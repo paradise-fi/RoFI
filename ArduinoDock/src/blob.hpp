@@ -1,3 +1,4 @@
+#pragma once
 #include <Arduino.h>
 
 struct InterruptGuard {
@@ -19,6 +20,7 @@ struct Blob_ {
 
     const uint8_t& operator[]( uint8_t idx ) const { return _mem[ idx ]; }
     uint8_t& operator[]( uint8_t idx ) { return _mem[ idx ]; }
+    operator bool(){ return _mem; }
 
     static Blob_ allocate() {
         InterruptGuard _;

@@ -2,58 +2,79 @@
 #include <EnableInterrupt.h>
 
 #include "blob.hpp"
+#include "modernHack.hpp"
 
 volatile int status;
 volatile int arg;
 
 struct SpiInterface {
+private:
+    enum class State { HEADER, RECEIVE, SEND };
+public:
     SpiInterface(): _buffer( Blob::allocate() ) {
         pinMode( MISO, OUTPUT );
         SPCR = bit( SPE ) | bit(SPIE);
     }
 
+    bool headerReceived() {
+        return _state == State::HEADER && _progress == 4;
+    }
+
+    uint8_t* header() { return _header; }
+
+    bool blobReceived() {
+        return _prevState == State::RECEIVE && _state == State::HEADER;
+    }
+
+    Blob&& getBlob() {
+        return move( _buffer );
+    }
+
+    void receive() {
+        nextState( State::RECEIVE );
+        _progress = 0;
+        _buffer = move( Blob::allocate() );
+    }
+
+    void send( Blob& b ) {
+        nextState( State::SEND );
+        _progress = 0;
+        _buffer = move( b );
+        shiftOutBuffer();
+    }
+
     void onSpiEnd() {
         SPDR = 0;
-        _state = State::HEADER;
+        nextState( State::HEADER );
         _progress = 0;
     }
 
     void onByte() {
         if ( _state == State::SEND ) {
-            shiftOutBuffer();
+            if ( _buffer )
+                shiftOutBuffer();
         } else {
             SPDR = 0;
             if ( _state == State::HEADER ) {
                 _header[ _progress++ ] = SPDR;
-                if ( _progress == 4 )
-                    onHeader();
             }
             else {
-                _buffer[ _progress++ ] = SPDR;
-                onExt();
+                if (_buffer )
+                    _buffer[ _progress++ ] = SPDR;
             }
         }
     }
-
-    void onHeader() {
-        for ( int i = 0; i != 16; i++ )
-            _buffer[ i ] = 'A' + _header[ 0 ] + i;
-
-        _state = State::SEND;
-        _progress = 0;
-
-        shiftOutBuffer();
-    }
-
-    void onExt() { }
-
+private:
     void shiftOutBuffer() {
         SPDR = _buffer[ _progress++ ];
     }
 
-    enum class State { HEADER, RECEIVE, SEND };
+    void nextState( State s ) {
+        _prevState = _state;
+        _state = s;
+    }
 
-    State _state;
+    State _state, _prevState;
     uint8_t _progress;
     uint8_t _header[ 4 ];
     Blob _buffer;
@@ -73,30 +94,14 @@ void onSpiEnd() {
 void setup() {
     Serial.begin( 115200 );
     enableInterrupt( 10, onSpiEnd, RISING );
-
-    auto x = Blob::allocate();
 }
 
-int lstat;
 void loop() {
-    // if ( status != lstat ) {
-    //     Serial.print( "Event: ");
-    //     Serial.print( status );
-    //     Serial.print(": ");
-    //     Serial.println( arg );
-    //     lstat = status;
-    // }
-    // if ( status == 43 ) {
-    //     for ( int i = 0; i != 4; i++ ) {
-    //         Serial.print( spiInterface._header[ i ], DEC );
-    //         Serial.print( " " );
-    //     }
-    //     Serial.println("");
-    // }
-    // if ( end ) {
-    //     Serial.print("\treceived: ");
-    //     Serial.println(rx);
-    //     rx[0] = rx[1] = rx[2] = rx[3] = '_';
-    //     end = false;
-    // }
+    if ( spiInterface.headerReceived() ) {
+        auto b = Blob::allocate();
+        uint8_t arg = spiInterface.header()[ 0 ];
+        for ( uint8_t i = 0; i != 16; i++ )
+            b[ i ] = 'a' + i + arg;
+        spiInterface.send( b );
+    }
 }
