@@ -1,14 +1,15 @@
 #include <Arduino.h>
 #include <EnableInterrupt.h>
 
+#include "blob.hpp"
+
 volatile int status;
 volatile int arg;
 
 struct SpiInterface {
-    SpiInterface() {
+    SpiInterface(): _buffer( Blob::allocate() ) {
         pinMode( MISO, OUTPUT );
         SPCR = bit( SPE ) | bit(SPIE);
-        _buffer = _buffers[ 0 ];
     }
 
     void onSpiEnd() {
@@ -55,8 +56,7 @@ struct SpiInterface {
     State _state;
     uint8_t _progress;
     uint8_t _header[ 4 ];
-    uint8_t _buffers[2][255];
-    uint8_t *_buffer;
+    Blob _buffer;
 };
 
 SpiInterface spiInterface;
@@ -73,6 +73,8 @@ void onSpiEnd() {
 void setup() {
     Serial.begin( 115200 );
     enableInterrupt( 10, onSpiEnd, RISING );
+
+    auto x = Blob::allocate();
 }
 
 int lstat;
