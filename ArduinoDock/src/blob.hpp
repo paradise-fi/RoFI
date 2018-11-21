@@ -14,8 +14,8 @@ struct Blob_ {
     Blob_() : _mem( nullptr ) {}
     Blob_( const Blob_& ) = delete;
     Blob_& operator=( const Blob_& ) = delete;
-    Blob_( Blob_&& o ): _mem( o._mem ) { o.free(); }
-    Blob_& operator=( Blob_&& o ) { _mem = o._mem; o.free(); return *this; }
+    Blob_( Blob_&& o ): _mem( nullptr ) { swap( o ); }
+    Blob_& operator=( Blob_&& o ) { swap( o ); return *this; }
     ~Blob_() { free(); }
 
     const uint8_t& operator[]( uint8_t idx ) const { return _mem[ idx ]; }
@@ -27,10 +27,17 @@ struct Blob_ {
         for ( uint8_t i = 0; i != poolSize; i++ ) {
             if ( !candidate( i ).taken ) {
                 candidate( i ).taken = true;
+                Serial.println( i );
                 return Blob_( candidate( i ).memory );
             }
         }
         return Blob_( nullptr );
+    }
+
+    void swap( Blob_& o ) {
+        auto x = _mem;
+        _mem = o._mem;
+        o._mem = x;
     }
 
     uint8_t* _mem;
@@ -38,6 +45,8 @@ private:
     Blob_( uint8_t* mem ): _mem( mem ) {}
 
     void free() {
+        if ( !_mem )
+            return;
         for ( uint8_t i = 0; i != poolSize; i++ ) {
             if ( candidate( i ).memory == _mem ) {
                 candidate( i ).taken = false;

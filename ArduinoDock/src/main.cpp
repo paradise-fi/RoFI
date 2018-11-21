@@ -101,7 +101,7 @@ void loop() {
         auto b = Blob::allocate();
         uint8_t arg = spiInterface.header()[ 0 ];
         for ( uint8_t i = 0; i != 16; i++ )
-            b[ i ] = 'a' + i + arg;
+            b[ i ] = 'a' + arg;
         spiInterface.send( b );
     }
 }
