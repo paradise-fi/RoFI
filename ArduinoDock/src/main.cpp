@@ -7,11 +7,11 @@
 volatile int status;
 volatile int arg;
 
-struct SpiInterface {
+class SpiInterface {
 private:
     enum class State { HEADER, RECEIVE, SEND };
 public:
-    SpiInterface(): _buffer( Blob::allocate() ) {
+    SpiInterface() {
         pinMode( MISO, OUTPUT );
         SPCR = bit( SPE ) | bit(SPIE);
     }
@@ -30,15 +30,15 @@ public:
         return move( _buffer );
     }
 
-    void receive() {
+    void receive( uint8_t offset = 0 ) {
         nextState( State::RECEIVE );
-        _progress = 0;
-        _buffer = move( Blob::allocate() );
+        _progress = offset;
+        _buffer = move( Blob::allocate( 255 ) );
     }
 
-    void send( Blob& b ) {
+    void send( Blob& b, uint8_t offset = 0 ) {
         nextState( State::SEND );
-        _progress = 0;
+        _progress = offset;
         _buffer = move( b );
         shiftOutBuffer();
     }
@@ -47,6 +47,8 @@ public:
         SPDR = 0;
         nextState( State::HEADER );
         _progress = 0;
+        if ( _prevState == State::SEND ) // Optimization
+            _buffer.free();
     }
 
     void onByte() {
@@ -98,7 +100,7 @@ void setup() {
 
 void loop() {
     if ( spiInterface.headerReceived() ) {
-        auto b = Blob::allocate();
+        auto b = Blob::allocate( 30 );
         uint8_t arg = spiInterface.header()[ 0 ];
         for ( uint8_t i = 0; i != 16; i++ )
             b[ i ] = 'a' + arg;
