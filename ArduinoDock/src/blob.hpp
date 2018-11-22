@@ -9,7 +9,7 @@ struct InterruptGuard {
     InterruptGuard& operator=( const InterruptGuard& ) = delete;
 };
 
-template < int size, int poolSize >
+template < uint8_t smallSize, uint8_t largeSize, uint8_t smallPoolSize, uint8_t largePoolSize >
 struct Blob_ {
     Blob_() : _mem( nullptr ) {}
     Blob_( const Blob_& ) = delete;
@@ -22,15 +22,11 @@ struct Blob_ {
     uint8_t& operator[]( uint8_t idx ) { return _mem[ idx ]; }
     operator bool(){ return _mem; }
 
-    static Blob_ allocate() {
-        InterruptGuard _;
-        for ( uint8_t i = 0; i != poolSize; i++ ) {
-            if ( !candidate( i ).taken ) {
-                candidate( i ).taken = true;
-                Serial.println( i );
-                return Blob_( candidate( i ).memory );
-            }
-        }
+    static Blob_ allocate( uint8_t size ) {
+        if ( size <= smallSize )
+            return _allocate< smallSize >();
+        if ( size <= largeSize )
+            return _allocate< largeSize >();
         return Blob_( nullptr );
     }
 
@@ -40,32 +36,62 @@ struct Blob_ {
         o._mem = x;
     }
 
+    void free() {
+        _free< smallSize >();
+        _free< largeSize >();
+    }
+
+    template < typename T >
+    T& as( uint8_t offset ) {
+        return *reinterpret_cast< T * >( _mem + offset );
+    }
+
     uint8_t* _mem;
 private:
     Blob_( uint8_t* mem ): _mem( mem ) {}
 
-    void free() {
+    template < uint8_t size >
+    void _free() {
         if ( !_mem )
             return;
-        for ( uint8_t i = 0; i != poolSize; i++ ) {
-            if ( candidate( i ).memory == _mem ) {
-                candidate( i ).taken = false;
+        for ( uint8_t i = 0; i != poolSize< size >(); i++ ) {
+            if ( candidate< size >( i ).memory == _mem ) {
+                candidate< size >( i ).taken = false;
                 _mem = nullptr;
                 return;
             }
         }
     }
 
+    template < uint8_t size >
+    static Blob_ _allocate() {
+        InterruptGuard _;
+        for ( uint8_t i = 0; i != poolSize< size >(); i++ ) {
+            if ( !candidate< size >( i ).taken ) {
+                candidate< size >( i ).taken = true;
+                return Blob_( candidate< size >( i ).memory );
+            }
+        }
+        return Blob_( nullptr );
+    }
+
+    template < uint8_t size >
     struct BlobCandidate {
         uint8_t memory[ size ];
         bool taken;
     };
 
-    static BlobCandidate& candidate( uint8_t i ) {
-        static BlobCandidate _blobs[ poolSize ];
+    template < uint8_t s >
+    static constexpr uint8_t poolSize() {
+        return s == smallSize ? smallPoolSize : largePoolSize;
+    };
+
+    template < uint8_t size >
+    static BlobCandidate< size >& candidate( uint8_t i ) {
+        static BlobCandidate< size > _blobs[ poolSize< size >() ];
         return _blobs[ i ];
     }
 
 };
 
-using Blob = Blob_< 255, 5 >;
+using Blob = Blob_< 128, 255, 2, 4 >;
