@@ -94,4 +94,4 @@ private:
 
 };
 
-using Blob = Blob_< 128, 255, 2, 4 >;
+using Blob = Blob_< 32, 255, 2, 5 >;
