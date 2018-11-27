@@ -7,6 +7,8 @@
 volatile int status;
 volatile int arg;
 
+enum SpiCommand { VERSION = 0, STATUS, INTERRUPT, SEND_BLOB, RECEIVE_BLOB };
+
 template < typename T >
 T& as( uint8_t* p ) {
     return *reinterpret_cast< T * >( p );
@@ -22,7 +24,9 @@ public:
     }
 
     bool headerReceived() {
-        return _state == State::HEADER && _progress == 4;
+        if ( _progress == 0 )
+            return false;
+        return _state == State::HEADER && _progress == headerSize( _header[ 0 ] );
     }
 
     uint8_t* header() { return _header; }
@@ -69,7 +73,7 @@ public:
                 shiftOutBuffer();
         } else {
             SPDR = 0;
-            if ( _state == State::HEADER && _progress < 4 ) {
+            if ( _state == State::HEADER && _progress < 5 ) {
                 _header[ _progress++ ] = SPDR;
             }
             else {
@@ -106,9 +110,20 @@ private:
         SPCR = bit( SPE ) | bit(SPIE);
     }
 
+    static uint8_t headerSize( uint8_t command ) {
+        switch ( command ) {
+            case SpiCommand::VERSION: return 1;
+            case SpiCommand::STATUS: return 5;
+            case SpiCommand::INTERRUPT: return 3;
+            case SpiCommand::SEND_BLOB: return 1;
+            case SpiCommand::RECEIVE_BLOB: return 1;
+            default: return 1;
+        }
+    }
+
     State _state, _prevState;
     uint8_t _progress;
-    uint8_t _header[ 4 ];
+    uint8_t _header[ 5 ];
     Blob _buffer;
     bool _received;
     bool _interrupt;
@@ -249,8 +264,6 @@ void setup() {
     enableInterrupt( 10, onSpiEnd, RISING );
 }
 
-enum SpiCommand { VERSION = 0, STATUS, INTERRUPT, SEND_BLOB, RECEIVE_BLOB };
-
 void onVersionCommand( uint8_t* ) {
     auto b = Blob::allocate( 32 );
     b.as< uint16_t >( 0 ) = 0;  // Dock variant
@@ -288,7 +301,7 @@ void onReceiveBlobCommand( uint8_t* ) {
     if ( d2dInterface.available() == 0 ) {
         auto b = Blob::allocate(4);
         b.as< uint16_t >( 0 ) = 0;
-        b.as< uint16_t >( 0 ) = 0;
+        b.as< uint16_t >( 2 ) = 0;
         spiInterface.send( move( b ) );
         return;
     }
