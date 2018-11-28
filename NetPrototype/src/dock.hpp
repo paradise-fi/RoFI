@@ -228,7 +228,7 @@ private:
     }
 
     static SequentialExecutor< TransactionContext >& getExecutor() {
-        static SequentialExecutor< TransactionContext > _executor( 10 );
+        static SequentialExecutor< TransactionContext > _executor( 30 );
         return _executor;
     }
 

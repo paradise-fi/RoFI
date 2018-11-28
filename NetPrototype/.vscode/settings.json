@@ -34,6 +34,11 @@
         "sstream": "cpp",
         "tuple": "cpp",
         "utility": "cpp",
-        "cstdarg": "cpp"
+        "cstdarg": "cpp",
+        "memory": "cpp",
+        "algorithm": "cpp",
+        "cmath": "cpp",
+        "deque": "cpp",
+        "numeric": "cpp"
     }
 }
