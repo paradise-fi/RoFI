@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <freertos/queue.h>
+#include <freertos/semphr.h>
 #include <typeinfo>
 
 namespace rtos {
@@ -161,4 +162,33 @@ private:
     uint8_t* _objs;
 };
 
+class Semaphore {
+public:
+    Semaphore( int max ) : _sem( xSemaphoreCreateCounting( max, max ) ) {
+        if ( !_sem )
+            throw std::runtime_error( "Cannot allocate" );
+    }
+
+    bool tryTake( ExContext c = ExContext::Normal ) {
+        if ( c == ExContext::ISR )
+            return xSemaphoreTakeFromISR( _sem, nullptr ) == pdTRUE;
+        return xSemaphoreTake( _sem, 0 ) == pdTRUE;
+    }
+
+    bool take() {
+        return xSemaphoreTake( _sem, portMAX_DELAY ) == pdTRUE;
+    }
+
+    bool give( ExContext c = ExContext::Normal ) {
+        if ( c == ExContext::ISR )
+            return xSemaphoreGiveFromISR( _sem, nullptr ) == pdTRUE;
+        return xSemaphoreGive( _sem ) == pdTRUE;
+    }
+
+    bool count() const {
+        return uxSemaphoreGetCount( _sem );
+    }
+private:
+    SemaphoreHandle_t _sem;
+};
 } // namespace rtos
