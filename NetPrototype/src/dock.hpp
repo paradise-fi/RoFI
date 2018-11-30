@@ -119,37 +119,37 @@ private:
  * Sequential executor cannot take std::function as it cannot be constructed
  * in the interrupt context due to heap allocation.
  */
-template < typename Arg >
+template < typename FType >
 class SequentialExecutor {
 public:
-    using F = void (*)(Arg&);
-
     SequentialExecutor( int queueSize ):
         _jobs( queueSize )
     {
-        auto res = xTaskCreate( _run, "SequentialExecutor", 2048, this, 10, nullptr );
+        auto res = xTaskCreate( _run, "SequentialExecutor", 2048, this, 5, nullptr );
         if ( res != pdPASS )
             throw std::runtime_error( "Cannot allocate task" );
     }
 
-    void run( F f, const Arg& arg, rtos::ExContext c = rtos::ExContext::Normal ) {
-        _jobs.push( { f, arg }, c );
+    template < typename F >
+    void run( const F& f ) {
+        _jobs.emplace( f );
     }
 
-    void run( F f, Arg&& arg, rtos::ExContext c = rtos::ExContext::Normal ) {
-        _jobs.push( { f, std::move( arg ) }, c );
+    template < typename F >
+    void run( F&& f ) {
+        _jobs.emplace( std::move( f ) );
     }
 
 private:
     static void _run( void* arg ) {
         auto* self = reinterpret_cast< SequentialExecutor* >( arg );
         while ( true ) {
-            auto task = self->_jobs.pop();
-            ( *task.first )( task.second );
+            auto job = self->_jobs.pop();
+            job();
         }
     }
 
-    rtos::Queue< std::pair< F, Arg > > _jobs;
+    rtos::Queue< std::function< FType > > _jobs;
 };
 
 struct DockVersion {
@@ -183,10 +183,11 @@ struct DockStatus {
 class Dock {
 public:
     Dock( spi_host_device_t bus, gpio_num_t cs ):
-        _cs( cs )
+        _cs( cs ), _outPacketCounter( 0 ), _versionSem( 1 ), _isrSem( 2 ),
+        _statusSem( 2 ), _sendSem( 5 ), _recvSem( 10 )
     {
         spi_device_interface_config_t devCfg = SpiDeviceInterface()
-            .clockSpeedHz( 100000 )
+            .clockSpeedHz( 50000 )
             .mode( 0 )
             .queueSize( 1 );
         spi_bus_add_device( bus, &devCfg, &_dev );
@@ -194,15 +195,65 @@ public:
         gpio_config_t cfg = defaultCsConfig( _cs );
         gpio_config( &cfg );
         gpio_set_level( _cs, 1 );
-        gpio_isr_handler_add( _cs, onInterrupt, this );
+        gpio_isr_handler_add( _cs, csInterruptHandler, this );
+        checkStatus();
+        isrService();
     }
 
     void sendBlob( uint16_t contentType, PBuf&& blob ) {
-        runTransaction( sendBlobTran, contentType, std::move( blob ) );
+        _sendSem.take();
+        runTransaction( [ blob = std::move( blob ), this, contentType ]() mutable {
+            if ( blob.size() > 2048 ) {
+                std::cout << "Trying to send large packet: " << blob.size() << "\n";
+                return;
+            }
+
+            SpiTransactionGuard transaction( _cs );
+
+            uint8_t header[ 1 ];
+            as< Command >( header ) = Command::Send;
+            spiWrite( _dev, header );
+
+            slaveDelay();
+
+            uint8_t blobHeader[ 4 ];
+            as< uint16_t >( blobHeader ) = contentType;
+            as< uint16_t >( blobHeader + 2 ) = blob.size();
+            spiWrite( _dev, blobHeader );
+
+            for ( auto it = blob.chunksBegin(); it != blob.chunksEnd(); ++it ) {
+                spiWrite( _dev, it->mem(), it->size() );
+            }
+            transaction.end();
+            slaveDelay();
+            if ( ++_outPacketCounter == 3 ) {
+                _outPacketCounter = 0;
+                // checkStatus();
+            }
+            _sendSem.give();
+        } );
     }
 
     void version() {
-        runTransaction( versionTran );
+        _sendSem.take();
+        runTransaction( [this]{
+            SpiTransactionGuard transaction( _cs );
+
+            uint8_t header[ 1 ];
+            as< Command >( header + 0 ) = Command::Version;
+            spiWrite( _dev, header );
+
+            slaveDelay();
+
+            uint8_t payload[ 4 ];
+            spiRead( _dev, payload );
+            transaction.end();
+            slaveDelay();
+            _versionSem.give();
+
+            if ( _onVersion )
+                _onVersion( *this, DockVersion::from( payload ) );
+        } );
     }
 
     template < typename F >
@@ -217,12 +268,6 @@ public:
     template < typename F >
     void onReceive( F f ) { _onReceive = f; }
 private:
-    struct TransactionContext {
-        Dock* self;
-        int contentType;
-        PBuf mem;
-    };
-
     enum class Command: uint8_t {
         Version = 0,
         Status = 1,
@@ -240,134 +285,116 @@ private:
         vTaskDelay( 50 / portTICK_PERIOD_MS );
     }
 
-    static SequentialExecutor< TransactionContext >& getExecutor() {
-        static SequentialExecutor< TransactionContext > _executor( 30 );
-        return _executor;
+    static IRAM_ATTR rtos::IsrDeferrer& isrService() {
+        static rtos::IsrDeferrer _def( 10 );
+        return _def;
     }
 
-    void runTransaction( void (*f)( TransactionContext& ), int contentType,
-        PBuf&& mem, rtos::ExContext c = rtos::ExContext::Normal )
-    {
-        getExecutor().run( f, { this, contentType, std::move( mem ) }, c );
+    template < typename F >
+    void runTransaction( F&& f ) {
+        static SequentialExecutor< void() > _executor( 30 );
+        _executor.run( std::forward< F >( f ) );
     }
 
-    void runTransaction( void (*f)( TransactionContext& ),
-        rtos::ExContext c = rtos::ExContext::Normal )
-    {
-        getExecutor().run( f, { this, 0, {} }, c );
-    }
-
-    static void sendBlobTran( TransactionContext& ctx ) {
-        auto self = ctx.self;
-        SpiTransactionGuard _( self->_cs );
-
-        uint8_t header[ 1 ];
-        as< Command >( header ) = Command::Send;
-        spiWrite( self->_dev, header );
-
-        slaveDelay();
-
-        uint8_t blobHeader[ 4 ];
-        as< uint16_t >( blobHeader ) = ctx.contentType;
-        as< uint16_t >( blobHeader + 2 ) = ctx.mem.size();
-        spiWrite( self->_dev, blobHeader );
-
-        for ( auto it = ctx.mem.chunksBegin(); it != ctx.mem.chunksEnd(); ++it ) {
-            spiWrite( self->_dev, it->mem(), it->size() );
-        }
-    }
-
-    static void receiveBlobTran( TransactionContext& ctx ) {
-        auto self = ctx.self;
-        SpiTransactionGuard _( self->_cs );
-
-        uint8_t header[ 1 ];
-        as< Command >( header ) = Command::Receive;
-        spiWrite( self->_dev, header );
-
-        slaveDelay();
-
-        uint8_t payloadHeader[ 4 ];
-        spiRead( self->_dev, payloadHeader );
-
-        auto contentType = as< uint16_t >( payloadHeader );
-        auto size = as< uint16_t >( payloadHeader + 2 );
-        if ( size == 0 || size > 2048 )
+    void receiveBlob() {
+        if ( !_recvSem.tryTake() )
             return;
+        runTransaction( [this] {
+            SpiTransactionGuard transaction( _cs );
 
-        PBuf payload( size );
-        for ( auto it = payload.chunksBegin(); it != payload.chunksEnd(); ++it ) {
-            spiRead( self->_dev, it->mem(), it->size() );
+            uint8_t header[ 1 ];
+            as< Command >( header ) = Command::Receive;
+            spiWrite( _dev, header );
+
+            slaveDelay();
+
+            uint8_t payloadHeader[ 4 ];
+            spiRead( _dev, payloadHeader );
+
+            auto contentType = as< uint16_t >( payloadHeader );
+            auto size = as< uint16_t >( payloadHeader + 2 );
+            if ( size == 0 || size > 2048 )
+                return;
+
+            auto payload = PBuf::allocate( size );
+            for ( auto it = payload.chunksBegin(); it != payload.chunksEnd(); ++it ) {
+                spiRead( _dev, it->mem(), it->size() );
+            }
+            transaction.end();
+            slaveDelay();
+            _recvSem.give();
+
+            if ( _onReceive )
+                _onReceive( *this, contentType, std::move( payload ) );
+        } );
+    }
+
+    void checkStatus() {
+        if ( !_statusSem.tryTake() )
+            return;
+        runTransaction([this] {
+            SpiTransactionGuard transaction( _cs );
+
+            uint8_t header[ 5 ];
+            as< Command >( header + 0 ) = Command::Status;
+            as< uint16_t >( header + 1 ) = 0;
+            as< uint16_t >( header + 3 ) = 0;
+            spiWrite( _dev, header );
+
+            slaveDelay();
+
+            uint8_t payload[ 12 ];
+            spiRead( _dev, payload );
+
+            transaction.end();
+            slaveDelay();
+            _statusSem.give();
+
+            auto status = DockStatus::from( payload );
+            for ( int i = 0; i != status.pendingReceive; i++ )
+                receiveBlob();
+            if ( _onStatus )
+                _onStatus( *this, status );
+        } );
+    }
+
+    void checkInterrupt() {
+        if ( !_isrSem.tryTake() ) {
+            std::cout << "Cannot take interrupt\n";
+            return;
         }
+        runTransaction( [this] {
+            SpiTransactionGuard transaction( _cs );
 
-        if ( self->_onReceive )
-            self->_onReceive( *self, contentType, std::move( payload ) );
+            uint8_t header[ 3 ];
+            as< Command >( header + 0 ) = Command::Interrupt;
+            as< uint16_t >( header + 1 ) =
+                InterruptFlag::CONNECT |
+                InterruptFlag::BLOB    ;
+            spiWrite( _dev, header );
+
+            slaveDelay();
+
+            uint8_t interrupts[ 2 ];
+            spiRead( _dev, interrupts );
+            transaction.end();
+            slaveDelay();
+            _isrSem.give();
+
+            uint16_t intFlags = as< uint16_t >( interrupts );
+            if ( intFlags & InterruptFlag::BLOB )
+                checkStatus();
+            if ( _onInterrupt )
+                _onInterrupt( *this, intFlags );
+        } );
     }
 
-    static void checkStatusTran( TransactionContext& ctx ) {
-        auto self = ctx.self;
-        SpiTransactionGuard _( self->_cs );
-
-        uint8_t header[ 5 ];
-        as< Command >( header + 0 ) = Command::Status;
-        as< uint16_t >( header + 1 ) = 0;
-        as< uint16_t >( header + 3 ) = 0;
-        spiWrite( self->_dev, header );
-
-        slaveDelay();
-
-        uint8_t payload[ 12 ];
-        spiRead( self->_dev, payload );
-
-        auto status = DockStatus::from( payload );
-        for ( int i = 0; i != status.pendingReceive; i++ )
-            self->runTransaction( receiveBlobTran );
-        if ( self->_onStatus )
-            self->_onStatus( *self, status );
-    }
-
-    static void checkInterruptTran( TransactionContext& ctx ) {
-        auto self = ctx.self;
-        SpiTransactionGuard _( self->_cs );
-
-        uint8_t header[ 3 ];
-        as< Command >( header + 0 ) = Command::Interrupt;
-        as< uint16_t >( header + 1 ) =
-            InterruptFlag::CONNECT |
-            InterruptFlag::BLOB    ;
-        spiWrite( self->_dev, header );
-
-        slaveDelay();
-
-        uint8_t interrupts[ 2 ];
-        spiRead( self->_dev, interrupts );
-
-        uint16_t intFlags = as< uint16_t >( interrupts );
-        if ( intFlags & InterruptFlag::BLOB )
-            self->runTransaction( checkStatusTran );
-        if ( self->_onInterrupt )
-            self->_onInterrupt( *self, intFlags );
-    }
-
-    static void versionTran( TransactionContext& ctx ) {
-        auto self = ctx.self;
-        SpiTransactionGuard _( self->_cs );
-
-        uint8_t header[ 1 ];
-        as< Command >( header + 0 ) = Command::Version;
-        spiWrite( self->_dev, header );
-
-        slaveDelay();
-
-        uint8_t payload[ 4 ];
-        spiRead( self->_dev, payload );
-        if ( self->_onVersion )
-            self->_onVersion( *self, DockVersion::from( payload ) );
-    }
-
-    static void IRAM_ATTR onInterrupt( void* arg ) {
-        auto* self = reinterpret_cast< Dock* >( arg );
-        self->runTransaction( checkInterruptTran, rtos::ExContext::ISR );
+    static void IRAM_ATTR csInterruptHandler( void* arg ) {
+        isrService().isr( arg, []( void* arg ) {
+            std::cout << "Interrupt!\n";
+            auto* self = reinterpret_cast< Dock* >( arg );
+            self->checkInterrupt();
+        } );
     }
 
     static Gpio defaultCsConfig( gpio_num_t c ) {
@@ -376,11 +403,11 @@ private:
             .mode( GPIO_MODE_INPUT_OUTPUT_OD )
             .pullUpEn( GPIO_PULLUP_ENABLE )
             .pullDownEn( GPIO_PULLDOWN_DISABLE )
-            .intrType( GPIO_INTR_POSEDGE );
+            .intrType( GPIO_INTR_NEGEDGE );
     }
 
     struct SpiTransactionGuard {
-        SpiTransactionGuard( gpio_num_t p ): _pin( p ) {
+        SpiTransactionGuard( gpio_num_t p ): _pin( p ), _rel( false ) {
             esp_log_level_set( "gpio", ESP_LOG_ERROR ); // Silence messages
 
             gpio_config_t cfg = defaultCsConfig( _pin )
@@ -389,22 +416,36 @@ private:
             gpio_set_level( _pin, 0 );
         }
         ~SpiTransactionGuard() {
-            gpio_set_level( _pin, 1 );
+            if ( !_rel )
+                end();
+        }
+
+        void end() {
             gpio_config_t cfg = defaultCsConfig( _pin );
             gpio_config(&cfg);
             gpio_set_level( _pin, 1 );
 
             esp_log_level_set( "gpio", ESP_LOG_INFO ); // return messages messages
+            _rel = true;
         }
 
         SpiTransactionGuard( const SpiTransactionGuard& ) = delete;
         SpiTransactionGuard& operator=( const SpiTransactionGuard& ) = delete;
 
         gpio_num_t _pin;
+        bool _rel;
     };
 
     gpio_num_t _cs;
     spi_device_handle_t _dev;
+    int _outPacketCounter;
+
+    rtos::Semaphore _versionSem;
+    rtos::Semaphore _isrSem;
+    rtos::Semaphore _statusSem;
+    rtos::Semaphore _sendSem;
+    rtos::Semaphore _recvSem;
+
     std::function< void( Dock&, DockVersion ) > _onVersion;
     std::function< void( Dock&, DockStatus ) > _onStatus;
     std::function< void( Dock&, uint16_t ) > _onInterrupt;
