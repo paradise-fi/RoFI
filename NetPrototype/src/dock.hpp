@@ -18,15 +18,13 @@ namespace _rofi {
 
 class PBuf {
 public:
-    PBuf( pbuf* buff = nullptr ) : _buff( buff ) {}
-    PBuf( int size ) : _buff( pbuf_alloc( PBUF_RAW, size, PBUF_POOL ) ) {
-        if ( !_buff )
-            throw std::bad_alloc();
-    }
+    static PBuf allocate( int size ) { return PBuf( size ); }
+    static PBuf reference( pbuf* b ) { return PBuf( b, true ); }
+    static PBuf own( pbuf* b ) { return PBuf( b, false ); }
+    static PBuf empty() { return PBuf( nullptr, false ); }
 
-    PBuf( const PBuf& ) = delete;
-    PBuf& operator=( const PBuf& ) = delete;
-
+    PBuf( const PBuf& o ): _buff( o._buff ) { pbuf_ref( _buff ); };
+    PBuf& operator=( PBuf o ) { swap( o );  return *this; }
     PBuf( PBuf&& o ): _buff( o._buff ) { o._buff = nullptr; }
     PBuf& operator=( PBuf&& o ) { swap( o ); return *this; }
 
@@ -42,6 +40,8 @@ public:
         _buff = nullptr;
         return b;
     }
+
+    pbuf* get() { return _buff; }
 
     operator bool() const { return _buff; }
     bool simple() const { return _buff->tot_len == _buff->len; }
@@ -91,6 +91,15 @@ public:
     ChunkIt chunksBegin() { return ChunkIt( _buff ); }
     ChunkIt chunksEnd() { return ChunkIt(); }
 private:
+    PBuf( pbuf* buff, bool addReference ) : _buff( buff ) {
+        if ( addReference )
+            pbuf_ref( _buff );
+    }
+    PBuf( int size ) : _buff( pbuf_alloc( PBUF_RAW, size, PBUF_POOL ) ) {
+        if ( !_buff )
+            throw std::bad_alloc();
+    }
+
     template< typename Self,
               typename R = typename std::conditional<
                 std::is_const< Self >::value, const uint8_t , uint8_t >::type >
