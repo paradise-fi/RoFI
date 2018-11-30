@@ -67,13 +67,17 @@ public:
 
         ChunkIt( pbuf* buf = nullptr ) : _c{ buf } { }
 
-        ChunkIt operator++() {
+        ChunkIt operator++( int ) {
             ChunkIt i = *this;
-            _c._buf = _c._buf->next;
+            ++(*this);
             return i;
         }
-        ChunkIt& operator++( int ) {
-            _c._buf = _c._buf->next;
+        ChunkIt& operator++() {
+            // See loop end condition: https://www.nongnu.org/lwip/2_0_x/group__pbuf.html
+            if ( _c._buf->tot_len == _c._buf->len )
+                _c._buf = nullptr;
+            else
+                _c._buf = _c._buf->next;
             return *this;
         }
         reference operator*() { return _c; }
