@@ -163,6 +163,31 @@ private:
 };
 
 class Semaphore {
+    class GiveGuard {
+    public:
+        GiveGuard( Semaphore& sem, ExContext c = ExContext::Normal )
+            : _given( false ), _sem( sem ), _cont( c ) {}
+
+        GiveGuard( const GiveGuard& ) = delete;
+        GiveGuard& operator=( const GiveGuard& ) = delete;
+        GiveGuard( GiveGuard&& ) = default;
+        GiveGuard& operator=( GiveGuard&& ) = default;
+
+        ~GiveGuard() {
+            give();
+        }
+
+        void give() {
+            if ( _given )
+                return;
+            _sem.give( _cont );
+            _given = true;
+        }
+    private:
+        bool _given;
+        Semaphore& _sem;
+        ExContext _cont;
+    };
 public:
     Semaphore( int max ) : _sem( xSemaphoreCreateCounting( max, max ) ) {
         if ( !_sem )
@@ -193,6 +218,11 @@ public:
     bool count() const {
         return uxSemaphoreGetCount( _sem );
     }
+
+    GiveGuard giveGuard( ExContext c = ExContext::Normal ) {
+        return GiveGuard( *this, c );
+    }
+
     void swap( Semaphore& o ) {
         using std::swap;
         swap( _sem, o._sem );
