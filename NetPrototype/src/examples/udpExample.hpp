@@ -53,15 +53,18 @@ inline void runSlave( const char* masterAddr ) {
     ip_addr_t addr;
     if ( !ipaddr_aton( masterAddr, &addr ) )
         std::cout << "Cannot create IP address\n";
+    int counter = 0;
     while ( true ) {
-        const char* message = "Hello world!";
-        auto buffer = _rofi::PBuf::allocate( strlen( message ) );
-        for ( int i = 0; i != strlen( message ) + 1; i++ ) {
+        const char* message = "Hello world!  ";
+        const int len = strlen( message );
+        auto buffer = _rofi::PBuf::allocate( len );
+        for ( int i = 0; i != len + 1; i++ ) {
             buffer[ i ] = message[ i ];
         }
-        std::cout << "Sending message: " << message << "\n";
+        buffer[ len - 1 ] = 'a' + ( counter++ ) % 26;
+        std::cout << "Sending message: " << buffer.asString() << "\n";
         udp_sendto( pcb, buffer.get(), &addr, 7777 );
-        vTaskDelay( 100 / portTICK_PERIOD_MS );
+        vTaskDelay( 1000 / portTICK_PERIOD_MS );
     }
 }
 
