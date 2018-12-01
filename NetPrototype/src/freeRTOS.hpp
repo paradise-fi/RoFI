@@ -169,6 +169,11 @@ public:
             throw std::runtime_error( "Cannot allocate" );
     }
 
+    Semaphore( const Semaphore& ) = delete;
+    Semaphore& operator=( const Semaphore& ) = delete;
+    Semaphore( Semaphore&& o ) : _sem( o._sem ) { o._sem = nullptr; }
+    Semaphore& operator=( Semaphore&& o ) { swap( o ); return *this; }
+
     bool tryTake( ExContext c = ExContext::Normal ) {
         if ( c == ExContext::ISR )
             return xSemaphoreTakeFromISR( _sem, nullptr ) == pdTRUE;
@@ -188,7 +193,13 @@ public:
     bool count() const {
         return uxSemaphoreGetCount( _sem );
     }
+    void swap( Semaphore& o ) {
+        using std::swap;
+        swap( _sem, o._sem );
+    }
+
 private:
+
     SemaphoreHandle_t _sem;
 };
 
