@@ -1,0 +1,6 @@
+{
+    "terminal.integrated.env.linux": {
+        "PATH": "/home/xmrazek7/.platformio/penv/bin:/home/xmrazek7/.platformio/penv:/home/xmrazek7/.cabal/bin:/opt/xtensa-esp32-elf/bin:/home/xmrazek7/bin:/home/xmrazek7/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/usr/lib/jvm/java-8-oracle/bin:/usr/lib/jvm/java-8-oracle/db/bin:/usr/lib/jvm/java-8-oracle/jre/bin",
+        "PLATFORMIO_CALLER": "vscode"
+    }
+}
