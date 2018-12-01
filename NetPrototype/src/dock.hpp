@@ -183,8 +183,8 @@ struct DockStatus {
 class Dock {
 public:
     Dock( spi_host_device_t bus, gpio_num_t cs ):
-        _cs( cs ), _outPacketCounter( 0 ), _versionSem( 1 ), _isrSem( 2 ),
-        _statusSem( 2 ), _sendSem( 5 ), _recvSem( 10 )
+        _cs( cs ), _versionSem( 1 ), _isrSem( 2 ), _statusSem( 2 ),
+        _sendSem( 2 ), _recvSem( 10 )
     {
         spi_device_interface_config_t devCfg = SpiDeviceInterface()
             .clockSpeedHz( 50000 )
@@ -203,6 +203,8 @@ public:
     void sendBlob( uint16_t contentType, PBuf&& blob ) {
         _sendSem.take();
         runTransaction( [ blob = std::move( blob ), this, contentType ]() mutable {
+            auto semGuard = _sendSem.giveGuard();
+
             if ( blob.size() > 2048 ) {
                 std::cout << "Trying to send large packet: " << blob.size() << "\n";
                 return;
@@ -226,17 +228,13 @@ public:
             }
             transaction.end();
             slaveDelay();
-            if ( ++_outPacketCounter == 3 ) {
-                _outPacketCounter = 0;
-                // checkStatus();
-            }
-            _sendSem.give();
         } );
     }
 
     void version() {
         _sendSem.take();
         runTransaction( [this]{
+            auto semGuard = _sendSem.giveGuard();
             SpiTransactionGuard transaction( _cs );
 
             uint8_t header[ 1 ];
@@ -249,7 +247,6 @@ public:
             spiRead( _dev, payload );
             transaction.end();
             slaveDelay();
-            _versionSem.give();
 
             if ( _onVersion )
                 _onVersion( *this, DockVersion::from( payload ) );
@@ -282,7 +279,7 @@ private:
     };
 
     static void slaveDelay() {
-        vTaskDelay( 50 / portTICK_PERIOD_MS );
+        vTaskDelay( 1 / portTICK_PERIOD_MS / 2 );
     }
 
     static IRAM_ATTR rtos::IsrDeferrer& isrService() {
@@ -290,16 +287,22 @@ private:
         return _def;
     }
 
+    SequentialExecutor< void() >& getExecutor() {
+        static SequentialExecutor< void() > _executor( 30 );
+        return _executor;
+    }
+
     template < typename F >
     void runTransaction( F&& f ) {
-        static SequentialExecutor< void() > _executor( 30 );
-        _executor.run( std::forward< F >( f ) );
+        getExecutor().run( std::forward< F >( f ) );
     }
 
     void receiveBlob() {
-        if ( !_recvSem.tryTake() )
+        if ( !_recvSem.tryTake() ) {
             return;
+        }
         runTransaction( [this] {
+            auto semGuard = _recvSem.giveGuard();
             SpiTransactionGuard transaction( _cs );
 
             uint8_t header[ 1 ];
@@ -313,8 +316,9 @@ private:
 
             auto contentType = as< uint16_t >( payloadHeader );
             auto size = as< uint16_t >( payloadHeader + 2 );
-            if ( size == 0 || size > 2048 )
+            if ( size == 0 || size > 2048 ) {
                 return;
+            }
 
             auto payload = PBuf::allocate( size );
             for ( auto it = payload.chunksBegin(); it != payload.chunksEnd(); ++it ) {
@@ -322,7 +326,6 @@ private:
             }
             transaction.end();
             slaveDelay();
-            _recvSem.give();
 
             if ( _onReceive )
                 _onReceive( *this, contentType, std::move( payload ) );
@@ -333,6 +336,7 @@ private:
         if ( !_statusSem.tryTake() )
             return;
         runTransaction([this] {
+            auto semGuard = _statusSem.giveGuard();;
             SpiTransactionGuard transaction( _cs );
 
             uint8_t header[ 5 ];
@@ -348,7 +352,6 @@ private:
 
             transaction.end();
             slaveDelay();
-            _statusSem.give();
 
             auto status = DockStatus::from( payload );
             for ( int i = 0; i != status.pendingReceive; i++ )
@@ -360,10 +363,10 @@ private:
 
     void checkInterrupt() {
         if ( !_isrSem.tryTake() ) {
-            std::cout << "Cannot take interrupt\n";
             return;
         }
         runTransaction( [this] {
+            auto semGuard = _isrSem.giveGuard();
             SpiTransactionGuard transaction( _cs );
 
             uint8_t header[ 3 ];
@@ -379,11 +382,11 @@ private:
             spiRead( _dev, interrupts );
             transaction.end();
             slaveDelay();
-            _isrSem.give();
 
             uint16_t intFlags = as< uint16_t >( interrupts );
-            if ( intFlags & InterruptFlag::BLOB )
+            if ( intFlags & InterruptFlag::BLOB ) {
                 checkStatus();
+            }
             if ( _onInterrupt )
                 _onInterrupt( *this, intFlags );
         } );
@@ -391,8 +394,8 @@ private:
 
     static void IRAM_ATTR csInterruptHandler( void* arg ) {
         isrService().isr( arg, []( void* arg ) {
-            std::cout << "Interrupt!\n";
             auto* self = reinterpret_cast< Dock* >( arg );
+            self->receiveBlob(); // It is probably receive transaction, check it
             self->checkInterrupt();
         } );
     }
@@ -438,7 +441,6 @@ private:
 
     gpio_num_t _cs;
     spi_device_handle_t _dev;
-    int _outPacketCounter;
 
     rtos::Semaphore _versionSem;
     rtos::Semaphore _isrSem;
