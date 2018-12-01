@@ -9,8 +9,12 @@
 #include <iostream>
 
 #include "dock.hpp"
+#include "roif.hpp"
 #include "freeRTOS.hpp"
 #include "test/test.hpp"
+
+#include "examples/udpExample.hpp"
+#include "examples/tcpExample.hpp"
 
 extern "C" wifi_init_config_t getDefaultWifiCfg() ;
 
@@ -29,7 +33,7 @@ bool isMaster() {
         uint8_t macAddress[ 6 ];
         esp_efuse_mac_get_default( macAddress );
 
-        result = macAddress[ 5 ] == 204;
+        result = macAddress[ 5 ] == 136;
 
         std::cout << "Mac Adress: ";
         const char* separator = "";
@@ -44,6 +48,7 @@ bool isMaster() {
 
 extern "C" void app_main() {
     setupStack();
+    isMaster();
     std::cout << "I am " << ( isMaster() ? "master" : "slave" ) << "\n";
 
     gpio_install_isr_service( ESP_INTR_FLAG_SHARED | ESP_INTR_FLAG_LOWMED | ESP_INTR_FLAG_IRAM );
@@ -54,7 +59,15 @@ extern "C" void app_main() {
     auto r = spi_bus_initialize( HSPI_HOST, &spiBus, 1 );
     ESP_ERROR_CHECK( r );
 
-    test::simpleDocks();
+    _rofi::RoIF roif( isMaster() ? "192.168.42.1" : "192.168.42.2", "255.255.255.0",
+        "192.168.1.5", { GPIO_NUM_14 } );
+    roif.setUp();
+    std::cout << "roif initialized\n";
+
+    if ( isMaster() )
+        tcpEx::runMaster();
+    else
+        tcpEx::runSlave( "192.168.42.1" );
 
     while ( true ) vTaskDelay( 2000 / portTICK_PERIOD_MS );
 }
