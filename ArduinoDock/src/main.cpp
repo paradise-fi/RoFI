@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <EnableInterrupt.h>
 
+static const uint16_t MAX_BUFFER_SIZE = 128;
+
 #include "blob.hpp"
 #include "modernHack.hpp"
 
@@ -20,7 +22,7 @@ private:
 public:
     SpiInterface(): _interrupt( false ) {
         pinMode( MISO, OUTPUT );
-        SPCR = bit( SPE ) | bit(SPIE);
+        SPCR = bit( SPE ) | bit( SPIE );
     }
 
     bool headerReceived() {
@@ -44,11 +46,15 @@ public:
     void receive( uint8_t offset = 0 ) {
         nextState( State::RECEIVE );
         _progress = offset;
-        _buffer = move( Blob::allocate( 255 ) );
+        _buffer = move( Blob::allocate( MAX_BUFFER_SIZE ) );
+        if ( !_buffer ) {
+            // Serial.println( "Cannot allocate! 1" );
+        }
     }
 
-    void send( Blob&& b, uint8_t offset = 0 ) {
+    void send( Blob&& b, uint8_t limit, uint8_t offset = 0 ) {
         nextState( State::SEND );
+        _limit = limit;
         _progress = offset;
         _buffer = move( b );
         shiftOutBuffer();
@@ -77,7 +83,7 @@ public:
                 _header[ _progress++ ] = SPDR;
             }
             else {
-                if (_buffer )
+                if ( _buffer && _progress < MAX_BUFFER_SIZE )
                     _buffer[ _progress++ ] = SPDR;
             }
         }
@@ -92,7 +98,8 @@ public:
     }
 private:
     void shiftOutBuffer() {
-        SPDR = _buffer[ _progress++ ];
+        if ( _progress < _limit )
+            SPDR = _buffer[ _progress++ ];
     }
 
     void nextState( State s ) {
@@ -105,6 +112,7 @@ private:
         SPCR = 0;
         pinMode( SS, OUTPUT );
         digitalWrite( SS, LOW );
+        _delay_us( 10 );
         digitalWrite( SS, HIGH );
         pinMode( SS, INPUT );
         SPCR = bit( SPE ) | bit(SPIE);
@@ -123,6 +131,7 @@ private:
 
     State _state, _prevState;
     uint8_t _progress;
+    uint8_t _limit;
     uint8_t _header[ 5 ];
     Blob _buffer;
     bool _received;
@@ -132,7 +141,6 @@ private:
 SpiInterface spiInterface;
 
 ISR (SPI_STC_vect) {
-    SPDR = 42;
     spiInterface.onByte();
 }
 
@@ -188,7 +196,17 @@ public:
     // 2 bytes leading zeroes, 2 bytes content type, 2 bytes size, payload
     Blob receive() { return move( _inQ.pop() ); }
     // 2 bytes leading zeroes, 2 bytes content type, 2 bytes size, payload
-    void send( Blob&& b ) { _outQ.push( move( b ) ); }
+    void send( Blob&& b ) {
+        if ( !b )
+            return;
+        // Serial.print( "SPI rec size: " );
+        // Serial.println( b.as< uint16_t >( 4 ) );
+        _outQ.push( move( b ) );
+        // Serial.print( "inQUeue: " );
+        // Serial.println( _inQ.size() );
+        // Serial.print( "outQUeue: " );
+        // Serial.println( _outQ.size() );
+    }
 
     void interruptMask( uint16_t mask ) { _intMask = mask; }
     uint16_t readInterrupts() {
@@ -201,8 +219,10 @@ public:
 private:
     void _receive() {
         if ( !_in ) {
-            _in = Blob::allocate( 255 );
+            _in = Blob::allocate( MAX_BUFFER_SIZE );
             _inProgress = 0;
+            if ( !_in )
+                return;
         }
         while ( Serial.available() ) {
             _in[ _inProgress++ ] = Serial.read();
@@ -211,15 +231,30 @@ private:
                 _inProgress = 0;
                 return;
             }
+            if ( _inProgress > MAX_BUFFER_SIZE ) {
+                // Serial.println("Scratched");
+                _in.free();
+                return;
+            }
+            if ( _inProgress == 20 ) {
+                // Serial.print("Size: ");
+                // Serial.println( _in.as< uint16_t >( 4 ) );
+                // for ( int i = 0; i != 20; i++ ) {
+                //     Serial.print( _in[ i ], HEX );
+                //     Serial.print( " " );
+                // }
+                //Serial.println("\n");
+            }
             // Check termination
             if ( _inProgress > 6u && _in.as< uint16_t >( 4 ) + 10u == _inProgress ) {
                 // ToDo: Check CRC
                 _inQ.push( move( _in ) );
                 _in.free();
-                if ( _intMask & InterruptFlag::BLOB ) {
+                if ( true || _intMask & InterruptFlag::BLOB ) {
                     _intFlags |= InterruptFlag::BLOB;
                     spiInterface.interruptMaster();
                 }
+                // Serial.println("Recv");
                 return;
             }
         }
@@ -235,20 +270,28 @@ private:
             _out.as< uint8_t >( 1 ) = 0;    // reserved
             uint8_t size = _out.as< uint16_t >( 4 );
             _out.as< uint32_t >( 6 + size ) = 0; // ToDo: CRC
+            if ( size > MAX_BUFFER_SIZE ) {
+                _out.free();
+                return;
+            }
+            // Serial.print( "Sending out: " );
+            // Serial.println( size );
         }
 
         uint8_t size = _out.as< uint16_t >( 4 ) + 10;
         for ( uint8_t i = 0; i != 10; i++ ) {
             if ( _outProgress == size ) {
+                Serial.flush();
                 _out.free();
                 return;
             }
             Serial.write( _out[ _outProgress++ ] );
         }
+        Serial.flush();
     }
 
-    BlobQueue< 2 > _inQ;
-    BlobQueue< 2 > _outQ;
+    BlobQueue< 10 > _inQ;
+    BlobQueue< 10 > _outQ;
     Blob _in;
     uint8_t _inProgress;
     Blob _out;
@@ -260,15 +303,15 @@ private:
 D2DInterface d2dInterface;
 
 void setup() {
-    Serial.begin( 115200 );
+    Serial.begin( 1000000 );
     enableInterrupt( 10, onSpiEnd, RISING );
 }
 
 void onVersionCommand( uint8_t* ) {
-    auto b = Blob::allocate( 32 );
+    auto b = Blob::allocate( 4 );
     b.as< uint16_t >( 0 ) = 0;  // Dock variant
     b.as< uint16_t >( 2 ) = 0; // Protocol revision
-    spiInterface.send( move( b ) );
+    spiInterface.send( move( b ), 4 );
 }
 
 void onStatusCommand( uint8_t* ) {
@@ -282,7 +325,7 @@ void onStatusCommand( uint8_t* ) {
     b.as< uint16_t >( 6 ) = 0; // int current
     b.as< uint16_t >( 8 ) = 0; // ext voltage
     b.as< uint16_t >( 10 ) = 0; // ext current
-    spiInterface.send( move( b ) );
+    spiInterface.send( move( b ), 12 );
 }
 
 void onInterruptCommand( uint8_t* header ) {
@@ -290,7 +333,7 @@ void onInterruptCommand( uint8_t* header ) {
     auto b = Blob::allocate( 2 );
     b.as< uint16_t >( 0 ) = d2dInterface.readInterrupts();
     d2dInterface.interruptMask( intMask );
-    spiInterface.send( move( b ) );
+    spiInterface.send( move( b ), 2 );
 }
 
 void onSendBlobCommand( uint8_t* ) {
@@ -302,12 +345,13 @@ void onReceiveBlobCommand( uint8_t* ) {
         auto b = Blob::allocate(4);
         b.as< uint16_t >( 0 ) = 0;
         b.as< uint16_t >( 2 ) = 0;
-        spiInterface.send( move( b ) );
+        spiInterface.send( move( b ), 4 );
         return;
     }
 
     Blob b = d2dInterface.receive();
-    spiInterface.send( move( b ), 2 );
+    spiInterface.send( move( b ), MAX_BUFFER_SIZE, 2 );
+    // Serial.println( "SPI wants to read\n" );
 }
 
 void loop() {

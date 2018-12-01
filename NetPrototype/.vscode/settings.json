@@ -39,6 +39,7 @@
         "algorithm": "cpp",
         "cmath": "cpp",
         "deque": "cpp",
-        "numeric": "cpp"
+        "numeric": "cpp",
+        "cstddef": "cpp"
     }
 }

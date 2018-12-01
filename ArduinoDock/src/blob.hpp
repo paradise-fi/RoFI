@@ -2,8 +2,8 @@
 #include <Arduino.h>
 
 struct InterruptGuard {
-    InterruptGuard() { cli(); }
-    ~InterruptGuard() { sei(); }
+    InterruptGuard() { /*cli();*/ }
+    ~InterruptGuard() { /*sei();*/ }
 
     InterruptGuard( const InterruptGuard& ) = delete;
     InterruptGuard& operator=( const InterruptGuard& ) = delete;
@@ -94,4 +94,4 @@ private:
 
 };
 
-using Blob = Blob_< 32, 255, 2, 5 >;
+using Blob = Blob_< 32, MAX_BUFFER_SIZE, 4, 7 >;

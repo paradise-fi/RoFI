@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <functional>
 #include <vector>
+#include <algorithm>
 
 #include <driver/gpio.h>
 #include <lwip/pbuf.h>
@@ -90,6 +91,14 @@ public:
 
     ChunkIt chunksBegin() { return ChunkIt( _buff ); }
     ChunkIt chunksEnd() { return ChunkIt(); }
+
+    std::string asString() {
+        std::string s;
+        for ( auto it = chunksBegin(); it != chunksEnd(); ++it ) {
+            std::copy_n( it->mem(), it->size(), std::back_inserter( s ) );
+        }
+        return s;
+    }
 private:
     PBuf( pbuf* buff, bool addReference ) : _buff( buff ) {
         if ( addReference )

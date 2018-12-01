@@ -130,14 +130,16 @@ public:
         IndexType idx = _idxs.pop( c );
         auto o = ObjectView< T >::create( object( idx ), t );
         o.release();
-        _q.push( idx, c );
+        if ( !_q.push( idx, c ) )
+            std::cout << "Cannot push to queue! 1\n";
     }
 
     void push( T&& t, ExContext c = ExContext::Normal ) {
         IndexType idx = _idxs.pop( c );
         auto o = ObjectView< T >::create( object( idx ), std::move( t ) );
         o.release();
-        _q.push( idx, c );
+        if ( !_q.push( idx, c ) )
+            std::cout << "Cannot push to queue! 2\n";
     }
 
     template < typename... Args >
@@ -145,13 +147,16 @@ public:
         IndexType idx = _idxs.pop();
         auto o = ObjectView< T >::create( object( idx ), std::forward< Args >( args )... );
         o.release();
-        _q.push( idx );
+        if ( !_q.push( idx ) )
+            std::cout << "Cannot push to queue! 3\n";
     }
 
     T pop( ExContext c = ExContext::Normal ) {
         IndexType idx = _q.pop( c );
         T t( std::move( ObjectView< T >::from( object( idx ) ).get() ) );
-        _idxs.push( idx, c );
+        memset( object( idx ), 0, sizeof( T ) );
+        if ( !_idxs.push( idx, c ) )
+            std::cout << "Cannot push to queue! 4\n";
         return t;
     }
 
