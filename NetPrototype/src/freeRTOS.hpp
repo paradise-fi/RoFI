@@ -4,6 +4,7 @@
 #include <stdexcept>
 #include <freertos/queue.h>
 #include <freertos/semphr.h>
+#include <freertos/timers.h>
 #include <typeinfo>
 
 namespace rtos {
@@ -287,6 +288,51 @@ private:
         }
     }
     QueueHandle_t _q;
+};
+
+class Timer {
+    using Routine = std::function< void() >;
+public:
+    enum class Type { OneShot, Periodic };
+
+    Timer() : _t( nullptr ) {}
+    Timer( TickType_t interval, Type t,  Routine r ) {
+        auto* rp = new Routine( r );
+        _t = xTimerCreate( "Timer name", interval, t == Type::Periodic, rp, _run );
+    }
+
+    Timer( const Timer& ) = delete;
+    Timer& operator=( const Timer& ) = delete;
+    Timer( Timer&& o ) : _t( o._t ) { o._t = nullptr; }
+    Timer& operator=( Timer&& o ) { swap( o ); return *this; }
+
+    ~Timer() {
+        if ( !_t )
+            return;
+        auto routine = reinterpret_cast< Routine *>( pvTimerGetTimerID( _t ) );
+        delete routine;
+        xTimerDelete( _t, portMAX_DELAY );
+    }
+
+    void start() {
+        xTimerStart( _t, portMAX_DELAY );
+    }
+
+    void release() {
+        _t = nullptr;
+    }
+
+    void swap( Timer& o ) {
+        using std::swap;
+        swap( _t, o._t );
+    }
+private:
+    static void _run( TimerHandle_t timer ) {
+        auto routine = reinterpret_cast< Routine *>( pvTimerGetTimerID( timer ) );
+        (*routine)();
+    }
+
+    TimerHandle_t _t;
 };
 
 } // namespace rtos
