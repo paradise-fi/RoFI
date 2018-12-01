@@ -46,8 +46,11 @@ public:
 
     operator bool() const { return _buff; }
     bool simple() const { return _buff->tot_len == _buff->len; }
-    void* payload() { return _buff->payload; }
-    int size() { return _buff->tot_len; }
+    uint8_t* payload() { return reinterpret_cast< uint8_t * >( _buff->payload ); }
+    const uint8_t* payload() const {
+        return reinterpret_cast< const uint8_t * >( _buff->payload );
+    }
+    int size() const { return _buff->tot_len; }
 
     uint8_t& operator[]( int idx ) { return get( *this, idx ); }
     const uint8_t& operator[]( int idx ) const { return get( *this, idx ); }
@@ -273,6 +276,8 @@ public:
 
     template < typename F >
     void onReceive( F f ) { _onReceive = f; }
+
+    gpio_num_t id() const { return _cs; }
 private:
     enum class Command: uint8_t {
         Version = 0,

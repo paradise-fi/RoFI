@@ -5,14 +5,16 @@
 #include <string>
 
 template < typename T >
-T& as( uint8_t* p ) {
+T& as( void* p ) {
     return *reinterpret_cast< T * >( p );
 }
 
 template < typename T >
-const T& as( const uint8_t* p ) {
+const T& as( const void* p ) {
     return *reinterpret_cast< const T * >( p );
 }
+
+
 
 struct ScopeTracker {
     ScopeTracker( const char* name ) : _name( name ), _indent( ++getCounter() ) {
