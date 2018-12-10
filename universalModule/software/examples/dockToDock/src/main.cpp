@@ -6,6 +6,14 @@
 extern "C" void app_main() {
     using namespace _rofi;
 
+    gpio_install_isr_service( ESP_INTR_FLAG_SHARED | ESP_INTR_FLAG_LOWMED | ESP_INTR_FLAG_IRAM );
+    spi_bus_config_t spiBus = SpiBusConfig()
+        .mosi( 5 )
+        .miso( 18 )
+        .sclk( 19 );
+    auto r = spi_bus_initialize( HSPI_HOST, &spiBus, 1 );
+    ESP_ERROR_CHECK( r );
+
     Dock d( HSPI_HOST, GPIO_NUM_14 );
     d.onReceive( []( Dock& d, int contentType, PBuf&& message ) {
         std::cout << "  Rec: " << message.asString() << "\n";
