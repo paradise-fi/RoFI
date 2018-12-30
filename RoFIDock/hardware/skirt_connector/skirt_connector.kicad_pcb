@@ -34,7 +34,7 @@
   )
 
   (setup
-    (last_trace_width 1)
+    (last_trace_width 0.25)
     (user_trace_width 0.35)
     (user_trace_width 0.5)
     (user_trace_width 1)
@@ -436,7 +436,7 @@
   (gr_text A (at 148.5 96) (layer F.SilkS)
     (effects (font (size 1.5 1.5) (thickness 0.3)))
   )
-  (gr_circle (center 150 100) (end 162.750035 100) (layer Edge.Cuts) (width 0.2))
+  (gr_circle (center 150 100) (end 162.5 100) (layer Edge.Cuts) (width 0.2))
   (gr_line (start 152.039376 92.633074) (end 142.039376 92.633074) (layer Eco1.User) (width 0.2))
   (gr_line (start 142.039376 92.633074) (end 142.039376 102.633074) (layer Eco1.User) (width 0.2))
   (gr_line (start 149.18537 86.844436) (end 148.600099 89.786792) (layer Eco1.User) (width 0.2))
