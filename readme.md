@@ -26,7 +26,7 @@ firmware, libraries, etc.
 
 There are following parts of the RoFI project:
 
-- RoFI Dock - the self-contained docking mechanism used by modules to connect
+- RoFICoM - the self-contained connector mechanism used by modules to connect
   and form a firm mechanical connection and establish communication and
   power-sharing lines.
 - Universal module - the foundational module of the platform demonstrating the

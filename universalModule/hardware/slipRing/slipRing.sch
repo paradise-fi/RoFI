@@ -128,10 +128,10 @@ F 3 "~" H 4500 4750 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Mechanical:MountingHole H?
+L Mechanical:MountingHole H5
 U 1 1 5C470271
 P 5250 4150
-F 0 "H?" H 5350 4196 50  0000 L CNN
+F 0 "H5" H 5350 4196 50  0000 L CNN
 F 1 "MountingHole" H 5350 4105 50  0000 L CNN
 F 2 "MountingHole:MountingHole_2.2mm_M2" H 5250 4150 50  0001 C CNN
 F 3 "~" H 5250 4150 50  0001 C CNN
@@ -139,10 +139,10 @@ F 3 "~" H 5250 4150 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Mechanical:MountingHole H?
+L Mechanical:MountingHole H6
 U 1 1 5C470277
 P 5250 4350
-F 0 "H?" H 5350 4396 50  0000 L CNN
+F 0 "H6" H 5350 4396 50  0000 L CNN
 F 1 "MountingHole" H 5350 4305 50  0000 L CNN
 F 2 "MountingHole:MountingHole_2.2mm_M2" H 5250 4350 50  0001 C CNN
 F 3 "~" H 5250 4350 50  0001 C CNN
@@ -150,10 +150,10 @@ F 3 "~" H 5250 4350 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Mechanical:MountingHole H?
+L Mechanical:MountingHole H7
 U 1 1 5C47027D
 P 5250 4550
-F 0 "H?" H 5350 4596 50  0000 L CNN
+F 0 "H7" H 5350 4596 50  0000 L CNN
 F 1 "MountingHole" H 5350 4505 50  0000 L CNN
 F 2 "MountingHole:MountingHole_2.2mm_M2" H 5250 4550 50  0001 C CNN
 F 3 "~" H 5250 4550 50  0001 C CNN
@@ -161,10 +161,10 @@ F 3 "~" H 5250 4550 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Mechanical:MountingHole H?
+L Mechanical:MountingHole H8
 U 1 1 5C470283
 P 5250 4750
-F 0 "H?" H 5350 4796 50  0000 L CNN
+F 0 "H8" H 5350 4796 50  0000 L CNN
 F 1 "MountingHole" H 5350 4705 50  0000 L CNN
 F 2 "MountingHole:MountingHole_2.2mm_M2" H 5250 4750 50  0001 C CNN
 F 3 "~" H 5250 4750 50  0001 C CNN
