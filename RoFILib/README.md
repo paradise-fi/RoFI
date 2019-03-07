@@ -45,7 +45,7 @@ The make should create three executables: `rofi-test`, `rofi-vis` and `rofi-reco
 ## Visualizer
 
 ```
-rofi-vis ../data/test.in
+./rofi-vis ../data/test.in
 ```
 
 Opens a new window with a visualization of the configuration.
@@ -53,7 +53,7 @@ Opens a new window with a visualization of the configuration.
 ## Reconfiguration
 
 ```
-rofi-reconfig ../data/init.in ../data/goal.in
+./rofi-reconfig ../data/init.in ../data/goal.in
 ```
 
 Writes a sequence of configurations starting with the initial and ending with the goal configuration.
