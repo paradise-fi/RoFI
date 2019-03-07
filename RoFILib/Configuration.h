@@ -515,12 +515,10 @@ private:
         };
 
         std::array<Matrix, 3> faceToDock = {
-                rotate(-M_PI/2, Y) * rotate(-M_PI/2, Z),
-                rotate(M_PI/2, Y) * rotate(M_PI/2, Z),
-                identity
+                rotate(-M_PI/2, Y) * rotate(-M_PI/2, Z), // Xp
+                rotate(M_PI/2, Y) * rotate(M_PI/2, Z),   // Xn
+                identity  // Zn
         };
-
-        std::array<Vector, 3> dockOri = { X, -X, Z};
 
         auto const& matrix = modules.at(edge.id1).rotation.at(edge.side1);
         Matrix fix2 = matrix * faceToDock[edge.dock1] * rotate(edge.ori * M_PI/2, Z)
