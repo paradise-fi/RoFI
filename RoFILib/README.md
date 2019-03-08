@@ -8,6 +8,12 @@ Math library used for matrix and vector representation.
 
 ### How to install
 
+#### Apt-based systems
+
+You can install the library from the package `libarmadillo-dev`
+
+#### From sources
+
 Follow [the installation notes](http://arma.sourceforge.net/download.html) on the library webpage.
 
 ## VTK library
@@ -16,7 +22,13 @@ Graphic library used for visualization.
 
 ### How to install
 
-Follow [the installation notes](https://www.vtk.org/Wiki/VTK/Configure_and_Build) on the library webpage. 
+#### Apt-based systems
+
+You can install the library from the package `libvtk6-dev`
+
+#### From sources
+
+Follow [the installation notes](https://www.vtk.org/Wiki/VTK/Configure_and_Build) on the library webpage.
 
 What worked for me:
 
@@ -36,7 +48,8 @@ you have to run cmake with an option `-DVTK_DIR=/path/to/VTK-build `.
 ```
 mkdir build
 cd build
-cmake -DVTK_DIR=/path/to/VTK-build ..
+cmake ..
+# cmake -DVTK_DIR=/path/to/VTK-build .. # If VTK was installed from sources
 make
 ```
 
