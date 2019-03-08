@@ -219,6 +219,11 @@ public:
         return edges;
     }
 
+    bool empty() const
+    {
+        return modules.empty();
+    }
+
     // Creates new module with given ID and angles. Creates an empty set of edges corresponding to the module.
     void addModule(double alpha, double beta, double gamma, ID id)
     {
@@ -517,7 +522,7 @@ private:
         std::array<Matrix, 3> faceToDock = {
                 rotate(-M_PI/2, Y) * rotate(-M_PI/2, Z), // Xp
                 rotate(M_PI/2, Y) * rotate(M_PI/2, Z),   // Xn
-                identity  // Zn
+                identity // Zn
         };
 
         auto const& matrix = modules.at(edge.id1).rotation.at(edge.side1);

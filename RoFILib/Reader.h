@@ -11,7 +11,7 @@
 class Reader
 {
 public:
-    void read(std::istream& input, Configuration& config)
+    bool read(std::istream& input, Configuration& config)
     {
         std::string s;
 
@@ -19,7 +19,7 @@ public:
         {
             if (s.empty())
             {
-                return;
+                break;
             }
             char type;
             std::stringstream tmp(s);
@@ -37,6 +37,17 @@ public:
                 tmp >> id1 >> s1 >> p1 >> ori >> p2 >> s2 >> id2;
                 config.addEdge(id1, static_cast<Side>(s1), static_cast<Dock>(p1), ori, static_cast<Dock>(p2), static_cast<Side>(s2), id2);
             }
+        }
+        return !config.empty();
+    }
+
+    void read(std::istream& input, std::vector<Configuration>& configs)
+    {
+        Configuration config;
+        while (read(input, config))
+        {
+            configs.push_back(config);
+            config = Configuration();
         }
     }
 };

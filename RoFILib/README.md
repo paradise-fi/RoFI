@@ -57,3 +57,12 @@ Opens a new window with a visualization of the configuration.
 ```
 
 Writes a sequence of configurations starting with the initial and ending with the goal configuration.
+
+## How to visualize the result of reconfiguration
+
+```
+./rofi-reconfig ../data/init.in ../data/goal.in > ../data/res.out
+./rofi-vis ../data/res.out -m
+```
+
+Writes a sequence of configurations to a separate file, then draws many `-m` configurations from one file. The flag must be placed after the file path!
