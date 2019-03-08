@@ -9,7 +9,7 @@ include_directories(${ARMADILLO_INCLUDE_DIRS})
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
 
-add_executable(rofi-reconfig ${ARMADILLO_LIBRARIES} reconfig/main.cpp Matrix.h Configuration.h Reader.h reconfig/BFS.h visualizer/Visualizer.h Printer.h)
+add_executable(rofi-reconfig ${ARMADILLO_LIBRARIES} reconfig/main.cpp Matrix.h Configuration.h Reader.h reconfig/Algorithms.h visualizer/Visualizer.h Printer.h)
 
 add_executable(rofi-test ${ARMADILLO_LIBRARIES} test/main.cpp test/test.cpp)
 

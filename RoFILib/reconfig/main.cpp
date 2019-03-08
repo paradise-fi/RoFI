@@ -3,7 +3,7 @@
 #include "../Reader.h"
 #include "../Configuration.h"
 #include "../Printer.h"
-#include "BFS.h"
+#include "Algorithms.h"
 
 int main(int argc, char* argv[])
 {
@@ -59,7 +59,7 @@ int main(int argc, char* argv[])
 
     //std::ofstream output;
     //output.open("../data/res1.out");
-    auto path = BFS(init, goal);
+    auto path = AStar(init, goal, Eval::centerDiff);
     if (path.empty())
     {
         std::cout << "Could not find a path with given parameters from initial to goal configuration.\n";
