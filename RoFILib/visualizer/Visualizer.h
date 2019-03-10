@@ -23,9 +23,11 @@
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
 #include "../Configuration.h"
+#include "Camera.h"
 #include <sstream>
 
 #include <vtkOBJReader.h>
+#include <vtkRenderLargeImage.h>
 
 const int colors[10][3] = { {255, 255, 255},
                            {0, 255, 0},
@@ -41,7 +43,18 @@ const int colors[10][3] = { {255, 255, 255},
 class Visualizer
 {
 public:
-    void drawConfiguration(const Configuration& config);
+    void drawConfiguration(const Configuration& config, const Camera& cameraParams) {
+        drawConfiguration(config, "", false, cameraParams);
+    }
+    void drawConfiguration(const Configuration& config, bool savePicture, const std::string& path = ""){
+        drawConfiguration(config, path, savePicture);
+    }
+    void drawConfiguration(const Configuration& config, const std::string& path = "", bool savePicture = false){
+        Camera defaultCameraParams;
+        drawConfiguration(config, path, savePicture, defaultCameraParams);
+    }
+    void drawConfiguration(const Configuration& config, const std::string& path, bool savePicture,
+            const Camera& cameraParams);
 private:
     void addActor(const std::string &model, const Matrix &matrix, int color) const;
     vtkSmartPointer<vtkRenderer> renderer;
@@ -69,13 +82,12 @@ inline vtkSmartPointer<vtkMatrix4x4> convertMatrix( const Matrix& m )
     return mat;
 }
 
-void Visualizer::drawConfiguration(const Configuration &config)
+void Visualizer::drawConfiguration(const Configuration &config, const std::string& path, bool savePicture,
+        const Camera& cameraParams)
 {
     renderer = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderWindow> renderWindow =
             vtkSmartPointer<vtkRenderWindow>::New();
-    vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
-            vtkSmartPointer<vtkRenderWindowInteractor>::New();
 
     for ( const auto& [id, mod] : config.getModules() ) {
         int color =  id % 7 + 3;
@@ -99,7 +111,7 @@ void Visualizer::drawConfiguration(const Configuration &config)
 
 
     renderer->SetBackground(1.0, 1.0, 1.0);
-    renderWindow->SetSize(640, 640);
+    renderWindow->SetSize(1920, 1080);
     renderWindow->AddRenderer(renderer);
 
     vtkSmartPointer<vtkCamera> camera =
@@ -107,42 +119,60 @@ void Visualizer::drawConfiguration(const Configuration &config)
 
     Vector massCenter = config.massCenter();
 
-    camera->SetPosition(massCenter(0), massCenter(1) - 6, massCenter(2));
-    camera->SetViewUp(0,0,1);
-    camera->SetFocalPoint(massCenter(0), massCenter(1), massCenter(2));
+    if (cameraParams.defaultFoc()){
+        camera->SetFocalPoint(massCenter(0), massCenter(1), massCenter(2));
+    } else {
+        camera->SetFocalPoint(cameraParams.getFocX(), cameraParams.getFocY(), cameraParams.getFocZ());
+    }
+    if (cameraParams.defaultPos()){
+        camera->SetPosition(massCenter(0), massCenter(1) - 6, massCenter(2));
+    } else {
+        camera->SetPosition(cameraParams.getPosX(), cameraParams.getPosY(), cameraParams.getPosZ());
+    }
+    if (cameraParams.defaultView()){
+        camera->SetViewUp(0,0,1);
+    } else {
+        camera->SetViewUp(cameraParams.getViewX(), cameraParams.getViewY(), cameraParams.getViewZ());
+    }
 
     renderer->SetActiveCamera(camera);
 
-    vtkSmartPointer<vtkAxesActor> axes =
-            vtkSmartPointer<vtkAxesActor>::New();
+    if (!savePicture) {
+        vtkSmartPointer<vtkRenderWindowInteractor> renderWindowInteractor =
+                vtkSmartPointer<vtkRenderWindowInteractor>::New();
+        renderWindowInteractor->SetRenderWindow(renderWindow);
 
-    renderWindowInteractor->SetRenderWindow(renderWindow);
-    renderWindow->Render();
+        renderWindow->Render();
 
-    vtkSmartPointer<vtkOrientationMarkerWidget> widget =
-            vtkSmartPointer<vtkOrientationMarkerWidget>::New();
-    widget->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
-    widget->SetOrientationMarker( axes );
-    widget->SetInteractor( renderWindowInteractor );
-    widget->SetViewport( 0.0, 0.0, 0.4, 0.4 );
-    widget->SetEnabled( 1 );
-    widget->InteractiveOn();
+        vtkSmartPointer<vtkAxesActor> axes =
+                vtkSmartPointer<vtkAxesActor>::New();
 
-    vtkSmartPointer<vtkWindowToImageFilter> windowToImageFilter =
-            vtkSmartPointer<vtkWindowToImageFilter>::New();
-    windowToImageFilter->SetInput(renderWindow);
-//	windowToImageFilter->SetMagnification(3);
-    windowToImageFilter->SetInputBufferTypeToRGBA(); //also record the alpha (transparency) channel
-    windowToImageFilter->ReadFrontBufferOff(); // read from the back buffer
-    windowToImageFilter->Update();
+        vtkSmartPointer<vtkOrientationMarkerWidget> widget =
+                vtkSmartPointer<vtkOrientationMarkerWidget>::New();
+        widget->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
+        widget->SetOrientationMarker( axes );
+        widget->SetInteractor( renderWindowInteractor );
+        widget->SetViewport( 0.0, 0.0, 0.4, 0.4 );
+        widget->SetEnabled( 1 );
+        widget->InteractiveOn();
 
-//	vtkSmartPointer<vtkPNGWriter> writer =
-//			vtkSmartPointer<vtkPNGWriter>::New();
-//	writer->SetFileName((path + ".png").c_str());
-//	writer->SetInputConnection(windowToImageFilter->GetOutputPort());
-//	writer->Write();
+        renderWindowInteractor->Start();
 
-    renderWindowInteractor->Start();
+    } else {
+        renderWindow->OffScreenRenderingOn();
+        renderWindow->Render();
+
+        vtkSmartPointer<vtkRenderLargeImage> renderLarge =
+                vtkSmartPointer<vtkRenderLargeImage>::New();
+        renderLarge->SetInput(renderer);
+        renderLarge->SetMagnification(1);
+
+        vtkSmartPointer<vtkPNGWriter> writer =
+                vtkSmartPointer<vtkPNGWriter>::New();
+        writer->SetFileName((path + ".png").c_str());
+        writer->SetInputConnection(renderLarge->GetOutputPort());
+        writer->Write();
+    }
 }
 
 

@@ -54,7 +54,7 @@ public:
         setPosZ(z);
     }
 
-    std::array<double, 3> getPos(){
+    std::array<double, 3> getPos() const{
         return position;
     }
 
@@ -93,7 +93,7 @@ public:
         setFocZ(z);
     }
 
-    std::array<double, 3> getFoc(){
+    std::array<double, 3> getFoc() const{
         return focalPoint;
     }
 
@@ -132,7 +132,7 @@ public:
         setViewZ(z);
     }
 
-    std::array<double, 3> getView(){
+    std::array<double, 3> getView() const{
         return viewUp;
     }
 
@@ -147,15 +147,15 @@ public:
         defaultViewUp = true;
     }
 
-    bool defaultPos(){
+    bool defaultPos() const{
         return defaultPosition;
     }
 
-    bool defaultFoc(){
+    bool defaultFoc() const{
         return defaultFocalPoint;
     }
 
-    bool defaultView(){
+    bool defaultView() const{
         return defaultViewUp;
     }
 };
