@@ -13,7 +13,7 @@ add_executable(rofi-reconfig ${ARMADILLO_LIBRARIES} reconfig/main.cpp Matrix.h C
 
 add_executable(rofi-test ${ARMADILLO_LIBRARIES} test/main.cpp test/test.cpp)
 
-add_executable(rofi-vis ${ARMADILLO_LIBRARIES} visualizer/main.cpp visualizer/Generator.h visualizer/Camera.h)
+add_executable(rofi-vis ${ARMADILLO_LIBRARIES} visualizer/main.cpp visualizer/Generator.h visualizer/Camera.h visualizer/AnimationReader.h)
 
 target_link_libraries(rofi-reconfig ${ARMADILLO_LIBRARIES} ${VTK_LIBRARIES})
 target_link_libraries(rofi-test ${ARMADILLO_LIBRARIES})

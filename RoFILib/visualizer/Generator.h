@@ -13,6 +13,7 @@ public:
     void generate(const Configuration& InitConf, const Configuration& GoalConf, std::vector<Configuration>& vec,
             unsigned int steps){
         //TODO promyslet steps +-1
+        //steps = 5 -> 4 meziobrazky
         for (unsigned int i = 1; i < steps; i++){
             Configuration c;
             generateOneStep(InitConf, GoalConf, c, steps, i);
