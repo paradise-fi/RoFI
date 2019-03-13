@@ -8,8 +8,22 @@
 #include "../Configuration.h"
 #include <queue>
 #include <cmath>
+#include <memory>
 
-using ConfigPool = std::unordered_set<Configuration, ConfigurationHash>;
+class ConfigurationPtrHash
+{
+public:
+    std::size_t operator()(const std::unique_ptr<Configuration>& ptr) const
+    {
+        return ConfigurationHash{}(*ptr);
+    }
+};
+
+inline bool operator==(const std::unique_ptr<Configuration>& a, const std::unique_ptr<Configuration>& b)
+{
+    return (*a) == (*b);
+}
+
 using ConfigPred = std::unordered_map<const Configuration*, const Configuration*>;
 using EvalFunction = double(const Configuration&, const Configuration&);
 using EvalPair = std::pair<double, const Configuration*>;
@@ -22,6 +36,27 @@ public:
         return a.first > b.first;
     }
 };
+
+class ConfigPool
+{
+public:
+    Configuration* insert(const Configuration& config)
+    {
+        auto tmp = std::make_unique<Configuration>(config);
+        auto [ptr, _] = pool.insert(std::move(tmp));
+        return ptr->get();
+    }
+
+    bool find(const Configuration& config) const
+    {
+        auto tmp = std::make_unique<Configuration>(config);
+        return (pool.find(tmp) == pool.end());
+    }
+private:
+    std::unordered_set<std::unique_ptr<Configuration>, ConfigurationPtrHash> pool;
+};
+
+
 
 namespace Eval
 {
@@ -87,8 +122,7 @@ inline std::vector<Configuration> BFS(const Configuration& init, const Configura
         return {init};
     }
 
-    auto [config, _] = pool.insert(init);
-    const Configuration* pointer = &(*config);
+    const Configuration* pointer = pool.insert(init);
     pred.insert({pointer, pointer});
 
     std::queue<const Configuration*> queue;
@@ -101,10 +135,9 @@ inline std::vector<Configuration> BFS(const Configuration& init, const Configura
 
         for (const auto& next : current->next(step))
         {
-            if (pool.find(next) == pool.end())
+            if (pool.find(next))
             {
-                auto [configNext, _] = pool.insert(next);
-                const Configuration* pointerNext = &(*configNext);
+                const Configuration* pointerNext = pool.insert(next);
                 pred.insert({pointerNext, current});
 
                 if (next == goal)
@@ -129,8 +162,7 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
         return {init};
     }
 
-    auto [config, _] = pool.insert(init);
-    const Configuration* pointer = &(*config);
+    const Configuration* pointer = pool.insert(init);
     pred.insert({pointer, pointer});
 
     std::priority_queue<EvalPair, std::vector<EvalPair>, EvalCompare> queue;
@@ -145,10 +177,9 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
 
         for (const auto& next : current->next(step))
         {
-            if (pool.find(next) == pool.end())
+            if (pool.find(next))
             {
-                auto [configNext, _] = pool.insert(next);
-                const Configuration* pointerNext = &(*configNext);
+                const Configuration* pointerNext = pool.insert(next);
                 pred.insert({pointerNext, current});
 
                 if (next == goal)
@@ -157,7 +188,6 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
                 }
                 queue.push( {eval(next, goal),  pointerNext} );
             }
-
         }
     }
     return {};
