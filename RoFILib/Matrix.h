@@ -41,17 +41,31 @@ inline double distance(const Vector& a, const Vector& b)
 
 inline Matrix rotate(double r, const Vector &u)
 {
-    int x = 0, y = 1, z = 2;
-    Matrix rotate = {{cos(r) + u(x) * u(x) * (1 - cos(r)), u(x) * u(y) * (1 - cos(r)) - u(z) * sin(r), u(x) * u(z) * (1 - cos(r)) + u(y) * sin(r), 0},
-                     {u(x) * u(y) * (1 - cos(r)) + u(z) * sin(r), cos(r) + u(y) * u(y) * (1 - cos(r)), u(y) * u(z) * (1 - cos(r)) - u(x) * sin(r), 0},
-                     {u(z) * u(x) * (1 - cos(r)) - u(y) * sin(r), u(z) * u(y) * (1 - cos(r)) + u(x) * sin(r), cos(r) + u(z) * u(z) * (1 - cos(r)), 0},
-                     {0, 0, 0, 1}};
+    const int x = 0, y = 1, z = 2;
+    Matrix rotate = identity;
+
+    rotate(0,0) = cos(r) + u(x) * u(x) * (1 - cos(r));
+    rotate(0,1) = u(x) * u(y) * (1 - cos(r)) - u(z) * sin(r);
+    rotate(0,2) = u(x) * u(z) * (1 - cos(r)) + u(y) * sin(r);
+    rotate(0,3) = 0;
+
+    rotate(1,0) = u(x) * u(y) * (1 - cos(r)) + u(z) * sin(r);
+    rotate(1,1) = cos(r) + u(y) * u(y) * (1 - cos(r));
+    rotate(1,2) = u(y) * u(z) * (1 - cos(r)) - u(x) * sin(r);
+    rotate(1,3) = 0;
+
+    rotate(2,0) = u(z) * u(x) * (1 - cos(r)) - u(y) * sin(r);
+    rotate(2,1) = u(z) * u(y) * (1 - cos(r)) + u(x) * sin(r);
+    rotate(2,2) = cos(r) + u(z) * u(z) * (1 - cos(r));
+    rotate(2,3) = 0;
+
+    rotate(3) = {0,0,0,1};
     return rotate;
 }
 
 inline Matrix translate(const Vector &u)
 {
-    int x = 0, y = 1, z = 2;
+    const int x = 0, y = 1, z = 2;
     Matrix translate = { {1, 0, 0, u(x)}, {0, 1, 0, u(y)}, {0, 0, 1, u(z)}, {0,0,0,1} };
     return translate;
 }
@@ -64,7 +78,7 @@ inline Matrix inversion()
 
 inline Matrix flip()
 {
-    int x = 0, y = 1, z = 2;
+    const int x = 0, y = 1, z = 2;
     Matrix flip = { {1, 0, 0, 0}, {0, -1, 0, 0}, {0, 0, -1, 0}, {0, 0, 0, 1} };
     return flip;
 }

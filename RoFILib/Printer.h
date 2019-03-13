@@ -18,9 +18,9 @@ public:
         for (const auto& [id, mod] : config.getModules())
         {
             out << "ID: " << id << ", side: A\n";
-            out << print(mod.frameMatrix(A));
+            out << print(mod.shoeMatrix(A));
             out << "ID: " << id << ", side: B\n";
-            out << print(mod.frameMatrix(B));
+            out << print(mod.shoeMatrix(B));
             out << std::endl;
         }
         return out.str();
@@ -45,9 +45,12 @@ public:
         }
         for (const auto& [id, edges] : config.getEdges())
         {
-            for (const Edge& edge : edges)
+            for (const std::optional<Edge>& edgeOpt : edges)
             {
-                if (edge.getId1() < edge.getId2())
+                if (!edgeOpt.has_value())
+                    continue;
+                const Edge& edge = edgeOpt.value();
+                if (edge.id1 < edge.id2)
                 {
                     out << print(edge);
                 }
@@ -89,13 +92,13 @@ private:
     {
         std::stringstream out;
         out << "E " <<
-            edge.getId1() << " " <<
-            edge.getSide1() << " " <<
-            edge.getDock1() << " " <<
-            edge.getOri() << " " <<
-            edge.getDock2() << " " <<
-            edge.getSide2() << " " <<
-            edge.getId2() << std::endl;
+            edge.id1 << " " <<
+            edge.side1 << " " <<
+            edge.dock1 << " " <<
+            edge.ori << " " <<
+            edge.dock2 << " " <<
+            edge.side2 << " " <<
+            edge.id2 << std::endl;
         return out.str();
     }
 };

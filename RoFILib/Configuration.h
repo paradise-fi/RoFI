@@ -37,37 +37,37 @@ public:
     Module(double alpha, double beta, double gamma, ID id) :
             alpha(alpha), beta(beta), gamma(gamma), id(id)
     {
-        rotation[A] = identity;
-        rotation[B] = identity;
+        matrix[Side::A] = identity;
+        matrix[Side::B] = identity;
     }
 
-    Matrix frameMatrix(Side side) const
+    Matrix shoeMatrix(Side side) const
     {
-        return rotation.at(side) * rotate(M_PI/2, X);
+        return matrix[side] * rotate(M_PI/2, X);
     }
 
-    Matrix jointMatrix(Side side) const
+    Matrix bodyMatrix(Side side) const
     {
-        double diff = side == A ? alpha : beta;
+        double diff = side == Side::A ? alpha : beta;
         diff *= M_PI/180.0;
-        return rotation.at(side) * rotate(M_PI/2 + diff, X);
+        return matrix[side] * rotate(M_PI/2 + diff, X);
     }
 
     Matrix dockMatrix(Side side, Dock dock, bool on) const
     {
         double d = on ? 0.05 : 0;
-        Matrix docks[3] = {
+        static const Matrix docks[3] = {
                 translate(Vector{d,0,0}) * rotate(M_PI, Z), // Xp
-                translate(Vector{-d,0,0}), // Xn
+                translate(Vector{-d,0,0}) * identity, // Xn
                 translate(Vector{0,0,-d}) * rotate(-M_PI/2, Y) // Zn
         };
-        return rotation.at(side) * docks[dock];
+        return matrix[side] * docks[dock];
     }
 
     Vector getCenter(Side side) const
     {
-        const Matrix& matrix=  rotation.at(side);
-        return Vector{matrix(0,3), matrix(1,3), matrix(2,3), matrix(3,3)};
+        const Matrix& matrixref =  matrix[side];
+        return Vector{matrixref(0,3), matrixref(1,3), matrixref(2,3), matrixref(3,3)};
     }
 
     ID getId() const
@@ -79,28 +79,29 @@ public:
     {
         switch (a)
         {
-            case Alpha:
+            case Joint::Alpha:
                 return alpha;
-            case Beta:
+            case Joint::Beta:
                 return beta;
-            default:
+            case Joint::Gamma:
                 return gamma;
         }
+        return 0;
     }
 
     void rotateJoint(Joint joint, int val)
     {
         switch (joint)
         {
-            case Alpha:
+            case Joint::Alpha:
                 alpha += val;
                 alpha = std::max(std::min(alpha, 90.0), -90.0);
                 break;
-            case Beta:
+            case Joint::Beta:
                 beta += val;
                 beta = std::max(std::min(beta, 90.0), -90.0);
                 break;
-            case Gamma:
+            case Joint::Gamma:
                 gamma += val;
                 gamma = fmod(gamma, 360.0);
         }
@@ -112,14 +113,14 @@ public:
                (alpha == other.alpha) &&
                (beta == other.beta) &&
                (gamma == other.gamma) &&
-               equals(rotation.at(A), other.rotation.at(A)) &&
-               equals(rotation.at(B), other.rotation.at(B));
+               equals(matrix[0], other.matrix[0]) &&
+               equals(matrix[1], other.matrix[1]);
     }
 
 private:
     ID id;
     double alpha, beta, gamma;
-    std::unordered_map<Side, Matrix> rotation;
+    std::array<Matrix, 2> matrix;
     friend Configuration;
     friend ConfigurationHash;
 };
@@ -129,41 +130,7 @@ class Edge
 public:
     Edge(ID id1, Side side1, Dock dock1, unsigned int ori, Dock dock2, Side side2, ID id2) :
             id1(id1), id2(id2), side1(side1), side2(side2), dock1(dock1), dock2(dock2), ori(ori) {}
-
-    Side getSide1() const
-    {
-        return side1;
-    }
-
-    Dock getDock1() const
-    {
-        return dock1;
-    }
-
-    Side getSide2() const
-    {
-        return side2;
-    }
-
-    Dock getDock2() const
-    {
-        return dock2;
-    }
-
-    unsigned getOri() const
-    {
-        return ori;
-    }
-
-    ID getId1() const
-    {
-        return id1;
-    }
-
-    ID getId2() const
-    {
-        return id2;
-    }
+            
 
     bool operator==(const Edge& other) const
     {
@@ -176,35 +143,20 @@ public:
                (ori == other.ori);
     }
 
-private:
-    ID id1, id2;
-    Side side1, side2;
-    Dock dock1, dock2;
-    unsigned int ori;
-    friend Configuration;
+    const ID id1, id2;
+    const Side side1, side2;
+    const Dock dock1, dock2;
+    const unsigned int ori;
 };
 
-inline std::vector<Edge> sort(const std::vector<Edge>& vec)
+inline Edge reverse(const Edge& edge)
 {
-    int edges[6] = {-1,-1,-1,-1,-1,-1};
-    for (int i = 0; i < vec.size(); ++i)
-    {
-        int index = vec[i].getSide1() * 3 + vec[i].getDock1();
-        edges[index] = i;
-    }
-    std::vector<Edge> res;
-    for (int edge : edges) {
-        if (edge != -1)
-        {
-            res.push_back(vec[edge]);
-        }
-    }
-    return res;
+    return {edge.id2, edge.side2, edge.dock2, edge.ori, edge.dock1, edge.side1, edge.id1};
 }
 
-
 using ModuleMap = std::unordered_map<ID, Module>;
-using EdgeMap = std::unordered_map<ID, std::vector<Edge>>;
+using EdgeList = std::array<std::optional<Edge>, 6>;
+using EdgeMap = std::unordered_map<ID, EdgeList>;
 
 class Configuration
 {
@@ -237,20 +189,22 @@ public:
     }
 
     // Adds given edge to given modules if both docks are free.
-    bool addEdge(ID id1, Side side1, Dock dock1, unsigned int ori, Dock dock2, Side side2, ID id2)
+    bool addEdge(Edge edge)
     {
         // Finds edges for both modules.
-        std::vector<Edge>& set1 = edges.at(id1);
-        std::vector<Edge>& set2 = edges.at(id2);
+        EdgeList& set1 = edges.at(edge.id1);
+        EdgeList& set2 = edges.at(edge.id2);
 
-        // If both docks are free, edges are added.
-        if ((findMatch(id1, side1, dock1, set1) == -1) && (findMatch(id2, side2, dock2, set2) == -1))
+        int index1 = edge.side1 * 3 + edge.dock1;
+        int index2 = edge.side2 * 3 + edge.dock2;
+        if (set1[index1].has_value() || set2[index2].has_value())
         {
-            set1.emplace_back(id1, side1, dock1, ori, dock2, side2, id2);
-            set2.emplace_back(id2, side2, dock2, ori, dock1, side1, id1);
-            return true;
+            return false;
         }
-        return false;
+
+        set1[index1] = edge;
+        set2[index2] = reverse(edge);
+        return true;
     }
 
     void setFixed(ID initID, Side initSide, const Matrix& initRotation)
@@ -277,31 +231,16 @@ public:
     bool computeRotations()
     {
         std::unordered_set<ID> fixed;
-        modules.at(fixedId).rotation.at(fixedSide) = fixedMatrix;
+        modules.at(fixedId).matrix[fixedSide] = fixedMatrix;
 
         return computeRotationsRec(fixedId, fixedSide, fixed);
     }
 
     bool isConnected() const
     {
-        std::queue<ID> queue;
         std::unordered_set<ID> seen;
-        queue.push(fixedId);
         seen.insert(fixedId);
-        while (!queue.empty())
-        {
-            ID id = queue.front();
-            queue.pop();
-            for (const Edge& edge : edges.at(id))
-            {
-                ID other = edge.id2;
-                if (seen.find(other) == seen.end())
-                {
-                    queue.push(other);
-                    seen.insert(other);
-                }
-            }
-        }
+        dfsID(fixedId, seen);
         return seen.size() == modules.size();
     }
 
@@ -376,8 +315,11 @@ public:
         std::vector<Configuration> res;
         for (auto& [id, set] : edges)
         {
-            for (const Edge& edge : set)
+            for (const std::optional<Edge>& edgeOpt : set)
             {
+                if (!edgeOpt.has_value())
+                    continue;
+                const Edge& edge = edgeOpt.value();
                 if (edge.id1 < edge.id2)
                 {
                     Configuration next = *this;
@@ -396,32 +338,26 @@ public:
             {
                 if (id1 >= id2)
                     continue;
-                for (Side side1 : {A, B})
+                for (auto [side1, side2] : {{A, A}, {A, B}, {B, A}, { B, B}})
                 {
                     Vector center1 = mod1.getCenter(side1);
-                    for (Side side2 : {A, B})
+                    Vector center2 = mod2.getCenter(side2);
+                    if (distance(center1, center2) != 1)
+                        continue;
+                    for (auto [dock1, dock2] : {{Xn, Xn}, {Xn, Xp}, {Xn, Zn}, {Xp, Xn}, {Xp, Xp}, {Xp, Zn}, {Zn, Xn}, {Zn, Xp}, {Zn, Zn}})
                     {
-                        Vector center2 = mod2.getCenter(side2);
-                        if (distance(center1, center2) != 1)
-                            continue;
-                        for (Dock dock1 : {Xn, Xp, Zn})
+                        for (const int ori : {0, 1, 2, 3})
                         {
-                            for (Dock dock2 : {Xn, Xp, Zn})
+                            const Matrix& matrix2 = mod2.matrix.at(side2);
+                            Edge edge(id1, side1, dock1, (unsigned int) ori, dock2, side2, id2);
+                            if (equals(matrix2, computeConnectedMatrix(edge)))
                             {
-                                for (const int ori : {0, 1, 2, 3})
+                                Configuration next = *this;
+                                if (!next.addEdge(edge))
+                                    continue;
+                                if (next.isValid())
                                 {
-                                    const Matrix& matrix2 = mod2.rotation.at(side2);
-                                    Edge edge(id1, side1, dock1, (unsigned int) ori, dock2, side2, id2);
-                                    if (equals(matrix2, computeConnected(edge)))
-                                    {
-                                        Configuration next = *this;
-                                        if (!next.addEdge(id1, side1, dock1, ori, dock2, side2, id2))
-                                            continue;
-                                        if (next.isValid())
-                                        {
-                                            res.push_back(next);
-                                        }
-                                    }
+                                    res.push_back(next);
                                 }
                             }
                         }
@@ -434,18 +370,8 @@ public:
 
     bool operator==(const Configuration& other) const
     {
-        EdgeMap newEdges;
-        for (auto& [id, vec] : edges)
-        {
-            newEdges[id] = sort(vec);
-        }
-        EdgeMap newOtherEdges;
-        for (auto& [id, vec] : other.edges)
-        {
-            newOtherEdges[id] = sort(vec);
-        }
         return (modules == other.modules) &&
-               (newEdges == newOtherEdges) &&
+               (edges == other.edges) &&
                (fixedId == other.fixedId) &&
                (fixedSide == other.fixedSide) &&
                (equals(fixedMatrix, other.fixedMatrix));
@@ -464,38 +390,20 @@ private:
     Side fixedSide = A;
     Matrix fixedMatrix = identity;
 
-    // Finds, whether the given dock is occupied.
-    int findMatch(ID id, Side side, Dock dock, const std::vector<Edge>& set) const
-    {
-        for (int i = 0; i < set.size(); ++i)
-        {
-            Edge edge = set[i];
-            if ((id == edge.id1) && (side == edge.side1) && (dock == edge.dock1))
-                return i;
-        }
-        return -1;
-    }
-
     // If the given edge is in the configuration, delete it from both modules.
     void eraseEdge(const Edge& edge)
     {
-        std::vector<Edge>& set1 = edges.at(edge.id1);
-        int i = findMatch(edge.id1, edge.side1, edge.dock1, set1);
-        if (i > -1)
-        {
-            set1.erase(set1.begin() + i);
-        }
+        EdgeList& set1 = edges.at(edge.id1);
+        int index1 = edge.side1 * 3 + edge.dock1;
+        set1[index1] = std::nullopt;
 
-        std::vector<Edge>& set2 = edges.at(edge.id2);
-        int j = findMatch(edge.id2, edge.side2, edge.dock2, set2);
-        if (j > -1)
-        {
-            set2.erase(set2.begin() + j);
-        }
+        EdgeList& set2 = edges.at(edge.id2);
+        int index2 = edge.side2 * 3 + edge.dock2;
+        set2[index2] = std::nullopt;
     }
 
     //
-    Matrix computeOtherSide(ID id, Side side) const
+    Matrix computeOtherSideMatrix(ID id, Side side) const
     {
         auto const& mod = modules.at(id);
         double alpha = 2 * M_PI * mod.alpha / 360;
@@ -507,30 +415,45 @@ private:
             std::swap(alpha, beta);
         }
 
-        Matrix fix = mod.rotation.at(side) * rotate(alpha, X) * rotate(gamma, Z) * translate(Z) * rotate(M_PI, Y) * rotate(-beta, X);
+        Matrix fix = mod.matrix[side] * rotate(alpha, X) * rotate(gamma, Z) * translate(Z) * rotate(M_PI, Y) * rotate(-beta, X);
 
         return fix;
     }
 
-    Matrix computeConnected(Edge edge) const
+    Matrix computeConnectedMatrix(Edge edge) const
     {
-        std::array<Matrix, 3> dockFaceUp = {
+        static const std::array<Matrix, 3> dockFaceUp = {
                 rotate(-M_PI/2, Z) * rotate(M_PI/2, Y), // Xp
                 rotate(M_PI/2, Z) *rotate(-M_PI/2, Y),  // Xn
                 identity  // Zn
         };
 
-        std::array<Matrix, 3> faceToDock = {
+        static const std::array<Matrix, 3> faceToDock = {
                 rotate(-M_PI/2, Y) * rotate(-M_PI/2, Z), // Xp
                 rotate(M_PI/2, Y) * rotate(M_PI/2, Z),   // Xn
                 identity // Zn
         };
 
-        auto const& matrix = modules.at(edge.id1).rotation.at(edge.side1);
+        auto const& matrix = modules.at(edge.id1).matrix[edge.side1];
         Matrix fix2 = matrix * faceToDock[edge.dock1] * rotate(edge.ori * M_PI/2, Z)
                 * translate(-Z) * dockFaceUp[edge.dock2] * rotate(M_PI, Y);
 
         return fix2;
+    }
+
+    void dfsID(ID id, std::unordered_set<ID>& seen) const
+    {
+        for (const std::optional<Edge> edgeOpt : edges)
+        {
+            if (!edgeOpt.has_value())
+                continue;
+            ID nextId = edgeOpt.value().id2;
+            if (seen.find(nextId) == seen.end())
+            {
+                seen.insert(nextId);
+                dfsID(nextId, seen);
+            }
+        }
     }
 
     // Fix given module: one side is fixed. Fix all connected.
@@ -540,18 +463,22 @@ private:
 
         // At first, fix other side of the module.
         Side side2 = side == A ? B : A;
-        auto& rotation = modules.at(id).rotation;
-        rotation.at(side2) = computeOtherSide(id, side);
+        auto& rotation = modules.at(id).matrix;
+        rotation[side2] = computeOtherSideMatrix(id, side);
         fixed.insert(id);
 
-        for (Edge& edge : edges.at(id))
+        for (const std::optional<Edge>& edgeOpt : edges.at(id))
         {
+            if (!edgeOpt.has_value())
+                continue;
+            const Edge& edge = edgeOpt.value();
+
             ID idNext = edge.id2;
             Side sideNext = edge.side2;
 
             // Compute, where next module should be.
-            Matrix rotationComputed = computeConnected(edge);
-            auto& rotationNext = modules.at(idNext).rotation.at(sideNext);
+            Matrix rotationComputed = computeConnectedMatrix(edge);
+            auto& rotationNext = modules.at(idNext).matrix[sideNext];
 
             // If it's not fixed yet, fix it and continue computation.
             if (fixed.find(idNext) == fixed.end())

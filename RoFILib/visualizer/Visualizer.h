@@ -79,23 +79,17 @@ void Visualizer::drawConfiguration(const Configuration &config)
 
     for ( const auto& [id, mod] : config.getModules() ) {
         int color =  id % 7 + 3;
-        addActor("shoe", mod.frameMatrix(A), color);
-        addActor("shoe", mod.frameMatrix(B), color);
-        addActor("body", mod.jointMatrix(A), color);
-        addActor("body", mod.jointMatrix(B), color);
-
-        std::vector<std::vector<bool>> on(2, {false, false, false});
-
-        for (const Edge&  edge : config.getEdges().at(id))
-        {
-            on[edge.getSide1()][edge.getDock1()] = true;
-        }
+        addActor("shoe", mod.shoeMatrix(A), color);
+        addActor("shoe", mod.shoeMatrix(B), color);
+        addActor("body", mod.bodyMatrix(A), color);
+        addActor("body", mod.bodyMatrix(B), color);
 
         for (Side side : {A, B})
         {
             for (Dock dock : {Xp, Xn, Zn})
             {
-                addActor("connector", mod.dockMatrix(side, dock, on[side][dock]), color);
+                bool on = config.getEdges().at(id)[side * 3 + dock].has_value();
+                addActor("connector", mod.dockMatrix(side, dock, on), color);
             }
         }
 

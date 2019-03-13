@@ -35,7 +35,7 @@ public:
             {
                 unsigned int id1, s1, p1, ori, p2, s2, id2;
                 tmp >> id1 >> s1 >> p1 >> ori >> p2 >> s2 >> id2;
-                config.addEdge(id1, static_cast<Side>(s1), static_cast<Dock>(p1), ori, static_cast<Dock>(p2), static_cast<Side>(s2), id2);
+                config.addEdge({id1, static_cast<Side>(s1), static_cast<Dock>(p1), ori, static_cast<Dock>(p2), static_cast<Side>(s2), id2});
             }
         }
         return !config.empty();
