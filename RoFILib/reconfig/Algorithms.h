@@ -9,8 +9,6 @@
 #include <queue>
 #include <cmath>
 
-const int step = 90;
-
 using ConfigPool = std::unordered_set<Configuration, ConfigurationHash>;
 using ConfigPred = std::unordered_map<const Configuration*, const Configuration*>;
 using EvalFunction = double(const Configuration&, const Configuration&);
@@ -78,7 +76,7 @@ inline std::vector<Configuration> createPath(ConfigPred& pred, const Configurati
     return res;
 }
 
-inline std::vector<Configuration> BFS(const Configuration& init, const Configuration& goal)
+inline std::vector<Configuration> BFS(const Configuration& init, const Configuration& goal, unsigned step = 90)
 {
     //Assume both configs are consistent and valid.
     ConfigPred pred;
@@ -121,7 +119,7 @@ inline std::vector<Configuration> BFS(const Configuration& init, const Configura
     return {};
 }
 
-inline std::vector<Configuration> AStar(const Configuration& init, const Configuration& goal, EvalFunction& eval = Eval::trivial)
+inline std::vector<Configuration> AStar(const Configuration& init, const Configuration& goal, unsigned step = 90, EvalFunction& eval = Eval::trivial)
 {
     ConfigPred pred;
     ConfigPool pool;
