@@ -59,7 +59,10 @@ inline Matrix rotate(double r, const Vector &u)
     rotate(2,2) = cos(r) + u(z) * u(z) * (1 - cos(r));
     rotate(2,3) = 0;
 
-    rotate(3) = {0,0,0,1};
+    rotate(3,0) = 0;
+    rotate(3,1) = 0;
+    rotate(3,2) = 0;
+    rotate(3,3) = 1;
     return rotate;
 }
 

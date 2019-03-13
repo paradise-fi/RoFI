@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include "../Configuration.h"
+#include "../Printer.h"
 
 TEST_CASE("Connections")
 {
@@ -16,9 +17,14 @@ TEST_CASE("Connections")
                         Configuration config;
                         config.addModule(0,0,0,0);
                         config.addModule(0,0,0,1);
-                        config.addEdge(0, side1, dock1, ori, dock2, side2, 1);
+                        config.addEdge({0, side1, dock1, ori, dock2, side2, 1});
 
-                        std::cout << side1 << " " << dock1 << " " << ori << " " << dock2 << " " << side2 << std::endl;
+                       // std::cout << side1 << " " << dock1 << " " << ori << " " << dock2 << " " << side2 << std::endl;
+
+//                        config.computeRotations();
+//                        Printer printer;
+//                        std::cout << printer.printMatrices(config);
+//
                         REQUIRE( config.isValid() );
                     }
                 }

@@ -84,11 +84,13 @@ void Visualizer::drawConfiguration(const Configuration &config)
         addActor("body", mod.bodyMatrix(A), color);
         addActor("body", mod.bodyMatrix(B), color);
 
+        EdgeList edges = config.getEdges().at(id);
+
         for (Side side : {A, B})
         {
             for (Dock dock : {Xp, Xn, Zn})
             {
-                bool on = config.getEdges().at(id)[side * 3 + dock].has_value();
+                bool on = edges[side * 3 + dock].has_value();
                 addActor("connector", mod.dockMatrix(side, dock, on), color);
             }
         }

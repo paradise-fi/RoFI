@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <queue>
 #include <array>
+#include <optional>
 
 using ID = unsigned int;
 
@@ -56,7 +57,7 @@ public:
     Matrix dockMatrix(Side side, Dock dock, bool on) const
     {
         double d = on ? 0.05 : 0;
-        static const Matrix docks[3] = {
+        const Matrix docks[3] = {
                 translate(Vector{d,0,0}) * rotate(M_PI, Z), // Xp
                 translate(Vector{-d,0,0}) * identity, // Xn
                 translate(Vector{0,0,-d}) * rotate(-M_PI/2, Y) // Zn
@@ -130,7 +131,11 @@ class Edge
 public:
     Edge(ID id1, Side side1, Dock dock1, unsigned int ori, Dock dock2, Side side2, ID id2) :
             id1(id1), id2(id2), side1(side1), side2(side2), dock1(dock1), dock2(dock2), ori(ori) {}
-            
+
+    Edge& operator=(const Edge& e)
+    {
+        return *this;
+    }
 
     bool operator==(const Edge& other) const
     {
@@ -338,13 +343,13 @@ public:
             {
                 if (id1 >= id2)
                     continue;
-                for (auto [side1, side2] : {{A, A}, {A, B}, {B, A}, { B, B}})
+                for (auto [side1, side2] : std::vector<std::pair<Side, Side>>{{A, A}, {A, B}, {B, A}, { B, B}})
                 {
                     Vector center1 = mod1.getCenter(side1);
                     Vector center2 = mod2.getCenter(side2);
                     if (distance(center1, center2) != 1)
                         continue;
-                    for (auto [dock1, dock2] : {{Xn, Xn}, {Xn, Xp}, {Xn, Zn}, {Xp, Xn}, {Xp, Xp}, {Xp, Zn}, {Zn, Xn}, {Zn, Xp}, {Zn, Zn}})
+                    for (auto [dock1, dock2] : std::vector<std::pair<Dock, Dock>>{{Xn, Xn}, {Xn, Xp}, {Xn, Zn}, {Xp, Xn}, {Xp, Xp}, {Xp, Zn}, {Zn, Xn}, {Zn, Xp}, {Zn, Zn}})
                     {
                         for (const int ori : {0, 1, 2, 3})
                         {
@@ -443,7 +448,7 @@ private:
 
     void dfsID(ID id, std::unordered_set<ID>& seen) const
     {
-        for (const std::optional<Edge> edgeOpt : edges)
+        for (const std::optional<Edge> edgeOpt : edges.at(id))
         {
             if (!edgeOpt.has_value())
                 continue;
