@@ -1,44 +1,157 @@
-#include <iostream>
 #include <fstream>
-#include "../Reader.h"
+#include "../cxxopts.hpp"
 #include "../Configuration.h"
-#include "../Printer.h"
+#include "../Reader.h"
 #include "Algorithms.h"
+#include "../Printer.h"
+
+enum class Algorithm
+{
+    BFS, AStar
+};
+
+std::ifstream initInput, goalInput;
+unsigned step = 90;
+Algorithm alg = Algorithm::BFS;
+EvalFunction* eval = Eval::trivial;
+
+void parse(int argc, char* argv[])
+{
+    cxxopts::Options options("rofi-reconfig", "RoFI Reconfiguration: Tool for computing a reconfiguration path.");
+    options.positional_help("[optional args]").show_positional_help();
+
+    options.add_options()
+            ("h,help", "Print help")
+            ("i,init", "Initial configuration file", cxxopts::value<std::string>())
+            ("g,goal", "Goal configuration file", cxxopts::value<std::string>())
+            ("s,step", "Rotation angle step size in range <0,90>", cxxopts::value<unsigned>())
+            ("a,alg", "Algorithm for reconfiguration: bfs, astar", cxxopts::value<std::string>())
+            ("e,eval", "Evaluation function for A* algorithm: dCenter, dJoint, trivial", cxxopts::value<std::string>())
+            ;
+
+    try {
+        auto result = options.parse(argc, argv);
+
+        if (result.count("help")) {
+            std::cout << options.help({"", "Group"}) << std::endl;
+            exit(0);
+        }
+
+        if (result.count("init") == 1) {
+            std::string initPath(result["init"].as< std::string >());
+            initInput.open(initPath);
+            if (!initInput.good()) {
+                std::cerr << "Coult not open file " << initPath << ".\n";
+                exit(0);
+            }
+        } else {
+            std::cerr << "There must be exactly one '-i' or '--init' option.\n";
+            exit(0);
+        }
+
+        if (result.count("goal") == 1) {
+            std::string goalPath(result["goal"].as< std::string >());
+            goalInput.open(goalPath);
+            if (!goalInput.good()) {
+                std::cerr << "Coult not open file " << goalPath << ".\n";
+                exit(0);
+            }
+        } else {
+            std::cerr << "There must be exactly one '-g' or '--goal' option.\n";
+            exit(0);
+        }
+
+        if (result.count("step") == 1) {
+            unsigned val = result["step"].as< unsigned >();
+            if (val > 90) {
+                std::cerr << "The step size must be in range <0,90>.\n";
+                exit(0);
+            }
+            step = val;
+        } else {
+            if (result.count("step") > 1) {
+                std::cerr << "There can be at most one '-s' or '--step' option.\n";
+                exit(0);
+            }
+        }
+
+        if (result.count("alg") == 1) {
+            std::string val = result["alg"].as< std::string >();
+            bool valid = false;
+            if ((val == "bfs") || (val == "BFS")) {
+                alg = Algorithm::BFS;
+                valid = true;
+            }
+            if ((val == "astar") || (val == "AStar")) {
+                alg = Algorithm::AStar;
+                valid = true;
+            }
+            if (!valid) {
+                std::cerr << "Not a valid argument for option '-a', '--alg': " << val << ".\n";
+                exit(0);
+            }
+        } else {
+            if (result.count("alg") > 1) {
+                std::cerr << "There can be at most one '-a' or '--alg' option.\n";
+                exit(0);
+            }
+
+        }
+
+        if ((result.count("eval") == 1)) {
+            if (alg != Algorithm::AStar)
+            {
+                std::cerr << "The option '--eval' is available only with the option '--alg astar'.\n";
+                exit(0);
+            }
+            std::string val = result["eval"].as< std::string >();
+            bool valid = false;
+            if (val == "dCenter") {
+                eval = &Eval::centerDiff;
+                valid = true;
+            }
+            if (val == "dJoint") {
+                eval = &Eval::jointDiff;
+                valid = true;
+            }
+            if (val == "trivial") {
+                eval = &Eval::trivial;
+                valid = true;
+            }
+            if (!valid) {
+                std::cerr << "Not a valid argument for option '-e', '--eval': " << val << ".\n";
+                exit(0);
+            }
+        } else {
+            if (result.count("eval") > 1) {
+                std::cerr << "There can be at most one '-e' or '--eval' option.\n";
+                exit(0);
+            }
+        }
+    }
+    catch (cxxopts::OptionException& e)
+    {
+        std::cerr << e.what() << "\n";
+        exit(0);
+    }
+}
 
 int main(int argc, char* argv[])
 {
+    parse(argc, argv);
+
     Configuration init, goal;
     Reader reader;
     Printer printer;
 
-    if (argc < 3)
-    {
-        std::cerr << "Please, include paths to initial and goal configuration files." << std::endl;
-        return 0;
-    }
+    bool ok = true;
+    ok &= reader.read(initInput, init);
+    ok &= reader.read(goalInput, goal);
 
-    std::fstream inputInit, inputGoal;
-
-    inputInit.open(argv[1]);
-    inputGoal.open(argv[2]);
-
-    if (inputInit.good())
+    if (!ok)
     {
-        reader.read(inputInit, init);
-    }
-    else
-    {
-        std::cerr << "Could not open file: " << argv[1] << ".\n";
-        return 0;
-    }
-    if (inputGoal.good())
-    {
-        reader.read(inputGoal, goal);
-    }
-    else
-    {
-        std::cerr << "Could not open file: " << argv[2] << ".\n";
-        return 0;
+        std::cerr << "Could not parse given files or files are empty.\n";
+        exit(0);
     }
 
     bool initValid = init.isValid();
@@ -54,18 +167,26 @@ int main(int argc, char* argv[])
     }
     if (!initValid || !goalValid)
     {
-        return 0;
+        exit(0);
     }
 
-    //std::ofstream output;
-    //output.open("../data/res1.out");
-    auto path = AStar(init, goal, Eval::centerDiff);
+
+    std::vector<Configuration> path;
+    switch (alg)
+    {
+        case Algorithm::BFS:
+            path = BFS(init, goal, step);
+            break;
+        case Algorithm::AStar:
+            path = AStar(init, goal, step, *eval);
+            break;
+    }
+
+    std::cout << printer.print(path);
+
     if (path.empty())
     {
         std::cout << "Could not find a path with given parameters from initial to goal configuration.\n";
         return 0;
     }
-    std::cout << printer.print(path);
-    //output.close();
 }
-
