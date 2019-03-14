@@ -23,3 +23,9 @@ _autosave-*
 # Exported BOM files
 *.xml
 *.csv
+
+# Exported 3D models
+*.step
+
+# Exported gerbers
+gerber_*
