@@ -60,47 +60,6 @@ public:
         visualizer.drawConfiguration(config, filename, savePicture, camera);
     }
 
-    bool readCameraSettings(Camera& cameraStart, Camera& cameraEnd, bool& cameraMove, const std::string& line){
-        if(line[0] != 'C'){     //not for camera settings
-            return false;
-        }
-        std::stringstream str(line);
-        std::string type;
-        str >> type;
-        int xs, ys, zs, xe, ye, ze;
-        if (type == "CP"){          //camera position
-            str >> xs >> ys >> zs;
-            cameraStart.setPos(xs, ys, zs);
-            cameraEnd.setPos(xs, ys, zs);
-        } else if (type == "CV"){   //camera viewUp
-            str >> xs >> ys >> zs;
-            cameraStart.setView(xs, ys, zs);
-            cameraEnd.setView(xs, ys, zs);
-        } else if (type == "CF"){   //camera focal point
-            str >> xs >> ys >> zs;
-            cameraStart.setFoc(xs, ys, zs);
-            cameraEnd.setFoc(xs, ys, zs);
-        } else if (type == "CPM"){  //camera position move
-            str >> xs >> xe >> ys >> ye >> zs >> ze;
-            cameraStart.setPos(xs, ys, zs);
-            cameraEnd.setPos(xe, ye, ze);
-            cameraMove = true;
-        } else if (type == "CVM"){  //camera viewUp move
-            str >> xs >> xe >> ys >> ye >> zs >> ze;
-            cameraStart.setView(xs, ys, zs);
-            cameraEnd.setView(xe, ye, ze);
-            cameraMove = true;
-        } else if (type == "CFM"){  //camera focal point move
-            str >> xs >> xe >> ys >> ye >> zs >> ze;
-            cameraStart.setFoc(xs, ys, zs);
-            cameraEnd.setFoc(xe, ye, ze);
-            cameraMove = true;
-        } else {
-            return false;
-        }
-        return true;
-    }
-
 private:
     std::string getFilename(const std::string& path, unsigned long step){
         std::stringstream str;

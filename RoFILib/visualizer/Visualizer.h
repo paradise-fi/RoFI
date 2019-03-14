@@ -117,10 +117,22 @@ void Visualizer::drawConfiguration(const Configuration &config, const std::strin
     vtkSmartPointer<vtkCamera> camera =
             vtkSmartPointer<vtkCamera>::New();
 
-    //setCameraMassCenterIfDefault(cameraParams, config.massCenter());
-    camera->SetFocalPoint(cameraParams.getFocX(), cameraParams.getFocY(), cameraParams.getFocZ());
-    camera->SetPosition(cameraParams.getPosX(), cameraParams.getPosY(), cameraParams.getPosZ());
-    camera->SetViewUp(cameraParams.getViewX(), cameraParams.getViewY(), cameraParams.getViewZ());
+    Vector massCenter = config.massCenter();
+    if (cameraParams.defaultFoc()){
+        camera->SetFocalPoint(massCenter(0), massCenter(1), massCenter(2));
+    } else {
+        camera->SetFocalPoint(cameraParams.getFocX(), cameraParams.getFocY(), cameraParams.getFocZ());
+    }
+    if (cameraParams.defaultPos()){
+        camera->SetPosition(massCenter(0), massCenter(1) - 6, massCenter(2));
+    } else {
+        camera->SetPosition(cameraParams.getPosX(), cameraParams.getPosY(), cameraParams.getPosZ());
+    }
+    if (cameraParams.defaultView()){
+        camera->SetViewUp(0,0,1);
+    } else {
+        camera->SetViewUp(cameraParams.getViewX(), cameraParams.getViewY(), cameraParams.getViewZ());
+    }
 
     renderer->SetActiveCamera(camera);
 
