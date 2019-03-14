@@ -158,6 +158,57 @@ public:
     bool defaultView() const{
         return defaultViewUp;
     }
+
+    void setCameraMassCenter(Vector massCenter){
+        setPos(massCenter(0), massCenter(1) - 6, massCenter(2));
+        setFoc(massCenter(0), massCenter(1), massCenter(2));
+        setView(0, 0, 1);
+        defaultPosition = true;
+        defaultViewUp = true;
+        defaultFocalPoint = true;
+    }
+
+    bool operator==(const Camera& other) const {
+        return this->getFoc() == other.getFoc() &&
+                this->getView() == other.getView() &&
+                this->getPos() == other.getPos();
+    }
 };
+
+
+
+inline double countStep(double a, double b, unsigned long step, unsigned long totalSteps){
+    return a + (((b - a) * step) / totalSteps);
+}
+
+void setPosition(const Camera& cameraStart, const Camera& cameraEnd, Camera& res,
+                 unsigned long step, unsigned long totalSteps){
+    res.setPosX(countStep(cameraStart.getPosX(), cameraEnd.getPosX(), step, totalSteps));
+    res.setPosY(countStep(cameraStart.getPosY(), cameraEnd.getPosY(), step, totalSteps));
+    res.setPosZ(countStep(cameraStart.getPosZ(), cameraEnd.getPosZ(), step, totalSteps));
+}
+
+void setView(const Camera& cameraStart, const Camera& cameraEnd, Camera& res,
+             unsigned long step, unsigned long totalSteps){
+    res.setViewX(countStep(cameraStart.getViewX(), cameraEnd.getViewX(), step, totalSteps));
+    res.setViewY(countStep(cameraStart.getViewY(), cameraEnd.getViewY(), step, totalSteps));
+    res.setViewZ(countStep(cameraStart.getViewZ(), cameraEnd.getViewZ(), step, totalSteps));
+}
+
+void setFocus(const Camera& cameraStart, const Camera& cameraEnd, Camera& res,
+              unsigned long step, unsigned long totalSteps){
+    res.setFocX(countStep(cameraStart.getFocX(), cameraEnd.getFocX(), step, totalSteps));
+    res.setFocY(countStep(cameraStart.getFocY(), cameraEnd.getFocY(), step, totalSteps));
+    res.setFocZ(countStep(cameraStart.getFocZ(), cameraEnd.getFocZ(), step, totalSteps));
+}
+
+Camera countCameraMove(const Camera& cameraStart, const Camera& cameraEnd,
+                       unsigned long step, unsigned long totalSteps){
+    Camera res;
+    setPosition(cameraStart, cameraEnd, res, step, totalSteps);
+    setView(cameraStart, cameraEnd, res, step, totalSteps);
+    setFocus(cameraStart, cameraEnd, res, step, totalSteps);
+    return res;
+}
 
 #endif //ROFI_CAMERA_H
