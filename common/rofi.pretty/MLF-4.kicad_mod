@@ -1,4 +1,4 @@
-(module MLF-4 (layer F.Cu) (tedit 5C7FD139)
+(module MLF-4 (layer F.Cu) (tedit 5C877B36)
   (fp_text reference REF** (at 0 1.6) (layer F.SilkS)
     (effects (font (size 1 1) (thickness 0.15)))
   )
@@ -21,4 +21,9 @@
   (pad 2 smd rect (at 0.3 0.6) (size 0.25 0.45) (layers F.Cu F.Paste F.Mask))
   (pad 3 smd rect (at 0.3 -0.6) (size 0.25 0.45) (layers F.Cu F.Paste F.Mask))
   (pad 4 smd rect (at -0.3 -0.6) (size 0.25 0.45) (layers F.Cu F.Paste F.Mask))
+  (model ${KISYS3DMOD}/Package_SON.3dshapes/VSON-10-1EP_3x3mm_P0.5mm_EP1.65x2.4mm.step
+    (at (xyz 0 0 0))
+    (scale (xyz 0.33 0.33 0.33))
+    (rotate (xyz 0 0 -90))
+  )
 )
