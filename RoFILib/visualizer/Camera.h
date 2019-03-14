@@ -172,12 +172,18 @@ public:
     }
 
     void setCameraMassCenter(Vector massCenter){
-        setPos(massCenter(0), massCenter(1) - 6, massCenter(2));
-        setFoc(massCenter(0), massCenter(1), massCenter(2));
-        setView(0, 0, 1);
-        defaultPosition = true;
-        defaultViewUp = true;
-        defaultFocalPoint = true;
+        if (defaultPos()) {
+            setPos(massCenter(0), massCenter(1) - 6, massCenter(2));
+            defaultPosition = true;
+        }
+        if (defaultFoc()) {
+            setFoc(massCenter(0), massCenter(1), massCenter(2));
+            defaultFocalPoint = true;
+        }
+        if (defaultView()) {
+            setView(0, 0, 1);
+            defaultViewUp = true;
+        }
     }
 
     bool operator==(const Camera& other) const {
@@ -214,19 +220,12 @@ void setFocus(const Camera& cameraStart, const Camera& cameraEnd, Camera& res,
     res.setFocZ(countStep(cameraStart.getFocZ(), cameraEnd.getFocZ(), step, totalSteps));
 }
 
-void setDefault(const Camera& cameraStart, Camera& res){
-    res.setDefaultPosition(cameraStart.defaultPos());
-    res.setDefaultFocalPoint(cameraStart.defaultFoc());
-    res.setDefaultViewUp(cameraStart.defaultView());
-}
-
 Camera countCameraMove(const Camera& cameraStart, const Camera& cameraEnd,
                        unsigned long step, unsigned long totalSteps){
     Camera res;
     setPosition(cameraStart, cameraEnd, res, step, totalSteps);
     setView(cameraStart, cameraEnd, res, step, totalSteps);
     setFocus(cameraStart, cameraEnd, res, step, totalSteps);
-    setDefault(cameraStart, res);
     return res;
 }
 
