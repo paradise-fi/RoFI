@@ -9,6 +9,7 @@
 #include "Generator.h"
 #include "Visualizer.h"
 #include <vector>
+#include "../Printer.h"
 
 class Animator{
 public:
@@ -40,6 +41,10 @@ public:
         }
         }
         visualizeAllConfigs(allConfigs, path, savePicture, cameraStart, cameraEnd);
+        Printer printer;
+        std::ofstream file;
+        file.open("../data/path.txt");
+        file << printer.print(allConfigs);
     }
 
     void visualizeAllConfigs(std::vector<Configuration>& allConfigs, const std::string& path, bool savePicture,

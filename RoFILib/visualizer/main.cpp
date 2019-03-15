@@ -9,6 +9,7 @@
 int mainWithAnimation(){
     AnimationReader animReader;
     animReader.read("../data/testMove.in");
+    return 0;
 }
 
 int mainAnimator(){
@@ -24,8 +25,8 @@ int mainAnimator(){
     Animator animator;
     bool cameraMove;
     reader.readCameraSettings(cam, s, e, cameraMove);
-    animator.visualizeMainConfigs(configs, 30, 6, "../data", true, s, e);
-
+    animator.visualizeMainConfigs(configs, 30, 6, "../data", false, s, e);
+    return 0;
 }
 
 int main(int argc, char *argv[])

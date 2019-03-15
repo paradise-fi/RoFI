@@ -36,8 +36,8 @@ public:
         }
         for ( const auto& [id1, edges1] : InitConf.getEdges()){
             for( const auto& edge : edges1){
-                CurrConf.addEdge(edge.getId1(), edge.getSide1(), edge.getDock1(), edge.getOri(), edge.getDock2(),
-                        edge.getSide2(), edge.getId2());
+                CurrConf.addEdge({edge->id1, edge->side1, edge->dock1, edge->ori, edge->dock2,
+                        edge->side2, edge->id2});
             }
         }
     }
@@ -91,9 +91,9 @@ public:
 
     }
 
-*/
+
     void generateOneStep(const Configuration& initConf, const Configuration& goalConf, Configuration& currConf,
-            /*unsigned int totalSteps,*/ unsigned int currentStep, double maxPhi){
+           unsigned int currentStep, double maxPhi){
         for ( const auto& [id1, mod1] : initConf.getModules() ){
             const auto& mod2 = goalConf.getModules().at(id1);
             if (mod1 == mod2){
@@ -112,7 +112,7 @@ public:
             }
         }
     }
-
+*/
 private:
     double countStep(double a, double b, unsigned int totalSteps, unsigned int step){
         return a + (((b - a) * step) / totalSteps);
@@ -157,17 +157,7 @@ private:
     }
 
     bool sameEdges(const Configuration& c1, const Configuration& c2){
-        EdgeMap e1;
-        for (auto& [id, vec] : c1.getEdges())
-        {
-            e1[id] = sort(vec);
-        }
-        EdgeMap e2;
-        for (auto& [id, vec] : c2.getEdges())
-        {
-            e2[id] = sort(vec);
-        }
-        return e1 == e2;
+        return c1.getEdges() == c2.getEdges();
     }
 };
 
