@@ -73,7 +73,8 @@ namespace Eval
             const Module& other = goal.getModules().at(id);
             for (Joint j : {Alpha, Beta, Gamma})
             {
-                result += std::abs(mod.getJoint(j) - other.getJoint(j));
+                double diff = mod.getJoint(j) - other.getJoint(j);
+                result += sqrt(diff * diff);
             }
         }
         return result;
@@ -88,6 +89,20 @@ namespace Eval
             for (Side s : {A, B})
             {
                 result += distance(mod.getCenter(s), other.getCenter(s));
+            }
+        }
+        return result;
+    }
+
+    inline double matrixDiff(const Configuration& curr, const Configuration& goal)
+    {
+        double result = 0;
+        for ( auto& [id, mod] : curr.getModules() )
+        {
+            const Module& other = goal.getModules().at(id);
+            for (Side s : {A, B})
+            {
+                result += distance(mod.shoeMatrix(s), other.shoeMatrix(s));
             }
         }
         return result;

@@ -34,9 +34,23 @@ inline Vector row(const Matrix &matrix, int row)
 
 inline double distance(const Vector& a, const Vector& b)
 {
-    return std::round(
-            sqrt((a(0) - b(0)) * (a(0) - b(0)) + (a(1) - b(1)) * (a(1) - b(1)) + (a(2) - b(2)) * (a(2) - b(2))) *
-            1000) / 1000.0;
+    Vector diff = a - b;
+    double res = 0;
+    for (int i = 0; i < 3; ++i)
+    {
+        res += diff(i) * diff(i);
+    }
+    return std::round(sqrt(res) * 1000) / 1000.0;
+}
+
+inline double distance(const Matrix& a, const Matrix& b)
+{
+    double res = 0;
+    for (int r = 0; r < 4; ++r)
+    {
+        res += distance(row(a, r), row(b, r));
+    }
+    return res;
 }
 
 inline Matrix rotate(double r, const Vector &u)

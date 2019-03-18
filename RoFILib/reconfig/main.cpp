@@ -26,7 +26,7 @@ void parse(int argc, char* argv[])
             ("g,goal", "Goal configuration file", cxxopts::value<std::string>())
             ("s,step", "Rotation angle step size in range <0,90>", cxxopts::value<unsigned>())
             ("a,alg", "Algorithm for reconfiguration: bfs, astar", cxxopts::value<std::string>())
-            ("e,eval", "Evaluation function for A* algorithm: dCenter, dJoint, trivial", cxxopts::value<std::string>())
+            ("e,eval", "Evaluation function for A* algorithm: dMatrix, dCenter, dJoint, trivial", cxxopts::value<std::string>())
             ;
 
     try {
@@ -112,6 +112,10 @@ void parse(int argc, char* argv[])
             }
             if (val == "dJoint") {
                 eval = &Eval::jointDiff;
+                valid = true;
+            }
+            if (val == "dMatrix") {
+                eval = &Eval::matrixDiff;
                 valid = true;
             }
             if (val == "trivial") {
