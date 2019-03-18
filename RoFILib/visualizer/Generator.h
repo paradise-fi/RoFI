@@ -39,9 +39,8 @@ public:
                 if (!edgeOpt.has_value())
                     continue;
                 const Edge& edge = edgeOpt.value();
-                if (!CurrConf.addEdge({edge.id1, edge.side1, edge.dock1, edge.ori, edge.dock2,
-                                  edge.side2, edge.id2})){
-                }
+                CurrConf.addEdge({edge.id1, edge.side1, edge.dock1, edge.ori, edge.dock2,
+                                  edge.side2, edge.id2});
             }
         }
     }
