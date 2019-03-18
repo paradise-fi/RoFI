@@ -11,8 +11,10 @@
 #include <queue>
 #include <array>
 #include <optional>
+#include <cmath>
 
 using ID = unsigned int;
+const double threshold = 0.0001;
 
 enum Side
 {
@@ -90,30 +92,44 @@ public:
         return 0;
     }
 
-    void rotateJoint(Joint joint, int val)
+    bool rotateJoint(Joint joint, double val)
     {
         switch (joint)
         {
             case Joint::Alpha:
                 alpha += val;
-                alpha = std::max(std::min(alpha, 90.0), -90.0);
+                if ((alpha > 90) || (alpha < -90))
+                {
+                    return false;
+                }
                 break;
             case Joint::Beta:
                 beta += val;
-                beta = std::max(std::min(beta, 90.0), -90.0);
+                if ((beta > 90) || (beta < -90))
+                {
+                    return false;
+                }
                 break;
             case Joint::Gamma:
                 gamma += val;
-                gamma = fmod(gamma, 360.0);
+                if (gamma > 180)
+                {
+                    gamma -= 360;
+                }
+                if (gamma < -180)
+                {
+                    gamma += 360;
+                }
         }
+        return true;
     }
 
     bool operator==(const Module& other) const
     {
         return (id == other.id) &&
-               (alpha == other.alpha) &&
-               (beta == other.beta) &&
-               (gamma == other.gamma) &&
+               (std::abs(alpha - other.alpha) < threshold) &&
+               (std::abs(beta - other.beta) < threshold) &&
+               (std::abs(gamma - other.gamma) < threshold) &&
                equals(matrix[0], other.matrix[0]) &&
                equals(matrix[1], other.matrix[1]);
     }
@@ -154,10 +170,86 @@ public:
     const unsigned int ori;
 };
 
+inline std::array<unsigned, 5> edgeToArray(const Edge& edge)
+{
+    return {edge.side1, edge.dock1, edge.ori, edge.dock2, edge.side2};
+};
+
+inline std::optional<Edge> getNextEdge(const Edge& edge)
+{
+    const static std::array<unsigned, 5> size = {2,3,4,3,2};
+    std::array<unsigned, 5> res = edgeToArray(edge);
+    int over = 1;
+    for (unsigned i = 0; i < 4; ++i)
+    {
+        if (res[i] + over >= size[i])
+        {
+            res[i] = 0;
+            over = 1;
+            continue;
+        }
+        res[i] += 1;
+        over = 0;
+        break;
+    }
+    if (over == 1)
+    {
+        return std::nullopt;
+    }
+    return Edge(edge.id1,
+                static_cast<Side>(res[0]),
+                static_cast<Dock>(res[1]),
+                res[2],
+                static_cast<Dock>(res[3]),
+                static_cast<Side>(res[4]),
+                edge.id2);
+}
+
 inline Edge reverse(const Edge& edge)
 {
     return {edge.id2, edge.side2, edge.dock2, edge.ori, edge.dock1, edge.side1, edge.id1};
 }
+
+class Action
+{
+public:
+    class Rotate
+    {
+    public:
+        Rotate(ID id, Joint joint, double angle) :
+                id(id), joint(joint), angle(angle) {}
+
+        const ID id;
+        const Joint joint;
+        const double angle;
+    };
+
+    class Reconnect
+    {
+    public:
+        Reconnect(bool add, const Edge& edge) :
+                add(add), edge(edge) {}
+
+        const bool add;
+        const Edge edge;
+    };
+
+    Action(std::vector<Rotate> rot, std::vector<Reconnect> rec) :
+            rotations(std::move(rot)), reconnections(std::move(rec)) {}
+
+    const std::vector<Rotate> rotations;
+    const std::vector<Reconnect> reconnections;
+
+    Action divide(double factor) const
+    {
+        std::vector<Rotate> division;
+        for (const Action::Rotate& rotate : rotations)
+        {
+            division.emplace_back(rotate.id, rotate.joint, rotate.angle * factor);
+        }
+        return {division, reconnections};
+    }
+};
 
 using ModuleMap = std::unordered_map<ID, Module>;
 using EdgeList = std::array<std::optional<Edge>, 6>;
@@ -282,6 +374,89 @@ public:
         return mass;
     }
 
+    std::optional<Configuration> makeValid(const Action& action) const
+    {
+        int steps = 10;
+        Configuration next = *this;
+        Action reconnect({}, action.reconnections);
+        Action rotate(action.rotations, {});
+
+        if (!next.execute(reconnect))
+        {
+            return std::nullopt;
+        }
+        for (int i = 1; i <= steps; ++i)
+        {
+            Action divided = rotate.divide(double(i)/double(steps));
+            if (!next.execute(divided))
+            {
+                return std::nullopt;
+            }
+        }
+        if (next.isValid())
+        {
+            return next;
+        }
+        return std::nullopt;
+    }
+
+    bool execute(const Action& action)
+    {
+        Configuration next = *this;
+        bool ok = true;
+        for (const Action::Rotate rot : action.rotations)
+        {
+            ok &= next.execute(rot);
+        }
+        for (const Action::Reconnect rec : action.reconnections)
+        {
+            ok &= next.execute(rec);
+        }
+        if (ok)
+        {
+            *this = next;
+        }
+        return ok;
+    }
+
+    bool execute(const Action::Rotate& action)
+    {
+        return modules.at(action.id).rotateJoint(action.joint, action.angle);
+    }
+
+    bool execute(const Action::Reconnect& action)
+    {
+        if (action.add)
+        {
+            return addEdge(action.edge);
+        }
+        else
+        {
+            return eraseEdge(action.edge);
+        }
+    }
+
+    std::vector<Action::Rotate> generateRotations(unsigned step) const
+    {
+        std::vector<Action::Rotate> res;
+        for (auto& [id, _] : modules)
+        {
+            for (int d : {-step, step})
+            {
+                for (Joint joint : {Alpha, Beta, Gamma})
+                {
+                    res.emplace_back(id, joint, d);
+                }
+            }
+        }
+        return res;
+    }
+
+    std::vector<Action::Reconnect> generateReconnections(unsigned step) const
+    {
+        return {};
+    }
+
     std::vector<Configuration> next(unsigned step) const
     {
         std::vector<Configuration> rec = nextReconnect();
@@ -304,7 +479,11 @@ public:
                 {
                     Configuration next = *this;
                     Module& mod = next.modules.at(id);
-                    mod.rotateJoint(joint, d);
+                    bool ok = mod.rotateJoint(joint, d);
+                    if (!ok)
+                    {
+                        continue;
+                    }
                     if (next.isValid())
                     {
                         res.push_back(next);
@@ -396,15 +575,22 @@ private:
     Matrix fixedMatrix = identity;
 
     // If the given edge is in the configuration, delete it from both modules.
-    void eraseEdge(const Edge& edge)
+    bool eraseEdge(const Edge& edge)
     {
         EdgeList& set1 = edges.at(edge.id1);
         int index1 = edge.side1 * 3 + edge.dock1;
-        set1[index1] = std::nullopt;
 
         EdgeList& set2 = edges.at(edge.id2);
         int index2 = edge.side2 * 3 + edge.dock2;
+
+        if (!set1[index1].has_value() || !set2[index2].has_value())
+        {
+            return false;
+        }
+
+        set1[index1] = std::nullopt;
         set2[index2] = std::nullopt;
+        return true;
     }
 
     //
