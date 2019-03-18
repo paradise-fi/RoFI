@@ -23,9 +23,9 @@ public:
         if (mainConfigs.size() == 1){
             allConfigs.push_back(mainConfigs.at(0));
         } else {
-        for (unsigned long i = 0; i < mainConfigs.size() - 2; i++){
-            Configuration& c1 = mainConfigs.at(i);
-            Configuration& c2 = mainConfigs.at(i + 1);
+        for (unsigned long i = 0; i < mainConfigs.size() - 1; i++){
+            const Configuration& c1 = mainConfigs.at(i);
+            const Configuration& c2 = mainConfigs.at(i + 1);
             std::vector<Configuration> generatedConfigs;
             Generator generator;
             generator.generate(c1, c2, generatedConfigs, maxPhi, reconnectionPics);
@@ -33,7 +33,7 @@ public:
                 allConfigs.push_back(c1);
                 firstConfig = false;
             }
-            for (Configuration& c : generatedConfigs){
+            for (const Configuration& c : generatedConfigs){
                 allConfigs.push_back(c);
             }
             allConfigs.push_back(c2);
@@ -41,10 +41,6 @@ public:
         }
         }
         visualizeAllConfigs(allConfigs, path, savePicture, cameraStart, cameraEnd);
-        Printer printer;
-        std::ofstream file;
-        file.open("../data/path.txt");
-        file << printer.print(allConfigs);
     }
 
     void visualizeAllConfigs(std::vector<Configuration>& allConfigs, const std::string& path, bool savePicture,

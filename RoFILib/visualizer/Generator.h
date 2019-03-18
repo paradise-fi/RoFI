@@ -35,9 +35,13 @@ public:
             CurrConf.addModule(alpha, beta, gamma, mod1.getId());
         }
         for ( const auto& [id1, edges1] : InitConf.getEdges()){
-            for( const auto& edge : edges1){
-                CurrConf.addEdge({edge->id1, edge->side1, edge->dock1, edge->ori, edge->dock2,
-                        edge->side2, edge->id2});
+            for (const std::optional<Edge>& edgeOpt : edges1){
+                if (!edgeOpt.has_value())
+                    continue;
+                const Edge& edge = edgeOpt.value();
+                if (!CurrConf.addEdge({edge.id1, edge.side1, edge.dock1, edge.ori, edge.dock2,
+                                  edge.side2, edge.id2})){
+                }
             }
         }
     }

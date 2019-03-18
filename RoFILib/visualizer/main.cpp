@@ -31,13 +31,13 @@ int mainAnimator(){
 
 int main(int argc, char *argv[])
 {
-/*
+#if 0
     mainAnimator();
     return 0;
 
     mainWithAnimation();
     return 0;
-*/
+#else
     Reader reader;
     Visualizer vis;
 
@@ -87,5 +87,6 @@ int main(int argc, char *argv[])
             std::cerr << "Could not open file: " << argv[i] << ".\n";
         }
     }
+#endif
 }
 
