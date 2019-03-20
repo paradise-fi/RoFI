@@ -111,21 +111,18 @@ Opens a new window with a visualization of the configuration.
 
 ```
 ./rofi-vis -i ../data/res.out -s --path ../data/res -a 
-
 ```
 
 Generates some intersteps (animation) and saves pictures to the ../data/res directory.
 
 ```
 ./rofi-vis -i ../data/res.out -s --path ../data/res -a -c ../data/1.cam
-
 ```
 
 Same as above with specified camera settings.
 
 ```
 ./rofi-vis -i ../data/res.out -s --path ../data/res -a -c ../data/1.cam --omega 15 --recTime 2
-
 ```
 
 
