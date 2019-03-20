@@ -26,14 +26,16 @@ inline bool operator==(const std::unique_ptr<Configuration>& a, const std::uniqu
 
 using ConfigPred = std::unordered_map<const Configuration*, const Configuration*>;
 using EvalFunction = double(const Configuration&, const Configuration&);
-using EvalPair = std::pair<double, const Configuration*>;
+using EvalPair = std::tuple<double, double, const Configuration*>;
 
 struct EvalCompare
 {
 public:
     bool operator()(const EvalPair& a, const EvalPair& b)
     {
-        return a.first > b.first;
+        auto& [a1, a2, _a] = a;
+        auto& [b1, b2, _b] = b;
+        return a1 + a2 > b1 + b2;
     }
 };
 
@@ -74,7 +76,8 @@ namespace Eval
             for (Joint j : {Alpha, Beta, Gamma})
             {
                 double diff = mod.getJoint(j) - other.getJoint(j);
-                result += sqrt(diff * diff);
+                //result += sqrt(diff * diff);
+                result += std::abs(diff) / 90;
             }
         }
         return result;
@@ -184,28 +187,25 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
     pred.insert({pointer, pointer});
 
     std::priority_queue<EvalPair, std::vector<EvalPair>, EvalCompare> queue;
-    queue.push( {eval(init, goal), pointer} );
+    queue.push( {0, eval(init, goal), pointer} );
 
     while (!queue.empty())
     {
-        const auto [val, current] = queue.top();
+        const auto [d, val, current] = queue.top();
         queue.pop();
 
         // std::cout << "Fitness: " << val << std::endl;
 
         for (const auto& next : current->next(step, bound))
         {
-            if (pool.find(next))
-            {
-                const Configuration* pointerNext = pool.insert(next);
-                pred.insert({pointerNext, current});
+            const Configuration* pointerNext = pool.insert(next);
+            pred.insert({pointerNext, current});
 
-                if (next == goal)
-                {
-                    return createPath(pred, pointerNext);
-                }
-                queue.push( {eval(next, goal),  pointerNext} );
+            if (next == goal)
+            {
+                return createPath(pred, pointerNext);
             }
+            queue.push( {d + 1, eval(next, goal),  pointerNext} );
         }
     }
     return {};
