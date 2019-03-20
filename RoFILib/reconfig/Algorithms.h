@@ -126,7 +126,7 @@ inline std::vector<Configuration> createPath(ConfigPred& pred, const Configurati
     return res;
 }
 
-inline std::vector<Configuration> BFS(const Configuration& init, const Configuration& goal, unsigned step = 90)
+inline std::vector<Configuration> BFS(const Configuration& init, const Configuration& goal, unsigned step = 90, unsigned bound = 1)
 {
     //Assume both configs are consistent and valid.
     ConfigPred pred;
@@ -148,7 +148,7 @@ inline std::vector<Configuration> BFS(const Configuration& init, const Configura
         const auto current = queue.front();
         queue.pop();
 
-        auto nextCfgs = current->next(step);
+        auto nextCfgs = current->next(step, bound);
  //       std::cout << queue.size() << " " << nextCfgs.size() << std::endl;
 
         for (const auto& next : nextCfgs)
@@ -170,7 +170,7 @@ inline std::vector<Configuration> BFS(const Configuration& init, const Configura
     return {};
 }
 
-inline std::vector<Configuration> AStar(const Configuration& init, const Configuration& goal, unsigned step = 90, EvalFunction& eval = Eval::trivial)
+inline std::vector<Configuration> AStar(const Configuration& init, const Configuration& goal, unsigned step = 90, unsigned bound = 1, EvalFunction& eval = Eval::trivial)
 {
     ConfigPred pred;
     ConfigPool pool;
@@ -193,7 +193,7 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
 
         // std::cout << "Fitness: " << val << std::endl;
 
-        for (const auto& next : current->next(step))
+        for (const auto& next : current->next(step, bound))
         {
             if (pool.find(next))
             {

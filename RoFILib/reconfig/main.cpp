@@ -12,6 +12,7 @@ enum class Algorithm
 
 std::ifstream initInput, goalInput;
 unsigned step = 90;
+unsigned bound = 1;
 Algorithm alg = Algorithm::BFS;
 EvalFunction* eval = Eval::trivial;
 
@@ -27,6 +28,7 @@ void parse(int argc, char* argv[])
             ("s,step", "Rotation angle step size in range <0,90>", cxxopts::value<unsigned>())
             ("a,alg", "Algorithm for reconfiguration: bfs, astar", cxxopts::value<std::string>())
             ("e,eval", "Evaluation function for A* algorithm: dMatrix, dCenter, dJoint, trivial", cxxopts::value<std::string>())
+            ("p,parallel", "How many parallel actions are allowed: <1,...>", cxxopts::value<unsigned>())
             ;
 
     try {
@@ -132,6 +134,22 @@ void parse(int argc, char* argv[])
                 exit(0);
             }
         }
+
+        if (result.count("parallel") == 1)
+        {
+            unsigned val = result["parallel"].as<unsigned>();
+            if (val == 0)
+            {
+                std::cerr << "At least one parallel action must be allowed.\n";
+                exit(0);
+            }
+            bound = val;
+        } else {
+            if (result.count("parallel") > 1) {
+                std::cerr << "There can be at most one '-p' or '--parallel' option.\n";
+                exit(0);
+            }
+        }
     }
     catch (cxxopts::OptionException& e)
     {
@@ -179,10 +197,10 @@ int main(int argc, char* argv[])
     switch (alg)
     {
         case Algorithm::BFS:
-            path = BFS(init, goal, step);
+            path = BFS(init, goal, step, bound);
             break;
         case Algorithm::AStar:
-            path = AStar(init, goal, step, *eval);
+            path = AStar(init, goal, step, bound, *eval);
             break;
     }
 
