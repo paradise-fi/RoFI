@@ -57,11 +57,77 @@ The make should create three executables: `rofi-test`, `rofi-vis` and `rofi-reco
 
 ## Visualizer
 
+The tool can visualize configurations, create animations and save pictures.
+
+The input file contains representation of one or more configurations separated by an empty line.
+
+You can choose whether to visualize model(s) of configuration(s) in 3D on the screen 
+or save picture(s) of configuration(s) using `-s` or `--save` option. You can also specify a path where to save the pictures using `-p` or `--path` option.
+
+If there are more configurations in the input file, you can choose `-a` or `--animation` option which will generete smoother changes between the configurations. If you do not want to animate it, you have to use `-m` or `--many` to specify that there are more than one configuration in the file.
+
+If the animation is chosen, you can specify:
+
+* angle velocity of modules using one of the `-o`, `--omega`, `-f` or `--phi` options
+* reconnection time / number of pictures using one of the `-r`, `--recTime`, `-e` or `--recPics` options 
+
+You can also specify settings for camera in a separate file. 
+The file can contain following lines:
+
+* `CP x y z`: camera position or
+* `CPM xs xe ys ye zs ze`: camera position move xstart -> xend, ystart -> yend, zstart -> zend
+* `CF x y z`: camera focal point or
+* `CFM xs xe ys ye zs ze`: camera focal point move xstart -> xend, ystart -> yend, zstart -> zend
+* `CV x y z`: camera view up or
+* `CVM xs xe ys ye zs ze`: camera view up move xstart -> xend, ystart -> yend, zstart -> zend
+
+Default values use mass center of the first configuration. 
+
 ```
-./rofi-vis ../data/test.in
+RoFI Visualizer: Tool for visualization of configurations and creating animations.
+Usage:
+  rofi-vis [OPTION...]
+
+  -h, --help         Print help
+  -s, --save         Save picture to file
+  -a, --animation    Create animation from configurations
+  -c, --camera arg   Camera settings file
+  -p, --path arg     Path where to save pictures
+  -o, --omega arg    Maximal angular velocity in 1°/s
+  -f, --phi arg      Maximal angle diff in ° per picture
+  -r, --recTime arg  Time in seconds for reconnection
+  -e, --recPics arg  Number of pictures for reconnection
+  -i, --input arg    Input config file
+  -m, --many         Many configurations in one file
+```
+
+Examples:
+
+```
+./rofi-vis -i ../data/test.in
 ```
 
 Opens a new window with a visualization of the configuration.
+
+```
+./rofi-vis -i ../data/res.out -s --path ../data/res -a 
+
+```
+
+Generates some intersteps (animation) and saves pictures to the ../data/res directory.
+
+```
+./rofi-vis -i ../data/res.out -s --path ../data/res -a -c ../data/1.cam
+
+```
+
+Same as above with specified camera settings.
+
+```
+./rofi-vis -i ../data/res.out -s --path ../data/res -a -c ../data/1.cam --omega 15 --recTime 2
+
+```
+
 
 ## Reconfiguration
 
@@ -115,7 +181,7 @@ Writes a sequence of configurations starting with the initial and ending with th
 
 ```
 ./rofi-reconfig -i ../data/init.in -g ../data/goal.in > ../data/res.out
-./rofi-vis ../data/res.out -m
+./rofi-vis -i ../data/res.out -m
 ```
 
-Writes a sequence of configurations to a separate file, then draws many `-m` configurations from one file. The flag must be placed after the file path!
+Writes a sequence of configurations to a separate file, then draws many `-m` configurations from one file. 

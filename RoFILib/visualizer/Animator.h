@@ -46,8 +46,10 @@ public:
     void visualizeAllConfigs(std::vector<Configuration>& allConfigs, const std::string& path, bool savePicture,
             Camera cameraStart, Camera cameraEnd){
         unsigned long step = 0;
-        cameraStart.setCameraMassCenter(allConfigs.at(0).massCenter());
-        cameraEnd.setCameraMassCenter(allConfigs.at(0).massCenter());
+        Configuration firstConfig = allConfigs.at(0);
+        firstConfig.computeRotations();
+        cameraStart.setCameraMassCenter(firstConfig.massCenter());
+        cameraEnd.setCameraMassCenter(firstConfig.massCenter());
         for (Configuration& c : allConfigs){
             Camera camera = countCameraMove(cameraStart, cameraEnd, step, allConfigs.size() - 1);
             visualizeOneConfig(c, path, savePicture, step, camera);
@@ -66,7 +68,7 @@ public:
 private:
     std::string getFilename(const std::string& path, unsigned long step){
         std::stringstream str;
-        str << path << "/res/img";
+        str << path << "/img";
         str << std::setw(4) << std::setfill('0') << step;
         return str.str();
     }

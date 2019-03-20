@@ -5,88 +5,161 @@
 #include "Visualizer.h"
 #include "AnimationReader.h"
 #include "Animator.h"
+#include "../cxxopts.hpp"
 
-int mainWithAnimation(){
-    AnimationReader animReader;
-    animReader.read("../data/testMove.in");
-    return 0;
+bool many = false;
+bool savePicture = false;
+bool animation = false;
+std::ifstream cameraSettings, inputFile;
+bool cameraSet = false;
+std::string path("../data/default");
+double omega = 120;
+double phi = 5;
+double reconnectionTime = 2;
+unsigned int reconnectionPics = 48;
+
+void parse(int argc, char* argv[]){
+    cxxopts::Options options("rofi-vis", "RoFI Visualizer: Tool for visualization of configurations and creating animations.");
+    options.positional_help("[optional args]").show_positional_help();
+
+    options.add_options()
+            ("h,help", "Print help")
+            ("s,save", "Save picture to file")
+            ("a,animation", "Create animation from configurations")
+            ("c,camera", "Camera settings file", cxxopts::value<std::string>())
+            ("p,path", "Path where to save pictures", cxxopts::value<std::string>())
+            ("o,omega", "Maximal angular velocity in 1°/s", cxxopts::value<double>())
+            ("f,phi", "Maximal angle diff in ° per picture", cxxopts::value<double>())
+            ("r,recTime", "Time in seconds for reconnection", cxxopts::value<double>())
+            ("e,recPics", "Number of pictures for reconnection", cxxopts::value<unsigned int>()) //rename
+            ("i,input", "Input config file", cxxopts::value<std::string>())
+            ("m,many", "Many configurations in one file")
+            ;
+
+    try {
+        auto result = options.parse(argc, argv);
+        if (result.count("help")) {
+            std::cout << options.help({"", "Group"}) << std::endl;
+            exit(0);
+        }
+
+        if (result.count("save")){
+            savePicture = true;
+        }
+
+        if (result.count("animation")){
+            animation = true;
+            many = true;
+        }
+
+        if (result.count("camera") == 1){
+            std::string filename = result["camera"].as< std::string >();
+            cameraSettings.open(filename);
+            if (!cameraSettings.good()) {
+                std::cerr << "Could not open file " << filename << ".\n";
+                exit(0);
+            }
+            cameraSet = true;
+        } else if (result.count("camera") > 1) {
+            std::cerr << "There can not be more than one -c or --camera options.\n";
+            exit(0);
+        }
+
+        if (result.count("path") == 1){
+            path = result["path"].as< std::string >();
+        } else if (result.count("path") > 1){
+            std::cerr << "There can not be more than one -p or --path options.\n";
+            exit(0);
+        }
+
+        if (result.count("omega") == 1 && result.count("phi") == 0){
+            double val = result["omega"].as< double >();
+            if (val < 0) {
+                std::cerr << "Angular velocity can not be negative.\n";
+                exit(0);
+            }
+            omega = val;
+            phi = omega / 24;       //framerate 24
+        } else if (result.count("omega") == 0 && result.count("phi") == 1) {
+            double val = result["phi"].as< double >();
+            if (val < 0) {
+                std::cerr << "Maximal angle diff can not be negative.\n";
+                exit(0);
+            }
+            phi = val;
+            omega = 24 * phi;       //framerate 24
+        } else if (!result.count("omega") && !result.count("phi")){}
+        else {
+            std::cerr << "There can not be more than one -o, --omega, -f or --phi options.\n";
+            exit(0);
+        }
+
+        if (result.count("recTime") == 1 && result.count("recPics") == 0){
+            double val = result["recTime"].as< double >();
+            if (val < 0) {
+                std::cerr << "Reconnection time can not be negative.\n";
+                exit(0);
+            }
+            reconnectionTime = val;
+            reconnectionPics = static_cast<unsigned int>(std::ceil(reconnectionTime * 24));
+        } else if (result.count("recTime") == 0 && result.count("recPics") == 1){
+            reconnectionPics = result["recPics"].as< unsigned int >();
+            reconnectionTime = reconnectionPics / static_cast<double>(24);
+        } else if (!result.count("recTime") && (!result.count("recPics"))) {}
+        else {
+            std::cerr << "There can not be more than one -r, --recTime, -rp or --recPics options.\n";
+            exit(0);
+        }
+
+        if (result.count("input") == 1){
+            std::string filename(result["input"].as< std::string >());
+            inputFile.open(filename);
+            if (!inputFile.good()){
+                std::cerr << "Could not open file " << filename << ".\n";
+                exit(0);
+            }
+        } else {
+            std::cerr << "There must be exactly one -i or --input option.\n";
+        }
+
+        if (result.count("many")){
+            many = true;
+        }
+
+    } catch (cxxopts::OptionException& e){
+        std::cerr << e.what();
+        exit(0);
+    }
 }
 
-int mainAnimator(){
+int main(int argc, char* argv[]){
+    parse(argc, argv);
+
     Reader reader;
-    std::ifstream file;
-    file.open("../data/res.out");
-    std::vector<Configuration> configs;
-    reader.read(file, configs);
-    Camera s;
-    Camera e;
-    std::ifstream cam;
-    cam.open("../data/1.cam");
+    Visualizer visualizer;
     Animator animator;
+    Camera cameraStart;
+    Camera cameraEnd;
     bool cameraMove;
-    reader.readCameraSettings(cam, s, e, cameraMove);
-    animator.visualizeMainConfigs(configs, 30, 6, "../data", false, s, e);
-    return 0;
-}
+    std::vector<Configuration> configs;
+    Configuration cfg;
 
-int main(int argc, char *argv[])
-{
-#if 0
-    mainAnimator();
-    return 0;
+    if (cameraSet) {
+        reader.readCameraSettings(cameraSettings, cameraStart, cameraEnd, cameraMove);
+    }
 
-    mainWithAnimation();
-    return 0;
-#else
-    Reader reader;
-    Visualizer vis;
-
-    if (argc < 2)
-    {
-        std::cerr << "Please, include one or more paths to a configuration file." << std::endl;
+    if (!many){
+        reader.read(inputFile, cfg);
+        animator.visualizeOneConfig(cfg, path, savePicture, 0, cameraStart);
         return 0;
     }
 
-    if (argc == 3)
-    {
-        if (argv[2] == std::string_view("-m"))
-        {
-            std::vector<Configuration> configs;
-            std::ifstream input;
-            input.open(argv[1]);
-            if (input.good())
-            {
-                reader.read(input, configs);
-                for (Configuration& config : configs)
-                {
-                    config.computeRotations();
-                    vis.drawConfiguration(config);
-                }
-            }
-            else
-            {
-                std::cerr << "Could not open file: " << argv[1] << ".\n";
-            }
-            return 0;
-        }
+    //many
+    reader.read(inputFile, configs);
+    if (animation){
+        animator.visualizeMainConfigs(configs, phi, reconnectionPics, path, savePicture, cameraStart, cameraEnd);
+        return 0;
     }
+    animator.visualizeAllConfigs(configs, path, savePicture, cameraStart, cameraEnd);
 
-    for (int i = 1; i < argc; ++i)
-    {
-        Configuration config;
-        std::ifstream input;
-        input.open(argv[i]);
-        if (input.good())
-        {
-            reader.read(input, config);
-            config.computeRotations();
-            vis.drawConfiguration(config);
-        }
-        else
-        {
-            std::cerr << "Could not open file: " << argv[i] << ".\n";
-        }
-    }
-#endif
 }
-
