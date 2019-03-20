@@ -148,7 +148,10 @@ inline std::vector<Configuration> BFS(const Configuration& init, const Configura
         const auto current = queue.front();
         queue.pop();
 
-        for (const auto& next : current->next(step))
+        auto nextCfgs = current->next(step);
+ //       std::cout << queue.size() << " " << nextCfgs.size() << std::endl;
+
+        for (const auto& next : nextCfgs)
         {
             if (pool.find(next))
             {
@@ -188,7 +191,7 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
         const auto [val, current] = queue.top();
         queue.pop();
 
-        //std::cout << "Fitness: " << val << std::endl;
+        // std::cout << "Fitness: " << val << std::endl;
 
         for (const auto& next : current->next(step))
         {

@@ -12,6 +12,7 @@
 #include <array>
 #include <optional>
 #include <cmath>
+#include <algorithm>
 
 using ID = unsigned int;
 const double threshold = 0.0001;
@@ -170,44 +171,53 @@ public:
     const unsigned int ori;
 };
 
-inline std::array<unsigned, 5> edgeToArray(const Edge& edge)
+inline Edge arrayToEdge(ID id1, ID id2, const std::array<unsigned, 5>& res)
 {
-    return {edge.side1, edge.dock1, edge.ori, edge.dock2, edge.side2};
-};
-
-inline std::optional<Edge> getNextEdge(const Edge& edge)
-{
-    const static std::array<unsigned, 5> size = {2,3,4,3,2};
-    std::array<unsigned, 5> res = edgeToArray(edge);
-    int over = 1;
-    for (unsigned i = 0; i < 4; ++i)
-    {
-        if (res[i] + over >= size[i])
-        {
-            res[i] = 0;
-            over = 1;
-            continue;
-        }
-        res[i] += 1;
-        over = 0;
-        break;
-    }
-    if (over == 1)
-    {
-        return std::nullopt;
-    }
-    return Edge(edge.id1,
+    return Edge(id1,
                 static_cast<Side>(res[0]),
                 static_cast<Dock>(res[1]),
                 res[2],
                 static_cast<Dock>(res[3]),
                 static_cast<Side>(res[4]),
-                edge.id2);
+                id2);
+}
+
+inline std::array<unsigned, 5> getNextArray(const std::array<unsigned, 5> &edge)
+{
+    const static std::array<unsigned, 5> size = {2,3,4,3,2};
+    std::array<unsigned, 5> res = edge;
+    for (unsigned i = 0; i < 5; ++i)
+    {
+        if (res[i] + 1 >= size[i])
+        {
+            res[i] = 0;
+            continue;
+        }
+        res[i] += 1;
+        break;
+    }
+    return res;
 }
 
 inline Edge reverse(const Edge& edge)
 {
     return {edge.id2, edge.side2, edge.dock2, edge.ori, edge.dock1, edge.side1, edge.id1};
+}
+
+template<typename T>
+inline void getAllSubsets(std::vector<T>& set, std::vector<std::vector<T>>& res, std::vector<T> accum, unsigned index, unsigned count)
+{
+    if (count == 0)
+    {
+        res.push_back(accum);
+        return;
+    }
+    for (unsigned i = index; i < set.size(); ++i)
+    {
+        auto next = accum;
+        next.push_back(set[i]);
+        getAllSubsets(set, res, next, i + 1, count - 1);
+    }
 }
 
 class Action
@@ -304,6 +314,11 @@ public:
         return true;
     }
 
+    bool findEdge(const Edge& edge) const
+    {
+        return edges.at(edge.id1)[edge.side1 * 3 + edge.dock1].has_value();
+    }
+
     void setFixed(ID initID, Side initSide, const Matrix& initRotation)
     {
         fixedId = initID;
@@ -380,6 +395,7 @@ public:
         Configuration next = *this;
         Action reconnect({}, action.reconnections);
         Action rotate(action.rotations, {});
+        Action divided = rotate.divide(1.0/steps);
 
         if (!next.execute(reconnect))
         {
@@ -387,7 +403,6 @@ public:
         }
         for (int i = 1; i <= steps; ++i)
         {
-            Action divided = rotate.divide(double(i)/double(steps));
             if (!next.execute(divided))
             {
                 return std::nullopt;
@@ -419,52 +434,47 @@ public:
         return ok;
     }
 
-    bool execute(const Action::Rotate& action)
+    std::vector<Action> generateActions(unsigned step, unsigned bound = 1) const
     {
-        return modules.at(action.id).rotateJoint(action.joint, action.angle);
-    }
+        auto rotations = generateRotations(step);
+        auto reconnections = generateReconnect();
 
-    bool execute(const Action::Reconnect& action)
-    {
-        if (action.add)
+        std::vector<Action> res;
+        for (unsigned count = 1; count <= bound; ++count) // How many actions will be in generated action.
         {
-            return addEdge(action.edge);
-        }
-        else
-        {
-            return eraseEdge(action.edge);
-        }
-    }
-
-    std::vector<Action::Rotate> generateRotations(unsigned step) const
-    {
-        std::vector<Action::Rotate> res;
-        for (auto& [id, _] : modules)
-        {
-            for (int d : {-step, step})
+            for (unsigned r = 0; r <= count; ++r)
             {
-                for (Joint joint : {Alpha, Beta, Gamma})
+                std::vector<std::vector<Action::Rotate>> resRot;
+                std::vector<std::vector<Action::Reconnect>> resRec;
+
+                getAllSubsets(rotations, resRot, {}, 0, r);
+                getAllSubsets(reconnections, resRec, {}, 0, count - r);
+
+                for (auto& rotation : resRot)
                 {
-                    res.emplace_back(id, joint, d);
+                    for (auto& reconnection : resRec)
+                    {
+                        res.emplace_back(rotation, reconnection);
+                    }
                 }
             }
         }
         return res;
     }
 
-    std::vector<Action::Reconnect> generateReconnections(unsigned step) const
+    std::vector<Configuration> next(unsigned step, unsigned bound = 1) const
     {
-        return {};
-    }
-
-    std::vector<Configuration> next(unsigned step) const
-    {
-        std::vector<Configuration> rec = nextReconnect();
-        std::vector<Configuration> rot = nextRotate(step);
         std::vector<Configuration> res;
-        res.reserve(rec.size() + rot.size());
-        res.insert(res.end(), rec.begin(), rec.end());
-        res.insert(res.end(), rot.begin(), rot.end());
+        auto actions = generateActions(step, bound);
+        //auto actions = generateActions(step, bound);
+        for (auto& action : actions)
+        {
+            auto cfgOpt = makeValid(action);
+            if (cfgOpt.has_value())
+            {
+                res.push_back(cfgOpt.value());
+            }
+        }
         return res;
     }
 
@@ -494,63 +504,63 @@ public:
         return res;
     }
 
-    std::vector<Configuration> nextReconnect() const
-    {
-        std::vector<Configuration> res;
-        for (auto& [id, set] : edges)
-        {
-            for (const std::optional<Edge>& edgeOpt : set)
-            {
-                if (!edgeOpt.has_value())
-                    continue;
-                const Edge& edge = edgeOpt.value();
-                if (edge.id1 < edge.id2)
-                {
-                    Configuration next = *this;
-                    next.eraseEdge(edge);
-
-                    if (next.isValid())
-                    {
-                        res.push_back(next);
-                    }
-                }
-            }
-        }
-        for (auto& [id1, mod1] : modules)
-        {
-            for (auto& [id2, mod2] : modules)
-            {
-                if (id1 >= id2)
-                    continue;
-                for (auto [side1, side2] : std::vector<std::pair<Side, Side>>{{A, A}, {A, B}, {B, A}, { B, B}})
-                {
-                    Vector center1 = mod1.getCenter(side1);
-                    Vector center2 = mod2.getCenter(side2);
-                    if (distance(center1, center2) != 1)
-                        continue;
-                    for (auto [dock1, dock2] : std::vector<std::pair<Dock, Dock>>{{Xn, Xn}, {Xn, Xp}, {Xn, Zn}, {Xp, Xn}, {Xp, Xp}, {Xp, Zn}, {Zn, Xn}, {Zn, Xp}, {Zn, Zn}})
-                    {
-                        for (const int ori : {0, 1, 2, 3})
-                        {
-                            const Matrix& matrix2 = mod2.matrix.at(side2);
-                            Edge edge(id1, side1, dock1, (unsigned int) ori, dock2, side2, id2);
-                            if (equals(matrix2, computeConnectedMatrix(edge)))
-                            {
-                                Configuration next = *this;
-                                if (!next.addEdge(edge))
-                                    continue;
-                                if (next.isValid())
-                                {
-                                    res.push_back(next);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return res;
-    }
+//    std::vector<Configuration> nextReconnect() const
+//    {
+//        std::vector<Configuration> res;
+//        for (auto& [id, set] : edges)
+//        {
+//            for (const std::optional<Edge>& edgeOpt : set)
+//            {
+//                if (!edgeOpt.has_value())
+//                    continue;
+//                const Edge& edge = edgeOpt.value();
+//                if (edge.id1 < edge.id2)
+//                {
+//                    Configuration next = *this;
+//                    next.eraseEdge(edge);
+//
+//                    if (next.isValid())
+//                    {
+//                        res.push_back(next);
+//                    }
+//                }
+//            }
+//        }
+//        for (auto& [id1, mod1] : modules)
+//        {
+//            for (auto& [id2, mod2] : modules)
+//            {
+//                if (id1 >= id2)
+//                    continue;
+//                for (auto [side1, side2] : std::vector<std::pair<Side, Side>>{{A, A}, {A, B}, {B, A}, { B, B}})
+//                {
+//                    Vector center1 = mod1.getCenter(side1);
+//                    Vector center2 = mod2.getCenter(side2);
+//                    if (distance(center1, center2) != 1)
+//                        continue;
+//                    for (auto [dock1, dock2] : std::vector<std::pair<Dock, Dock>>{{Xn, Xn}, {Xn, Xp}, {Xn, Zn}, {Xp, Xn}, {Xp, Xp}, {Xp, Zn}, {Zn, Xn}, {Zn, Xp}, {Zn, Zn}})
+//                    {
+//                        for (const int ori : {0, 1, 2, 3})
+//                        {
+//                            const Matrix& matrix2 = mod2.matrix[side2];
+//                            Edge edge(id1, side1, dock1, (unsigned int) ori, dock2, side2, id2);
+//                            if (equals(matrix2, computeConnectedMatrix(edge)))
+//                            {
+//                                Configuration next = *this;
+//                                if (!next.addEdge(edge))
+//                                    continue;
+//                                if (next.isValid())
+//                                {
+//                                    res.push_back(next);
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//            }
+//        }
+//        return res;
+//    }
 
     bool operator==(const Configuration& other) const
     {
@@ -687,6 +697,106 @@ private:
             }
         }
         return result;
+    }
+
+    std::vector<Action::Rotate> generateRotations(unsigned step) const
+    {
+        std::vector<Action::Rotate> res;
+        for (auto& [id, _] : modules)
+        {
+            for (int d : {-step, step})
+            {
+                for (Joint joint : {Alpha, Beta, Gamma})
+                {
+                    res.emplace_back(id, joint, d);
+                }
+            }
+        }
+        return res;
+    }
+
+    std::vector<Action::Reconnect> generateReconnect() const
+    {
+        auto con = generateConnections();
+        auto dis = generateDisconnections();
+        std::vector<Action::Reconnect> res(con.begin(), con.end());
+        std::copy(dis.begin(), dis.end(), std::back_inserter(res));
+
+        return res;
+    }
+
+    std::vector<Action::Reconnect> generateDisconnections() const
+    {
+        std::vector<Action::Reconnect> res;
+        for (auto& [id, set] : edges)
+        {
+            for (const std::optional<Edge>& edgeOpt : set)
+            {
+                if (!edgeOpt.has_value())
+                    continue;
+                const Edge& edge = edgeOpt.value();
+                if (edge.id1 < edge.id2)
+                {
+                    res.emplace_back(false, edge);
+                }
+            }
+        }
+        return res;
+    }
+
+    std::vector<Action::Reconnect> generateConnections() const
+    {
+        std::vector<Action::Reconnect> res;
+        for (auto& [id1, mod1] : modules)
+        {
+            for (auto&[id2, mod2] : modules)
+            {
+                if (id1 >= id2)
+                    continue;
+                const static std::array<unsigned, 5> init = {0,0,0,0,0};
+                std::array<unsigned, 5> array = {0,0,0,0,0};
+                do
+                {
+                    Edge edge = arrayToEdge(id1, id2, array);
+                    array = getNextArray(array);
+//                    for(auto& x : array)
+//                    {
+//                        std::cout << x;
+//                    }
+//                    std::cout << std::endl;
+
+                    Vector center1 = mod1.getCenter(edge.side1);
+                    Vector center2 = mod2.getCenter(edge.side2);
+                    if (distance(center1, center2) != 1)
+                        continue;
+
+                    const Matrix& matrix = mod2.matrix[edge.side2];
+                    if (equals(matrix, computeConnectedMatrix(edge)) && !findEdge(edge))
+                    {
+                        res.emplace_back(true, edge);
+                    }
+
+                } while (array != init);
+            }
+        }
+        return res;
+    }
+
+    bool execute(const Action::Rotate& action)
+    {
+        return modules.at(action.id).rotateJoint(action.joint, action.angle);
+    }
+
+    bool execute(const Action::Reconnect& action)
+    {
+        if (action.add)
+        {
+            return addEdge(action.edge);
+        }
+        else
+        {
+            return eraseEdge(action.edge);
+        }
     }
 };
 

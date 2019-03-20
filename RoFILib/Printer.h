@@ -59,8 +59,6 @@ public:
         return out.str();
     }
 
-
-private:
     std::string print(const Matrix& matrix) const
     {
         std::stringstream out;
