@@ -3,6 +3,10 @@ project(rofi)
 
 set(CMAKE_CXX_STANDARD 17)
 
+if(${LIBCXX})
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++")
+endif(${LIBCXX})
+
 find_package(Armadillo REQUIRED)
 include_directories(${ARMADILLO_INCLUDE_DIRS})
 
