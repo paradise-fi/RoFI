@@ -1,0 +1,14 @@
+sudo: required
+services:
+  - docker
+env: SH="docker exec -t container bash -c"
+
+before_install:
+  - docker run -d --name container -v $(pwd):/travis -w /travis yaqwsx/rofi tail -f /dev/null
+  - docker ps
+
+script:
+  - $SH "make all.gcc"
+  - $SH "make all.clang"
+  - $SH "make test.gcc"
+  - $SH "make test.clang"
