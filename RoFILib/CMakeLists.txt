@@ -22,3 +22,5 @@ add_executable(rofi-vis ${ARMADILLO_LIBRARIES} visualizer/main.cpp visualizer/Ge
 target_link_libraries(rofi-reconfig ${ARMADILLO_LIBRARIES} ${VTK_LIBRARIES})
 target_link_libraries(rofi-test ${ARMADILLO_LIBRARIES})
 target_link_libraries(rofi-vis ${ARMADILLO_LIBRARIES} ${VTK_LIBRARIES})
+
+add_subdirectory(distribute)
