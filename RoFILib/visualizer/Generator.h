@@ -53,7 +53,7 @@ public:
         unsigned int count = reconnectionPics / 2;
         Configuration c1;
         Configuration c2 = goalConf;
-        if (vec.empty()){ //no inter congif
+        if (vec.empty()){ //no inter config
             c1 = initConf;
         } else {
             c1 = vec.at(vec.size() - 1);
@@ -116,6 +116,13 @@ public:
         }
     }
 */
+
+    unsigned int getStepsCount(const Configuration& initConf, const Configuration& goalConf, double maxPhi){
+        maxPhi = std::abs(maxPhi);
+        double maxAngleMove = getMaxAngleMove(initConf, goalConf);
+        return static_cast<unsigned int>(std::ceil(maxAngleMove / maxPhi));
+    }
+
 private:
     double countStep(double a, double b, unsigned int totalSteps, unsigned int step){
         return a + (((b - a) * step) / totalSteps);
@@ -151,12 +158,6 @@ private:
         double beta = std::abs(m1.getJoint(Beta) - m2.getJoint(Beta));
         double gamma = std::abs(m1.getJoint(Gamma) - m2.getJoint(Gamma));
         return std::max(std::max(alpha, beta), gamma);
-    }
-
-    unsigned int getStepsCount(const Configuration& initConf, const Configuration& goalConf, double maxPhi){
-        maxPhi = std::abs(maxPhi);
-        double maxAngleMove = getMaxAngleMove(initConf, goalConf);
-        return static_cast<unsigned int>(std::ceil(maxAngleMove / maxPhi));
     }
 
     bool sameEdges(const Configuration& c1, const Configuration& c2){

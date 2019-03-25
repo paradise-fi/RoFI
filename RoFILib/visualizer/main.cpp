@@ -132,6 +132,8 @@ void parse(int argc, char* argv[]){
     }
 }
 
+unsigned long Animator::outCount = 0;
+
 int main(int argc, char* argv[]){
     parse(argc, argv);
 
@@ -150,7 +152,7 @@ int main(int argc, char* argv[]){
 
     if (!many){
         reader.read(inputFile, cfg);
-        animator.visualizeOneConfig(cfg, path, savePicture, 0, cameraStart);
+        animator.visualizeOneConfig(cfg, path, savePicture, cameraStart);
         return 0;
     }
 
