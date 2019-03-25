@@ -279,6 +279,19 @@ public:
         return edges;
     }
 
+    std::vector<Edge> getEdges(ID id) const
+    {
+        std::vector<Edge> res;
+        for (auto& e : edges.at(id))
+        {
+            if (e.has_value())
+            {
+                res.push_back(e.value());
+            }
+        }
+        return res;
+    }
+
     bool empty() const
     {
         return modules.empty();
