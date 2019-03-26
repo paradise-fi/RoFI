@@ -57,9 +57,14 @@ public:
         return matrix[side] * rotate(M_PI/2 + diff, X);
     }
 
-    Matrix dockMatrix(Side side, Dock dock, bool on) const
+    Matrix dockMatrix(Side side, Dock dock, bool on, double onCoeff = -1) const
     {
-        double d = on ? 0.05 : 0;
+        double d;
+        if (onCoeff < 0){
+            d = on ? 0.05 : 0;
+        } else  {
+            d = onCoeff * 0.05;
+        }
         const Matrix docks[3] = {
                 translate(Vector{d,0,0}) * rotate(M_PI, Z), // Xp
                 translate(Vector{-d,0,0}) * identity, // Xn
@@ -146,8 +151,8 @@ private:
 class Edge
 {
 public:
-    Edge(ID id1, Side side1, Dock dock1, unsigned int ori, Dock dock2, Side side2, ID id2) :
-            id1(id1), id2(id2), side1(side1), side2(side2), dock1(dock1), dock2(dock2), ori(ori) {}
+    Edge(ID id1, Side side1, Dock dock1, unsigned int ori, Dock dock2, Side side2, ID id2, double onCoeff = 1) :
+            id1(id1), id2(id2), side1(side1), side2(side2), dock1(dock1), dock2(dock2), ori(ori), onCoeff(onCoeff) {}
 
     Edge& operator=(const Edge& e)
     {
@@ -169,6 +174,7 @@ public:
     const Side side1, side2;
     const Dock dock1, dock2;
     const unsigned int ori;
+    double onCoeff = 1;     //for visualizer
 };
 
 inline Edge arrayToEdge(ID id1, ID id2, const std::array<unsigned, 5>& res)
@@ -201,7 +207,7 @@ inline std::array<unsigned, 5> getNextArray(const std::array<unsigned, 5> &edge)
 
 inline Edge reverse(const Edge& edge)
 {
-    return {edge.id2, edge.side2, edge.dock2, edge.ori, edge.dock1, edge.side1, edge.id1};
+    return {edge.id2, edge.side2, edge.dock2, edge.ori, edge.dock1, edge.side1, edge.id1, edge.onCoeff};
 }
 
 template<typename T>

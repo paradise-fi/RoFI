@@ -12,8 +12,7 @@ class Generator{
 public:
     void generate(const Configuration& InitConf, const Configuration& GoalConf, std::vector<Configuration>& vec,
             unsigned int steps){
-        //TODO promyslet steps +-1
-        //steps = 5 -> 4 meziobrazky
+        //steps = 5 -> 4 interConfigs
         for (unsigned int i = 1; i < steps; i++){
             Configuration c;
             generateOneStep(InitConf, GoalConf, c, steps, i);
@@ -47,22 +46,65 @@ public:
 
     void generateEdgeChange(const Configuration& initConf, const Configuration& goalConf,
             std::vector<Configuration>& vec, unsigned int reconnectionPics){
-        if (sameEdges(initConf, goalConf)){
+        if (sameEdges(initConf, goalConf) || initConf.getModules().empty()){
             return;
         }
-        unsigned int count = reconnectionPics / 2;
-        Configuration c1;
-        Configuration c2 = goalConf;
-        if (vec.empty()){ //no inter config
-            c1 = initConf;
-        } else {
-            c1 = vec.at(vec.size() - 1);
+        ID highestId = getHighestId(initConf);
+        std::vector<Edge> sameEdges{};
+        std::vector<Edge> onlyInitEdges{};
+        std::vector<Edge> onlyGoalEdges{};
+        std::vector<Edge> initEdges{};
+        std::vector<Edge> goalEdges{};
+        for (unsigned int id = 0; id <= highestId; id++){
+            for (const auto& e :  initConf.getEdges(id)){
+                initEdges.push_back(e);
+            }
         }
-        for (unsigned int i = 0; i < count; i++){
-            vec.push_back(c1);
+        for (const auto& edge : initEdges){
+            if (goalConf.findEdge(edge)){
+                sameEdges.push_back(edge);
+            } else {
+                onlyInitEdges.push_back(edge);
+            }
         }
-        for (unsigned int j = 0; j < count; j++){
-            vec.push_back(c2);
+
+        for (unsigned int id = 0; id <= highestId; id++){
+            for (const auto& e :  goalConf.getEdges(id)){
+                goalEdges.push_back(e);
+            }
+        }
+
+        for (const auto& edge : goalEdges){
+            if (!initConf.findEdge(edge)){
+                onlyGoalEdges.push_back(edge);
+            }
+        }
+        for (unsigned int i = 1; i <= reconnectionPics; i++){
+            Configuration c;
+            generateOneEdgeChange(initConf, goalConf, c, reconnectionPics, i, onlyInitEdges,
+                    onlyGoalEdges, sameEdges);
+            vec.push_back(c);
+        }
+    }
+
+    void generateOneEdgeChange(const Configuration& initConf, const Configuration& goalConf,
+            Configuration& currConf, unsigned int reconnectionPics, unsigned int step,
+            const std::vector<Edge>& onlyInitEdges, const std::vector<Edge>& onlyGoalEdges,
+            const std::vector<Edge>& sameEdges){
+        for (const auto& [id, mod] : goalConf.getModules()){
+            currConf.addModule(mod.getJoint(Alpha), mod.getJoint(Beta), mod.getJoint(Gamma), id);
+        }
+        for (const auto& e : sameEdges){
+            currConf.addEdge(e);
+        }
+        double coeff = step / static_cast<double>(reconnectionPics);
+        for (auto e : onlyInitEdges){
+            e.onCoeff = 1 - coeff;
+            currConf.addEdge(e);
+        }
+        for (auto e : onlyGoalEdges){
+            e.onCoeff = coeff;
+            currConf.addEdge(e);
         }
     }
 
@@ -162,6 +204,16 @@ private:
 
     bool sameEdges(const Configuration& c1, const Configuration& c2){
         return c1.getEdges() == c2.getEdges();
+    }
+
+    ID getHighestId(const Configuration& config){
+        ID highest = config.getModules().at(0).getId();
+        for (const auto& [id, _] : config.getModules()){
+            if (id > highest){
+                highest = id;
+            }
+        }
+        return highest;
     }
 };
 
