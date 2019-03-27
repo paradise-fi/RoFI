@@ -17,6 +17,7 @@ double omega = 120;
 double phi = 5;
 double reconnectionTime = 2;
 unsigned int reconnectionPics = 48;
+unsigned int framerate = 24;
 
 void parse(int argc, char* argv[]){
     cxxopts::Options options("rofi-vis", "RoFI Visualizer: Tool for visualization of configurations and creating animations.");
@@ -24,15 +25,16 @@ void parse(int argc, char* argv[]){
 
     options.add_options()
             ("h,help", "Print help")
+            ("i,input", "Input config file", cxxopts::value<std::string>())
             ("s,save", "Save picture to file")
             ("a,animation", "Create animation from configurations")
             ("c,camera", "Camera settings file", cxxopts::value<std::string>())
             ("p,path", "Path where to save pictures", cxxopts::value<std::string>())
+            ("f,framerate", "Number of pictures per second", cxxopts::value<unsigned int>())
             ("o,omega", "Maximal angular velocity in 1°/s", cxxopts::value<double>())
-            ("f,phi", "Maximal angle diff in ° per picture", cxxopts::value<double>())
+            ("d,degree", "Maximal angle diff in ° per picture", cxxopts::value<double>())
             ("r,recTime", "Time in seconds for reconnection", cxxopts::value<double>())
             ("e,recPics", "Number of pictures for reconnection", cxxopts::value<unsigned int>()) //rename
-            ("i,input", "Input config file", cxxopts::value<std::string>())
             ("m,many", "Many configurations in one file")
             ;
 
@@ -41,6 +43,17 @@ void parse(int argc, char* argv[]){
         if (result.count("help")) {
             std::cout << options.help({"", "Group"}) << std::endl;
             exit(0);
+        }
+
+        if (result.count("input") == 1){
+            std::string filename(result["input"].as< std::string >());
+            inputFile.open(filename);
+            if (!inputFile.good()){
+                std::cerr << "Could not open file " << filename << ".\n";
+                exit(0);
+            }
+        } else {
+            std::cerr << "There must be exactly one -i or --input option.\n";
         }
 
         if (result.count("save")){
@@ -67,30 +80,39 @@ void parse(int argc, char* argv[]){
 
         if (result.count("path") == 1){
             path = result["path"].as< std::string >();
+            if (!result.count("save")){
+                std::cerr << "Path is not used because -s or --save is not set.\n";
+            }
         } else if (result.count("path") > 1){
             std::cerr << "There can not be more than one -p or --path options.\n";
             exit(0);
         }
 
-        if (result.count("omega") == 1 && result.count("phi") == 0){
+        if (result.count("framerate") == 1){
+            framerate = result["framerate"].as<unsigned int>();
+        } else if (result.count("framerate") > 1){
+            std::cerr << "There can not be more than one -f or --framerate options\n";
+        }
+
+        if (result.count("omega") == 1 && result.count("degree") == 0){
             double val = result["omega"].as< double >();
             if (val < 0) {
                 std::cerr << "Angular velocity can not be negative.\n";
                 exit(0);
             }
             omega = val;
-            phi = omega / 24;       //framerate 24
-        } else if (result.count("omega") == 0 && result.count("phi") == 1) {
-            double val = result["phi"].as< double >();
+            phi = omega / framerate;
+        } else if (result.count("omega") == 0 && result.count("degree") == 1) {
+            double val = result["degree"].as< double >();
             if (val < 0) {
                 std::cerr << "Maximal angle diff can not be negative.\n";
                 exit(0);
             }
             phi = val;
-            omega = 24 * phi;       //framerate 24
-        } else if (!result.count("omega") && !result.count("phi")){}
+            omega = framerate * phi;
+        } else if (!result.count("omega") && !result.count("degree")){}
         else {
-            std::cerr << "There can not be more than one -o, --omega, -f or --phi options.\n";
+            std::cerr << "There can not be more than one -o, --omega, -d or --degree options.\n";
             exit(0);
         }
 
@@ -101,25 +123,14 @@ void parse(int argc, char* argv[]){
                 exit(0);
             }
             reconnectionTime = val;
-            reconnectionPics = static_cast<unsigned int>(std::ceil(reconnectionTime * 24));
+            reconnectionPics = static_cast<unsigned int>(std::ceil(reconnectionTime * framerate));
         } else if (result.count("recTime") == 0 && result.count("recPics") == 1){
             reconnectionPics = result["recPics"].as< unsigned int >();
-            reconnectionTime = reconnectionPics / static_cast<double>(24);
+            reconnectionTime = reconnectionPics / static_cast<double>(framerate);
         } else if (!result.count("recTime") && (!result.count("recPics"))) {}
         else {
             std::cerr << "There can not be more than one -r, --recTime, -rp or --recPics options.\n";
             exit(0);
-        }
-
-        if (result.count("input") == 1){
-            std::string filename(result["input"].as< std::string >());
-            inputFile.open(filename);
-            if (!inputFile.good()){
-                std::cerr << "Could not open file " << filename << ".\n";
-                exit(0);
-            }
-        } else {
-            std::cerr << "There must be exactly one -i or --input option.\n";
         }
 
         if (result.count("many")){
