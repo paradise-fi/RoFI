@@ -10,7 +10,8 @@
 bool many = false;
 bool savePicture = false;
 bool animation = false;
-std::ifstream cameraSettings, inputFile;
+std::ifstream inputFile;
+std::ifstream cameraSettings;
 bool cameraSet = false;
 std::string path("../data/default");
 double omega = 120;
@@ -18,6 +19,24 @@ double phi = 5;
 double reconnectionTime = 2;
 unsigned int reconnectionPics = 48;
 unsigned int framerate = 24;
+
+std::string notAvailable(const std::string& option, const std::string& condition){
+    std::stringstream str;
+    str << "The option " << option << " is available only with the option " << condition << ".\n";
+    return str.str();
+}
+
+std::string atMostOne(const std::string& option){
+    std::stringstream str;
+    str << "There can not be at most one " << option << "option.\n";
+    return str.str();
+}
+
+std::string exactlyOne(const std::string& option){
+    std::stringstream str;
+    str << "There must be exactly one " << option << " option\n";
+    return str.str();
+}
 
 void parse(int argc, char* argv[]){
     cxxopts::Options options("rofi-vis", "RoFI Visualizer: Tool for visualization of configurations and creating animations.");
@@ -53,7 +72,7 @@ void parse(int argc, char* argv[]){
                 exit(0);
             }
         } else {
-            std::cerr << "There must be exactly one -i or --input option.\n";
+            std::cerr << exactlyOne("'-i' or '--input'");
         }
 
         if (result.count("save")){
@@ -74,7 +93,7 @@ void parse(int argc, char* argv[]){
             }
             cameraSet = true;
         } else if (result.count("camera") > 1) {
-            std::cerr << "There can not be more than one -c or --camera options.\n";
+            std::cerr << atMostOne("'-c' or '--camera'");
             exit(0);
         }
 
@@ -84,17 +103,26 @@ void parse(int argc, char* argv[]){
                 std::cerr << "Path is not used because -s or --save is not set.\n";
             }
         } else if (result.count("path") > 1){
-            std::cerr << "There can not be more than one -p or --path options.\n";
+            std::cerr << atMostOne("'-p' or '--path'");
             exit(0);
         }
 
         if (result.count("framerate") == 1){
+            if (!animation){
+                std::cerr << notAvailable("'-f' or '--framerate'", "'-a' or '--animation'");
+                exit(0);
+            }
             framerate = result["framerate"].as<unsigned int>();
         } else if (result.count("framerate") > 1){
-            std::cerr << "There can not be more than one -f or --framerate options\n";
+            std::cerr << atMostOne("'-f' or '--framerate'");
+            exit(0);
         }
 
         if (result.count("omega") == 1 && result.count("degree") == 0){
+            if (!animation){
+                std::cerr << notAvailable("'-o' or '--omega'", "'-a' or '--animation'");
+                exit(0);
+            }
             double val = result["omega"].as< double >();
             if (val < 0) {
                 std::cerr << "Angular velocity can not be negative.\n";
@@ -103,6 +131,10 @@ void parse(int argc, char* argv[]){
             omega = val;
             phi = omega / framerate;
         } else if (result.count("omega") == 0 && result.count("degree") == 1) {
+            if (!animation){
+                std::cerr << notAvailable("'-d' or '--degree'", "'-a' or '--animation'");
+                exit(0);
+            }
             double val = result["degree"].as< double >();
             if (val < 0) {
                 std::cerr << "Maximal angle diff can not be negative.\n";
@@ -112,11 +144,15 @@ void parse(int argc, char* argv[]){
             omega = framerate * phi;
         } else if (!result.count("omega") && !result.count("degree")){}
         else {
-            std::cerr << "There can not be more than one -o, --omega, -d or --degree options.\n";
+            std::cerr << atMostOne("'-o', '--omega', '-d' or '--degree'");
             exit(0);
         }
 
         if (result.count("recTime") == 1 && result.count("recPics") == 0){
+            if (!animation){
+                std::cerr << notAvailable("'-r' or '--recTime'", "'-a' or '--animation'");
+                exit(0);
+            }
             double val = result["recTime"].as< double >();
             if (val < 0) {
                 std::cerr << "Reconnection time can not be negative.\n";
@@ -125,11 +161,15 @@ void parse(int argc, char* argv[]){
             reconnectionTime = val;
             reconnectionPics = static_cast<unsigned int>(std::ceil(reconnectionTime * framerate));
         } else if (result.count("recTime") == 0 && result.count("recPics") == 1){
+            if (!animation){
+                std::cerr << notAvailable("'-e' or '--recPics'", "'-a' or '--animation'");
+                exit(0);
+            }
             reconnectionPics = result["recPics"].as< unsigned int >();
             reconnectionTime = reconnectionPics / static_cast<double>(framerate);
         } else if (!result.count("recTime") && (!result.count("recPics"))) {}
         else {
-            std::cerr << "There can not be more than one -r, --recTime, -rp or --recPics options.\n";
+            std::cerr << atMostOne("'-r', '--recTime', '-e' or '--recPics'");
             exit(0);
         }
 
@@ -147,6 +187,15 @@ unsigned long Animator::outCount = 0;
 
 int main(int argc, char* argv[]){
     parse(argc, argv);
+
+    if (savePicture){
+        std::ofstream videoParams("../visualizer/.videoParams.txt");
+        if (!videoParams.good()){
+            std::cerr << "Could not write parameters for video to file ../visualizer/.videoParams.txt\n";
+        }
+        videoParams << path << "\n";
+        videoParams << framerate << "\n";
+    }
 
     Reader reader;
     Visualizer visualizer;

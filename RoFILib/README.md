@@ -43,6 +43,14 @@ make -j4
 In case you have sudo rights on your computer, VTK should be installed and should work with the provided CMakeLists.txt. Otherwise
 you have to run cmake with an option `-DVTK_DIR=/path/to/VTK-build `.
 
+## FFmpeg
+
+Tool for creating videos from single pictures
+
+### How to install
+
+Follow [the installation notes](https://ffmpeg.org/download.html) on the framework webpage.
+
 # How to run the program
 
 ```
@@ -68,7 +76,8 @@ If there are more configurations in the input file, you can choose `-a` or `--an
 
 If the animation is chosen, you can specify:
 
-* angle velocity of modules using one of the `-o`, `--omega`, `-f` or `--phi` options
+* framerate of the animation using one of the `-f` or `--framerate` options
+* angle velocity of modules using one of the `-o`, `--omega`, `-d` or `--degree` options
 * reconnection time / number of pictures using one of the `-r`, `--recTime`, `-e` or `--recPics` options 
 
 You can also specify settings for camera in a separate file. 
@@ -88,17 +97,18 @@ RoFI Visualizer: Tool for visualization of configurations and creating animation
 Usage:
   rofi-vis [OPTION...]
 
-  -h, --help         Print help
-  -s, --save         Save picture to file
-  -a, --animation    Create animation from configurations
-  -c, --camera arg   Camera settings file
-  -p, --path arg     Path where to save pictures
-  -o, --omega arg    Maximal angular velocity in 1°/s
-  -f, --phi arg      Maximal angle diff in ° per picture
-  -r, --recTime arg  Time in seconds for reconnection
-  -e, --recPics arg  Number of pictures for reconnection
-  -i, --input arg    Input config file
-  -m, --many         Many configurations in one file
+  -h, --help           Print help
+  -i, --input arg      Input config file
+  -s, --save           Save picture to file
+  -a, --animation      Create animation from configurations
+  -c, --camera arg     Camera settings file
+  -p, --path arg       Path where to save pictures
+  -f, --framerate arg  Number of pictures per second
+  -o, --omega arg      Maximal angular velocity in 1°/s
+  -d, --degree arg     Maximal angle diff in ° per picture
+  -r, --recTime arg    Time in seconds for reconnection
+  -e, --recPics arg    Number of pictures for reconnection
+  -m, --many           Many configurations in one file
 ```
 
 Examples:
@@ -124,7 +134,6 @@ Same as above with specified camera settings.
 ```
 ./rofi-vis -i ../data/res.out -s --path ../data/res -a -c ../data/1.cam --omega 15 --recTime 2
 ```
-
 
 ## Reconfiguration
 
@@ -182,3 +191,33 @@ Writes a sequence of configurations starting with the initial and ending with th
 ```
 
 Writes a sequence of configurations to a separate file, then draws many `-m` configurations from one file. 
+
+## How to create a video
+
+Use script videoCreator.sh in visualizer directory.
+
+```
+./rofi-reconfig -i ../data/init.in -g ../data/goal.in > ../data/res.out
+./rofi-vis -i ../data/res.out -a -s --path ../data/res -c ../data/1.cam
+cd ../visualizer
+./videoCreator.sh ../data/animation/output.mp4
+```
+
+Writes sequence of configurations to a separate file, then saves pictures to ../data/res directory
+and creates video output.mp4 in data directory. 
+
+You can also specify the directory with saved pictures as the second argument of the script:
+
+```
+./videoCreator.sh ../data/animation/output.mp4 ../data/res
+```
+
+You can also specify the framerate as the third argument of the script:
+
+
+```
+./videoCreator.sh ../data/animation/output.mp4 ../data/res 24
+```
+
+If the directory with saved pictures and framerate are not specified, then the script reads 
+parameters saved by last call of ./rofi-vis with -s on. 
