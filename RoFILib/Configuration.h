@@ -177,6 +177,28 @@ public:
     double onCoeff = 1;     //for visualizer
 };
 
+inline Matrix transformJoint(double alpha, double beta, double gamma)
+{
+    return rotate(alpha, X) * rotate(gamma, Z) * translate(Z) * rotate(M_PI, Y) * rotate(-beta, X);
+}
+
+inline Matrix transformConnection(Dock d1, int ori, Dock d2)
+{
+    static const std::array<Matrix, 3> dockFaceUp = {
+        rotate(-M_PI/2, Z) * rotate(M_PI/2, Y), // Xp
+                rotate(M_PI/2, Z) *rotate(-M_PI/2, Y),  // Xn
+                identity  // Zn
+    };
+
+    static const std::array<Matrix, 3> faceToDock = {
+        rotate(-M_PI/2, Y) * rotate(-M_PI/2, Z), // Xp
+                rotate(M_PI/2, Y) * rotate(M_PI/2, Z),   // Xn
+                identity // Zn
+    };
+
+    return faceToDock[d1] * rotate(ori * M_PI/2, Z) * translate(-Z) * dockFaceUp[d2] * rotate(M_PI, Y);
+};
+
 inline Edge arrayToEdge(ID id1, ID id2, const std::array<unsigned, 5>& res)
 {
     return Edge(id1,
@@ -602,7 +624,6 @@ private:
         return true;
     }
 
-    //
     Matrix computeOtherSideMatrix(ID id, Side side) const
     {
         auto const& mod = modules.at(id);
@@ -615,30 +636,13 @@ private:
             std::swap(alpha, beta);
         }
 
-        Matrix fix = mod.matrix[side] * rotate(alpha, X) * rotate(gamma, Z) * translate(Z) * rotate(M_PI, Y) * rotate(-beta, X);
-
-        return fix;
+        return mod.matrix[side] * transformJoint(alpha, beta, gamma);
     }
 
     Matrix computeConnectedMatrix(Edge edge) const
     {
-        static const std::array<Matrix, 3> dockFaceUp = {
-                rotate(-M_PI/2, Z) * rotate(M_PI/2, Y), // Xp
-                rotate(M_PI/2, Z) *rotate(-M_PI/2, Y),  // Xn
-                identity  // Zn
-        };
-
-        static const std::array<Matrix, 3> faceToDock = {
-                rotate(-M_PI/2, Y) * rotate(-M_PI/2, Z), // Xp
-                rotate(M_PI/2, Y) * rotate(M_PI/2, Z),   // Xn
-                identity // Zn
-        };
-
         auto const& matrix = modules.at(edge.id1).matrix[edge.side1];
-        Matrix fix2 = matrix * faceToDock[edge.dock1] * rotate(edge.ori * M_PI/2, Z)
-                * translate(-Z) * dockFaceUp[edge.dock2] * rotate(M_PI, Y);
-
-        return fix2;
+        return matrix * transformConnection(edge.dock1, edge.ori, edge.dock2);
     }
 
     void dfsID(ID id, std::unordered_set<ID>& seen) const
