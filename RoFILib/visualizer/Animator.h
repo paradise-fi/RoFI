@@ -16,7 +16,7 @@ private:
     static unsigned long outCount;
 public:
     void visualizeMainConfigs(std::vector<Configuration>& mainConfigs, double maxPhi, unsigned int reconnectionPics,
-            const std::string& path, bool savePicture, const Camera& cameraStart, const Camera& cameraEnd){
+            const std::string& path, bool savePicture, Camera cameraStart, Camera cameraEnd){
         bool firstConfig = true;
         if (mainConfigs.empty()){
             return;
@@ -31,6 +31,7 @@ public:
         Camera currentCameraStart{};
         Camera currentCameraEnd{};
         unsigned long currentStep = 0;
+        setCamerasDefault(mainConfigs.at(0), cameraStart, cameraEnd);
         for (unsigned long i = 0; i < mainConfigs.size() - 1; i++){
             const Configuration& c1 = mainConfigs.at(i);
             const Configuration& c2 = mainConfigs.at(i + 1);
@@ -47,16 +48,12 @@ public:
             visualizeAllConfigs(generatedConfigs, path, savePicture, currentCameraStart, currentCameraEnd);
             currentStep += generatedConfigs.size();
         }
-
     }
 
     void visualizeAllConfigs(std::vector<Configuration>& allConfigs, const std::string& path, bool savePicture,
             Camera cameraStart, Camera cameraEnd){
         unsigned long step = 0;
-        Configuration firstConfig = allConfigs.at(0);
-        firstConfig.computeRotations();
-        cameraStart.setCameraMassCenter(firstConfig.massCenter());
-        cameraEnd.setCameraMassCenter(firstConfig.massCenter());
+        setCamerasDefault(allConfigs.at(0), cameraStart, cameraEnd);
         for (Configuration& c : allConfigs){
             Camera camera = countCameraMove(cameraStart, cameraEnd, step, allConfigs.size() - 1);
             visualizeOneConfig(c, path, savePicture, camera);
@@ -73,6 +70,12 @@ public:
     }
 
 private:
+    void setCamerasDefault(Configuration config, Camera& cameraStart, Camera& cameraEnd){
+        config.computeRotations();
+        cameraStart.setCameraMassCenter(config.massCenter());
+        cameraEnd.setCameraMassCenter(config.massCenter());
+    }
+
     std::string getFilename(const std::string& path){
         std::stringstream str;
         str << path << "/img";
