@@ -412,14 +412,42 @@ public:
     {
         int steps = 10;
         Configuration next = *this;
-        Action reconnect({}, action.reconnections);
-        Action rotate(action.rotations, {});
-        Action divided = rotate.divide(1.0/steps);
 
-        if (!next.execute(reconnect))
+        std::vector<Action::Reconnect> connections;
+        std::vector<Action::Reconnect> disconnections;
+        for (const auto& res : action.reconnections)
+        {
+            if (res.add)
+            {
+                connections.push_back(res);
+            }
+            else
+            {
+                disconnections.push_back(res);
+            }
+        }
+
+        Action connect({}, connections);
+        Action disconnect({}, disconnections);
+
+        if (!next.execute(disconnect))
         {
             return std::nullopt;
         }
+
+        if (!next.isConnected())
+        {
+            return std::nullopt;
+        }
+
+        if (!next.execute(connect))
+        {
+            return std::nullopt;
+        }
+
+
+        Action rotate(action.rotations, {});
+        Action divided = rotate.divide(1.0/steps);
         for (int i = 1; i <= steps; ++i)
         {
             if (!next.execute(divided))
@@ -496,90 +524,6 @@ public:
         }
         return res;
     }
-
-    std::vector<Configuration> nextRotate(unsigned step) const
-    {
-        std::vector<Configuration> res;
-        for (auto& [id, _] : modules)
-        {
-            for (int d : {-step, step})
-            {
-                for (Joint joint : {Alpha, Beta, Gamma})
-                {
-                    Configuration next = *this;
-                    Module& mod = next.modules.at(id);
-                    bool ok = mod.rotateJoint(joint, d);
-                    if (!ok)
-                    {
-                        continue;
-                    }
-                    if (next.isValid())
-                    {
-                        res.push_back(next);
-                    }
-                }
-            }
-        }
-        return res;
-    }
-
-//    std::vector<Configuration> nextReconnect() const
-//    {
-//        std::vector<Configuration> res;
-//        for (auto& [id, set] : edges)
-//        {
-//            for (const std::optional<Edge>& edgeOpt : set)
-//            {
-//                if (!edgeOpt.has_value())
-//                    continue;
-//                const Edge& edge = edgeOpt.value();
-//                if (edge.id1 < edge.id2)
-//                {
-//                    Configuration next = *this;
-//                    next.eraseEdge(edge);
-//
-//                    if (next.isValid())
-//                    {
-//                        res.push_back(next);
-//                    }
-//                }
-//            }
-//        }
-//        for (auto& [id1, mod1] : modules)
-//        {
-//            for (auto& [id2, mod2] : modules)
-//            {
-//                if (id1 >= id2)
-//                    continue;
-//                for (auto [side1, side2] : std::vector<std::pair<Side, Side>>{{A, A}, {A, B}, {B, A}, { B, B}})
-//                {
-//                    Vector center1 = mod1.getCenter(side1);
-//                    Vector center2 = mod2.getCenter(side2);
-//                    if (distance(center1, center2) != 1)
-//                        continue;
-//                    for (auto [dock1, dock2] : std::vector<std::pair<Dock, Dock>>{{Xn, Xn}, {Xn, Xp}, {Xn, Zn}, {Xp, Xn}, {Xp, Xp}, {Xp, Zn}, {Zn, Xn}, {Zn, Xp}, {Zn, Zn}})
-//                    {
-//                        for (const int ori : {0, 1, 2, 3})
-//                        {
-//                            const Matrix& matrix2 = mod2.matrix[side2];
-//                            Edge edge(id1, side1, dock1, (unsigned int) ori, dock2, side2, id2);
-//                            if (equals(matrix2, computeConnectedMatrix(edge)))
-//                            {
-//                                Configuration next = *this;
-//                                if (!next.addEdge(edge))
-//                                    continue;
-//                                if (next.isValid())
-//                                {
-//                                    res.push_back(next);
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//        return res;
-//    }
 
     bool operator==(const Configuration& other) const
     {
