@@ -267,6 +267,39 @@ public:
     }
 };
 
+bool unique(const std::vector<Action::Rotate>& a)
+{
+    std::unordered_map<ID, std::array<bool, 3>> moved;
+    for (const auto& rot : a)
+    {
+        if (moved.find(rot.id) == moved.end())
+        {
+            moved[rot.id] = {false, false, false};
+            moved[rot.id][rot.joint] = true;
+        }
+        else
+        {
+            if (moved[rot.id][rot.joint])
+            {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+template<typename T>
+void filter(const std::vector<T>& data, std::vector<T>& res, bool (*pred)(const T&))
+{
+    for (const T& datum : data)
+    {
+        if ((*pred)(datum))
+        {
+            res.push_back(datum);
+        }
+    }
+}
+
 using ModuleMap = std::unordered_map<ID, Module>;
 using EdgeList = std::array<std::optional<Edge>, 6>;
 using EdgeMap = std::unordered_map<ID, EdgeList>;
@@ -492,12 +525,15 @@ public:
             for (unsigned r = 0; r <= count; ++r)
             {
                 std::vector<std::vector<Action::Rotate>> resRot;
+                std::vector<std::vector<Action::Rotate>> resRotFiltered;
                 std::vector<std::vector<Action::Reconnect>> resRec;
 
                 getAllSubsets(rotations, resRot, {}, 0, r);
                 getAllSubsets(reconnections, resRec, {}, 0, count - r);
 
-                for (auto& rotation : resRot)
+                filter(resRot, resRotFiltered, unique);
+
+                for (auto& rotation : resRotFiltered)
                 {
                     for (auto& reconnection : resRec)
                     {
