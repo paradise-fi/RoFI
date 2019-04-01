@@ -347,7 +347,7 @@ public:
 
     bool isValid()
     {
-        if (!isConnected())
+        if (!connected())
         {
             return false;
         }
@@ -367,7 +367,7 @@ public:
         return computeRotationsRec(fixedId, fixedSide, fixed);
     }
 
-    bool isConnected() const
+    bool connected() const
     {
         std::unordered_set<ID> seen;
         seen.insert(fixedId);
@@ -408,7 +408,7 @@ public:
         return mass;
     }
 
-    std::optional<Configuration> makeValid(const Action& action) const
+    std::optional<Configuration> executeIfValid(const Action &action) const
     {
         int steps = 10;
         Configuration next = *this;
@@ -435,7 +435,7 @@ public:
             return std::nullopt;
         }
 
-        if (!next.isConnected())
+        if (!next.connected())
         {
             return std::nullopt;
         }
@@ -516,7 +516,7 @@ public:
         //auto actions = generateActions(step, bound);
         for (auto& action : actions)
         {
-            auto cfgOpt = makeValid(action);
+            auto cfgOpt = executeIfValid(action);
             if (cfgOpt.has_value())
             {
                 res.push_back(cfgOpt.value());
