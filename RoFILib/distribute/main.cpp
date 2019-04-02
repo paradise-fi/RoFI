@@ -8,8 +8,9 @@
 
 #include "../Configuration.h"
 #include "../Reader.h"
+#include "distributedModule.h"
 
-bool parseInputFile(const std::string &fileName, Module &module) {
+bool parseInputFile(const std::string &fileName, DistributedModule &module) {
     std::ifstream file;
     file.open(fileName);
     std::string s;
@@ -20,21 +21,28 @@ bool parseInputFile(const std::string &fileName, Module &module) {
         Configuration config;
         reader.read(file, config);
         auto &modules = config.getModules();
-        module = modules.at(module.getId());
+
+        const Module &moduleToCopy = modules.at(module.getId());
+        module.rotateJoint(Alpha, moduleToCopy.getJoint(Joint::Alpha));
+        module.rotateJoint(Beta, moduleToCopy.getJoint(Joint::Beta));
+        module.rotateJoint(Gamma, moduleToCopy.getJoint(Joint::Gamma));
+
+        auto edges = config.getEdges(module.getId());
+        module.setEdges(edges);
     }
 
     file.close();
     return true;
 }
 
-void printModule(const Module &module) {
-    std::cout << "M " << module.getId() << " " << module.getJoint(Joint::Alpha) << " "
+void printModule(const DistributedModule &module) {
+    std::cout << "M " << module.getId() << " "
+    << module.getJoint(Joint::Alpha) << " "
     << module.getJoint(Joint::Beta) << " "
-    << module.getJoint(Joint::Gamma) << " "
-    //<< module.getEdges().size()
+    << module.getJoint(Joint::Gamma)
     << std::endl;
 
-    /*for (const Edge &edge : module.getEdges()) {
+    for (const Edge &edge : module.getEdges()) {
         int id1 = edge.id1;
         int id2 = edge.id2;
 
@@ -43,7 +51,7 @@ void printModule(const Module &module) {
                       << edge.ori << " " << static_cast<int>(edge.dock2) << " " << static_cast<int>(edge.side2) << " " << id2
                       << std::endl;
         }
-    }*/
+    }
 }
 
 int main(int argc, char **argv) {
@@ -59,7 +67,7 @@ int main(int argc, char **argv) {
     MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
     std::string fileName = argv[1];
-    Module module(0, 0, 0, rank);
+    DistributedModule module(0, 0, 0, rank);
     parseInputFile(fileName, module);
     printModule(module);
 
