@@ -289,7 +289,7 @@ public:
     }
 };
 
-bool unique(const std::vector<Action::Rotate>& a)
+inline bool unique(const std::vector<Action::Rotate>& a)
 {
     std::unordered_map<ID, std::array<bool, 3>> moved;
     for (const auto& rot : a)

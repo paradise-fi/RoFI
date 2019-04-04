@@ -220,28 +220,28 @@ inline double vecSize(const std::array<double, 3>& a, const std::array<double, 3
                      ((a[2] - b[2]) * (a[2] - b[2])));
 }
 
-void setPosition(const Camera& cameraStart, const Camera& cameraEnd, Camera& res,
+inline void setPosition(const Camera& cameraStart, const Camera& cameraEnd, Camera& res,
                  unsigned long step, unsigned long totalSteps){
     res.setPosX(countStep(cameraStart.getPosX(), cameraEnd.getPosX(), step, totalSteps));
     res.setPosY(countStep(cameraStart.getPosY(), cameraEnd.getPosY(), step, totalSteps));
     res.setPosZ(countStep(cameraStart.getPosZ(), cameraEnd.getPosZ(), step, totalSteps));
 }
 
-void setView(const Camera& cameraStart, const Camera& cameraEnd, Camera& res,
+inline void setView(const Camera& cameraStart, const Camera& cameraEnd, Camera& res,
              unsigned long step, unsigned long totalSteps){
     res.setViewX(countStep(cameraStart.getViewX(), cameraEnd.getViewX(), step, totalSteps));
     res.setViewY(countStep(cameraStart.getViewY(), cameraEnd.getViewY(), step, totalSteps));
     res.setViewZ(countStep(cameraStart.getViewZ(), cameraEnd.getViewZ(), step, totalSteps));
 }
 
-void setFocus(const Camera& cameraStart, const Camera& cameraEnd, Camera& res,
+inline void setFocus(const Camera& cameraStart, const Camera& cameraEnd, Camera& res,
               unsigned long step, unsigned long totalSteps){
     res.setFocX(countStep(cameraStart.getFocX(), cameraEnd.getFocX(), step, totalSteps));
     res.setFocY(countStep(cameraStart.getFocY(), cameraEnd.getFocY(), step, totalSteps));
     res.setFocZ(countStep(cameraStart.getFocZ(), cameraEnd.getFocZ(), step, totalSteps));
 }
 
-std::array<double, 3> countLinearPosition(const Camera& cameraStart, const Camera& cameraEnd,
+inline std::array<double, 3> countLinearPosition(const Camera& cameraStart, const Camera& cameraEnd,
         unsigned long step, unsigned long totalSteps){
     std::array<double, 3> res{};
     res[0] = countStep(cameraStart.getPosX(), cameraEnd.getPosX(), step, totalSteps);
@@ -250,7 +250,7 @@ std::array<double, 3> countLinearPosition(const Camera& cameraStart, const Camer
     return res;
 }
 
-std::array<double, 3> countLinearFocus(const Camera& cameraStart, const Camera& cameraEnd,
+inline std::array<double, 3> countLinearFocus(const Camera& cameraStart, const Camera& cameraEnd,
         unsigned long step, unsigned long totalSteps){
     std::array<double, 3> res{};
     res[0] = countStep(cameraStart.getFocX(), cameraEnd.getFocX(), step, totalSteps);
@@ -259,7 +259,7 @@ std::array<double, 3> countLinearFocus(const Camera& cameraStart, const Camera& 
     return res;
 }
 
-std::array<double, 3> countLinearView(const Camera& cameraStart, const Camera& cameraEnd,
+inline std::array<double, 3> countLinearView(const Camera& cameraStart, const Camera& cameraEnd,
         unsigned long step, unsigned long totalSteps){
     std::array<double, 3> res{};
     res[0] = countStep(cameraStart.getViewX(), cameraEnd.getViewX(), step, totalSteps);
@@ -268,14 +268,14 @@ std::array<double, 3> countLinearView(const Camera& cameraStart, const Camera& c
     return res;
 }
 
-double countDistance(const Camera& cameraStart, const Camera& cameraEnd, unsigned long step,
+inline double countDistance(const Camera& cameraStart, const Camera& cameraEnd, unsigned long step,
                      unsigned long totalSteps){
     double d1 = vecSize(cameraStart.getPos(), cameraStart.getFoc());
     double d2 = vecSize(cameraEnd.getPos(), cameraEnd.getFoc());
     return countStep(d1, d2, step, totalSteps);
 }
 
-Camera countCameraMove(const Camera& cameraStart, const Camera& cameraEnd,
+inline Camera countCameraMove(const Camera& cameraStart, const Camera& cameraEnd,
                        unsigned long step, unsigned long totalSteps){
     Camera res;
     std::array<double, 3> linearPosition = countLinearPosition(cameraStart, cameraEnd, step, totalSteps);
