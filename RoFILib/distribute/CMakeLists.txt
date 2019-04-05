@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(rofi-distribute)
-SET(CMAKE_CXX_COMPILER /usr/bin/mpic++)
+SET(CMAKE_CXX_COMPILER mpic++)
 SET(CMAKE_CXX_FLAGS ${MPI_CXX_COMPILE_FLAGS})
 
 include_directories(../reconfig)

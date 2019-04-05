@@ -9,6 +9,7 @@
 #include "../Configuration.h"
 #include "../Reader.h"
 #include "distributedModule.h"
+#include "../Printer.h"
 
 bool parseInputFile(const std::string &fileName, DistributedModule &module) {
     std::ifstream file;
@@ -36,22 +37,34 @@ bool parseInputFile(const std::string &fileName, DistributedModule &module) {
 }
 
 void printModule(const DistributedModule &module) {
-    std::cout << "M " << module.getId() << " "
-    << module.getJoint(Joint::Alpha) << " "
-    << module.getJoint(Joint::Beta) << " "
-    << module.getJoint(Joint::Gamma)
-    << std::endl;
+    Printer printer;
+    std::cout << printer.print(module);
 
     for (const Edge &edge : module.getEdges()) {
         int id1 = edge.id1;
         int id2 = edge.id2;
 
         if ((id1 < id2 && module.getId() == id1) || (id1 > id2 && module.getId() == id2)) {
-            std::cout << "E " << id1 << " " << static_cast<int>(edge.side1) << " " << static_cast<int>(edge.dock1) << " "
-                      << edge.ori << " " << static_cast<int>(edge.dock2) << " " << static_cast<int>(edge.side2) << " " << id2
-                      << std::endl;
+            std::cout << printer.print(edge);
         }
     }
+}
+
+void tmpReconfiguration() {
+    std::cout << std::endl;
+    std::cout << "M 1 0 90 0" << std::endl;
+    std::cout << std::endl;
+    std::cout << "M 1 0 0 90" << std::endl;
+    std::cout << "M 2 90 0 90" << std::endl;
+    std::cout << std::endl;
+    std::cout << "E + 1 0 0 0 0 1 2" << std::endl;
+    std::cout << "E + 0 0 2 1 2 1 2" << std::endl;
+    std::cout << std::endl;
+    std::cout << "E - 1 1 2 0 2 0 2" << std::endl;
+    std::cout << "E - 0 0 2 1 2 1 2" << std::endl;
+    std::cout << std::endl;
+    std::cout << "M 1 0 -90 0" << std::endl;
+    std::cout << std::endl;
 }
 
 int main(int argc, char **argv) {
@@ -63,13 +76,19 @@ int main(int argc, char **argv) {
     int size, rank;
 
     MPI_Init(&argc,&argv);
-    MPI_Comm_size(MPI_COMM_WORLD,&size);
-    MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+    MPI_Comm_size(MPI_COMM_WORLD, &size);
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
     std::string fileName = argv[1];
-    DistributedModule module(0, 0, 0, rank);
+    DistributedModule module(0, 0, 0, static_cast<ID>(rank));
     parseInputFile(fileName, module);
     printModule(module);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    if (rank == 0) {
+        tmpReconfiguration();
+    }
 
     MPI_Finalize();
     return 0;
