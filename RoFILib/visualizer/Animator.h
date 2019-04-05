@@ -84,28 +84,27 @@ private:
     }
 
     unsigned int getAllConfigsCount(const std::vector<Configuration>& mainConfigs, double maxPhi,
-            unsigned int reconnectionPics){
+                                    unsigned int reconnectionPics){
         if (mainConfigs.empty()){
-          return 0;
+            return 0;
         }
         if (mainConfigs.size() == 1){
-          return 1;
+            return 1;
         }
         unsigned int count = 1; //the very first configuration
         Generator generator;
         for (unsigned long i = 0; i < mainConfigs.size() - 1; i++){
             const Configuration& c1 = mainConfigs.at(i);
             const Configuration& c2 = mainConfigs.at(i + 1);
-            count += generator.getStepsCount(c1, c2, maxPhi);
+            unsigned int moduleChangeCount = generator.getStepsCount(c1, c2, maxPhi);
+            unsigned int currentCount = moduleChangeCount;
             if (c1.getEdges() != c2.getEdges()){
-                unsigned int edgeChange = reconnectionPics / 2;
-                count += edgeChange * 2;
-                count += 1;     //c2 is not included
+                currentCount = moduleChangeCount > reconnectionPics ? moduleChangeCount : reconnectionPics;
             }
+            count += currentCount;
         }
         return count;
     }
-
 };
 
 #endif //ROFI_ANIMATOR_H

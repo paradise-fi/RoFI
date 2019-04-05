@@ -3,7 +3,6 @@
 #include <string_view>
 #include "../Reader.h"
 #include "Visualizer.h"
-#include "AnimationReader.h"
 #include "Animator.h"
 #include "../cxxopts.hpp"
 
