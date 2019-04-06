@@ -7,7 +7,7 @@
 
 enum class Algorithm
 {
-    BFS, AStar
+    BFS, AStar, RRT
 };
 
 std::ifstream initInput, goalInput;
@@ -26,7 +26,7 @@ void parse(int argc, char* argv[])
             ("i,init", "Initial configuration file", cxxopts::value<std::string>())
             ("g,goal", "Goal configuration file", cxxopts::value<std::string>())
             ("s,step", "Rotation angle step size in range <0,90>", cxxopts::value<unsigned>())
-            ("a,alg", "Algorithm for reconfiguration: bfs, astar", cxxopts::value<std::string>())
+            ("a,alg", "Algorithm for reconfiguration: bfs, astar, rrt", cxxopts::value<std::string>())
             ("e,eval", "Evaluation function for A* algorithm: dMatrix, dCenter, dJoint, trivial", cxxopts::value<std::string>())
             ("p,parallel", "How many parallel actions are allowed: <1,...>", cxxopts::value<unsigned>())
             ;
@@ -86,6 +86,10 @@ void parse(int argc, char* argv[])
             }
             if ((val == "astar") || (val == "AStar")) {
                 alg = Algorithm::AStar;
+                valid = true;
+            }
+            if ((val == "rrt") || (val == "RRT")) {
+                alg = Algorithm::RRT;
                 valid = true;
             }
             if (!valid) {
@@ -201,6 +205,9 @@ int main(int argc, char* argv[])
             break;
         case Algorithm::AStar:
             path = AStar(init, goal, step, bound, *eval);
+            break;
+        case Algorithm::RRT:
+            path = RRT(init, goal, step);
             break;
     }
 

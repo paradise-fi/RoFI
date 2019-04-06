@@ -359,6 +359,17 @@ public:
         return modules;
     }
 
+    std::vector<ID> getIDs() const
+    {
+        std::vector<ID> ids;
+        ids.reserve(modules.size());
+        for (auto& [id, m] : modules)
+        {
+            ids.push_back(id);
+        }
+        return ids;
+    }
+
     const EdgeMap& getEdges() const
     {
         return edges;
@@ -894,7 +905,10 @@ inline std::optional<Configuration> generateAngles(const std::vector<ID>& ids, c
     Configuration cfg;
     for (ID id : ids)
     {
-        cfg.addModule(0,0,0,id);
+        double alpha = step * ab(rd);
+        double beta = step * ab(rd);
+        double gamma = step * c(rd);
+        cfg.addModule(alpha,beta,gamma,id);
     }
     for (const Edge& edge : edges)
     {
