@@ -1,6 +1,7 @@
 #include "catch.hpp"
 #include "../Configuration.h"
 #include "../Printer.h"
+#include "../visualizer/Visualizer.h"
 
 TEST_CASE("Connections")
 {
@@ -83,6 +84,77 @@ TEST_CASE("Next configurations")
 
     for (auto& next : nextCfgs)
     {
-        std::cout << p.print(next);
+        //std::cout << p.print(next);
     }
+}
+
+TEST_CASE("Generate edge")
+{
+    Printer p;
+    std::unordered_map<ID, std::array<bool, 6>> occupied;
+    occupied[0] = {true, true, true, true, true, true};
+    occupied[1] = {true, true, true, true, true, true};
+
+    for (int i = 0; i < 6; ++i)
+    {
+        auto edge = generateEdge(0, 1, occupied);
+        REQUIRE(edge.has_value());
+    }
+    auto edge = generateEdge(0, 1, occupied);
+    REQUIRE(!edge.has_value());
+}
+
+TEST_CASE("Generate angles")
+{
+    std::vector<ID> ids = {0, 1};
+    std::vector<Edge> edges;
+    edges.emplace_back(0, A, Xp, 0, Zn, B, 1);
+
+    auto cfg = generateAngles(ids, edges);
+    REQUIRE(cfg.has_value());
+    Printer p;
+    //std::cout << p.print(cfg.value());
+}
+
+TEST_CASE("Generate angles for generated edges")
+{
+    Printer p;
+    std::vector<ID> ids = {0, 1};
+    std::unordered_map<ID, std::array<bool, 6>> occupied;
+    occupied[0] = {true, true, true, true, true, true};
+    occupied[1] = {true, true, true, true, true, true};
+
+    for (int i = 0; i < 6; ++i)
+    {
+        auto edge = generateEdge(0, 1, occupied);
+        REQUIRE(edge.has_value());
+        std::vector<Edge> edges;
+        edges.push_back(edge.value());
+        auto cfg = generateAngles(ids, edges);
+        REQUIRE(cfg.has_value());
+        //std::cout << p.print(cfg.value());
+    }
+}
+
+TEST_CASE("Sample free")
+{
+    Printer p;
+    std::vector<ID> ids = {0, 1};
+    std::optional<Configuration> cfg = sampleFree(ids);
+    REQUIRE(cfg.has_value());
+}
+
+TEST_CASE("Sample free complicated")
+{
+    std::vector<ID> ids = {0, 1, 5, 7, 4};
+    std::optional<Configuration> cfg = sampleFree(ids);
+    while (!cfg.has_value())
+    {
+        cfg = sampleFree(ids);
+    }
+    REQUIRE(cfg.has_value());
+//    Printer p;
+//    std::cout << p.print(cfg.value());
+//    Visualizer vis;
+//    vis.drawConfiguration(cfg.value());
 }
