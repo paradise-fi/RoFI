@@ -200,24 +200,44 @@ Use script videoCreator.sh in visualizer directory.
 ./rofi-reconfig -i ../data/init.in -g ../data/goal.in > ../data/res.out
 ./rofi-vis -i ../data/res.out -a -s --path ../data/res -c ../data/1.cam
 cd ../visualizer
-./videoCreator.sh ../data/animation/output.mp4
+./videoCreator.sh -o ../data/animation/output.mp4
 ```
 
 Writes sequence of configurations to a separate file, then saves pictures to ../data/res directory
-and creates video output.mp4 in data directory. 
+and creates video output.mp4 in data/animation directory. 
 
-You can also specify the directory with saved pictures as the second argument of the script:
+You can specify the directory with saved pictures, framerate of the animation,
+path + filename of the output animation and whether to clean the input directory - 
+delete the pictures.
 
-```
-./videoCreator.sh ../data/animation/output.mp4 ../data/res
-```
 
-You can also specify the framerate as the third argument of the script:
-
+Options: 
 
 ```
-./videoCreator.sh ../data/animation/output.mp4 ../data/res 24
+  -h, --help         Prints help
+  -i, --input        Directory with pictures to be animated
+  -o, --output       Output file (path/videoName.mp4)
+  -f, --framerate    Number of pictures per second
+  -d, --delete       Delete pictures in the input directory
 ```
 
-If the directory with saved pictures and framerate are not specified, then the script reads 
-parameters saved by last call of ./rofi-vis with -s on. 
+Examples: 
+
+Spicify output file and input directory:
+
+```
+./videoCreator.sh -o ../data/animation/output.mp4 -i ../data/res
+```
+
+Specify output file, input directory and framerate:
+
+```
+./videoCreator.sh -o ../data/animation/output.mp4 -i ../data/res -f 24
+```
+
+Specify output file and delete pictures in input directory
+
+```
+./videoCreator.sh -o ../data/animation/output.mp4 -d
+```
+
