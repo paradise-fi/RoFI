@@ -11,7 +11,7 @@
 #include "distributedModule.h"
 #include "../Printer.h"
 
-bool parseInputFile(const std::string &fileName, DistributedModule &module) {
+bool parseFile(const std::string &fileName, DistributedModule &module) {
     std::ifstream file;
     file.open(fileName);
     std::string s;
@@ -20,7 +20,12 @@ bool parseInputFile(const std::string &fileName, DistributedModule &module) {
         getline(file, s);
         Reader reader;
         Configuration config;
-        reader.read(file, config);
+        bool rv = reader.read(file, config);
+
+        if (!rv) {
+            return false;
+        }
+
         auto &modules = config.getModules();
 
         const Module &moduleToCopy = modules.at(module.getId());
@@ -68,8 +73,8 @@ void tmpReconfiguration() {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 2) {
-        std::cout << "Input file is missing. " << std::endl;
+    if (argc != 3) {
+        std::cout << "Input or output file is missing. " << std::endl;
         return 1;
     }
 
@@ -79,10 +84,15 @@ int main(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-    std::string fileName = argv[1];
-    DistributedModule module(0, 0, 0, static_cast<ID>(rank));
-    parseInputFile(fileName, module);
-    printModule(module);
+    std::string inputFileName = argv[1];
+    DistributedModule currModule(0, 0, 0, static_cast<ID>(rank));
+    parseFile(inputFileName, currModule);
+
+    std::string outputFileName = argv[2];
+    DistributedModule trgModule(0, 0, 0, static_cast<ID>(rank));
+    parseFile(outputFileName, trgModule);
+
+    printModule(currModule);
 
     MPI_Barrier(MPI_COMM_WORLD);
 

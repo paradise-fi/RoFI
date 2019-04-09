@@ -1,6 +1,7 @@
 #!/bin/bash
 
-IN_MPI="../example.in"
+IN_START_MPI="../example.in"
+IN_TARGET_MPI="../exampleTrg.in"
 OUT_MPI='run.out'
 OUT_POSTPROCESSING='example.out'
 LOG='log'
@@ -12,10 +13,10 @@ if [ -d "./build" ]; then rm -rf build/; fi
 mkdir build; cd build
 
 echo "compile and start distributed algorithm"
-ROFI_COUNT=$(head -n 1 $IN_MPI)
+ROFI_COUNT=$(head -n 1 $IN_START_MPI)
 cmake ../../.. | tee $LOG &&  
   make | tee $LOG &&
-  mpiexec -np $ROFI_COUNT ./distribute/rofi-distribute $IN_MPI >> $OUT_MPI &&
+  mpiexec -np $ROFI_COUNT ./distribute/rofi-distribute $IN_START_MPI $IN_TARGET_MPI >> $OUT_MPI &&
   ./rofi-distribute-postprocessing $OUT_MPI >> $OUT_POSTPROCESSING
 echo "finish process"
 
