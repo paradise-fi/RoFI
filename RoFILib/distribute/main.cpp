@@ -90,6 +90,46 @@ void tmpReconfiguration() {
     std::cout << std::endl;
 }
 
+void shareConfigurations(const DistributedModule &module, Configuration &configuration) {
+    int worldSize;
+    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+
+    DistributedModule moduleToSend[worldSize];
+    for (int i = 0; i < worldSize; i++) {
+        moduleToSend[i] = module;
+    }
+
+    int sizeOfModule = sizeof(DistributedModule);
+    auto moduleToSendChar = reinterpret_cast<const char *>(moduleToSend);
+    char moduleToRecvChar[sizeOfModule * worldSize];
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    MPI_Alltoall(moduleToSendChar, sizeOfModule, MPI_CHAR, moduleToRecvChar, sizeOfModule, MPI_CHAR, MPI_COMM_WORLD);
+
+    auto moduleToRecv = reinterpret_cast<DistributedModule *>(moduleToRecvChar);
+    for (int i = 0; i < worldSize; i++) {
+        DistributedModule &module1 = moduleToRecv[i];
+        configuration.addModule(module1.getJoint(Joint::Alpha), module1.getJoint(Joint::Beta), module1.getJoint(Joint::Gamma), module1.getId());
+    }
+
+    for (int i = 0; i < worldSize; i++) {
+        DistributedModule &module1 = moduleToRecv[i];
+        for (auto optEdge : module1.getEdges()) {
+            if (!optEdge.has_value()) {
+                continue;
+            }
+
+            Edge edge = optEdge.value();
+            ID id1 = edge.id1();
+            ID id2 = edge.id2();
+
+            if ((module1.getId() == id1 && id1 < id2) || (module1.getId() == id2 && id1 > id2)) {
+                configuration.addEdge(edge);
+            }
+        }
+    }
+}
+
 int main(int argc, char **argv) {
     if (argc != 3) {
         std::cout << "Input or output file is missing. " << std::endl;
@@ -117,6 +157,13 @@ int main(int argc, char **argv) {
     if (rank == 0) {
         tmpReconfiguration();
     }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    Configuration currConfiguration;
+    Configuration trgConfiguration;
+    shareConfigurations(currModule, currConfiguration);
+    shareConfigurations(trgModule, trgConfiguration);
 
     MPI_Finalize();
     return 0;
