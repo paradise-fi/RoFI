@@ -103,7 +103,7 @@ void Visualizer::drawConfiguration(const Configuration &config, const std::strin
             for (Dock dock : {Xp, Xn, Zn})
             {
                 bool on = edges[side * 3 + dock].has_value();
-                double onCoeff = on ? edges[side * 3 + dock].value().onCoeff : 0;
+                double onCoeff = on ? edges[side * 3 + dock].value().onCoeff() : 0;
                 addActor("connector", mod.dockMatrix(side, dock, on, onCoeff), color);
             }
         }

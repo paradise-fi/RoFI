@@ -46,8 +46,8 @@ void printModule(const DistributedModule &module) {
     std::cout << printer.print(module);
 
     for (const Edge &edge : module.getEdges()) {
-        int id1 = edge.id1;
-        int id2 = edge.id2;
+        int id1 = edge.id1();
+        int id2 = edge.id2();
 
         if ((id1 < id2 && module.getId() == id1) || (id1 > id2 && module.getId() == id2)) {
             std::cout << printer.print(edge);

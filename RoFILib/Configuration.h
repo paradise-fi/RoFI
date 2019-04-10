@@ -171,29 +171,70 @@ class Edge
 {
 public:
     Edge(ID id1, Side side1, Dock dock1, unsigned int ori, Dock dock2, Side side2, ID id2, double onCoeff = 1) :
-            id1(id1), id2(id2), side1(side1), side2(side2), dock1(dock1), dock2(dock2), ori(ori), onCoeff(onCoeff) {}
-
-    Edge& operator=(const Edge& e)
-    {
-        return *this;
-    }
+            id1_(id1), id2_(id2), side1_(side1), side2_(side2), dock1_(dock1), dock2_(dock2), ori_(ori), onCoeff_(onCoeff) {}
 
     bool operator==(const Edge& other) const
     {
-        return (id1 == other.id1) &&
-               (id2 == other.id2) &&
-               (side1 == other.side1) &&
-               (side2 == other.side2) &&
-               (dock1 == other.dock1) &&
-               (dock2 == other.dock2) &&
-               (ori == other.ori);
+        return (id1_ == other.id1_) &&
+               (id2_ == other.id2_) &&
+               (side1_ == other.side1_) &&
+               (side2_ == other.side2_) &&
+               (dock1_ == other.dock1_) &&
+               (dock2_ == other.dock2_) &&
+               (ori_ == other.ori_);
     }
 
-    const ID id1, id2;
-    const Side side1, side2;
-    const Dock dock1, dock2;
-    const unsigned int ori;
-    double onCoeff = 1;     //for visualizer
+    ID id1() const
+    {
+        return id1_;
+    }
+
+    ID id2() const
+    {
+        return id2_;
+    }
+
+    Side side1() const
+    {
+        return side1_;
+    }
+
+    Side side2() const
+    {
+        return side2_;
+    }
+
+    Dock dock1() const
+    {
+        return dock1_;
+    }
+
+    Dock dock2() const
+    {
+        return dock2_;
+    }
+
+    unsigned int ori() const
+    {
+        return ori_;
+    }
+
+    double onCoeff() const
+    {
+        return onCoeff_;
+    }
+
+    void setOnCoeff(double value)
+    {
+        onCoeff_ = value;
+    }
+
+private:
+    ID id1_, id2_;
+    Side side1_, side2_;
+    Dock dock1_, dock2_;
+    unsigned int ori_;
+    double onCoeff_ = 1;     //for visualizer
 };
 
 inline Matrix transformJoint(double alpha, double beta, double gamma)
@@ -248,7 +289,7 @@ inline std::array<unsigned, 5> getNextArray(const std::array<unsigned, 5> &edge)
 
 inline Edge reverse(const Edge& edge)
 {
-    return {edge.id2, edge.side2, edge.dock2, edge.ori, edge.dock1, edge.side1, edge.id1, edge.onCoeff};
+    return {edge.id2(), edge.side2(), edge.dock2(), edge.ori(), edge.dock1(), edge.side1(), edge.id1(), edge.onCoeff()};
 }
 
 template<typename T>
@@ -408,11 +449,11 @@ public:
     bool addEdge(Edge edge)
     {
         // Finds edges for both modules.
-        EdgeList& set1 = edges.at(edge.id1);
-        EdgeList& set2 = edges.at(edge.id2);
+        EdgeList& set1 = edges.at(edge.id1());
+        EdgeList& set2 = edges.at(edge.id2());
 
-        int index1 = edge.side1 * 3 + edge.dock1;
-        int index2 = edge.side2 * 3 + edge.dock2;
+        int index1 = edge.side1() * 3 + edge.dock1();
+        int index2 = edge.side2() * 3 + edge.dock2();
         if (set1[index1].has_value() || set2[index2].has_value())
         {
             return false;
@@ -425,7 +466,7 @@ public:
 
     bool findEdge(const Edge& edge) const
     {
-        return edges.at(edge.id1)[edge.side1 * 3 + edge.dock1].has_value();
+        return edges.at(edge.id1())[edge.side1() * 3 + edge.dock1()].has_value();
     }
 
     void setFixed(ID initID, Side initSide, const Matrix& initRotation)
@@ -643,11 +684,11 @@ private:
     // If the given edge is in the configuration, delete it from both modules.
     bool eraseEdge(const Edge& edge)
     {
-        EdgeList& set1 = edges.at(edge.id1);
-        int index1 = edge.side1 * 3 + edge.dock1;
+        EdgeList& set1 = edges.at(edge.id1());
+        int index1 = edge.side1() * 3 + edge.dock1();
 
-        EdgeList& set2 = edges.at(edge.id2);
-        int index2 = edge.side2 * 3 + edge.dock2;
+        EdgeList& set2 = edges.at(edge.id2());
+        int index2 = edge.side2() * 3 + edge.dock2();
 
         if (!set1[index1].has_value() || !set2[index2].has_value())
         {
@@ -676,8 +717,8 @@ private:
 
     Matrix computeConnectedMatrix(Edge edge) const
     {
-        auto const& matrix = modules.at(edge.id1).matrix[edge.side1];
-        return matrix * transformConnection(edge.dock1, edge.ori, edge.dock2);
+        auto const& matrix = modules.at(edge.id1()).matrix[edge.side1()];
+        return matrix * transformConnection(edge.dock1(), edge.ori(), edge.dock2());
     }
 
     void dfsID(ID id, std::unordered_set<ID>& seen) const
@@ -686,7 +727,7 @@ private:
         {
             if (!edgeOpt.has_value())
                 continue;
-            ID nextId = edgeOpt.value().id2;
+            ID nextId = edgeOpt.value().id2();
             if (seen.find(nextId) == seen.end())
             {
                 seen.insert(nextId);
@@ -712,8 +753,8 @@ private:
                 continue;
             const Edge& edge = edgeOpt.value();
 
-            ID idNext = edge.id2;
-            Side sideNext = edge.side2;
+            ID idNext = edge.id2();
+            Side sideNext = edge.side2();
 
             // Compute, where next module should be.
             Matrix rotationComputed = computeConnectedMatrix(edge);
@@ -773,7 +814,7 @@ private:
                 if (!edgeOpt.has_value())
                     continue;
                 const Edge& edge = edgeOpt.value();
-                if (edge.id1 < edge.id2)
+                if (edge.id1() < edge.id2())
                 {
                     res.emplace_back(false, edge);
                 }
@@ -803,12 +844,12 @@ private:
 //                    }
 //                    std::cout << std::endl;
 
-                    Vector center1 = mod1.getCenter(edge.side1);
-                    Vector center2 = mod2.getCenter(edge.side2);
+                    Vector center1 = mod1.getCenter(edge.side1());
+                    Vector center2 = mod2.getCenter(edge.side2());
                     if (distance(center1, center2) != 1)
                         continue;
 
-                    const Matrix& matrix = mod2.matrix[edge.side2];
+                    const Matrix& matrix = mod2.matrix[edge.side2()];
                     if (equals(matrix, computeConnectedMatrix(edge)) && !findEdge(edge))
                     {
                         res.emplace_back(true, edge);

@@ -107,11 +107,11 @@ private:
         double coeff = currentStep / static_cast<double>(reconnectionPics);
         if (coeff > 1){ coeff = 1;}
         for (auto e : onlyInitEdges){
-            e.onCoeff = 1 - coeff;
+            e.setOnCoeff(1 - coeff);
             currConf.addEdge(e);
         }
         for (auto e : onlyGoalEdges){
-            e.onCoeff = coeff;
+            e.setOnCoeff(coeff);
             currConf.addEdge(e);
         }
     }

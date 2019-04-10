@@ -50,7 +50,7 @@ public:
                 if (!edgeOpt.has_value())
                     continue;
                 const Edge& edge = edgeOpt.value();
-                if (edge.id1 < edge.id2)
+                if (edge.id1() < edge.id2())
                 {
                     out << print(edge);
                 }
@@ -90,13 +90,13 @@ public:
     {
         std::stringstream out;
         out << "E " <<
-            edge.id1 << " " <<
-            edge.side1 << " " <<
-            edge.dock1 << " " <<
-            edge.ori << " " <<
-            edge.dock2 << " " <<
-            edge.side2 << " " <<
-            edge.id2 << std::endl;
+            edge.id1() << " " <<
+            edge.side1() << " " <<
+            edge.dock1() << " " <<
+            edge.ori() << " " <<
+            edge.dock2() << " " <<
+            edge.side2() << " " <<
+            edge.id2() << std::endl;
         return out.str();
     }
 };
