@@ -40,18 +40,18 @@ const int colors[10][3] = { {255, 255, 255},
                            {250, 176, 162},
                            {234, 110, 111}};
 
-Matrix shoeMatrix() const
+Matrix shoeMatrix()
 {
     return rotate(M_PI/2, X);
 }
 
-Matrix bodyMatrix(double alpha) const
+Matrix bodyMatrix(double alpha)
 {
     double diff = alpha * M_PI/180.0;
     return rotate(M_PI/2 + diff, X);
 }
 
-Matrix dockMatrix(Dock dock, bool on, double onCoeff = -1) const
+Matrix dockMatrix(Dock dock, bool on, double onCoeff = -1)
 {
     double d;
     if (onCoeff < 0){
