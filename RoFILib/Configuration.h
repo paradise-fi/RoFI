@@ -42,7 +42,7 @@ class Module
 public:
     Module(double alpha, double beta, double gamma, ID id) :
             alpha(alpha), beta(beta), gamma(gamma), id(id) {}
-            
+
     ID getId() const
     {
         return id;
@@ -84,22 +84,22 @@ public:
         switch (joint)
         {
             case Joint::Alpha:
-                alpha = val;
-                if ((alpha > 90) || (alpha < -90))
+                if ((val > 90) || (val < -90))
                 {
                     return false;
                 }
+                alpha = val;
                 break;
             case Joint::Beta:
-                beta = val;
-                if ((beta > 90) || (beta < -90))
+                if ((val > 90) || (val < -90))
                 {
                     return false;
                 }
+                beta = val;
                 break;
             case Joint::Gamma:
                 gamma = val;
-                if (gamma > 180)
+                if (gamma >= 180)
                 {
                     gamma -= 360;
                 }
