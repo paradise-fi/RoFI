@@ -34,25 +34,43 @@ bool parseFile(const std::string &fileName, DistributedModule &module) {
         module.rotateJoint(Gamma, moduleToCopy.getJoint(Joint::Gamma));
 
         auto edges = config.getEdges(module.getId());
-        module.setEdges(edges);
+        EdgeList arrayEdges;
+
+        for (Edge &edge : edges) {
+            if (edge.id1() == module.getId()) {
+                arrayEdges[edge.side1() * 3 + edge.dock1()] = edge;
+            } else {
+                arrayEdges[edge.side2() * 3 + edge.dock2()] = edge;
+            }
+        }
+        module.setEdges(arrayEdges);
     }
 
     file.close();
     return true;
 }
 
-void printModule(const DistributedModule &module) {
+std::string printDistributedModule(const DistributedModule &module) {
     Printer printer;
-    std::cout << printer.print(module);
+    std::stringstream out;
+    out << printer.print(module);
 
-    for (const Edge &edge : module.getEdges()) {
+    for (auto &optEdge : module.getEdges()) {
+        if (!optEdge.has_value()) {
+            continue;
+        }
+
+        Edge &edge = optEdge.value();
+
         int id1 = edge.id1();
         int id2 = edge.id2();
 
         if ((id1 < id2 && module.getId() == id1) || (id1 > id2 && module.getId() == id2)) {
-            std::cout << printer.print(edge);
+            out << printer.print(edge);
         }
     }
+
+    return out.str();
 }
 
 void tmpReconfiguration() {
@@ -92,7 +110,7 @@ int main(int argc, char **argv) {
     DistributedModule trgModule(0, 0, 0, static_cast<ID>(rank));
     parseFile(outputFileName, trgModule);
 
-    printModule(currModule);
+    std::cout << printDistributedModule(currModule);
 
     MPI_Barrier(MPI_COMM_WORLD);
 
