@@ -210,18 +210,18 @@ inline Matrix transformJoint(double alpha, double beta, double gamma)
 inline Matrix transformConnection(Dock d1, int ori, Dock d2)
 {
     static const std::array<Matrix, 3> dockFaceUp = {
-        rotate(-M_PI/2, Z) * rotate(M_PI/2, Y), // Xp
-                rotate(M_PI/2, Z) *rotate(-M_PI/2, Y),  // Xn
+        rotate(M_PI, Z) * rotate(-M_PI/2, Y), // Xp
+                rotate(M_PI, Z) * rotate(M_PI/2, Y),  // Xn
                 identity  // Zn
     };
 
     static const std::array<Matrix, 3> faceToDock = {
-        rotate(-M_PI/2, Y) * rotate(-M_PI/2, Z), // Xp
-                rotate(M_PI/2, Y) * rotate(M_PI/2, Z),   // Xn
+        rotate(M_PI, Z) * rotate(M_PI/2, Y), // Xp
+                rotate(M_PI, Z) * rotate(-M_PI/2, Y),   // Xn
                 identity // Zn
     };
 
-    return faceToDock[d1] * rotate(ori * M_PI/2, Z) * translate(-Z) * dockFaceUp[d2] * rotate(M_PI, Y);
+    return faceToDock[d1] * rotate(ori * M_PI/2, Z) * translate(-Z) * dockFaceUp[d2] * rotate(M_PI, X);
 };
 
 inline Edge arrayToEdge(ID id1, ID id2, const std::array<unsigned, 5>& res)

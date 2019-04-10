@@ -120,11 +120,13 @@ void Visualizer::drawConfiguration(const Configuration &config, const std::strin
     for ( const auto& [id, matrices] : config.getMatrices())
     {
         int color =  id % 7 + 3;
+        const Module& mod = config.getModules().at(id);
         EdgeList edges = config.getEdges().at(id);
         for (Side s : {A, B})
         {
+            Joint j = s == A ? Alpha : Beta;
             addActor("shoe", matrices[s] * shoeMatrix(), color);
-            addActor("body", matrices[s] * bodyMatrix(s), color);
+            addActor("body", matrices[s] * bodyMatrix(mod.getJoint(j)), color);
 
             for (Dock dock : {Xp, Xn, Zn})
             {
