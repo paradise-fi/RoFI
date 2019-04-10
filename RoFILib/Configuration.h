@@ -41,46 +41,8 @@ class Module
 {
 public:
     Module(double alpha, double beta, double gamma, ID id) :
-            alpha(alpha), beta(beta), gamma(gamma), id(id)
-    {
-        matrix[Side::A] = identity;
-        matrix[Side::B] = identity;
-    }
-
-    Matrix shoeMatrix(Side side) const
-    {
-        return matrix[side] * rotate(M_PI/2, X);
-    }
-
-    Matrix bodyMatrix(Side side) const
-    {
-        double diff = side == Side::A ? alpha : beta;
-        diff *= M_PI/180.0;
-        return matrix[side] * rotate(M_PI/2 + diff, X);
-    }
-
-    Matrix dockMatrix(Side side, Dock dock, bool on, double onCoeff = -1) const
-    {
-        double d;
-        if (onCoeff < 0){
-            d = on ? 0.05 : 0;
-        } else  {
-            d = onCoeff * 0.05;
-        }
-        const Matrix docks[3] = {
-                translate(Vector{d,0,0}) * rotate(M_PI, Z), // Xp
-                translate(Vector{-d,0,0}) * identity, // Xn
-                translate(Vector{0,0,-d}) * rotate(-M_PI/2, Y) // Zn
-        };
-        return matrix[side] * docks[dock];
-    }
-
-    Vector getCenter(Side side) const
-    {
-        const Matrix& matrixref =  matrix[side];
-        return Vector{matrixref(0,3), matrixref(1,3), matrixref(2,3), matrixref(3,3)};
-    }
-
+            alpha(alpha), beta(beta), gamma(gamma), id(id) {}
+            
     ID getId() const
     {
         return id;
@@ -154,15 +116,13 @@ public:
         return (id == other.id) &&
                (std::abs(alpha - other.alpha) < threshold) &&
                (std::abs(beta - other.beta) < threshold) &&
-               (std::abs(gamma - other.gamma) < threshold) &&
-               equals(matrix[0], other.matrix[0]) &&
-               equals(matrix[1], other.matrix[1]);
+               (std::abs(gamma - other.gamma) < threshold);
     }
 
 private:
     ID id;
     double alpha, beta, gamma;
-    std::array<Matrix, 2> matrix;
+    //std::array<Matrix, 2> matrix;
     friend Configuration;
     friend ConfigurationHash;
 };
@@ -236,6 +196,11 @@ private:
     unsigned int ori_;
     double onCoeff_ = 1;     //for visualizer
 };
+
+inline Vector getCenter(const Matrix& m)
+{
+    return Vector{m(0,3), m(1,3), m(2,3), m(3,3)};
+}
 
 inline Matrix transformJoint(double alpha, double beta, double gamma)
 {
@@ -385,6 +350,7 @@ void filter(const std::vector<T>& data, std::vector<T>& res, bool (*pred)(const 
 using ModuleMap = std::unordered_map<ID, Module>;
 using EdgeList = std::array<std::optional<Edge>, 6>;
 using EdgeMap = std::unordered_map<ID, EdgeList>;
+using MatrixMap = std::unordered_map<ID, std::array<Matrix, 2>>;
 
 class Configuration
 {
@@ -409,6 +375,11 @@ public:
             ids.push_back(id);
         }
         return ids;
+    }
+
+    const MatrixMap & getMatrices() const
+    {
+        return matrices;
     }
 
     const EdgeMap& getEdges() const
@@ -482,7 +453,7 @@ public:
         {
             return false;
         }
-        if (!computeRotations())
+        if (!computeMatrices())
         {
             return false;
         }
@@ -490,12 +461,12 @@ public:
     }
 
     // Fill in the rotation attribute according to the first fixed module.
-    bool computeRotations()
+    bool computeMatrices()
     {
-        std::unordered_set<ID> fixed;
-        modules.at(fixedId).matrix[fixedSide] = fixedMatrix;
+        matrices = {};
+        matrices[fixedId][fixedSide] = fixedMatrix;
 
-        return computeRotationsRec(fixedId, fixedSide, fixed);
+        return computeMatricesRec(fixedId, fixedSide);
     }
 
     bool connected() const
@@ -509,10 +480,10 @@ public:
     bool collisionFree() const
     {
         std::vector<Vector> centers;
-        for (const auto& [_, mod] : modules)
+        for (const auto& [id, ms] : matrices)
         {
-            centers.push_back(mod.getCenter(A));
-            centers.push_back(mod.getCenter(B));
+            centers.push_back(getCenter(ms[A]));
+            centers.push_back(getCenter(ms[B]));
         }
         for (unsigned i = 0; i < centers.size(); ++i)
         {
@@ -530,10 +501,10 @@ public:
     Vector massCenter() const
     {
         Vector mass({0,0,0,1});
-        for (const auto& [_, mod] : modules)
+        for (const auto& [id, ms] : matrices)
         {
-            mass += mod.getCenter(A);
-            mass += mod.getCenter(B);
+            mass += getCenter(ms[A]);
+            mass += getCenter(ms[B]);
         }
         mass /= modules.size()*2;
         return mass;
@@ -676,6 +647,8 @@ private:
     // Maps module ID to edges connected to the module.
     EdgeMap edges;
 
+    MatrixMap matrices;
+
     // Fixed module side: all other modules are rotated with respect to this one.
     ID fixedId = 0;
     Side fixedSide = A;
@@ -703,6 +676,7 @@ private:
     Matrix computeOtherSideMatrix(ID id, Side side) const
     {
         auto const& mod = modules.at(id);
+        auto const& matrix = matrices.at(id)[side];
         double alpha = 2 * M_PI * mod.alpha / 360;
         double beta = 2 * M_PI * mod.beta / 360;
         double gamma = 2 * M_PI * mod.gamma / 360;
@@ -712,12 +686,12 @@ private:
             std::swap(alpha, beta);
         }
 
-        return mod.matrix[side] * transformJoint(alpha, beta, gamma);
+        return matrix * transformJoint(alpha, beta, gamma);
     }
 
     Matrix computeConnectedMatrix(Edge edge) const
     {
-        auto const& matrix = modules.at(edge.id1()).matrix[edge.side1()];
+        auto const& matrix = matrices.at(edge.id1())[edge.side1()];
         return matrix * transformConnection(edge.dock1(), edge.ori(), edge.dock2());
     }
 
@@ -737,15 +711,14 @@ private:
     }
 
     // Fix given module: one side is fixed. Fix all connected.
-    bool computeRotationsRec(ID id, Side side, std::unordered_set<ID>& fixed)
+    bool computeMatricesRec(ID id, Side side)
     {
         bool result = true;
 
         // At first, fix other side of the module.
         Side side2 = side == A ? B : A;
-        auto& rotation = modules.at(id).matrix;
-        rotation[side2] = computeOtherSideMatrix(id, side);
-        fixed.insert(id);
+        auto& matrixCurr = matrices.at(id);
+        matrixCurr[side2] = computeOtherSideMatrix(id, side);
 
         for (const std::optional<Edge>& edgeOpt : edges.at(id))
         {
@@ -757,19 +730,17 @@ private:
             Side sideNext = edge.side2();
 
             // Compute, where next module should be.
-            Matrix rotationComputed = computeConnectedMatrix(edge);
-            auto& rotationNext = modules.at(idNext).matrix[sideNext];
+            Matrix matrixCmp = computeConnectedMatrix(edge);
 
-            // If it's not fixed yet, fix it and continue computation.
-            if (fixed.find(idNext) == fixed.end())
+            if (matrices.find(idNext) == matrices.end())
             {
-                rotationNext = rotationComputed;
-                result &= computeRotationsRec(idNext, sideNext, fixed);
+                matrices[idNext][sideNext] = matrixCmp;
+                result &= computeMatricesRec(idNext, sideNext);
             }
             else
             {
-                // If it was already fixed, check that the rotations are the same.
-                if (!equals(rotationNext, rotationComputed))
+                const auto& matrixNext = matrices.at(idNext)[sideNext];
+                if (!equals(matrixNext, matrixCmp))
                 {
                     return false;
                 }
@@ -826,9 +797,9 @@ private:
     std::vector<Action::Reconnect> generateConnections() const
     {
         std::vector<Action::Reconnect> res;
-        for (auto& [id1, mod1] : modules)
+        for (auto& [id1, ms1] : matrices)
         {
-            for (auto&[id2, mod2] : modules)
+            for (auto&[id2, ms2] : matrices)
             {
                 if (id1 >= id2)
                     continue;
@@ -844,12 +815,12 @@ private:
 //                    }
 //                    std::cout << std::endl;
 
-                    Vector center1 = mod1.getCenter(edge.side1());
-                    Vector center2 = mod2.getCenter(edge.side2());
+                    Vector center1 = getCenter(ms1[edge.side1()]);
+                    Vector center2 = getCenter(ms2[edge.side2()]);
                     if (distance(center1, center2) != 1)
                         continue;
 
-                    const Matrix& matrix = mod2.matrix[edge.side2()];
+                    const Matrix& matrix = ms2[edge.side2()];
                     if (equals(matrix, computeConnectedMatrix(edge)) && !findEdge(edge))
                     {
                         res.emplace_back(true, edge);

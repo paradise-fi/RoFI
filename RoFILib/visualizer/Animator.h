@@ -64,14 +64,14 @@ public:
     void visualizeOneConfig(Configuration& config, const std::string& path, bool savePicture,
             const Camera& camera){
         Visualizer visualizer;
-        config.computeRotations();
+        config.computeMatrices();
         std::string filename = getFilename(path);
         visualizer.drawConfiguration(config, filename, savePicture, camera);
     }
 
 private:
     void setCamerasDefault(Configuration config, Camera& cameraStart, Camera& cameraEnd){
-        config.computeRotations();
+        config.computeMatrices();
         cameraStart.setCameraMassCenter(config.massCenter());
         cameraEnd.setCameraMassCenter(config.massCenter());
     }

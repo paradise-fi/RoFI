@@ -15,12 +15,12 @@ public:
     std::string printMatrices(const Configuration& config)
     {
         std::stringstream out;
-        for (const auto& [id, mod] : config.getModules())
+        for (const auto& [id, ms] : config.getMatrices())
         {
             out << "ID: " << id << ", side: A\n";
-            out << print(mod.shoeMatrix(A));
+            out << print(ms[A]);
             out << "ID: " << id << ", side: B\n";
-            out << print(mod.shoeMatrix(B));
+            out << print(ms[B]);
             out << std::endl;
         }
         return out.str();

@@ -40,6 +40,34 @@ const int colors[10][3] = { {255, 255, 255},
                            {250, 176, 162},
                            {234, 110, 111}};
 
+Matrix shoeMatrix() const
+{
+    return rotate(M_PI/2, X);
+}
+
+Matrix bodyMatrix(double alpha) const
+{
+    double diff = alpha * M_PI/180.0;
+    return rotate(M_PI/2 + diff, X);
+}
+
+Matrix dockMatrix(Dock dock, bool on, double onCoeff = -1) const
+{
+    double d;
+    if (onCoeff < 0){
+        d = on ? 0.05 : 0;
+    } else  {
+        d = onCoeff * 0.05;
+    }
+    Matrix docks[3] = {
+            translate(Vector{d,0,0}) * rotate(M_PI, Z), // Xp
+            translate(Vector{-d,0,0}) * identity, // Xn
+            translate(Vector{0,0,-d}) * rotate(-M_PI/2, Y) // Zn
+    };
+    return docks[dock];
+}
+
+
 class Visualizer
 {
 public:
@@ -89,27 +117,23 @@ void Visualizer::drawConfiguration(const Configuration &config, const std::strin
     vtkSmartPointer<vtkRenderWindow> renderWindow =
             vtkSmartPointer<vtkRenderWindow>::New();
 
-    for ( const auto& [id, mod] : config.getModules() ) {
+    for ( const auto& [id, matrices] : config.getMatrices())
+    {
         int color =  id % 7 + 3;
-        addActor("shoe", mod.shoeMatrix(A), color);
-        addActor("shoe", mod.shoeMatrix(B), color);
-        addActor("body", mod.bodyMatrix(A), color);
-        addActor("body", mod.bodyMatrix(B), color);
-
         EdgeList edges = config.getEdges().at(id);
-
-        for (Side side : {A, B})
+        for (Side s : {A, B})
         {
+            addActor("shoe", matrices[s] * shoeMatrix(), color);
+            addActor("body", matrices[s] * bodyMatrix(s), color);
+
             for (Dock dock : {Xp, Xn, Zn})
             {
-                bool on = edges[side * 3 + dock].has_value();
-                double onCoeff = on ? edges[side * 3 + dock].value().onCoeff() : 0;
-                addActor("connector", mod.dockMatrix(side, dock, on, onCoeff), color);
+                bool on = edges[s * 3 + dock].has_value();
+                double onCoeff = on ? edges[s * 3 + dock].value().onCoeff() : 0;
+                addActor("connector", matrices[s] * dockMatrix(dock, on, onCoeff), color);
             }
         }
-
     }
-
 
     renderer->SetBackground(1.0, 1.0, 1.0);
     renderWindow->SetSize(1920, 1080);

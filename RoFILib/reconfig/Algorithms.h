@@ -103,12 +103,12 @@ namespace Eval
     inline double centerDiff(const Configuration& curr, const Configuration& goal)
     {
         double result = 0;
-        for ( auto& [id, mod] : curr.getModules() )
+        for ( auto& [id, ms] : curr.getMatrices() )
         {
-            const Module& other = goal.getModules().at(id);
+            const auto& other = goal.getMatrices().at(id);
             for (Side s : {A, B})
             {
-                result += distance(mod.getCenter(s), other.getCenter(s));
+                result += distance(getCenter(ms[s]), getCenter(other[s]));
             }
         }
         return result;
@@ -117,12 +117,12 @@ namespace Eval
     inline double matrixDiff(const Configuration& curr, const Configuration& goal)
     {
         double result = 0;
-        for ( auto& [id, mod] : curr.getModules() )
+        for ( auto& [id, ms] : curr.getMatrices() )
         {
-            const Module& other = goal.getModules().at(id);
+            const auto& other = goal.getMatrices().at(id);
             for (Side s : {A, B})
             {
-                result += distance(mod.shoeMatrix(s), other.shoeMatrix(s));
+                result += distance(ms[s], other[s]);
             }
         }
         return result;
@@ -134,12 +134,12 @@ namespace Distance
     inline double matrixDist(const Configuration& curr, const Configuration& goal)
     {
         double result = 0;
-        for ( auto& [id, mod] : curr.getModules() )
+        for ( auto& [id, ms] : curr.getMatrices() )
         {
-            const Module& other = goal.getModules().at(id);
+            const auto& other = goal.getMatrices().at(id);
             for (Side s : {A, B})
             {
-                result += distance(mod.shoeMatrix(s), other.shoeMatrix(s));
+                result += distance(ms[s], other[s]);
             }
         }
         return result;
