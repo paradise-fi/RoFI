@@ -19,23 +19,20 @@
 using ID = unsigned int;
 const double threshold = 0.0001;
 
-enum Side
-{
-    A, B
-};
-
-enum Dock
-{
-    Xp, Xn, Zn
-};
-
-enum Joint
-{
-    Alpha, Beta, Gamma
-};
-
 class Configuration;
 class ConfigurationHash;
+
+/* MODULE
+ *
+ * Module is an object with ID and three joints alpha, beta, gamma.
+ * The joint values are given in degrees and are in range:
+ *   alpha, beta: <-90, 90> (range is limited)
+ *   gamma: <-180, 179> (range is unlimited, but the value is kept in limits)
+ *
+ * The joint values can be either rotated by or set to a specified value.
+ * */
+
+enum Joint { Alpha, Beta, Gamma };
 
 class Module
 {
@@ -43,10 +40,7 @@ public:
     Module(double alpha, double beta, double gamma, ID id) :
             alpha(alpha), beta(beta), gamma(gamma), id(id) {}
 
-    ID getId() const
-    {
-        return id;
-    }
+    ID getId() const { return id; }
 
     double getJoint(Joint a) const
     {
@@ -122,16 +116,43 @@ public:
 private:
     ID id;
     double alpha, beta, gamma;
-    //std::array<Matrix, 2> matrix;
     friend Configuration;
     friend ConfigurationHash;
 };
+
+/* EDGE
+ *
+ * Edge is an object with seven parameters specifying connectors and orientation.
+ * Each connector is defined by module ID, side and dock.
+ *
+ * The edge is immutable and has only getters.
+ *
+ * (Flag onCoeff is used for visualization purposes.)
+ * */
+
+enum Side { A, B };
+
+enum Dock { Xp, Xn, Zn };
 
 class Edge
 {
 public:
     Edge(ID id1, Side side1, Dock dock1, unsigned int ori, Dock dock2, Side side2, ID id2, double onCoeff = 1) :
             id1_(id1), id2_(id2), side1_(side1), side2_(side2), dock1_(dock1), dock2_(dock2), ori_(ori), onCoeff_(onCoeff) {}
+
+    ID id1() const { return id1_; }
+    ID id2() const { return id2_; }
+    Side side1() const { return side1_; }
+    Side side2() const { return side2_; }
+    Dock dock1() const { return dock1_; }
+    Dock dock2() const { return dock2_; }
+    unsigned int ori() const { return ori_; }
+
+    double onCoeff() const { return onCoeff_; }
+    void setOnCoeff(double value)
+    {
+        onCoeff_ = value;
+    }
 
     bool operator==(const Edge& other) const
     {
@@ -144,51 +165,6 @@ public:
                (ori_ == other.ori_);
     }
 
-    ID id1() const
-    {
-        return id1_;
-    }
-
-    ID id2() const
-    {
-        return id2_;
-    }
-
-    Side side1() const
-    {
-        return side1_;
-    }
-
-    Side side2() const
-    {
-        return side2_;
-    }
-
-    Dock dock1() const
-    {
-        return dock1_;
-    }
-
-    Dock dock2() const
-    {
-        return dock2_;
-    }
-
-    unsigned int ori() const
-    {
-        return ori_;
-    }
-
-    double onCoeff() const
-    {
-        return onCoeff_;
-    }
-
-    void setOnCoeff(double value)
-    {
-        onCoeff_ = value;
-    }
-
 private:
     ID id1_, id2_;
     Side side1_, side2_;
@@ -197,45 +173,12 @@ private:
     double onCoeff_ = 1;     //for visualizer
 };
 
-inline Vector getCenter(const Matrix& m)
+inline Edge reverse(const Edge& edge)
 {
-    return Vector{m(0,3), m(1,3), m(2,3), m(3,3)};
+    return {edge.id2(), edge.side2(), edge.dock2(), edge.ori(), edge.dock1(), edge.side1(), edge.id1(), edge.onCoeff()};
 }
 
-inline Matrix transformJoint(double alpha, double beta, double gamma)
-{
-    return rotate(alpha, X) * rotate(gamma, Z) * translate(Z) * rotate(M_PI, Y) * rotate(-beta, X);
-}
-
-inline Matrix transformConnection(Dock d1, int ori, Dock d2)
-{
-    static const std::array<Matrix, 3> dockFaceUp = {
-        rotate(M_PI, Z) * rotate(-M_PI/2, Y), // Xp
-                rotate(M_PI, Z) * rotate(M_PI/2, Y),  // Xn
-                identity  // Zn
-    };
-
-    static const std::array<Matrix, 3> faceToDock = {
-        rotate(M_PI, Z) * rotate(M_PI/2, Y), // Xp
-                rotate(M_PI, Z) * rotate(-M_PI/2, Y),   // Xn
-                identity // Zn
-    };
-
-    return faceToDock[d1] * rotate(ori * M_PI/2, Z) * translate(-Z) * dockFaceUp[d2] * rotate(M_PI, X);
-};
-
-inline Edge arrayToEdge(ID id1, ID id2, const std::array<unsigned, 5>& res)
-{
-    return Edge(id1,
-                static_cast<Side>(res[0]),
-                static_cast<Dock>(res[1]),
-                res[2],
-                static_cast<Dock>(res[3]),
-                static_cast<Side>(res[4]),
-                id2);
-}
-
-inline std::array<unsigned, 5> getNextArray(const std::array<unsigned, 5> &edge)
+inline std::array<unsigned, 5> nextEdgeArray(const std::array<unsigned, 5> &edge)
 {
     const static std::array<unsigned, 5> size = {2,3,4,3,2};
     std::array<unsigned, 5> res = edge;
@@ -252,26 +195,31 @@ inline std::array<unsigned, 5> getNextArray(const std::array<unsigned, 5> &edge)
     return res;
 }
 
-inline Edge reverse(const Edge& edge)
+inline std::optional<Edge> nextEdge(const Edge& edge)
 {
-    return {edge.id2(), edge.side2(), edge.dock2(), edge.ori(), edge.dock1(), edge.side1(), edge.id1(), edge.onCoeff()};
+    std::array<unsigned, 5> arr = {edge.side1(), edge.dock1(), edge.ori(), edge.dock2(), edge.side2()};
+    std::array<unsigned, 5> init = {0, 0, 0, 0, 0};
+    auto next = nextEdgeArray(arr);
+    if (next == init)
+        return std::nullopt;
+    return Edge(edge.id1(),
+                static_cast<Side>(next[0]),
+                static_cast<Dock>(next[1]),
+                next[2],
+                static_cast<Dock>(next[3]),
+                static_cast<Side>(next[4]),
+                edge.id2());
 }
 
-template<typename T>
-inline void getAllSubsets(std::vector<T>& set, std::vector<std::vector<T>>& res, std::vector<T> accum, unsigned index, unsigned count)
-{
-    if (count == 0)
-    {
-        res.push_back(accum);
-        return;
-    }
-    for (unsigned i = index; i < set.size(); ++i)
-    {
-        auto next = accum;
-        next.push_back(set[i]);
-        getAllSubsets(set, res, next, i + 1, count - 1);
-    }
-}
+/* ACTIONS
+ *
+ * Action is an object representing a set of atomic actions occurring in parallel.
+ * Atomic actions are rotations and reconnections (connect -- disconnect).
+ *
+ * Function divide creates a new action with smaller rotations, used for simulating
+ * the continuous movement in discrete steps.
+ *
+ * */
 
 class Action
 {
@@ -347,6 +295,56 @@ void filter(const std::vector<T>& data, std::vector<T>& res, bool (*pred)(const 
     }
 }
 
+template<typename T>
+inline void getAllSubsets(std::vector<T>& set, std::vector<std::vector<T>>& res, std::vector<T> accum, unsigned index, unsigned count)
+{
+    if (count == 0)
+    {
+        res.push_back(accum);
+        return;
+    }
+    for (unsigned i = index; i < set.size(); ++i)
+    {
+        auto next = accum;
+        next.push_back(set[i]);
+        getAllSubsets(set, res, next, i + 1, count - 1);
+    }
+}
+
+/* TRANSFORMATION MATRICES
+ *
+ * Functions transformJoint and transformConnection define the relative positions
+ * of module sides and of connected modules. The relative positions are defined in
+ * the thesis of Honza Mrazek.
+ *
+ * */
+
+inline Matrix transformJoint(double alpha, double beta, double gamma)
+{
+    return rotate(alpha, X) * rotate(gamma, Z) * translate(Z) * rotate(M_PI, Y) * rotate(-beta, X);
+}
+
+inline Matrix transformConnection(Dock d1, int ori, Dock d2)
+{
+    static const std::array<Matrix, 3> dockFaceUp = {
+            rotate(M_PI, Z) * rotate(-M_PI/2, Y), // Xp
+            rotate(M_PI, Z) * rotate(M_PI/2, Y),  // Xn
+            identity  // Zn
+    };
+
+    static const std::array<Matrix, 3> faceToDock = {
+            rotate(M_PI, Z) * rotate(M_PI/2, Y), // Xp
+            rotate(M_PI, Z) * rotate(-M_PI/2, Y),   // Xn
+            identity // Zn
+    };
+
+    return faceToDock[d1] * rotate(ori * M_PI/2, Z) * translate(-Z) * dockFaceUp[d2] * rotate(M_PI, X);
+};
+
+/* CONFIGURATION
+ *
+ * */
+
 using ModuleMap = std::unordered_map<ID, Module>;
 using EdgeList = std::array<std::optional<Edge>, 6>;
 using EdgeMap = std::unordered_map<ID, EdgeList>;
@@ -356,15 +354,12 @@ class Configuration
 {
 public:
 
-    const ModuleMap& getModules() const
-    {
-        return modules;
-    }
+    bool empty() const { return modules.empty(); }
 
-    ModuleMap& getModules()
-    {
-        return modules;
-    }
+    ModuleMap& getModules() { return modules; }
+    const ModuleMap& getModules() const { return modules; }
+    const EdgeMap& getEdges() const { return edges; }
+    const MatrixMap & getMatrices() const { return matrices; }
 
     std::vector<ID> getIDs() const
     {
@@ -375,16 +370,6 @@ public:
             ids.push_back(id);
         }
         return ids;
-    }
-
-    const MatrixMap & getMatrices() const
-    {
-        return matrices;
-    }
-
-    const EdgeMap& getEdges() const
-    {
-        return edges;
     }
 
     std::vector<Edge> getEdges(ID id) const
@@ -398,11 +383,6 @@ public:
             }
         }
         return res;
-    }
-
-    bool empty() const
-    {
-        return modules.empty();
     }
 
     // Creates new module with given ID and angles. Creates an empty set of edges corresponding to the module.
@@ -520,33 +500,18 @@ public:
         for (const auto& res : action.reconnections)
         {
             if (res.add)
-            {
                 connections.push_back(res);
-            }
             else
-            {
                 disconnections.push_back(res);
-            }
         }
 
         Action connect({}, connections);
         Action disconnect({}, disconnections);
 
-        if (!next.execute(disconnect))
+        if (!next.execute(disconnect) || !next.connected() || !next.execute(connect))
         {
             return std::nullopt;
         }
-
-        if (!next.connected())
-        {
-            return std::nullopt;
-        }
-
-        if (!next.execute(connect))
-        {
-            return std::nullopt;
-        }
-
 
         Action rotate(action.rotations, {});
         Action divided = rotate.divide(1.0/steps);
@@ -803,18 +768,12 @@ private:
             {
                 if (id1 >= id2)
                     continue;
-                const static std::array<unsigned, 5> init = {0,0,0,0,0};
-                std::array<unsigned, 5> array = {0,0,0,0,0};
-                do
-                {
-                    Edge edge = arrayToEdge(id1, id2, array);
-                    array = getNextArray(array);
-//                    for(auto& x : array)
-//                    {
-//                        std::cout << x;
-//                    }
-//                    std::cout << std::endl;
 
+                Edge edge(id1, A, Xp, 0, Xp, A, id2);
+                auto edgeOpt = nextEdge(edge);
+
+                while (edgeOpt.has_value())
+                {
                     Vector center1 = getCenter(ms1[edge.side1()]);
                     Vector center2 = getCenter(ms2[edge.side2()]);
                     if (distance(center1, center2) != 1)
@@ -825,8 +784,9 @@ private:
                     {
                         res.emplace_back(true, edge);
                     }
-
-                } while (array != init);
+                    edge = edgeOpt.value();
+                    edgeOpt = nextEdge(edge);
+                }
             }
         }
         return res;

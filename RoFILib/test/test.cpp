@@ -37,7 +37,8 @@ TEST_CASE("Connections")
 TEST_CASE("Edge generation")
 {
     Printer printer;
-    std::array<unsigned, 5> array = {0,0,0,0,0};
+    //std::array<unsigned, 5> array = {0,0,0,0,0};
+    Edge edge1(0, A, Xp, 0, Xp, A, 1);
     for (Side side2 : {A, B})
     {
         for (Dock dock2 : {Xp, Xn, Zn})
@@ -48,11 +49,13 @@ TEST_CASE("Edge generation")
                 {
                     for (Side side1 : {A, B})
                     {
-                        Edge edge = arrayToEdge(0, 1, array);
                         Edge edge2(0, side1, dock1, ori, dock2, side2, 1);
                         //std::cout << printer.print(edge) << printer.print(edge2) << std::endl;
-                        REQUIRE(edge == edge2);
-                        array = getNextArray(array);
+                        REQUIRE(edge1 == edge2);
+
+                        auto edgeOpt = nextEdge(edge1);
+                        if (edgeOpt.has_value())
+                            edge1 = edgeOpt.value();
                     }
                 }
             }
@@ -63,15 +66,14 @@ TEST_CASE("Edge generation")
 TEST_CASE("Generate all edges")
 {
     Printer p;
-    const static std::array<unsigned, 5> init = {0,0,0,0,0};
-    std::array<unsigned, 5> array = {0,0,0,0,0};
-    do
-    {
-        Edge edge = arrayToEdge(0, 1, array);
-        array = getNextArray(array);
 
-        //std::cout << p.print(edge) << std::endl;
-    } while (array != init);
+    Edge edge(0, A, Xp, 0, Xp, A, 1);
+    auto edgeOpt = nextEdge(edge);
+    while (edgeOpt.has_value())
+    {
+        edge = edgeOpt.value();
+        edgeOpt = nextEdge(edge);
+    }
 }
 
 TEST_CASE("Next configurations")
