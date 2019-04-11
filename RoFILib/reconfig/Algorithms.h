@@ -131,61 +131,50 @@ namespace Eval
 
 namespace Distance
 {
-    inline double matrixDist(const Configuration& curr, const Configuration& goal)
+    inline double hamming(const Configuration& curr, const Configuration& goal)
     {
         double result = 0;
-        for ( auto& [id, ms] : curr.getMatrices() )
+        double costEdge = 10, costDeg = 1.0/90.0;
+        for ( auto& [id, mod] : curr.getModules() )
         {
-            const auto& other = goal.getMatrices().at(id);
-            for (Side s : {A, B})
+            const auto& other = goal.getModules().at(id);
+            for (Joint j : {Alpha, Beta, Gamma})
             {
-                result += distance(ms[s], other[s]);
+                result += std::abs(mod.getJoint(j) - other.getJoint(j));
+            }
+        }
+        result *= costDeg;
+
+        for (auto& [id, edges] : curr.getEdges())
+        {
+            for (auto& opt : edges)
+            {
+                if (opt.has_value())
+                {
+                    if (!goal.findEdge(opt.value()))
+                    {
+                        result += costEdge;
+                    }
+                }
+            }
+        }
+
+        for (auto& [id, edges] : goal.getEdges())
+        {
+            for (auto& opt : edges)
+            {
+                if (opt.has_value())
+                {
+                    if (!curr.findEdge(opt.value()))
+                    {
+                        result += costEdge;
+                    }
+                }
             }
         }
         return result;
     }
 }
-
-
-const Configuration* getCfg(const std::unique_ptr<Configuration>& ptr)
-{
-    return ptr.get();
-}
-
-const Configuration* getCfg(const Configuration& cfg)
-{
-    return &cfg;
-}
-
-template<typename T>
-inline const Configuration* nearest(const Configuration& cfg, const T& pool, DistFunction* dist)
-{
-    const Configuration* near = nullptr;
-    double dMin = 0;
-    for (auto& next : pool)
-    {
-        auto nextPtr = getCfg(next);
-        if (near == nullptr)
-        {
-            near = nextPtr;
-            dMin = dist(cfg, *near);
-            continue;
-        }
-        double d = dist(cfg, *nextPtr);
-        if (d < dMin)
-        {
-            dMin = d;
-            near = nextPtr;
-        }
-    }
-    return near;
-}
-
-inline Configuration steer(const Configuration& from, const Configuration& to, unsigned step = 90)
-{
-    return *nearest(to, from.next(step), Distance::matrixDist);
-}
-
 
 inline std::vector<Configuration> createPath(ConfigPred& pred, const Configuration* goal)
 {
@@ -325,6 +314,188 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
     return {};
 }
 
+/* RRT Functions for random configuration generation
+ *
+ * */
+
+inline int findFreeIndex(int index, const std::array<bool, 6>& A)
+{
+    int count = 6;
+    while (!A[index] && count > 0)
+    {
+        index = (index + 1) % 6;
+        --count;
+    }
+    if (count == 0)
+    {
+        return -1;
+    }
+    return index;
+}
+
+inline std::optional<Edge> generateEdge(ID id1, ID id2, std::unordered_map<ID, std::array<bool, 6>>& occupied)
+{
+    std::random_device rd;
+    std::uniform_int_distribution<int> dist(0, 11);
+
+    int index1 = findFreeIndex(dist(rd) % 6, occupied[id1]);
+    int index2 = findFreeIndex(dist(rd) % 6, occupied[id2]);
+
+    occupied[id1][index1] = false;
+    occupied[id2][index2] = false;
+
+    if ((index1 < 0) || (index2 < 0))
+    {
+        return std::nullopt;
+    }
+    int ori = dist(rd) % 4;
+    auto s1 = Side(index1 % 3 % 2);
+    auto d1 = Dock(index1 / 3);
+    auto s2 = Side(index2 % 3 % 2);
+    auto d2 = Dock(index2 / 3);
+    return Edge(id1, s1, d1, ori, d2, s2, id2);
+}
+
+inline std::optional<Configuration> generateAngles(const std::vector<ID>& ids, const std::vector<Edge>& edges)
+{
+    // Assume the edges form a connected graph and that edges contain only IDs from the 'ids' vector.
+    std::random_device rd;
+    std::uniform_int_distribution<int> ab(-1,1);
+    std::uniform_int_distribution<int> c(0, 3);
+    double step = 90;
+    Configuration cfg;
+    for (ID id : ids)
+    {
+        double alpha = step * ab(rd);
+        double beta = step * ab(rd);
+        double gamma = step * c(rd);
+        cfg.addModule(alpha,beta,gamma,id);
+    }
+    for (const Edge& edge : edges)
+    {
+        cfg.addEdge(edge);
+    }
+
+    // Try generating random angles to make the configuration valid.
+    // After 1000 iterations give up.
+    for (int i = 0; i < 1000; ++i)
+    {
+        if (cfg.isValid())
+            return cfg;
+        for (auto& [id, mod] : cfg.getModules())
+        {
+            double alpha = step * ab(rd);
+            double beta = step * ab(rd);
+            double gamma = step * c(rd);
+            mod.setJoint(Joint::Alpha, alpha);
+            mod.setJoint(Joint::Beta, beta);
+            mod.setJoint(Joint::Gamma, gamma);
+        }
+    }
+    // Giving up.
+    return std::nullopt;
+}
+
+inline std::optional<Configuration> generateRandomTree(const std::vector<ID>& ids)
+{
+    std::default_random_engine e;
+    std::random_device rd;
+    std::uniform_int_distribution<unsigned long> dist(0, ids.size());
+
+
+    std::vector<Edge> edges;
+    std::vector<ID> shuffled = ids;
+    std::shuffle(shuffled.begin(), shuffled.end(), e);
+    std::unordered_map<ID, std::array<bool, 6>> occupied;
+    occupied[shuffled[0]] = {true, true, true, true, true, true};
+
+    for (unsigned i = 1; i < shuffled.size(); ++i)
+    {
+        ID id1 = shuffled[i];
+        ID id2 = shuffled[dist(rd) % i];
+        occupied[id1] = {true, true, true, true, true, true};
+        std::optional<Edge> edgeOpt = generateEdge(id1, id2, occupied);
+        if (!edgeOpt.has_value())
+        {
+            return std::nullopt;
+        }
+
+        edges.emplace_back(edgeOpt.value());
+    }
+    return generateAngles(ids, edges);
+}
+
+inline Configuration sampleFree(const std::vector<ID>& ids)
+{
+    auto treeOpt = generateRandomTree(ids);
+    while (!treeOpt.has_value())
+    {
+
+        treeOpt = generateRandomTree(ids);
+    }
+    auto cfg = treeOpt.value();
+    std::random_device rd;
+    unsigned long count = 10 * ids.size();
+    for (unsigned i = 0; i < count; ++i)
+    {
+        auto next = cfg.next(90, 1, true);
+        if (next.empty())
+        {
+            next = cfg.next(90);
+        }
+        if (next.empty())
+            break;
+
+        std::uniform_int_distribution<unsigned long> dist(0, next.size() - 1);
+        cfg = next[dist(rd)];
+    }
+
+    return cfg;
+}
+
+const Configuration* getCfg(const std::unique_ptr<Configuration>& ptr)
+{
+    return ptr.get();
+}
+
+const Configuration* getCfg(const Configuration& cfg)
+{
+    return &cfg;
+}
+
+template<typename T>
+inline const Configuration* nearest(const Configuration& cfg, const T& pool, DistFunction* dist)
+{
+    const Configuration* near = nullptr;
+    double dMin = 0;
+    for (auto& next : pool)
+    {
+        auto nextPtr = getCfg(next);
+        if (near == nullptr)
+        {
+            near = nextPtr;
+            dMin = dist(cfg, *near);
+            continue;
+        }
+        double d = dist(cfg, *nextPtr);
+        if (d < dMin)
+        {
+            dMin = d;
+            near = nextPtr;
+        }
+    }
+    return near;
+}
+
+inline Configuration steer(const Configuration& from, const Configuration& to, unsigned step = 90)
+{
+    return *nearest(to, from.next(step), Distance::hamming);
+}
+
+/* RRT Algorithm
+ *
+ * */
+
 inline std::vector<Configuration> RRT(const Configuration& init, const Configuration& goal, unsigned step = 90)
 {
     Printer p;
@@ -333,28 +504,25 @@ inline std::vector<Configuration> RRT(const Configuration& init, const Configura
 
     auto initPtr = pool.insert(init);
 
-    for (int i = 0; i < 10000; ++i)
+    for (int i = 0; i < 5000; ++i)
     {
-        auto rand = sampleFree(init.getIDs());
-        while (!rand.has_value())
-        {
-            rand = sampleFree(init.getIDs());
-        }
-        auto near = nearest(rand.value(), pool, Distance::matrixDist);
-        auto next = steer(*near, *rand, step);
+        Configuration rand = sampleFree(init.getIDs());
+        //Configuration rand = goal;
+        const Configuration* near = nearest(rand, pool, Distance::hamming);
+        Configuration next = steer(*near, rand, step);
 
         auto nextPtr = near;
         if (!pool.find(next))
         {
             nextPtr = pool.insert(next);
             edges[nextPtr] = {};
-            //std::cout << p.print(next);
+            std::cout << p.print(next);
         }
 
         edges[near].push_back(nextPtr);
         edges[nextPtr].push_back(near);
     }
-    //std::cout << pool.size() << " " << edges.size() << std::endl;
+    std::cout << pool.size() << " " << edges.size() << std::endl;
     const Configuration * goalPtr = nullptr;
     for (auto& cfg : pool)
     {

@@ -579,10 +579,28 @@ public:
         return res;
     }
 
-    std::vector<Configuration> next(unsigned step, unsigned bound = 1) const
+    std::vector<Action> generateReconnectActions(unsigned bound = 1) const
+    {
+        std::vector<Action::Reconnect> reconnections = generateConnections();
+        std::vector<Action> res;
+        std::vector<Action::Rotate> empty;
+        for (unsigned count = 1; count <= bound; ++count) // How many actions will be in generated action.
+        {
+            std::vector<std::vector<Action::Reconnect>> resRec;
+            getAllSubsets(reconnections, resRec, {}, 0, count);
+
+            for (auto& reconnection : resRec)
+            {
+                res.emplace_back(empty, reconnection);
+            }
+        }
+        return res;
+    }
+
+    std::vector<Configuration> next(unsigned step, unsigned bound = 1, bool rcn = false) const
     {
         std::vector<Configuration> res;
-        auto actions = generateActions(step, bound);
+        std::vector<Action> actions = rcn ? generateReconnectActions(bound) : generateActions(step, bound);
         //auto actions = generateActions(step, bound);
         for (auto& action : actions)
         {
@@ -777,7 +795,11 @@ private:
                     Vector center1 = getCenter(ms1[edge.side1()]);
                     Vector center2 = getCenter(ms2[edge.side2()]);
                     if (distance(center1, center2) != 1)
+                    {
+                        edge = edgeOpt.value();
+                        edgeOpt = nextEdge(edge);
                         continue;
+                    }
 
                     const Matrix& matrix = ms2[edge.side2()];
                     if (equals(matrix, computeConnectedMatrix(edge)) && !findEdge(edge))
@@ -828,112 +850,5 @@ private:
         return static_cast<size_t>(mod.id * (13 * (mod.alpha + 90) + 17 * (mod.beta + 90) + 19 * mod.gamma));
     }
 };
-
-inline int findFreeIndex(int index, const std::array<bool, 6>& A)
-{
-    int count = 6;
-    while (!A[index] && count > 0)
-    {
-        index = (index + 1) % 6;
-        --count;
-    }
-    if (count == 0)
-    {
-        return -1;
-    }
-    return index;
-}
-
-inline std::optional<Edge> generateEdge(ID id1, ID id2, std::unordered_map<ID, std::array<bool, 6>>& occupied)
-{
-    std::random_device rd;
-    std::uniform_int_distribution<int> dist(0, 11);
-
-    int index1 = findFreeIndex(dist(rd) % 6, occupied[id1]);
-    int index2 = findFreeIndex(dist(rd) % 6, occupied[id2]);
-
-    occupied[id1][index1] = false;
-    occupied[id2][index2] = false;
-
-    if ((index1 < 0) || (index2 < 0))
-    {
-        return std::nullopt;
-    }
-    int ori = dist(rd) % 4;
-    auto s1 = Side(index1 % 3 % 2);
-    auto d1 = Dock(index1 / 3);
-    auto s2 = Side(index2 % 3 % 2);
-    auto d2 = Dock(index2 / 3);
-    return Edge(id1, s1, d1, ori, d2, s2, id2);
-}
-
-inline std::optional<Configuration> generateAngles(const std::vector<ID>& ids, const std::vector<Edge>& edges)
-{
-    // Assume the edges form a connected graph and that edges contain only IDs from the 'ids' vector.
-    std::random_device rd;
-    std::uniform_int_distribution<int> ab(-1,1);
-    std::uniform_int_distribution<int> c(0, 3);
-    double step = 90;
-    Configuration cfg;
-    for (ID id : ids)
-    {
-        double alpha = step * ab(rd);
-        double beta = step * ab(rd);
-        double gamma = step * c(rd);
-        cfg.addModule(alpha,beta,gamma,id);
-    }
-    for (const Edge& edge : edges)
-    {
-        cfg.addEdge(edge);
-    }
-
-    int count = 1000;
-    while (!cfg.isValid() && count > 0)
-    {
-        // Generate random angles for all modules and joints.
-        for (auto& [id, mod] : cfg.getModules())
-        {
-            double alpha = step * ab(rd);
-            double beta = step * ab(rd);
-            double gamma = step * c(rd);
-            mod.setJoint(Joint::Alpha, alpha);
-            mod.setJoint(Joint::Beta, beta);
-            mod.setJoint(Joint::Gamma, gamma);
-        }
-        --count;
-    }
-    if (count == 0)
-        return std::nullopt;
-    return cfg;
-}
-
-inline std::optional<Configuration> sampleFree(const std::vector<ID>& ids)
-{
-    std::default_random_engine e;
-    std::random_device rd;
-    std::uniform_int_distribution<unsigned long> dist(0, ids.size());
-
-
-    std::vector<Edge> edges;
-    std::vector<ID> shuffled = ids;
-    std::shuffle(shuffled.begin(), shuffled.end(), e);
-    std::unordered_map<ID, std::array<bool, 6>> occupied;
-    occupied[shuffled[0]] = {true, true, true, true, true, true};
-
-    for (unsigned i = 1; i < shuffled.size(); ++i)
-    {
-        ID id1 = shuffled[i];
-        ID id2 = shuffled[dist(rd) % i];
-        occupied[id1] = {true, true, true, true, true, true};
-        std::optional<Edge> edgeOpt = generateEdge(id1, id2, occupied);
-        if (!edgeOpt.has_value())
-        {
-            return std::nullopt;
-        }
-
-        edges.emplace_back(edgeOpt.value());
-    }
-    return generateAngles(ids, edges);
-}
 
 #endif //ROBOTS_CONFIGURATION_H

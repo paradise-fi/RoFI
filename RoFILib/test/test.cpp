@@ -2,6 +2,7 @@
 #include "../Configuration.h"
 #include "../Printer.h"
 #include "../visualizer/Visualizer.h"
+#include "../reconfig/Algorithms.h"
 
 TEST_CASE("Connections")
 {
@@ -142,21 +143,27 @@ TEST_CASE("Sample free")
 {
     Printer p;
     std::vector<ID> ids = {0, 1};
-    std::optional<Configuration> cfg = sampleFree(ids);
-    REQUIRE(cfg.has_value());
+    Configuration cfg = sampleFree(ids);
+    Visualizer vis;
+    vis.drawConfiguration(cfg);
 }
 
 TEST_CASE("Sample free complicated")
 {
     std::vector<ID> ids = {0, 1, 5, 7, 4};
-    std::optional<Configuration> cfg = sampleFree(ids);
-    while (!cfg.has_value())
-    {
-        cfg = sampleFree(ids);
-    }
-    REQUIRE(cfg.has_value());
+    Configuration cfg = sampleFree(ids);
+    Visualizer vis;
+    vis.drawConfiguration(cfg);
 //    Printer p;
 //    std::cout << p.print(cfg.value());
 //    Visualizer vis;
 //    vis.drawConfiguration(cfg.value());
+}
+
+TEST_CASE("Sample free even more complicated")
+{
+    std::vector<ID> ids = {0, 1, 2, 3, 4, 5, 6, 7};
+    Configuration cfg = sampleFree(ids);
+    Visualizer vis;
+    vis.drawConfiguration(cfg);
 }
