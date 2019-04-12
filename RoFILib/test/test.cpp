@@ -145,7 +145,7 @@ TEST_CASE("Sample free")
     std::vector<ID> ids = {0, 1};
     Configuration cfg = sampleFree(ids);
     Visualizer vis;
-    vis.drawConfiguration(cfg);
+    //vis.drawConfiguration(cfg);
 }
 
 TEST_CASE("Sample free complicated")
@@ -153,7 +153,7 @@ TEST_CASE("Sample free complicated")
     std::vector<ID> ids = {0, 1, 5, 7, 4};
     Configuration cfg = sampleFree(ids);
     Visualizer vis;
-    vis.drawConfiguration(cfg);
+    //vis.drawConfiguration(cfg);
 //    Printer p;
 //    std::cout << p.print(cfg.value());
 //    Visualizer vis;
@@ -165,5 +165,5 @@ TEST_CASE("Sample free even more complicated")
     std::vector<ID> ids = {0, 1, 2, 3, 4, 5, 6, 7};
     Configuration cfg = sampleFree(ids);
     Visualizer vis;
-    vis.drawConfiguration(cfg);
+    //vis.drawConfiguration(cfg);
 }
