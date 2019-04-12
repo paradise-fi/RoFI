@@ -29,3 +29,5 @@ _autosave-*
 
 # Exported gerbers
 gerber_*
+*-gerber
+*-gerber.zip
