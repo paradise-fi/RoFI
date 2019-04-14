@@ -167,3 +167,28 @@ TEST_CASE("Sample free even more complicated")
     Visualizer vis;
     //vis.drawConfiguration(cfg);
 }
+
+TEST_CASE("Diff only rotations - one change") {
+    Configuration cfg1, cfg2;
+
+    cfg1.addModule(0, 0, 0, 0);
+    cfg2.addModule(90, 0, 0, 0);
+
+    Action action = cfg1.diff(cfg2);
+    REQUIRE(action.reconnections.empty());
+    REQUIRE(action.rotations.size() == 1);
+    REQUIRE(action.rotations.at(0) == Action::Rotate(0, Joint::Alpha, 90));
+}
+
+TEST_CASE("Diff only rotations - more changes") {
+    Configuration cfg1, cfg2;
+
+    cfg1.addModule(0, 0, 0, 0);
+    cfg2.addModule(90, -45, 0, 0);
+
+    Action action = cfg1.diff(cfg2);
+    REQUIRE(action.reconnections.empty());
+    REQUIRE(action.rotations.size() == 2);
+    REQUIRE(action.rotations.at(0) == Action::Rotate(0, Joint::Alpha, 90));
+    REQUIRE(action.rotations.at(1) == Action::Rotate(0, Joint::Beta, -45));
+}

@@ -233,6 +233,16 @@ public:
         const ID id;
         const Joint joint;
         const double angle;
+
+        bool operator==(const Rotate &other) const {
+            return id == other.id &&
+                   joint == other.joint &&
+                   std::abs(angle - other.angle) < threshold;
+        }
+
+        bool operator!=(const Rotate &other) const {
+            return !(*this == other);
+        }
     };
 
     class Reconnect
@@ -243,6 +253,15 @@ public:
 
         const bool add;
         const Edge edge;
+
+        bool operator==(const Reconnect &other) const {
+            return add == other.add &&
+                   edge == other.edge;
+        }
+
+        bool operator!=(const Reconnect &other) const {
+            return !(*this == other);
+        }
     };
 
     Action(std::vector<Rotate> rot, std::vector<Reconnect> rec) :
@@ -611,6 +630,29 @@ public:
             }
         }
         return res;
+    }
+
+    Action diff(const Configuration &other) const {
+        std::vector<Action::Rotate> rotations;
+        std::vector<Action::Reconnect> reconnections;
+
+        ModuleMap moduleMap = other.getModules();
+        for (const auto &[id, otherModule] : moduleMap) {
+            if (modules.find(id) == modules.end()) {
+                continue;
+            }
+
+            const Module &module = modules.at(id);
+            for (Joint joint : { Alpha, Beta, Gamma }) {
+                if (module.getJoint(joint) != otherModule.getJoint(joint)) {
+                    rotations.emplace_back(id, joint, otherModule.getJoint(joint) - module.getJoint(joint));
+                }
+            }
+        }
+
+        //TODO add rotation diff
+
+        return {rotations, reconnections};
     }
 
     bool operator==(const Configuration& other) const
