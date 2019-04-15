@@ -20,6 +20,7 @@ public:
  */
     void generate(const Configuration& initConf, const Configuration& goalConf, std::vector<Configuration>& vec,
                   double maxPhi, unsigned int reconnectionPics){
+        maxPhi = std::abs(maxPhi);
         unsigned int moduleSteps = getStepsCount(initConf, goalConf, maxPhi);
         unsigned int totalSteps = moduleSteps;
         if (initConf.getEdges() != goalConf.getEdges()){
@@ -29,7 +30,7 @@ public:
         sortEdges(initConf, goalConf, onlyInitEdges, onlyGoalEdges, sameEdges);
         for (unsigned int i = 1; i < totalSteps; i++){
             Configuration c;
-            generateOneStep(initConf, goalConf, c, moduleSteps, reconnectionPics, totalSteps, i,
+            generateOneStep(initConf, goalConf, c, moduleSteps, maxPhi, reconnectionPics, totalSteps, i,
                             onlyInitEdges, onlyGoalEdges, sameEdges);
             vec.push_back(c);
         }
@@ -43,7 +44,6 @@ public:
      * @return
      */
     unsigned int getStepsCount(const Configuration& initConf, const Configuration& goalConf, double maxPhi){
-        maxPhi = std::abs(maxPhi);
         double maxAngleMove = getMaxAngleMove(initConf, goalConf);
         return static_cast<unsigned int>(std::ceil(maxAngleMove / maxPhi));
     }
@@ -78,21 +78,20 @@ private:
     }
 
     void generateOneModuleStep(const Configuration& initConf, const Configuration& goalConf, Configuration& currConf,
-            unsigned int moduleSteps, unsigned int totalSteps, unsigned int currentStep){
+            unsigned int moduleSteps, double maxPhi, unsigned int totalSteps, unsigned int currentStep){
         for (const auto& [id1, mod1] : initConf.getModules()){
             const auto& mod2 = goalConf.getModules().at(id1);
             if (mod1 == mod2){
                 currConf.addModule(mod1.getJoint(Alpha), mod1.getJoint(Beta), mod1.getJoint(Gamma), mod1.getId());
                 continue;
             }
-            //TODO nebo rovno?
             if (currentStep >= moduleSteps){
                 currConf.addModule(mod2.getJoint(Alpha), mod2.getJoint(Beta), mod2.getJoint(Gamma), mod2.getId());
                 continue;
             }
-            double alpha = countStep(mod1.getJoint(Alpha), mod2.getJoint(Alpha), moduleSteps, currentStep);
-            double beta = countStep(mod1.getJoint(Beta), mod2.getJoint(Beta), moduleSteps, currentStep);
-            double gamma = countStep(mod1.getJoint(Gamma), mod2.getJoint(Gamma), moduleSteps, currentStep);
+            double alpha = countStep(mod1.getJoint(Alpha), mod2.getJoint(Alpha), maxPhi, currentStep);
+            double beta = countStep(mod1.getJoint(Beta), mod2.getJoint(Beta), maxPhi, currentStep);
+            double gamma = countStep(mod1.getJoint(Gamma), mod2.getJoint(Gamma), maxPhi, currentStep);
             currConf.addModule(alpha, beta, gamma, mod1.getId());
         }
     }
@@ -117,17 +116,28 @@ private:
     }
 
     void generateOneStep(const Configuration& initConf, const Configuration& goalConf, Configuration& currConf,
-            unsigned int moduleSteps, unsigned int reconnectionPics, unsigned int totalSteps,
+            unsigned int moduleSteps, double maxPhi, unsigned int reconnectionPics, unsigned int totalSteps,
             unsigned int currentStep, const std::vector<Edge>& onlyInitEdges, const std::vector<Edge>& onlyGoalEdges,
             const std::vector<Edge>& sameEdges){
-        generateOneModuleStep(initConf, goalConf, currConf, moduleSteps, totalSteps, currentStep);
+        generateOneModuleStep(initConf, goalConf, currConf, moduleSteps, maxPhi, totalSteps, currentStep);
         generateOneEdgeStep(initConf, goalConf, currConf, reconnectionPics, totalSteps, currentStep,
                 onlyInitEdges, onlyGoalEdges, sameEdges);
 
     }
 
-    double countStep(double a, double b, unsigned int totalSteps, unsigned int step){
-        return a + (((b - a) * step) / totalSteps);
+    double countStep(double a, double b, double maxPhi, unsigned int step){
+        if (a < b){
+            if (a + step * maxPhi <= b){
+                return a + step * maxPhi;
+            }
+            return b;
+        }
+        // a >= b
+        if (a - step * maxPhi >= b){
+            return a - step * maxPhi;
+        }
+        return b;
+
     }
 
     double getMaxAngleMove(const Configuration& c1, const Configuration& c2){
