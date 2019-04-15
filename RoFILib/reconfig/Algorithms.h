@@ -27,18 +27,19 @@ inline bool operator==(const std::unique_ptr<Configuration>& a, const std::uniqu
 
 using ConfigPred = std::unordered_map<const Configuration*, const Configuration*>;
 using ConfigEdges = std::unordered_map<const Configuration*, std::vector<const Configuration*>>;
+using ConfigValue = std::unordered_map<const Configuration*, double>;
 using EvalFunction = double(const Configuration&, const Configuration&);
 using DistFunction = double(const Configuration&, const Configuration&);
-using EvalPair = std::tuple<double, double, const Configuration*>;
+using EvalPair = std::tuple<double, const Configuration*>;
 
 struct EvalCompare
 {
 public:
     bool operator()(const EvalPair& a, const EvalPair& b)
     {
-        auto& [a1, a2, _a] = a;
-        auto& [b1, b2, _b] = b;
-        return a1 + a2 > b1 + b2;
+        auto& [a1, _a] = a;
+        auto& [b1, _b] = b;
+        return a1 > b1;
     }
 };
 
@@ -70,6 +71,12 @@ public:
         Printer p;
         auto tmp = std::make_unique<Configuration>(config);
         return (pool.find(tmp) != pool.end());
+    }
+
+    const Configuration* get(const Configuration& config) const
+    {
+        auto tmp = std::make_unique<Configuration>(config);
+        return pool.find(tmp)->get();
     }
 
 private:
@@ -281,34 +288,61 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
     ConfigPred pred;
     ConfigPool pool;
 
+    // Already computed shortest distance from init to configuration.
+    ConfigValue initDist;
+
+    // Shortest distance from init through this configuration to goal.
+    ConfigValue goalDist;
+
     if (init == goal)
     {
         return {init};
     }
 
-    const Configuration* pointer = pool.insert(init);
-    pred.insert({pointer, pointer});
-
     std::priority_queue<EvalPair, std::vector<EvalPair>, EvalCompare> queue;
-    queue.push( {0, eval(init, goal), pointer} );
+
+    const Configuration* pointer = pool.insert(init);
+    initDist[pointer] = 0;
+    goalDist[pointer] = eval(init, goal);
+    pred[pointer] = pointer;
+
+    queue.push( {goalDist[pointer], pointer} );
 
     while (!queue.empty())
     {
-        const auto [d, val, current] = queue.top();
+        const auto [d, current] = queue.top();
+        double currDist = initDist[current];
         queue.pop();
-
-        // std::cout << "Fitness: " << val << std::endl;
 
         for (const auto& next : current->next(step, bound))
         {
-            const Configuration* pointerNext = pool.insert(next);
-            pred.insert({pointerNext, current});
+            const Configuration* pointerNext;
+            double newDist = currDist + 1 + eval(next, goal);
+            bool update = false;
+
+            if (!pool.find(next))
+            {
+                pointerNext = pool.insert(next);
+                initDist[pointerNext] = currDist + 1;
+                update = true;
+            }
+            else
+            {
+                pointerNext = pool.get(next);
+            }
+
+            if ((currDist + 1 < initDist[pointerNext]) || update)
+            {
+                initDist[pointerNext] = currDist + 1;
+                goalDist[pointerNext] = newDist;
+                pred[pointerNext] = current;
+                queue.push({newDist, pointerNext});
+            }
 
             if (next == goal)
             {
                 return createPath(pred, pointerNext);
             }
-            queue.push( {d + 1, eval(next, goal),  pointerNext} );
         }
     }
     return {};
