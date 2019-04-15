@@ -211,6 +211,9 @@ public:
 
 
 inline double countStep(double a, double b, unsigned long step, unsigned long totalSteps){
+    if (totalSteps == 0){
+        return a;
+    }
     return a + (((b - a) * step) / totalSteps);
 }
 
