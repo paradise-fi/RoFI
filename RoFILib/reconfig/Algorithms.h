@@ -493,12 +493,12 @@ inline Configuration sampleFree(const std::vector<ID>& ids)
     return cfg;
 }
 
-const Configuration* getCfg(const std::unique_ptr<Configuration>& ptr)
+inline const Configuration* getCfg(const std::unique_ptr<Configuration>& ptr)
 {
     return ptr.get();
 }
 
-const Configuration* getCfg(const Configuration& cfg)
+inline const Configuration* getCfg(const Configuration& cfg)
 {
     return &cfg;
 }

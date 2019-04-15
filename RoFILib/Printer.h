@@ -103,16 +103,11 @@ public:
     static std::string toString(const Action &action) {
         std::stringstream out;
         for (const auto &rotation : action.rotations) {
-            out << "R " <<
-                rotation.id << " " <<
-                rotation.joint << " " <<
-                rotation.angle << std::endl;
+            out << Printer::toString(rotation);
         }
 
         for (const auto &reconnection : action.reconnections) {
-            Printer printer;
-            out << (reconnection.add ? "C " : "D ") <<
-                printer.print(reconnection.edge);
+            out << Printer::toString(reconnection);
         }
 
         return out.str();
@@ -123,6 +118,27 @@ public:
         for (const Action &action : actions) {
             out << Printer::toString(action) << std::endl;
         }
+
+        return out.str();
+    }
+
+    static std::string toString(const Action::Rotate &rotation) {
+        std::stringstream out;
+
+        out << "R " <<
+            rotation.id << " " <<
+            rotation.joint << " " <<
+            rotation.angle << std::endl;
+
+        return out.str();
+    }
+
+    static std::string toString(const Action::Reconnect &reconnection) {
+        std::stringstream out;
+
+        Printer printer;
+        out << (reconnection.add ? "C " : "D ") <<
+            printer.print(reconnection.edge);
 
         return out.str();
     }
