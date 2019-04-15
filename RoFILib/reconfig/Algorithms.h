@@ -134,6 +134,12 @@ namespace Eval
         }
         return result;
     }
+
+    inline double actionDiff(const Configuration& curr, const Configuration& goal)
+    {
+        Action action = curr.diff(goal);
+        return action.rotations.size() + action.reconnections.size() ;
+    }
 }
 
 namespace Distance
