@@ -648,9 +648,36 @@ public:
                     rotations.emplace_back(id, joint, otherModule.getJoint(joint) - module.getJoint(joint));
                 }
             }
-        }
 
-        //TODO add rotation diff
+            const EdgeList &edgeList = edges.at(id);
+            const EdgeList &otherEdgeList = other.edges.at(id);
+            for (unsigned int i = 0; i < 6; i++) {
+                auto &edge = edgeList.at(i);
+                auto &otherEdge = otherEdgeList.at(i);
+
+                if (edge == otherEdge) {
+                    continue;
+                }
+
+                if (!edge.has_value()) {
+                    const Edge &edge1 = otherEdge.value();
+                    if (edge1.id1() < edge1.id2()) {
+                        reconnections.emplace_back(true, otherEdge.value());
+                    }
+                } else if (!otherEdge.has_value()) {
+                    const Edge &edge1 = edge.value();
+                    if (edge1.id1() < edge1.id2()) {
+                        reconnections.emplace_back(false, edge.value());
+                    }
+                } else {
+                    const Edge &edge1 = otherEdge.value();
+                    if (edge1.id1() < edge1.id2()) {
+                        reconnections.emplace_back(true, otherEdge.value());
+                        reconnections.emplace_back(false, edge.value());
+                    }
+                }
+            }
+        }
 
         return {rotations, reconnections};
     }
