@@ -52,6 +52,35 @@ public:
         }
     }
 
+    static Action fromStringAction(std::istream &input) {
+        std::string s;
+        std::vector<Action::Rotate> rotations;
+        std::vector<Action::Reconnect> reconnections;
+
+        while (getline(input, s)) {
+            if (s.empty()) {
+                break;
+            }
+
+            char type;
+            std::stringstream tmp(s);
+            tmp >> type;
+            if (type == 'R') {
+                unsigned int id, joint;
+                double angle;
+                tmp >> id >> joint >> angle;
+                rotations.emplace_back(id, static_cast<Joint>(joint), angle);
+            } else if (type == 'D' || type == 'C') {
+                char edgeChar;
+                unsigned int id1, s1, p1, ori, p2, s2, id2;
+                tmp >> edgeChar >> id1 >> s1 >> p1 >> ori >> p2 >> s2 >> id2;
+                reconnections.emplace_back(type == 'C', Edge(id1, static_cast<Side>(s1), static_cast<Dock>(p1), ori, static_cast<Dock>(p2), static_cast<Side>(s2), id2));
+            }
+        }
+
+        return {rotations, reconnections};
+    }
+
     void readCameraSettings(std::istream& input, Camera& cameraStart, Camera& cameraEnd, bool& cameraMove){
         std::string line;
         while(getline(input, line)) {

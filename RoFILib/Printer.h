@@ -99,6 +99,33 @@ public:
             edge.id2() << std::endl;
         return out.str();
     }
+
+    static std::string toString(const Action &action) {
+        std::stringstream out;
+        for (const auto &rotation : action.rotations) {
+            out << "R " <<
+                rotation.id << " " <<
+                rotation.joint << " " <<
+                rotation.angle << std::endl;
+        }
+
+        for (const auto &reconnection : action.reconnections) {
+            Printer printer;
+            out << (reconnection.add ? "C " : "D ") <<
+                printer.print(reconnection.edge);
+        }
+
+        return out.str();
+    }
+
+    static std::string toString(const std::vector<Action> &actions) {
+        std::stringstream out;
+        for (const Action &action : actions) {
+            out << Printer::toString(action) << std::endl;
+        }
+
+        return out.str();
+    }
 };
 
 #endif //ROBOTS_PRINTER_H

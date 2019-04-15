@@ -61,39 +61,16 @@ void Postprocessing::addFirstConfiguration(std::ifstream &file) {
 bool Postprocessing::addNextConfigurations(std::ifstream &file) {
     std::string s;
     Configuration currConfiguration = configurations.at(0);
+    bool emptyAction = false;
 
-    while (getline(file, s)) {
-        if (s.empty()) {
+    while (!emptyAction) {
+        Action action = Reader::fromStringAction(file);
+        emptyAction = action.rotations.empty() && action.reconnections.empty();
+
+        if (!emptyAction) {
+            currConfiguration.execute(action);
             configurations.push_back(currConfiguration);
-            continue;
         }
-
-        char type;
-        std::stringstream tmp(s);
-        tmp >> type;
-
-        std::vector<Action::Rotate> rotations;
-        std::vector<Action::Reconnect> reconnections;
-
-        if (type == 'M') {
-            double alpha, beta, gamma;
-            unsigned int id;
-            tmp >> id >> alpha >> beta >> gamma;
-
-            rotations.emplace_back(static_cast<ID>(id), Joint::Alpha, alpha);
-            rotations.emplace_back(static_cast<ID>(id), Joint::Beta, beta);
-            rotations.emplace_back(static_cast<ID>(id), Joint::Gamma, gamma);
-        } else if (type == 'E') {
-            char addConnection;
-            unsigned int id1, s1, d1, ori, d2, s2, id2;
-            tmp >> addConnection >> id1 >> s1 >> d1 >> ori >> d2 >> s2 >> id2;
-
-            Edge edge(static_cast<ID>(id1), static_cast<Side>(s1), static_cast<Dock>(d1), ori, static_cast<Dock>(d2),
-                      static_cast<Side>(s2), static_cast<ID>(id2));
-            reconnections.emplace_back(addConnection == '+', edge);
-        }
-
-        currConfiguration.execute({rotations, reconnections});
     }
 
     return true;

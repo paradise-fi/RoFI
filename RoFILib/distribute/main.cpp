@@ -9,20 +9,42 @@
 #include "DistributedModule.h"
 
 void tmpReconfiguration() {
-    std::cout << std::endl;
-    std::cout << "M 1 0 90 0" << std::endl;
-    std::cout << std::endl;
-    std::cout << "M 1 0 0 90" << std::endl;
-    std::cout << "M 2 90 0 90" << std::endl;
-    std::cout << std::endl;
-    std::cout << "E + 1 0 0 0 0 1 2" << std::endl;
-    std::cout << "E + 0 0 2 1 2 1 2" << std::endl;
-    std::cout << std::endl;
-    std::cout << "E - 1 1 2 0 2 0 2" << std::endl;
-    std::cout << "E - 0 0 2 1 2 1 2" << std::endl;
-    std::cout << std::endl;
-    std::cout << "M 1 0 -90 0" << std::endl;
-    std::cout << std::endl;
+    std::vector<Action> actions;
+    std::vector<Action::Rotate> rotations;
+    std::vector<Action::Reconnect> reconnections;
+
+    rotations.emplace_back(1, Joint::Beta, 90);
+    actions.emplace_back(rotations, reconnections);
+
+    rotations.clear();
+    reconnections.clear();
+    rotations.emplace_back(1, Joint::Gamma, 90);
+    rotations.emplace_back(2, Joint::Alpha, 90);
+    rotations.emplace_back(2, Joint::Gamma, 90);
+    actions.emplace_back(rotations, reconnections);
+
+    rotations.clear();
+    reconnections.clear();
+    reconnections.emplace_back(true, Edge(static_cast<ID>(1), static_cast<Side>(0), static_cast<Dock>(0), 0,
+                                          static_cast<Dock>(0), static_cast<Side>(1), static_cast<ID>(2)));
+    reconnections.emplace_back(true, Edge(static_cast<ID>(0), static_cast<Side>(0), static_cast<Dock>(2), 1,
+                                          static_cast<Dock>(2), static_cast<Side>(1), static_cast<ID>(2)));
+    actions.emplace_back(rotations, reconnections);
+
+    rotations.clear();
+    reconnections.clear();
+    reconnections.emplace_back(false, Edge(static_cast<ID>(1), static_cast<Side>(1), static_cast<Dock>(2), 0,
+                                          static_cast<Dock>(2), static_cast<Side>(0), static_cast<ID>(2)));
+    reconnections.emplace_back(false, Edge(static_cast<ID>(0), static_cast<Side>(0), static_cast<Dock>(2), 1,
+                                          static_cast<Dock>(2), static_cast<Side>(1), static_cast<ID>(2)));
+    actions.emplace_back(rotations, reconnections);
+
+    rotations.clear();
+    reconnections.clear();
+    rotations.emplace_back(1, Joint::Beta, -90);
+    actions.emplace_back(rotations, reconnections);
+
+    std::cout << std::endl << Printer::toString(actions);
 }
 
 int main(int argc, char **argv) {
