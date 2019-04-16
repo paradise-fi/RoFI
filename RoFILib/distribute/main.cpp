@@ -67,18 +67,9 @@ int main(int argc, char **argv) {
     initFile.close();
     trgFile.close();
 
-    std::cout << module.printCurrModule();
+    std::cout << module.printCurrModule(0);
 
-    MPI_Barrier(MPI_COMM_WORLD);
-
-    if (rank == 0) {
-        tmpReconfiguration();
-    }
-
-    MPI_Barrier(MPI_COMM_WORLD);
-
-    module.shareCurrConfigurations();
-    module.shareTrgConfigurations();
+    module.reconfigurate();
 
     MPI_Finalize();
     return 0;

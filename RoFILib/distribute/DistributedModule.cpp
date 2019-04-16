@@ -34,22 +34,33 @@ DistributedModule::DistributedModule(unsigned int id, std::ifstream &initConfigS
     trgModule.setEdges(createEdgeListFromEdges(trgConfig.getEdges(id), id));
 }
 
-std::string DistributedModule::printCurrModule() const {
-    return printModule(currModule);
+std::string DistributedModule::printCurrModule(int step) const {
+    return printModule(currModule, step);
 }
 
-std::string DistributedModule::printTrgModule() const {
-    return printModule(trgModule);
+std::string DistributedModule::printTrgModule(int step) const {
+    return printModule(trgModule, step);
 }
 
-std::string DistributedModule::printCurrConfiguration() const {
-    Printer printer;
-    return printer.print(currConfiguration);
+std::string DistributedModule::printCurrConfiguration(int step) const {
+    return DistributedPrinter::toString(currConfiguration, step);
 }
 
-std::string DistributedModule::printTrgConfiguration() const {
-    Printer printer;
-    return printer.print(trgConfiguration);
+std::string DistributedModule::printTrgConfiguration(int step) const {
+    return DistributedPrinter::toString(trgConfiguration, step);
+}
+
+void DistributedModule::reconfigurate() {
+    shareCurrConfigurations();
+    shareTrgConfigurations();
+
+    auto generatePath = AStar(currConfiguration, trgConfiguration, 90, 1, Eval::actionDiff);
+
+    for (unsigned int i = 1; i < generatePath.size(); i++) {
+        Action diff = generatePath.at(i - 1).diff(generatePath.at(i));
+        executeDiff(diff, i);
+        MPI_Barrier(MPI_COMM_WORLD);
+    }
 }
 
 EdgeList DistributedModule::createEdgeListFromEdges(const std::vector<Edge> &edges, unsigned int id) const {
@@ -106,10 +117,9 @@ void DistributedModule::shareConfigurations(const DistributedModuleProperties &m
     }
 }
 
-std::string DistributedModule::printModule(const DistributedModuleProperties &module) const {
-    Printer printer;
+std::string DistributedModule::printModule(const DistributedModuleProperties &module, int step) const {
     std::stringstream out;
-    out << printer.print(module);
+    out << DistributedPrinter::toString(module, step);
 
     for (auto &optEdge : module.getEdges()) {
         if (!optEdge.has_value()) {
@@ -121,9 +131,27 @@ std::string DistributedModule::printModule(const DistributedModuleProperties &mo
         int id2 = edge.id2();
 
         if ((id1 < id2 && module.getId() == id1) || (id1 > id2 && module.getId() == id2)) {
-            out << printer.print(edge);
+            out << DistributedPrinter::toString(edge, step);
         }
     }
 
     return out.str();
+}
+
+void DistributedModule::executeDiff(const Action &action, int step) {
+    for (const auto &rotation : action.rotations) {
+        if (currModule.getId() == rotation.id) {
+            currModule.execute(rotation);
+            std::cout << DistributedPrinter::toString(rotation, step);
+        }
+    }
+
+    for (const auto &reconnection : action.reconnections) {
+        if (currModule.getId() == reconnection.edge.id1()) {
+            currModule.execute(reconnection);
+            std::cout << DistributedPrinter::toString(reconnection, step);
+        } else if (currModule.getId() == reconnection.edge.id2()) {
+            currModule.execute(reconnection);
+        }
+    }
 }

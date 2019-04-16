@@ -7,7 +7,7 @@
 
 #include "../../Configuration.h"
 #include "../../Printer.h"
-#include "../../Reader.h"
+#include "../DistributedReader.h"
 
 class Postprocessing {
 public:
@@ -18,10 +18,9 @@ public:
 private:
     std::vector<Configuration> configurations;
 
-    void addFirstConfiguration(std::ifstream &file);
+    void addFirstConfiguration(std::stringstream &inputStream);
 
-
-    bool addNextConfigurations(std::ifstream &file);
+    void addNextConfigurations(std::stringstream &inputStream);
 };
 
 #endif //ROFI_POSTPROCESSING_H

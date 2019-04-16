@@ -8,8 +8,9 @@
 #include <mpi.h>
 
 #include "DistributedModuleProperties.h"
+#include "DistributedPrinter.h"
 #include "../Reader.h"
-#include "../Printer.h"
+#include "../reconfig/Algorithms.h"
 
 class DistributedModule {
 public:
@@ -17,26 +18,30 @@ public:
 
     //TODO add constructor with only one module properties
 
-    std::string printCurrModule() const;
-    std::string printTrgModule() const;
-    std::string printCurrConfiguration() const;
-    std::string printTrgConfiguration() const;
+    std::string printCurrModule(int step) const;
+    std::string printTrgModule(int step) const;
+    std::string printCurrConfiguration(int step) const;
+    std::string printTrgConfiguration(int step) const;
 
-    void shareCurrConfigurations() { shareConfigurations(currModule, currConfiguration); }
-    void shareTrgConfigurations() { shareConfigurations(trgModule, trgConfiguration); }
+    void reconfigurate();
 
 private:
     DistributedModuleProperties currModule;
     DistributedModuleProperties trgModule;
-
     Configuration currConfiguration;
+
     Configuration trgConfiguration;
+
+    void shareCurrConfigurations() { shareConfigurations(currModule, currConfiguration); }
+    void shareTrgConfigurations() { shareConfigurations(trgModule, trgConfiguration); }
 
     EdgeList createEdgeListFromEdges(const std::vector<Edge> &edges, unsigned int id) const;
 
     void shareConfigurations(const DistributedModuleProperties &module, Configuration &configuration);
 
-    std::string printModule(const DistributedModuleProperties &module) const;
+    std::string printModule(const DistributedModuleProperties &module, int step) const;
+
+    void executeDiff(const Action &action, int step);
 };
 
 

@@ -5,7 +5,7 @@ SET(CMAKE_CXX_FLAGS ${MPI_CXX_COMPILE_FLAGS})
 
 include_directories(../reconfig)
 
-set(SOURCES DistributedModuleProperties.h DistributedModule.cpp DistributedModule.h)
+set(SOURCES DistributedModuleProperties.h DistributedModule.cpp DistributedModule.h DistributedPrinter.h DistributedReader.h)
 
 add_executable(rofi-distribute main.cpp ${SOURCES})
 

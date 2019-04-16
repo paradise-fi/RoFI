@@ -5,42 +5,45 @@
 #include "postprocessing.h"
 
 bool Postprocessing::generateConfigurations(const std::string &inputFileName) {
+    std::stringstream stringstream;
     std::ifstream file;
     file.open(inputFileName);
 
-    addFirstConfiguration(file);
+    std::string s;
+    while (getline(file, s)) {
+        stringstream << s << std::endl;
+    }
+    file.close();
 
+    addFirstConfiguration(stringstream);
     if (configurations.empty()) {
         return false;
     }
 
-    bool isOk = addNextConfigurations(file);
-
-    if (!isOk) {
-        return false;
-    }
-
+    addNextConfigurations(stringstream);
     Printer printer;
     std::cout << printer.print(configurations);
 
-    file.close();
     return true;
 }
 
-void Postprocessing::addFirstConfiguration(std::ifstream &file) {
+void Postprocessing::addFirstConfiguration(std::stringstream &inputStream) {
     std::vector<std::string> sortedConfig;
     std::string s;
 
-    while (file.is_open()) {
-        getline(file, s);
-
+    while (getline(inputStream, s)) {
         if (s.empty()) {
             break;
         }
 
+        int step;
         char type;
         std::stringstream tmp(s);
-        tmp >> type;
+        tmp >> step >> type;
+
+        if (step != 0) {
+            continue;
+        }
 
         if (type == 'M') {
             sortedConfig.insert(sortedConfig.begin(), s);
@@ -54,24 +57,27 @@ void Postprocessing::addFirstConfiguration(std::ifstream &file) {
         stream << oneLine << std::endl;
     }
 
-    Reader reader;
-    reader.read(stream, configurations);
+    Configuration cfg;
+    DistributedReader::fromString(stream, cfg, 0);
+    configurations.push_back(cfg);
 }
 
-bool Postprocessing::addNextConfigurations(std::ifstream &file) {
+void Postprocessing::addNextConfigurations(std::stringstream &inputStream) {
     std::string s;
     Configuration currConfiguration = configurations.at(0);
     bool emptyAction = false;
+    int step = 1;
 
     while (!emptyAction) {
-        Action action = Reader::fromStringAction(file);
+        inputStream.clear();
+        inputStream.seekg(0, std::ios::beg);
+        Action action = DistributedReader::fromStringAction(inputStream, step);
         emptyAction = action.rotations.empty() && action.reconnections.empty();
 
         if (!emptyAction) {
             currConfiguration.execute(action);
             configurations.push_back(currConfiguration);
+            step++;
         }
     }
-
-    return true;
 }
