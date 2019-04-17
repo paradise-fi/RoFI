@@ -6,6 +6,8 @@ OUTPATH=../data/animation/output.mp4
 FRAMERATE=$(sed -n 2p ${input})
 DELETE=FALSE
 
+# parse input parameters
+
 while [[ $# -gt 0 ]]
 do 
 key="$1"
@@ -45,6 +47,13 @@ case $key in
 esac
 done
 
-ffmpeg -framerate $FRAMERATE -i ${INPATH}/img%04d.png -pix_fmt yuv420p $OUTPATH
+# create vide from simple pictures
+ffmpeg -framerate $FRAMERATE -i ${INPATH}/img%04d.png -pix_fmt yuv420p .auxiliary.mp4
+
+# repeat last frame for 1 second 
+ffmpeg -i .auxiliary.mp4 -filter_complex "[0]trim=0:1[hold];[0][hold]concat[extended];[extended][0]overlay" $OUTPATH
+
+# remove auxiliary video
+rm .auxiliary.mp4
 
 [ "$DELETE" == TRUE ] && rm ${INPATH}/img*.png
