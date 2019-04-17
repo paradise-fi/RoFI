@@ -462,6 +462,19 @@ public:
     // Fill in the rotation attribute according to the first fixed module.
     bool computeMatrices()
     {
+        if (empty())
+        {
+            return true;
+        }
+        if (modules.find(fixedId) == modules.end())
+        {
+            ID min = modules.begin()->first;
+            for (auto& [id, _] : modules)
+            {
+                min = std::min(min, id);
+            }
+            fixedId = min;
+        }
         matrices = {};
         matrices[fixedId][fixedSide] = fixedMatrix;
 
