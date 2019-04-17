@@ -18,6 +18,8 @@ double phi = 5;
 double reconnectionTime = 2;
 unsigned int reconnectionPics = 48;
 unsigned int framerate = 24;
+std::pair<unsigned long, unsigned long> resolution = {1920, 1080};
+int magnify = 1;
 
 std::string notAvailable(const std::string& option, const std::string& condition){
     std::stringstream str;
@@ -27,7 +29,7 @@ std::string notAvailable(const std::string& option, const std::string& condition
 
 std::string atMostOne(const std::string& option){
     std::stringstream str;
-    str << "There can not be at most one " << option << "option.\n";
+    str << "There can not be at most one " << option << " option.\n";
     return str.str();
 }
 
@@ -49,11 +51,13 @@ void parse(int argc, char* argv[]){
             ("c,camera", "Camera settings file", cxxopts::value<std::string>())
             ("p,path", "Path where to save pictures", cxxopts::value<std::string>())
             ("f,framerate", "Number of pictures per second", cxxopts::value<unsigned int>())
-            ("o,omega", "Maximal angular velocity in 1°/s", cxxopts::value<double>())
-            ("d,degree", "Maximal angle diff in ° per picture", cxxopts::value<double>())
-            ("r,recTime", "Time in seconds for reconnection", cxxopts::value<double>())
+            ("v,velocity", "Maximal angular velocity in 1°/s", cxxopts::value<double>())
+            ("g,angle", "Maximal angle diff in ° per picture", cxxopts::value<double>())
+            ("t,recTime", "Time in seconds for reconnection", cxxopts::value<double>())
             ("e,recPics", "Number of pictures for reconnection", cxxopts::value<unsigned int>()) //rename
-            ("m,many", "Many configurations in one file")
+            ("n,many", "Many configurations in one file")
+            ("r,resolution", "Size of the window on the screen or resolution of the saved picture in format numberxnumber", cxxopts::value<std::string>())
+            ("m,magnify", "Magnification of saved pictures", cxxopts::value<int>())
             ;
 
     try {
@@ -99,7 +103,7 @@ void parse(int argc, char* argv[]){
         if (result.count("path") == 1){
             path = result["path"].as< std::string >();
             if (!result.count("save")){
-                std::cerr << "Path is not used because -s or --save is not set.\n";
+                std::cerr << "Path is not used because '-s' or '--save' is not set.\n";
             }
         } else if (result.count("path") > 1){
             std::cerr << atMostOne("'-p' or '--path'");
@@ -117,39 +121,39 @@ void parse(int argc, char* argv[]){
             exit(0);
         }
 
-        if (result.count("omega") == 1 && result.count("degree") == 0){
+        if (result.count("velocity") == 1 && result.count("angle") == 0){
             if (!animation){
-                std::cerr << notAvailable("'-o' or '--omega'", "'-a' or '--animation'");
+                std::cerr << notAvailable("'-v' or '--velocity'", "'-a' or '--animation'");
                 exit(0);
             }
-            double val = result["omega"].as< double >();
+            double val = result["velocity"].as< double >();
             if (val < 0) {
                 std::cerr << "Angular velocity can not be negative.\n";
                 exit(0);
             }
             omega = val;
             phi = omega / framerate;
-        } else if (result.count("omega") == 0 && result.count("degree") == 1) {
+        } else if (result.count("velocity") == 0 && result.count("angle") == 1) {
             if (!animation){
-                std::cerr << notAvailable("'-d' or '--degree'", "'-a' or '--animation'");
+                std::cerr << notAvailable("'-g' or '--angle'", "'-a' or '--animation'");
                 exit(0);
             }
-            double val = result["degree"].as< double >();
+            double val = result["angle"].as< double >();
             if (val < 0) {
                 std::cerr << "Maximal angle diff can not be negative.\n";
                 exit(0);
             }
             phi = val;
             omega = framerate * phi;
-        } else if (!result.count("omega") && !result.count("degree")){}
+        } else if (!result.count("velocity") && !result.count("angle")){}
         else {
-            std::cerr << atMostOne("'-o', '--omega', '-d' or '--degree'");
+            std::cerr << atMostOne("'-v', '--velocity', '-g' or '--angle'");
             exit(0);
         }
 
         if (result.count("recTime") == 1 && result.count("recPics") == 0){
             if (!animation){
-                std::cerr << notAvailable("'-r' or '--recTime'", "'-a' or '--animation'");
+                std::cerr << notAvailable("'-t' or '--recTime'", "'-a' or '--animation'");
                 exit(0);
             }
             double val = result["recTime"].as< double >();
@@ -168,12 +172,49 @@ void parse(int argc, char* argv[]){
             reconnectionTime = reconnectionPics / static_cast<double>(framerate);
         } else if (!result.count("recTime") && (!result.count("recPics"))) {}
         else {
-            std::cerr << atMostOne("'-r', '--recTime', '-e' or '--recPics'");
+            std::cerr << atMostOne("'-t', '--recTime', '-e' or '--recPics'");
             exit(0);
         }
 
         if (result.count("many")){
             many = true;
+        }
+
+        if (result.count("resolution") == 1){
+            std::string res = result["resolution"].as<std::string>();
+            std::string::size_type position = res.find('x');
+            if (position == std::string::npos){
+                position = res.find('X');
+                if (position == std::string::npos){
+                    std::cerr << "Option resolution has wrong format - 'x' or 'X' is missing" << "\n";
+                    exit(0);
+                }
+            }
+            std::string x = res.substr(0, position);
+            std::string y = res.substr(position + 1, res.size() - position + 1);
+            unsigned long dx, dy;
+            try {
+                dx = std::stoul(x);
+                dy = std::stoul(y);
+            } catch (std::invalid_argument& e){
+                std::cerr << "Resolution parameter is not a number.";
+                exit(0);
+            }
+            resolution = {dx, dy};
+        } else if (result.count("resolution") > 1) {
+            std::cerr << atMostOne("'-r' or '--resolution'");
+            exit(0);
+        }
+
+        if (result.count("magnify") == 1){
+            if (!savePicture){
+                std::cerr << notAvailable("'-m' or '--magnify'", "'-s' or '--save'");
+                exit(0);
+            }
+            magnify = result["magnify"].as<int>();
+        } else if (result.count("magnify") > 1) {
+            std::cerr << atMostOne("'-m' or '--magnify'");
+            exit(0);
         }
 
     } catch (cxxopts::OptionException& e){
@@ -211,16 +252,17 @@ int main(int argc, char* argv[]){
 
     if (!many){
         reader.read(inputFile, cfg);
-        animator.visualizeOneConfig(cfg, path, savePicture, cameraStart);
+        animator.visualizeOneConfig(cfg, path, savePicture, cameraStart, resolution, magnify);
         return 0;
     }
 
     //many
     reader.read(inputFile, configs);
     if (animation){
-        animator.visualizeMainConfigs(configs, phi, reconnectionPics, path, savePicture, cameraStart, cameraEnd);
+        animator.visualizeMainConfigs(configs, phi, reconnectionPics, path, savePicture, cameraStart, cameraEnd,
+                resolution, magnify);
         return 0;
     }
-    animator.visualizeAllConfigs(configs, path, savePicture, cameraStart, cameraEnd);
+    animator.visualizeAllConfigs(configs, path, savePicture, cameraStart, cameraEnd, resolution, magnify);
 
 }

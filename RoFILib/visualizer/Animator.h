@@ -16,7 +16,8 @@ private:
     static unsigned long outCount;
 public:
     void visualizeMainConfigs(std::vector<Configuration>& mainConfigs, double maxPhi, unsigned int reconnectionPics,
-            const std::string& path, bool savePicture, Camera cameraStart, Camera cameraEnd){
+            const std::string& path, bool savePicture, Camera cameraStart, Camera cameraEnd,
+            const std::pair<unsigned long, unsigned long>& resolution, int magnify){
         bool firstConfig = true;
         if (mainConfigs.empty()){
             return;
@@ -24,7 +25,7 @@ public:
         if (mainConfigs.size() == 1){
             std::vector<Configuration> cfg{};
             cfg.push_back(mainConfigs.at(0));
-            visualizeAllConfigs(cfg, path, savePicture, cameraStart, cameraEnd);
+            visualizeAllConfigs(cfg, path, savePicture, cameraStart, cameraEnd, resolution, magnify);
             return;
         }
         unsigned long allConfigsCount = getAllConfigsCount(mainConfigs, maxPhi, reconnectionPics);
@@ -45,28 +46,31 @@ public:
             generatedConfigs.push_back(c2);
             currentCameraStart = countCameraMove(cameraStart, cameraEnd, currentStep, allConfigsCount - 1);
             currentCameraEnd = countCameraMove(cameraStart, cameraEnd, currentStep + generatedConfigs.size() - 1, allConfigsCount - 1);
-            visualizeAllConfigs(generatedConfigs, path, savePicture, currentCameraStart, currentCameraEnd);
+            visualizeAllConfigs(generatedConfigs, path, savePicture, currentCameraStart, currentCameraEnd,
+                    resolution, magnify);
             currentStep += generatedConfigs.size();
         }
     }
 
     void visualizeAllConfigs(std::vector<Configuration>& allConfigs, const std::string& path, bool savePicture,
-            Camera cameraStart, Camera cameraEnd){
+            Camera cameraStart, Camera cameraEnd, const std::pair<unsigned long, unsigned long>& resolution,
+                             int magnify){
         unsigned long step = 0;
         setCamerasDefault(allConfigs.at(0), cameraStart, cameraEnd);
         for (Configuration& c : allConfigs){
             Camera camera = countCameraMove(cameraStart, cameraEnd, step, allConfigs.size() - 1);
-            visualizeOneConfig(c, path, savePicture, camera);
+            visualizeOneConfig(c, path, savePicture, camera, resolution, magnify);
             step++;
         }
     }
 
     void visualizeOneConfig(Configuration& config, const std::string& path, bool savePicture,
-            const Camera& camera){
+            const Camera& camera, const std::pair<unsigned long, unsigned long>& resolution,
+            int magnify){
         Visualizer visualizer;
         config.computeMatrices();
         std::string filename = getFilename(path);
-        visualizer.drawConfiguration(config, filename, savePicture, camera);
+        visualizer.drawConfiguration(config, filename, savePicture, camera, resolution, magnify);
     }
 
 private:

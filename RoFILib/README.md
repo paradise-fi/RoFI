@@ -72,13 +72,18 @@ The input file contains representation of one or more configurations separated b
 You can choose whether to visualize model(s) of configuration(s) in 3D on the screen 
 or save picture(s) of configuration(s) using `-s` or `--save` option. You can also specify a path where to save the pictures using `-p` or `--path` option.
 
-If there are more configurations in the input file, you can choose `-a` or `--animation` option which will generete smoother changes between the configurations. If you do not want to animate it, you have to use `-m` or `--many` to specify that there are more than one configuration in the file.
+If there are more configurations in the input file, you can choose `-a` or `--animation` option which will generete smoother changes between the configurations. If you do not want to animate it, you have to use `-n` or `--many` to specify that there are more than one configuration in the file.
 
 If the animation is chosen, you can specify:
 
 * framerate of the animation using one of the `-f` or `--framerate` options
-* angle velocity of modules using one of the `-o`, `--omega`, `-d` or `--degree` options
-* reconnection time / number of pictures using one of the `-r`, `--recTime`, `-e` or `--recPics` options 
+* angle velocity of modules using one of the `-v`, `--velocity`, `-g` or `--angle` options
+* reconnection time / number of pictures using one of the `-t`, `--recTime`, `-e` or `--recPics` options 
+
+You can also specify resolution (or size) of the result (on the screen or saved picture) using 
+`-r`, `--resolution` option in format numberxnumber (e.g. 1920x1080). 
+If the save option is used, you can specify magnification (`-m`, `--magnify`). E.g. magnification=2 and 
+resolution=1920x1080 will create a picture with resolution 3840x2160.
 
 You can also specify settings for camera in a separate file. 
 The file can contain following lines:
@@ -97,18 +102,21 @@ RoFI Visualizer: Tool for visualization of configurations and creating animation
 Usage:
   rofi-vis [OPTION...]
 
-  -h, --help           Print help
-  -i, --input arg      Input config file
-  -s, --save           Save picture to file
-  -a, --animation      Create animation from configurations
-  -c, --camera arg     Camera settings file
-  -p, --path arg       Path where to save pictures
-  -f, --framerate arg  Number of pictures per second
-  -o, --omega arg      Maximal angular velocity in 1°/s
-  -d, --degree arg     Maximal angle diff in ° per picture
-  -r, --recTime arg    Time in seconds for reconnection
-  -e, --recPics arg    Number of pictures for reconnection
-  -m, --many           Many configurations in one file
+  -h, --help            Print help
+  -i, --input arg       Input config file
+  -s, --save            Save picture to file
+  -a, --animation       Create animation from configurations
+  -c, --camera arg      Camera settings file
+  -p, --path arg        Path where to save pictures
+  -f, --framerate arg   Number of pictures per second
+  -v, --velocity arg    Maximal angular velocity in 1°/s
+  -g, --angle arg       Maximal angle diff in ° per picture
+  -t, --recTime arg     Time in seconds for reconnection
+  -e, --recPics arg     Number of pictures for reconnection
+  -n, --many            Many configurations in one file
+  -r, --resolution arg  Size of the window on the screen or resolution of the
+                        saved picture in format numberxnumber
+  -m, --magnify arg     Magnification of saved pictures
 ```
 
 Examples:
@@ -132,7 +140,7 @@ Generates some intersteps (animation) and saves pictures to the ../data/res dire
 Same as above with specified camera settings.
 
 ```
-./rofi-vis -i ../data/res.out -s --path ../data/res -a -c ../data/1.cam --omega 15 --recTime 2
+./rofi-vis -i ../data/res.out -s --path ../data/res -a -c ../data/1.cam --velocity 15 --recTime 2
 ```
 
 ## Reconfiguration

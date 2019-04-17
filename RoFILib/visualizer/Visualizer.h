@@ -82,7 +82,14 @@ public:
         drawConfiguration(config, path, savePicture, defaultCameraParams);
     }
     void drawConfiguration(const Configuration& config, const std::string& path, bool savePicture,
-            const Camera& cameraParams);
+            const Camera& cameraParams){
+        drawConfiguration(config, path, savePicture, cameraParams, {1920, 1080}, 1);
+    }
+
+    void drawConfiguration(const Configuration& config, const std::string& path, bool savePicture,
+            const Camera& cameraParams, const std::pair<unsigned long, unsigned long>& resolution,
+            int magnify);
+
 private:
     void addActor(const std::string &model, const Matrix &matrix, int color) const;
     vtkSmartPointer<vtkRenderer> renderer;
@@ -111,7 +118,7 @@ inline vtkSmartPointer<vtkMatrix4x4> convertMatrix( const Matrix& m )
 }
 
 void Visualizer::drawConfiguration(const Configuration &config, const std::string& path, bool savePicture,
-        const Camera& cameraParams)
+        const Camera& cameraParams, const std::pair<unsigned long, unsigned long>& resolution, int magnify)
 {
     renderer = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderWindow> renderWindow =
@@ -138,7 +145,7 @@ void Visualizer::drawConfiguration(const Configuration &config, const std::strin
     }
 
     renderer->SetBackground(1.0, 1.0, 1.0);
-    renderWindow->SetSize(1920, 1080);
+    renderWindow->SetSize(static_cast<int>(resolution.first), static_cast<int>(resolution.second));
     renderWindow->AddRenderer(renderer);
 
     vtkSmartPointer<vtkCamera> camera =
@@ -191,7 +198,7 @@ void Visualizer::drawConfiguration(const Configuration &config, const std::strin
         vtkSmartPointer<vtkRenderLargeImage> renderLarge =
                 vtkSmartPointer<vtkRenderLargeImage>::New();
         renderLarge->SetInput(renderer);
-        renderLarge->SetMagnification(1);
+        renderLarge->SetMagnification(magnify);
 
         vtkSmartPointer<vtkPNGWriter> writer =
                 vtkSmartPointer<vtkPNGWriter>::New();
