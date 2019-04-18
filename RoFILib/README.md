@@ -258,3 +258,36 @@ Specify output file and delete pictures in input directory
 ./videoCreator.sh -o ../data/animation/output.mp4 -d
 ```
 
+## How to create an animation in one step
+
+Use script animation.sh in visualizer directory. 
+
+Options: 
+
+```
+  -h, --help            Prints help
+  -i, --input arg       Input config file
+  -o, --output arg      Output file (path/videoName.mp4)
+  -c, --camera arg      Camera settings file
+  -f, --framerate arg   Number of pictures per second
+  -v, --velocity arg    Maximal angular velocity in 1°/s
+  -g, --angle arg       Maximal angle diff in ° per picture
+  -t, --recTime arg     Time in seconds for reconnection
+  -e, --recPics arg     Number of pictures for reconnection
+  -r, --resolution arg  Resolution of the animation
+  -m, --magnify arg     Magnification of the resolution
+```
+
+Examples:
+
+Create a video out.mp4 from config file res.out:
+
+```
+./animation.sh -i ../data/res.out -o ../data/animation/out.mp4
+```
+
+Specify also camera settings:
+
+```
+./animation.sh -i ../data/res.out -o ../data/animation/out.mp4 -c ../data/1.cam
+```
