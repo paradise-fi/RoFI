@@ -1,8 +1,10 @@
 #!/bin/bash
 
-PICTURESPATH="../data/res/tmp"
+PICTURESPATH=`mktemp -d ../data/res/tmp/XXXXXX`
 OUTPATH=../data/animation/output.mp4
 OUTPATHSET=FALSE
+
+echo $PICTURESPATH
 
 # command line arguments for ./rofi-vis
 VIS="-s -p $PICTURESPATH -a"
