@@ -228,15 +228,6 @@ unsigned long Animator::outCount = 0;
 int main(int argc, char* argv[]){
     parse(argc, argv);
 
-    if (savePicture){
-        std::ofstream videoParams("../visualizer/.videoParams.txt");
-        if (!videoParams.good()){
-            std::cerr << "Could not write parameters for video to file ../visualizer/.videoParams.txt\n";
-        }
-        videoParams << path << "\n";
-        videoParams << framerate << "\n";
-    }
-
     Reader reader;
     Visualizer visualizer;
     Animator animator;

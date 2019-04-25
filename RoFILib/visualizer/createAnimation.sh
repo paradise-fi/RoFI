@@ -1,15 +1,13 @@
 #!/bin/bash
 
-PICTURESPATH=`mktemp -d ../data/res/tmp/XXXXXX`
+PICTURESPATH=`mktemp -d /tmp/XXXXXX`
 OUTPATH=../data/animation/output.mp4
 OUTPATHSET=FALSE
-
-echo $PICTURESPATH
 
 # command line arguments for ./rofi-vis
 VIS="-s -p $PICTURESPATH -a"
 
-# command line arguments for videoCreator.sh
+# command line arguments for buildVideo.sh
 VID="-i $PICTURESPATH -d"
 
 # parse input parameters
@@ -31,6 +29,7 @@ case $key in
      echo "  -e, --recPics arg     Number of pictures for reconnection"
      echo "  -r, --resolution arg  Resolution of the animation"
      echo "  -m, --magnify arg     Magnification of the resolution"
+     echo "  -l, --nologo          Video without RoFI logo"
      exit 0
      ;;
      -i|--input)
@@ -85,6 +84,10 @@ case $key in
      shift
      shift
      ;;
+     -l|--nologo)
+     VID="$VID -l"
+     shift 
+     ;;
      *)
      echo "Unknown argument $1"
      exit 1
@@ -100,7 +103,7 @@ echo "VIS: $VIS"
 echo "VID: $VID"
 
 [ ! -d $PICTURESPATH ] && mkdir $PICTURESPATH
-cd ../build && ./rofi-vis $VIS && cd ../visualizer && ./videoCreator.sh $VID && rmdir $PICTURESPATH
+cd ../build && ./rofi-vis $VIS && cd ../visualizer && ./buildVideo.sh $VID && rmdir $PICTURESPATH
 
 
 

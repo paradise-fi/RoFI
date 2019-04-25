@@ -148,7 +148,7 @@ Same as above with specified camera settings.
 The tool allows to choose from different algorithms for the path computation.
 
 You can choose the algorithm using `--alg` option with two possible arguments:
- 
+
 * `bfs`: BFS algorithm with given step size and parallel bound.
 * `astar`: A* algorithm with given step size, parallel bound and evaluation function. 
 * `rrt`: RRT algorithm with given step size.
@@ -204,28 +204,28 @@ Writes a sequence of configurations starting with the initial and ending with th
 
 ```
 ./rofi-reconfig -i ../data/init.in -g ../data/goal.in > ../data/res.out
-./rofi-vis -i ../data/res.out -m
+./rofi-vis -i ../data/res.out -n
 ```
 
-Writes a sequence of configurations to a separate file, then draws many `-m` configurations from one file. 
+Writes a sequence of configurations to a separate file, then draws many `-n` configurations from one file. 
 
 ## How to create a video
 
-Use script videoCreator.sh in visualizer directory.
+Use script buildVideo.sh in visualizer directory.
 
 ```
 ./rofi-reconfig -i ../data/init.in -g ../data/goal.in > ../data/res.out
 ./rofi-vis -i ../data/res.out -a -s --path ../data/res -c ../data/1.cam
 cd ../visualizer
-./videoCreator.sh -o ../data/animation/output.mp4
+./buildVideo.sh -i ../data/res -o ../data/animation/output.mp4
 ```
 
 Writes sequence of configurations to a separate file, then saves pictures to ../data/res directory
 and creates video output.mp4 in data/animation directory. 
 
-You can specify the directory with saved pictures, framerate of the animation,
-path + filename of the output animation and whether to clean the input directory - 
-delete the pictures.
+You can specify the directory with saved pictures, framerate (default = 24) of the animation,
+path + filename of the output animation, whether to clean the input directory - 
+delete the pictures and whether to create animation with or without RoFI logo. 
 
 
 Options: 
@@ -236,6 +236,7 @@ Options:
   -o, --output       Output file (path/videoName.mp4)
   -f, --framerate    Number of pictures per second
   -d, --delete       Delete pictures in the input directory
+  -l, --nologo       Video without RoFI logo
 ```
 
 Examples: 
@@ -252,15 +253,15 @@ Specify output file, input directory and framerate:
 ./videoCreator.sh -o ../data/animation/output.mp4 -i ../data/res -f 24
 ```
 
-Specify output file and delete pictures in input directory
+Specify output file, input directory and delete pictures in input directory
 
 ```
-./videoCreator.sh -o ../data/animation/output.mp4 -d
+./videoCreator.sh -o ../data/animation/output.mp4 -i ../data/res -d
 ```
 
 ## How to create an animation in one step
 
-Use script animation.sh in visualizer directory. 
+Use script createAnimation.sh in visualizer directory. 
 
 Options: 
 
@@ -276,6 +277,7 @@ Options:
   -e, --recPics arg     Number of pictures for reconnection
   -r, --resolution arg  Resolution of the animation
   -m, --magnify arg     Magnification of the resolution
+  -l, --nologo			Video without RoFI logo
 ```
 
 Examples:
@@ -283,11 +285,11 @@ Examples:
 Create a video out.mp4 from config file res.out:
 
 ```
-./animation.sh -i ../data/res.out -o ../data/animation/out.mp4
+./createAnimation.sh -i ../data/res.out -o ../data/animation/out.mp4
 ```
 
 Specify also camera settings:
 
 ```
-./animation.sh -i ../data/res.out -o ../data/animation/out.mp4 -c ../data/1.cam
+./createAnimation.sh -i ../data/res.out -o ../data/animation/out.mp4 -c ../data/1.cam
 ```
