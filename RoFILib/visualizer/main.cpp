@@ -200,12 +200,16 @@ void parse(int argc, char* argv[], Parameters& p){
             }
             std::string x = res.substr(0, position);
             std::string y = res.substr(position + 1, res.size() - position + 1);
-            unsigned long dx, dy;
+            int dx, dy;
             try {
-                dx = std::stoul(x);
-                dy = std::stoul(y);
+                dx = std::stoi(x);
+                dy = std::stoi(y);
             } catch (std::invalid_argument& e){
                 std::cerr << "Resolution parameter is not a number.\n";
+                exit(0);
+            }
+            if (dx < 0 || dy < 0){
+                std::cerr << "Resolution parameter can not be negative.\n";
                 exit(0);
             }
             p.resolution = {dx, dy};
@@ -219,7 +223,12 @@ void parse(int argc, char* argv[], Parameters& p){
                 std::cerr << err::notAvailable("'-m' or '--magnify'", "'-s' or '--save'");
                 exit(0);
             }
-            p.magnify = result["magnify"].as<int>();
+            int val = result["magnify"].as<int>();
+            if (val < 0){
+                std::cerr << "Magnification can not be negative.\n";
+                exit(0);
+            }
+            p.magnify = val;
         } else if (result.count("magnify") > 1) {
             std::cerr << err::atMostOne("'-m' or '--magnify'");
             exit(0);
