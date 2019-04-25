@@ -17,7 +17,7 @@ private:
 public:
     void visualizeMainConfigs(std::vector<Configuration>& mainConfigs, double maxPhi, unsigned int reconnectionPics,
             const std::string& path, bool savePicture, Camera cameraStart, Camera cameraEnd,
-            const std::pair<unsigned long, unsigned long>& resolution, int magnify){
+            const Resolution& resolution, int magnify){
         bool firstConfig = true;
         if (mainConfigs.empty()){
             return;
@@ -53,7 +53,7 @@ public:
     }
 
     void visualizeAllConfigs(std::vector<Configuration>& allConfigs, const std::string& path, bool savePicture,
-            Camera cameraStart, Camera cameraEnd, const std::pair<unsigned long, unsigned long>& resolution,
+            Camera cameraStart, Camera cameraEnd, const Resolution& resolution,
                              int magnify){
         unsigned long step = 0;
         setCamerasDefault(allConfigs.at(0), cameraStart, cameraEnd);
@@ -65,7 +65,7 @@ public:
     }
 
     void visualizeOneConfig(Configuration& config, const std::string& path, bool savePicture,
-            const Camera& camera, const std::pair<unsigned long, unsigned long>& resolution,
+            const Camera& camera, const Resolution& resolution,
             int magnify){
         Visualizer visualizer;
         config.computeMatrices();

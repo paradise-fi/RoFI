@@ -29,6 +29,8 @@
 #include <vtkOBJReader.h>
 #include <vtkRenderLargeImage.h>
 
+using Resolution = std::pair<int, int>;
+
 const int colors[10][3] = { {255, 255, 255},
                            {0, 255, 0},
                            {0, 0, 255},
@@ -87,7 +89,7 @@ public:
     }
 
     void drawConfiguration(const Configuration& config, const std::string& path, bool savePicture,
-            const Camera& cameraParams, const std::pair<unsigned long, unsigned long>& resolution,
+            const Camera& cameraParams, const Resolution& resolution,
             int magnify);
 
 private:
@@ -118,7 +120,7 @@ inline vtkSmartPointer<vtkMatrix4x4> convertMatrix( const Matrix& m )
 }
 
 void Visualizer::drawConfiguration(const Configuration &config, const std::string& path, bool savePicture,
-        const Camera& cameraParams, const std::pair<unsigned long, unsigned long>& resolution, int magnify)
+        const Camera& cameraParams, const Resolution& resolution, int magnify)
 {
     renderer = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderWindow> renderWindow =
@@ -145,7 +147,7 @@ void Visualizer::drawConfiguration(const Configuration &config, const std::strin
     }
 
     renderer->SetBackground(1.0, 1.0, 1.0);
-    renderWindow->SetSize(static_cast<int>(resolution.first), static_cast<int>(resolution.second));
+    renderWindow->SetSize(resolution.first, resolution.second);
     renderWindow->AddRenderer(renderer);
 
     vtkSmartPointer<vtkCamera> camera =

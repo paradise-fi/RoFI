@@ -6,40 +6,46 @@
 #include "Animator.h"
 #include "../cxxopts.hpp"
 
-bool many = false;
-bool savePicture = false;
-bool animation = false;
-std::ifstream inputFile;
-std::ifstream cameraSettings;
-bool cameraSet = false;
-std::string path("../data/default");
-double omega = 120;
-double phi = 5;
-double reconnectionTime = 2;
-unsigned int reconnectionPics = 48;
-unsigned int framerate = 24;
-std::pair<unsigned long, unsigned long> resolution = {1920, 1080};
-int magnify = 1;
+//using Resolution = std::pair<int, int>;
 
-std::string notAvailable(const std::string& option, const std::string& condition){
-    std::stringstream str;
-    str << "The option " << option << " is available only with the option " << condition << ".\n";
-    return str.str();
-}
+struct Parameters{
+    bool many = false;
+    bool savePicture = false;
+    bool animation = false;
+    std::ifstream inputFile;
+    std::ifstream cameraSettings;
+    bool cameraSet = false;
+    std::string path = "../data/res";
+    double omega = 120;
+    double phi = 5;
+    double reconnectionTime = 2;
+    unsigned int reconnectionPics = 48;
+    unsigned int framerate = 24;
+    Resolution resolution = {1920, 1080};
+    int magnify = 1;
+};
 
-std::string atMostOne(const std::string& option){
-    std::stringstream str;
-    str << "There can not be at most one " << option << " option.\n";
-    return str.str();
-}
+namespace err {
+    std::string notAvailable(const std::string &option, const std::string &condition) {
+        std::stringstream str;
+        str << "The option " << option << " is available only with the option " << condition << ".\n";
+        return str.str();
+    }
 
-std::string exactlyOne(const std::string& option){
-    std::stringstream str;
-    str << "There must be exactly one " << option << " option\n";
-    return str.str();
-}
+    std::string atMostOne(const std::string &option) {
+        std::stringstream str;
+        str << "There can be at most one " << option << " option.\n";
+        return str.str();
+    }
 
-void parse(int argc, char* argv[]){
+    std::string exactlyOne(const std::string &option) {
+        std::stringstream str;
+        str << "There must be exactly one " << option << " option.\n";
+        return str.str();
+    }
+}//namespace err
+
+void parse(int argc, char* argv[], Parameters& p){
     cxxopts::Options options("rofi-vis", "RoFI Visualizer: Tool for visualization of configurations and creating animations.");
     options.positional_help("[optional args]").show_positional_help();
 
@@ -56,7 +62,8 @@ void parse(int argc, char* argv[]){
             ("t,recTime", "Time in seconds for reconnection", cxxopts::value<double>())
             ("e,recPics", "Number of pictures for reconnection", cxxopts::value<unsigned int>()) //rename
             ("n,many", "Many configurations in one file")
-            ("r,resolution", "Size of the window on the screen or resolution of the saved picture in format numberxnumber", cxxopts::value<std::string>())
+            ("r,resolution", "Size of the window on the screen or resolution of the saved picture in format "
+                             "<num>x<num>", cxxopts::value<std::string>())
             ("m,magnify", "Magnification of saved pictures", cxxopts::value<int>())
             ;
 
@@ -69,61 +76,62 @@ void parse(int argc, char* argv[]){
 
         if (result.count("input") == 1){
             std::string filename(result["input"].as< std::string >());
-            inputFile.open(filename);
-            if (!inputFile.good()){
+            p.inputFile.open(filename);
+            if (!p.inputFile.good()){
                 std::cerr << "Could not open file " << filename << ".\n";
                 exit(0);
             }
         } else {
-            std::cerr << exactlyOne("'-i' or '--input'");
+            std::cerr << err::exactlyOne("'-i' or '--input'");
+            exit(0);
         }
 
         if (result.count("save")){
-            savePicture = true;
+            p.savePicture = true;
         }
 
         if (result.count("animation")){
-            animation = true;
-            many = true;
+            p.animation = true;
+            p.many = true;
         }
 
         if (result.count("camera") == 1){
             std::string filename = result["camera"].as< std::string >();
-            cameraSettings.open(filename);
-            if (!cameraSettings.good()) {
+            p.cameraSettings.open(filename);
+            if (!p.cameraSettings.good()) {
                 std::cerr << "Could not open file " << filename << ".\n";
                 exit(0);
             }
-            cameraSet = true;
+            p.cameraSet = true;
         } else if (result.count("camera") > 1) {
-            std::cerr << atMostOne("'-c' or '--camera'");
+            std::cerr << err::atMostOne("'-c' or '--camera'");
             exit(0);
         }
 
         if (result.count("path") == 1){
-            path = result["path"].as< std::string >();
+            p.path = result["path"].as< std::string >();
             if (!result.count("save")){
                 std::cerr << "Path is not used because '-s' or '--save' is not set.\n";
             }
         } else if (result.count("path") > 1){
-            std::cerr << atMostOne("'-p' or '--path'");
+            std::cerr << err::atMostOne("'-p' or '--path'");
             exit(0);
         }
 
         if (result.count("framerate") == 1){
-            if (!animation){
-                std::cerr << notAvailable("'-f' or '--framerate'", "'-a' or '--animation'");
+            if (!p.animation){
+                std::cerr << err::notAvailable("'-f' or '--framerate'", "'-a' or '--animation'");
                 exit(0);
             }
-            framerate = result["framerate"].as<unsigned int>();
+            p.framerate = result["framerate"].as<unsigned int>();
         } else if (result.count("framerate") > 1){
-            std::cerr << atMostOne("'-f' or '--framerate'");
+            std::cerr << err::atMostOne("'-f' or '--framerate'");
             exit(0);
         }
 
         if (result.count("velocity") == 1 && result.count("angle") == 0){
-            if (!animation){
-                std::cerr << notAvailable("'-v' or '--velocity'", "'-a' or '--animation'");
+            if (!p.animation){
+                std::cerr << err::notAvailable("'-v' or '--velocity'", "'-a' or '--animation'");
                 exit(0);
             }
             double val = result["velocity"].as< double >();
@@ -131,11 +139,11 @@ void parse(int argc, char* argv[]){
                 std::cerr << "Angular velocity can not be negative.\n";
                 exit(0);
             }
-            omega = val;
-            phi = omega / framerate;
+            p.omega = val;
+            p.phi = p.omega / p.framerate;
         } else if (result.count("velocity") == 0 && result.count("angle") == 1) {
-            if (!animation){
-                std::cerr << notAvailable("'-g' or '--angle'", "'-a' or '--animation'");
+            if (!p.animation){
+                std::cerr << err::notAvailable("'-g' or '--angle'", "'-a' or '--animation'");
                 exit(0);
             }
             double val = result["angle"].as< double >();
@@ -143,17 +151,17 @@ void parse(int argc, char* argv[]){
                 std::cerr << "Maximal angle diff can not be negative.\n";
                 exit(0);
             }
-            phi = val;
-            omega = framerate * phi;
+            p.phi = val;
+            p.omega = p.framerate * p.phi;
         } else if (!result.count("velocity") && !result.count("angle")){}
         else {
-            std::cerr << atMostOne("'-v', '--velocity', '-g' or '--angle'");
+            std::cerr << err::atMostOne("'-v', '--velocity', '-g' or '--angle'");
             exit(0);
         }
 
         if (result.count("recTime") == 1 && result.count("recPics") == 0){
-            if (!animation){
-                std::cerr << notAvailable("'-t' or '--recTime'", "'-a' or '--animation'");
+            if (!p.animation){
+                std::cerr << err::notAvailable("'-t' or '--recTime'", "'-a' or '--animation'");
                 exit(0);
             }
             double val = result["recTime"].as< double >();
@@ -161,23 +169,23 @@ void parse(int argc, char* argv[]){
                 std::cerr << "Reconnection time can not be negative.\n";
                 exit(0);
             }
-            reconnectionTime = val;
-            reconnectionPics = static_cast<unsigned int>(std::ceil(reconnectionTime * framerate));
+            p.reconnectionTime = val;
+            p.reconnectionPics = static_cast<unsigned int>(std::ceil(p.reconnectionTime * p.framerate));
         } else if (result.count("recTime") == 0 && result.count("recPics") == 1){
-            if (!animation){
-                std::cerr << notAvailable("'-e' or '--recPics'", "'-a' or '--animation'");
+            if (!p.animation){
+                std::cerr << err::notAvailable("'-e' or '--recPics'", "'-a' or '--animation'");
                 exit(0);
             }
-            reconnectionPics = result["recPics"].as< unsigned int >();
-            reconnectionTime = reconnectionPics / static_cast<double>(framerate);
+            p.reconnectionPics = result["recPics"].as< unsigned int >();
+            p.reconnectionTime = p.reconnectionPics / static_cast<double>(p.framerate);
         } else if (!result.count("recTime") && (!result.count("recPics"))) {}
         else {
-            std::cerr << atMostOne("'-t', '--recTime', '-e' or '--recPics'");
+            std::cerr << err::atMostOne("'-t', '--recTime', '-e' or '--recPics'");
             exit(0);
         }
 
         if (result.count("many")){
-            many = true;
+            p.many = true;
         }
 
         if (result.count("resolution") == 1){
@@ -186,7 +194,7 @@ void parse(int argc, char* argv[]){
             if (position == std::string::npos){
                 position = res.find('X');
                 if (position == std::string::npos){
-                    std::cerr << "Option resolution has wrong format - 'x' or 'X' is missing" << "\n";
+                    std::cerr << "Option resolution has wrong format - 'x' or 'X' is missing." << "\n";
                     exit(0);
                 }
             }
@@ -197,23 +205,23 @@ void parse(int argc, char* argv[]){
                 dx = std::stoul(x);
                 dy = std::stoul(y);
             } catch (std::invalid_argument& e){
-                std::cerr << "Resolution parameter is not a number.";
+                std::cerr << "Resolution parameter is not a number.\n";
                 exit(0);
             }
-            resolution = {dx, dy};
+            p.resolution = {dx, dy};
         } else if (result.count("resolution") > 1) {
-            std::cerr << atMostOne("'-r' or '--resolution'");
+            std::cerr << err::atMostOne("'-r' or '--resolution'");
             exit(0);
         }
 
         if (result.count("magnify") == 1){
-            if (!savePicture){
-                std::cerr << notAvailable("'-m' or '--magnify'", "'-s' or '--save'");
+            if (!p.savePicture){
+                std::cerr << err::notAvailable("'-m' or '--magnify'", "'-s' or '--save'");
                 exit(0);
             }
-            magnify = result["magnify"].as<int>();
+            p.magnify = result["magnify"].as<int>();
         } else if (result.count("magnify") > 1) {
-            std::cerr << atMostOne("'-m' or '--magnify'");
+            std::cerr << err::atMostOne("'-m' or '--magnify'");
             exit(0);
         }
 
@@ -226,7 +234,8 @@ void parse(int argc, char* argv[]){
 unsigned long Animator::outCount = 0;
 
 int main(int argc, char* argv[]){
-    parse(argc, argv);
+    Parameters params;
+    parse(argc, argv, params);
 
     Reader reader;
     Visualizer visualizer;
@@ -237,23 +246,26 @@ int main(int argc, char* argv[]){
     std::vector<Configuration> configs;
     Configuration cfg;
 
-    if (cameraSet) {
-        reader.readCameraSettings(cameraSettings, cameraStart, cameraEnd, cameraMove);
+    if (params.cameraSet) {
+        reader.readCameraSettings(params.cameraSettings, cameraStart, cameraEnd, cameraMove);
     }
 
-    if (!many){
-        reader.read(inputFile, cfg);
-        animator.visualizeOneConfig(cfg, path, savePicture, cameraStart, resolution, magnify);
+    if (!params.many){
+        reader.read(params.inputFile, cfg);
+        animator.visualizeOneConfig(cfg, params.path, params.savePicture, cameraStart,
+                params.resolution, params.magnify);
         return 0;
     }
 
     //many
-    reader.read(inputFile, configs);
-    if (animation){
-        animator.visualizeMainConfigs(configs, phi, reconnectionPics, path, savePicture, cameraStart, cameraEnd,
-                resolution, magnify);
+    reader.read(params.inputFile, configs);
+    if (params.animation){
+        animator.visualizeMainConfigs(configs, params.phi, params.reconnectionPics, params.path,
+                params.savePicture, cameraStart, cameraEnd,
+                params.resolution, params.magnify);
         return 0;
     }
-    animator.visualizeAllConfigs(configs, path, savePicture, cameraStart, cameraEnd, resolution, magnify);
+    animator.visualizeAllConfigs(configs, params.path, params.savePicture, cameraStart, cameraEnd,
+            params.resolution, params.magnify);
 
 }

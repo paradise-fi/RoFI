@@ -277,7 +277,7 @@ Options:
   -e, --recPics arg     Number of pictures for reconnection
   -r, --resolution arg  Resolution of the animation
   -m, --magnify arg     Magnification of the resolution
-  -l, --nologo			Video without RoFI logo
+  -l, --nologo          Video without RoFI logo
 ```
 
 Examples:
