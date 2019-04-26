@@ -52,10 +52,10 @@ public:
 private:
     void sortEdges(const Configuration& initConf, const Configuration& goalConf, std::vector<Edge>& onlyInitEdges,
             std::vector<Edge>& onlyGoalEdges, std::vector<Edge>& sameEdges){
-        ID highestId = getHighestId(initConf);
+        std::set<ID> ids = getIDs(initConf);
         std::vector<Edge> initEdges{};
         std::vector<Edge> goalEdges{};
-        for (unsigned int id = 0; id <= highestId; id++){
+        for (unsigned int id : ids){
             for (const auto& e :  initConf.getEdges(id)){
                 initEdges.push_back(e);
             }
@@ -159,18 +159,12 @@ private:
         return std::max(std::max(alpha, beta), gamma);
     }
 
-    bool sameEdges(const Configuration& c1, const Configuration& c2){
-        return c1.getEdges() == c2.getEdges();
-    }
-
-    ID getHighestId(const Configuration& config){
-        ID highest = config.getModules().at(0).getId();
+    std::set<ID> getIDs(const Configuration& config){
+        std::set<ID> res;
         for (const auto& [id, _] : config.getModules()){
-            if (id > highest){
-                highest = id;
-            }
+            res.insert(id);
         }
-        return highest;
+        return res;
     }
 };
 

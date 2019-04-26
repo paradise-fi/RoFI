@@ -21,37 +21,11 @@ class Camera{
     bool defaultViewUp = true;
 
 public:
-    double getPosX() const {
-        return position[0];
-    }
-
-    double getPosY() const {
-        return position[1];
-    }
-
-    double getPosZ() const {
-        return position[2];
-    }
-
-    void setPosX(double x){
+    void setPos(double x, double y, double z){
         position[0] = x;
-        defaultPosition = false;
-    }
-
-    void setPosY(double y){
         position[1] = y;
-        defaultPosition = false;
-    }
-
-    void setPosZ(double z){
         position[2] = z;
         defaultPosition = false;
-    }
-
-    void setPos(double x, double y, double z){
-        setPosX(x);
-        setPosY(y);
-        setPosZ(z);
     }
 
     void setPos(const std::array<double, 3> &position) {
@@ -63,39 +37,11 @@ public:
         return position;
     }
 
-    //Focus
-
-    double getFocX() const {
-        return focalPoint[0];
-    }
-
-    double getFocY() const {
-        return focalPoint[1];
-    }
-
-    double getFocZ() const {
-        return focalPoint[2];
-    }
-
-    void setFocX(double x){
+    void setFoc(double x, double y, double z){
         focalPoint[0] = x;
-        defaultFocalPoint = false;
-    }
-
-    void setFocY(double y){
         focalPoint[1] = y;
-        defaultFocalPoint = false;
-    }
-
-    void setFocZ(double z){
         focalPoint[2] = z;
         defaultFocalPoint = false;
-    }
-
-    void setFoc(double x, double y, double z){
-        setFocX(x);
-        setFocY(y);
-        setFocZ(z);
     }
 
     void setFoc(const std::array<double, 3> &focalPoint) {
@@ -107,39 +53,11 @@ public:
         return focalPoint;
     }
 
-    //ViewUP
-
-    double getViewX() const{
-        return viewUp[0];
-    }
-
-    double getViewY() const{
-        return viewUp[1];
-    }
-
-    double getViewZ() const{
-        return viewUp[2];
-    }
-
-    void setViewX(double x){
+    void setView(double x, double y, double z){
         viewUp[0] = x;
-        defaultViewUp = false;
-    }
-
-    void setViewY(double y){
         viewUp[1] = y;
-        defaultViewUp = false;
-    }
-
-    void setViewZ(double z){
         viewUp[2] = z;
         defaultViewUp = false;
-    }
-
-    void setView(double x, double y, double z){
-        setViewX(x);
-        setViewY(y);
-        setViewZ(z);
     }
 
     void setView(const std::array<double, 3> &viewUp) {
@@ -150,7 +68,6 @@ public:
     std::array<double, 3> getView() const{
         return viewUp;
     }
-
 
 
     void reset(){
@@ -172,18 +89,6 @@ public:
 
     bool defaultView() const{
         return defaultViewUp;
-    }
-
-    void setDefaultPosition(bool defaultPosition) {
-        Camera::defaultPosition = defaultPosition;
-    }
-
-    void setDefaultFocalPoint(bool defaultFocalPoint) {
-        Camera::defaultFocalPoint = defaultFocalPoint;
-    }
-
-    void setDefaultViewUp(bool defaultViewUp) {
-        Camera::defaultViewUp = defaultViewUp;
     }
 
     void setCameraMassCenter(Vector massCenter){
@@ -210,7 +115,7 @@ public:
 
 
 
-inline double countStep(double a, double b, unsigned long step, unsigned long totalSteps){
+inline double countSteps(double a, double b, unsigned long step, unsigned long totalSteps){
     if (totalSteps == 0){
         return a;
     }
@@ -223,51 +128,30 @@ inline double vecSize(const std::array<double, 3>& a, const std::array<double, 3
                      ((a[2] - b[2]) * (a[2] - b[2])));
 }
 
-inline void setPosition(const Camera& cameraStart, const Camera& cameraEnd, Camera& res,
-                 unsigned long step, unsigned long totalSteps){
-    res.setPosX(countStep(cameraStart.getPosX(), cameraEnd.getPosX(), step, totalSteps));
-    res.setPosY(countStep(cameraStart.getPosY(), cameraEnd.getPosY(), step, totalSteps));
-    res.setPosZ(countStep(cameraStart.getPosZ(), cameraEnd.getPosZ(), step, totalSteps));
-}
-
-inline void setView(const Camera& cameraStart, const Camera& cameraEnd, Camera& res,
-             unsigned long step, unsigned long totalSteps){
-    res.setViewX(countStep(cameraStart.getViewX(), cameraEnd.getViewX(), step, totalSteps));
-    res.setViewY(countStep(cameraStart.getViewY(), cameraEnd.getViewY(), step, totalSteps));
-    res.setViewZ(countStep(cameraStart.getViewZ(), cameraEnd.getViewZ(), step, totalSteps));
-}
-
-inline void setFocus(const Camera& cameraStart, const Camera& cameraEnd, Camera& res,
-              unsigned long step, unsigned long totalSteps){
-    res.setFocX(countStep(cameraStart.getFocX(), cameraEnd.getFocX(), step, totalSteps));
-    res.setFocY(countStep(cameraStart.getFocY(), cameraEnd.getFocY(), step, totalSteps));
-    res.setFocZ(countStep(cameraStart.getFocZ(), cameraEnd.getFocZ(), step, totalSteps));
-}
-
 inline std::array<double, 3> countLinearPosition(const Camera& cameraStart, const Camera& cameraEnd,
         unsigned long step, unsigned long totalSteps){
     std::array<double, 3> res{};
-    res[0] = countStep(cameraStart.getPosX(), cameraEnd.getPosX(), step, totalSteps);
-    res[1] = countStep(cameraStart.getPosY(), cameraEnd.getPosY(), step, totalSteps);
-    res[2] = countStep(cameraStart.getPosZ(), cameraEnd.getPosZ(), step, totalSteps);
+    for (int i = 0; i < 3; i++){
+        res[i] = countSteps(cameraStart.getPos()[i], cameraEnd.getPos()[i], step, totalSteps);
+    }
     return res;
 }
 
 inline std::array<double, 3> countLinearFocus(const Camera& cameraStart, const Camera& cameraEnd,
         unsigned long step, unsigned long totalSteps){
     std::array<double, 3> res{};
-    res[0] = countStep(cameraStart.getFocX(), cameraEnd.getFocX(), step, totalSteps);
-    res[1] = countStep(cameraStart.getFocY(), cameraEnd.getFocY(), step, totalSteps);
-    res[2] = countStep(cameraStart.getFocZ(), cameraEnd.getFocZ(), step, totalSteps);
+    for (int i = 0; i < 3; i++){
+        res[i] = countSteps(cameraStart.getFoc()[i], cameraEnd.getFoc()[i], step, totalSteps);
+    }
     return res;
 }
 
 inline std::array<double, 3> countLinearView(const Camera& cameraStart, const Camera& cameraEnd,
         unsigned long step, unsigned long totalSteps){
     std::array<double, 3> res{};
-    res[0] = countStep(cameraStart.getViewX(), cameraEnd.getViewX(), step, totalSteps);
-    res[1] = countStep(cameraStart.getViewY(), cameraEnd.getViewY(), step, totalSteps);
-    res[2] = countStep(cameraStart.getViewZ(), cameraEnd.getViewZ(), step, totalSteps);
+    for (int i = 0; i < 3; i++){
+        res[i] = countSteps(cameraStart.getView()[i], cameraEnd.getView()[i], step, totalSteps);
+    }
     return res;
 }
 
@@ -275,10 +159,10 @@ inline double countDistance(const Camera& cameraStart, const Camera& cameraEnd, 
                      unsigned long totalSteps){
     double d1 = vecSize(cameraStart.getPos(), cameraStart.getFoc());
     double d2 = vecSize(cameraEnd.getPos(), cameraEnd.getFoc());
-    return countStep(d1, d2, step, totalSteps);
+    return countSteps(d1, d2, step, totalSteps);
 }
 
-inline Camera countCameraMove(const Camera& cameraStart, const Camera& cameraEnd,
+inline Camera interpolateCamera(const Camera& cameraStart, const Camera& cameraEnd,
                        unsigned long step, unsigned long totalSteps){
     Camera res;
     std::array<double, 3> linearPosition = countLinearPosition(cameraStart, cameraEnd, step, totalSteps);

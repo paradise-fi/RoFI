@@ -240,8 +240,6 @@ void parse(int argc, char* argv[], Parameters& p){
     }
 }
 
-unsigned long Animator::outCount = 0;
-
 int main(int argc, char* argv[]){
     Parameters params;
     parse(argc, argv, params);

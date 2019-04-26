@@ -31,17 +31,6 @@
 
 using Resolution = std::pair<int, int>;
 
-const int colors[10][3] = { {255, 255, 255},
-                           {0, 255, 0},
-                           {0, 0, 255},
-                           {191, 218, 112},
-                           {242, 202, 121},
-                           {218, 152, 207},
-                           {142, 202, 222},
-                           {104, 135, 205},
-                           {250, 176, 162},
-                           {234, 110, 111}};
-
 Matrix shoeMatrix()
 {
     return rotate(M_PI/2, X);
@@ -91,6 +80,17 @@ public:
     void drawConfiguration(const Configuration& config, const std::string& path, bool savePicture,
             const Camera& cameraParams, const Resolution& resolution,
             int magnify);
+
+    const int colors[10][3] = { {255, 255, 255},
+                                {0, 255, 0},
+                                {0, 0, 255},
+                                {191, 218, 112},
+                                {242, 202, 121},
+                                {218, 152, 207},
+                                {142, 202, 222},
+                                {104, 135, 205},
+                                {250, 176, 162},
+                                {234, 110, 111}};
 
 private:
     void addActor(const std::string &model, const Matrix &matrix, int color) const;
@@ -157,17 +157,17 @@ void Visualizer::drawConfiguration(const Configuration &config, const std::strin
     if (cameraParams.defaultFoc()){
         camera->SetFocalPoint(massCenter(0), massCenter(1), massCenter(2));
     } else {
-        camera->SetFocalPoint(cameraParams.getFocX(), cameraParams.getFocY(), cameraParams.getFocZ());
+        camera->SetFocalPoint(cameraParams.getFoc()[0], cameraParams.getFoc()[1], cameraParams.getFoc()[2]);
     }
     if (cameraParams.defaultPos()){
         camera->SetPosition(massCenter(0), massCenter(1) - 6, massCenter(2));
     } else {
-        camera->SetPosition(cameraParams.getPosX(), cameraParams.getPosY(), cameraParams.getPosZ());
+        camera->SetPosition(cameraParams.getPos()[0], cameraParams.getPos()[1], cameraParams.getPos()[2]);
     }
     if (cameraParams.defaultView()){
         camera->SetViewUp(0,0,1);
     } else {
-        camera->SetViewUp(cameraParams.getViewX(), cameraParams.getViewY(), cameraParams.getViewZ());
+        camera->SetViewUp(cameraParams.getView()[0], cameraParams.getView()[1], cameraParams.getView()[2]);
     }
 
     renderer->SetActiveCamera(camera);

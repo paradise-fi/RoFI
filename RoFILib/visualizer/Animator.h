@@ -13,7 +13,7 @@
 
 class Animator{
 private:
-    static unsigned long outCount;
+    unsigned long outCount = 0;
 public:
     void visualizeMainConfigs(std::vector<Configuration>& mainConfigs, double maxPhi, unsigned int reconnectionPics,
             const std::string& path, bool savePicture, Camera cameraStart, Camera cameraEnd,
@@ -23,20 +23,20 @@ public:
             return;
         }
         if (mainConfigs.size() == 1){
-            std::vector<Configuration> cfg{};
-            cfg.push_back(mainConfigs.at(0));
+            std::vector<Configuration> cfg;
+            cfg.push_back(mainConfigs[0]);
             visualizeAllConfigs(cfg, path, savePicture, cameraStart, cameraEnd, resolution, magnify);
             return;
         }
         unsigned long allConfigsCount = getAllConfigsCount(mainConfigs, maxPhi, reconnectionPics);
-        Camera currentCameraStart{};
-        Camera currentCameraEnd{};
+        Camera currentCameraStart;
+        Camera currentCameraEnd;
         unsigned long currentStep = 0;
         setCamerasDefault(mainConfigs.at(0), cameraStart, cameraEnd);
         for (unsigned long i = 0; i < mainConfigs.size() - 1; i++){
             const Configuration& c1 = mainConfigs.at(i);
             const Configuration& c2 = mainConfigs.at(i + 1);
-            std::vector<Configuration> generatedConfigs{};
+            std::vector<Configuration> generatedConfigs;
             if (firstConfig){
                 generatedConfigs.push_back(c1);
                 firstConfig = false;
@@ -44,8 +44,8 @@ public:
             Generator generator;
             generator.generate(c1, c2, generatedConfigs, maxPhi, reconnectionPics);
             generatedConfigs.push_back(c2);
-            currentCameraStart = countCameraMove(cameraStart, cameraEnd, currentStep, allConfigsCount - 1);
-            currentCameraEnd = countCameraMove(cameraStart, cameraEnd, currentStep + generatedConfigs.size() - 1, allConfigsCount - 1);
+            currentCameraStart = interpolateCamera(cameraStart, cameraEnd, currentStep, allConfigsCount - 1);
+            currentCameraEnd = interpolateCamera(cameraStart, cameraEnd, currentStep + generatedConfigs.size() - 1, allConfigsCount - 1);
             visualizeAllConfigs(generatedConfigs, path, savePicture, currentCameraStart, currentCameraEnd,
                     resolution, magnify);
             currentStep += generatedConfigs.size();
@@ -58,7 +58,7 @@ public:
         unsigned long step = 0;
         setCamerasDefault(allConfigs.at(0), cameraStart, cameraEnd);
         for (Configuration& c : allConfigs){
-            Camera camera = countCameraMove(cameraStart, cameraEnd, step, allConfigs.size() - 1);
+            Camera camera = interpolateCamera(cameraStart, cameraEnd, step, allConfigs.size() - 1);
             visualizeOneConfig(c, path, savePicture, camera, resolution, magnify);
             step++;
         }
