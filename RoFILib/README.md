@@ -72,7 +72,7 @@ The input file contains representation of one or more configurations separated b
 You can choose whether to visualize model(s) of configuration(s) in 3D on the screen 
 or save picture(s) of configuration(s) using `-s` or `--save` option. You can also specify a path where to save the pictures using `-p` or `--path` option.
 
-If there are more configurations in the input file, you can choose `-a` or `--animation` option which will generete smoother changes between the configurations. If you do not want to animate it, you have to use `-n` or `--many` to specify that there are more than one configuration in the file.
+If there are more configurations in the input file, you can choose `-a` or `--animation` option which will generate smoother changes between the configurations. If you do not want to animate it, you have to use `-n` or `--many` to specify that there are more than one configuration in the file.
 
 If the animation is chosen, you can specify:
 
@@ -80,10 +80,7 @@ If the animation is chosen, you can specify:
 * angle velocity of modules using one of the `-v`, `--velocity`, `-g` or `--angle` options
 * reconnection time / number of pictures using one of the `-t`, `--recTime`, `-e` or `--recPics` options 
 
-You can also specify resolution (or size) of the result (on the screen or saved picture) using 
-`-r`, `--resolution` option in format numberxnumber (e.g. 1920x1080). 
-If the save option is used, you can specify magnification (`-m`, `--magnify`). E.g. magnification=2 and 
-resolution=1920x1080 will create a picture with resolution 3840x2160.
+You can also specify size of the render window using `-r`, `--resolution` option in format <num>x<num> (e.g. 1920x1080). If the save option is used, you can specify magnification (`-m`, `--magnify`), which will enlarge the resolution of the final saved picture. The resolution of saved picture is resolution * magnification. E.g. window resolution = 1920x1080 and magnification = 2 -> result picture resolution = 3840x2160. 
 
 You can also specify settings for camera in a separate file. 
 The file can contain following lines:
