@@ -90,7 +90,7 @@ public:
             std::stringstream str(line);
             std::string type;
             str >> type;
-            int xs, ys, zs, xe, ye, ze;
+            double xs, ys, zs, xe, ye, ze;
             if (type == "CP") {          //camera position
                 str >> xs >> ys >> zs;
                 cameraStart.setPos(xs, ys, zs);
