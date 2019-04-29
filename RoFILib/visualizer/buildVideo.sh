@@ -89,8 +89,14 @@ ffmpeg -y -i $AUXILIARY1 -filter_complex "[0]trim=0:1[hold];[0][hold]concat[exte
 
 if [ "$LOGO" == "TRUE" ]
   then
+    HEIGHT=`ffprobe -v error -select_streams v:0 -show_entries stream=height -of csv=p=0 $AUXILIARY2`
+    LOGOHEIGHT=$(( HEIGHT / 8 ))
+    # create logo
+    LOGOPIC=`mktemp /tmp/XXXXXX.png`
+    inkscape -z -e $LOGOPIC -h $LOGOHEIGHT rofi-logo-2row-black.svg
     # add logo
-    ffmpeg -i $AUXILIARY2 -i rofi-logo.png -filter_complex 'overlay=x=W-w-30:y=H-h-20' $OUTPATH
+    ffmpeg -i $AUXILIARY2 -i $LOGOPIC -filter_complex 'overlay=x=W-w-30:y=H-h-20' $OUTPATH
+    rm $LOGOPIC
   else
     cp $AUXILIARY2 $OUTPATH
 fi
