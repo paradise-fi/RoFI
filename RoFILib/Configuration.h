@@ -413,6 +413,10 @@ public:
         edges.emplace(std::piecewise_construct,
                       std::forward_as_tuple(id),  // args for key
                       std::forward_as_tuple());
+        if ((modules.size() == 1) || (id < fixedId))
+        {
+            fixedId = id;
+        }
     }
 
     // Adds given edge to given modules if both docks are free.
@@ -465,15 +469,6 @@ public:
         if (empty())
         {
             return true;
-        }
-        if (modules.find(fixedId) == modules.end())
-        {
-            ID min = modules.begin()->first;
-            for (auto& [id, _] : modules)
-            {
-                min = std::min(min, id);
-            }
-            fixedId = min;
         }
         matrices = {};
         matrices[fixedId][fixedSide] = fixedMatrix;
