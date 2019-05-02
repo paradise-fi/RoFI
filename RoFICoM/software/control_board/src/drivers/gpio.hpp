@@ -12,6 +12,49 @@ struct Gpio {
             return Gpio( _periph );
         }
 
+        void setupPPOutput() {
+            port().enableClock();
+            LL_GPIO_InitTypeDef cfg{};
+            cfg.Pin = 1 << _pos;
+            cfg.Mode = LL_GPIO_MODE_OUTPUT;
+            cfg.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
+            cfg.Pull = LL_GPIO_PULL_NO;
+            LL_GPIO_Init( _periph, &cfg );
+        }
+
+        void setupInput( bool pull, bool pull_up = true ) {
+            port().enableClock();
+            LL_GPIO_InitTypeDef cfg{};
+            cfg.Pin = 1 << _pos;
+            cfg.Mode = LL_GPIO_MODE_INPUT;
+            cfg.Pull = !pull ?
+                LL_GPIO_PULL_NO :
+                pull_up ? LL_GPIO_PULL_UP : LL_GPIO_PULL_DOWN;
+            LL_GPIO_Init( _periph, &cfg );
+        }
+
+        void setupAnalog( bool pull, bool pull_up = true ) {
+            port().enableClock();
+            LL_GPIO_InitTypeDef cfg{};
+            cfg.Pin = 1 << _pos;
+            cfg.Mode = LL_GPIO_MODE_ANALOG;
+            cfg.Pull = !pull ?
+                LL_GPIO_PULL_NO :
+                pull_up ? LL_GPIO_PULL_UP : LL_GPIO_PULL_DOWN;
+            LL_GPIO_Init( _periph, &cfg );
+        }
+
+        bool read() {
+            return LL_GPIO_IsInputPinSet( _periph, 1 << _pos );
+        }
+
+        void write( bool state ) {
+            if ( state )
+                LL_GPIO_SetOutputPin( _periph, 1 << _pos );
+            else
+                LL_GPIO_ResetOutputPin( _periph, 1 << _pos );
+        }
+
         int _pos;
         GPIO_TypeDef *_periph;
     };
