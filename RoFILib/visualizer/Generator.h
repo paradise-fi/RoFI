@@ -78,7 +78,7 @@ private:
     }
 
     void generateOneModuleStep(const Configuration& initConf, const Configuration& goalConf, Configuration& currConf,
-            unsigned int moduleSteps, double maxPhi, unsigned int totalSteps, unsigned int currentStep){
+            unsigned int moduleSteps, double maxPhi, unsigned int currentStep){
         for (const auto& [id1, mod1] : initConf.getModules()){
             const auto& mod2 = goalConf.getModules().at(id1);
             if (mod1 == mod2){
@@ -96,8 +96,7 @@ private:
         }
     }
 
-    void generateOneEdgeStep(const Configuration& initConf, const Configuration& goalConf, Configuration& currConf,
-                             unsigned int reconnectionPics, unsigned int totalSteps, unsigned int currentStep,
+    void generateOneEdgeStep(Configuration& currConf, unsigned int reconnectionPics, unsigned int currentStep,
                              const std::vector<Edge>& onlyInitEdges, const std::vector<Edge>& onlyGoalEdges,
                              const std::vector<Edge>& sameEdges){
         for (const auto& e : sameEdges){
@@ -119,20 +118,40 @@ private:
             unsigned int moduleSteps, double maxPhi, unsigned int reconnectionPics, unsigned int totalSteps,
             unsigned int currentStep, const std::vector<Edge>& onlyInitEdges, const std::vector<Edge>& onlyGoalEdges,
             const std::vector<Edge>& sameEdges){
-        generateOneModuleStep(initConf, goalConf, currConf, moduleSteps, maxPhi, totalSteps, currentStep);
-        generateOneEdgeStep(initConf, goalConf, currConf, reconnectionPics, totalSteps, currentStep,
+        generateOneModuleStep(initConf, goalConf, currConf, moduleSteps, maxPhi, currentStep);
+        generateOneEdgeStep(currConf, reconnectionPics, currentStep,
                 onlyInitEdges, onlyGoalEdges, sameEdges);
 
     }
 
     double countStep(double a, double b, double maxPhi, unsigned int step){
         if (a < b){
+            if (std::abs(b - a) > 180){
+                //gamma angle must go through -180=180
+                if (a - step * maxPhi > -180){
+                    return a - step * maxPhi;
+                }
+                if (a - step * maxPhi + 360 >= b) {
+                    return a - step * maxPhi + 360;
+                }
+                return b;
+            }
             if (a + step * maxPhi <= b){
                 return a + step * maxPhi;
             }
             return b;
         }
         // a >= b
+        if (std::abs(a - b) > 180){
+            //gamma angle must go through -180=180
+            if (a + step * maxPhi <= 180){
+                return a + step * maxPhi;
+            }
+            if (a + step * maxPhi - 360 <= b){
+                return a + step * maxPhi - 360;
+            }
+            return b;
+        }
         if (a - step * maxPhi >= b){
             return a - step * maxPhi;
         }
@@ -156,6 +175,9 @@ private:
         double alpha = std::abs(m1.getJoint(Alpha) - m2.getJoint(Alpha));
         double beta = std::abs(m1.getJoint(Beta) - m2.getJoint(Beta));
         double gamma = std::abs(m1.getJoint(Gamma) - m2.getJoint(Gamma));
+        if (gamma > 180){
+            gamma = 360 - 180;
+        }
         return std::max(std::max(alpha, beta), gamma);
     }
 
