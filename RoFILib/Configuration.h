@@ -93,11 +93,11 @@ public:
                 break;
             case Joint::Gamma:
                 gamma = val;
-                if (gamma >= 180)
+                if (gamma > 180)
                 {
                     gamma -= 360;
                 }
-                if (gamma < -180)
+                if (gamma <= -180)
                 {
                     gamma += 360;
                 }
@@ -227,41 +227,54 @@ public:
     class Rotate
     {
     public:
+        Rotate() : _id(0), _joint(Alpha), _angle(0) {};
         Rotate(ID id, Joint joint, double angle) :
-                id(id), joint(joint), angle(angle) {}
+                _id(id), _joint(joint), _angle(angle) {}
 
-        const ID id;
-        const Joint joint;
-        const double angle;
+        ID id() const { return _id; }
+        Joint joint() const { return _joint; }
+        double angle() const { return _angle; }
 
         bool operator==(const Rotate &other) const {
-            return id == other.id &&
-                   joint == other.joint &&
-                   std::abs(angle - other.angle) < threshold;
+            return _id == other._id &&
+                   _joint == other._joint &&
+                   std::abs(_angle - other._angle) < threshold;
         }
 
         bool operator!=(const Rotate &other) const {
             return !(*this == other);
         }
+    private:
+        ID _id;
+        Joint _joint;
+        double _angle;
+        friend Action;
     };
 
     class Reconnect
     {
     public:
-        Reconnect(bool add, const Edge& edge) :
-                add(add), edge(edge) {}
 
-        const bool add;
-        const Edge edge;
+        Reconnect() : _add(false), _edge({0,A,Zn,0,Zn,A,0}) {};
+        Reconnect(bool add, const Edge& edge) :
+                _add(add), _edge(edge) {}
+
+        bool add() const { return _add; }
+        Edge edge() const { return _edge; }
 
         bool operator==(const Reconnect &other) const {
-            return add == other.add &&
-                   edge == other.edge;
+            return _add == other._add &&
+                   _edge == other._edge;
         }
 
         bool operator!=(const Reconnect &other) const {
             return !(*this == other);
         }
+
+    private:
+        bool _add;
+        Edge _edge;
+        friend Action;
     };
 
     Action(std::vector<Rotate> rot, std::vector<Reconnect> rec) :
@@ -275,7 +288,7 @@ public:
         std::vector<Rotate> division;
         for (const Action::Rotate& rotate : rotations)
         {
-            division.emplace_back(rotate.id, rotate.joint, rotate.angle * factor);
+            division.emplace_back(rotate._id, rotate._joint, rotate._angle * factor);
         }
         return {division, reconnections};
     }
@@ -286,14 +299,14 @@ inline bool unique(const std::vector<Action::Rotate>& a)
     std::unordered_map<ID, std::array<bool, 3>> moved;
     for (const auto& rot : a)
     {
-        if (moved.find(rot.id) == moved.end())
+        if (moved.find(rot.id()) == moved.end())
         {
-            moved[rot.id] = {false, false, false};
-            moved[rot.id][rot.joint] = true;
+            moved[rot.id()] = {false, false, false};
+            moved[rot.id()][rot.joint()] = true;
         }
         else
         {
-            if (moved[rot.id][rot.joint])
+            if (moved[rot.id()][rot.joint()])
             {
                 return false;
             }
@@ -327,6 +340,7 @@ inline void getAllSubsets(std::vector<T>& set, std::vector<std::vector<T>>& res,
         auto next = accum;
         next.push_back(set[i]);
         getAllSubsets(set, res, next, i + 1, count - 1);
+        getAllSubsets(set, res, accum, i + 1, count);
     }
 }
 
@@ -526,7 +540,7 @@ public:
         std::vector<Action::Reconnect> disconnections;
         for (const auto& res : action.reconnections)
         {
-            if (res.add)
+            if (res.add())
                 connections.push_back(res);
             else
                 disconnections.push_back(res);
@@ -606,19 +620,83 @@ public:
         return res;
     }
 
-    std::vector<Action> generateReconnectActions(unsigned bound = 1) const
+    std::vector<Action::Reconnect> generateReconnect() const
     {
-        std::vector<Action::Reconnect> reconnections = generateConnections();
-        std::vector<Action> res;
-        std::vector<Action::Rotate> empty;
-        for (unsigned count = 1; count <= bound; ++count) // How many actions will be in generated action.
-        {
-            std::vector<std::vector<Action::Reconnect>> resRec;
-            getAllSubsets(reconnections, resRec, {}, 0, count);
+        auto con = generateConnections();
+        auto dis = generateDisconnections();
+        std::vector<Action::Reconnect> res(con.begin(), con.end());
+        std::copy(dis.begin(), dis.end(), std::back_inserter(res));
 
-            for (auto& reconnection : resRec)
+        return res;
+    }
+
+    std::vector<Action::Reconnect> generateConnections() const
+    {
+        std::vector<Action::Reconnect> res;
+        for (auto& [id1, ms1] : matrices)
+        {
+            for (auto&[id2, ms2] : matrices)
             {
-                res.emplace_back(empty, reconnection);
+                if (id1 >= id2)
+                    continue;
+
+                Edge edge(id1, A, Xp, 0, Xp, A, id2);
+                auto edgeOpt = nextEdge(edge);
+
+                while (edgeOpt.has_value())
+                {
+                    Vector center1 = getCenter(ms1[edge.side1()]);
+                    Vector center2 = getCenter(ms2[edge.side2()]);
+                    if (distance(center1, center2) != 1)
+                    {
+                        edge = edgeOpt.value();
+                        edgeOpt = nextEdge(edge);
+                        continue;
+                    }
+
+                    const Matrix& matrix = ms2[edge.side2()];
+                    if (equals(matrix, computeConnectedMatrix(edge)) && !findEdge(edge))
+                    {
+                        res.emplace_back(true, edge);
+                    }
+                    edge = edgeOpt.value();
+                    edgeOpt = nextEdge(edge);
+                }
+            }
+        }
+        return res;
+    }
+
+    std::vector<Action::Rotate> generateRotations(unsigned step) const
+    {
+        std::vector<Action::Rotate> res;
+        for (auto& [id, _] : modules)
+        {
+            for (int d : {-step, step})
+            {
+                for (Joint joint : {Alpha, Beta, Gamma})
+                {
+                    res.emplace_back(id, joint, d);
+                }
+            }
+        }
+        return res;
+    }
+
+    std::vector<Action::Reconnect> generateDisconnections() const
+    {
+        std::vector<Action::Reconnect> res;
+        for (auto& [id, set] : edges)
+        {
+            for (const std::optional<Edge>& edgeOpt : set)
+            {
+                if (!edgeOpt.has_value())
+                    continue;
+                const Edge& edge = edgeOpt.value();
+                if (edge.id1() < edge.id2())
+                {
+                    res.emplace_back(false, edge);
+                }
             }
         }
         return res;
@@ -627,7 +705,7 @@ public:
     std::vector<Configuration> next(unsigned step, unsigned bound = 1, bool rcn = false) const
     {
         std::vector<Configuration> res;
-        std::vector<Action> actions = rcn ? generateReconnectActions(bound) : generateActions(step, bound);
+        std::vector<Action> actions = generateActions(step, bound);
         //auto actions = generateActions(step, bound);
         for (auto& action : actions)
         {
@@ -809,102 +887,20 @@ private:
         return result;
     }
 
-    std::vector<Action::Rotate> generateRotations(unsigned step) const
-    {
-        std::vector<Action::Rotate> res;
-        for (auto& [id, _] : modules)
-        {
-            for (int d : {-step, step})
-            {
-                for (Joint joint : {Alpha, Beta, Gamma})
-                {
-                    res.emplace_back(id, joint, d);
-                }
-            }
-        }
-        return res;
-    }
-
-    std::vector<Action::Reconnect> generateReconnect() const
-    {
-        auto con = generateConnections();
-        auto dis = generateDisconnections();
-        std::vector<Action::Reconnect> res(con.begin(), con.end());
-        std::copy(dis.begin(), dis.end(), std::back_inserter(res));
-
-        return res;
-    }
-
-    std::vector<Action::Reconnect> generateDisconnections() const
-    {
-        std::vector<Action::Reconnect> res;
-        for (auto& [id, set] : edges)
-        {
-            for (const std::optional<Edge>& edgeOpt : set)
-            {
-                if (!edgeOpt.has_value())
-                    continue;
-                const Edge& edge = edgeOpt.value();
-                if (edge.id1() < edge.id2())
-                {
-                    res.emplace_back(false, edge);
-                }
-            }
-        }
-        return res;
-    }
-
-    std::vector<Action::Reconnect> generateConnections() const
-    {
-        std::vector<Action::Reconnect> res;
-        for (auto& [id1, ms1] : matrices)
-        {
-            for (auto&[id2, ms2] : matrices)
-            {
-                if (id1 >= id2)
-                    continue;
-
-                Edge edge(id1, A, Xp, 0, Xp, A, id2);
-                auto edgeOpt = nextEdge(edge);
-
-                while (edgeOpt.has_value())
-                {
-                    Vector center1 = getCenter(ms1[edge.side1()]);
-                    Vector center2 = getCenter(ms2[edge.side2()]);
-                    if (distance(center1, center2) != 1)
-                    {
-                        edge = edgeOpt.value();
-                        edgeOpt = nextEdge(edge);
-                        continue;
-                    }
-
-                    const Matrix& matrix = ms2[edge.side2()];
-                    if (equals(matrix, computeConnectedMatrix(edge)) && !findEdge(edge))
-                    {
-                        res.emplace_back(true, edge);
-                    }
-                    edge = edgeOpt.value();
-                    edgeOpt = nextEdge(edge);
-                }
-            }
-        }
-        return res;
-    }
-
     bool execute(const Action::Rotate& action)
     {
-        return modules.at(action.id).rotateJoint(action.joint, action.angle);
+        return modules.at(action.id()).rotateJoint(action.joint(), action.angle());
     }
 
     bool execute(const Action::Reconnect& action)
     {
-        if (action.add)
+        if (action.add())
         {
-            return addEdge(action.edge);
+            return addEdge(action.edge());
         }
         else
         {
-            return eraseEdge(action.edge);
+            return eraseEdge(action.edge());
         }
     }
 };

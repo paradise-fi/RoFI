@@ -15,13 +15,16 @@ include(${VTK_USE_FILE})
 
 add_executable(rofi-reconfig ${ARMADILLO_LIBRARIES} reconfig/main.cpp Matrix.h Configuration.h Reader.h reconfig/Algorithms.h visualizer/Visualizer.h Printer.h)
 
+add_executable(rofi-generate ${ARMADILLO_LIBRARIES} generate/main.cpp)
+
 add_executable(rofi-test ${ARMADILLO_LIBRARIES} test/main.cpp test/test.cpp)
 
 add_executable(rofi-vis ${ARMADILLO_LIBRARIES} visualizer/main.cpp visualizer/Generator.h visualizer/Camera.h visualizer/Animator.h)
 
 add_executable(rofi-distribute-postprocessing distribute/postprocessing/main.cpp distribute/postprocessing/postprocessing.h distribute/postprocessing/postprocessing.cpp)
 
-target_link_libraries(rofi-reconfig ${ARMADILLO_LIBRARIES} ${VTK_LIBRARIES})
+target_link_libraries(rofi-reconfig ${ARMADILLO_LIBRARIES})
+target_link_libraries(rofi-generate ${ARMADILLO_LIBRARIES})
 target_link_libraries(rofi-test ${ARMADILLO_LIBRARIES} ${VTK_LIBRARIES})
 target_link_libraries(rofi-vis ${ARMADILLO_LIBRARIES} ${VTK_LIBRARIES})
 

@@ -126,9 +126,9 @@ public:
         std::stringstream out;
 
         out << "R " <<
-            rotation.id << " " <<
-            rotation.joint << " " <<
-            rotation.angle << std::endl;
+            rotation.id() << " " <<
+            rotation.joint() << " " <<
+            rotation.angle() << std::endl;
 
         return out.str();
     }
@@ -137,8 +137,8 @@ public:
         std::stringstream out;
 
         Printer printer;
-        out << (reconnection.add ? "C " : "D ") <<
-            printer.print(reconnection.edge);
+        out << (reconnection.add() ? "C " : "D ") <<
+            printer.print(reconnection.edge());
 
         return out.str();
     }

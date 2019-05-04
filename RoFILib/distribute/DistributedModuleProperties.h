@@ -22,17 +22,17 @@ public:
     }
 
     void execute(const Action::Rotate &rotation) {
-        if (rotation.id == getId()) {
-            rotateJoint(rotation.joint, rotation.angle);
+        if (rotation.id() == getId()) {
+            rotateJoint(rotation.joint(), rotation.angle());
         }
     }
 
     void execute(const Action::Reconnect &reconnection) {
-        if (reconnection.edge.id1() == getId() || reconnection.edge.id2() == getId()) {
-            if (reconnection.add) {
-                edges[reconnection.edge.side1() * 3 + reconnection.edge.dock1()] = reconnection.edge;
+        if (reconnection.edge().id1() == getId() || reconnection.edge().id2() == getId()) {
+            if (reconnection.add()) {
+                edges[reconnection.edge().side1() * 3 + reconnection.edge().dock1()] = reconnection.edge();
             } else {
-                edges[reconnection.edge.side1() * 3 + reconnection.edge.dock1()] = std::nullopt;
+                edges[reconnection.edge().side1() * 3 + reconnection.edge().dock1()] = std::nullopt;
             }
         }
     }
