@@ -144,48 +144,21 @@ namespace Eval
 
 namespace Distance
 {
-    inline double hamming(const Configuration& curr, const Configuration& goal)
+    inline double reconnections(const Configuration& curr, const Configuration& goal)
     {
-        double result = 0;
-        double costEdge = 10, costDeg = 1.0/90.0;
-        for ( auto& [id, mod] : curr.getModules() )
-        {
-            const auto& other = goal.getModules().at(id);
-            for (Joint j : {Alpha, Beta, Gamma})
-            {
-                result += std::abs(mod.getJoint(j) - other.getJoint(j));
-            }
-        }
-        result *= costDeg;
+        auto diff = curr.diff(goal);
+        return diff.reconnections.size();
+    }
 
-        for (auto& [id, edges] : curr.getEdges())
-        {
-            for (auto& opt : edges)
-            {
-                if (opt.has_value())
-                {
-                    if (!goal.findEdge(opt.value()))
-                    {
-                        result += costEdge;
-                    }
-                }
-            }
-        }
+    inline double rotations(const Configuration& curr, const Configuration& goal)
+    {
+        auto diff = curr.diff(goal);
+        return diff.rotations.size();
+    }
 
-        for (auto& [id, edges] : goal.getEdges())
-        {
-            for (auto& opt : edges)
-            {
-                if (opt.has_value())
-                {
-                    if (!curr.findEdge(opt.value()))
-                    {
-                        result += costEdge;
-                    }
-                }
-            }
-        }
-        return result;
+    inline double diff(const Configuration& curr, const Configuration& goal)
+    {
+        return reconnections(curr, goal) * 1000 + rotations(curr, goal);
     }
 }
 
@@ -358,6 +331,23 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
  *
  * */
 
+template<typename T>
+inline void getAllSubsetsLess(std::vector<T>& set, std::vector<std::vector<T>>& res, std::vector<T> accum, unsigned index, unsigned count)
+{
+    if ((count == 0) || (index == set.size()))
+    {
+        res.push_back(accum);
+        return;
+    }
+    for (unsigned i = index; i < set.size(); ++i)
+    {
+        auto next = accum;
+        next.push_back(set[i]);
+        getAllSubsetsLess(set, res, next, i + 1, count - 1);
+        getAllSubsetsLess(set, res, accum, i + 1, count);
+    }
+}
+
 inline int findFreeIndex(int index, const std::array<bool, 6>& A)
 {
     int count = 6;
@@ -401,7 +391,7 @@ inline std::optional<Configuration> generateAngles(const std::vector<ID>& ids, c
     // Assume the edges form a connected graph and that edges contain only IDs from the 'ids' vector.
     std::random_device rd;
     std::uniform_int_distribution<int> ab(-1,1);
-    std::uniform_int_distribution<int> c(0, 3);
+    std::uniform_int_distribution<int> c(-1, 2);
     double step = 90;
     Configuration cfg;
     for (ID id : ids)
@@ -470,24 +460,19 @@ inline Configuration sampleFree(const std::vector<ID>& ids)
     auto treeOpt = generateRandomTree(ids);
     while (!treeOpt.has_value())
     {
-
         treeOpt = generateRandomTree(ids);
     }
     auto cfg = treeOpt.value();
-    std::random_device rd;
-    unsigned long count = 10 * ids.size();
-    for (unsigned i = 0; i < count; ++i)
-    {
-        auto next = cfg.next(90, 1, true);
-        if (next.empty())
-        {
-            next = cfg.next(90);
-        }
-        if (next.empty())
-            break;
+    auto connect = cfg.generateConnections();
 
-        std::uniform_int_distribution<unsigned long> dist(0, next.size() - 1);
-        cfg = next[dist(rd)];
+    std::random_device rd;
+    std::uniform_int_distribution<unsigned long> dist(0, 1);
+    for (auto& action : connect)
+    {
+        if (dist(rd) == 1)
+        {
+            cfg.execute({{},{action}});
+        }
     }
 
     return cfg;
@@ -527,14 +512,150 @@ inline const Configuration* nearest(const Configuration& cfg, const T& pool, Dis
     return near;
 }
 
-inline Configuration steer(const Configuration& from, const Configuration& to, unsigned step = 90)
+inline Configuration steer(const Configuration& from, const Configuration& to, DistFunction* dist)
 {
-    return *nearest(to, from.next(step), Distance::hamming);
+    Printer p;
+    auto diff = from.diff(to);
+
+    auto init = from.executeIfValid(diff);
+    if (init.has_value())
+        return init.value();
+
+    auto allRot = diff.rotations;
+    auto allRec = diff.reconnections;
+    std::vector<std::vector<Action::Rotate>> subRot;
+    std::vector<std::vector<Action::Reconnect>> subRec;
+    getAllSubsetsLess(allRot, subRot, {}, 0, allRot.size());
+    getAllSubsetsLess(allRec, subRec, {}, 0, allRec.size());
+
+    //std::cout << subRot.size() << " " << subRec.size() << std::endl;
+
+    double minDistance = dist(from, to);
+    Configuration minCfg = from;
+
+    //std::cout << "Distance from: \n" << p.print(from) << std::endl;
+
+    for (auto& rot : subRot)
+    {
+        for (auto& rec : subRec)
+        {
+            Action action = {rot, rec};
+            //std::cout << p.toString(action) << std::endl;
+            auto valid = from.executeIfValid({rot, rec});
+            if (valid.has_value())
+            {
+                double newDistance = dist(from, valid.value());
+                //std::cout << newDistance << std::endl << p.print(valid.value()) << std::endl;
+                if (newDistance < minDistance)
+                {
+                    minDistance = newDistance;
+                    minCfg = valid.value();
+                }
+            }
+        }
+    }
+    return minCfg;
+}
+
+inline std::optional<Configuration> steerEdge(const Configuration& from, const Configuration& to, unsigned step)
+{
+    auto diff = from.diff(to);
+    std::vector<Edge> edges;
+    auto ids = from.getIDs();
+    for (auto& rec : diff.reconnections)
+    {
+        if (rec.add())
+            edges.push_back(rec.edge());
+    }
+    for (auto id : ids)
+    {
+        for (auto& edge : from.getEdges(id))
+        {
+            if (edge.id1() == id)
+            {
+                edges.push_back(edge);
+            }
+        }
+    }
+    return generateAngles(ids, edges);
+}
+
+inline void extendEdge(ConfigPool& pool, ConfigEdges& edges, const Configuration& cfg, unsigned step)
+{
+    Printer p;
+    const Configuration* near = nearest(cfg, pool, Eval::matrixDiff);
+    auto cfgEdge = steerEdge(*near, cfg, step);
+    if (!cfgEdge.has_value())
+        return;
+    auto diff = near->diff(cfgEdge.value());
+    auto rot = diff.rotations;
+    auto rec = diff.reconnections;
+
+    auto first = near->executeIfValid({rot,{}});
+    if (first.has_value())
+    {
+        auto firstPtr = pool.insert(first.value());
+        edges[firstPtr] = {};
+
+        edges[near].push_back(firstPtr);
+        edges[firstPtr].push_back(near);
+
+        auto secondPtr = pool.insert(cfgEdge.value());
+        edges[secondPtr] = {};
+        //std::cout << p.print(cfgEdge.value()) << std::endl;
+
+        edges[firstPtr].push_back(secondPtr);
+        edges[secondPtr].push_back(firstPtr);
+    }
 }
 
 /* RRT Algorithm
  *
  * */
+
+inline void extend(ConfigPool& pool, ConfigEdges& edges, const Configuration& cfg)
+{
+    Printer p;
+    const Configuration* near = nearest(cfg, pool, Distance::reconnections);
+    Configuration next = steer(*near, cfg, Distance::rotations);
+
+    if (!pool.find(next))
+    {
+        auto nextPtr = pool.insert(next);
+        edges[nextPtr] = {};
+        //std::cout << p.print(next) << std::endl;
+
+        edges[near].push_back(nextPtr);
+        edges[nextPtr].push_back(near);
+    }
+}
+
+inline void randomWalk(ConfigPool& pool, ConfigEdges& edges, const Configuration& cfg, unsigned step = 90)
+{
+    Printer p;
+    const Configuration* near = nearest(cfg, pool, Eval::matrixDiff);
+    for (int i = 0; i < 10; ++i)
+    {
+        auto next = near->next(step, 1);
+
+        std::random_device rd;
+        std::uniform_int_distribution<unsigned long> dist(0, next.size() - 1);
+        Configuration nextCfg = next[dist(rd)];
+
+        if (!pool.find(nextCfg))
+        {
+            auto nextPtr = pool.insert(nextCfg);
+            edges[nextPtr] = {};
+
+            //std::cout << p.print(nextCfg) << std::endl;
+
+            edges[near].push_back(nextPtr);
+            edges[nextPtr].push_back(near);
+
+            near = nextPtr;
+        }
+    }
+}
 
 inline std::vector<Configuration> RRT(const Configuration& init, const Configuration& goal, unsigned step = 90)
 {
@@ -544,25 +665,20 @@ inline std::vector<Configuration> RRT(const Configuration& init, const Configura
 
     auto initPtr = pool.insert(init);
 
-    for (int i = 0; i < 5000; ++i)
+    while(true)
     {
         Configuration rand = sampleFree(init.getIDs());
-        //Configuration rand = goal;
-        const Configuration* near = nearest(rand, pool, Distance::hamming);
-        Configuration next = steer(*near, rand, step);
+        //randomWalk(pool, edges, rand, step);
+        extendEdge(pool, edges, rand, step);
+        extend(pool, edges, rand);
 
-        auto nextPtr = near;
-        if (!pool.find(next))
-        {
-            nextPtr = pool.insert(next);
-            edges[nextPtr] = {};
-            std::cout << p.print(next);
-        }
+        extendEdge(pool, edges, goal, step);
+        extend(pool, edges, goal);
 
-        edges[near].push_back(nextPtr);
-        edges[nextPtr].push_back(near);
+        if (pool.find(goal))
+            break;
     }
-    std::cout << pool.size() << " " << edges.size() << std::endl;
+    //std::cout << pool.size() << " " << edges.size() << std::endl;
     const Configuration * goalPtr = nullptr;
     for (auto& cfg : pool)
     {
