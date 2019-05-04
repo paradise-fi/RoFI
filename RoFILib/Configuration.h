@@ -860,7 +860,7 @@ private:
 
         for (const std::optional<Edge>& edgeOpt : edges.at(id))
         {
-            if (!edgeOpt.has_value())
+            if (!edgeOpt.has_value() || edgeOpt.value().onCoeff() < 1)
                 continue;
             const Edge& edge = edgeOpt.value();
 
