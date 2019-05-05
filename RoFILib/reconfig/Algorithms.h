@@ -488,6 +488,25 @@ inline const Configuration* getCfg(const Configuration& cfg)
     return &cfg;
 }
 
+
+inline const Configuration* addToTree(ConfigPool& pool, ConfigEdges& edges, const Configuration* from, const Configuration& to)
+{
+    if (!pool.find(to))
+    {
+        auto nextPtr = pool.insert(to);
+        edges[nextPtr] = {};
+        //std::cout << p.print(next) << std::endl;
+
+        edges[from].push_back(nextPtr);
+        edges[nextPtr].push_back(from);
+        return nextPtr;
+    }
+    else
+    {
+        return pool.get(to);
+    }
+}
+
 template<typename T>
 inline const Configuration* nearest(const Configuration& cfg, const T& pool, DistFunction* dist)
 {
@@ -528,24 +547,17 @@ inline Configuration steer(const Configuration& from, const Configuration& to, D
     getAllSubsetsLess(allRot, subRot, {}, 0, allRot.size());
     getAllSubsetsLess(allRec, subRec, {}, 0, allRec.size());
 
-    //std::cout << subRot.size() << " " << subRec.size() << std::endl;
-
     double minDistance = dist(from, to);
     Configuration minCfg = from;
-
-    //std::cout << "Distance from: \n" << p.print(from) << std::endl;
 
     for (auto& rot : subRot)
     {
         for (auto& rec : subRec)
         {
-            Action action = {rot, rec};
-            //std::cout << p.toString(action) << std::endl;
             auto valid = from.executeIfValid({rot, rec});
             if (valid.has_value())
             {
                 double newDistance = dist(from, valid.value());
-                //std::cout << newDistance << std::endl << p.print(valid.value()) << std::endl;
                 if (newDistance < minDistance)
                 {
                     minDistance = newDistance;
@@ -594,18 +606,8 @@ inline void extendEdge(ConfigPool& pool, ConfigEdges& edges, const Configuration
     auto first = near->executeIfValid({rot,{}});
     if (first.has_value())
     {
-        auto firstPtr = pool.insert(first.value());
-        edges[firstPtr] = {};
-
-        edges[near].push_back(firstPtr);
-        edges[firstPtr].push_back(near);
-
-        auto secondPtr = pool.insert(cfgEdge.value());
-        edges[secondPtr] = {};
-        //std::cout << p.print(cfgEdge.value()) << std::endl;
-
-        edges[firstPtr].push_back(secondPtr);
-        edges[secondPtr].push_back(firstPtr);
+        auto ptr = addToTree(pool, edges, near, first.value());
+        addToTree(pool, edges, ptr, cfgEdge.value());
     }
 }
 
@@ -619,42 +621,38 @@ inline void extend(ConfigPool& pool, ConfigEdges& edges, const Configuration& cf
     const Configuration* near = nearest(cfg, pool, Distance::reconnections);
     Configuration next = steer(*near, cfg, Distance::rotations);
 
-    if (!pool.find(next))
-    {
-        auto nextPtr = pool.insert(next);
-        edges[nextPtr] = {};
-        //std::cout << p.print(next) << std::endl;
-
-        edges[near].push_back(nextPtr);
-        edges[nextPtr].push_back(near);
-    }
+    addToTree(pool, edges, near, next);
 }
 
-inline void randomWalk(ConfigPool& pool, ConfigEdges& edges, const Configuration& cfg, unsigned step = 90)
+inline void extend2(ConfigPool& pool, ConfigEdges& edges, const Configuration& cfg, unsigned step)
 {
-    Printer p;
-    const Configuration* near = nearest(cfg, pool, Eval::matrixDiff);
-    for (int i = 0; i < 10; ++i)
+    const Configuration* near = nearest(cfg, pool, Distance::reconnections);
+
+    auto diff = near->diff(cfg);
+    auto value = near->executeIfValid(diff);
+    if (value.has_value())
     {
-        auto next = near->next(step, 1);
-
-        std::random_device rd;
-        std::uniform_int_distribution<unsigned long> dist(0, next.size() - 1);
-        Configuration nextCfg = next[dist(rd)];
-
-        if (!pool.find(nextCfg))
-        {
-            auto nextPtr = pool.insert(nextCfg);
-            edges[nextPtr] = {};
-
-            //std::cout << p.print(nextCfg) << std::endl;
-
-            edges[near].push_back(nextPtr);
-            edges[nextPtr].push_back(near);
-
-            near = nextPtr;
-        }
+        addToTree(pool, edges, near, value.value());
+        return;
     }
+
+    auto cfgEdge = steerEdge(*near, cfg, step);
+    if (cfgEdge.has_value())
+    {
+        auto diff2 = near->diff(cfgEdge.value());
+        auto rot = diff2.rotations;
+
+        auto first = near->executeIfValid({rot,{}});
+        if (first.has_value())
+        {
+            auto ptr = addToTree(pool, edges, near, first.value());
+            addToTree(pool, edges, ptr, cfgEdge.value());
+        }
+        return;
+    }
+
+    Configuration next = steer(*near, cfg, Distance::rotations);
+    addToTree(pool, edges, near, next);
 }
 
 inline std::vector<Configuration> RRT(const Configuration& init, const Configuration& goal, unsigned step = 90)
@@ -669,28 +667,25 @@ inline std::vector<Configuration> RRT(const Configuration& init, const Configura
     {
         Configuration rand = sampleFree(init.getIDs());
         //randomWalk(pool, edges, rand, step);
-        extendEdge(pool, edges, rand, step);
-        extend(pool, edges, rand);
+//        extendEdge(pool, edges, rand, step);
+//        extend(pool, edges, rand);
+//
+//        extendEdge(pool, edges, goal, step);
+//        extend(pool, edges, goal);
 
-        extendEdge(pool, edges, goal, step);
-        extend(pool, edges, goal);
+        extend2(pool, edges, rand, step);
+        extend2(pool, edges, goal, step);
 
         if (pool.find(goal))
             break;
     }
     //std::cout << pool.size() << " " << edges.size() << std::endl;
-    const Configuration * goalPtr = nullptr;
-    for (auto& cfg : pool)
+    if (pool.find(goal))
     {
-        if (*cfg == goal)
-        {
-            goalPtr = cfg.get();
-        }
+        const Configuration * goalPtr = pool.get(goal);
+        return createPath(edges, initPtr, goalPtr);
     }
-    if (goalPtr == nullptr)
-        return {};
-
-    return createPath(edges, initPtr, goalPtr);
+    return {};
 }
 
 #endif //ROBOTS_BFS_H
