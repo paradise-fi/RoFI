@@ -6,7 +6,7 @@
 #define ROFI_POSTPROCESSING_H
 
 #include "../../Configuration.h"
-#include "../../Printer.h"
+#include "../../IO.h"
 #include "../DistributedReader.h"
 
 class Postprocessing {

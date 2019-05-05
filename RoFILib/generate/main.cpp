@@ -4,18 +4,19 @@
 
 #include <cassert>
 #include "../Configuration.h"
-#include "../Printer.h"
+#include "../IO.h"
 #include "../reconfig/Algorithms.h"
+
+using namespace IO;
 
 using ConfigPair = std::pair<Configuration, Configuration>;
 std::string folder = "../data/planner-tests/";
 
 void printToFile(const Configuration& cfg, const std::string& path)
 {
-    Printer p;
     std::ofstream file;
     file.open(path);
-    file << p.print(cfg);
+    file << toString(cfg);
     file.close();
 }
 

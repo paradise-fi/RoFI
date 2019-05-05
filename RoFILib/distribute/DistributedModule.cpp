@@ -10,9 +10,8 @@ DistributedModule::DistributedModule(unsigned int id, std::ifstream &initConfigS
         return;
     }
 
-    Reader reader;
     Configuration initConfig;
-    reader.read(initConfigStream, initConfig);
+    IO::readConfiguration(initConfigStream, initConfig);
 
     const Module &initModuleToCopy = initConfig.getModules().at(id);
     currModule = DistributedModuleProperties(initModuleToCopy.getJoint(Joint::Alpha)
@@ -23,7 +22,7 @@ DistributedModule::DistributedModule(unsigned int id, std::ifstream &initConfigS
     currModule.setEdges(createEdgeListFromEdges(initConfig.getEdges(id), id));
 
     Configuration trgConfig;
-    reader.read(trgConfigStream, trgConfig);
+    IO::readConfiguration(trgConfigStream, trgConfig);
 
     const Module &trgModuleToCopy = trgConfig.getModules().at(id);
     trgModule = DistributedModuleProperties(trgModuleToCopy.getJoint(Joint::Alpha)

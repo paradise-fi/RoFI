@@ -9,8 +9,8 @@
 
 #include "DistributedModuleProperties.h"
 #include "DistributedPrinter.h"
-#include "../Reader.h"
 #include "../reconfig/Algorithms.h"
+#include "../IO.h"
 
 class DistributedModule {
 public:

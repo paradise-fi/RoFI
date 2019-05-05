@@ -9,7 +9,6 @@
 #include "Generator.h"
 #include "Visualizer.h"
 #include <vector>
-#include "../Printer.h"
 
 class Animator{
 private:

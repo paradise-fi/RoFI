@@ -1,9 +1,10 @@
 #include <fstream>
 #include "../cxxopts.hpp"
 #include "../Configuration.h"
-#include "../Reader.h"
+#include "../IO.h"
 #include "Algorithms.h"
-#include "../Printer.h"
+
+using namespace IO;
 
 enum class Algorithm
 {
@@ -171,12 +172,10 @@ int main(int argc, char* argv[])
     parse(argc, argv);
 
     Configuration init, goal;
-    Reader reader;
-    Printer printer;
 
     bool ok = true;
-    ok &= reader.read(initInput, init);
-    ok &= reader.read(goalInput, goal);
+    ok &= readConfiguration(initInput, init);
+    ok &= readConfiguration(goalInput, goal);
 
     if (!ok)
     {
@@ -215,7 +214,7 @@ int main(int argc, char* argv[])
             break;
     }
 
-    std::cout << printer.print(path);
+    std::cout << toString(path);
 
     if (path.empty())
     {

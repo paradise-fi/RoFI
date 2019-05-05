@@ -6,7 +6,7 @@
 #define ROBOTS_BFS_H
 
 #include "../Configuration.h"
-#include "../Printer.h"
+#include "../IO.h"
 #include <queue>
 #include <cmath>
 #include <memory>
@@ -68,7 +68,6 @@ public:
 
     bool find(const Configuration& config) const
     {
-        Printer p;
         auto tmp = std::make_unique<Configuration>(config);
         return (pool.find(tmp) != pool.end());
     }
@@ -533,7 +532,6 @@ inline const Configuration* nearest(const Configuration& cfg, const T& pool, Dis
 
 inline Configuration steer(const Configuration& from, const Configuration& to, DistFunction* dist)
 {
-    Printer p;
     auto diff = from.diff(to);
 
     auto init = from.executeIfValid(diff);
@@ -594,7 +592,6 @@ inline std::optional<Configuration> steerEdge(const Configuration& from, const C
 
 inline void extendEdge(ConfigPool& pool, ConfigEdges& edges, const Configuration& cfg, unsigned step)
 {
-    Printer p;
     const Configuration* near = nearest(cfg, pool, Eval::matrixDiff);
     auto cfgEdge = steerEdge(*near, cfg, step);
     if (!cfgEdge.has_value())
@@ -617,7 +614,6 @@ inline void extendEdge(ConfigPool& pool, ConfigEdges& edges, const Configuration
 
 inline void extend(ConfigPool& pool, ConfigEdges& edges, const Configuration& cfg)
 {
-    Printer p;
     const Configuration* near = nearest(cfg, pool, Distance::reconnections);
     Configuration next = steer(*near, cfg, Distance::rotations);
 
@@ -657,7 +653,6 @@ inline void extend2(ConfigPool& pool, ConfigEdges& edges, const Configuration& c
 
 inline std::vector<Configuration> RRT(const Configuration& init, const Configuration& goal, unsigned step = 90)
 {
-    Printer p;
     ConfigPool pool;
     ConfigEdges edges;
 

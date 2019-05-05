@@ -6,14 +6,13 @@
 #define ROFI_DISTRIBUTEDPRINTER_H
 
 #include "../Configuration.h"
-#include "../Printer.h"
+#include "../IO.h"
 
 class DistributedPrinter {
 public:
     static std::string toString(const Configuration &configuration, int step) {
         std::stringstream out;
-        Printer printer;
-        std::string standardOut = printer.print(configuration);
+        std::string standardOut = IO::toString(configuration);
         if (standardOut.empty()) {
             return "";
         }
@@ -31,23 +30,21 @@ public:
 
     static std::string toString(const Module &module, int step) {
         std::stringstream out;
-        Printer printer;
-        out << step << " " << printer.print(module);
+        out << step << " " << IO::toString(module);
 
         return out.str();
     }
 
     static std::string toString(const Edge &edge, int step) {
         std::stringstream out;
-        Printer printer;
-        out << step << " " << printer.print(edge);
+        out << step << " " << IO::toString(edge);
 
         return out.str();
     }
 
     static std::string toString(const Action &action, int step) {
         std::stringstream out;
-        std::string standardOut = Printer::toString(action);
+        std::string standardOut = IO::toString(action);
         if (standardOut.empty()) {
             return "";
         }
@@ -64,14 +61,14 @@ public:
     }
     static std::string toString(const Action::Rotate &rotation, int step) {
         std::stringstream out;
-        out << step << " " << Printer::toString(rotation);
+        out << step << " " << IO::toString(rotation);
 
         return out.str();
     }
 
     static std::string toString(const Action::Reconnect &reconnect, int step) {
         std::stringstream out;
-        out << step << " " << Printer::toString(reconnect);
+        out << step << " " << IO::toString(reconnect);
 
         return out.str();
     }

@@ -1,11 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <string_view>
-#include "../Reader.h"
 #include "Visualizer.h"
 #include "Animator.h"
 #include "../cxxopts.hpp"
+#include "../IO.h"
 
+using namespace IO;
 //using Resolution = std::pair<int, int>;
 
 struct Parameters{
@@ -244,7 +245,6 @@ int main(int argc, char* argv[]){
     Parameters params;
     parse(argc, argv, params);
 
-    Reader reader;
     Visualizer visualizer;
     Animator animator;
     Camera cameraStart;
@@ -254,18 +254,18 @@ int main(int argc, char* argv[]){
     Configuration cfg;
 
     if (params.cameraSet) {
-        reader.readCameraSettings(params.cameraSettings, cameraStart, cameraEnd, cameraMove);
+        readCameraSettings(params.cameraSettings, cameraStart, cameraEnd, cameraMove);
     }
 
     if (!params.many){
-        reader.read(params.inputFile, cfg);
+        readConfiguration(params.inputFile, cfg);
         animator.visualizeOneConfig(cfg, params.path, params.savePicture, cameraStart,
                 params.resolution, params.magnify);
         return 0;
     }
 
     //many
-    reader.read(params.inputFile, configs);
+    readConfigurations(params.inputFile, configs);
     if (params.animation){
         animator.visualizeMainConfigs(configs, params.phi, params.reconnectionPics, params.path,
                 params.savePicture, cameraStart, cameraEnd,

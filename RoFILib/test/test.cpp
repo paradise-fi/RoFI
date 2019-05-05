@@ -1,6 +1,5 @@
 #include "catch.hpp"
 #include "../Configuration.h"
-#include "../Printer.h"
 #include "../visualizer/Visualizer.h"
 #include "../reconfig/Algorithms.h"
 
@@ -37,7 +36,6 @@ TEST_CASE("Connections")
 
 TEST_CASE("Edge generation")
 {
-    Printer printer;
     //std::array<unsigned, 5> array = {0,0,0,0,0};
     Edge edge1(0, A, Xp, 0, Xp, A, 1);
     for (Side side2 : {A, B})
@@ -66,8 +64,6 @@ TEST_CASE("Edge generation")
 
 TEST_CASE("Generate all edges")
 {
-    Printer p;
-
     Edge edge(0, A, Xp, 0, Xp, A, 1);
     auto edgeOpt = nextEdge(edge);
     while (edgeOpt.has_value())
@@ -79,7 +75,6 @@ TEST_CASE("Generate all edges")
 
 TEST_CASE("Next configurations")
 {
-    Printer p;
     Configuration cfg;
     cfg.addModule(0,0,0,0);
 
@@ -93,7 +88,6 @@ TEST_CASE("Next configurations")
 
 TEST_CASE("Generate edge")
 {
-    Printer p;
     std::unordered_map<ID, std::array<bool, 6>> occupied;
     occupied[0] = {true, true, true, true, true, true};
     occupied[1] = {true, true, true, true, true, true};
@@ -115,13 +109,11 @@ TEST_CASE("Generate angles")
 
     auto cfg = generateAngles(ids, edges);
     REQUIRE(cfg.has_value());
-    Printer p;
     //std::cout << p.print(cfg.value());
 }
 
 TEST_CASE("Generate angles for generated edges")
 {
-    Printer p;
     std::vector<ID> ids = {0, 1};
     std::unordered_map<ID, std::array<bool, 6>> occupied;
     occupied[0] = {true, true, true, true, true, true};
@@ -141,7 +133,6 @@ TEST_CASE("Generate angles for generated edges")
 
 TEST_CASE("Sample free")
 {
-    Printer p;
     std::vector<ID> ids = {0, 1};
     Configuration cfg = sampleFree(ids);
     Visualizer vis;

@@ -5,7 +5,7 @@
 #ifndef ROFI_DISTRIBUTEDREADER_H
 #define ROFI_DISTRIBUTEDREADER_H
 
-#include "../Reader.h"
+#include "../IO.h"
 
 class DistributedReader {
 public:
@@ -27,8 +27,7 @@ public:
             }
         }
 
-        Reader reader;
-        reader.read(stringstream, config);
+        IO::readConfiguration(stringstream, config);
 
         return !config.empty();
     }
@@ -51,7 +50,7 @@ public:
             }
         }
 
-        return Reader::fromStringAction(stringstream);
+        return IO::readAction(stringstream);
     }
 };
 

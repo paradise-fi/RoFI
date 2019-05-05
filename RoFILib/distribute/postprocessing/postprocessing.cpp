@@ -21,8 +21,7 @@ bool Postprocessing::generateConfigurations(const std::string &inputFileName) {
     }
 
     addNextConfigurations(stringstream);
-    Printer printer;
-    std::cout << printer.print(configurations);
+    std::cout << IO::toString(configurations);
 
     return true;
 }

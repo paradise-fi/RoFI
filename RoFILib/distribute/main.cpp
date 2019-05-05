@@ -44,7 +44,7 @@ void tmpReconfiguration() {
     rotations.emplace_back(1, Joint::Beta, -90);
     actions.emplace_back(rotations, reconnections);
 
-    std::cout << std::endl << Printer::toString(actions);
+    std::cout << std::endl << IO::toString(actions);
 }
 
 int main(int argc, char **argv) {
