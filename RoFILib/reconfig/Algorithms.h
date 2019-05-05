@@ -115,7 +115,7 @@ namespace Eval
             const auto& other = goal.getMatrices().at(id);
             for (Side s : {A, B})
             {
-                result += distance(getCenter(ms[s]), getCenter(other[s]));
+                result += distance(center(ms[s]), center(other[s]));
             }
         }
         return result;

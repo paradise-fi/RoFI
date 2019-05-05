@@ -10,6 +10,8 @@
 using Vector = arma::vec4;
 using Matrix = arma::mat44;
 
+inline const double precision = 1000.0;
+
 inline const Matrix identity = arma::mat(4, 4, arma::fill::eye);
 inline const Vector X = arma::vec4({1,0,0,0});
 inline const Vector Y = arma::vec4({0,1,0,0});
@@ -17,13 +19,12 @@ inline const Vector Z = arma::vec4({0,0,1,0});
 
 inline bool equals( const Matrix& a, const Matrix& b)
 {
-    return arma::approx_equal( a, b, "absdiff", 0.001);
+    return arma::approx_equal( a, b, "absdiff", 1/precision);
 }
 
-
-inline Vector getCenter(const Matrix& m)
+inline bool equals( const Vector& a, const Vector& b)
 {
-    return Vector{m(0,3), m(1,3), m(2,3), m(3,3)};
+    return arma::approx_equal( a, b, "absdiff", 1/precision);
 }
 
 inline Vector column(const Matrix &matrix, int col)
@@ -31,21 +32,20 @@ inline Vector column(const Matrix &matrix, int col)
     return arma::vec4{matrix(0, col), matrix(1, col), matrix(2, col), matrix(3, col)};
 }
 
-
-inline Vector row(const Matrix &matrix, int row)
+inline Vector center(const Matrix &m)
 {
-    return Vector{matrix(row, 0), matrix(row, 1), matrix(row, 2), matrix(row, 3)};
+    return column(m, 3);
 }
 
 inline double distance(const Vector& a, const Vector& b)
 {
     Vector diff = a - b;
     double res = 0;
-    for (int i = 0; i < 3; ++i)
+    for (int i = 0; i < 4; ++i)
     {
         res += diff(i) * diff(i);
     }
-    return std::round(sqrt(res) * 1000) / 1000.0;
+    return std::round(sqrt(res) * precision) / precision;
 }
 
 inline double distance(const Matrix& a, const Matrix& b)
@@ -53,7 +53,7 @@ inline double distance(const Matrix& a, const Matrix& b)
     double res = 0;
     for (int r = 0; r < 4; ++r)
     {
-        res += distance(row(a, r), row(b, r));
+        res += distance(column(a, r), column(b, r));
     }
     return res;
 }
@@ -82,28 +82,18 @@ inline Matrix rotate(double r, const Vector &u)
     rotate(3,1) = 0;
     rotate(3,2) = 0;
     rotate(3,3) = 1;
+
     return rotate;
 }
 
 inline Matrix translate(const Vector &u)
 {
     const int x = 0, y = 1, z = 2;
-    Matrix translate = { {1, 0, 0, u(x)}, {0, 1, 0, u(y)}, {0, 0, 1, u(z)}, {0,0,0,1} };
+    Matrix translate = { {1, 0, 0, u(x)},
+                         {0, 1, 0, u(y)},
+                         {0, 0, 1, u(z)},
+                         {0, 0, 0, 1} };
     return translate;
 }
-
-inline Matrix inversion()
-{
-    Matrix inverse = { {-1,0,0,0}, {0,-1,0,0}, {0,0,-1,0}, {0,0,0,1} };
-    return inverse;
-}
-
-inline Matrix flip()
-{
-    const int x = 0, y = 1, z = 2;
-    Matrix flip = { {1, 0, 0, 0}, {0, -1, 0, 0}, {0, 0, -1, 0}, {0, 0, 0, 1} };
-    return flip;
-}
-
 
 #endif //ROBOTY_MATRIX_H

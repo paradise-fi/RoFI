@@ -503,8 +503,8 @@ public:
         std::vector<Vector> centers;
         for (const auto& [id, ms] : matrices)
         {
-            centers.push_back(getCenter(ms[A]));
-            centers.push_back(getCenter(ms[B]));
+            centers.push_back(center(ms[A]));
+            centers.push_back(center(ms[B]));
         }
         for (unsigned i = 0; i < centers.size(); ++i)
         {
@@ -524,8 +524,8 @@ public:
         Vector mass({0,0,0,1});
         for (const auto& [id, ms] : matrices)
         {
-            mass += getCenter(ms[A]);
-            mass += getCenter(ms[B]);
+            mass += center(ms[A]);
+            mass += center(ms[B]);
         }
         mass /= modules.size()*2;
         return mass;
@@ -645,8 +645,8 @@ public:
 
                 while (edgeOpt.has_value())
                 {
-                    Vector center1 = getCenter(ms1[edge.side1()]);
-                    Vector center2 = getCenter(ms2[edge.side2()]);
+                    Vector center1 = center(ms1[edge.side1()]);
+                    Vector center2 = center(ms2[edge.side2()]);
                     if (distance(center1, center2) != 1)
                     {
                         edge = edgeOpt.value();
