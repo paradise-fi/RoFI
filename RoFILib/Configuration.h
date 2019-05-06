@@ -558,6 +558,10 @@ public:
         Action divided = rotate.divide(1.0/steps);
         for (int i = 1; i <= steps; ++i)
         {
+            if (!next.isValid())
+            {
+                return std::nullopt;
+            }
             if (!next.execute(divided))
             {
                 return std::nullopt;

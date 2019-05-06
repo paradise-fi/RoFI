@@ -46,9 +46,9 @@ namespace IO
     inline std::string toString(const Module &mod)
     {
         std::stringstream out;
-        for (auto j : {Alpha, Beta, Gamma})
-            out << mod.getJoint(j) << " ";
         out << mod.getId();
+        for (auto j : {Alpha, Beta, Gamma})
+            out << " " << mod.getJoint(j);
         return out.str();
     }
 
@@ -218,7 +218,7 @@ namespace IO
             }
         }
 
-        return cfg.empty();
+        return !cfg.empty();
     }
 
     inline void readConfigurations(std::istream &input, std::vector< Configuration > &configs)
