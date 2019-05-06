@@ -8,6 +8,7 @@
 #include <cassert>
 #include <functional>
 
+#include <drivers/peripheral.hpp>
 #include <drivers/dma.hpp>
 #include <drivers/gpio.hpp>
 #include <system/ringBuffer.hpp>
@@ -24,11 +25,11 @@ extern "C" void USART3_4_LPUART1_IRQHandler();
         HANDLER();                                   \
     }
 
-struct Uart {
+struct Uart: public Peripheral< USART_TypeDef > {
 public:
     template < typename... Configs >
     Uart( USART_TypeDef *periph = nullptr, Configs... configs )
-        : _periph( periph )
+        : Peripheral< USART_TypeDef >( periph )
     {
         enableClock();
 
@@ -46,16 +47,6 @@ public:
 
         _enableInterrupt( 0 );
     }
-
-    Uart( const Uart& ) = delete;
-    Uart& operator=( const Uart& ) = delete;
-
-    void swap( Uart& o ) {
-        using std::swap;
-        swap( _periph, o._periph );
-    }
-    Uart( Uart&& o ) { swap( o ); }
-    Uart& operator=( Uart&& o ) { swap( o ); return *this; }
 
     using Handler = std::function< void() >;
 
@@ -177,8 +168,6 @@ protected:
     Handlers& handlers() {
         return handlers( _periph );
     }
-
-    USART_TypeDef *_periph;
     static std::array< Handlers, 4 > _uarts;
 
     friend void USART1_IRQHandler();

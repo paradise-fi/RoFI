@@ -6,27 +6,19 @@
 #include <stm32g0xx_ll_tim.h>
 #include <stm32g0xx_ll_bus.h>
 
+#include <drivers/peripheral.hpp>
 #include <drivers/gpio.hpp>
 
-class Timer {
+class Timer: public Peripheral< TIM_TypeDef > {
 public:
     template < typename... Configs >
-    Timer( TIM_TypeDef *periph = nullptr, Configs... configs ) : _periph( periph )
+    Timer( TIM_TypeDef *periph = nullptr, Configs... configs )
+        : Peripheral< TIM_TypeDef >( periph )
     {
         enableClock();
         LL_TIM_EnableARRPreload( _periph );
         ( configs.post( _periph ), ... );
     }
-
-    Timer( const Timer& ) = delete;
-    Timer& operator=( const Timer& ) = delete;
-
-    void swap( Timer& o ) {
-        using std::swap;
-        swap( _periph, o._periph );
-    }
-    Timer( Timer&& o ) { swap( o ); }
-    Timer& operator=( Timer&& o ) { swap( o ); return *this; }
 
     void enable() {
         LL_TIM_EnableCounter( _periph );
@@ -123,9 +115,6 @@ public:
     Pwm pwmChannel( int channel ) {
         return Pwm( _periph, channel );
     }
-
-private:
-    TIM_TypeDef *_periph;
 };
 
 struct FreqAndRes {

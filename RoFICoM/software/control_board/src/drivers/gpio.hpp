@@ -3,9 +3,11 @@
 #include <stm32g0xx_ll_bus.h>
 #include <stm32g0xx_ll_gpio.h>
 
+#include <drivers/peripheral.hpp>
 
-struct Gpio {
-    Gpio( GPIO_TypeDef *_periph ) : _periph( _periph ) {}
+
+struct Gpio: public Peripheral< GPIO_TypeDef > {
+    Gpio( GPIO_TypeDef *_periph ) : Peripheral< GPIO_TypeDef >( _periph ) {}
 
     struct Pin {
         Gpio port() const {
@@ -77,7 +79,6 @@ struct Gpio {
         return { pin, _periph };
     }
 
-    GPIO_TypeDef *_periph;
 };
 
 
