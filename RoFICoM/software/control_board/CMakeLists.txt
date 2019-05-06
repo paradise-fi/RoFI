@@ -12,6 +12,9 @@ include(STM32Device)
 include(STM32HAL)
 include(ClangTidy)
 
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Og")
+
 project(control_board C CXX ASM)
 
 file(GLOB_RECURSE SRC src/*.cpp src/*.c)
