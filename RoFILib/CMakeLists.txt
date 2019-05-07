@@ -23,6 +23,8 @@ add_executable(rofi-vis ${ARMADILLO_LIBRARIES} visualizer/main.cpp visualizer/Ge
 
 add_executable(rofi-distribute-postprocessing distribute/postprocessing/main.cpp distribute/postprocessing/postprocessing.h distribute/postprocessing/postprocessing.cpp)
 
+add_executable(rofi-distribute-preprocessing distribute/preprocessing/main.cpp)
+
 target_link_libraries(rofi-reconfig ${ARMADILLO_LIBRARIES})
 target_link_libraries(rofi-generate ${ARMADILLO_LIBRARIES})
 target_link_libraries(rofi-test ${ARMADILLO_LIBRARIES} ${VTK_LIBRARIES})
