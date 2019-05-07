@@ -30,14 +30,14 @@ public:
 
     static std::string toString(const Module &module, int step) {
         std::stringstream out;
-        out << step << " " << IO::toString(module);
+        out << step << " M " << IO::toString(module) << std::endl;
 
         return out.str();
     }
 
     static std::string toString(const Edge &edge, int step) {
         std::stringstream out;
-        out << step << " " << IO::toString(edge);
+        out << step << " E " << IO::toString(edge) << std::endl;
 
         return out.str();
     }

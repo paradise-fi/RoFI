@@ -138,14 +138,14 @@ std::string DistributedModule::printModule(const DistributedModuleProperties &mo
 }
 
 void DistributedModule::executeDiff(const Action &action, int step) {
-    for (const auto &rotation : action.rotations) {
+    for (const auto &rotation : action.rotations()) {
         if (currModule.getId() == rotation.id()) {
             currModule.execute(rotation);
             std::cout << DistributedPrinter::toString(rotation, step);
         }
     }
 
-    for (const auto &reconnection : action.reconnections) {
+    for (const auto &reconnection : action.reconnections()) {
         if (currModule.getId() == reconnection.edge().id1()) {
             currModule.execute(reconnection);
             std::cout << DistributedPrinter::toString(reconnection, step);

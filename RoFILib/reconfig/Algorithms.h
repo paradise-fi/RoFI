@@ -137,7 +137,7 @@ namespace Eval
     inline double actionDiff(const Configuration& curr, const Configuration& goal)
     {
         Action action = curr.diff(goal);
-        return action.rotations.size() + action.reconnections.size() ;
+        return action.rotations().size() + action.reconnections().size() ;
     }
 }
 
@@ -146,13 +146,13 @@ namespace Distance
     inline double reconnections(const Configuration& curr, const Configuration& goal)
     {
         auto diff = curr.diff(goal);
-        return diff.reconnections.size();
+        return diff.reconnections().size();
     }
 
     inline double rotations(const Configuration& curr, const Configuration& goal)
     {
         auto diff = curr.diff(goal);
-        return diff.rotations.size();
+        return diff.rotations().size();
     }
 
     inline double diff(const Configuration& curr, const Configuration& goal)
@@ -538,8 +538,8 @@ inline Configuration steer(const Configuration& from, const Configuration& to, D
     if (init.has_value())
         return init.value();
 
-    auto allRot = diff.rotations;
-    auto allRec = diff.reconnections;
+    auto allRot = diff.rotations();
+    auto allRec = diff.reconnections();
     std::vector<std::vector<Action::Rotate>> subRot;
     std::vector<std::vector<Action::Reconnect>> subRec;
     getAllSubsetsLess(allRot, subRot, {}, 0, allRot.size());
@@ -572,7 +572,7 @@ inline std::optional<Configuration> steerEdge(const Configuration& from, const C
     auto diff = from.diff(to);
     std::vector<Edge> edges;
     auto ids = from.getIDs();
-    for (auto& rec : diff.reconnections)
+    for (auto& rec : diff.reconnections())
     {
         if (rec.add())
             edges.push_back(rec.edge());
@@ -597,8 +597,8 @@ inline void extendEdge(ConfigPool& pool, ConfigEdges& edges, const Configuration
     if (!cfgEdge.has_value())
         return;
     auto diff = near->diff(cfgEdge.value());
-    auto rot = diff.rotations;
-    auto rec = diff.reconnections;
+    auto rot = diff.rotations();
+    auto rec = diff.reconnections();
 
     auto first = near->executeIfValid({rot,{}});
     if (first.has_value())
@@ -636,7 +636,7 @@ inline void extend2(ConfigPool& pool, ConfigEdges& edges, const Configuration& c
     if (cfgEdge.has_value())
     {
         auto diff2 = near->diff(cfgEdge.value());
-        auto rot = diff2.rotations;
+        auto rot = diff2.rotations();
 
         auto first = near->executeIfValid({rot,{}});
         if (first.has_value())

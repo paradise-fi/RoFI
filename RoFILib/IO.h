@@ -123,11 +123,11 @@ namespace IO
     inline std::string toString(const Action &action)
     {
         std::stringstream out;
-        for (const auto &rotation : action.rotations) {
+        for (const auto &rotation : action.rotations()) {
             out << toString(rotation);
         }
 
-        for (const auto &reconnection : action.reconnections) {
+        for (const auto &reconnection : action.reconnections()) {
             out << toString(reconnection);
         }
 

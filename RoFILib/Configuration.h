@@ -278,20 +278,30 @@ public:
     };
 
     Action(std::vector<Rotate> rot, std::vector<Reconnect> rec) :
-            rotations(std::move(rot)), reconnections(std::move(rec)) {}
-
-    const std::vector<Rotate> rotations;
-    const std::vector<Reconnect> reconnections;
+            _rotations(std::move(rot)), _reconnections(std::move(rec)) {}
 
     Action divide(double factor) const
     {
         std::vector<Rotate> division;
-        for (const Action::Rotate& rotate : rotations)
+        for (const Action::Rotate& rotate : _rotations)
         {
             division.emplace_back(rotate._id, rotate._joint, rotate._angle * factor);
         }
-        return {division, reconnections};
+        return {division, _reconnections};
     }
+
+    std::vector<Rotate> rotations() const {
+        return _rotations;
+    }
+
+    std::vector<Reconnect> reconnections() const {
+        return _reconnections;
+    }
+
+private:
+    std::vector<Rotate> _rotations;
+    std::vector<Reconnect> _reconnections;
+
 };
 
 inline bool unique(const std::vector<Action::Rotate>& a)
@@ -538,7 +548,7 @@ public:
 
         std::vector<Action::Reconnect> connections;
         std::vector<Action::Reconnect> disconnections;
-        for (const auto& res : action.reconnections)
+        for (const auto& res : action.reconnections())
         {
             if (res.add())
                 connections.push_back(res);
@@ -554,7 +564,7 @@ public:
             return std::nullopt;
         }
 
-        Action rotate(action.rotations, {});
+        Action rotate(action.rotations(), {});
         Action divided = rotate.divide(1.0/steps);
         for (int i = 1; i <= steps; ++i)
         {
@@ -578,11 +588,11 @@ public:
     {
         Configuration next = *this;
         bool ok = true;
-        for (const Action::Rotate rot : action.rotations)
+        for (const Action::Rotate rot : action.rotations())
         {
             ok &= next.execute(rot);
         }
-        for (const Action::Reconnect rec : action.reconnections)
+        for (const Action::Reconnect rec : action.reconnections())
         {
             ok &= next.execute(rec);
         }
@@ -779,6 +789,10 @@ public:
                (fixedId == other.fixedId) &&
                (fixedSide == other.fixedSide) &&
                (equals(fixedMatrix, other.fixedMatrix));
+    }
+
+    bool operator!=(const Configuration &other) const {
+        return !(*this == other);
     }
 
     friend ConfigurationHash;

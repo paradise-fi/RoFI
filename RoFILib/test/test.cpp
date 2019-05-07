@@ -167,9 +167,9 @@ TEST_CASE("Diff only rotations - one change") {
     cfg2.addModule(90, 0, 0, 0);
 
     Action action = cfg1.diff(cfg2);
-    REQUIRE(action.reconnections.empty());
-    REQUIRE(action.rotations.size() == 1);
-    REQUIRE(action.rotations.at(0) == Action::Rotate(0, Joint::Alpha, 90));
+    REQUIRE(action.reconnections().empty());
+    REQUIRE(action.rotations().size() == 1);
+    REQUIRE(action.rotations().at(0) == Action::Rotate(0, Joint::Alpha, 90));
 }
 
 TEST_CASE("Diff only rotations - more changes") {
@@ -179,10 +179,10 @@ TEST_CASE("Diff only rotations - more changes") {
     cfg2.addModule(90, -45, 0, 0);
 
     Action action = cfg1.diff(cfg2);
-    REQUIRE(action.reconnections.empty());
-    REQUIRE(action.rotations.size() == 2);
-    REQUIRE(action.rotations.at(0) == Action::Rotate(0, Joint::Alpha, 90));
-    REQUIRE(action.rotations.at(1) == Action::Rotate(0, Joint::Beta, -45));
+    REQUIRE(action.reconnections().empty());
+    REQUIRE(action.rotations().size() == 2);
+    REQUIRE(action.rotations().at(0) == Action::Rotate(0, Joint::Alpha, 90));
+    REQUIRE(action.rotations().at(1) == Action::Rotate(0, Joint::Beta, -45));
 }
 
 TEST_CASE("Diff only reconnections") {
@@ -200,25 +200,25 @@ TEST_CASE("Diff only reconnections") {
     cfg2 = cfg1;
     cfg2.execute({{}, {reconnect1}});
     Action action1 = cfg1.diff(cfg2);
-    REQUIRE(action1.reconnections.size() == 1);
-    REQUIRE(action1.rotations.empty());
-    REQUIRE(action1.reconnections.at(0) == reconnect1);
+    REQUIRE(action1.reconnections().size() == 1);
+    REQUIRE(action1.rotations().empty());
+    REQUIRE(action1.reconnections().at(0) == reconnect1);
 
     Action::Reconnect reconnect2(false, edge2);
     cfg2.execute({{}, {reconnect2}});
     Action action2 = cfg1.diff(cfg2);
-    REQUIRE(action2.reconnections.size() == 2);
-    REQUIRE(action2.rotations.empty());
-    REQUIRE((action2.reconnections.at(0) == reconnect1 || action2.reconnections.at(0) == reconnect2));
-    REQUIRE((action2.reconnections.at(1) == reconnect1 || action2.reconnections.at(1) == reconnect2));
-    REQUIRE(action2.reconnections.at(0) != action2.reconnections.at(1));
+    REQUIRE(action2.reconnections().size() == 2);
+    REQUIRE(action2.rotations().empty());
+    REQUIRE((action2.reconnections().at(0) == reconnect1 || action2.reconnections().at(0) == reconnect2));
+    REQUIRE((action2.reconnections().at(1) == reconnect1 || action2.reconnections().at(1) == reconnect2));
+    REQUIRE(action2.reconnections().at(0) != action2.reconnections().at(1));
 
     Action::Reconnect reconnect3(true, edge1);
     cfg2.execute({{}, {reconnect3}});
     Action action3 = cfg1.diff(cfg2);
-    REQUIRE(action3.reconnections.size() == 1);
-    REQUIRE(action3.rotations.empty());
-    REQUIRE(action3.reconnections.at(0) == reconnect2);
+    REQUIRE(action3.reconnections().size() == 1);
+    REQUIRE(action3.rotations().empty());
+    REQUIRE(action3.reconnections().at(0) == reconnect2);
 }
 
 TEST_CASE("Diff reconnections and rotations") {
@@ -238,14 +238,13 @@ TEST_CASE("Diff reconnections and rotations") {
     cfg2 = cfg1;
     cfg2.execute({{rotate}, {reconnect1, reconnect2}});
     Action action = cfg1.diff(cfg2);
-    REQUIRE(action.rotations.size() == 1);
-    REQUIRE(action.reconnections.size() == 2);
-    REQUIRE(action.rotations.at(0) == rotate);
-    REQUIRE((action.reconnections.at(0) == reconnect1 || action.reconnections.at(0) == reconnect2));
-    REQUIRE((action.reconnections.at(1) == reconnect1 || action.reconnections.at(1) == reconnect2));
-    REQUIRE(action.reconnections.at(0) != action.reconnections.at(1));
+    REQUIRE(action.rotations().size() == 1);
+    REQUIRE(action.reconnections().size() == 2);
+    REQUIRE(action.rotations().at(0) == rotate);
+    REQUIRE((action.reconnections().at(0) == reconnect1 || action.reconnections().at(0) == reconnect2));
+    REQUIRE((action.reconnections().at(1) == reconnect1 || action.reconnections().at(1) == reconnect2));
+    REQUIRE(action.reconnections().at(0) != action.reconnections().at(1));
 }
-
 TEST_CASE("Visualizer simple generate"){
     Configuration cfg1, cfg2;
     cfg1.addModule(0,0,0, 0);

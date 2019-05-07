@@ -71,7 +71,7 @@ void Postprocessing::addNextConfigurations(std::stringstream &inputStream) {
         inputStream.clear();
         inputStream.seekg(0, std::ios::beg);
         Action action = DistributedReader::fromStringAction(inputStream, step);
-        emptyAction = action.rotations.empty() && action.reconnections.empty();
+        emptyAction = action.rotations().empty() && action.reconnections().empty();
 
         if (!emptyAction) {
             currConfiguration.execute(action);
