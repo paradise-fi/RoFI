@@ -272,11 +272,11 @@ inline int LL_DMAMUX_REQ_TX( USART_TypeDef *uart ) {
     assert( false && "Invalid USART specified" );
 }
 
-class Reader {
+class UartReader {
 public:
     using Mem = memory::Pool::Block;
 
-    Reader( Uart& uart, int dmaChannel = 0 ) : _uart( uart ) {
+    UartReader( Uart& uart, int dmaChannel = 0 ) : _uart( uart ) {
         _channel = Dma::allocate( dmaChannel );
         assert( _channel );
 
@@ -364,11 +364,11 @@ private:
     Mem _block;
 };
 
-class Writer {
+class UartWriter {
 public:
     using Mem = memory::Pool::Block;
 
-    Writer( Uart& uart, int dmaChannel = 0 ) : _uart( uart ) {
+    UartWriter( Uart& uart, int dmaChannel = 0 ) : _uart( uart ) {
         _channel = Dma::allocate( dmaChannel );
         assert( _channel );
 

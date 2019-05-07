@@ -59,6 +59,6 @@ private:
     }
 
     Uart _uart;
-    Writer writer;
+    UartWriter writer;
     volatile bool _txBusy;
 };

@@ -137,6 +137,15 @@ public:
             LL_DMA_DisableIT_TE( DMA1, _channel );
         }
 
+        void abort() {
+            if ( !LL_DMA_IsEnabledChannel( DMA1, _channel ) )
+                return;
+            LL_DMA_DisableChannel( DMA1, _channel );
+            auto &handlers = Dma::channel( _channel );
+            if ( handlers._complete )
+                handlers._complete( _channel );
+        }
+
         int _channel = 0;
     };
 
