@@ -54,10 +54,12 @@ void DistributedModule::reconfigurate() {
     shareTrgConfigurations();
 
     auto generatePath = AStar(currConfiguration, trgConfiguration, 90, 1, Eval::actionDiff);
+    std::vector<Action> generatedActions = createDiffs(generatePath);
+    optimizePath(generatedActions);
 
-    for (unsigned int i = 1; i < generatePath.size(); i++) {
-        Action diff = generatePath.at(i - 1).diff(generatePath.at(i));
-        executeDiff(diff, i);
+    for (unsigned int i = 0; i < generatedActions.size(); i++) {
+        Action diff = generatedActions.at(i);
+        executeDiff(diff, i + 1);
         MPI_Barrier(MPI_COMM_WORLD);
     }
 }
@@ -153,4 +155,94 @@ void DistributedModule::executeDiff(const Action &action, int step) {
             currModule.execute(reconnection);
         }
     }
+}
+
+std::vector<Action> DistributedModule::createDiffs(const std::vector<Configuration> &path) const {
+    std::vector<Action> rv;
+    for (unsigned int i = 1; i < path.size(); i++) {
+        Action diff = path.at(i - 1).diff(path.at(i));
+        rv.push_back(diff);
+    }
+
+    return rv;
+}
+
+void DistributedModule::optimizePath(std::vector<Action> &path) const {
+    joinActions(path);
+    bool doMoreOpt = true;
+
+    while (doMoreOpt) {
+        swapActions(path);
+        doMoreOpt = joinActions(path);
+    }
+}
+
+bool DistributedModule::joinActions(std::vector<Action> &path) const {
+    if (path.empty()) {
+        return false;
+    }
+
+    bool rv = false;
+    Configuration curr = currConfiguration;
+    std::vector<Action> newActions;
+    newActions.push_back(path.at(0));
+    unsigned long currIndex = 0;
+
+    for (unsigned long i = 1; i < path.size(); i++) {
+        Configuration correct = curr;
+        correct.execute(newActions.at(currIndex));
+        correct.execute(path.at(i));
+
+        std::vector<Action::Rotate> rotate = newActions.at(currIndex).rotations();
+        std::vector<Action::Reconnect> reconnect = newActions.at(currIndex).reconnections();
+        std::vector<Action::Rotate> rotate2 = path.at(i).rotations();
+        std::vector<Action::Reconnect> reconnect2 = path.at(i).reconnections();
+        rotate.insert(rotate.end(), rotate2.begin(), rotate2.end());
+        reconnect.insert(reconnect.end(), reconnect2.begin(), reconnect2.end());
+
+        auto optionalCfg = curr.executeIfValid({rotate, reconnect});
+
+        if (!optionalCfg.has_value() || optionalCfg.value() != correct) {
+            curr.execute(newActions.at(currIndex));
+            currIndex++;
+            continue;
+        }
+
+        rv = true;
+        newActions[currIndex] = {rotate, reconnect};
+    }
+
+    path.clear();
+    path = newActions;
+    return rv;
+}
+
+void DistributedModule::swapActions(std::vector<Action> &path) const {
+    Configuration beforeFst = currConfiguration;
+
+    for (unsigned long i = 1; i < path.size(); i++) {
+        Configuration correctOrder = beforeFst;
+
+        correctOrder.execute(path.at(i - 1));
+
+        std::optional<Configuration> swapOrder = beforeFst.executeIfValid(path.at(i));
+        if (!swapOrder.has_value()) {
+            beforeFst = correctOrder;
+            continue;
+        }
+
+        swapOrder = swapOrder.value().executeIfValid(path.at(i - 1));
+        if (!swapOrder.has_value()) {
+            beforeFst = correctOrder;
+            continue;
+        }
+
+        correctOrder.execute(path.at(i));
+        if (correctOrder == swapOrder.value()) {
+            std::swap(path[i], path[i - 1]);
+        }
+
+        beforeFst.execute(path.at(i - 1));
+    }
+
 }

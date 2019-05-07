@@ -13,7 +13,7 @@ if [ -d "./build" ]; then rm -rf build/; fi
 mkdir build; cd build
 
 echo "compile and start distributed algorithm"
-ROFI_COUNT=$(head -n 1 $IN_START_MPI)
+ROFI_COUNT=3
 cmake ../../.. | tee $LOG &&  
   make | tee $LOG &&
   mpiexec -np $ROFI_COUNT ./distribute/rofi-distribute $IN_START_MPI $IN_TARGET_MPI >> $OUT_MPI &&

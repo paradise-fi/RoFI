@@ -42,6 +42,15 @@ private:
     std::string printModule(const DistributedModuleProperties &module, int step) const;
 
     void executeDiff(const Action &action, int step);
+
+    std::vector<Action> createDiffs(const std::vector<Configuration> &path) const;
+
+    void optimizePath(std::vector<Action> &path) const;
+
+    bool joinActions(std::vector<Action> &path) const;
+
+    void swapActions(std::vector<Action> &path) const;
+
 };
 
 
