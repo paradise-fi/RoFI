@@ -2,11 +2,13 @@
 
 #include <cassert>
 #include <system/dbg.hpp>
+#include <system/clock.hpp>
 
 int main() {
-    HAL_Init();
+    setupSystemClock();
+    SystemCoreClockUpdate();
 
-    Dbg::info( "Started" );
+    Dbg::info( "Started: %d", SystemCoreClock );
     int counter = 0;
     while ( true ) {
         Dbg::info( "Tick %d", counter );

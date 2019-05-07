@@ -6,7 +6,7 @@
                 "${workspaceFolder}/**"
             ],
             "defines": [ "USE_FULL_LL_DRIVER", "STM32G071xx",
-                "USART1", "USART2", "USART3", "USART4" ],
+                "USART1", "USART2", "USART3", "USART4", "RCC" ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c11",
             "cppStandard": "c++17",
