@@ -51,6 +51,14 @@ Tool for creating videos from single pictures
 
 Follow [the installation notes](https://ffmpeg.org/download.html) on the framework webpage.
 
+## Inkscape
+
+Vector graphics software used for exporting bitmat pictures from vector graphics.
+
+### How to install
+
+Follow [the installation notes](https://inkscape.org/release/) on the webpage.
+
 # How to run the program
 
 ```
