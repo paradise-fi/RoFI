@@ -2,21 +2,25 @@
 
 IN_START_MPI="../example.in"
 IN_TARGET_MPI="../exampleTrg.in"
-OUT_MPI='run.out'
-OUT_POSTPROCESSING='example.out'
-LOG='log'
+IN_DIRECTORY="preprocess/"
+IN_COUNT="preprocess/count"
+IN_DICTIONARY="preprocess/dictionary"
+OUT_MPI="run.out"
+OUT_POSTPROCESSING="example.out"
+LOG="log"
 
 
 echo "start script"
 echo "clean and create build"
 if [ -d "./build" ]; then rm -rf build/; fi
-mkdir build; cd build
+mkdir build; cd build; mkdir $IN_DIRECTORY
 
 echo "compile and start distributed algorithm"
-ROFI_COUNT=3
-cmake ../../.. | tee $LOG &&  
+cmake ../../.. | tee $LOG &&
   make | tee $LOG &&
-  mpiexec -np $ROFI_COUNT ./distribute/rofi-distribute $IN_START_MPI $IN_TARGET_MPI >> $OUT_MPI &&
+  ./rofi-distribute-preprocessing $IN_START_MPI $IN_TARGET_MPI $IN_DIRECTORY $IN_COUNT $IN_DICTIONARY &&
+  ROFI_COUNT=$(head -n 1 $IN_COUNT) &&
+  mpiexec -np $ROFI_COUNT ./distribute/rofi-distribute $IN_DIRECTORY >> $OUT_MPI &&
   ./rofi-distribute-postprocessing $OUT_MPI >> $OUT_POSTPROCESSING
 echo "finish process"
 

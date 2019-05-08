@@ -11,7 +11,17 @@ class DistributedModuleProperties : public Module {
 public:
     DistributedModuleProperties() : Module(0, 0, 0, static_cast<ID>(0)) {}
 
+    explicit DistributedModuleProperties(ID id) : Module(0, 0, 0, static_cast<ID>(id)) {}
+
     DistributedModuleProperties(double alpha, double beta, double gamma, ID id) : Module(alpha, beta, gamma, id) {}
+
+    void addEdge(const Edge &edge) {
+        if (edge.id1() == getId()) {
+            edges[edge.side1() * 3 + edge.dock1()] = edge;
+        } else if (edge.id2() == getId()) {
+            edges[edge.side2() * 3 + edge.dock2()] = edge;
+        }
+    }
 
     EdgeList getEdges() const {
         return edges;
@@ -28,12 +38,19 @@ public:
     }
 
     void execute(const Action::Reconnect &reconnection) {
-        if (reconnection.edge().id1() == getId() || reconnection.edge().id2() == getId()) {
-            if (reconnection.add()) {
-                edges[reconnection.edge().side1() * 3 + reconnection.edge().dock1()] = reconnection.edge();
-            } else {
-                edges[reconnection.edge().side1() * 3 + reconnection.edge().dock1()] = std::nullopt;
-            }
+        int index;
+        if (reconnection.edge().id1() == getId()) {
+            index = reconnection.edge().side1() * 3 + reconnection.edge().dock1();
+        } else if (reconnection.edge().id2() == getId()) {
+            index = reconnection.edge().side2() * 3 + reconnection.edge().dock2();
+        } else {
+            return;
+        }
+
+        if (reconnection.add()) {
+            edges[index] = reconnection.edge();
+        } else {
+            edges[index] = std::nullopt;
         }
     }
 

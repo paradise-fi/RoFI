@@ -4,33 +4,14 @@
 
 #include "DistributedModule.h"
 
-DistributedModule::DistributedModule(unsigned int id, std::ifstream &initConfigStream,
-                                     std::ifstream &trgConfigStream) {
-    if (!initConfigStream.is_open() || !trgConfigStream.is_open()) {
+DistributedModule::DistributedModule(unsigned int id, std::ifstream &inStream, std::ifstream &trgStream)
+        : currModule(id), trgModule(id) {
+    if (!inStream.is_open() || !trgStream.is_open()) {
         return;
     }
 
-    Configuration initConfig;
-    IO::readConfiguration(initConfigStream, initConfig);
-
-    const Module &initModuleToCopy = initConfig.getModules().at(id);
-    currModule = DistributedModuleProperties(initModuleToCopy.getJoint(Joint::Alpha)
-            , initModuleToCopy.getJoint(Joint::Beta)
-            , initModuleToCopy.getJoint(Joint::Gamma)
-            , static_cast<ID>(id));
-
-    currModule.setEdges(createEdgeListFromEdges(initConfig.getEdges(id), id));
-
-    Configuration trgConfig;
-    IO::readConfiguration(trgConfigStream, trgConfig);
-
-    const Module &trgModuleToCopy = trgConfig.getModules().at(id);
-    trgModule = DistributedModuleProperties(trgModuleToCopy.getJoint(Joint::Alpha)
-            , trgModuleToCopy.getJoint(Joint::Beta)
-            , trgModuleToCopy.getJoint(Joint::Gamma)
-            , static_cast<ID>(id));
-
-    trgModule.setEdges(createEdgeListFromEdges(trgConfig.getEdges(id), id));
+    DistributedReader::readDistributedModule(inStream, currModule);
+    DistributedReader::readDistributedModule(trgStream, trgModule);
 }
 
 std::string DistributedModule::printCurrModule(int step) const {

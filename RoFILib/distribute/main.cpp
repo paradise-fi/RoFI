@@ -48,7 +48,7 @@ void tmpReconfiguration() {
 }
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
+    if (argc != 2) {
         std::cout << "Input or output file is missing. " << std::endl;
         return 1;
     }
@@ -58,9 +58,11 @@ int main(int argc, char **argv) {
     MPI_Comm_size(MPI_COMM_WORLD, &size);
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
+    const std::string inFileName = argv[1] + std::to_string(rank) + ".in";
+    const std::string trgFileName = argv[1] + std::to_string(rank) + ".out";
     std::ifstream initFile, trgFile;
-    initFile.open(argv[1]);
-    trgFile.open(argv[2]);
+    initFile.open(inFileName);
+    trgFile.open(trgFileName);
 
     DistributedModule module(static_cast<unsigned int>(rank), initFile, trgFile);
 

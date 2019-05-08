@@ -9,14 +9,13 @@
 
 #include "DistributedModuleProperties.h"
 #include "DistributedPrinter.h"
+#include "DistributedReader.h"
 #include "../reconfig/Algorithms.h"
 #include "../IO.h"
 
 class DistributedModule {
 public:
-    DistributedModule(unsigned int id, std::ifstream &initConfigStream, std::ifstream &trgConfigStream);
-
-    //TODO add constructor with only one module properties
+    DistributedModule(unsigned int id, std::ifstream &inStream, std::ifstream &trgStream);
 
     std::string printCurrModule(int step) const;
     std::string printTrgModule(int step) const;

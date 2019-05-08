@@ -68,7 +68,7 @@ unsigned long preprocessOutputFile(const std::string &outFile, const std::string
 
         std::ofstream file;
         file.open(tmpDirectory + std::to_string(idMap.at(id)) + ".out");
-        file << IO::toString(module1) << std::endl;
+        file << "M " << IO::toString(module1) << std::endl;
         file.close();
     }
 
@@ -79,7 +79,7 @@ unsigned long preprocessOutputFile(const std::string &outFile, const std::string
 }
 
 int main(int argc, char **argv) {
-    if (argc != 4) {
+    if (argc != 6) {
         std::cout << "Input files or directory is missing. " << std::endl;
         return 1;
     }
@@ -87,8 +87,8 @@ int main(int argc, char **argv) {
     const std::string fileNameIn = argv[1];
     const std::string fileNameOut = argv[2];
     const std::string tmpDirectory = argv[3];
-    const std::string tmpDictionary = tmpDirectory + "dictionary";
-    const std::string tmpCount = tmpDirectory + "count";
+    const std::string tmpCount = argv[4];
+    const std::string tmpDictionary = argv[5];
 
     std::map<unsigned int, unsigned int> idMap;
 
