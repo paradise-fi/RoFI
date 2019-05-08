@@ -34,6 +34,8 @@ class ConfigurationHash;
 
 enum Joint { Alpha, Beta, Gamma };
 
+enum Value { True, False, Unknown };
+
 class Module
 {
 public:
@@ -476,15 +478,15 @@ public:
 
     bool isValid()
     {
-        if (!connected())
+        if (connectedVal == Unknown)
         {
-            return false;
+            bool res = connected();
+            connectedVal = res ? True : False;
+            if (!res)
+                return false;
         }
-        if (!computeMatrices())
-        {
-            return false;
-        }
-        return collisionFree();
+        bool res = computeMatrices();
+        return (connectedVal == True) && res && collisionFree();
     }
 
     // Fill in the rotation attribute according to the first fixed module.
@@ -584,31 +586,46 @@ public:
         return std::nullopt;
     }
 
+//    bool execute(const Action& action)
+//    {
+//        Configuration next = *this;
+//        bool ok = true;
+//        for (const Action::Rotate rot : action.rotations)
+//        {
+//            ok &= next.execute(rot);
+//        }
+//        for (const Action::Reconnect rec : action.reconnections)
+//        {
+//            ok &= next.execute(rec);
+//        }
+//        if (ok)
+//        {
+//            *this = next;
+//        }
+//        return ok;
+//    }
+
     bool execute(const Action& action)
     {
-        Configuration next = *this;
         bool ok = true;
         for (const Action::Rotate rot : action.rotations())
         {
-            ok &= next.execute(rot);
+            ok &= execute(rot);
         }
         for (const Action::Reconnect rec : action.reconnections())
         {
-            ok &= next.execute(rec);
-        }
-        if (ok)
-        {
-            *this = next;
+            ok &= execute(rec);
         }
         return ok;
     }
 
-    std::vector<Action> generateActions(unsigned step, unsigned bound = 1) const
+    void generateActions(std::vector<Action>& res, unsigned step, unsigned bound = 1) const
     {
-        auto rotations = generateRotations(step);
-        auto reconnections = generateReconnect();
+        std::vector<Action::Rotate> rotations;
+        generateRotations(rotations, step);
+        std::vector<Action::Reconnect> reconnections;
+        generateReconnect(reconnections);
 
-        std::vector<Action> res;
         for (unsigned count = 1; count <= bound; ++count) // How many actions will be in generated action.
         {
             for (unsigned r = 0; r <= count; ++r)
@@ -631,22 +648,16 @@ public:
                 }
             }
         }
-        return res;
     }
 
-    std::vector<Action::Reconnect> generateReconnect() const
+    void generateReconnect(std::vector<Action::Reconnect>& res) const
     {
-        auto con = generateConnections();
-        auto dis = generateDisconnections();
-        std::vector<Action::Reconnect> res(con.begin(), con.end());
-        std::copy(dis.begin(), dis.end(), std::back_inserter(res));
-
-        return res;
+        generateConnections(res);
+        generateDisconnections(res);
     }
 
-    std::vector<Action::Reconnect> generateConnections() const
+    void generateConnections(std::vector<Action::Reconnect>& res) const
     {
-        std::vector<Action::Reconnect> res;
         for (auto& [id1, ms1] : matrices)
         {
             for (auto&[id2, ms2] : matrices)
@@ -678,28 +689,25 @@ public:
                 }
             }
         }
-        return res;
     }
 
-    std::vector<Action::Rotate> generateRotations(unsigned step) const
+    void generateRotations(std::vector<Action::Rotate>& res, unsigned step) const
     {
-        std::vector<Action::Rotate> res;
-        for (auto& [id, _] : modules)
+        for (auto [id, mod] : modules)
         {
             for (int d : {-step, step})
             {
                 for (Joint joint : {Alpha, Beta, Gamma})
                 {
-                    res.emplace_back(id, joint, d);
+                    if (mod.rotateJoint(joint, d))
+                        res.emplace_back(id, joint, d);
                 }
             }
         }
-        return res;
     }
 
-    std::vector<Action::Reconnect> generateDisconnections() const
+    void generateDisconnections(std::vector<Action::Reconnect>& res) const
     {
-        std::vector<Action::Reconnect> res;
         for (auto& [id, set] : edges)
         {
             for (const std::optional<Edge>& edgeOpt : set)
@@ -713,13 +721,12 @@ public:
                 }
             }
         }
-        return res;
     }
 
-    std::vector<Configuration> next(unsigned step, unsigned bound = 1, bool rcn = false) const
+    void next(std::vector<Configuration>& res, unsigned step, unsigned bound = 1) const
     {
-        std::vector<Configuration> res;
-        std::vector<Action> actions = generateActions(step, bound);
+        std::vector<Action> actions;
+        generateActions(actions, step, bound);
         //auto actions = generateActions(step, bound);
         for (auto& action : actions)
         {
@@ -729,7 +736,6 @@ public:
                 res.push_back(cfgOpt.value());
             }
         }
-        return res;
     }
 
     Action diff(const Configuration &other) const {
@@ -785,10 +791,7 @@ public:
     bool operator==(const Configuration& other) const
     {
         return (modules == other.modules) &&
-               (edges == other.edges) &&
-               (fixedId == other.fixedId) &&
-               (fixedSide == other.fixedSide) &&
-               (equals(fixedMatrix, other.fixedMatrix));
+               (edges == other.edges);
     }
 
     bool operator!=(const Configuration &other) const {
@@ -810,6 +813,9 @@ private:
     Side fixedSide = A;
     Matrix fixedMatrix = identity;
 
+    Value connectedVal = Unknown;
+    Value matricesVal = Unknown;
+
     // If the given edge is in the configuration, delete it from both modules.
     bool eraseEdge(const Edge& edge)
     {
@@ -826,6 +832,7 @@ private:
 
         set1[index1] = std::nullopt;
         set2[index2] = std::nullopt;
+        connectedVal = Unknown;
         return true;
     }
 
@@ -907,7 +914,10 @@ private:
 
     bool execute(const Action::Rotate& action)
     {
-        return modules.at(action.id()).rotateJoint(action.joint(), action.angle());
+        bool res = modules.at(action.id()).rotateJoint(action.joint(), action.angle());
+        if (res)
+            matricesVal = Unknown;
+        return res;
     }
 
     bool execute(const Action::Reconnect& action)

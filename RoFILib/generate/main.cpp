@@ -45,8 +45,10 @@ ConfigPair generateTest(unsigned modules, unsigned path, unsigned step, unsigned
     Configuration goal = init;
     for (unsigned i = 0; i < path; ++i)
     {
-        auto reconnect = goal.generateReconnect();
-        auto rotate = goal.generateRotations(step);
+        std::vector<Action::Rotate> rotate;
+        std::vector<Action::Reconnect> reconnect;
+        goal.generateReconnect(reconnect);
+        goal.generateRotations(rotate, step);
         std::uniform_int_distribution<unsigned long> flip(0, 5);
         //if ((flip(e) > 1))
         {

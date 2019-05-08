@@ -239,7 +239,8 @@ inline std::vector<Configuration> BFS(const Configuration& init, const Configura
         const auto current = queue.front();
         queue.pop();
 
-        auto nextCfgs = current->next(step, bound);
+        std::vector<Configuration> nextCfgs;
+        current->next(nextCfgs, step, bound);
  //       std::cout << queue.size() << " " << nextCfgs.size() << std::endl;
 
         for (const auto& next : nextCfgs)
@@ -292,7 +293,10 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
         double currDist = initDist[current];
         queue.pop();
 
-        for (const auto& next : current->next(step, bound))
+
+        std::vector<Configuration> nextCfgs;
+        current->next(nextCfgs, step, bound);
+        for (const auto& next : nextCfgs)
         {
             const Configuration* pointerNext;
             double newDist = currDist + 1 + eval(next, goal);
@@ -331,7 +335,7 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
  * */
 
 template<typename T>
-inline void getAllSubsetsLess(std::vector<T>& set, std::vector<std::vector<T>>& res, std::vector<T> accum, unsigned index, unsigned count)
+inline void getAllSubsetsLess(const std::vector<T>& set, std::vector<std::vector<T>>& res, std::vector<T> accum, unsigned index, unsigned count)
 {
     if ((count == 0) || (index == set.size()))
     {
@@ -462,7 +466,8 @@ inline Configuration sampleFree(const std::vector<ID>& ids)
         treeOpt = generateRandomTree(ids);
     }
     auto cfg = treeOpt.value();
-    auto connect = cfg.generateConnections();
+    std::vector<Action::Reconnect> connect;
+    cfg.generateConnections(connect);
 
     std::random_device rd;
     std::uniform_int_distribution<unsigned long> dist(0, 1);
@@ -567,6 +572,86 @@ inline Configuration steer(const Configuration& from, const Configuration& to, D
     return minCfg;
 }
 
+inline Configuration steerRotate(const Configuration& from,const Configuration& to, const Action& diff)
+{
+    unsigned long count = diff.rotations.size();
+    auto afterAction = from.executeIfValid({{diff.rotations}, {}});
+    if (afterAction.has_value())
+    {
+        return afterAction.value();
+    }
+    return from;
+
+    for (unsigned long i = count; i > 0; --i)
+    {
+        std::vector<std::vector<Action::Rotate>> subRot;
+        getAllSubsetsLess(diff.rotations, subRot, {}, 0, count);
+        for (auto& rot : subRot)
+        {
+            Action action = {rot, {}};
+            auto afterAction = from.executeIfValid(action);
+            if (afterAction.has_value())
+            {
+                return afterAction.value();
+            }
+        }
+    }
+    return from;
+}
+
+inline std::vector<Configuration> steerReconnect(const Configuration& from,const Configuration& to, const Action& diff, unsigned step)
+{
+    auto allRec = diff.reconnections;
+    unsigned long count = allRec.size();
+    for (unsigned long i = count; i > 0; --i)
+    {
+        std::vector<std::vector<Action::Reconnect>> subRec;
+        getAllSubsetsLess(allRec, subRec, {}, 0, count);
+        for (auto& rec : subRec)
+        {
+            Action action = {{}, rec};
+            auto copy = from;
+            copy.execute(action);
+            std::vector<Edge> edges;
+            auto ids = copy.getIDs();
+            for (ID id : ids)
+            {
+                auto newEdges = copy.getEdges(id);
+                edges.insert(edges.end(), newEdges.begin(), newEdges.end());
+            }
+            auto steered = generateAngles(ids, edges);
+            if (!steered.has_value())
+                continue;
+            Action fromSteerDiff = from.diff(steered.value());
+            Action fromSteerRot = {{fromSteerDiff.rotations}, {}};
+            auto first = from.executeIfValid(fromSteerRot);
+            if (!first.has_value())
+                continue;
+            Action fromSteerRec = {{}, {fromSteerDiff.reconnections}};
+            auto second = first.value().executeIfValid(fromSteerDiff);
+            if (!second.has_value())
+                continue;
+            return {first.value(), second.value()};
+        }
+    }
+    return {from};
+}
+
+inline std::vector<Configuration> steerPath(const Configuration& from, const Configuration& to, unsigned step)
+{
+    auto fromToDiff = from.diff(to);
+    auto afterDiff = from.executeIfValid(fromToDiff);
+    if (afterDiff.has_value())
+    {
+        return {afterDiff.value()};
+    }
+    if (fromToDiff.reconnections.empty())
+    {
+        return {steerRotate(from, to, fromToDiff)};
+    }
+    return steerReconnect(from, to, fromToDiff, step);
+}
+
 inline std::optional<Configuration> steerEdge(const Configuration& from, const Configuration& to, unsigned step)
 {
     auto diff = from.diff(to);
@@ -605,6 +690,16 @@ inline void extendEdge(ConfigPool& pool, ConfigEdges& edges, const Configuration
     {
         auto ptr = addToTree(pool, edges, near, first.value());
         addToTree(pool, edges, ptr, cfgEdge.value());
+    }
+}
+
+inline void extendPath(ConfigPool& pool, ConfigEdges& edges, const Configuration& cfg, unsigned step, DistFunction* dist = Eval::matrixDiff)
+{
+    const Configuration* near = nearest(cfg, pool, dist);
+    auto newPath = steerPath(*near, cfg, step);
+    for (auto& newCfg : newPath)
+    {
+        near = addToTree(pool, edges, near, newCfg);
     }
 }
 
@@ -668,8 +763,8 @@ inline std::vector<Configuration> RRT(const Configuration& init, const Configura
 //        extendEdge(pool, edges, goal, step);
 //        extend(pool, edges, goal);
 
-        extend2(pool, edges, rand, step);
-        extend2(pool, edges, goal, step);
+        extendPath(pool, edges, rand, step);
+        extendPath(pool, edges, goal, step);
 
         if (pool.find(goal))
             break;
