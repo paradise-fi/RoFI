@@ -185,6 +185,7 @@ bool DistributedModule::joinActions(std::vector<Action> &path) const {
 
         if (!optionalCfg.has_value() || optionalCfg.value() != correct) {
             curr.execute(newActions.at(currIndex));
+            newActions.push_back(path.at(i));
             currIndex++;
             continue;
         }
