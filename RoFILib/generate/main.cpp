@@ -6,11 +6,12 @@
 #include "../Configuration.h"
 #include "../IO.h"
 #include "../reconfig/Algorithms.h"
+#include <chrono>
 
 using namespace IO;
 
 using ConfigPair = std::pair<Configuration, Configuration>;
-std::string folder = "../data/planner-tests/";
+std::string folder = "../data/planner-tests-v2/";
 
 void printToFile(const Configuration& cfg, const std::string& path)
 {
@@ -35,7 +36,8 @@ void printToFile(const ConfigPair& test, unsigned modules, unsigned path, unsign
 
 ConfigPair generateTest(unsigned modules, unsigned path, unsigned step, unsigned bound)
 {
-    std::default_random_engine e{static_cast<long unsigned int>(time(0))};
+    std::default_random_engine e;
+    e.seed(std::chrono::system_clock::now().time_since_epoch().count());
     std::vector<ID> ids(modules * 5);
     std::iota(ids.begin(), ids.end(), 0);
     std::shuffle(ids.begin(), ids.end(), e);
@@ -82,7 +84,7 @@ ConfigPair generateTest(unsigned modules, unsigned path, unsigned step, unsigned
 
 int main()
 {
-    unsigned moduleCount[] = {2,3,5,10,15}; //,25,30,40,50};
+    unsigned moduleCount[] = {2,3,4,5,10,15}; //,25,30,40,50};
     unsigned pathSize[] = {5,10,20,30,50};
 
     for (unsigned i : moduleCount)

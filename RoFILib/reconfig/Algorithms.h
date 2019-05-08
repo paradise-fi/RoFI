@@ -11,6 +11,22 @@
 #include <cmath>
 #include <memory>
 
+struct AlgorithmStat
+{
+    unsigned long pathLength = 0;
+    unsigned long queueSize = 0;
+    unsigned long seenCfgs = 0;
+
+    std::string toString() const
+    {
+        std::stringstream out;
+        out << std::setw(8) << std::left << "length " << pathLength << std::endl;
+        out << std::setw(8) << std::left << "queue " << queueSize << std::endl;
+        out << std::setw(8) << std::left << "cfgs " << seenCfgs << std::endl;
+        return out.str();
+    }
+};
+
 class ConfigurationPtrHash
 {
 public:
@@ -217,11 +233,13 @@ inline std::vector<Configuration> createPath(ConfigEdges& edges, const Configura
     return {};
 }
 
-inline std::vector<Configuration> BFS(const Configuration& init, const Configuration& goal, unsigned step = 90, unsigned bound = 1)
+inline std::vector<Configuration> BFS(const Configuration& init, const Configuration& goal, unsigned step = 90, unsigned bound = 1, AlgorithmStat* stat = nullptr)
 {
     //Assume both configs are consistent and valid.
     ConfigPred pred;
     ConfigPool pool;
+
+    unsigned long maxQSize = 0;
 
     if (init == goal)
     {
@@ -236,6 +254,7 @@ inline std::vector<Configuration> BFS(const Configuration& init, const Configura
 
     while (!queue.empty())
     {
+        maxQSize = std::max(maxQSize, queue.size());
         const auto current = queue.front();
         queue.pop();
 
@@ -252,17 +271,31 @@ inline std::vector<Configuration> BFS(const Configuration& init, const Configura
 
                 if (next == goal)
                 {
-                    return createPath(pred, pointerNext);
+                    auto path = createPath(pred, pointerNext);
+                    if (stat != nullptr)
+                    {
+                        stat->pathLength = path.size();
+                        stat->queueSize = maxQSize;
+                        stat->seenCfgs = pool.size();
+                    }
+
+                    return path;
                 }
                 queue.push(pointerNext);
             }
 
         }
     }
+    if (stat != nullptr)
+    {
+        stat->pathLength = 0;
+        stat->queueSize = maxQSize;
+        stat->seenCfgs = pool.size();
+    }
     return {};
 }
 
-inline std::vector<Configuration> AStar(const Configuration& init, const Configuration& goal, unsigned step = 90, unsigned bound = 1, EvalFunction& eval = Eval::trivial)
+inline std::vector<Configuration> AStar(const Configuration& init, const Configuration& goal, unsigned step = 90, unsigned bound = 1, EvalFunction& eval = Eval::trivial, AlgorithmStat* stat = nullptr)
 {
     ConfigPred pred;
     ConfigPool pool;
@@ -284,11 +317,14 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
     initDist[pointer] = 0;
     goalDist[pointer] = eval(init, goal);
     pred[pointer] = pointer;
+    unsigned long maxQSize = 0;
 
     queue.push( {goalDist[pointer], pointer} );
 
     while (!queue.empty())
     {
+
+        maxQSize = std::max(maxQSize, queue.size());
         const auto [d, current] = queue.top();
         double currDist = initDist[current];
         queue.pop();
@@ -323,9 +359,23 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
 
             if (next == goal)
             {
-                return createPath(pred, pointerNext);
+                auto path = createPath(pred, pointerNext);
+                if (stat != nullptr)
+                {
+                    stat->pathLength = path.size();
+                    stat->queueSize = maxQSize;
+                    stat->seenCfgs = pool.size();
+                }
+
+                return path;
             }
         }
+    }
+    if (stat != nullptr)
+    {
+        stat->pathLength = 0;
+        stat->queueSize = maxQSize;
+        stat->seenCfgs = pool.size();
     }
     return {};
 }
@@ -368,7 +418,8 @@ inline int findFreeIndex(int index, const std::array<bool, 6>& A)
 
 inline std::optional<Edge> generateEdge(ID id1, ID id2, std::unordered_map<ID, std::array<bool, 6>>& occupied)
 {
-    std::random_device rd;
+    std::default_random_engine rd;
+    rd.seed(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<int> dist(0, 11);
 
     int index1 = findFreeIndex(dist(rd) % 6, occupied[id1]);
@@ -392,7 +443,8 @@ inline std::optional<Edge> generateEdge(ID id1, ID id2, std::unordered_map<ID, s
 inline std::optional<Configuration> generateAngles(const std::vector<ID>& ids, const std::vector<Edge>& edges)
 {
     // Assume the edges form a connected graph and that edges contain only IDs from the 'ids' vector.
-    std::random_device rd;
+    std::default_random_engine rd;
+    rd.seed(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<int> ab(-1,1);
     std::uniform_int_distribution<int> c(-1, 2);
     double step = 90;
@@ -410,8 +462,8 @@ inline std::optional<Configuration> generateAngles(const std::vector<ID>& ids, c
     }
 
     // Try generating random angles to make the configuration valid.
-    // After 1000 iterations give up.
-    for (int i = 0; i < 1000; ++i)
+    // After 10 iterations give up.
+    for (int i = 0; i < 10; ++i)
     {
         if (cfg.isValid())
             return cfg;
@@ -431,14 +483,14 @@ inline std::optional<Configuration> generateAngles(const std::vector<ID>& ids, c
 
 inline std::optional<Configuration> generateRandomTree(const std::vector<ID>& ids)
 {
-    std::default_random_engine e;
-    std::random_device rd;
+    std::default_random_engine rd;
+    rd.seed(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<unsigned long> dist(0, ids.size());
 
 
     std::vector<Edge> edges;
     std::vector<ID> shuffled = ids;
-    std::shuffle(shuffled.begin(), shuffled.end(), e);
+    std::shuffle(shuffled.begin(), shuffled.end(), rd);
     std::unordered_map<ID, std::array<bool, 6>> occupied;
     occupied[shuffled[0]] = {true, true, true, true, true, true};
 
@@ -469,7 +521,8 @@ inline Configuration sampleFree(const std::vector<ID>& ids)
     std::vector<Action::Reconnect> connect;
     cfg.generateConnections(connect);
 
-    std::random_device rd;
+    std::default_random_engine rd;
+    rd.seed(std::chrono::system_clock::now().time_since_epoch().count());
     std::uniform_int_distribution<unsigned long> dist(0, 1);
     for (auto& action : connect)
     {
@@ -575,18 +628,20 @@ inline Configuration steer(const Configuration& from, const Configuration& to, D
 inline Configuration steerRotate(const Configuration& from,const Configuration& to, const Action& diff)
 {
     unsigned long count = diff.rotations().size();
-    auto afterAction = from.executeIfValid({{diff.rotations()}, {}});
-    if (afterAction.has_value())
-    {
-        return afterAction.value();
-    }
-    return from;
+    //auto afterAction = from.executeIfValid({{diff.rotations()}, {}});
+//    if (afterAction.has_value())
+//    {
+//        return afterAction.value();
+//    }
+//    return from;
 
     for (unsigned long i = count; i > 0; --i)
     {
         std::vector<std::vector<Action::Rotate>> subRot;
+        std::vector<std::vector<Action::Rotate>> filteredRot;
         getAllSubsetsLess(diff.rotations(), subRot, {}, 0, count);
-        for (auto& rot : subRot)
+        filter(subRot, filteredRot, unique);
+        for (auto& rot : filteredRot)
         {
             Action action = {rot, {}};
             auto afterAction = from.executeIfValid(action);
@@ -746,7 +801,7 @@ inline void extend2(ConfigPool& pool, ConfigEdges& edges, const Configuration& c
     addToTree(pool, edges, near, next);
 }
 
-inline std::vector<Configuration> RRT(const Configuration& init, const Configuration& goal, unsigned step = 90)
+inline std::vector<Configuration> RRT(const Configuration& init, const Configuration& goal, unsigned step = 90, AlgorithmStat* stat = nullptr)
 {
     ConfigPool pool;
     ConfigEdges edges;
@@ -770,11 +825,21 @@ inline std::vector<Configuration> RRT(const Configuration& init, const Configura
             break;
     }
     //std::cout << pool.size() << " " << edges.size() << std::endl;
+
+    stat->queueSize = 0;
+    stat->seenCfgs = pool.size();
     if (pool.find(goal))
     {
         const Configuration * goalPtr = pool.get(goal);
-        return createPath(edges, initPtr, goalPtr);
+        auto path = createPath(edges, initPtr, goalPtr);
+        if (stat != nullptr)
+        {
+            stat->pathLength = path.size();
+        }
+
+        return path;
     }
+    stat->pathLength = 0;
     return {};
 }
 

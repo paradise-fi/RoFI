@@ -201,20 +201,22 @@ int main(int argc, char* argv[])
 
 
     std::vector<Configuration> path;
+    AlgorithmStat stat;
     switch (alg)
     {
         case Algorithm::BFS:
-            path = BFS(init, goal, step, bound);
+            path = BFS(init, goal, step, bound, &stat);
             break;
         case Algorithm::AStar:
-            path = AStar(init, goal, step, bound, *eval);
+            path = AStar(init, goal, step, bound, *eval, &stat);
             break;
         case Algorithm::RRT:
-            path = RRT(init, goal, step);
+            path = RRT(init, goal, step, &stat);
             break;
     }
 
     std::cout << toString(path);
+    std::cout << stat.toString();
 
     if (path.empty())
     {
