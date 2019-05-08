@@ -102,7 +102,7 @@ TEST_CASE("Generate all rotations without repetitions")
     getAllRots(rots, res, 3);
 
 
-    REQUIRE(res.size() == 2);
+    REQUIRE(res.size() == 2 + 4 + 1 + 5);
 }
 
 TEST_CASE("Generate all actions")
