@@ -574,8 +574,8 @@ inline Configuration steer(const Configuration& from, const Configuration& to, D
 
 inline Configuration steerRotate(const Configuration& from,const Configuration& to, const Action& diff)
 {
-    unsigned long count = diff.rotations.size();
-    auto afterAction = from.executeIfValid({{diff.rotations}, {}});
+    unsigned long count = diff.rotations().size();
+    auto afterAction = from.executeIfValid({{diff.rotations()}, {}});
     if (afterAction.has_value())
     {
         return afterAction.value();
@@ -585,7 +585,7 @@ inline Configuration steerRotate(const Configuration& from,const Configuration& 
     for (unsigned long i = count; i > 0; --i)
     {
         std::vector<std::vector<Action::Rotate>> subRot;
-        getAllSubsetsLess(diff.rotations, subRot, {}, 0, count);
+        getAllSubsetsLess(diff.rotations(), subRot, {}, 0, count);
         for (auto& rot : subRot)
         {
             Action action = {rot, {}};
@@ -601,7 +601,7 @@ inline Configuration steerRotate(const Configuration& from,const Configuration& 
 
 inline std::vector<Configuration> steerReconnect(const Configuration& from,const Configuration& to, const Action& diff, unsigned step)
 {
-    auto allRec = diff.reconnections;
+    auto allRec = diff.reconnections();
     unsigned long count = allRec.size();
     for (unsigned long i = count; i > 0; --i)
     {
@@ -623,11 +623,11 @@ inline std::vector<Configuration> steerReconnect(const Configuration& from,const
             if (!steered.has_value())
                 continue;
             Action fromSteerDiff = from.diff(steered.value());
-            Action fromSteerRot = {{fromSteerDiff.rotations}, {}};
+            Action fromSteerRot = {{fromSteerDiff.rotations()}, {}};
             auto first = from.executeIfValid(fromSteerRot);
             if (!first.has_value())
                 continue;
-            Action fromSteerRec = {{}, {fromSteerDiff.reconnections}};
+            Action fromSteerRec = {{}, {fromSteerDiff.reconnections()}};
             auto second = first.value().executeIfValid(fromSteerDiff);
             if (!second.has_value())
                 continue;
@@ -645,7 +645,7 @@ inline std::vector<Configuration> steerPath(const Configuration& from, const Con
     {
         return {afterDiff.value()};
     }
-    if (fromToDiff.reconnections.empty())
+    if (fromToDiff.reconnections().empty())
     {
         return {steerRotate(from, to, fromToDiff)};
     }

@@ -79,7 +79,8 @@ TEST_CASE("Next configurations")
     Configuration cfg;
     cfg.addModule(0,0,0,0);
 
-    auto nextCfgs = cfg.next(90, 2);
+    std::vector<Configuration> nextCfgs;
+    cfg.next(nextCfgs, 90, 2);
 
     for (auto& next : nextCfgs)
     {
