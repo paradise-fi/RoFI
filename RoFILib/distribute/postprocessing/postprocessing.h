@@ -13,7 +13,7 @@ class Postprocessing {
 public:
     Postprocessing() = default;
 
-    bool generateConfigurations(const std::string &inputFileName);
+    bool generateConfigurations(const std::string &inputFileName, std::stringstream &output);
 
 private:
     std::vector<Configuration> configurations;

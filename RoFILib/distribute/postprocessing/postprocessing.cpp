@@ -4,7 +4,7 @@
 
 #include "postprocessing.h"
 
-bool Postprocessing::generateConfigurations(const std::string &inputFileName) {
+bool Postprocessing::generateConfigurations(const std::string &inputFileName, std::stringstream &output) {
     std::stringstream stringstream;
     std::ifstream file;
     file.open(inputFileName);
@@ -21,7 +21,7 @@ bool Postprocessing::generateConfigurations(const std::string &inputFileName) {
     }
 
     addNextConfigurations(stringstream);
-    std::cout << IO::toString(configurations);
+    output << IO::toString(configurations);
 
     return true;
 }
