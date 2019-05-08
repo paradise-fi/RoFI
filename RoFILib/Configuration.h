@@ -340,20 +340,53 @@ void filter(const std::vector<T>& data, std::vector<T>& res, bool (*pred)(const 
 }
 
 template<typename T>
-inline void getAllSubsets(std::vector<T>& set, std::vector<std::vector<T>>& res, std::vector<T> accum, unsigned index, unsigned count)
+inline void getAllSubsetsRec(const std::vector<T>& set, std::vector<std::vector<T>>& res, std::vector<T> accum, unsigned index, unsigned count)
 {
-    if (count == 0)
+    if ((accum.size() == count) || (index >= set.size()))
     {
         res.push_back(accum);
         return;
     }
-    for (unsigned i = index; i < set.size(); ++i)
+    auto next = accum;
+    next.push_back(set[index]);
+    getAllSubsetsRec(set, res, next, index + 1, count);
+    getAllSubsetsRec(set, res, accum, index + 1, count);
+}
+
+
+template<typename T>
+inline void getAllSubsets(const std::vector<T>& from, std::vector<std::vector<T>>& res, unsigned count)
+{
+    getAllSubsetsRec(from, res, {}, 0, count);
+}
+
+using Rots = std::vector<Action::Rotate>;
+inline void getAllRotsRec(const Rots& set, std::vector<Rots>& res, const Rots& accum, unsigned count, unsigned index)
+{
+    if ((accum.size() == count) || (index >= set.size()))
+    {
+        res.push_back(accum);
+        return;
+    }
+    auto act = set[index];
+    bool ok = true;
+    for (auto& act2 : accum)
+    {
+        if ((act.id() == act2.id()) && (act.joint() == act2.joint()))
+            ok = false;
+    }
+    if (ok)
     {
         auto next = accum;
-        next.push_back(set[i]);
-        getAllSubsets(set, res, next, i + 1, count - 1);
-        getAllSubsets(set, res, accum, i + 1, count);
+        next.push_back(set[index]);
+        getAllRotsRec(set, res, next, count, index + 1);
     }
+    getAllRotsRec(set, res, accum, count, index + 1);
+}
+
+inline void getAllRots(const Rots& from, std::vector<Rots>& res, unsigned count)
+{
+    getAllRotsRec(from, res, {}, count, 0);
 }
 
 /* TRANSFORMATION MATRICES
@@ -626,28 +659,44 @@ public:
         std::vector<Action::Reconnect> reconnections;
         generateReconnect(reconnections);
 
-        for (unsigned count = 1; count <= bound; ++count) // How many actions will be in generated action.
+        std::vector<std::vector<Action::Rotate>> resRot;
+        std::vector<std::vector<Action::Reconnect>> resRec;
+
+        getAllSubsets(reconnections, resRec, bound);
+        getAllRots(rotations, resRot, bound);
+
+        for (auto& rotation : resRot)
         {
-            for (unsigned r = 0; r <= count; ++r)
+            for (auto& reconnection : resRec)
             {
-                std::vector<std::vector<Action::Rotate>> resRot;
-                std::vector<std::vector<Action::Rotate>> resRotFiltered;
-                std::vector<std::vector<Action::Reconnect>> resRec;
-
-                getAllSubsets(rotations, resRot, {}, 0, r);
-                getAllSubsets(reconnections, resRec, {}, 0, count - r);
-
-                filter(resRot, resRotFiltered, unique);
-
-                for (auto& rotation : resRotFiltered)
-                {
-                    for (auto& reconnection : resRec)
-                    {
-                        res.emplace_back(rotation, reconnection);
-                    }
-                }
+                if (rotation.size() + reconnection.size() <= bound)
+                    res.emplace_back(rotation, reconnection);
             }
         }
+
+//        for (unsigned count = 1; count <= bound; ++count) // How many actions will be in generated action.
+//        {
+//            for (unsigned r = 0; r <= count; ++r)
+//            {
+//                std::vector<std::vector<Action::Rotate>> resRot;
+//                std::vector<std::vector<Action::Reconnect>> resRec;
+//
+//                //getAllSubsets(rotations, resRot, {}, 0, r);
+//                getAllSubsets(reconnections, resRec, {}, 0, count - r);
+//
+//                getAllRots(rotations, resRot, r);
+//
+//                //filter(resRot, resRotFiltered, unique);
+//
+//                for (auto& rotation : resRot)
+//                {
+//                    for (auto& reconnection : resRec)
+//                    {
+//                        res.emplace_back(rotation, reconnection);
+//                    }
+//                }
+//            }
+//        }
     }
 
     void generateReconnect(std::vector<Action::Reconnect>& res) const
@@ -750,8 +799,20 @@ public:
 
             const Module &module = modules.at(id);
             for (Joint joint : { Alpha, Beta, Gamma }) {
-                if (module.getJoint(joint) != otherModule.getJoint(joint)) {
-                    rotations.emplace_back(id, joint, otherModule.getJoint(joint) - module.getJoint(joint));
+                auto val = otherModule.getJoint(joint) - module.getJoint(joint);
+                if (joint == Gamma)
+                {
+                    if (val > 180)
+                    {
+                        val = 360 - val;
+                    }
+                    if (val <= -180)
+                    {
+                        val = 360 + val;
+                    }
+                }
+                if (val != 0) {
+                    rotations.emplace_back(id, joint, val);
                 }
             }
 

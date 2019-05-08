@@ -384,23 +384,6 @@ inline std::vector<Configuration> AStar(const Configuration& init, const Configu
  *
  * */
 
-template<typename T>
-inline void getAllSubsetsLess(const std::vector<T>& set, std::vector<std::vector<T>>& res, std::vector<T> accum, unsigned index, unsigned count)
-{
-    if ((count == 0) || (index == set.size()))
-    {
-        res.push_back(accum);
-        return;
-    }
-    for (unsigned i = index; i < set.size(); ++i)
-    {
-        auto next = accum;
-        next.push_back(set[i]);
-        getAllSubsetsLess(set, res, next, i + 1, count - 1);
-        getAllSubsetsLess(set, res, accum, i + 1, count);
-    }
-}
-
 inline int findFreeIndex(int index, const std::array<bool, 6>& A)
 {
     int count = 6;
@@ -600,8 +583,8 @@ inline Configuration steer(const Configuration& from, const Configuration& to, D
     auto allRec = diff.reconnections();
     std::vector<std::vector<Action::Rotate>> subRot;
     std::vector<std::vector<Action::Reconnect>> subRec;
-    getAllSubsetsLess(allRot, subRot, {}, 0, allRot.size());
-    getAllSubsetsLess(allRec, subRec, {}, 0, allRec.size());
+    getAllRots(allRot, subRot, allRot.size());
+    getAllSubsets(allRec, subRec, allRec.size());
 
     double minDistance = dist(from, to);
     Configuration minCfg = from;
@@ -639,7 +622,7 @@ inline Configuration steerRotate(const Configuration& from,const Configuration& 
     {
         std::vector<std::vector<Action::Rotate>> subRot;
         std::vector<std::vector<Action::Rotate>> filteredRot;
-        getAllSubsetsLess(diff.rotations(), subRot, {}, 0, count);
+        getAllRots(diff.rotations(), subRot, count);
         filter(subRot, filteredRot, unique);
         for (auto& rot : filteredRot)
         {
@@ -661,7 +644,7 @@ inline std::vector<Configuration> steerReconnect(const Configuration& from,const
     for (unsigned long i = count; i > 0; --i)
     {
         std::vector<std::vector<Action::Reconnect>> subRec;
-        getAllSubsetsLess(allRec, subRec, {}, 0, count);
+        getAllSubsets(allRec, subRec, count);
         for (auto& rec : subRec)
         {
             Action action = {{}, rec};

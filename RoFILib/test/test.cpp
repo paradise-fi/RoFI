@@ -74,6 +74,52 @@ TEST_CASE("Generate all edges")
     }
 }
 
+TEST_CASE("Get all subsets")
+{
+    std::vector<int> vals = {1,2,3,4};
+    std::vector<std::vector<int>> res1;
+    getAllSubsets(vals, res1, 0);
+    REQUIRE(res1.size() == 1);
+
+    std::vector<std::vector<int>> res2;
+    getAllSubsets(vals, res2, 1);
+    REQUIRE(res2.size() == 5);
+
+    std::vector<std::vector<int>> res3;
+    getAllSubsets(vals, res3, 2);
+    REQUIRE(res3.size() == 11);
+}
+
+TEST_CASE("Generate all rotations without repetitions")
+{
+    Rots rots;
+    rots.push_back({0,Alpha,90});
+    rots.push_back({0,Alpha,-90});
+    rots.push_back({0,Beta,90});
+    rots.push_back({1,Beta,90});
+
+    std::vector<Rots> res;
+    getAllRots(rots, res, 3);
+
+
+    REQUIRE(res.size() == 2);
+}
+
+TEST_CASE("Generate all actions")
+{
+    Configuration cfg;
+    cfg.addModule(0,0,0,0);
+
+    std::vector<Action> res2;
+    cfg.generateActions(res2, 90, 1);
+
+    REQUIRE( res2.size() == 7 );
+
+    std::vector<Action> res;
+    cfg.generateActions(res, 90, 2);
+    REQUIRE( res.size() == 19 );
+}
+
 TEST_CASE("Next configurations")
 {
     Configuration cfg;
