@@ -236,12 +236,12 @@ delete the pictures and whether to create animation with or without RoFI logo.
 Options: 
 
 ```
-  -h, --help         Prints help
-  -i, --input        Directory with pictures to be animated
-  -o, --output       Output file (path/videoName.mp4)
-  -f, --framerate    Number of pictures per second
-  -d, --delete       Delete pictures in the input directory
-  -l, --nologo       Video without RoFI logo
+  -h, --help           Prints help
+  -i, --input  arg     Directory with pictures to be animated
+  -o, --output  arg    Output file (path/videoName.mp4)
+  -f, --framerate arg  Number of pictures per second
+  -d, --delete         Delete pictures in the input directory
+  -l, --nologo         Video without RoFI logo
 ```
 
 Examples: 

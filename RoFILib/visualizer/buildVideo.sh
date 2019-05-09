@@ -56,12 +56,12 @@ case $key in
 	shift
 	;;
 	-h|--help)
-	echo "  -h, --help         Prints help"
-	echo "  -i, --input        Directory with pictures to be animated"
-	echo "  -o, --output       Output file (path/videoName.mp4)"
-	echo "  -f, --framerate    Number of pictures per second"
-	echo "  -d, --delete       Delete pictures in the input directory"
-	echo "  -l, --nologo       Video without RoFI logo"
+	echo "  -h, --help           Prints help"
+	echo "  -i, --input arg      Directory with pictures to be animated"
+	echo "  -o, --output arg     Output file (path/videoName.mp4)"
+	echo "  -f, --framerate arg  Number of pictures per second"
+	echo "  -d, --delete         Delete pictures in the input directory"
+	echo "  -l, --nologo         Video without RoFI logo"
 	exit 0
 	;;
 	*)
