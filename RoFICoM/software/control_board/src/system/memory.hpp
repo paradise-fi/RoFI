@@ -77,7 +77,7 @@ public:
 private:
     struct Mem {
         bool available = true;
-        uint8_t mem[ SIZE ];
+        uint8_t mem[ SIZE ] __attribute__(( aligned( 4 ) ));
     };
 
     static std::array< Mem, COUNT >& _pool() {
