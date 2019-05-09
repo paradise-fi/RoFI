@@ -26,6 +26,18 @@ public:
         _instance()._warning( fmt, args... );
     }
 
+    template < typename T >
+    static void dumpReg( const char *name, T val ) {
+        char buff[ 8 * sizeof( T ) + 1 ];
+        for( int i = 0; i != 8 * sizeof( T ); i++ ) {
+            buff[ i ] = ( val & ( 1 << ( 8 * sizeof( T ) - 1 - i) ) )
+                ? '1'
+                : '0';
+        }
+        buff[ 8 * sizeof( T ) ] = 0;
+        info( "%s: %s", name, buff );
+    }
+
 private:
     static Dbg& _instance() {
         static Dbg inst( USART1,
