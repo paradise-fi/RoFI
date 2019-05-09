@@ -8,6 +8,7 @@ extern "C" void DMA1_Channel1_IRQHandler() {
 
 extern "C" void DMA1_Channel2_3_IRQHandler() {
     Dma::channel( 2 )._handleIsr( 2 );
+    Dma::channel( 3 )._handleIsr( 3 );
 }
 
 extern "C" void DMA1_Ch4_7_DMAMUX1_OVR_IRQHandler() {
