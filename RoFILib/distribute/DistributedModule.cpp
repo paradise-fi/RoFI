@@ -227,3 +227,33 @@ void DistributedModule::swapActions(std::vector<Action> &path) const {
     }
 
 }
+
+void DistributedModule::reconfigurate2() {
+    if (currModule.getId() == 0) {
+        currCoordinates = {0, 0, 0, 0, 0, 1};
+        coordinatesInit = true;
+    }
+
+    shareCoordinates();
+}
+
+void DistributedModule::shareCoordinates() {
+    std::vector<Edge> edges;
+    for (auto &edge : currModule.getEdges()) {
+        if (edge.has_value()) {
+            edges.push_back(edge.value());
+        }
+    }
+    std::sort(edges.begin(), edges.end(), compareEdge);
+
+    std::vector<DistributedModuleProperties> neighbours;
+    neighbours.resize(edges.size());
+
+    for (unsigned long i = 0; i < edges.size(); i++) {
+        MPI_Status status;
+        auto currModuleToSend = reinterpret_cast<const char *>(&currModule);
+        MPI_Sendrecv(currModuleToSend, sizeof(DistributedModuleProperties), MPI_CHAR, edges.at(i).id2(), 0
+                , &neighbours.at(i), sizeof(DistributedModuleProperties), MPI_CHAR, edges.at(i).id2(), 0
+                , MPI_COMM_WORLD, &status);
+    }
+}
