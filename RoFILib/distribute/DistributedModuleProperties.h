@@ -19,7 +19,19 @@ public:
         if (edge.id1() == getId()) {
             edges[edge.side1() * 3 + edge.dock1()] = edge;
         } else if (edge.id2() == getId()) {
-            edges[edge.side2() * 3 + edge.dock2()] = edge;
+            edges[edge.side2() * 3 + edge.dock2()] = reverse(edge);
+        }
+    }
+
+    void changeEdge(const std::optional<Edge> edge, unsigned long i) {
+        if (edge.has_value()) {
+            if (edge.value().id1() == getId()) {
+                edges[i] = edge;
+            } else {
+                edges[i] = reverse(edge.value());
+            }
+        } else {
+            edges[i] = std::nullopt;
         }
     }
 
@@ -28,7 +40,9 @@ public:
     }
 
     void setEdges(const EdgeList &newEdges) {
-        edges = newEdges;
+        for (unsigned long i = 0; i < 6; i++) {
+            changeEdge(newEdges.at(i), i);
+        }
     }
 
     void execute(const Action::Rotate &rotation) {
@@ -38,7 +52,7 @@ public:
     }
 
     void execute(const Action::Reconnect &reconnection) {
-        int index;
+        unsigned long index;
         if (reconnection.edge().id1() == getId()) {
             index = reconnection.edge().side1() * 3 + reconnection.edge().dock1();
         } else if (reconnection.edge().id2() == getId()) {
@@ -48,7 +62,7 @@ public:
         }
 
         if (reconnection.add()) {
-            edges[index] = reconnection.edge();
+            changeEdge(reconnection.edge(), index);
         } else {
             edges[index] = std::nullopt;
         }

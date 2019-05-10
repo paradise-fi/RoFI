@@ -72,7 +72,6 @@ void DistributedModule::shareConfigurations(const DistributedModuleProperties &m
     auto moduleToSendChar = reinterpret_cast<const char *>(moduleToSend);
     char moduleToRecvChar[sizeOfModule * worldSize];
 
-    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Alltoall(moduleToSendChar, sizeOfModule, MPI_CHAR, moduleToRecvChar, sizeOfModule, MPI_CHAR, MPI_COMM_WORLD);
 
     auto moduleToRecv = reinterpret_cast<DistributedModuleProperties *>(moduleToRecvChar);

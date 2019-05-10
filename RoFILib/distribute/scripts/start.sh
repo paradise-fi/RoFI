@@ -17,10 +17,10 @@ mkdir build; cd build; mkdir $IN_DIRECTORY
 
 echo "compile and start distributed algorithm"
 cmake ../../.. | tee $LOG &&
-  make | tee $LOG &&
+  make -j4 | tee $LOG &&
   ./rofi-distribute-preprocessing $IN_START_MPI $IN_TARGET_MPI $IN_DIRECTORY $IN_COUNT $IN_DICTIONARY &&
   ROFI_COUNT=$(head -n 1 $IN_COUNT) &&
-  mpiexec -np $ROFI_COUNT ./distribute/rofi-distribute $IN_DIRECTORY >> $OUT_MPI &&
+  mpiexec --hostfile ../host-file -np $ROFI_COUNT ./distribute/rofi-distribute $IN_DIRECTORY >> $OUT_MPI &&
   ./rofi-distribute-postprocessing $OUT_MPI $IN_DICTIONARY >> $OUT_POSTPROCESSING
 echo "finish process"
 
