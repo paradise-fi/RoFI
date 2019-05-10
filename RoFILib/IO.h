@@ -265,8 +265,8 @@ namespace IO
     {
         std::string line;
         while (getline(input, line)) {
-            if (line[0] != 'C') {     //not for camera settings
-                continue;
+            if (line[0] != 'C' && !line.empty()) {     //not for camera settings
+                throw std::runtime_error("Expected camera settings (CP, CPM, CF, CFM, CV, CVM), got " + line + ".");
             }
             std::stringstream str(line);
             std::string type;
@@ -299,6 +299,9 @@ namespace IO
                 cameraStart.setFoc(xs, ys, zs);
                 cameraEnd.setFoc(xe, ye, ze);
                 cameraMove = true;
+            }
+            else if (!type.empty()){
+                throw std::runtime_error("Expected camera settings (CP, CPM, CF, CFM, CV, CVM), got " + type + ".");
             }
         }
     }

@@ -3,6 +3,7 @@
 #include "../visualizer/Visualizer.h"
 #include "../reconfig/Algorithms.h"
 #include "../visualizer/Generator.h"
+#include "../visualizer/Camera.h"
 
 TEST_CASE("Connections")
 {
@@ -292,6 +293,7 @@ TEST_CASE("Diff reconnections and rotations") {
     REQUIRE((action.reconnections().at(1) == reconnect1 || action.reconnections().at(1) == reconnect2));
     REQUIRE(action.reconnections().at(0) != action.reconnections().at(1));
 }
+
 TEST_CASE("Visualizer simple generate"){
     Configuration cfg1, cfg2;
     cfg1.addModule(0,0,0, 0);
@@ -423,6 +425,73 @@ TEST_CASE("Visualizer simple generate"){
             }
         }
     }
+}
 
+TEST_CASE("Interpolate camera"){
+    SECTION("Interpolate position"){
+        Camera cameraStart;
+        Camera cameraEnd;
+        cameraStart.setPos(5, 5, 10);
+        cameraEnd.setPos(-5, -5, 10);
+        cameraStart.setFoc(0, 0, 0);
+        cameraStart.setFoc(0, 0, 0);
+        unsigned int steps = 10;
+        for (unsigned int i = 0; i <= steps; i++) {
+            Camera currentCamera = interpolateCamera(cameraStart, cameraEnd, i, steps);
+            double distance = vecSize(currentCamera.getPos(), currentCamera.getFoc());
+            double startDistance = vecSize(cameraStart.getPos(), cameraStart.getFoc());
+            double endDistance = vecSize(cameraStart.getPos(), cameraEnd.getFoc());
+            REQUIRE(distance == countSteps(startDistance, endDistance, i, steps));
+            REQUIRE(currentCamera.getFoc()[0] == 0);
+            REQUIRE(currentCamera.getFoc()[1] == 0);
+            REQUIRE(currentCamera.getFoc()[2] == 0);
+        }
+        Camera cam = interpolateCamera(cameraStart, cameraEnd, 5, 10);
+        REQUIRE(cam.getPos()[0] == 0);
+        REQUIRE(cam.getPos()[1] == 0);
+    }
+    SECTION("Interpolate focus"){
+        Camera cameraStart;
+        Camera cameraEnd;
+        cameraStart.setPos(0, 0, 0);
+        cameraEnd.setPos(0, 0, 0);
+        cameraStart.setFoc(5, 5, 10);
+        cameraEnd.setFoc(-5, -5, 10);
+        unsigned int steps = 10;
+        for (unsigned int i = 0; i <= steps; i++) {
+            Camera currentCamera = interpolateCamera(cameraStart, cameraEnd, i, steps);
+            double distance = vecSize(currentCamera.getPos(), currentCamera.getFoc());
+            double startDistance = vecSize(cameraStart.getPos(), cameraStart.getFoc());
+            double endDistance = vecSize(cameraEnd.getPos(), cameraEnd.getFoc());
+            REQUIRE(distance == countSteps(startDistance, endDistance, i, steps));
+        }
+        Camera cam = interpolateCamera(cameraStart, cameraEnd, 5, 10);
+        REQUIRE(cam.getPos()[0] == 0);
+        REQUIRE(cam.getPos()[1] == 0);
+        REQUIRE(cam.getFoc()[0] == 0);
+        REQUIRE(cam.getFoc()[1] == 0);
+        REQUIRE(cam.getFoc()[2] == 10);
+    }
+    SECTION("Move position and focus parallel"){
+        Camera cameraStart;
+        Camera cameraEnd;
+        cameraStart.setPos(5, 5, 5);
+        cameraEnd.setPos(-5, -5, -5);
+        cameraStart.setFoc(5, 5, 0);
+        cameraEnd.setFoc(-5, -5, -10);
+        unsigned int steps = 10;
+        for (unsigned int i = 0; i <= steps; i++) {
+            Camera currentCamera = interpolateCamera(cameraStart, cameraEnd, i, steps);
+            double distance = vecSize(currentCamera.getPos(), currentCamera.getFoc());
+            REQUIRE(distance == 5);
+        }
+        Camera cam = interpolateCamera(cameraStart, cameraEnd, 5, 10);
+        REQUIRE(cam.getPos()[0] == 0);
+        REQUIRE(cam.getPos()[1] == 0);
+        REQUIRE(cam.getPos()[2] == 0);
 
+        REQUIRE(cam.getFoc()[0] == 0);
+        REQUIRE(cam.getFoc()[1] == 0);
+        REQUIRE(cam.getFoc()[2] == -5);
+    }
 }
