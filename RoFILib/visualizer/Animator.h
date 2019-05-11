@@ -14,6 +14,20 @@ class Animator{
 private:
     unsigned long outCount = 0;
 public:
+    /**
+     * This function is used for visualization of main configs. This function
+     * esures, that more configurations are generated.
+     *
+     * @param mainConfigs main configurations to be visualized
+     * @param maxPhi maximal angle difference in one step
+     * @param reconnectionPics number of steps for reconnection
+     * @param path where to save the pictures
+     * @param savePicture whether to save pictures or render the configurations on the screen
+     * @param cameraStart camera parameters at the beginning
+     * @param cameraEnd camera parameters at the end
+     * @param resolution size of the renderer window
+     * @param magnify increase the resolution of the saved image
+     */
     void visualizeMainConfigs(std::vector<Configuration>& mainConfigs, double maxPhi, unsigned int reconnectionPics,
             const std::string& path, bool savePicture, Camera cameraStart, Camera cameraEnd,
             const Resolution& resolution, int magnify){
@@ -51,6 +65,17 @@ public:
         }
     }
 
+    /**
+     * This function is used for visualization of configurations.
+     *
+     * @param allConfigs configurations to be visualized
+     * @param path where to save the pictures
+     * @param savePicture whether to save pictures or render the configurations on the screen
+     * @param cameraStart camera parameters at the beginning
+     * @param cameraEnd camera parameters at the end
+     * @param resolution size of the renderer window
+     * @param magnify increase the resolution of the saved image
+     */
     void visualizeAllConfigs(std::vector<Configuration>& allConfigs, const std::string& path, bool savePicture,
             Camera cameraStart, Camera cameraEnd, const Resolution& resolution,
                              int magnify){
@@ -63,6 +88,16 @@ public:
         }
     }
 
+    /**
+     * This function is used for visualization of one configuration.
+     *
+     * @param config configuration to be visualized
+     * @param path where to save the pictures
+     * @param savePicture whether to save pictures or render the configurations on the screen
+     * @param camera camera parameters
+     * @param resolution size of the renderer window
+     * @param magnify increase the resolution of the saved image
+     */
     void visualizeOneConfig(Configuration& config, const std::string& path, bool savePicture,
             const Camera& camera, const Resolution& resolution,
             int magnify){
@@ -73,12 +108,26 @@ public:
     }
 
 private:
+    /**
+     * This function sets cameras default parameters to
+     * parameters dependent on mass center of the confiuration.
+     *
+     * @param config
+     * @param cameraStart
+     * @param cameraEnd
+     */
     void setCamerasDefault(Configuration config, Camera& cameraStart, Camera& cameraEnd){
         config.computeMatrices();
         cameraStart.setCameraMassCenter(config.massCenter());
         cameraEnd.setCameraMassCenter(config.massCenter());
     }
 
+    /**
+     * This function creates a unique filename.
+     *
+     * @param path where to save the pictures
+     * @return unique filename
+     */
     std::string getFilename(const std::string& path){
         std::stringstream str;
         str << path << "/img";
@@ -86,6 +135,14 @@ private:
         return str.str();
     }
 
+    /**
+     * This function returns count of all configs to be visualized.
+     *
+     * @param mainConfigs main configuration
+     * @param maxPhi maximal angle difference in one step
+     * @param reconnectionPics number of steps for reconnection
+     * @return number of all configs
+     */
     unsigned int getAllConfigsCount(const std::vector<Configuration>& mainConfigs, double maxPhi,
                                     unsigned int reconnectionPics){
         if (mainConfigs.empty()){

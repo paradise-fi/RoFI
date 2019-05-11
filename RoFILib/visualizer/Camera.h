@@ -8,9 +8,8 @@
 #include <array>
 
 /**
- * Parameters for vtkCamera
- * default values from documentation
- *
+ * This class have parameters for vtkCamera.
+ * Default values are from documentation. *
  */
 class Camera{
     std::array<double, 3> position = {0, 0, 1};
@@ -91,6 +90,12 @@ public:
         return defaultViewUp;
     }
 
+    /**
+     * This function overwrites default camera params by new values
+     * depending on the mass center of a configuration.
+     *
+     * @param massCenter mass center of the configuration
+     */
     void setCameraMassCenter(Vector massCenter){
         if (defaultPos()) {
             setPos(massCenter(0), massCenter(1) - 6, massCenter(2));
@@ -114,7 +119,15 @@ public:
 };
 
 
-
+/**
+ * This function linearly interpolates between value a and b.
+ *
+ * @param a value at the beginning
+ * @param b value at the end
+ * @param step currently counted step number
+ * @param totalSteps total number of steps
+ * @return interpolated value
+ */
 inline double countSteps(double a, double b, unsigned long step, unsigned long totalSteps){
     if (totalSteps == 0){
         return a;
@@ -122,12 +135,28 @@ inline double countSteps(double a, double b, unsigned long step, unsigned long t
     return a + (((b - a) * step) / totalSteps);
 }
 
+/**
+ * This function counts distance of two points in space.
+ *
+ * @param a coordinates of one point
+ * @param b coordinates of the second point
+ * @return distance of two points
+ */
 inline double vecSize(const std::array<double, 3>& a, const std::array<double, 3>& b){
     return std::sqrt(((a[0] - b[0]) * (a[0] - b[0])) +
                      ((a[1] - b[1]) * (a[1] - b[1])) +
                      ((a[2] - b[2]) * (a[2] - b[2])));
 }
 
+/**
+ * This function linearly interpolates position of camera.
+ *
+ * @param cameraStart camera parameters at the beginning
+ * @param cameraEnd camera parameters at the end
+ * @param step currently counted step number
+ * @param totalSteps total number of steps
+ * @return linearly interpolated camera position coordinates
+ */
 inline std::array<double, 3> countLinearPosition(const Camera& cameraStart, const Camera& cameraEnd,
         unsigned long step, unsigned long totalSteps){
     std::array<double, 3> res{};
@@ -137,6 +166,15 @@ inline std::array<double, 3> countLinearPosition(const Camera& cameraStart, cons
     return res;
 }
 
+/**
+ * This function linearly interpolates focal point of camera.
+ *
+ * @param cameraStart camera parameters at the beginning
+ * @param cameraEnd camera parameters at the end
+ * @param step currently counted step number
+ * @param totalSteps total number of steps
+ * @return linearly interpolated camera focal point coordinates
+ */
 inline std::array<double, 3> countLinearFocus(const Camera& cameraStart, const Camera& cameraEnd,
         unsigned long step, unsigned long totalSteps){
     std::array<double, 3> res{};
@@ -146,6 +184,15 @@ inline std::array<double, 3> countLinearFocus(const Camera& cameraStart, const C
     return res;
 }
 
+/**
+ * This function linearly interpolates viewUp vector of camera.
+ *
+ * @param cameraStart camera parameters at the beginning
+ * @param cameraEnd camera parameters at the end
+ * @param step currently counted step number
+ * @param totalSteps total number of steps
+ * @return linearly interpolated camera viewUp vector coordinates
+ */
 inline std::array<double, 3> countLinearView(const Camera& cameraStart, const Camera& cameraEnd,
         unsigned long step, unsigned long totalSteps){
     std::array<double, 3> res{};
@@ -155,6 +202,15 @@ inline std::array<double, 3> countLinearView(const Camera& cameraStart, const Ca
     return res;
 }
 
+/**
+ * This function linearly interpolates distance of focal point and position of camera.
+ *
+ * @param cameraStart camera parameters at the beginning
+ * @param cameraEnd camera parameters at the end
+ * @param step currently counted step number
+ * @param totalSteps total number of steps
+ * @return linearly interpolated distance of focal point and position
+ */
 inline double countDistance(const Camera& cameraStart, const Camera& cameraEnd, unsigned long step,
                      unsigned long totalSteps){
     double d1 = vecSize(cameraStart.getPos(), cameraStart.getFoc());
@@ -162,6 +218,15 @@ inline double countDistance(const Camera& cameraStart, const Camera& cameraEnd, 
     return countSteps(d1, d2, step, totalSteps);
 }
 
+/**
+ * This function interpolates camera parameters between cameraStart and cameraEnd.
+ *
+ * @param cameraStart camera parameters at the beginning
+ * @param cameraEnd camera parameters at the end
+ * @param step currently counted step number
+ * @param totalSteps total number of steps
+ * @return interpolated camera parameters
+ */
 inline Camera interpolateCamera(const Camera& cameraStart, const Camera& cameraEnd,
                        unsigned long step, unsigned long totalSteps){
     Camera res;

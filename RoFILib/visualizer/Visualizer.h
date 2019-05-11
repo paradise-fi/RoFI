@@ -77,6 +77,19 @@ public:
         drawConfiguration(config, path, savePicture, cameraParams, {1920, 1080}, 1);
     }
 
+    /**
+     * Function to draw a configuration.
+     *
+     * This function can render the configuration directly on the screen or save
+     * an image of the configuration to a file.
+     *
+     * @param config configuration to be drawn
+     * @param path where to save a picture of the configuration and its name without type suffix
+     * @param savePicture whether to save a picture or render the configuration on the screen
+     * @param cameraParams parameters for camera settings
+     * @param resolution size of the renderer window
+     * @param magnify increase the resolution of the saved image
+     */
     void drawConfiguration(const Configuration& config, const std::string& path, bool savePicture,
             const Camera& cameraParams, const Resolution& resolution,
             int magnify);

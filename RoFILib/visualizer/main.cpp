@@ -125,6 +125,8 @@ void parse(int argc, char* argv[], Parameters& p){
                 exit(0);
             }
             p.framerate = result["framerate"].as<unsigned int>();
+            p.phi = p.omega / p.framerate;
+            p.reconnectionPics = static_cast<unsigned int>(std::ceil(p.reconnectionTime * p.framerate));
         } else if (result.count("framerate") > 1){
             std::cerr << err::atMostOne("'-f' or '--framerate'");
             exit(0);

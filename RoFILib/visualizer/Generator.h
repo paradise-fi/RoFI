@@ -11,13 +11,17 @@
 class Generator{
 public:
     /**
- * generates inter steps between initConf and goalConf
- * @param initConf
- * @param goalConf
- * @param vec saves result to this vector
- * @param maxPhi max angle change per configuration generated (per picture)
- * @param reconnectionPics count of configs (pictures) to display reconnection of modules
- */
+     * This function generates configurations between initConf and goalConf.
+     * The result saves to vector vec.
+     * The size of the steps (the difference between two consecutive configurations)
+     * depends on the parameters given.
+     *
+     * @param initConf initial configuration
+     * @param goalConf goal configuration
+     * @param vec vector of generated configurations
+     * @param maxPhi maximal angle difference in one step
+     * @param reconnectionPics number of steps for reconnection
+     */
     void generate(const Configuration& initConf, const Configuration& goalConf, std::vector<Configuration>& vec,
                   double maxPhi, unsigned int reconnectionPics){
         maxPhi = std::abs(maxPhi);
@@ -37,11 +41,13 @@ public:
     }
 
     /**
-     * returns count of configurations need to generate to have maximal angle difference
-     * @param initConf
-     * @param goalConf
-     * @param maxPhi maximal difference angle between two configs
-     * @return
+     * This function returns count of configurations to be generated between initConf and goalConf
+     * to have maximal angle difference maxPhi between two consecutive configurations.
+     *
+     * @param initConf initial configuration
+     * @param goalConf goal configuration
+     * @param maxPhi maximal angle difference between two consecutive configurations
+     * @return count of configurations to be generated
      */
     unsigned int getStepsCount(const Configuration& initConf, const Configuration& goalConf, double maxPhi){
         double maxAngleMove = getMaxAngleMove(initConf, goalConf);
@@ -50,6 +56,15 @@ public:
 
 
 private:
+    /**
+     * This function sorts edges of configuration into three categories.
+     *
+     * @param initConf initial configuration
+     * @param goalConf goal configuration
+     * @param onlyInitEdges edges to be removed during generated configs - are in initConf, but not in goalConf
+     * @param onlyGoalEdges edges to be added during generated configs - are not in initConf, but in goalConf
+     * @param sameEdges edges which do not change - are in both initConf and goalConf
+     */
     void sortEdges(const Configuration& initConf, const Configuration& goalConf, std::vector<Edge>& onlyInitEdges,
             std::vector<Edge>& onlyGoalEdges, std::vector<Edge>& sameEdges){
         std::set<ID> ids = getIDs(initConf);
@@ -77,6 +92,16 @@ private:
         }
     }
 
+    /**
+     * This function generates modules for currently generated configuration.
+     *
+     * @param initConf initial configuration
+     * @param goalConf goal configuration
+     * @param currConf currently generated configuration
+     * @param moduleSteps how many steps need to be generated to get angles of all modules to the goal position
+     * @param maxPhi maximal angle difference between two consecutive configurations
+     * @param currentStep step number which is now generated
+     */
     void generateOneModuleStep(const Configuration& initConf, const Configuration& goalConf, Configuration& currConf,
             unsigned int moduleSteps, double maxPhi, unsigned int currentStep){
         for (const auto& [id1, mod1] : initConf.getModules()){
@@ -96,6 +121,16 @@ private:
         }
     }
 
+    /**
+     * This function generates edges for currently generated configuration.
+     *
+     * @param currConf currently generated configuration
+     * @param reconnectionPics number of steps for reconnection
+     * @param currentStep step number which is now generated
+     * @param onlyInitEdges edges to be removed during generated configs - are in initConf, but not in goalConf
+     * @param onlyGoalEdges edges to be added during generated configs - are not in initConf, but in goalConf
+     * @param sameEdges edges which do not change - are in both initConf and goalConf
+     */
     void generateOneEdgeStep(Configuration& currConf, unsigned int reconnectionPics, unsigned int currentStep,
                              const std::vector<Edge>& onlyInitEdges, const std::vector<Edge>& onlyGoalEdges,
                              const std::vector<Edge>& sameEdges){
@@ -114,6 +149,21 @@ private:
         }
     }
 
+    /**
+     * This function generates one configuration.
+     *
+     * @param initConf initial configuration
+     * @param goalConf goal configuration
+     * @param currConf currently generated configuration
+     * @param moduleSteps how many steps need to be generated to get angles of all modules to the goal position
+     * @param maxPhi maximal angle difference between two consecutive configurations
+     * @param reconnectionPics number of steps for reconnection
+     * @param totalSteps number of total steps between initConf and goalConf
+     * @param currentStep step number which is now generated
+     * @param onlyInitEdges edges to be removed during generated configs - are in initConf, but not in goalConf
+     * @param onlyGoalEdges edges to be added during generated configs - are not in initConf, but in goalConf
+     * @param sameEdges edges which do not change - are in both initConf and goalConf
+     */
     void generateOneStep(const Configuration& initConf, const Configuration& goalConf, Configuration& currConf,
             unsigned int moduleSteps, double maxPhi, unsigned int reconnectionPics, unsigned int totalSteps,
             unsigned int currentStep, const std::vector<Edge>& onlyInitEdges, const std::vector<Edge>& onlyGoalEdges,
@@ -124,6 +174,15 @@ private:
 
     }
 
+    /**
+     * This function counts angle of generated module.
+     *
+     * @param a value in initConf
+     * @param b value in goalConf
+     * @param maxPhi maximal angle difference between two consecutive configurations
+     * @param step step number which is now generated
+     * @return value of angle in generated configuration
+     */
     double countStep(double a, double b, double maxPhi, unsigned int step){
         if (a < b){
             if (std::abs(b - a) > 180){
@@ -159,6 +218,13 @@ private:
 
     }
 
+    /**
+     * This function returns maximal difference of angle in configuration c1 and c2.
+     *
+     * @param c1 initial configuration
+     * @param c2 goal configuration
+     * @return maximal angle difference
+     */
     double getMaxAngleMove(const Configuration& c1, const Configuration& c2){
         double maxAngleMove = 0;
         for ( const auto& [id1, mod1] : c1.getModules() ){
@@ -171,6 +237,13 @@ private:
         return maxAngleMove;
     }
 
+    /**
+     * This function returns maximal difference of angle in one module.
+     *
+     * @param m1 module in initial configuration
+     * @param m2 module in goal configuration
+     * @return maximal difference of angle in one module.
+     */
     double countDiffAngle(const Module& m1, const Module& m2){
         double alpha = std::abs(m1.getJoint(Alpha) - m2.getJoint(Alpha));
         double beta = std::abs(m1.getJoint(Beta) - m2.getJoint(Beta));
@@ -181,6 +254,12 @@ private:
         return std::max(std::max(alpha, beta), gamma);
     }
 
+    /**
+     * This function returns IDs of modules in configuration.
+     *
+     * @param config configuration
+     * @return IDs of modules in configuration
+     */
     std::set<ID> getIDs(const Configuration& config){
         std::set<ID> res;
         for (const auto& [id, _] : config.getModules()){
