@@ -32,26 +32,17 @@ public:
 
     void reconfigurate2();
 
-    void setCoordinates(const std::array<int, 6> &coordinates) {
-        currCoordinates = coordinates;
-    }
-
-    std::array<int, 6> getCoordinates() const {
-        return currCoordinates;
-    };
-
-    int getCoordinate(Side side, Coordinates coordinate) {
-        return currCoordinates.at(side * 3 + coordinate);
-    }
-
 private:
     DistributedModuleProperties currModule;
     DistributedModuleProperties trgModule;
     Configuration currConfiguration;
     Configuration trgConfiguration;
 
-    std::array<int, 6> currCoordinates;
-    bool coordinatesInit = false;
+    Matrix matrixA;
+    bool matrixAInit = false;
+
+    Matrix matrixB;
+    bool matrixBInit = false;
 
     void shareCurrConfigurations() { shareConfigurations(currModule, currConfiguration); }
     void shareTrgConfigurations() { shareConfigurations(trgModule, trgConfiguration); }
