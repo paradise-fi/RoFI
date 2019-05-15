@@ -65,6 +65,10 @@ private:
 
     void shareCoordinates();
 
+    void tryConnect(const Edge &edge, int step);
+
+    void tryConnectOther(ID other);
+
 };
 
 inline bool compareEdge(const Edge edge1, const Edge edge2) {

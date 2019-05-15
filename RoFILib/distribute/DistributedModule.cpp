@@ -372,3 +372,50 @@ void DistributedModule::shareCoordinates() {
     }
 }
 
+void DistributedModule::tryConnect(const Edge &edge, int step) {
+    int id2 = edge.id2();
+    MPI_Bcast(&id2, 1, MPI_INT, currModule.getId(), MPI_COMM_WORLD);
+
+    Matrix matrix;
+    if (edge.side1() == Side::A) {
+        matrix = matrixA * transformConnection(edge.dock1(), edge.ori(), edge.dock2());
+    } else {
+        matrix = matrixB * transformConnection(edge.dock1(), edge.ori(), edge.dock2());
+    }
+
+    std::pair<Matrix, Edge> pairToSend = {matrix, edge};
+    auto pairToSendChar = reinterpret_cast<const char *>(&pairToSend);
+    MPI_Send(pairToSendChar, sizeof(std::pair<Matrix, Edge>), MPI_CHAR, id2, 4, MPI_COMM_WORLD);
+
+    MPI_Status status;
+    bool canConnect;
+    MPI_Recv(&canConnect, 1, MPI_CXX_BOOL, id2, 4, MPI_COMM_WORLD, &status);
+
+    if (canConnect) {
+        currModule.addEdge(edge);
+        std::cout << DistributedPrinter::toString(edge, step);
+    }
+
+}
+
+void DistributedModule::tryConnectOther(ID other) {
+    int id;
+    MPI_Bcast(&id, 1, MPI_INT, other, MPI_COMM_WORLD);
+
+    if (id != currModule.getId()) {
+        return;
+    }
+
+    char pairToRecvChar[sizeof(std::pair<Matrix, Edge>)];
+    MPI_Status status;
+    MPI_Recv(pairToRecvChar, sizeof(std::pair<Matrix, Edge>), MPI_CHAR, other, 4, MPI_COMM_WORLD, &status);
+    auto [matrix, edge] = *reinterpret_cast<std::pair<Matrix, Edge> *>(pairToRecvChar);
+
+    bool canConnect = (edge.side2() == Side::A && equals(matrixA, matrix))
+            || (edge.side2() == Side::B && equals(matrixB, matrix));
+    MPI_Send(&canConnect, 1, MPI_CXX_BOOL, other, 4, MPI_COMM_WORLD);
+
+    if (canConnect) {
+        currModule.addEdge(edge);
+    }
+}
