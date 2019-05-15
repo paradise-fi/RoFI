@@ -1,10 +1,10 @@
 #!/bin/bash
 
-IN_START_MPI="../example.in"
-IN_TARGET_MPI="../exampleTrg.in"
-IN_DIRECTORY="preprocess/"
-IN_COUNT="preprocess/count"
-IN_DICTIONARY="preprocess/dictionary"
+IN_START_MPI="../$1"
+IN_TARGET_MPI="../$2"
+IN_DIRECTORY="$3/"
+IN_COUNT="$3/count"
+IN_DICTIONARY="$3/dictionary"
 OUT_MPI="run.out"
 OUT_POSTPROCESSING="example.out"
 LOG="log"
@@ -20,7 +20,7 @@ cmake ../../.. | tee $LOG &&
   make -j4 | tee $LOG &&
   ./rofi-distribute-preprocessing $IN_START_MPI $IN_TARGET_MPI $IN_DIRECTORY $IN_COUNT $IN_DICTIONARY &&
   ROFI_COUNT=$(head -n 1 $IN_COUNT) &&
-  mpiexec --hostfile ../host-file -np $ROFI_COUNT ./distribute/rofi-distribute $IN_DIRECTORY >> $OUT_MPI &&
+  mpiexec --hostfile ../$4 -np $ROFI_COUNT ./distribute/rofi-distribute $IN_DIRECTORY >> $OUT_MPI &&
   ./rofi-distribute-postprocessing $OUT_MPI $IN_DICTIONARY >> $OUT_POSTPROCESSING
 echo "finish process"
 
