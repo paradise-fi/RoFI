@@ -393,7 +393,8 @@ void DistributedModule::tryConnect(const Edge &edge, int step) {
 
     if (canConnect) {
         currModule.addEdge(edge);
-        std::cout << DistributedPrinter::toString(edge, step);
+        Action::Reconnect reconnect(true, edge);
+        std::cout << DistributedPrinter::toString(reconnect, step);
     }
 
 }
