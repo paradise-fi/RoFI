@@ -99,15 +99,15 @@ public:
     void setCameraMassCenter(Vector massCenter){
         if (defaultPos()) {
             setPos(massCenter(0), massCenter(1) - 6, massCenter(2));
-            defaultPosition = true;
+            defaultPosition = false;
         }
         if (defaultFoc()) {
             setFoc(massCenter(0), massCenter(1), massCenter(2));
-            defaultFocalPoint = true;
+            defaultFocalPoint = false;
         }
         if (defaultView()) {
             setView(0, 0, 1);
-            defaultViewUp = true;
+            defaultViewUp = false;
         }
     }
 
@@ -229,6 +229,9 @@ inline double countDistance(const Camera& cameraStart, const Camera& cameraEnd, 
  */
 inline Camera interpolateCamera(const Camera& cameraStart, const Camera& cameraEnd,
                        unsigned long step, unsigned long totalSteps){
+    if (cameraStart == cameraEnd){
+        return cameraStart;
+    }
     Camera res;
     std::array<double, 3> linearPosition = countLinearPosition(cameraStart, cameraEnd, step, totalSteps);
     std::array<double, 3> linearFocus = countLinearFocus(cameraStart, cameraEnd, step, totalSteps);

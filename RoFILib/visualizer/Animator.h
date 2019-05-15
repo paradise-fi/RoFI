@@ -81,8 +81,16 @@ public:
                              int magnify){
         unsigned long step = 0;
         setCamerasDefault(allConfigs.at(0), cameraStart, cameraEnd);
+        Camera camera;
+        bool cameraMove = true;
+        if (cameraStart == cameraEnd){
+            camera = cameraStart;
+            cameraMove = false;
+        }
         for (Configuration& c : allConfigs){
-            Camera camera = interpolateCamera(cameraStart, cameraEnd, step, allConfigs.size() - 1);
+            if (cameraMove) {
+                camera = interpolateCamera(cameraStart, cameraEnd, step, allConfigs.size() - 1);
+            }
             visualizeOneConfig(c, path, savePicture, camera, resolution, magnify);
             step++;
         }
@@ -110,7 +118,7 @@ public:
 private:
     /**
      * This function sets cameras default parameters to
-     * parameters dependent on mass center of the confiuration.
+     * parameters dependent on mass center of the configuration.
      *
      * @param config
      * @param cameraStart
