@@ -364,7 +364,7 @@ void DistributedModule::tryConnect(const Edge &edge, int step) {
     }
 }
 
-void DistributedModule::tryConnectOther(ID other) {
+void DistributedModule::tryConnect(ID other) {
     int id;
     MPI_Bcast(&id, 1, MPI_INT, other, MPI_COMM_WORLD);
 
@@ -395,20 +395,10 @@ void DistributedModule::tryDisconnect(ID other) {
 }
 
 void DistributedModule::tryRotation(Joint joint, double angle, int step) {
-    int neighbourIds[6];
-    for (unsigned long i = 0; i < 6; i++) {
-        if (currModule.getEdges().at(i).has_value()) {
-            neighbourIds[i] = currModule.getEdges().at(i).value().id2();
-        } else {
-            neighbourIds[i] = -1;
-        }
-    }
-
     int worldSize;
     MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
     int otherNeighbours[6 * worldSize];
-
-    MPI_Gather(neighbourIds, 6, MPI_INT, otherNeighbours, 6, MPI_INT, currModule.getId(), MPI_COMM_WORLD);
+    getNeighboursIds(otherNeighbours, currModule.getId());
 
     std::set<ID> idsOnSide;
     bool canMove = getIds(otherNeighbours, joint == Joint::Beta ? B : A, idsOnSide);
@@ -456,8 +446,6 @@ void DistributedModule::tryRotation(Joint joint, double angle, int step) {
     Action divided = action.divide(1.0/rotationSteps);
     bool canNextStep = true;
     for (int i = 0; i < rotationSteps && canNextStep; i++) {
-        //std::cout << IO::toString(cfg) << std::endl;
-
         cfg.execute(divided);
         cfg.computeMatrices();
         MatrixMap matrices = cfg.getMatrices();
@@ -499,20 +487,7 @@ void DistributedModule::tryRotation(Joint joint, double angle, int step) {
 }
 
 void DistributedModule::tryRotation(ID other) {
-    int neighbourIds[6];
-    for (unsigned long i = 0; i < 6; i++) {
-        if (currModule.getEdges().at(i).has_value()) {
-            neighbourIds[i] = currModule.getEdges().at(i).value().id2();
-        } else {
-            neighbourIds[i] = -1;
-        }
-    }
-
-    int worldSize;
-    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
-    int otherNeighbours[6 * worldSize];
-
-    MPI_Gather(neighbourIds, 6, MPI_INT, otherNeighbours, 6, MPI_INT, other, MPI_COMM_WORLD);
+    getNeighboursIds(nullptr, other);
 
     bool canMove;
     MPI_Bcast(&canMove, 1, MPI_CXX_BOOL, other, MPI_COMM_WORLD);
@@ -556,10 +531,8 @@ void DistributedModule::tryRotationRotateModules(ID other, int rotateModulesCoun
         MPI_Bcast(matricesToRecvChar, sizeof(std::pair<ID, std::array<Matrix, 2>>) * rotateModulesCount, MPI_CHAR, other
                 , MPI_COMM_WORLD);
 
-        bool collisionFree[rotateModulesCount];
         bool collFreeSend = true;
-        MPI_Gather(&collFreeSend, 1, MPI_CXX_BOOL, collisionFree, 1, MPI_CXX_BOOL, other, MPI_COMM_WORLD);
-
+        MPI_Gather(&collFreeSend, 1, MPI_CXX_BOOL, nullptr, 1, MPI_CXX_BOOL, other, MPI_COMM_WORLD);
         MPI_Bcast(&canNextStep, 1, MPI_CXX_BOOL, other, MPI_COMM_WORLD);
 
         if (i == rotationSteps - 1 && canNextStep) {
@@ -600,11 +573,22 @@ void DistributedModule::tryRotationStaticModules(ID other, int rotateModulesCoun
             collFreeSend &= distance(std::get<1>(pair)[1], matrixB) >= 1;
         }
 
-        bool collisionFree[rotateModulesCount];
-        MPI_Gather(&collFreeSend, 1, MPI_CXX_BOOL, collisionFree, 1, MPI_CXX_BOOL, other, MPI_COMM_WORLD);
-
+        MPI_Gather(&collFreeSend, 1, MPI_CXX_BOOL, nullptr, 1, MPI_CXX_BOOL, other, MPI_COMM_WORLD);
         MPI_Bcast(&canNextStep, 1, MPI_CXX_BOOL, other, MPI_COMM_WORLD);
     }
+}
+
+void DistributedModule::getNeighboursIds(int *otherNeighbours, ID root) const {
+    int neighbourIds[6];
+    for (unsigned long i = 0; i < 6; i++) {
+        if (currModule.getEdges().at(i).has_value()) {
+            neighbourIds[i] = currModule.getEdges().at(i).value().id2();
+        } else {
+            neighbourIds[i] = -1;
+        }
+    }
+
+    MPI_Gather(neighbourIds, 6, MPI_INT, otherNeighbours, 6, MPI_INT, root, MPI_COMM_WORLD);
 }
 
 bool DistributedModule::getIds(const int *neighboursId, Side side, std::set<ID> &idsOnSide) const {

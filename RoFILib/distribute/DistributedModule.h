@@ -75,7 +75,7 @@ private:
 
     void tryConnect(const Edge &edge, int step);
 
-    void tryConnectOther(ID other);
+    void tryConnect(ID other);
 
     void tryDisconnect(const Edge &edge, int step);
 
@@ -90,6 +90,8 @@ private:
     void tryRotationStaticModules(ID other, int rotateModulesCount) const;
 
     bool getIds(const int *neighboursId, Side side, std::set<ID> &idsOnSide) const;
+
+    void getNeighboursIds(int *otherNeighbours, ID root) const;
 
     void createCfg(const std::vector<DistributedModuleProperties> &neighbours, Configuration &cfg) const;
 
