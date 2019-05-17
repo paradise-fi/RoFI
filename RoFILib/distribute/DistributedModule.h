@@ -24,7 +24,8 @@ enum MPITags {
     hasMatrixTag,
     shareMatrixTag,
     shareMatrixForConnectTag,
-    canConnectTag
+    canConnectTag,
+    shareEdgeTag
 };
 
 class DistributedModule {
@@ -94,6 +95,8 @@ private:
     void getNeighboursIds(int *otherNeighbours, ID root) const;
 
     void createCfg(const std::vector<DistributedModuleProperties> &neighbours, Configuration &cfg) const;
+
+    bool existPath(const int *neighbours, ID id1, ID id2) const;
 
 };
 

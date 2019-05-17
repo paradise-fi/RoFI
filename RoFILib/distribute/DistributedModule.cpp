@@ -387,11 +387,55 @@ void DistributedModule::tryConnect(ID other) {
 }
 
 void DistributedModule::tryDisconnect(const Edge &edge, int step) {
+    int worldSize;
+    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+    int otherNeighbours[6 * worldSize];
+    getNeighboursIds(otherNeighbours, currModule.getId());
 
+    otherNeighbours[edge.id2() * 6 + edge.side2() * 3 + edge.dock2()] = -1;
+    otherNeighbours[edge.id1() * 6 + edge.side1() * 3 + edge.dock1()] = -1;
+
+    bool canDisconnect = existPath(otherNeighbours, edge.id1(), edge.id2());
+    MPI_Bcast(&canDisconnect, 1, MPI_CXX_BOOL, currModule.getId(), MPI_COMM_WORLD);
+
+    if (!canDisconnect) {
+        return;
+    }
+
+    int id2 = edge.id2();
+    MPI_Bcast(&id2, 1, MPI_INT, currModule.getId(), MPI_COMM_WORLD);
+
+    auto edgeToSend = reinterpret_cast<const char *>(&edge);
+    MPI_Send(edgeToSend, sizeof(Edge), MPI_CHAR, id2, shareEdgeTag, MPI_COMM_WORLD);
+
+    currModule.removeEdge(edge);
+    Action::Reconnect reconnect(false, edge);
+    std::cout << DistributedPrinter::toString(reconnect, step);
 }
 
 void DistributedModule::tryDisconnect(ID other) {
+    getNeighboursIds(nullptr, other);
 
+    bool canDisconnect;
+    MPI_Bcast(&canDisconnect, 1, MPI_CXX_BOOL, other, MPI_COMM_WORLD);
+
+    if (!canDisconnect) {
+        return;
+    }
+
+    int id2;
+    MPI_Bcast(&id2, 1, MPI_INT, other, MPI_COMM_WORLD);
+
+    if (id2 != currModule.getId()) {
+        return;
+    }
+
+    MPI_Status status;
+    char edgeChar[sizeof(Edge)];
+    MPI_Recv(edgeChar, sizeof(Edge), MPI_CHAR, other, shareEdgeTag, MPI_COMM_WORLD, &status);
+
+    Edge edge = *reinterpret_cast<Edge *>(edgeChar);
+    currModule.removeEdge(edge);
 }
 
 void DistributedModule::tryRotation(Joint joint, double angle, int step) {
@@ -681,4 +725,33 @@ void DistributedModule::createCfg(const std::vector<DistributedModuleProperties>
             cfg.addEdge(edge);
         }
     }
+}
+
+bool DistributedModule::existPath(const int *neighbours, ID id1, ID id2) const {
+    std::queue<ID> queue;
+    queue.push(id1);
+
+    std::set<ID> seenIds;
+    while (!queue.empty()) {
+        ID id = queue.front();
+        queue.pop();
+
+        if (id == id2) {
+            return true;
+        }
+
+        if (seenIds.find(id) != seenIds.end()) {
+            continue;
+        }
+
+        for (int i = id * 6; i < id * 6 + 6; i++) {
+            if (neighbours[i] != -1) {
+                queue.push(neighbours[i]);
+            }
+        }
+
+        seenIds.insert(id);
+    }
+
+    return false;
 }

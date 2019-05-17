@@ -23,6 +23,14 @@ public:
         }
     }
 
+    void removeEdge(const Edge &edge) {
+        if (edge.id1() == getId()) {
+            edges[edge.side1() * 3 + edge.dock1()] = std::nullopt;
+        } else if (edge.id2() == getId()) {
+            edges[edge.side2() * 3 + edge.dock2()] = std::nullopt;
+        }
+    }
+
     void changeEdge(const std::optional<Edge> edge, unsigned long i) {
         if (edge.has_value()) {
             if (edge.value().id1() == getId()) {
