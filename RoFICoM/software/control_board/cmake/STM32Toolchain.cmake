@@ -31,9 +31,11 @@ set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
+set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
+
 set(MCU_FPU fpv4-sp-d16)
 
-set(COMMON_FLAGS "-mcpu=${MCU_ARCH} -mthumb -mfloat-abi=${MCU_FLOAT_ABI} -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0")
+set(COMMON_FLAGS "-mcpu=${MCU_ARCH} -mthumb -mfloat-abi=${MCU_FLOAT_ABI} -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0 --specs=nosys.specs")
 
 if (MCU_FLOAT_ABI STREQUAL hard)
     set(COMMON_FLAGS "${COMMON_FLAGS} -mfpu=${MCU_FPU}")
@@ -43,11 +45,18 @@ set(CMAKE_CXX_FLAGS "${COMMON_FLAGS} -fno-exceptions ")
 set(CMAKE_C_FLAGS "${COMMON_FLAGS} -std=gnu99")
 
 set(STDLIBS "-lc -lm -lnosys")
-set(CMAKE_EXE_LINKER_FLAGS "--specs=nosys.specs -Wl,--gc-sections ${STDLIBS} -T ${MCU_LINKER_SCRIPT}")
+set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gc-sections ${STDLIBS} -T ${MCU_LINKER_SCRIPT}")
 set(LINKER_LANGUAGE CXX)
 
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -gdwarf-2")
     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -gdwarf-2")
 endif()
+
+if(NOT CMAKE_CXX_COMPILE_FEATURES)
+    set(CMAKE_CXX_COMPILE_FEATURES
+    ${CMAKE_CXX17_COMPILE_FEATURES}
+    )
+endif()
+
 
