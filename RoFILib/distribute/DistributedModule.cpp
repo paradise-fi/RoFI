@@ -77,7 +77,8 @@ void DistributedModule::shareConfigurations(const DistributedModuleProperties &m
     auto moduleToRecv = reinterpret_cast<DistributedModuleProperties *>(moduleToRecvChar);
     for (int i = 0; i < worldSize; i++) {
         DistributedModuleProperties &module1 = moduleToRecv[i];
-        configuration.addModule(module1.getJoint(Joint::Alpha), module1.getJoint(Joint::Beta), module1.getJoint(Joint::Gamma), module1.getId());
+        configuration.addModule(module1.getJoint(Joint::Alpha), module1.getJoint(Joint::Beta)
+                , module1.getJoint(Joint::Gamma), module1.getId());
     }
 
     for (int i = 0; i < worldSize; i++) {
@@ -255,51 +256,14 @@ void DistributedModule::shareCoordinates() {
         MPI_Status status;
         auto currModuleToSend = reinterpret_cast<const char *>(&currModule);
         char moduleToRecv[sizeof(DistributedModuleProperties)];
-        MPI_Sendrecv(currModuleToSend, sizeof(DistributedModuleProperties), MPI_CHAR, edge.id2(), 0
-                , moduleToRecv, sizeof(DistributedModuleProperties), MPI_CHAR, edge.id2(), 0
+        MPI_Sendrecv(currModuleToSend, sizeof(DistributedModuleProperties), MPI_CHAR, edge.id2(), shareModulePropTag
+                , moduleToRecv, sizeof(DistributedModuleProperties), MPI_CHAR, edge.id2(), shareModulePropTag
                 , MPI_COMM_WORLD, &status);
         neighbours.push_back(*reinterpret_cast<DistributedModuleProperties *>(moduleToRecv));
     }
 
     Configuration cfg;
-    cfg.addModule(currModule.getJoint(Joint::Alpha), currModule.getJoint(Joint::Beta), currModule.getJoint(Joint::Gamma)
-            , currModule.getId());
-
-    for (auto &module : neighbours) {
-        cfg.addModule(module.getJoint(Joint::Alpha), module.getJoint(Joint::Beta), module.getJoint(Joint::Gamma)
-                , module.getId());
-    }
-
-    const ModuleMap &modules = cfg.getModules();
-    for (auto &module : neighbours) {
-        for (auto optEdge : module.getEdges()) {
-            if (!optEdge.has_value()) {
-                continue;
-            }
-
-            Edge edge = optEdge.value();
-            ID id1 = edge.id1();
-            ID id2 = edge.id2();
-
-            if (module.getId() == std::min(id1, id2) && modules.find(std::max(id1, id2)) != modules.end()) {
-                cfg.addEdge(edge);
-            }
-        }
-    }
-
-    for (auto optEdge : currModule.getEdges()) {
-        if (!optEdge.has_value()) {
-            continue;
-        }
-
-        Edge edge = optEdge.value();
-        ID id1 = edge.id1();
-        ID id2 = edge.id2();
-
-        if (currModule.getId() == std::min(id1, id2) && modules.find(std::max(id1, id2)) != modules.end()) {
-            cfg.addEdge(edge);
-        }
-    }
+    createCfg(neighbours, cfg);
 
     std::vector<ID> idsHasMatrix;
     while (!matrixAInit && !matrixBInit) {
@@ -307,12 +271,13 @@ void DistributedModule::shareCoordinates() {
             MPI_Status status;
             bool toSend = false;
             bool toRecv;
-            MPI_Sendrecv(&toSend, 1, MPI_CXX_BOOL, edge.id2(), 1, &toRecv, 1, MPI_CXX_BOOL, edge.id2(), 1
+            MPI_Sendrecv(&toSend, 1, MPI_CXX_BOOL, edge.id2(), hasMatrixTag
+                    , &toRecv, 1, MPI_CXX_BOOL, edge.id2(), hasMatrixTag
                     , MPI_COMM_WORLD, &status);
 
             if (toRecv) {
                 char matrixToRecv[sizeof(Matrix)];
-                MPI_Recv(matrixToRecv, sizeof(Matrix), MPI_CHAR, edge.id2(), 2, MPI_COMM_WORLD, &status);
+                MPI_Recv(matrixToRecv, sizeof(Matrix), MPI_CHAR, edge.id2(), shareMatrixTag, MPI_COMM_WORLD, &status);
                 auto matrix = reinterpret_cast<Matrix *>(matrixToRecv);
 
                 if (edge.side1() == A) {
@@ -361,13 +326,14 @@ void DistributedModule::shareCoordinates() {
         MPI_Status status;
         bool toSend = true;
         bool toRecv;
-        MPI_Sendrecv(&toSend, 1, MPI_CXX_BOOL, edge.id2(), 1, &toRecv, 1, MPI_CXX_BOOL, edge.id2(), 1
+        MPI_Sendrecv(&toSend, 1, MPI_CXX_BOOL, edge.id2(), hasMatrixTag
+                , &toRecv, 1, MPI_CXX_BOOL, edge.id2(), hasMatrixTag
                 , MPI_COMM_WORLD, &status);
 
         if (!toRecv) {
             Matrix matrix = matrices.at(edge.id2()).at(edge.side2());
             auto matrixToSend = reinterpret_cast<const char *>(&matrix);
-            MPI_Send(matrixToSend, sizeof(Matrix), MPI_CHAR, edge.id2(), 2, MPI_COMM_WORLD);
+            MPI_Send(matrixToSend, sizeof(Matrix), MPI_CHAR, edge.id2(), shareMatrixTag, MPI_COMM_WORLD);
         }
     }
 }
@@ -385,18 +351,17 @@ void DistributedModule::tryConnect(const Edge &edge, int step) {
 
     std::pair<Matrix, Edge> pairToSend = {matrix, edge};
     auto pairToSendChar = reinterpret_cast<const char *>(&pairToSend);
-    MPI_Send(pairToSendChar, sizeof(std::pair<Matrix, Edge>), MPI_CHAR, id2, 4, MPI_COMM_WORLD);
+    MPI_Send(pairToSendChar, sizeof(std::pair<Matrix, Edge>), MPI_CHAR, id2, shareMatrixForConnectTag, MPI_COMM_WORLD);
 
     MPI_Status status;
     bool canConnect;
-    MPI_Recv(&canConnect, 1, MPI_CXX_BOOL, id2, 4, MPI_COMM_WORLD, &status);
+    MPI_Recv(&canConnect, 1, MPI_CXX_BOOL, id2, canConnectTag, MPI_COMM_WORLD, &status);
 
     if (canConnect) {
         currModule.addEdge(edge);
         Action::Reconnect reconnect(true, edge);
         std::cout << DistributedPrinter::toString(reconnect, step);
     }
-
 }
 
 void DistributedModule::tryConnectOther(ID other) {
@@ -409,14 +374,327 @@ void DistributedModule::tryConnectOther(ID other) {
 
     char pairToRecvChar[sizeof(std::pair<Matrix, Edge>)];
     MPI_Status status;
-    MPI_Recv(pairToRecvChar, sizeof(std::pair<Matrix, Edge>), MPI_CHAR, other, 4, MPI_COMM_WORLD, &status);
+    MPI_Recv(pairToRecvChar, sizeof(std::pair<Matrix, Edge>), MPI_CHAR, other, shareMatrixForConnectTag, MPI_COMM_WORLD, &status);
     auto [matrix, edge] = *reinterpret_cast<std::pair<Matrix, Edge> *>(pairToRecvChar);
 
     bool canConnect = (edge.side2() == Side::A && equals(matrixA, matrix))
             || (edge.side2() == Side::B && equals(matrixB, matrix));
-    MPI_Send(&canConnect, 1, MPI_CXX_BOOL, other, 4, MPI_COMM_WORLD);
+    MPI_Send(&canConnect, 1, MPI_CXX_BOOL, other, canConnectTag, MPI_COMM_WORLD);
 
     if (canConnect) {
         currModule.addEdge(edge);
+    }
+}
+
+void DistributedModule::tryDisconnect(const Edge &edge, int step) {
+
+}
+
+void DistributedModule::tryDisconnect(ID other) {
+
+}
+
+void DistributedModule::tryRotation(Joint joint, double angle, int step) {
+    int neighbourIds[6];
+    for (unsigned long i = 0; i < 6; i++) {
+        if (currModule.getEdges().at(i).has_value()) {
+            neighbourIds[i] = currModule.getEdges().at(i).value().id2();
+        } else {
+            neighbourIds[i] = -1;
+        }
+    }
+
+    int worldSize;
+    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+    int otherNeighbours[6 * worldSize];
+
+    MPI_Gather(neighbourIds, 6, MPI_INT, otherNeighbours, 6, MPI_INT, currModule.getId(), MPI_COMM_WORLD);
+
+    std::set<ID> idsOnSide;
+    bool canMove = getIds(otherNeighbours, joint == Joint::Beta ? B : A, idsOnSide);
+    MPI_Bcast(&canMove, 1, MPI_CXX_BOOL, currModule.getId(), MPI_COMM_WORLD);
+
+    if (!canMove) {
+        return;
+    }
+
+    int idCount = idsOnSide.size();
+    MPI_Bcast(&idCount, 1, MPI_INT, currModule.getId(), MPI_COMM_WORLD);
+
+    int ids[idCount];
+    int counter = 0;
+    for (ID id : idsOnSide) {
+        ids[counter] = id;
+        counter++;
+    }
+    MPI_Bcast(ids, idCount, MPI_INT, currModule.getId(), MPI_COMM_WORLD);
+
+    std::vector<DistributedModuleProperties> otherModules;
+    for (int i = 0; i < idCount; i++) {
+        MPI_Status status;
+        char moduleToRecv[sizeof(DistributedModuleProperties)];
+        MPI_Recv(moduleToRecv, sizeof(DistributedModuleProperties), MPI_CHAR, ids[i], shareModulePropTag
+                , MPI_COMM_WORLD, &status);
+
+        otherModules.push_back(*reinterpret_cast<DistributedModuleProperties *>(moduleToRecv));
+    }
+
+    Configuration cfg;
+    createCfg(otherModules, cfg);
+    if (joint == Joint::Beta) {
+        cfg.setFixed(currModule.getId(), B, matrixB);
+    } else {
+        cfg.setFixed(currModule.getId(), A, matrixA);
+    }
+    cfg.computeMatrices();
+
+    Action::Rotate rotation(currModule.getId(), joint, angle);
+    Action action = { { rotation }, { } };
+    int rotationSteps = 10;
+    MPI_Bcast(&rotationSteps, 1, MPI_INT, currModule.getId(), MPI_COMM_WORLD);
+
+    Action divided = action.divide(1.0/rotationSteps);
+    bool canNextStep = true;
+    for (int i = 0; i < rotationSteps && canNextStep; i++) {
+        //std::cout << IO::toString(cfg) << std::endl;
+
+        cfg.execute(divided);
+        cfg.computeMatrices();
+        MatrixMap matrices = cfg.getMatrices();
+        std::pair<ID, std::array<Matrix, 2>> matricesToSend[idCount];
+        counter = 0;
+        for (auto &[id, array] : matrices) {
+            if (id == currModule.getId()) {
+                continue;
+            }
+
+            matricesToSend[counter] = {id, array};
+            counter++;
+        }
+
+        auto matricesToSendChar = reinterpret_cast<char *>(matricesToSend);
+        MPI_Bcast(matricesToSendChar, sizeof(std::pair<ID, std::array<Matrix, 2>>) * idCount, MPI_CHAR
+                , currModule.getId(), MPI_COMM_WORLD);
+
+        bool collisionFree[idCount];
+        bool collFreeSend = true;
+        MPI_Gather(&collFreeSend, 1, MPI_CXX_BOOL, collisionFree, 1, MPI_CXX_BOOL, currModule.getId(), MPI_COMM_WORLD);
+
+        canNextStep = true;
+        for (bool oneModuleFree : collisionFree) {
+            canNextStep &= oneModuleFree;
+        }
+
+        MPI_Bcast(&canNextStep, 1, MPI_CXX_BOOL, currModule.getId(), MPI_COMM_WORLD);
+    }
+
+    if (canNextStep) {
+        cfg.computeMatrices();
+        MatrixMap matrices = cfg.getMatrices();
+        matrixA = matrices.at(currModule.getId())[0];
+        matrixB = matrices.at(currModule.getId())[1];
+
+        std::cout << DistributedPrinter::toString(rotation, step);
+    }
+}
+
+void DistributedModule::tryRotation(ID other) {
+    int neighbourIds[6];
+    for (unsigned long i = 0; i < 6; i++) {
+        if (currModule.getEdges().at(i).has_value()) {
+            neighbourIds[i] = currModule.getEdges().at(i).value().id2();
+        } else {
+            neighbourIds[i] = -1;
+        }
+    }
+
+    int worldSize;
+    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+    int otherNeighbours[6 * worldSize];
+
+    MPI_Gather(neighbourIds, 6, MPI_INT, otherNeighbours, 6, MPI_INT, other, MPI_COMM_WORLD);
+
+    bool canMove;
+    MPI_Bcast(&canMove, 1, MPI_CXX_BOOL, other, MPI_COMM_WORLD);
+
+    if (!canMove) {
+        return;
+    }
+
+    int idCount;
+    MPI_Bcast(&idCount, 1, MPI_INT, other, MPI_COMM_WORLD);
+
+    int ids[idCount];
+    MPI_Bcast(ids, idCount, MPI_INT, other, MPI_COMM_WORLD);
+
+    bool shouldSentProp = false;
+    for (int i = 0; i < idCount; i++) {
+        if (ids[i] == currModule.getId()) {
+            shouldSentProp = true;
+        }
+    }
+
+    if (shouldSentProp) {
+        tryRotationRotateModules(other, idCount);
+    } else {
+        tryRotationStaticModules(other, idCount);
+    }
+}
+
+void DistributedModule::tryRotationRotateModules(ID other, int rotateModulesCount) {
+    auto currModuleToSend = reinterpret_cast<const char *>(&currModule);
+    MPI_Send(currModuleToSend, sizeof(DistributedModuleProperties), MPI_CHAR, other, shareModulePropTag
+            , MPI_COMM_WORLD);
+
+    int rotationSteps;
+    MPI_Bcast(&rotationSteps, 1, MPI_INT, other, MPI_COMM_WORLD);
+
+    bool canNextStep = true;
+    std::array<Matrix, 2> currModuleMatrices;
+    for (int i = 0; i < rotationSteps && canNextStep; i++) {
+        char matricesToRecvChar[rotateModulesCount * sizeof(std::pair<ID, std::array<Matrix, 2>>)];
+        MPI_Bcast(matricesToRecvChar, sizeof(std::pair<ID, std::array<Matrix, 2>>) * rotateModulesCount, MPI_CHAR, other
+                , MPI_COMM_WORLD);
+
+        bool collisionFree[rotateModulesCount];
+        bool collFreeSend = true;
+        MPI_Gather(&collFreeSend, 1, MPI_CXX_BOOL, collisionFree, 1, MPI_CXX_BOOL, other, MPI_COMM_WORLD);
+
+        MPI_Bcast(&canNextStep, 1, MPI_CXX_BOOL, other, MPI_COMM_WORLD);
+
+        if (i == rotationSteps - 1 && canNextStep) {
+            auto matricesToRecv = reinterpret_cast<std::pair<ID, std::array<Matrix, 2>> *>(matricesToRecvChar);
+            for (int j = 0; j < rotateModulesCount && collFreeSend; j++) {
+                std::pair<ID, std::array<Matrix, 2>> &pair = matricesToRecv[j];
+                if (currModule.getId() == std::get<0>(pair)) {
+                    currModuleMatrices = std::get<1>(pair);
+                    break;
+                }
+            }
+        }
+    }
+
+    if (canNextStep) {
+        matrixA = currModuleMatrices[0];
+        matrixB = currModuleMatrices[1];
+    }
+}
+
+void DistributedModule::tryRotationStaticModules(ID other, int rotateModulesCount) const {
+    int rotationSteps;
+    MPI_Bcast(&rotationSteps, 1, MPI_INT, other, MPI_COMM_WORLD);
+
+    bool canNextStep = true;
+    for (int i = 0; i < rotationSteps && canNextStep; i++) {
+        char matricesToRecvChar[rotateModulesCount * sizeof(std::pair<ID, std::array<Matrix, 2>>)];
+        MPI_Bcast(matricesToRecvChar, sizeof(std::pair<ID, std::array<Matrix, 2>>) * rotateModulesCount, MPI_CHAR, other
+                , MPI_COMM_WORLD);
+
+        bool collFreeSend = true;
+        auto matricesToRecv = reinterpret_cast<std::pair<ID, std::array<Matrix, 2>> *>(matricesToRecvChar);
+        for (int j = 0; j < rotateModulesCount && collFreeSend; j++) {
+            std::pair<ID, std::array<Matrix, 2>> &pair = matricesToRecv[j];
+            collFreeSend &= distance(std::get<1>(pair)[0], matrixA) >= 1;
+            collFreeSend &= distance(std::get<1>(pair)[0], matrixB) >= 1;
+            collFreeSend &= distance(std::get<1>(pair)[1], matrixA) >= 1;
+            collFreeSend &= distance(std::get<1>(pair)[1], matrixB) >= 1;
+        }
+
+        bool collisionFree[rotateModulesCount];
+        MPI_Gather(&collFreeSend, 1, MPI_CXX_BOOL, collisionFree, 1, MPI_CXX_BOOL, other, MPI_COMM_WORLD);
+
+        MPI_Bcast(&canNextStep, 1, MPI_CXX_BOOL, other, MPI_COMM_WORLD);
+    }
+}
+
+bool DistributedModule::getIds(const int *neighboursId, Side side, std::set<ID> &idsOnSide) const {
+    Side otherSide = side == A ? B : A;
+
+    std::set<ID> otherSideIds;
+    for (int i = currModule.getId() * 6 + 3 * otherSide; i < currModule.getId() * 6 + 3 * otherSide + 3; i++) {
+        if (neighboursId[i] == -1) {
+            continue;
+        }
+
+        otherSideIds.insert(neighboursId[i]);
+    }
+
+    std::queue<ID> idsToProcess;
+    for (int i = currModule.getId() * 6 + 3 * side; i < currModule.getId() * 6 + 3 * side + 3; i++) {
+        if (neighboursId[i] == -1) {
+            continue;
+        }
+
+        if (otherSideIds.find(neighboursId[i]) != otherSideIds.end()) {
+            return false;
+        }
+
+        idsToProcess.push(neighboursId[i]);
+    }
+
+    while (!idsToProcess.empty()) {
+        ID id = idsToProcess.front();
+        idsToProcess.pop();
+
+        if (idsOnSide.find(id) != idsOnSide.end() || id == currModule.getId()) {
+            continue;
+        }
+
+        if (otherSideIds.find(id) != otherSideIds.end()) {
+            return false;
+        }
+
+        idsOnSide.insert(id);
+
+        for (int i = id * 6; i < id * 6 + 6; i++) {
+            if (neighboursId[i] == -1 || idsOnSide.find(neighboursId[i]) != idsOnSide.end()) {
+                continue;
+            }
+
+            idsToProcess.push(neighboursId[i]);
+        }
+    }
+
+    return true;
+}
+
+void DistributedModule::createCfg(const std::vector<DistributedModuleProperties> &neighbours, Configuration &cfg) const {
+    cfg.addModule(currModule.getJoint(Joint::Alpha), currModule.getJoint(Joint::Beta), currModule.getJoint(Joint::Gamma)
+            , currModule.getId());
+
+    for (auto &module : neighbours) {
+        cfg.addModule(module.getJoint(Joint::Alpha), module.getJoint(Joint::Beta), module.getJoint(Joint::Gamma)
+                , module.getId());
+    }
+
+    const ModuleMap &modules = cfg.getModules();
+    for (auto &module : neighbours) {
+        for (auto optEdge : module.getEdges()) {
+            if (!optEdge.has_value()) {
+                continue;
+            }
+
+            Edge edge = optEdge.value();
+            ID id1 = edge.id1();
+            ID id2 = edge.id2();
+
+            if (module.getId() == std::min(id1, id2) && modules.find(std::max(id1, id2)) != modules.end()) {
+                cfg.addEdge(edge);
+            }
+        }
+    }
+
+    for (auto optEdge : currModule.getEdges()) {
+        if (!optEdge.has_value()) {
+            continue;
+        }
+
+        Edge edge = optEdge.value();
+        ID id1 = edge.id1();
+        ID id2 = edge.id2();
+
+        if (currModule.getId() == std::min(id1, id2) && modules.find(std::max(id1, id2)) != modules.end()) {
+            cfg.addEdge(edge);
+        }
     }
 }

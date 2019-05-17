@@ -19,6 +19,14 @@ enum Coordinates {
     Zcoor
 };
 
+enum MPITags {
+    shareModulePropTag,
+    hasMatrixTag,
+    shareMatrixTag,
+    shareMatrixForConnectTag,
+    canConnectTag
+};
+
 class DistributedModule {
 public:
     DistributedModule(unsigned int id, std::ifstream &inStream, std::ifstream &trgStream);
@@ -68,6 +76,22 @@ private:
     void tryConnect(const Edge &edge, int step);
 
     void tryConnectOther(ID other);
+
+    void tryDisconnect(const Edge &edge, int step);
+
+    void tryDisconnect(ID other);
+
+    void tryRotation(Joint joint, double angle, int step);
+
+    void tryRotation(ID other);
+
+    void tryRotationRotateModules(ID other, int rotateModulesCount);
+
+    void tryRotationStaticModules(ID other, int rotateModulesCount) const;
+
+    bool getIds(const int *neighboursId, Side side, std::set<ID> &idsOnSide) const;
+
+    void createCfg(const std::vector<DistributedModuleProperties> &neighbours, Configuration &cfg) const;
 
 };
 
