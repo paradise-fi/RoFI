@@ -13,12 +13,6 @@
 #include "../reconfig/Algorithms.h"
 #include "../IO.h"
 
-enum Coordinates {
-    Xcoor,
-    Ycoor,
-    Zcoor
-};
-
 enum MPITags {
     shareModulePropTag,
     hasMatrixTag,

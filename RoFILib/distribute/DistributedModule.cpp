@@ -525,6 +525,7 @@ void DistributedModule::tryRotation(Joint joint, double angle, int step) {
         MatrixMap matrices = cfg.getMatrices();
         matrixA = matrices.at(currModule.getId())[0];
         matrixB = matrices.at(currModule.getId())[1];
+        currModule.rotateJoint(joint, angle);
 
         std::cout << DistributedPrinter::toString(rotation, step);
     }
