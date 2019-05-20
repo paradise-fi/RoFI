@@ -209,7 +209,10 @@ struct TxOn: public UartConfigBase {
         if ( periph == USART1 ) {
             if ( _pin._pos == 6 )
                 return LL_GPIO_AF_0;
-            assert( false && "Incorrect TX pin" );
+        }
+        else if ( periph == USART2 ) {
+            if ( _pin._pos == 2 )
+                return LL_GPIO_AF_1;
         }
         // ToDo: More configurations
         assert( false && "Incorrect TX pin" );
@@ -239,10 +242,13 @@ struct RxOn: public UartConfigBase {
         if ( periph == USART1 ) {
             if ( _pin._pos == 7 )
                 return LL_GPIO_AF_0;
-            assert( false && "Incorrect TX pin" );
+        }
+        else if ( periph == USART2 ) {
+            if ( _pin._pos == 3 )
+                return LL_GPIO_AF_1;
         }
         // ToDo: More configurations
-        assert( false && "Incorrect TX pin" );
+        assert( false && "Incorrect RX pin" );
     }
 
     Gpio::Pin _pin;
@@ -304,11 +310,15 @@ public:
         LL_DMA_SetMemoryAddress( DMA1, _channel, uint32_t( _block.get() + offset ) );
         LL_DMA_SetDataLength( DMA1, _channel, size );
 
-        _uart.enableTimeout( bitTimeout, [&, callback, size]() {
-            LL_DMA_DisableChannel( DMA1, _channel );
-            int read = size - LL_DMA_GetDataLength( DMA1, _channel );
-            callback( std::move( _block ), read );
-        } );
+        if ( bitTimeout == 0 )
+            _uart.disableTimout();
+        else {
+            _uart.enableTimeout( bitTimeout, [&, callback, size]() {
+                LL_DMA_DisableChannel( DMA1, _channel );
+                int read = size - LL_DMA_GetDataLength( DMA1, _channel );
+                callback( std::move( _block ), read );
+            } );
+        }
 
         _channel.onComplete( [&, callback, size]( int /* channel */ ) {
             LL_DMA_DisableChannel( DMA1, _channel );
@@ -397,8 +407,9 @@ public:
         LL_DMA_SetDataLength( DMA1, _channel, size );
 
         _channel.onComplete( [&, callback, size]( int /* channel */ ) {
-            LL_DMA_DisableChannel( DMA1, _channel );;
-            callback( std::move( _block ) );
+            LL_DMA_DisableChannel( DMA1, _channel );
+            int written = size - LL_DMA_GetDataLength( DMA1, _channel );
+            callback( std::move( _block ), written );
         } );
 
         LL_DMA_EnableChannel( DMA1, _channel );

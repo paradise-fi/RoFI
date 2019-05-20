@@ -73,7 +73,7 @@ struct Gpio: public Peripheral< GPIO_TypeDef > {
                   _pos == 1 ? EXTI0_1_IRQn
                 : _pos <= 3 ? EXTI2_3_IRQn
                 : EXTI4_15_IRQn;
-            NVIC_SetPriority( irq, 2 );
+            NVIC_SetPriority( irq, 1 );
             NVIC_EnableIRQ( irq );
         }
 

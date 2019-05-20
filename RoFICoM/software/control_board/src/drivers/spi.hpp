@@ -32,12 +32,12 @@ struct Spi: public Peripheral< SPI_TypeDef > {
         SPI_InitStruct.BitOrder = LL_SPI_MSB_FIRST;
         SPI_InitStruct.CRCCalculation = LL_SPI_CRCCALCULATION_DISABLE;
         SPI_InitStruct.CRCPoly = 7;
-        LL_SPI_Init( SPI1, &SPI_InitStruct );
-        LL_SPI_DisableNSSPulseMgt( SPI1 );
-        LL_SPI_SetRxFIFOThreshold( SPI1, LL_SPI_RX_FIFO_TH_QUARTER );
+        LL_SPI_Init( _periph, &SPI_InitStruct );
+        LL_SPI_DisableNSSPulseMgt( _periph );
+        LL_SPI_SetRxFIFOThreshold( _periph, LL_SPI_RX_FIFO_TH_QUARTER );
 
         ( configs.post( _periph ), ... );
-        _enableInterrupt( 0 );
+        _enableInterrupt( 1 );
     }
 
     void enableClock() {
@@ -68,6 +68,10 @@ struct Spi: public Peripheral< SPI_TypeDef > {
 
     }
 
+    bool available() {
+        return LL_SPI_IsActiveFlag_RXNE( _periph );
+    }
+
     template < typename Callback >
     void onTransactionBegins( Callback c ) {
         handlers().begin = c;
@@ -92,6 +96,7 @@ struct Spi: public Peripheral< SPI_TypeDef > {
     }
 
     void enableRx() {
+        LL_SPI_SetRxFIFOThreshold( _periph, LL_SPI_RX_FIFO_TH_QUARTER );
         LL_SPI_EnableIT_RXNE( _periph );
     }
 
@@ -102,6 +107,10 @@ struct Spi: public Peripheral< SPI_TypeDef > {
 
     void disableRx() {
         LL_SPI_DisableIT_RXNE( _periph );
+    }
+
+    uint8_t read() {
+        return LL_SPI_ReceiveData8( _periph );
     }
 
 private:

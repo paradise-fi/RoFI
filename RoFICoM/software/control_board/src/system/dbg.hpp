@@ -55,7 +55,7 @@ private:
         auto buffer = memory::Pool::allocate( 256 );
         int size = snprintf( reinterpret_cast< char * >( buffer.get() ), 256, fmt, args... );
         buffer[ size ] = '\n';
-        writer.writeBlock( std::move( buffer ), 0, size + 1, [&]( memory::Pool::Block ){
+        writer.writeBlock( std::move( buffer ), 0, size + 1, [&]( memory::Pool::Block, int ){
             _txBusy = false;
         } );
     }

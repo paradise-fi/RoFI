@@ -1,4 +1,5 @@
-#include <stm32g0xx_hal.h>
+
+#include <system/defer.hpp>
 
 #include <cassert>
 #include <system/dbg.hpp>
@@ -6,7 +7,61 @@
 #include <drivers/gpio.hpp>
 #include <drivers/timer.hpp>
 #include <drivers/spi.hpp>
+#include <drivers/uart.hpp>
 #include <motor.hpp>
+
+#include <spiInterface.hpp>
+#include <connInterface.hpp>
+
+#include <stm32g0xx_hal.h>
+
+using Block = memory::Pool::Block;
+
+void onCmdVersion( SpiInterface& interf ) {
+    auto block = memory::Pool::allocate( 4 );
+    viewAs< uint16_t >( block.get() ) = 1;
+    viewAs< uint16_t >( block.get() + 2 ) = 0;
+    interf.sendBlock( std::move( block ), 4 );
+}
+
+void onCmdStatus( SpiInterface& interf, Block /*header*/, ConnInterface& connInt ) {
+    auto block = memory::Pool::allocate( 12 );
+    memset( block.get(), 0xAA, 12 );
+    viewAs< uint8_t >( block.get() + 2 ) = connInt.pending();
+    viewAs< uint8_t >( block.get() + 3 ) = connInt.available();
+    // ToDo: Assign remaining values
+    interf.sendBlock( std::move( block ), 12 );
+    // ToDo Interpret the header
+}
+
+void onCmdInterrupt( SpiInterface& interf, Block /*header*/ ) {
+    Defer::job( []{
+        Dbg::info( "Interrupt command" );
+    } );
+    auto block = memory::Pool::allocate( 2 );
+    memset( block.get(), 0, 2 );
+    interf.sendBlock( std::move( block ), 2 );
+}
+
+void onCmdSendBlob( SpiInterface& spiInt, ConnInterface& connInt ) {
+    spiInt.receiveBlob([&]( Block blob, int size ) {
+        uint16_t blobLen = viewAs< uint16_t >( blob.get() + 2 );
+        if ( size != 4 + blobLen )
+            return;
+        connInt.sendBlob( std::move( blob ) );
+    } );
+}
+
+void onCmdReceiveBlob( SpiInterface& spiInt, ConnInterface& connInt ) {
+    if ( connInt.available() > 0 )
+        spiInt.sendBlob( connInt.getBlob() );
+    else {
+        auto block = memory::Pool::allocate( 4 );
+        viewAs< uint16_t >( block.get() ) = 0; // content type
+        viewAs< uint16_t >( block.get() + 2 ) = 0; // length
+        spiInt.sendBlock( std::move( block ), 4 );
+    }
+}
 
 int main() {
     setupSystemClock();
@@ -14,9 +69,6 @@ int main() {
     HAL_Init();
 
     Dbg::info( "Main clock: %d", SystemCoreClock );
-    int counter = 0;
-    GpioA[ 7 ].setupInput( true );
-    GpioB[ 1 ].setupPPOutput();
 
     Timer timer( TIM1, FreqAndRes( 1000, 2000 ) );
     auto pwm = timer.pwmChannel( LL_TIM_CHANNEL_CH1 );
@@ -33,39 +85,42 @@ int main() {
         SckOn( GpioA[ 1 ] ),
         CsOn( GpioA[ 4 ] )
     );
-    SpiReaderWriter rwSpi( spi );
 
-    volatile bool print = false;
-    memory::Pool::Block rxBuf;
-    auto txBuf = memory::Pool::allocate( 40 );
-    std::copy_n( "Hello world", 20, txBuf.get() );
-    int tId = 0;
-    spi.onTransactionEnds( [&] {
-        tId++;
-        Dbg::info( "Transcation prepare %d", tId );
-        rwSpi.abortRx();
-        rwSpi.abortTx();
-        spi.clearRx();
-        rwSpi.readBlock( memory::Pool::allocate( 11 ), 0, 10,
-            [&, tId]( memory::Pool::Block b, int size ) {
-                rxBuf = std::move( b );
-                rxBuf [ size ] = 0;
-                print = true;
-                rwSpi.writeBlock( std::move( txBuf ), 0, 10,
-                    [&, tId]( memory::Pool::Block b, int /* size */ ) {
-                        txBuf = std::move( b );
-                    } );
-            } );
-    } );
+    Uart uart( USART2,
+        Baudrate( 115200 ),
+        TxOn( GpioA[ 2 ] ),
+        RxOn( GpioA[ 3 ] ) );
 
-    spi.enable();
+    ConnInterface connInterface( std::move( uart ) );
+
+    using Command = SpiInterface::Command;
+    SpiInterface spiInterface( std::move( spi ),
+        [&]( Command cmd, Block b ) {
+            // Dbg::info( "Command %d", cmd );
+            switch( cmd ) {
+            case Command::VERSION:
+                onCmdVersion( spiInterface );
+                break;
+            case Command::STATUS:
+                onCmdStatus( spiInterface, std::move( b ), connInterface );
+                break;
+            case Command::INTERRUPT:
+                onCmdInterrupt( spiInterface, std::move( b ) );
+                break;
+            case Command::SEND_BLOB:
+                onCmdSendBlob( spiInterface, connInterface );
+                break;
+            case Command::RECEIVE_BLOB:
+                onCmdReceiveBlob( spiInterface, connInterface );
+                break;
+            default:
+                Dbg::warning( "Unkwnown command %d", cmd );
+            };
+        } );
+
 
     while ( true ) {
-        if ( print ) {
-            counter++;
-            print = false;
-            Dbg::info( "Received (%d): %10.10s", counter, rxBuf.get() );
-        }
+        Defer::run();
     }
 }
 
