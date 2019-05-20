@@ -10,7 +10,10 @@ public:
     RingBuffer( memory::Pool::Block storage, int storageSize )
         : _head( 0 ), _tail( 0 ), _storage( std::move( storage ) ),
           _storageCapacity( storageSize / sizeof( T ) )
-    {}
+    {
+        for ( int i = 0; i != _storageCapacity; i++ )
+            new ( _data() + i ) T();
+    }
 
     int capacity() const {
         return _storageCapacity - 1;
@@ -42,17 +45,18 @@ public:
         return _data()[ _index( idx ) ];
     }
 
-    void push_back( T val ) {
+    bool push_back( T val ) {
         if ( full() )
-            return; // silently ignore overflow
-        _data()[ _tail ] = val;
+            return false;
+        _data()[ _tail ] = std::move( val );
         _tail = _next( _tail );
+        return true;
     }
 
     T pop_front() {
         int head = _head;
         _head = _next( _head );
-        return _data()[ head ];
+        return std::move( _data()[ head ] );
     }
 
     // Return longest continuous segment of memory after tail
