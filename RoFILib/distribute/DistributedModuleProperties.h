@@ -76,6 +76,30 @@ public:
         }
     }
 
+    Action diff(const DistributedModuleProperties &other) const {
+        std::vector<Action::Rotate> rotations;
+        for (Joint joint : { Alpha, Beta, Gamma }) {
+            if (getJoint(joint) != other.getJoint(joint)) {
+                rotations.emplace_back(getId(), joint, other.getJoint(joint) - getJoint(joint));
+            }
+        }
+
+        std::vector<Action::Reconnect> reconnections;
+        for (unsigned long i = 0; i < 6; i++) {
+            if (edges.at(i).has_value() && edges.at(i) != other.edges.at(i)) {
+                reconnections.emplace_back(false, edges.at(i).value());
+            }
+        }
+
+        for (unsigned long i = 0; i < 6; i++) {
+            if (other.edges.at(i).has_value() && edges.at(i) != other.edges.at(i)) {
+                reconnections.emplace_back(true, other.edges.at(i).value());
+            }
+        }
+
+        return {rotations, reconnections};
+    }
+
 private:
     EdgeList edges;
 };

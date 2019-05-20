@@ -22,6 +22,13 @@ enum MPITags {
     shareEdgeTag
 };
 
+enum ActionType {
+    Rotation,
+    Connection,
+    Disconnection,
+    NoAction
+};
+
 class DistributedModule {
 public:
     DistributedModule(unsigned int id, std::ifstream &inStream, std::ifstream &trgStream);
@@ -68,15 +75,21 @@ private:
 
     void shareCoordinates();
 
-    void tryConnect(const Edge &edge, int step);
+    ID nextId(ID current) const;
+
+    bool execAction(int indexOfAction, int step);
+
+    void execAction(ID other);
+
+    bool tryConnect(const Edge &edge, int step);
 
     void tryConnect(ID other);
 
-    void tryDisconnect(const Edge &edge, int step);
+    bool tryDisconnect(const Edge &edge, int step);
 
     void tryDisconnect(ID other);
 
-    void tryRotation(Joint joint, double angle, int step);
+    bool tryRotation(Joint joint, double angle, int step);
 
     void tryRotation(ID other);
 

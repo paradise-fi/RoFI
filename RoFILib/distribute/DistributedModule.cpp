@@ -236,10 +236,57 @@ void DistributedModule::reconfigurate2() {
     }
 
     shareCoordinates();
-    auto coorA = center(matrixA);
-    std::cout << "A coor " << currModule.getId() << " " << coorA.at(0) << " " << coorA.at(1) << " " << coorA(2) << std::endl;
-    auto coorB = center(matrixB);
-    std::cout << "B coor " << currModule.getId() << " " << coorB.at(0) << " " << coorB.at(1) << " " << coorB(2) << std::endl;
+
+    ID lastActionID = 0;
+    int indexOfAction = 0;
+    ID currentID = 0;
+    int step = 1;
+    bool endOfReconfig = false;
+    bool firstRound = true;
+    int worldSize;
+    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+
+    while (!endOfReconfig) {
+        if (indexOfAction >= 6 /** 2 + 3*/) {
+            //no step is available - TODO try heuristic
+            return;
+        }
+
+        bool executed = false;
+        if (currentID == currModule.getId()) {
+            executed = execAction(indexOfAction, step);
+        } else {
+            execAction(currentID);
+        }
+        MPI_Bcast(&executed, 1, MPI_CXX_BOOL, currentID, MPI_COMM_WORLD);
+
+        if (executed) {
+            lastActionID = currentID;
+            indexOfAction = 0;
+            step++;
+        } else if (currentID == lastActionID && !firstRound) {
+            indexOfAction++;
+        }
+
+        Action action = currModule.diff(trgModule);
+        bool needToReconfig = !action.empty();
+        bool needToReconfigSend[worldSize];
+        for (int i = 0; i < worldSize; i++) {
+            needToReconfigSend[i] = needToReconfig;
+        }
+        bool needToReconfigRecv[worldSize];
+
+        MPI_Alltoall(needToReconfigSend, 1, MPI_CXX_BOOL, needToReconfigRecv, 1, MPI_CXX_BOOL
+                , MPI_COMM_WORLD);
+
+        currentID = nextId(currentID);
+        bool someNeedReconfig = false;
+        for (int i = 0; i < worldSize; i++) {
+            someNeedReconfig |= needToReconfigRecv[i];
+        }
+        endOfReconfig = !someNeedReconfig;
+        firstRound = false;
+    }
 }
 
 void DistributedModule::shareCoordinates() {
@@ -338,7 +385,65 @@ void DistributedModule::shareCoordinates() {
     }
 }
 
-void DistributedModule::tryConnect(const Edge &edge, int step) {
+ID DistributedModule::nextId(ID current) const {
+    int worldSize;
+    MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
+
+    current++;
+    current %= worldSize;
+
+    return current;
+}
+
+bool DistributedModule::execAction(int indexOfAction, int step) {
+    Action action = currModule.diff(trgModule);
+    if (action.rotations().size() > indexOfAction) {
+        ActionType actionType = ActionType::Rotation;
+        MPI_Bcast(&actionType, 1, MPI_INT, currModule.getId(), MPI_COMM_WORLD);
+        Action::Rotate rotation = action.rotations().at(indexOfAction);
+        return tryRotation(rotation.joint(), rotation.angle(), step);
+    }
+
+    indexOfAction -= action.rotations().size();
+
+    if (action.reconnections().size() > indexOfAction) {
+        Action::Reconnect reconnect = action.reconnections().at(indexOfAction);
+        if (reconnect.add()) {
+            ActionType actionType = ActionType::Connection;
+            MPI_Bcast(&actionType, 1, MPI_INT, currModule.getId(), MPI_COMM_WORLD);
+            return tryConnect(reconnect.edge(), step);
+        }
+
+        ActionType actionType = ActionType::Disconnection;
+        MPI_Bcast(&actionType, 1, MPI_INT, currModule.getId(), MPI_COMM_WORLD);
+        return tryDisconnect(reconnect.edge(), step);
+    }
+
+    ActionType actionType = ActionType::NoAction;
+    MPI_Bcast(&actionType, 1, MPI_INT, currModule.getId(), MPI_COMM_WORLD);
+    return false;
+}
+
+void DistributedModule::execAction(ID other) {
+    ActionType actionType;
+    MPI_Bcast(&actionType, 1, MPI_INT, other, MPI_COMM_WORLD);
+
+    switch (actionType) {
+        case Rotation:
+            tryRotation(other);
+            break;
+        case Connection:
+            tryConnect(other);
+            break;
+        case Disconnection:
+            tryDisconnect(other);
+            break;
+        case NoAction:
+            break;
+    }
+}
+
+bool DistributedModule::tryConnect(const Edge &edge, int step) {
     int id2 = edge.id2();
     MPI_Bcast(&id2, 1, MPI_INT, currModule.getId(), MPI_COMM_WORLD);
 
@@ -361,7 +466,10 @@ void DistributedModule::tryConnect(const Edge &edge, int step) {
         currModule.addEdge(edge);
         Action::Reconnect reconnect(true, edge);
         std::cout << DistributedPrinter::toString(reconnect, step);
+        return true;
     }
+
+    return false;
 }
 
 void DistributedModule::tryConnect(ID other) {
@@ -386,7 +494,7 @@ void DistributedModule::tryConnect(ID other) {
     }
 }
 
-void DistributedModule::tryDisconnect(const Edge &edge, int step) {
+bool DistributedModule::tryDisconnect(const Edge &edge, int step) {
     int worldSize;
     MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
     int otherNeighbours[6 * worldSize];
@@ -399,7 +507,7 @@ void DistributedModule::tryDisconnect(const Edge &edge, int step) {
     MPI_Bcast(&canDisconnect, 1, MPI_CXX_BOOL, currModule.getId(), MPI_COMM_WORLD);
 
     if (!canDisconnect) {
-        return;
+        return false;
     }
 
     int id2 = edge.id2();
@@ -411,6 +519,8 @@ void DistributedModule::tryDisconnect(const Edge &edge, int step) {
     currModule.removeEdge(edge);
     Action::Reconnect reconnect(false, edge);
     std::cout << DistributedPrinter::toString(reconnect, step);
+
+    return true;
 }
 
 void DistributedModule::tryDisconnect(ID other) {
@@ -438,7 +548,7 @@ void DistributedModule::tryDisconnect(ID other) {
     currModule.removeEdge(edge);
 }
 
-void DistributedModule::tryRotation(Joint joint, double angle, int step) {
+bool DistributedModule::tryRotation(Joint joint, double angle, int step) {
     int worldSize;
     MPI_Comm_size(MPI_COMM_WORLD, &worldSize);
     int otherNeighbours[6 * worldSize];
@@ -449,7 +559,7 @@ void DistributedModule::tryRotation(Joint joint, double angle, int step) {
     MPI_Bcast(&canMove, 1, MPI_CXX_BOOL, currModule.getId(), MPI_COMM_WORLD);
 
     if (!canMove) {
-        return;
+        return false;
     }
 
     int idCount = idsOnSide.size();
@@ -528,7 +638,10 @@ void DistributedModule::tryRotation(Joint joint, double angle, int step) {
         currModule.rotateJoint(joint, angle);
 
         std::cout << DistributedPrinter::toString(rotation, step);
+        return true;
     }
+
+    return false;
 }
 
 void DistributedModule::tryRotation(ID other) {

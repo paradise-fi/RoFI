@@ -167,6 +167,10 @@ public:
                (ori_ == other.ori_);
     }
 
+    bool operator!=(const Edge& other) const {
+        return !(*this == other);
+    }
+
 private:
     ID id1_, id2_;
     Side side1_, side2_;
@@ -298,6 +302,10 @@ public:
 
     std::vector<Reconnect> reconnections() const {
         return _reconnections;
+    }
+
+    bool empty() const {
+        return _reconnections.empty() && _rotations.empty();
     }
 
 private:
