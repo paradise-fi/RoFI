@@ -6,9 +6,10 @@
 class Dbg {
     template < typename... Configs >
     Dbg( USART_TypeDef *uartPer, Configs...configs ):
-        _uart( uartPer, configs... ), writer( _uart )
+        _uart( uartPer, configs... ), _writer( _uart ), _reader( _uart )
     {
         _uart.enable();
+        _reader.startBufferedReading();
     }
 public:
     template < typename... Args >
@@ -38,6 +39,14 @@ public:
         info( "%s: %s", name, buff );
     }
 
+    static bool available() {
+        return _instance()._reader.available();
+    }
+
+    static char get() {
+        return _instance()._reader.get();
+    }
+
 private:
     static Dbg& _instance() {
         static Dbg inst( USART1,
@@ -55,7 +64,7 @@ private:
         auto buffer = memory::Pool::allocate( 256 );
         int size = snprintf( reinterpret_cast< char * >( buffer.get() ), 256, fmt, args... );
         buffer[ size ] = '\n';
-        writer.writeBlock( std::move( buffer ), 0, size + 1, [&]( memory::Pool::Block, int ){
+        _writer.writeBlock( std::move( buffer ), 0, size + 1, [&]( memory::Pool::Block, int ){
             _txBusy = false;
         } );
     }
@@ -71,6 +80,7 @@ private:
     }
 
     Uart _uart;
-    UartWriter writer;
+    UartWriter _writer;
+    UartReader _reader;
     volatile bool _txBusy;
 };
