@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <stm32g0xx_hal.h>
 #include <drivers/timer.hpp>
 #include <drivers/gpio.hpp>
 
@@ -38,4 +39,89 @@ public:
 private:
     Timer::Pwm _pwm;
     Gpio::Pin _pin;
+};
+
+class Slider {
+public:
+    Slider( Motor motor, Gpio::Pin retractionLimit, Gpio::Pin expansionLimit )
+        : _motor( std::move( motor ) ),
+          _retrLimit( retractionLimit ),
+          _expLimit( expansionLimit ),
+          _goal( State::Retracted ),
+          _currentState( State::Unknown )
+    {
+        _retrLimit.setupInput( true ).invert()
+            .setupInterrupt( LL_EXTI_TRIGGER_RISING_FALLING, [&]( bool ) {
+                run();
+            });
+        _expLimit.setupInput( true ).invert()
+            .setupInterrupt( LL_EXTI_TRIGGER_RISING_FALLING, [&]( bool ) {
+                run();
+            });
+        motor.set( 0 );
+        motor.enable();
+    }
+
+    enum class State { Unknown, Retracted, Expanding, Expanded, Retracting };
+
+    void expand() {
+        _goal = State::Expanded;
+        _onStateChange();
+    }
+
+    void retract() {
+        _goal = State::Retracted;
+        _onStateChange();
+    }
+
+    void run() {
+        if ( _goal == State::Retracted ) {
+            if ( _retrLimit.read() )
+                _set( State::Retracted );
+            else
+                _set( State::Retracting );
+        }
+        else if ( _goal == State::Expanded ) {
+            if ( _expLimit.read() )
+                _set( State::Expanded );
+            else
+                _set( State::Expanding );
+        }
+        _move();
+    }
+private:
+    void _move() {
+        uint32_t duration = HAL_GetTick() - _stateStarted;
+        if ( _currentState == State::Expanding )
+            _motor.set( _coef( duration ) * -100 );
+        else if ( _currentState == State::Retracting )
+            _motor.set( _coef( duration ) * 100 );
+        else
+            _motor.set( 0 );
+    }
+
+    void _set( State s ) {
+        if ( s != _currentState )
+            _onStateChange();
+        _currentState = s;
+    }
+
+    void _onStateChange() {
+        _stateStarted = HAL_GetTick();
+    }
+
+    int _coef( int duration ) {
+        if ( duration > 6000 )
+            return 0;
+        if ( duration % 1500 > 1000 )
+            return 0;
+        return 1;
+    }
+
+    Motor _motor;
+    Gpio::Pin _retrLimit;
+    Gpio::Pin _expLimit;
+    State _goal;
+    State _currentState;
+    uint32_t _stateStarted;
 };

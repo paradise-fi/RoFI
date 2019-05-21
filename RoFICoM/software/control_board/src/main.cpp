@@ -9,11 +9,13 @@
 #include <drivers/spi.hpp>
 #include <drivers/uart.hpp>
 #include <motor.hpp>
+#include <util.hpp>
 
 #include <spiInterface.hpp>
 #include <connInterface.hpp>
 
 #include <stm32g0xx_hal.h>
+
 
 using Block = memory::Pool::Block;
 
@@ -79,6 +81,8 @@ int main() {
     motor.enable();
     motor.set( 0 );
 
+    Slider slider( Motor( pwm, GpioB[ 1 ] ), GpioA[ 7 ], GpioA[ 5 ] );
+
     Spi spi( SPI1,
         Slave(),
         MisoOn( GpioA[ 6 ] ),
@@ -118,8 +122,22 @@ int main() {
             };
         } );
 
-
     while ( true ) {
+        slider.run();
+        if ( Dbg::available() ) {
+            switch( Dbg::get() ) {
+            case 'e':
+                slider.expand();
+                Dbg::info("Expanding");
+                break;
+            case 'r':
+                slider.retract();
+                Dbg::info("Retracting");
+                break;
+            default:
+                Dbg::info( "Received: %c", Dbg::get() );
+            }
+        }
         Defer::run();
     }
 }
