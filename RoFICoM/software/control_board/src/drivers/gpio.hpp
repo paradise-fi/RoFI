@@ -17,7 +17,7 @@ struct Gpio: public Peripheral< GPIO_TypeDef > {
             return Gpio( _periph );
         }
 
-        void setupPPOutput() {
+        Pin& setupPPOutput() {
             port().enableClock();
             LL_GPIO_InitTypeDef cfg{};
             cfg.Pin = 1 << _pos;
@@ -25,9 +25,10 @@ struct Gpio: public Peripheral< GPIO_TypeDef > {
             cfg.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
             cfg.Pull = LL_GPIO_PULL_NO;
             LL_GPIO_Init( _periph, &cfg );
+            return *this;
         }
 
-        void setupInput( bool pull, bool pull_up = true ) {
+        Pin& setupInput( bool pull, bool pull_up = true ) {
             port().enableClock();
             LL_GPIO_InitTypeDef cfg{};
             cfg.Pin = 1 << _pos;
@@ -36,9 +37,10 @@ struct Gpio: public Peripheral< GPIO_TypeDef > {
                 LL_GPIO_PULL_NO :
                 pull_up ? LL_GPIO_PULL_UP : LL_GPIO_PULL_DOWN;
             LL_GPIO_Init( _periph, &cfg );
+            return *this;
         }
 
-        void setupAnalog( bool pull, bool pull_up = true ) {
+        Pin& setupAnalog( bool pull, bool pull_up = true ) {
             port().enableClock();
             LL_GPIO_InitTypeDef cfg{};
             cfg.Pin = 1 << _pos;
@@ -47,10 +49,11 @@ struct Gpio: public Peripheral< GPIO_TypeDef > {
                 LL_GPIO_PULL_NO :
                 pull_up ? LL_GPIO_PULL_UP : LL_GPIO_PULL_DOWN;
             LL_GPIO_Init( _periph, &cfg );
+            return *this;
         }
 
         template < typename Callback >
-        void setupInterrupt( int edge, Callback c ) {
+        Pin setupInterrupt( int edge, Callback c ) {
             port().enableClock();
 
             if ( _periph == GPIOA )
@@ -59,7 +62,7 @@ struct Gpio: public Peripheral< GPIO_TypeDef > {
                 LL_EXTI_SetEXTISource( LL_EXTI_CONFIG_PORTB, _extiConfigLine( _pos ) );
 
             LL_EXTI_InitTypeDef EXTI_InitStruct{};
-            EXTI_InitStruct.Line_0_31 = LL_EXTI_LINE_4;
+            EXTI_InitStruct.Line_0_31 = 1 << _pos;
             EXTI_InitStruct.LineCommand = ENABLE;
             EXTI_InitStruct.Mode = LL_EXTI_MODE_IT;
             EXTI_InitStruct.Trigger = edge;
@@ -75,9 +78,17 @@ struct Gpio: public Peripheral< GPIO_TypeDef > {
                 : EXTI4_15_IRQn;
             NVIC_SetPriority( irq, 1 );
             NVIC_EnableIRQ( irq );
+            return *this;
+        }
+
+        Pin invert() {
+            _invert = true;
+            return *this;
         }
 
         bool read() {
+            if ( _invert )
+                return !LL_GPIO_IsInputPinSet( _periph, 1 << _pos );
             return LL_GPIO_IsInputPinSet( _periph, 1 << _pos );
         }
 
@@ -90,6 +101,7 @@ struct Gpio: public Peripheral< GPIO_TypeDef > {
 
         int _pos;
         GPIO_TypeDef *_periph;
+        bool _invert = false;
     };
 
     void enableClock() {
