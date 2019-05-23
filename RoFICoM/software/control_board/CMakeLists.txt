@@ -39,5 +39,5 @@ add_custom_command(TARGET ${PROJECT_NAME}.elf POST_BUILD
         COMMENT "Building ${HEX_FILE} \nBuilding ${BIN_FILE}")
 
 add_custom_target(flash
-    COMMAND st-flash --format ihex write ${HEX_FILE}
+    COMMAND ${CMAKE_SOURCE_DIR}/tools/flashAll.sh --format ihex write ${HEX_FILE}
     DEPENDS ${HEX_FILE})
