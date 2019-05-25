@@ -28,7 +28,7 @@ class AlgorithmPartialConfiguration : public DistributedModule {
 public:
     AlgorithmPartialConfiguration(unsigned int id, std::ifstream &inStream, std::ifstream &trgStream);
 
-    void reconfigurate();
+    bool reconfigurate();
 
 private:
     Matrix matrixA;

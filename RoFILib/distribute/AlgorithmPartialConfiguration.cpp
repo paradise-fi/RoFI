@@ -9,7 +9,7 @@ AlgorithmPartialConfiguration::AlgorithmPartialConfiguration(unsigned int id, st
 
 }
 
-void AlgorithmPartialConfiguration::reconfigurate() {
+bool AlgorithmPartialConfiguration::reconfigurate() {
     if (currModule.getId() == 0) {
         matrixA = identity;
         matrixAInit = true;
@@ -29,7 +29,7 @@ void AlgorithmPartialConfiguration::reconfigurate() {
     while (!endOfReconfig) {
         if (indexOfAction >= 6 * 2 + 3) {
             //no step is available - TODO try heuristic
-            return;
+            return false;
         }
 
         bool executed = false;
@@ -67,6 +67,8 @@ void AlgorithmPartialConfiguration::reconfigurate() {
         endOfReconfig = !someNeedReconfig;
         firstRound = false;
     }
+
+    return true;
 }
 
 void AlgorithmPartialConfiguration::shareCoordinates() {

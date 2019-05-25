@@ -16,7 +16,7 @@ public:
     std::string toStringCurrConfiguration(int step) const;
     std::string toStringTrgConfiguration(int step) const;
 
-    void reconfigurate();
+    void reconfigurate(EvalFunction *eval);
 
 private:
     Configuration currConfiguration;

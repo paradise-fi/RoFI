@@ -17,11 +17,13 @@ std::string AlgorithmFullConfiguration::toStringTrgConfiguration(int step) const
     return DistributedPrinter::toString(trgConfiguration, step);
 }
 
-void AlgorithmFullConfiguration::reconfigurate() {
+void AlgorithmFullConfiguration::reconfigurate(EvalFunction *eval) {
     shareCurrConfigurations();
     shareTrgConfigurations();
 
-    auto generatePath = AStar(currConfiguration, trgConfiguration, 90, 1, Eval::actionDiff);
+    currConfiguration.computeMatrices();
+    trgConfiguration.computeMatrices();
+    auto generatePath = AStar(currConfiguration, trgConfiguration, 90, 1, *eval);
     std::vector<Action> generatedActions = createDiffs(generatePath);
     optimizePath(generatedActions);
 
