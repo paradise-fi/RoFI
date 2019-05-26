@@ -6,6 +6,72 @@
 #include <map>
 #include <fstream>
 #include "../../IO.h"
+#include "../../cxxopts.hpp"
+
+
+std::string dir, init, goal;
+
+void parse(int argc, char* argv[])
+{
+    cxxopts::Options options("rofi-distribute-preprocessing", "RoFI Distributed Preprocessing: Tool for preparing files for distrbuted reconfiguration. ");
+    options.positional_help("[optional args]").show_positional_help();
+
+    options.add_options()
+            ("h,help", "Print help")
+            ("i,init", "Initial configuration file", cxxopts::value<std::string>())
+            ("g,goal", "Goal configuration file", cxxopts::value<std::string>())
+            ("d,directory", "Directory for module's configs", cxxopts::value<std::string>())
+            ;
+
+    try {
+        auto result = options.parse(argc, argv);
+
+        if (result.count("help")) {
+            std::cout << options.help({"", "Group"}) << std::endl;
+            exit(0);
+        }
+
+        if (result.count("init") == 1) {
+            init = result["init"].as< std::string >();
+            std::ifstream initInput;
+            initInput.open(init);
+            if (!initInput.good()) {
+                std::cerr << "Could not open file " << init << std::endl;
+                exit(0);
+            }
+
+            initInput.close();
+        } else {
+            std::cerr << "There must be exactly one '-i' or '--init' option." << std::endl;
+            exit(0);
+        }
+
+        if (result.count("goal") == 1) {
+            goal = result["goal"].as< std::string >();
+            std::ifstream goalInput;
+            goalInput.open(goal);
+            if (!goalInput.good()) {
+                std::cerr << "Could not open file " << goal << std::endl;
+                exit(0);
+            }
+
+            goalInput.close();
+        } else {
+            std::cerr << "There must be exactly one '-g' or '--goal' option." << std::endl;
+            exit(0);
+        }
+
+        if (result.count("directory") == 1) {
+            dir = result["directory"].as< std::string >();
+        } else {
+            std::cerr << "There must be exactly one '-d' or '--directory' option." << std::endl;
+            exit(0);
+        }
+    } catch (cxxopts::OptionException& e) {
+        std::cerr << e.what() << std::endl;
+        exit(0);
+    }
+}
 
 void printEdges(const Configuration &cfg, const std::string &tmpDirectory
         , const std::map<unsigned int, unsigned int> &idMap, const std::string &extension) {
@@ -79,16 +145,13 @@ unsigned long preprocessOutputFile(const std::string &outFile, const std::string
 }
 
 int main(int argc, char **argv) {
-    if (argc != 6) {
-        std::cout << "Input files or directory is missing. " << std::endl;
-        return 1;
-    }
+    parse(argc, argv);
 
-    const std::string fileNameIn = argv[1];
-    const std::string fileNameOut = argv[2];
-    const std::string tmpDirectory = argv[3];
-    const std::string tmpCount = argv[4];
-    const std::string tmpDictionary = argv[5];
+    const std::string fileNameIn = init;
+    const std::string fileNameOut = goal;
+    const std::string tmpDirectory = dir;
+    const std::string tmpCount = dir + "/count";
+    const std::string tmpDictionary = dir + "/dictionary";
 
     std::map<unsigned int, unsigned int> idMap;
 

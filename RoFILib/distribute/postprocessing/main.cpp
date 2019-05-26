@@ -4,18 +4,72 @@
 
 #include <iostream>
 #include "postprocessing.h"
+#include "../../cxxopts.hpp"
+
+std::string dic, init;
+
+void parse(int argc, char* argv[])
+{
+    cxxopts::Options options("rofi-distribute-postprocessing", "RoFI Distributed Postprocessing: Tool for processing given temporary timestamped file to a sequence of configurations. ");
+    options.positional_help("[optional args]").show_positional_help();
+
+    options.add_options()
+            ("h,help", "Print help")
+            ("t,dictionary", "Dictionary file", cxxopts::value<std::string>())
+            ("i,init", "File with timestamped actions", cxxopts::value<std::string>())
+            ;
+
+    try {
+        auto result = options.parse(argc, argv);
+
+        if (result.count("help")) {
+            std::cout << options.help({"", "Group"}) << std::endl;
+            exit(0);
+        }
+
+        if (result.count("init") == 1) {
+            init = result["init"].as< std::string >();
+            std::ifstream initInput;
+            initInput.open(init);
+            if (!initInput.good()) {
+                std::cerr << "Could not open file " << init << std::endl;
+                exit(0);
+            }
+
+            initInput.close();
+        } else {
+            std::cerr << "There must be exactly one '-i' or '--init' option." << std::endl;
+            exit(0);
+        }
+
+        if (result.count("dictionary") == 1) {
+            dic = result["dictionary"].as< std::string >();
+            std::ifstream file;
+            file.open(dic);
+            if (!file.good()) {
+                std::cerr << "Could not open file " << dic << std::endl;
+                exit(0);
+            }
+
+            file.close();
+        } else {
+            std::cerr << "There must be exactly one '-t' or '--dictionary' option." << std::endl;
+            exit(0);
+        }
+    } catch (cxxopts::OptionException& e) {
+        std::cerr << e.what() << std::endl;
+        exit(0);
+    }
+}
 
 int main(int argc, char **argv) {
-    if (argc != 3) {
-        std::cout << "Input files are missing. " << std::endl;
-        return 1;
-    }
+    parse(argc, argv);
 
-    const std::string fileNameIn = argv[1];
+    const std::string fileNameIn = init;
     std::map<int, int> idMap;
 
     std::ifstream file;
-    file.open(argv[2]);
+    file.open(dic);
     std::string s;
     while (getline(file, s)) {
         if (s.empty()) {
