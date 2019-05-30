@@ -71,7 +71,14 @@ private:
 
     template < typename... Args >
     void _error( const char *fmt, Args...args ) {
-        _info( fmt, args... );
+        _writer.abort();
+        _txBusy = false;
+
+        char buffer[ 130 ];
+        int size = snprintf( buffer, 128, fmt, args... );
+        buffer[ size ] = '\n';
+        buffer[ size + 1 ] = 0;
+        _uart.send( buffer );
     }
 
     template < typename... Args >
