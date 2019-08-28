@@ -1,4 +1,7 @@
 cmake_minimum_required(VERSION 3.13)
+
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../releng/cmake")
+
 project(rofi)
 
 set(CMAKE_CXX_STANDARD 17)
@@ -19,3 +22,4 @@ add_subdirectory(generate)
 add_subdirectory(reconfig)
 add_subdirectory(visualizer)
 add_subdirectory(util)
+add_subdirectory(smtreconfig)
