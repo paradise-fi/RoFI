@@ -5,8 +5,8 @@
 #ifndef ROFI_DISTRIBUTEDPRINTER_H
 #define ROFI_DISTRIBUTEDPRINTER_H
 
-#include "../Configuration.h"
-#include "../IO.h"
+#include <Configuration.h>
+#include <IO.h>
 
 class DistributedPrinter {
 public:

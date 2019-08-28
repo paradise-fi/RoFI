@@ -8,7 +8,7 @@
 
 #include "AlgorithmFullConfiguration.h"
 #include "AlgorithmPartialConfiguration.h"
-#include "../cxxopts.hpp"
+#include <cxxopts.hpp>
 
 enum Algo {
     Full,

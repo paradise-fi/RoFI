@@ -5,8 +5,8 @@
 #ifndef ROBOTS_BFS_H
 #define ROBOTS_BFS_H
 
-#include "../Configuration.h"
-#include "../IO.h"
+#include <Configuration.h>
+#include <IO.h>
 #include <queue>
 #include <cmath>
 #include <memory>

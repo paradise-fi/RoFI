@@ -6,7 +6,6 @@
 #define ROFI_IO_H
 
 #include "Configuration.h"
-#include "visualizer/Camera.h"
 #include <sstream>
 #include <iomanip>
 
@@ -258,54 +257,6 @@ namespace IO
 
         return {rotations, reconnections};
     }
-
-// Reading camera settings: used for visualization.
-
-    inline void readCameraSettings(std::istream &input, Camera &cameraStart, Camera &cameraEnd, bool &cameraMove)
-    {
-        std::string line;
-        while (getline(input, line)) {
-            if (line[0] != 'C' && !line.empty()) {     //not for camera settings
-                throw std::runtime_error("Expected camera settings (CP, CPM, CF, CFM, CV, CVM), got " + line + ".");
-            }
-            std::stringstream str(line);
-            std::string type;
-            str >> type;
-            double xs, ys, zs, xe, ye, ze;
-            if (type == "CP") {          //camera position
-                str >> xs >> ys >> zs;
-                cameraStart.setPos(xs, ys, zs);
-                cameraEnd.setPos(xs, ys, zs);
-            } else if (type == "CV") {   //camera viewUp
-                str >> xs >> ys >> zs;
-                cameraStart.setView(xs, ys, zs);
-                cameraEnd.setView(xs, ys, zs);
-            } else if (type == "CF") {   //camera focal point
-                str >> xs >> ys >> zs;
-                cameraStart.setFoc(xs, ys, zs);
-                cameraEnd.setFoc(xs, ys, zs);
-            } else if (type == "CPM") {  //camera position move
-                str >> xs >> xe >> ys >> ye >> zs >> ze;
-                cameraStart.setPos(xs, ys, zs);
-                cameraEnd.setPos(xe, ye, ze);
-                cameraMove = true;
-            } else if (type == "CVM") {  //camera viewUp move
-                str >> xs >> xe >> ys >> ye >> zs >> ze;
-                cameraStart.setView(xs, ys, zs);
-                cameraEnd.setView(xe, ye, ze);
-                cameraMove = true;
-            } else if (type == "CFM") {  //camera focal point move
-                str >> xs >> xe >> ys >> ye >> zs >> ze;
-                cameraStart.setFoc(xs, ys, zs);
-                cameraEnd.setFoc(xe, ye, ze);
-                cameraMove = true;
-            }
-            else if (!type.empty()){
-                throw std::runtime_error("Expected camera settings (CP, CPM, CF, CFM, CV, CVM), got " + type + ".");
-            }
-        }
-    }
-
 
 /* MATRIX TO STRING
  * Mostly for debug purposes */

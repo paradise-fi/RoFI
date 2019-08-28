@@ -5,7 +5,7 @@
 #ifndef ROFI_ANIMATOR_H
 #define ROFI_ANIMATOR_H
 
-#include "../Configuration.h"
+#include <Configuration.h>
 #include "Generator.h"
 #include "Visualizer.h"
 #include <vector>

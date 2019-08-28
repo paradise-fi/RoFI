@@ -1,0 +1,20 @@
+cmake_minimum_required(VERSION 3.10)
+project(rofi)
+
+set(CMAKE_CXX_STANDARD 17)
+
+if(${LIBCXX})
+    set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++")
+endif(${LIBCXX})
+
+add_executable(rofi-reconfig main.cpp)
+target_link_libraries(rofi-reconfig configuration)
+target_include_directories(rofi-reconfig PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/)
+
+add_library(reconfig INTERFACE)
+target_include_directories(reconfig INTERFACE .)
+target_link_libraries(reconfig INTERFACE configuration)
+
+add_executable(reconfig-test test/main.cpp test/test.cpp)
+target_link_libraries(reconfig-test configuration reconfig)
+target_include_directories(reconfig-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/)

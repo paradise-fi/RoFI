@@ -3,9 +3,8 @@
 //
 
 #include <cassert>
-#include "../Configuration.h"
-#include "../IO.h"
-#include "../reconfig/Algorithms.h"
+#include <Configuration.h>
+#include <IO.h>
 #include <chrono>
 
 using namespace IO;

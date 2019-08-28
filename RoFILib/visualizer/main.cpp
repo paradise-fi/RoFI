@@ -3,8 +3,8 @@
 #include <string_view>
 #include "Visualizer.h"
 #include "Animator.h"
-#include "../cxxopts.hpp"
-#include "../IO.h"
+#include <cxxopts.hpp>
+#include <IO.h>
 
 using namespace IO;
 //using Resolution = std::pair<int, int>;

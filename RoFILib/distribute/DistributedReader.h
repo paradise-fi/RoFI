@@ -5,7 +5,7 @@
 #ifndef ROFI_DISTRIBUTEDREADER_H
 #define ROFI_DISTRIBUTEDREADER_H
 
-#include "../IO.h"
+#include <IO.h>
 #include "DistributedModuleProperties.h"
 
 class DistributedReader {

@@ -5,8 +5,8 @@
 #include <iostream>
 #include <map>
 #include <fstream>
-#include "../../IO.h"
-#include "../../cxxopts.hpp"
+#include <IO.h>
+#include <cxxopts.hpp>
 
 
 std::string dir, init, goal;

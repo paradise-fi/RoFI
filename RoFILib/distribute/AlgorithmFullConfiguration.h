@@ -6,7 +6,7 @@
 #define ROFI_ALGORITHMFULLCONFIGURATION_H
 
 
-#include "../reconfig/Algorithms.h"
+#include <Algorithms.h>
 #include "DistributedModule.h"
 
 class AlgorithmFullConfiguration : public DistributedModule {

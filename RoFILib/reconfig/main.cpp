@@ -1,7 +1,7 @@
 #include <fstream>
-#include "../cxxopts.hpp"
-#include "../Configuration.h"
-#include "../IO.h"
+#include <cxxopts.hpp>
+#include <Configuration.h>
+#include <IO.h>
 #include "Algorithms.h"
 
 using namespace IO;

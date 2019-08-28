@@ -5,8 +5,8 @@
 #ifndef ROFI_POSTPROCESSING_H
 #define ROFI_POSTPROCESSING_H
 
-#include "../../Configuration.h"
-#include "../../IO.h"
+#include <Configuration.h>
+#include <IO.h>
 #include "../DistributedReader.h"
 
 class Postprocessing {

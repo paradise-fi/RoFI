@@ -1,30 +1,33 @@
-all: visualizer
-test: visualizer_test
+all: rofilib.gcc rofilib.clang
+test: rofilib_test
 
-all.clang: visualizer.clang
-test.clang: visualizer_test.clang
+all.clang: rofilib.clang
+test.clang: rofilib_test.clang
 clean.clang:
 	rm -rf _build.clang
 
-all.gcc: visualizer.gcc
-test.gcc: visualizer_test.gcc
+all.gcc: rofilib.gcc
+test.gcc: rofilib_test.gcc
 clean.gcc:
 	rm -rf _build.gcc
 
-visualizer.gcc:
-	mkdir -p _build.gcc/visualizer
-	cd _build.gcc/visualizer; \
+rofilib.gcc:
+	mkdir -p _build.gcc/rofilib
+	cd _build.gcc/rofilib; \
 	cmake ../../RoFILib/; \
 	make
 
-visualizer.clang:
-	mkdir -p _build.clang/visualizer
-	cd _build.clang/visualizer; \
+rofilib.clang:
+	mkdir -p _build.clang/rofilib
+	cd _build.clang/rofilib; \
 	CXX=clang++ CC=clang cmake ../../RoFILib/ -DLIBCXX=1; \
 	make
 
-visualizer_test.gcc: visualizer.gcc
-	cd _build.gcc/visualizer; ./rofi-test
+rofilib_test.gcc: rofilib.gcc
+	cd _build.gcc/rofilib/visualizer; ./rofi-vis-test
+	cd _build.gcc/rofilib/reconfig; ./reconfig-test
 
-visualizer_test.clang: visualizer.clang
-	cd _build.clang/visualizer; ./rofi-test
+
+rofilib_test.clang: rofilib.clang
+	cd _build.clang/rofilib/visualizer; ./rofi-vis-test
+	cd _build.gcc/rofilib/reconfig; ./reconfig-test

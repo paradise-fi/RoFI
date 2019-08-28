@@ -5,7 +5,7 @@
 #ifndef ROFI_DISTRIBUTEDMODULEPROPERTIES_H
 #define ROFI_DISTRIBUTEDMODULEPROPERTIES_H
 
-#include "../Configuration.h"
+#include <Configuration.h>
 
 class DistributedModuleProperties : public Module {
 public:

@@ -22,7 +22,7 @@
 #include <vtkAxesActor.h>
 #include <vtkWindowToImageFilter.h>
 #include <vtkPNGWriter.h>
-#include "../Configuration.h"
+#include <Configuration.h>
 #include "Camera.h"
 #include <sstream>
 

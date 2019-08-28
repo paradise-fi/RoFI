@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include "postprocessing.h"
-#include "../../cxxopts.hpp"
+#include <cxxopts.hpp>
 
 std::string dic, init;
 
