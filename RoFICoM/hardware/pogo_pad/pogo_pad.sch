@@ -1,5 +1,6 @@
 EESchema Schematic File Version 4
-EELAYER 26 0
+LIBS:pogo_pad-cache
+EELAYER 29 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -118,4 +119,30 @@ Text GLabel 3950 3850 0    50   Input ~ 0
 8
 Text GLabel 3950 3950 0    50   Input ~ 0
 9
+Text GLabel 6600 3400 0    50   Input ~ 0
+3
+Text GLabel 7100 3400 2    50   Input ~ 0
+4
+Text GLabel 6600 3500 0    50   Input ~ 0
+5
+Text GLabel 7100 3500 2    50   Input ~ 0
+7
+Text GLabel 6600 3600 0    50   Input ~ 0
+6
+NoConn ~ 7100 3600
+Text GLabel 6600 3700 0    50   Input ~ 0
+2
+Text GLabel 7100 3700 2    50   Input ~ 0
+1
+$Comp
+L Connector_Generic:Conn_02x04_Odd_Even J4
+U 1 1 5D6FDCDA
+P 6800 3500
+F 0 "J4" H 6850 3817 50  0000 C CNN
+F 1 "Molex" H 6850 3726 50  0000 C CNN
+F 2 "rofi:molex-505004-0812" H 6800 3500 50  0001 C CNN
+F 3 "~" H 6800 3500 50  0001 C CNN
+	1    6800 3500
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC
