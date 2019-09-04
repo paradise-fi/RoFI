@@ -20,7 +20,7 @@ U 1 1 5C124CC6
 P 5150 4150
 F 0 "J1" H 5250 4800 50  0000 C CNN
 F 1 "Cable" H 5250 4700 50  0000 C CNN
-F 2 "rofi:flat_cable_9" H 5150 4150 50  0001 C CNN
+F 2 "rofi:flat_cable_9_smd" H 5150 4150 50  0001 C CNN
 F 3 "~" H 5150 4150 50  0001 C CNN
 	1    5150 4150
 	1    0    0    -1  
