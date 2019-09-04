@@ -1,2 +1,7 @@
 AvrDock.bak
 _build*
+
+# VSCode
+**/.vscode/
+!**/.vscode/launch.json
+!**/.vscode/c_cpp_properties.json
