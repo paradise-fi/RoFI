@@ -32,8 +32,9 @@ public:
     }
 
     void sendBlob( Block blob ) {
+        assert( blob.get() );
         Defer::job([&, b = std::move( blob )]() mutable {
-            int length = blobLen( blob );
+            int length = blobLen( b );
             uint32_t crc = Crc::compute( blobBody( b ), length );
             crcField( b ) = crc;
             _outQueue.push_back( std::move( b ) );
@@ -79,6 +80,10 @@ private:
                     return;
                 }
                 uint16_t length = blobLen( b );
+                if ( length > BLOB_LIMIT ) {
+                    _receiveFrame();
+                    return;
+                }
                 _reader.readBlock( std::move( b ), BLOB_HEADER_SIZE, length + CRC_SIZE, _timeout,
                     [&]( Block b, int s ) {
                         _onNewBlob( std::move( b ), s );

@@ -197,14 +197,12 @@ struct CsOn: public PinCfg< CsOn > {
         _pin.setupInterrupt( LL_EXTI_TRIGGER_RISING_FALLING, [periph]( bool rising ) {
             if ( rising ) {
                 // Transaction ends
-                SPI1->CR1 |= SPI_CR1_SSI;
-                LL_SPI_SetNSSMode( periph, LL_SPI_NSS_HARD_INPUT );
+                LL_SPI_Disable( periph );
                 Spi::handlers( periph )._onEnd();
             }
             else {
                 // Transaction begins
-                SPI1->CR1 &= ~SPI_CR1_SSI;
-                LL_SPI_SetNSSMode( periph, LL_SPI_NSS_SOFT );
+                LL_SPI_Enable( periph );
                 Spi::handlers( periph )._onBegin();
             }
         });

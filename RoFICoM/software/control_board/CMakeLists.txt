@@ -27,7 +27,7 @@ add_executable(${PROJECT_NAME}.elf ${SRC})
 set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CXX_STANDARD 17)
 target_include_directories(${PROJECT_NAME}.elf PRIVATE src ${CMAKE_SOURCE_DIR}/lib)
 target_compile_options(${PROJECT_NAME}.elf PRIVATE -Wall -Wextra -pedantic -funwind-tables)
-target_link_options(${PROJECT_NAME}.elf PRIVATE "-Wl,-Map=${PROJECT_NAME}.map,--cref" "-Wl,--print-memory-usage" "-funwind-tables")
+target_link_options(${PROJECT_NAME}.elf PRIVATE "-Wl,-Map=${PROJECT_NAME}.map,--cref" "-Wl,--print-memory-usage" "-funwind-tables" "-fasynchronous-unwind-tables")
 target_link_libraries(${PROJECT_NAME}.elf PRIVATE stm32_hal function2)
 # set_target_properties(${PROJECT_NAME}.elf PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
 

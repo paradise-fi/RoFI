@@ -21,8 +21,8 @@ using Block = memory::Pool::Block;
 
 void onCmdVersion( SpiInterface& interf ) {
     auto block = memory::Pool::allocate( 4 );
-    viewAs< uint16_t >( block.get() ) = 1;
-    viewAs< uint16_t >( block.get() + 2 ) = 0;
+    viewAs< uint16_t >( block.get() ) = 42;
+    viewAs< uint16_t >( block.get() + 2 ) = 1;
     interf.sendBlock( std::move( block ), 4 );
 }
 
@@ -37,11 +37,8 @@ void onCmdStatus( SpiInterface& interf, Block /*header*/, ConnInterface& connInt
 }
 
 void onCmdInterrupt( SpiInterface& interf, Block /*header*/ ) {
-    Defer::job( []{
-        Dbg::info( "Interrupt command" );
-    } );
     auto block = memory::Pool::allocate( 2 );
-    memset( block.get(), 0, 2 );
+    viewAs< uint16_t >( block.get() ) = 0;
     interf.sendBlock( std::move( block ), 2 );
 }
 
@@ -71,6 +68,7 @@ int main() {
     HAL_Init();
 
     Dbg::info( "Main clock: %d", SystemCoreClock );
+    HAL_Delay( 100 );
 
     Timer timer( TIM1, FreqAndRes( 1000, 2000 ) );
     auto pwm = timer.pwmChannel( LL_TIM_CHANNEL_CH1 );
@@ -100,7 +98,6 @@ int main() {
     using Command = SpiInterface::Command;
     SpiInterface spiInterface( std::move( spi ),
         [&]( Command cmd, Block b ) {
-            // Dbg::info( "Command %d", cmd );
             switch( cmd ) {
             case Command::VERSION:
                 onCmdVersion( spiInterface );
@@ -121,7 +118,6 @@ int main() {
                 Dbg::warning( "Unkwnown command %d", cmd );
             };
         } );
-
     while ( true ) {
         slider.run();
         if ( Dbg::available() ) {

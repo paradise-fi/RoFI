@@ -415,6 +415,10 @@ public:
         LL_DMA_EnableChannel( DMA1, _channel );
     }
 
+    void abort() {
+        LL_DMA_DisableChannel( DMA1, _channel );
+    }
+
 private:
     Uart& _uart;
     Dma::Channel _channel;

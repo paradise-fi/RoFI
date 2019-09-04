@@ -74,8 +74,8 @@ private:
         _writer.abort();
         _txBusy = false;
 
-        char buffer[ 130 ];
-        int size = snprintf( buffer, 128, fmt, args... );
+        static char buffer[ 512 ];
+        int size = snprintf( buffer, 510, fmt, args... );
         buffer[ size ] = '\n';
         buffer[ size + 1 ] = 0;
         _uart.send( buffer );
