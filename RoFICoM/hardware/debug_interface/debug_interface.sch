@@ -1,0 +1,299 @@
+EESchema Schematic File Version 4
+LIBS:debug_interface-cache
+EELAYER 29 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Connector_Generic:Conn_02x05_Odd_Even J?
+U 1 1 5D70D7AA
+P 3100 3550
+F 0 "J?" H 3150 3967 50  0000 C CNN
+F 1 "ST-Link A" H 3150 3876 50  0000 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_2x05_P2.54mm_Vertical" H 3100 3550 50  0001 C CNN
+F 3 "~" H 3100 3550 50  0001 C CNN
+	1    3100 3550
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector_Generic:Conn_02x05_Odd_Even J?
+U 1 1 5D70EB6E
+P 4650 3550
+F 0 "J?" H 4700 3967 50  0000 C CNN
+F 1 "ST-Link B" H 4700 3876 50  0000 C CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_2x05_P2.54mm_Vertical" H 4650 3550 50  0001 C CNN
+F 3 "~" H 4650 3550 50  0001 C CNN
+	1    4650 3550
+	1    0    0    -1  
+$EndComp
+Text GLabel 2900 3350 0    50   Input ~ 0
+RST
+$Comp
+L power:GND #PWR?
+U 1 1 5D710173
+P 2900 3550
+F 0 "#PWR?" H 2900 3300 50  0001 C CNN
+F 1 "GND" V 2905 3422 50  0000 R CNN
+F 2 "" H 2900 3550 50  0001 C CNN
+F 3 "" H 2900 3550 50  0001 C CNN
+	1    2900 3550
+	0    1    1    0   
+$EndComp
+$Comp
+L power:+3.3V #PWR?
+U 1 1 5D71045C
+P 2900 3650
+F 0 "#PWR?" H 2900 3500 50  0001 C CNN
+F 1 "+3.3V" V 2915 3778 50  0000 L CNN
+F 2 "" H 2900 3650 50  0001 C CNN
+F 3 "" H 2900 3650 50  0001 C CNN
+	1    2900 3650
+	0    -1   -1   0   
+$EndComp
+Text GLabel 3400 3350 2    50   Input ~ 0
+SWCLK
+Text GLabel 3400 3450 2    50   Input ~ 0
+SWDIO
+$Comp
+L power:GND #PWR?
+U 1 1 5D711272
+P 3400 3550
+F 0 "#PWR?" H 3400 3300 50  0001 C CNN
+F 1 "GND" V 3405 3422 50  0000 R CNN
+F 2 "" H 3400 3550 50  0001 C CNN
+F 3 "" H 3400 3550 50  0001 C CNN
+	1    3400 3550
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:+3.3V #PWR?
+U 1 1 5D711F17
+P 3400 3650
+F 0 "#PWR?" H 3400 3500 50  0001 C CNN
+F 1 "+3.3V" V 3415 3778 50  0000 L CNN
+F 2 "" H 3400 3650 50  0001 C CNN
+F 3 "" H 3400 3650 50  0001 C CNN
+	1    3400 3650
+	0    1    1    0   
+$EndComp
+Text GLabel 4450 3350 0    50   Input ~ 0
+RST
+$Comp
+L power:GND #PWR?
+U 1 1 5D713706
+P 4450 3450
+F 0 "#PWR?" H 4450 3200 50  0001 C CNN
+F 1 "GND" V 4455 3322 50  0000 R CNN
+F 2 "" H 4450 3450 50  0001 C CNN
+F 3 "" H 4450 3450 50  0001 C CNN
+	1    4450 3450
+	0    1    1    0   
+$EndComp
+$Comp
+L power:+3.3V #PWR?
+U 1 1 5D713D24
+P 4450 3650
+F 0 "#PWR?" H 4450 3500 50  0001 C CNN
+F 1 "+3.3V" V 4465 3778 50  0000 L CNN
+F 2 "" H 4450 3650 50  0001 C CNN
+F 3 "" H 4450 3650 50  0001 C CNN
+	1    4450 3650
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:+3.3V #PWR?
+U 1 1 5D71427D
+P 4950 3650
+F 0 "#PWR?" H 4950 3500 50  0001 C CNN
+F 1 "+3.3V" V 4965 3778 50  0000 L CNN
+F 2 "" H 4950 3650 50  0001 C CNN
+F 3 "" H 4950 3650 50  0001 C CNN
+	1    4950 3650
+	0    1    1    0   
+$EndComp
+Text GLabel 4950 3350 2    50   Input ~ 0
+SWDIO
+Text GLabel 4950 3550 2    50   Input ~ 0
+SWCLK
+$Comp
+L power:GND #PWR?
+U 1 1 5D7149B9
+P 4950 3450
+F 0 "#PWR?" H 4950 3200 50  0001 C CNN
+F 1 "GND" V 4955 3322 50  0000 R CNN
+F 2 "" H 4950 3450 50  0001 C CNN
+F 3 "" H 4950 3450 50  0001 C CNN
+	1    4950 3450
+	0    -1   -1   0   
+$EndComp
+NoConn ~ 4950 3750
+NoConn ~ 4450 3750
+NoConn ~ 4450 3550
+NoConn ~ 3400 3750
+NoConn ~ 2900 3750
+NoConn ~ 2900 3450
+Text Notes 2650 4050 0    50   ~ 0
+Note: There are two pinout of cheap ST-Links, break out both of them
+$Comp
+L Connector_Generic:Conn_02x04_Odd_Even J4
+U 1 1 5D6FDCDA
+P 6800 3500
+F 0 "J4" H 6850 3817 50  0000 C CNN
+F 1 "RoFICoM" H 6850 3726 50  0000 C CNN
+F 2 "rofi:molex-505004-0812" H 6800 3500 50  0001 C CNN
+F 3 "~" H 6800 3500 50  0001 C CNN
+	1    6800 3500
+	1    0    0    -1  
+$EndComp
+Text GLabel 6600 3500 0    50   Input ~ 0
+RST
+Text GLabel 6600 3600 0    50   Input ~ 0
+SWDIO
+$Comp
+L power:GND #PWR?
+U 1 1 5D71B150
+P 6600 3700
+F 0 "#PWR?" H 6600 3450 50  0001 C CNN
+F 1 "GND" V 6605 3572 50  0000 R CNN
+F 2 "" H 6600 3700 50  0001 C CNN
+F 3 "" H 6600 3700 50  0001 C CNN
+	1    6600 3700
+	0    1    1    0   
+$EndComp
+$Comp
+L power:+3.3V #PWR?
+U 1 1 5D71B51F
+P 7100 3400
+F 0 "#PWR?" H 7100 3250 50  0001 C CNN
+F 1 "+3.3V" V 7115 3528 50  0000 L CNN
+F 2 "" H 7100 3400 50  0001 C CNN
+F 3 "" H 7100 3400 50  0001 C CNN
+	1    7100 3400
+	0    1    1    0   
+$EndComp
+Text GLabel 7100 3500 2    50   Input ~ 0
+TX
+Text GLabel 7100 3600 2    50   Input ~ 0
+RX
+Text GLabel 7100 3700 2    50   Input ~ 0
+SWCLK
+$Comp
+L power:VCC #PWR?
+U 1 1 5D71C141
+P 6600 3400
+F 0 "#PWR?" H 6600 3250 50  0001 C CNN
+F 1 "VCC" V 6618 3527 50  0000 L CNN
+F 2 "" H 6600 3400 50  0001 C CNN
+F 3 "" H 6600 3400 50  0001 C CNN
+	1    6600 3400
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x05 J?
+U 1 1 5D725884
+P 4350 4850
+F 0 "J?" H 4430 4892 50  0000 L CNN
+F 1 "UART" H 4430 4801 50  0000 L CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x05_P2.54mm_Vertical" H 4350 4850 50  0001 C CNN
+F 3 "~" H 4350 4850 50  0001 C CNN
+	1    4350 4850
+	1    0    0    -1  
+$EndComp
+Text GLabel 4150 5050 0    50   Input ~ 0
+TX
+Text GLabel 4150 4950 0    50   Input ~ 0
+RX
+$Comp
+L power:GND #PWR?
+U 1 1 5D7267C4
+P 4150 4650
+F 0 "#PWR?" H 4150 4400 50  0001 C CNN
+F 1 "GND" V 4155 4522 50  0000 R CNN
+F 2 "" H 4150 4650 50  0001 C CNN
+F 3 "" H 4150 4650 50  0001 C CNN
+	1    4150 4650
+	0    1    1    0   
+$EndComp
+$Comp
+L power:VCC #PWR?
+U 1 1 5D726BE8
+P 4150 4850
+F 0 "#PWR?" H 4150 4700 50  0001 C CNN
+F 1 "VCC" V 4168 4977 50  0000 L CNN
+F 2 "" H 4150 4850 50  0001 C CNN
+F 3 "" H 4150 4850 50  0001 C CNN
+	1    4150 4850
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:+3.3V #PWR?
+U 1 1 5D726F27
+P 4150 4750
+F 0 "#PWR?" H 4150 4600 50  0001 C CNN
+F 1 "+3.3V" V 4165 4878 50  0000 L CNN
+F 2 "" H 4150 4750 50  0001 C CNN
+F 3 "" H 4150 4750 50  0001 C CNN
+	1    4150 4750
+	0    -1   -1   0   
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x06 J?
+U 1 1 5D727C08
+P 5300 4800
+F 0 "J?" H 5380 4792 50  0000 L CNN
+F 1 "ST-Link" H 5380 4701 50  0000 L CNN
+F 2 "Connector_PinSocket_2.54mm:PinSocket_1x06_P2.54mm_Vertical" H 5300 4800 50  0001 C CNN
+F 3 "~" H 5300 4800 50  0001 C CNN
+	1    5300 4800
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR?
+U 1 1 5D728F3F
+P 5100 4600
+F 0 "#PWR?" H 5100 4350 50  0001 C CNN
+F 1 "GND" V 5105 4472 50  0000 R CNN
+F 2 "" H 5100 4600 50  0001 C CNN
+F 3 "" H 5100 4600 50  0001 C CNN
+	1    5100 4600
+	0    1    1    0   
+$EndComp
+$Comp
+L power:+3.3V #PWR?
+U 1 1 5D72958C
+P 5100 4700
+F 0 "#PWR?" H 5100 4550 50  0001 C CNN
+F 1 "+3.3V" V 5115 4828 50  0000 L CNN
+F 2 "" H 5100 4700 50  0001 C CNN
+F 3 "" H 5100 4700 50  0001 C CNN
+	1    5100 4700
+	0    -1   -1   0   
+$EndComp
+$Comp
+L power:VCC #PWR?
+U 1 1 5D729974
+P 5100 4800
+F 0 "#PWR?" H 5100 4650 50  0001 C CNN
+F 1 "VCC" V 5118 4927 50  0000 L CNN
+F 2 "" H 5100 4800 50  0001 C CNN
+F 3 "" H 5100 4800 50  0001 C CNN
+	1    5100 4800
+	0    -1   -1   0   
+$EndComp
+Text GLabel 5100 5000 0    50   Input ~ 0
+SWDIO
+Text GLabel 5100 5100 0    50   Input ~ 0
+SWCLK
+Text GLabel 5100 4900 0    50   Input ~ 0
+RST
+$EndSCHEMATC
