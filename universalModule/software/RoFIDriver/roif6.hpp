@@ -1,5 +1,7 @@
 #pragma once
 
+#define LWIPP_ND6_ALLOW_RA_UPDATES 0
+
 #include <lwip/def.h>
 #include <lwip/err.h>
 #include <lwip/netif.h>
@@ -70,8 +72,13 @@ public:
 	{}
 
 	struct Entry {
-		Ip6Addr addr;
+		Ip6Addr addr[ LWIP_IPV6_NUM_ADDRESSES ];
 		PhysAddr guid;
+
+		Entry ( const Ip6Addr& addr, const PhysAddr& guid )
+			: addr{ "::", addr, "::" }
+			, guid(guid) 
+		{}
 
 		static int size() { return Ip6Addr::size() + PhysAddr::size(); }
 	};
@@ -92,16 +99,26 @@ public:
 		as< Command >( p.payload() + 0 ) = Command::Response;
 		as< uint8_t >( p.payload() + 1 ) = Ip6Addr::size();
 		as< uint8_t >( p.payload() + 2 ) = PhysAddr::size();
+		as< uint8_t >( p.payload() + 3 ) = LWIP_IPV6_NUM_ADDRESSES;
 		auto dataField = p.payload() + 4;
-		as< Ip6Addr >( dataField ) = _self.addr;
-		as< PhysAddr >( dataField + Ip6Addr::size() ) = _self.guid;
-		dataField += Ip6Addr::size() + PhysAddr::size();
+		for ( int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++ ) {	
+			as< Ip6Addr >( dataField + Ip6Addr::size() * i ) = _self.addr[i];
+		}
+		as< PhysAddr >( dataField + Ip6Addr::size() * LWIP_IPV6_NUM_ADDRESSES ) = _self.guid;
+		dataField += Ip6Addr::size() * LWIP_IPV6_NUM_ADDRESSES + PhysAddr::size();
 		dock.sendBlob( ContentType, std::move( p ) );
 	}
 
+	void sendCall( Dock& dock ) {
+        auto p = PBuf::allocate( 1 );
+        as< Command >( p.payload() ) = Command::Call;
+        dock.sendBlob( ContentType, std::move( p ) );
+    }
+
 	Dock *destination( Ip6Addr add ) {
 		for ( const auto& e : _entries )
-			if ( e.first.addr == add ) return e.second;
+			for ( int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++ )
+				if ( e.first.addr[i] == add ) return e.second;
 		return nullptr;
 	}
 
@@ -109,13 +126,14 @@ public:
 
 private:
 	void _parseResponse( Dock& d, const PBuf& packet ) {
+		int count = as< uint8_t >( packet.payload() + 3 );
+		// std::cout << std::dec << "Packet size: " << packet.size() << " count: " << count << " Entry::size(): " << Entry::size() << std::endl;
 		if ( packet.size() < 4 )
 			return;
 		if ( as< uint8_t >( packet.payload() + 1) != Ip6Addr::size() )
 			return;
 		if ( as< uint8_t >( packet.payload() + 2) != PhysAddr::size() )
 			return;
-		int count = as< uint8_t >( packet.payload() + 3 );
 
 		if ( packet.size() != 4 + count * Entry::size() )
 			return;
@@ -171,6 +189,8 @@ public:
 		_netif.hwaddr_len = 6;
 		std::copy_n( pAddr.addr, _netif.hwaddr_len, _netif.hwaddr );
 		netif_add( &_netif, NULL, NULL, NULL, this, init, tcpip_input );
+		//netif_add_ip6_address( &_netif, (ip6_addr_t*) ip.addr, nullptr );
+		netif_ip6_addr_set_state( &_netif, 1, IP6_ADDR_TENTATIVE );
 
 		// Proactivelly send mapping responses
 		_mappingTimer = rtos::Timer( 1000 / portTICK_PERIOD_MS, rtos::Timer::Type::Periodic,
@@ -195,6 +215,11 @@ public:
 		std::cout << std::dec;
 	}
 
+	static void f(netif* n, u8_t s) {
+		std::cout << std::hex << "nd6_callback called; s: " << (int) s << " netif->ip_addr: " << *((ip6_addr_t*) &(n->ip_addr))
+		<< " netif->output_ip6: " << *((ip6_addr_t*) &(n->output_ip6)) << std::dec << "\n";
+	}
+
 	static err_t init( struct netif* roif ) {
 		auto self = reinterpret_cast< RoIF6* >( roif->state );
 		roif->hwaddr_len = 6;
@@ -203,12 +228,14 @@ public:
 		roif->name[ 0 ] = 'r'; roif->name[ 1 ] = 'o';
 		roif->output_ip6 = output;
 		roif->linkoutput = linkOutput;
+		roif->ip6_autoconfig_enabled = 0;
 		roif->flags |= NETIF_FLAG_LINK_UP 
 				| NETIF_FLAG_BROADCAST
                 | NETIF_FLAG_IGMP
                 | NETIF_FLAG_MLD6
                 | NETIF_FLAG_UP; 
 		roif->num = _seqNum();
+		nd6_set_cb( roif, f );
 		return ERR_OK;
 	}
 
