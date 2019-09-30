@@ -1,0 +1,9 @@
+cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+
+find_package(gazebo REQUIRED)
+include_directories(${GAZEBO_INCLUDE_DIRS})
+link_directories(${GAZEBO_LIBRARY_DIRS})
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
+
+add_executable(publisherDemo publisherDemo.cpp)
+target_link_libraries(publisherDemo universalModulePluginMsgs ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})

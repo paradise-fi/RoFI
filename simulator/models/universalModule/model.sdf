@@ -1,0 +1,658 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+    <model name="universalModule">
+        <link name="bodyA">
+            <self_collide>true</self_collide>
+            <inertial>
+                <pose frame="">0 -0.029663 0 0 -0 0</pose>
+                <mass>0.201058</mass>
+                <inertia>
+                    <ixx>0.00016</ixx>
+                    <ixy>0</ixy>
+                    <ixz>0</ixz>
+                    <iyy>0.00013</iyy>
+                    <iyz>0</iyz>
+                    <izz>0.000158</izz>
+                </inertia>
+            </inertial>
+            <visual name="visual-bodyA">
+                <pose frame="">0 0 0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>bodyA</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+                <material>
+                    <lighting>1</lighting>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/DarkGrey</name>
+                    </script>
+                    <shader type="pixel">
+                        <normal_map>__default__</normal_map>
+                    </shader>
+                </material>
+            </visual>
+            <collision name="collision-bodyA">
+                <pose frame="">0 0 0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/bodyA.stl</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                    </mesh>
+                </geometry>
+            </collision>
+        </link>
+
+        <link name="bodyB">
+            <self_collide>true</self_collide>
+            <inertial>
+                <pose frame="">0 0.029663 0 0 -0 0</pose>
+                <mass>0.201058</mass>
+                <inertia>
+                    <ixx>0.00016</ixx>
+                    <ixy>0</ixy>
+                    <ixz>0</ixz>
+                    <iyy>0.00013</iyy>
+                    <iyz>0</iyz>
+                    <izz>0.000158</izz>
+                </inertia>
+            </inertial>
+            <visual name="visual-bodyB">
+                <pose frame="">0 0 0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>bodyB</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+                <material>
+                    <lighting>1</lighting>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/DarkGrey</name>
+                    </script>
+                    <shader type="pixel">
+                        <normal_map>__default__</normal_map>
+                    </shader>
+                </material>
+            </visual>
+            <collision name="collision-bodyB">
+                <pose frame="">0 0 0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/bodyB.stl</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                    </mesh>
+                </geometry>
+            </collision>
+        </link>
+
+        <link name="shoeA">
+            <self_collide>true</self_collide>
+            <pose frame="">-0.0265 -0.05 0 0 -0 0</pose>
+            <inertial>
+                <pose frame="">0.0265 -0.012973 0 0 -0 0</pose>
+                <mass>0.089474</mass>
+                <inertia>
+                    <ixx>5.9e-05</ixx>
+                    <ixy>0</ixy>
+                    <ixz>0</ixz>
+                    <iyy>0.000103</iyy>
+                    <iyz>0</iyz>
+                    <izz>0.000117</izz>
+                </inertia>
+            </inertial>
+            <collision name="shoeA-collision">
+                <pose frame="">0.0265 0.05 -0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/shoeA.stl</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                    </mesh>
+                </geometry>
+            </collision>
+            <visual name="shoeA-visual">
+                <pose frame="">0.0265 0.05 -0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>shoeA</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+                <material>
+                    <lighting>1</lighting>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/Yellow</name>
+                    </script>
+                    <shader type="pixel">
+                        <normal_map>__default__</normal_map>
+                    </shader>
+                </material>
+            </visual>
+        </link>
+
+        <link name="shoeB">
+            <self_collide>true</self_collide>
+            <pose frame="">-0.0265 0.05 0.0015 0 -0 0</pose>
+            <inertial>
+                <pose frame="">0.0265 0.012973 0 0 -0 0</pose>
+                <mass>0.089474</mass>
+                <inertia>
+                    <ixx>5.9e-05</ixx>
+                    <ixy>0</ixy>
+                    <ixz>0</ixz>
+                    <iyy>0.000103</iyy>
+                    <iyz>0</iyz>
+                    <izz>0.000117</izz>
+                </inertia>
+            </inertial>
+            <collision name="shoeB-collision">
+                <pose frame="">0.0265 -0.05 -0.0015 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/shoeB.stl</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                    </mesh>
+                </geometry>
+            </collision>
+            <visual name="shoeB-visual">
+                <pose frame="">0.0265 -0.05 -0.0015 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>shoeB</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+                <material>
+                    <lighting>1</lighting>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/Yellow</name>
+                    </script>
+                    <shader type="pixel">
+                        <normal_map>__default__</normal_map>
+                    </shader>
+                </material>
+            </visual>
+        </link>
+
+        <link name="connectorAplusX">
+            <pose frame="">0.043 -0.05 0 0 -0 0</pose>
+            <inertial>
+                <pose frame="">0.003103 0 -0 0 -0 0</pose>
+                <mass>0.010155</mass>
+                <inertia>
+                    <ixx>3e-06</ixx>
+                    <ixy>0</ixy>
+                    <ixz>-0</ixz>
+                    <iyy>2e-06</iyy>
+                    <iyz>0</iyz>
+                    <izz>2e-06</izz>
+                </inertia>
+            </inertial>
+            <collision name="connectorAplusX-collision">
+                <pose frame="">-0.043 0.05 -0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>connectorAplusX</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+            </collision>
+            <visual name="connectorAplusX-visual">
+                <pose frame="">-0.043 0.05 -0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>connectorAplusX</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+                <material>
+                    <lighting>1</lighting>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/DarkGrey</name>
+                    </script>
+                    <shader type="pixel">
+                        <normal_map>__default__</normal_map>
+                    </shader>
+                </material>
+            </visual>
+        </link>
+
+        <link name="connectorAminusZ">
+            <pose frame="">0 -0.093 0 0 -0 0</pose>
+            <inertial>
+                <pose frame="">-0 -0.003103 -0 0 -0 0</pose>
+                <mass>0.010155</mass>
+                <inertia>
+                    <ixx>2e-06</ixx>
+                    <ixy>-0</ixy>
+                    <ixz>-0</ixz>
+                    <iyy>3e-06</iyy>
+                    <iyz>-0</iyz>
+                    <izz>2e-06</izz>
+                </inertia>
+            </inertial>
+            <collision name="connectorAminusZ-collision">
+                <pose frame="">-0 0.093 -0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>connectorAminusZ</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+            </collision>
+            <visual name="connectorAminusZ-visual">
+                <pose frame="">-0 0.093 -0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>connectorAminusZ</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+                <material>
+                    <lighting>1</lighting>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/DarkGrey</name>
+                    </script>
+                    <shader type="pixel">
+                        <normal_map>__default__</normal_map>
+                    </shader>
+                </material>
+            </visual>
+        </link>
+
+        <link name="connectorAminusX">
+            <pose frame="">-0.043 -0.05 0 0 -0 0</pose>
+            <inertial>
+                <pose frame="">-0.003103 0 0 0 -0 0</pose>
+                <mass>0.010155</mass>
+                <inertia>
+                    <ixx>3e-06</ixx>
+                    <ixy>-0</ixy>
+                    <ixz>-0</ixz>
+                    <iyy>2e-06</iyy>
+                    <iyz>-0</iyz>
+                    <izz>2e-06</izz>
+                </inertia>
+            </inertial>
+            <collision name="connectorAminusX-collision">
+                <pose frame="">0.043 0.05 0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>connectorAminusX</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+            </collision>
+            <visual name="connectorAminusX-visual">
+                <pose frame="">0.043 0.05 0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>connectorAminusX</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+                <material>
+                    <lighting>1</lighting>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/DarkGrey</name>
+                    </script>
+                    <shader type="pixel">
+                        <normal_map>__default__</normal_map>
+                    </shader>
+                </material>
+            </visual>
+        </link>
+
+        <link name="connectorBplusX">
+            <pose frame="">-0.043 0.051 0.0015 0 -0 0</pose>
+            <inertial>
+                <pose frame="">-0.003103 0 0 0 -0 0</pose>
+                <mass>0.010155</mass>
+                <inertia>
+                        <ixx>3e-06</ixx>
+                    <ixy>-0</ixy>
+                    <ixz>-0</ixz>
+                    <iyy>2e-06</iyy>
+                    <iyz>-0</iyz>
+                    <izz>2e-06</izz>
+                </inertia>
+            </inertial>
+            <collision name="connectorBplusX-collision">
+                <pose frame="">0.043 -0.051 -0.0015 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>connectorBplusX</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+            </collision>
+            <visual name="connectorBplusX-visual">
+                <pose frame="">0.043 -0.051 -0.0015 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>connectorBplusX</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+                <material>
+                    <lighting>1</lighting>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/DarkGrey</name>
+                    </script>
+                    <shader type="pixel">
+                        <normal_map>__default__</normal_map>
+                    </shader>
+                </material>
+            </visual>
+        </link>
+
+        <link name="connectorBminusZ">
+            <pose frame="">0 0.094 0.0015 0 -0 0</pose>
+            <inertial>
+                <pose frame="">-0 0.003103 -0 0 -0 0</pose>
+                <mass>0.010155</mass>
+                <inertia>
+                    <ixx>2e-06</ixx>
+                    <ixy>-0</ixy>
+                    <ixz>-0</ixz>
+                    <iyy>3e-06</iyy>
+                    <iyz>-0</iyz>
+                    <izz>2e-06</izz>
+                </inertia>
+            </inertial>
+            <collision name="connectorBminusZ-collision">
+                <pose frame="">0 -0.094 0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>connectorBminusZ</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+            </collision>
+            <visual name="connectorBminusZ-visual">
+                <pose frame="">0 -0.094 0 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>connectorBminusZ</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+                <material>
+                    <lighting>1</lighting>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/DarkGrey</name>
+                    </script>
+                    <shader type="pixel">
+                        <normal_map>__default__</normal_map>
+                    </shader>
+                </material>
+            </visual>
+        </link>
+
+        <link name="connectorBminusX">
+            <pose frame="">0.043 0.051 0.0015 0 -0 0</pose>
+            <inertial>
+                <pose frame="">0.003103 0 0 0 -0 0</pose>
+                <mass>0.010155</mass>
+                <inertia>
+                    <ixx>3e-06</ixx>
+                    <ixy>-0</ixy>
+                    <ixz>-0</ixz>
+                    <iyy>2e-06</iyy>
+                    <iyz>0</iyz>
+                    <izz>2e-06</izz>
+                </inertia>
+            </inertial>
+            <collision name="connectorBminusX-collision">
+                <pose frame="">-0.043 -0.051 -0.0015 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>connectorBminusX</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+            </collision>
+            <visual name="connectorBminusX-visual">
+                <pose frame="">-0.043 -0.051 -0.0015 0 -0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://universalModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>connectorBminusX</name>
+                        </submesh>
+                    </mesh>
+                </geometry>
+                <material>
+                    <lighting>1</lighting>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/DarkGrey</name>
+                    </script>
+                    <shader type="pixel">
+                        <normal_map>__default__</normal_map>
+                    </shader>
+                </material>
+            </visual>
+        </link>
+
+
+        <joint name="bodyRev" type="revolute">
+            <child>bodyB</child>
+            <parent>bodyA</parent>
+            <axis>
+                <xyz>0 0.01 0</xyz>
+                <dynamics>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+                <use_parent_model_frame>1</use_parent_model_frame>
+            </axis>
+        </joint>
+
+        <joint name="shoeARev" type="revolute">
+            <child>shoeA</child>
+            <parent>bodyA</parent>
+            <axis>
+                <xyz>-0.01 0 0</xyz>
+                <limit>
+                    <lower>-1.57079632679</lower>
+                    <upper>1.57079632679</upper>
+                </limit>
+                <dynamics>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+                <use_parent_model_frame>1</use_parent_model_frame>
+            </axis>
+        </joint>
+
+        <joint name="shoeBRev" type="revolute">
+            <child>shoeB</child>
+            <parent>bodyB</parent>
+            <axis>
+                <xyz>0.01 0 0</xyz>
+                <limit>
+                    <lower>-1.57079632679</lower>
+                    <upper>1.57079632679</upper>
+                </limit>
+                <dynamics>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+                <use_parent_model_frame>1</use_parent_model_frame>
+            </axis>
+        </joint>
+
+        <joint name="connectorAplusX" type="prismatic">
+            <child>connectorAplusX</child>
+            <parent>shoeA</parent>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>-0.007</lower>
+                    <upper>0</upper>
+                    <effort>100</effort>
+                    <velocity>100</velocity>
+                </limit>
+                <dynamics>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+                <use_parent_model_frame>1</use_parent_model_frame>
+            </axis>
+        </joint>
+
+        <joint name="connectorAminusZ" type="prismatic">
+            <child>connectorAminusZ</child>
+            <parent>shoeA</parent>
+            <axis>
+                <xyz>0 -1 0</xyz>
+                <limit>
+                    <lower>-0.007</lower>
+                    <upper>0</upper>
+                    <effort>100</effort>
+                    <velocity>100</velocity>
+                </limit>
+                <dynamics>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+                <use_parent_model_frame>1</use_parent_model_frame>
+            </axis>
+        </joint>
+
+        <joint name="connectorAminusX" type="prismatic">
+            <child>connectorAminusX</child>
+            <parent>shoeA</parent>
+            <axis>
+                <xyz>-1 0 0</xyz>
+                <limit>
+                    <lower>-0.007</lower>
+                    <upper>0</upper>
+                    <effort>100</effort>
+                    <velocity>100</velocity>
+                </limit>
+                <dynamics>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+                <use_parent_model_frame>1</use_parent_model_frame>
+            </axis>
+        </joint>
+
+        <joint name="connectorBplusX" type="prismatic">
+            <child>connectorBplusX</child>
+            <parent>shoeB</parent>
+            <axis>
+                <xyz>-1 0 0</xyz>
+                <limit>
+                    <lower>-0.007</lower>
+                    <upper>0</upper>
+                    <effort>100</effort>
+                    <velocity>100</velocity>
+                </limit>
+                <dynamics>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+                <use_parent_model_frame>1</use_parent_model_frame>
+            </axis>
+        </joint>
+
+        <joint name="connectorBminusZ" type="prismatic">
+            <child>connectorBminusZ</child>
+            <parent>shoeB</parent>
+            <axis>
+                <xyz>0 1 0</xyz>
+                <limit>
+                    <lower>-0.007</lower>
+                    <upper>0</upper>
+                    <effort>100</effort>
+                    <velocity>100</velocity>
+                </limit>
+                <dynamics>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+                <use_parent_model_frame>1</use_parent_model_frame>
+            </axis>
+        </joint>
+
+        <joint name="connectorBminusX" type="prismatic">
+            <child>connectorBminusX</child>
+            <parent>shoeB</parent>
+            <axis>
+                <xyz>1 0 0</xyz>
+                <limit>
+                    <lower>-0.007</lower>
+                    <upper>0</upper>
+                    <effort>100</effort>
+                    <velocity>100</velocity>
+                </limit>
+                <dynamics>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+                <use_parent_model_frame>1</use_parent_model_frame>
+            </axis>
+        </joint>
+
+        <plugin name="control" filename="libuniversalModulePlugin.so"/>
+    </model>
+</sdf>
