@@ -71,16 +71,30 @@ public:
 		: _self{ addr, guid }
 	{}
 
+	AddressMapping_6( const Ip6Addr& a1, const Ip6Addr& a2, const Ip6Addr& a3, const PhysAddr& guid )
+		: _self{ a1, a2, a3, guid }
+	{}
+
 	struct Entry {
 		Ip6Addr addr[ LWIP_IPV6_NUM_ADDRESSES ];
 		PhysAddr guid;
 
 		Entry ( const Ip6Addr& addr, const PhysAddr& guid )
 			: addr{ "::", addr, "::" }
-			, guid(guid) 
+			, guid( guid ) 
 		{}
 
-		static int size() { return Ip6Addr::size() + PhysAddr::size(); }
+		Entry ( const Ip6Addr& addr1, const Ip6Addr& addr2, const Ip6Addr& addr3, const PhysAddr& guid )
+			: addr{ addr1, addr2, addr3 }
+			, guid( guid )
+		{}
+
+		Entry ( const Entry& e )
+			: addr{ e.addr[0], e.addr[1], e.addr[2] }
+			, guid( e.guid )
+		{}
+
+		static int size() { return Ip6Addr::size() * LWIP_IPV6_NUM_ADDRESSES + PhysAddr::size(); }
 	};
 
 	void onPacket( Dock& dock, const PBuf& packet ) {
@@ -99,9 +113,9 @@ public:
 		as< Command >( p.payload() + 0 ) = Command::Response;
 		as< uint8_t >( p.payload() + 1 ) = Ip6Addr::size();
 		as< uint8_t >( p.payload() + 2 ) = PhysAddr::size();
-		as< uint8_t >( p.payload() + 3 ) = LWIP_IPV6_NUM_ADDRESSES;
+		as< uint8_t >( p.payload() + 3 ) = 1;
 		auto dataField = p.payload() + 4;
-		for ( int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++ ) {	
+		for ( int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++ ) {
 			as< Ip6Addr >( dataField + Ip6Addr::size() * i ) = _self.addr[i];
 		}
 		as< PhysAddr >( dataField + Ip6Addr::size() * LWIP_IPV6_NUM_ADDRESSES ) = _self.guid;
@@ -116,9 +130,12 @@ public:
     }
 
 	Dock *destination( Ip6Addr add ) {
-		for ( const auto& e : _entries )
-			for ( int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++ )
-				if ( e.first.addr[i] == add ) return e.second;
+		for ( const auto& e : _entries ) {
+			for ( int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++ ) {
+				if ( e.first.addr[i] == add )
+					return e.second;
+			}
+		}
 		return nullptr;
 	}
 
@@ -127,7 +144,6 @@ public:
 private:
 	void _parseResponse( Dock& d, const PBuf& packet ) {
 		int count = as< uint8_t >( packet.payload() + 3 );
-		// std::cout << std::dec << "Packet size: " << packet.size() << " count: " << count << " Entry::size(): " << Entry::size() << std::endl;
 		if ( packet.size() < 4 )
 			return;
 		if ( as< uint8_t >( packet.payload() + 1) != Ip6Addr::size() )
@@ -141,9 +157,12 @@ private:
 		_removeEntriesFor( d );
 		for (int i = 0; i != count; i++ ) {
 			const uint8_t *entry = packet.payload() + 4 + i * Entry::size();
-			Ip6Addr lAddr = as< Ip6Addr >( entry );
-			PhysAddr pAddr = as< PhysAddr >( entry + Ip6Addr::size() );
-			_entries.push_back( { { lAddr, pAddr }, &d } );
+			PhysAddr pAddr = as< PhysAddr >( entry + Ip6Addr::size() * LWIP_IPV6_NUM_ADDRESSES );
+			for (int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++) {
+				Ip6Addr lAddr = as< Ip6Addr >( entry + i * Ip6Addr::size() );
+				std::cout << std::hex << "adding to entry " << lAddr << std::dec << std::endl;
+				_entries.push_back( { { lAddr, pAddr }, &d } );
+			}
 		}
 	}
 
@@ -169,6 +188,7 @@ private:
 	std::vector< std::pair< Entry, Dock * > > _entries;
 	Entry _self;
 
+	friend class RoIF6;
 };
 
 // RoFi Network Interface for IPv6
@@ -186,10 +206,9 @@ public:
 			} );
 		}
 		
-		_netif.hwaddr_len = 6;
-		std::copy_n( pAddr.addr, _netif.hwaddr_len, _netif.hwaddr );
 		netif_add( &_netif, NULL, NULL, NULL, this, init, tcpip_input );
-		//netif_add_ip6_address( &_netif, (ip6_addr_t*) ip.addr, nullptr );
+		dhcp_stop( &_netif );
+		netif_add_ip6_address( &_netif, (ip6_addr_t*) ip.addr, nullptr );
 		netif_ip6_addr_set_state( &_netif, 1, IP6_ADDR_TENTATIVE );
 
 		// Proactivelly send mapping responses
@@ -203,7 +222,11 @@ public:
 
 	void setUp() {
 		netif_set_default( &_netif );
-		netif_create_ip6_linklocal_address( &_netif, *_netif.hwaddr);
+		netif_create_ip6_linklocal_address( &_netif, 0 );
+		for ( int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++ )
+			_mapping._self.addr[i] = Ip6Addr( *reinterpret_cast< ip6_addr* >( &_netif.ip6_addr[i] ) );
+		netif_ip6_addr_set_state( &_netif, 0, IP6_ADDR_VALID );
+		netif_add_ip6_address( &_netif, (ip6_addr_t*) &_netif.ip6_addr[0], nullptr );
 		netif_set_up( &_netif );
 	}
 
@@ -227,13 +250,12 @@ public:
 		roif->mtu = 120;
 		roif->name[ 0 ] = 'r'; roif->name[ 1 ] = 'o';
 		roif->output_ip6 = output;
+		roif->input = netif_input;
 		roif->linkoutput = linkOutput;
-		roif->ip6_autoconfig_enabled = 0;
-		roif->flags |= NETIF_FLAG_LINK_UP 
-				| NETIF_FLAG_BROADCAST
-                | NETIF_FLAG_IGMP
-                | NETIF_FLAG_MLD6
-                | NETIF_FLAG_UP; 
+		roif->flags |= NETIF_FLAG_LINK_UP
+	                //| NETIF_FLAG_IGMP
+	        	    | NETIF_FLAG_MLD6
+    	            | NETIF_FLAG_UP;
 		roif->num = _seqNum();
 		nd6_set_cb( roif, f );
 		return ERR_OK;
