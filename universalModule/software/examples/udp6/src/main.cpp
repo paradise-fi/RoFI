@@ -1,3 +1,4 @@
+#include "lwipopts.h"
 #include <driver/gpio.h>
 #include <tcpip_adapter.h>
 #include "nvs_flash.h"
@@ -15,8 +16,8 @@
 // esp32-004 ipv6 fc07:4:3ffb:1a80:0:0:0:4
 
 void setupStack() {
-    nvs_flash_init();
     tcpip_adapter_init();
+    nvs_flash_init();
 }
 
 const char* getOwn( int id ) {
@@ -92,20 +93,19 @@ extern "C" void app_main() {
 
 	_rofi::RoIF6 roif(
 		mac(),
-		"::",
 		//getOwn( getId() ),
-		//getAddress( getId() ),
+		getAddress( getId() ),
 		"fe80::",
 		"fe80::",
 		docks( getId() ) );
-	std::cout << "roif6 initialized\n";
+
 	roif.setUp();
 	roif.printAddresses();
 
 	if ( getId() == 1 )
 		udpEx6::runMaster();
 	else
-		udpEx6::runSlave( /* "fe80::1" */ "fe80:0:0:0:32ae:a4ff:fe14:e5cc" );
+		udpEx6::runSlave( /* "fe80:0:0:0:ae30:0:cce5:14a4" */ "fe80::1" );
 	
 	while ( true ) vTaskDelay( 1000 / portTICK_PERIOD_MS );
 }

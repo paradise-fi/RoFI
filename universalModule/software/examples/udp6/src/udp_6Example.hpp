@@ -18,6 +18,7 @@ namespace udpEx6 {
 inline void onMasterPacket(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 	const ip_addr_t *addr, u16_t port)
 {
+	std::cout << "On master packet! " << std::endl;
 	if ( !p ) return;
 
 	auto packet = _rofi::PBuf::own( p );
@@ -25,23 +26,29 @@ inline void onMasterPacket(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 				<< packet.asString() << " (on master packet)" << std::dec << std::endl;
 	
 	udp_sendto( pcb, packet.get(), addr, port );
+	// free(p);
 }
 
 inline void onSlavePacket(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 	const ip_addr_t *addr, u16_t port)
 {
+	std::cout << "on slave packet" << std::endl;
 	if ( !p ) return;
 
 	auto packet = _rofi::PBuf::own( p );
 	std::cout << std::hex << _rofi::Ip6Addr( addr->u_addr.ip6 ) << ":" << port << " responded: "
 				<< packet.asString() << " (on slave packet)" << std::dec << std::endl;
+	// free(p);
 }
 
 inline void runMaster() {
 	std::cout << "Starting UDP echo server (udp6ex)\n";
 
-	udp_pcb* pcb = udp_new_ip6();
-	udp_bind( pcb, IP6_ADDR_ANY, 7777 );
+	udp_pcb* pcb = udp_new();
+	if (!pcb) 
+		std::cout << "pcb is null" << std::endl;
+	int res = udp_bind( pcb, IP6_ADDR_ANY, 7777 );
+	std::cout << "UDP binded (" << res << ")" << std::endl;
 	udp_recv( pcb, onMasterPacket, nullptr );
 
 	while ( true )
@@ -51,8 +58,11 @@ inline void runMaster() {
 inline void runSlave( const char* masterAddr ) {
 	std::cout << "Starting UDP client\n";
 
-	udp_pcb* pcb = udp_new_ip6();
+	udp_pcb* pcb = udp_new();
+	if (!pcb)
+		std::cout << "pcb is null" << std::endl;
 	int res = udp_bind( pcb, IP6_ADDR_ANY, 7777 );
+	std::cout << "UDP binded (" << res << ")" << std::endl;
 	udp_recv( pcb, onSlavePacket, nullptr );
 
 	ip_addr_t addr;
@@ -67,10 +77,9 @@ inline void runSlave( const char* masterAddr ) {
 			buffer[ i ] = message[ i ];
 		}
 		buffer[ len - 1 ] = 'a' + ( counter++ ) % 26;
-		std::cout << "Sending message: " << buffer.asString() << std::endl;
-		//res = udp_send( pcb, buffer.get());
+		std::cout << "Sending message: " << buffer.asString() << " to ";
+		std::cout << std::hex; printA(std::cout, *(ip6_addr_t*) &addr) << std::dec << std::endl;
 		res = udp_sendto( pcb, buffer.get(), &addr, 7777 );
-		std::cout << std::endl;
 		std::cout << "upd_sendto error " << res << std::endl;
 		vTaskDelay( 1000 / portTICK_PERIOD_MS );
 	}

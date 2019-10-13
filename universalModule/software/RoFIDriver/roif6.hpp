@@ -225,8 +225,6 @@ public:
 		netif_create_ip6_linklocal_address( &_netif, 0 );
 		for ( int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++ )
 			_mapping._self.addr[i] = Ip6Addr( *reinterpret_cast< ip6_addr* >( &_netif.ip6_addr[i] ) );
-		netif_ip6_addr_set_state( &_netif, 0, IP6_ADDR_VALID );
-		netif_add_ip6_address( &_netif, (ip6_addr_t*) &_netif.ip6_addr[0], nullptr );
 		netif_set_up( &_netif );
 	}
 
