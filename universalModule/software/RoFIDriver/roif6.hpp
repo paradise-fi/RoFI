@@ -41,7 +41,9 @@ struct Ip6Addr : ip6_addr_t {
     }
     Ip6Addr( ip6_addr addr ): ip6_addr( addr ) {}
 
-    bool operator==( const Ip6Addr& o ) const { return addr == o.addr; }
+    bool operator==( const Ip6Addr& o ) const {
+		return addr[0] == o.addr[0] && addr[1] == o.addr[1] && addr[2] == o.addr[2] && addr[3] == o.addr[3];
+	}
 
     static int size() { return 16; }
 };
@@ -129,10 +131,12 @@ public:
         dock.sendBlob( ContentType, std::move( p ) );
     }
 
-	Dock *destination( Ip6Addr add ) {
+	Dock *destination( Ip6Addr addr ) {
 		for ( const auto& e : _entries ) {
 			for ( int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++ ) {
-				if ( e.first.addr[i] == add )
+				/* std::cout << std::hex << "e.first.addr[i]: " << e.first.addr[i] << std::hex << " addr: " << addr << std::dec
+					<< "  (" << (e.first.addr[i] == addr ? "True" : "False") << ")" << std::endl; */
+				if ( e.first.addr[i] == addr )
 					return e.second;
 			}
 		}
@@ -160,7 +164,7 @@ private:
 			PhysAddr pAddr = as< PhysAddr >( entry + Ip6Addr::size() * LWIP_IPV6_NUM_ADDRESSES );
 			for (int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++) {
 				Ip6Addr lAddr = as< Ip6Addr >( entry + i * Ip6Addr::size() );
-				std::cout << std::hex << "adding to entry " << lAddr << std::dec << std::endl;
+				// std::cout << std::hex << "adding to entry " << lAddr << std::dec << std::endl;
 				_entries.push_back( { { lAddr, pAddr }, &d } );
 			}
 		}
@@ -237,8 +241,9 @@ public:
 	}
 
 	static void f(netif* n, u8_t s) {
+		/*
 		std::cout << std::hex << "nd6_callback called; s: " << (int) s << " netif->ip_addr: " << *((ip6_addr_t*) &(n->ip_addr))
-		<< " netif->output_ip6: " << *((ip6_addr_t*) &(n->output_ip6)) << std::dec << "\n";
+		<< " netif->output_ip6: " << *((ip6_addr_t*) &(n->output_ip6)) << std::dec << "\n"; */
 	}
 
 	static err_t init( struct netif* roif ) {
@@ -289,6 +294,7 @@ private:
 
     void _send( Ip6Addr addr, PBuf&& packet ) {
         Dock* d = _mapping.destination( addr );
+		// std::cout << "in send, dock is " << (d == nullptr ? "null " : "not null") << "\n";
         if ( d )
             d->sendBlob( 0, std::move( packet ) );
     }
