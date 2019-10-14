@@ -107,5 +107,5 @@ extern "C" void app_main() {
 	else
 		udpEx6::runSlave( /* "fe80:0:0:0:ae30:0:cce5:14a4" */ "fe80::1" );
 	
-	while ( true ) vTaskDelay( 1000 / portTICK_PERIOD_MS );
+	while ( true ) vTaskDelay( 2000 / portTICK_PERIOD_MS );
 }

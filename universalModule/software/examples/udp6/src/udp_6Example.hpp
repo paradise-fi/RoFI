@@ -18,7 +18,6 @@ namespace udpEx6 {
 inline void onMasterPacket(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 	const ip_addr_t *addr, u16_t port)
 {
-	std::cout << "On master packet! " << std::endl;
 	if ( !p ) return;
 
 	auto packet = _rofi::PBuf::own( p );
@@ -32,7 +31,6 @@ inline void onMasterPacket(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 inline void onSlavePacket(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 	const ip_addr_t *addr, u16_t port)
 {
-	std::cout << "on slave packet" << std::endl;
 	if ( !p ) return;
 
 	auto packet = _rofi::PBuf::own( p );
@@ -52,7 +50,7 @@ inline void runMaster() {
 	udp_recv( pcb, onMasterPacket, nullptr );
 
 	while ( true )
-		vTaskDelay( 1000 / portTICK_PERIOD_MS );
+		vTaskDelay( 2000 / portTICK_PERIOD_MS );
 }
 
 inline void runSlave( const char* masterAddr ) {
@@ -80,8 +78,7 @@ inline void runSlave( const char* masterAddr ) {
 		std::cout << "Sending message: " << buffer.asString() << " to ";
 		std::cout << std::hex; printA(std::cout, *(ip6_addr_t*) &addr) << std::dec << std::endl;
 		res = udp_sendto( pcb, buffer.get(), &addr, 7777 );
-		std::cout << "upd_sendto error " << res << std::endl;
-		vTaskDelay( 1000 / portTICK_PERIOD_MS );
+		vTaskDelay( 2000 / portTICK_PERIOD_MS );
 	}
 }
 
