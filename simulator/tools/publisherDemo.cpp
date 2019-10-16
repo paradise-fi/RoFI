@@ -10,6 +10,7 @@
 #include <string_view>
 #include <vector>
 
+#include "rofi_hal.hpp"
 
 #define CONNECT 1 // Want to connect to gazebo?
 
@@ -97,53 +98,60 @@ void printHelp()
               << "\tjoint 2 getmaxposition\n";
 }
 
-rofi::messages::JointCmd processJointCmd( const std::vector< std::string_view > & tokens )
+void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_view > & tokens )
 {
     using rofi::messages::JointCmd;
 
     if ( tokens.size() < 3 )
         throw std::runtime_error("Wrong number of arguments");
 
-    rofi::messages::JointCmd jointCmd;
-    jointCmd.set_joint( readInt( tokens[1] ) );
+    auto joint = rofi.getJoint( readInt( tokens[1] ) );
 
-    auto jointCmdType = getJointCmdType( tokens[2] );
-    jointCmd.set_cmdtype( jointCmdType );
-
-    switch ( jointCmdType )
+    switch ( getJointCmdType( tokens[2] ) )
     {
+        case JointCmd::GET_MAX_POSITION:
+            std::cout << "Max position: " << joint.maxPosition() << "\n";
+            break;
+        case JointCmd::GET_MIN_POSITION:
+            std::cout << "Min position: " << joint.minPosition() << "\n";
+            break;
+        case JointCmd::GET_MAX_SPEED:
+            std::cout << "Max speed: " << joint.maxSpeed() << "\n";
+            break;
+        case JointCmd::GET_MIN_SPEED:
+            std::cout << "Min speed: " << joint.minSpeed() << "\n";
+            break;
+        case JointCmd::GET_MAX_TORQUE:
+            std::cout << "Max torque: " << joint.maxTorque() << "\n";
+            break;
+        case JointCmd::GET_SPEED:
+            std::cout << "Current speed: " << joint.getSpeed() << "\n";
+            break;
+        case JointCmd::SET_SPEED:
+            if ( tokens.size() != 4 )
+                throw std::runtime_error("Wrong number of arguments");
+            joint.setSpeed( readFloat( tokens[3] ) );
+            break;
+        case JointCmd::GET_POSITION:
+            std::cout << "Current position: " << joint.getPosition() << "\n";
+            break;
         case JointCmd::SET_POS_WITH_SPEED:
-        {
             if ( tokens.size() != 5 )
                 throw std::runtime_error("Wrong number of arguments");
-
-            jointCmd.mutable_setposwithspeed()->set_position( readFloat( tokens[3] ) );
-            jointCmd.mutable_setposwithspeed()->set_speed( readFloat( tokens[4] ) );
+            joint.setPosition( readFloat( tokens[3] ), readFloat( tokens[4] ), nullptr ); // TODO callback
             break;
-        }
-        case JointCmd::SET_SPEED:
-        {
-            if ( tokens.size() != 4 )
-                throw std::runtime_error("Wrong number of arguments");
-
-            jointCmd.mutable_setspeed()->set_speed( readFloat( tokens[3] ) );
+        case JointCmd::GET_TORQUE:
+            std::cout << "Current torque: " << joint.getTorque() << "\n";
             break;
-        }
         case JointCmd::SET_TORQUE:
-        {
             if ( tokens.size() != 4 )
                 throw std::runtime_error("Wrong number of arguments");
-
-            jointCmd.mutable_settorque()->set_torque( readFloat( tokens[3] ) );
+            joint.setTorque( readFloat( tokens[3] ) );
             break;
-        }
         default:
-            if ( tokens.size() != 3 )
-                throw std::runtime_error("Wrong number of arguments");
+            printHelp();
             break;
     }
-
-    return jointCmd;
 }
 
 
@@ -151,25 +159,9 @@ int main( int argc, char **argv )
 {
     try
     {
-#if CONNECT
-        if ( !gazebo::client::setup( argc, argv ) )
-        {
-            std::cerr << "Error on gazebo client setup\n";
-        }
+        gazebo::client::setup( argc, argv );
 
-        gazebo::transport::NodePtr node( new gazebo::transport::Node() );
-        node->Init();
-
-        auto pub = node->Advertise< rofi::messages::JointCmd >( "~/universalModule/control" );
-        if ( !pub )
-        {
-            std::cerr << "No found publisher\n";
-        }
-
-        std::cerr << "Waiting for connection...\n";
-        pub->WaitForConnection();
-        std::cerr << "Connected\n";
-#endif
+        auto rofi = rofi::hal::RoFI();
 
         for ( std::string line; std::getline( std::cin, line ); )
         {
@@ -180,22 +172,9 @@ int main( int argc, char **argv )
             if ( tokens.front() == "quit" )
                 break;
 
-            try
+            if ( tokens.front() == "joint" )
             {
-                if ( tokens.front() == "joint" )
-                {
-                    auto msg = processJointCmd( tokens );
-#if CONNECT
-                    pub->Publish( msg );
-#else
-                    std::cout << "Sending...\n" << msg.DebugString();
-#endif
-                    continue;
-                }
-            }
-            catch ( const std::exception & e )
-            {
-                std::cerr << e.what() << '\n';
+                processJointCmd( rofi, tokens );
                 continue;
             }
 
@@ -203,9 +182,7 @@ int main( int argc, char **argv )
             printHelp();
         }
 
-#if CONNECT
         gazebo::client::shutdown();
-#endif
     }
     catch ( const gazebo::common::Exception & e )
     {
