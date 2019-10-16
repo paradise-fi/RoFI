@@ -1,7 +1,0 @@
-syntax = "proto2";
-package rofi.messages;
-
-message JointVelCmd {
-    required int32 joint = 1;
-    required double velocity = 2;
-}

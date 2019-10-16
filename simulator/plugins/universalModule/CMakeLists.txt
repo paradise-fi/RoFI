@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
 find_package(gazebo REQUIRED)
 include_directories(${GAZEBO_INCLUDE_DIRS})
@@ -15,8 +15,10 @@ foreach(ITR ${GAZEBO_INCLUDE_DIRS})
 endforeach()
 
 set (msgs
-    messages/jointPosCmd.proto
-    messages/jointVelCmd.proto
+    messages/jointCmd.proto
+    messages/jointSetPosWithSpeedCmd.proto
+    messages/jointSetSpeedCmd.proto
+    messages/jointSetTorqueCmd.proto
 )
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${msgs})
@@ -27,4 +29,3 @@ target_include_directories(universalModulePluginMsgs INTERFACE ${CMAKE_CURRENT_B
 
 add_library(universalModulePlugin SHARED main.cpp)
 target_link_libraries(universalModulePlugin ${GAZEBO_LIBRARIES} universalModulePluginMsgs)
-

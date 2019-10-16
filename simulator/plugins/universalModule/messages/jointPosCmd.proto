@@ -1,7 +1,0 @@
-syntax = "proto2";
-package rofi.messages;
-
-message JointPosCmd {
-    required int32 joint = 1;
-    required double position = 2;
-}
