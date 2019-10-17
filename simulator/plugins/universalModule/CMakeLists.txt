@@ -15,10 +15,11 @@ foreach(ITR ${GAZEBO_INCLUDE_DIRS})
 endforeach()
 
 set (msgs
-    messages/jointCmd.proto
-    messages/jointSetPosWithSpeedCmd.proto
-    messages/jointSetSpeedCmd.proto
-    messages/jointSetTorqueCmd.proto
+    messages/commands/jointCmd.proto
+    messages/commands/jointSetPosWithSpeedCmd.proto
+    messages/commands/jointSetSpeedCmd.proto
+    messages/commands/jointSetTorqueCmd.proto
+    messages/responses/jointResp.proto
 )
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${msgs})
