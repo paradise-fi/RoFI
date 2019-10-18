@@ -37,8 +37,8 @@ namespace rofi
                 float maxSpeed() const;
                 float minSpeed() const;
                 float maxTorque() const;
-                float getSpeed() const;
-                void setSpeed( float speed );
+                float getVelocity() const;
+                void setVelocity( float velocity );
                 float getPosition() const;
                 void setPosition( float pos, float speed, void ( *callback )( Joint ) );
                 float getTorque() const;

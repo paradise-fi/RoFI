@@ -2,7 +2,7 @@ syntax = "proto3";
 package rofi.messages;
 
 import "jointSetPosWithSpeedCmd.proto";
-import "jointSetSpeedCmd.proto";
+import "jointSetVelocityCmd.proto";
 import "jointSetTorqueCmd.proto";
 
 message JointCmd {
@@ -13,16 +13,16 @@ message JointCmd {
         GET_MIN_SPEED = 3;
         GET_MAX_TORQUE = 4;
         GET_POSITION = 5;
-        GET_SPEED = 6;
+        GET_VELOCITY = 6;
         GET_TORQUE = 7;
         SET_POS_WITH_SPEED = 8;
-        SET_SPEED = 9;
+        SET_VELOCITY = 9;
         SET_TORQUE = 10;
     }
     int32 joint = 1;
     Type cmdType = 2;
 
     JointSetPosWithSpeedCmd setPosWithSpeed = 4;
-    JointSetSpeedCmd setSpeed = 3;
+    JointSetVelocityCmd setVelocity = 3;
     JointSetTorqueCmd setTorque = 5;
 }

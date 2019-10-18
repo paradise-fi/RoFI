@@ -77,10 +77,10 @@ inline rofi::messages::JointCmd::Type getJointCmdType( std::string_view token )
         { "getminspeed", JointCmd::GET_MIN_SPEED },
         { "getmaxtorque", JointCmd::GET_MAX_TORQUE },
         { "getposition", JointCmd::GET_POSITION },
-        { "getspeed", JointCmd::GET_SPEED },
+        { "getvelocity", JointCmd::GET_VELOCITY },
         { "gettorque", JointCmd::GET_TORQUE },
         { "setposwithspeed", JointCmd::SET_POS_WITH_SPEED },
-        { "setspeed", JointCmd::SET_SPEED },
+        { "setvelocity", JointCmd::SET_VELOCITY },
         { "settorque", JointCmd::SET_TORQUE }
     };
 
@@ -93,7 +93,7 @@ inline rofi::messages::JointCmd::Type getJointCmdType( std::string_view token )
 void printHelp()
 {
     std::cerr << "Help not yet implemented\n  write 'quit' for quit\nExample of usage:\n"
-              << "\tjoint 2 setspeed 8.5\n"
+              << "\tjoint 2 setvelocity 8.5\n"
               << "\tjoint 1 settorque -3.4\n"
               << "\tjoint 2 getmaxposition\n";
 }
@@ -139,17 +139,17 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
             std::cout << "Max torque: " << result << "\n";
             break;
 		}
-        case JointCmd::GET_SPEED:
+        case JointCmd::GET_VELOCITY:
         {
-            auto result = joint.getSpeed();
-            std::cout << "Current speed: " << result << "\n";
+            auto result = joint.getVelocity();
+            std::cout << "Current velocity: " << result << "\n";
             break;
 		}
-        case JointCmd::SET_SPEED:
+        case JointCmd::SET_VELOCITY:
         {
             if ( tokens.size() != 4 )
                 throw std::runtime_error("Wrong number of arguments");
-            joint.setSpeed( readFloat( tokens[3] ) );
+            joint.setVelocity( readFloat( tokens[3] ) );
             break;
 		}
         case JointCmd::GET_POSITION:

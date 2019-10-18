@@ -148,22 +148,22 @@ private:
             _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_TORQUE, joint, maxTorque ) );
             break;
         }
-        case JointCmd::GET_SPEED:
+        case JointCmd::GET_VELOCITY:
         {
-            double speed = 0; // TODO get speed
-            std::cout << "Returning current speed of joint " << joint << ": " << speed << "\n";
-            _pub->Publish( getJointRofiResp( JointCmd::GET_SPEED, joint, speed ) );
+            double velocity = 0; // TODO get velocity
+            std::cout << "Returning current velocity of joint " << joint << ": " << velocity << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_VELOCITY, joint, velocity ) );
             break;
         }
-        case JointCmd::SET_SPEED:
+        case JointCmd::SET_VELOCITY:
         {
-            double velocity = msg.setspeed().speed();
+            double velocity = msg.setvelocity().velocity();
 
             // TODO set max force
             auto &modelJoint = _model->GetJoints()[ joint ];
             modelJoint->SetParam( "fmax", 0, maxJointTorque );
             modelJoint->SetParam( "vel", 0, velocity );
-            std::cerr << "Setting speed of joint " << joint << " to " << velocity << "\n";
+            std::cerr << "Setting velocity of joint " << joint << " to " << velocity << "\n";
             // TODO set boundaries
             break;
         }

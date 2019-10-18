@@ -24,11 +24,13 @@ In Gazebo you can add models and control the simulation. Read more about the
 Gazebo GUI in [the official
 documentation](http://gazebosim.org/tutorials?tut=guided_b2&cat=).
 
-To control the join speed (demo functionality), run:
+To connect to gazebo universalModule (demo functionality), run:
 
 ```
-build/tools/publisherDemo <desiredJointSpeed>
+build/tools/command_line_demo
 ```
+
+where you can type `help` for more info
 
 ## Development Guide
 

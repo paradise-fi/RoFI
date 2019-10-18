@@ -18,7 +18,7 @@ set (msgs
     messages/commands/rofiCmd.proto
     messages/commands/jointCmd.proto
     messages/commands/jointSetPosWithSpeedCmd.proto
-    messages/commands/jointSetSpeedCmd.proto
+    messages/commands/jointSetVelocityCmd.proto
     messages/commands/jointSetTorqueCmd.proto
 
     messages/responses/rofiResp.proto

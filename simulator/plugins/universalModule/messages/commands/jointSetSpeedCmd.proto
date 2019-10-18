@@ -1,6 +1,0 @@
-syntax = "proto3";
-package rofi.messages;
-
-message JointSetSpeedCmd {
-    float speed = 1;
-}

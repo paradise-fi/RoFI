@@ -170,10 +170,10 @@ namespace rofi
             return resp->jointresp().values().Get( 0 );
         }
 
-        float RoFI::Joint::getSpeed() const
+        float RoFI::Joint::getVelocity() const
         {
-            auto result = jdata->registerPromise( messages::JointCmd::GET_SPEED );
-            auto msg = jdata->getCmdMsg( messages::JointCmd::GET_SPEED );
+            auto result = jdata->registerPromise( messages::JointCmd::GET_VELOCITY );
+            auto msg = jdata->getCmdMsg( messages::JointCmd::GET_VELOCITY );
             jdata->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
@@ -182,10 +182,10 @@ namespace rofi
             return resp->jointresp().values().Get( 0 );
         }
 
-        void RoFI::Joint::setSpeed( float speed )
+        void RoFI::Joint::setVelocity( float velocity )
         {
-            auto msg = jdata->getCmdMsg( messages::JointCmd::SET_SPEED );
-            msg.mutable_jointcmd()->mutable_setspeed()->set_speed( speed );
+            auto msg = jdata->getCmdMsg( messages::JointCmd::SET_VELOCITY );
+            msg.mutable_jointcmd()->mutable_setvelocity()->set_velocity( velocity );
             jdata->rofi.pub->Publish( msg, true );
         }
 
