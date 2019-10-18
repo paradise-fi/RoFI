@@ -7,8 +7,8 @@
 #include <iostream>
 #include <utility>
 
-#include <jointCmd.pb.h>
-#include <jointResp.pb.h>
+#include <rofiCmd.pb.h>
+#include <rofiResp.pb.h>
 
 namespace gazebo {
 
@@ -25,18 +25,20 @@ std::string to_string(const gazebo::physics::JointWrench &jw)
     + "\nTorques:\n\tbody1: " + to_string(jw.body1Torque) + "\n\tbody2: " + to_string(jw.body2Torque);
 }
 
-rofi::messages::JointResp resp( rofi::messages::JointCmd::Type cmdtype, int joint, float value )
+rofi::messages::RofiResp getJointRofiResp( rofi::messages::JointCmd::Type cmdtype, int joint, float value )
 {
-    rofi::messages::JointResp resp;
-    resp.set_cmdtype( cmdtype );
-    resp.set_joint( joint );
+    rofi::messages::RofiResp resp;
+    resp.set_resptype( rofi::messages::RofiCmd::JOINT_CMD );
+    auto & jointResp = *resp.mutable_jointresp();
+    jointResp.set_joint( joint );
+    jointResp.set_cmdtype( cmdtype );
 
-    resp.add_values( value );
+    jointResp.add_values( value );
 
     return resp;
 }
 
-using JointCmdPtr = const boost::shared_ptr< const rofi::messages::JointCmd >;
+using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
 
 class UniversalModulePlugin : public ModelPlugin {
 public:
@@ -75,121 +77,137 @@ public:
 
         _node->Init( _model->GetWorld()->Name() );
         std::string topicName = "~/" + _model->GetName() + "/control";
-        _sub = _node->Subscribe( topicName, &UniversalModulePlugin::onJointCmd, this );
-        _pub = _node->Advertise< rofi::messages::JointResp >( "~/" + _model->GetName() + "/response" );
+        _sub = _node->Subscribe( topicName, &UniversalModulePlugin::onRofiCmd, this );
+        _pub = _node->Advertise< rofi::messages::RofiResp >( "~/" + _model->GetName() + "/response" );
 
         std::cerr << "Listening...\n";
     }
 private:
-    void onJointCmd( JointCmdPtr &msg )
+    void onRofiCmd( const RofiCmdPtr &msg)
     {
-        auto& joints = _model->GetJoints();
-        if ( msg->joint() < 0 || msg->joint() >= 3 )
+        using rofi::messages::RofiCmd;
+
+        switch ( msg->cmdtype() )
         {
-            std::cerr << "Warning: invalid joint " << msg->joint() << " specified\n";
+            case RofiCmd::NO_CMD:
+                break;
+            case RofiCmd::JOINT_CMD:
+                onJointCmd( msg->jointcmd() );
+                break;
+            case RofiCmd::DOCK_CMD:
+                std::cerr << "Dock commands not implemented\n";
+                break;
+        }
+    }
+
+    void onJointCmd( const rofi::messages::JointCmd &msg )
+    {
+        int joint = msg.joint();
+        if ( joint < 0 || joint >= 3 )
+        {
+            std::cerr << "Warning: invalid joint " << joint << " specified\n";
             return;
         }
 
-        switch ( msg->cmdtype() )
+        switch ( msg.cmdtype() )
         {
             using JointCmd = rofi::messages::JointCmd;
 
         case JointCmd::GET_MAX_POSITION:
         {
             double maxPosition = jointPositionBoundaries.second;
-            std::cout << "Returning max position of joint " << msg->joint() << ": " << maxPosition << "\n";
-            _pub->Publish( resp( JointCmd::GET_MAX_POSITION, msg->joint(), maxPosition ) );
+            std::cout << "Returning max position of joint " << joint << ": " << maxPosition << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_POSITION, joint, maxPosition ) );
             break;
         }
         case JointCmd::GET_MIN_POSITION:
         {
             double minPosition = jointPositionBoundaries.first;
-            std::cout << "Returning min position of joint " << msg->joint() << ": " << minPosition << "\n";
-            _pub->Publish( resp( JointCmd::GET_MIN_POSITION, msg->joint(), minPosition ) );
+            std::cout << "Returning min position of joint " << joint << ": " << minPosition << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_POSITION, joint, minPosition ) );
             break;
         }
         case JointCmd::GET_MAX_SPEED:
         {
             double maxSpeed = jointSpeedBoundaries.second;
-            std::cout << "Returning max speed of joint " << msg->joint() << ": " << maxSpeed << "\n";
-            _pub->Publish( resp( JointCmd::GET_MAX_SPEED, msg->joint(), maxSpeed ) );
+            std::cout << "Returning max speed of joint " << joint << ": " << maxSpeed << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_SPEED, joint, maxSpeed ) );
             break;
         }
         case JointCmd::GET_MIN_SPEED:
         {
             double minSpeed = jointSpeedBoundaries.first;
-            std::cout << "Returning min speed of joint " << msg->joint() << ": " << minSpeed << "\n";
-            _pub->Publish( resp( JointCmd::GET_MIN_SPEED, msg->joint(), minSpeed ) );
+            std::cout << "Returning min speed of joint " << joint << ": " << minSpeed << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_SPEED, joint, minSpeed ) );
             break;
         }
         case JointCmd::GET_MAX_TORQUE:
         {
             double maxTorque = maxJointTorque;
-            std::cout << "Returning max torque of joint " << msg->joint() << ": " << maxTorque << "\n";
-            _pub->Publish( resp( JointCmd::GET_MAX_TORQUE, msg->joint(), maxTorque ) );
+            std::cout << "Returning max torque of joint " << joint << ": " << maxTorque << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_TORQUE, joint, maxTorque ) );
             break;
         }
         case JointCmd::GET_SPEED:
         {
             double speed = 0; // TODO get speed
-            std::cout << "Returning current speed of joint " << msg->joint() << ": " << speed << "\n";
-            _pub->Publish( resp( JointCmd::GET_SPEED, msg->joint(), speed ) );
+            std::cout << "Returning current speed of joint " << joint << ": " << speed << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_SPEED, joint, speed ) );
             break;
         }
         case JointCmd::SET_SPEED:
         {
-            double velocity = msg->setspeed().speed();
+            double velocity = msg.setspeed().speed();
 
             // TODO set max force
-            joints[ msg->joint() ]->SetParam( "fmax", 0, maxJointTorque );
-            joints[ msg->joint() ]->SetParam( "vel", 0, velocity );
-            std::cerr << "Setting speed of joint " << msg->joint() << " to " << velocity << "\n";
+            auto &modelJoint = _model->GetJoints()[ joint ];
+            modelJoint->SetParam( "fmax", 0, maxJointTorque );
+            modelJoint->SetParam( "vel", 0, velocity );
+            std::cerr << "Setting speed of joint " << joint << " to " << velocity << "\n";
             // TODO set boundaries
-
-            std::cerr << to_string( joints[ msg->joint() ]->GetForceTorque( 0 ) ) << "\n";
             break;
         }
         case JointCmd::GET_POSITION:
         {
             double position = 0; // TODO get position
-            std::cout << "Returning current position of joint " << msg->joint() << ": " << position << "\n";
-            _pub->Publish( resp( JointCmd::GET_POSITION, msg->joint(), position ) );
+            std::cout << "Returning current position of joint " << joint << ": " << position << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_POSITION, joint, position ) );
             break;
         }
         case JointCmd::SET_POS_WITH_SPEED:
         {
-            double position = msg->setposwithspeed().position();
-            double velocity = msg->setposwithspeed().speed();
+            double position = msg.setposwithspeed().position();
+            double velocity = msg.setposwithspeed().speed();
 
             // TODO change sign of velocity if position is on the other side
             // TODO set max force
-            joints[ msg->joint() ]->SetParam( "fmax", 0, maxJointTorque );
-            joints[ msg->joint() ]->SetParam( "vel", 0, velocity );
-            std::cerr << "Setting position of joint " << msg->joint() << " to " << position << " with speed " << velocity << "\n";
+            auto &modelJoint = _model->GetJoints()[ joint ];
+            modelJoint->SetParam( "fmax", 0, maxJointTorque );
+            modelJoint->SetParam( "vel", 0, velocity );
+            std::cerr << "Setting position of joint " << joint << " to " << position << " with speed " << velocity << "\n";
             // TODO set boundary (position)
-
-            std::cerr << to_string( joints[ msg->joint() ]->GetForceTorque( 0 ) ) << "\n";
             break;
         }
         case JointCmd::GET_TORQUE:
         {
             double torque = 0; // TODO get torque
-            std::cout << "Returning current torque of joint " << msg->joint() << ": " << torque << "\n";
-            _pub->Publish( resp( JointCmd::GET_TORQUE, msg->joint(), torque ) );
+            std::cout << "Returning current torque of joint " << joint << ": " << torque << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_TORQUE, joint, torque ) );
             break;
         }
         case JointCmd::SET_TORQUE:
         {
-            double torque = msg->settorque().torque();
+            double torque = msg.settorque().torque();
 
             // TODO set torque
-            std::cerr << "Setting torque of joint " << msg->joint() << " to " << torque << "\n";
+            auto &modelJoint = _model->GetJoints()[ joint ];
+            std::cerr << "Setting torque of joint " << joint << " to " << torque << "\n";
 
-            std::cerr << to_string( joints[ msg->joint() ]->GetForceTorque( 0 ) ) << "\n";
+            std::cerr << "Torque:\n" << to_string( modelJoint->GetForceTorque( 0 ) ) << "\n";
             break;
         }
         default:
-            std::cerr << "Unknown command type: " << msg->cmdtype() << " of joint " << msg->joint() << "\n";
+            std::cerr << "Unknown command type: " << msg.cmdtype() << " of joint " << joint << "\n";
             break;
         }
     }

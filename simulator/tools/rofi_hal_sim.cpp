@@ -1,6 +1,6 @@
 #include "rofi_hal_sim.hpp"
 
-#include <jointCmd.pb.h>
+#include <cassert>
 
 namespace rofi
 {
@@ -10,7 +10,9 @@ namespace rofi
 
         RoFI::Joint RoFI::getJoint( int index )
         {
-            return rdata->joints.at( index )->getJoint();
+            if ( index < 0 || static_cast< size_t >( index ) > rdata->joints.size() )
+                throw std::out_of_range( "Joint index is out of range" );
+            return rdata->joints[ index ]->getJoint();
         }
 
         RoFI::Joint::Joint( RoFI::Joint::Data & data ) : jdata( &data ) {}
@@ -28,41 +30,30 @@ namespace rofi
             std::string moduleName = "universalModule";
 
             sub = node->Subscribe( "~/" + moduleName + "/response", &RoFI::Data::onResponse, this );
-            pub = node->Advertise< rofi::messages::JointCmd >( "~/" + moduleName + "/control" );
+            pub = node->Advertise< rofi::messages::RofiCmd >( "~/" + moduleName + "/control" );
 
             std::cerr << "Waiting for connection...\n";
             pub->WaitForConnection();
             std::cerr << "Connected\n";
         }
 
-        void RoFI::Data::onResponse( const boost::shared_ptr< const messages::JointResp > & resp )
+        void RoFI::Data::onResponse( const RoFI::Data::RofiRespPtr & resp )
         {
             std::cerr << "Got response\n";
-
-            int respJoint = resp->joint();
-            if ( respJoint < 0 || static_cast< size_t >( respJoint ) >= joints.size() )
+            messages::RofiCmd::Type resptype = resp->resptype();
+            switch ( resptype )
             {
-                std::cerr << "Joint response has invalid joint: " << respJoint << "\n";
-                return;
-            }
-            auto & jdata = joints[ respJoint ];
-            {
-                std::lock_guard< std::mutex > lg( jdata->respMapMutex );
-                auto range = jdata->respMap.equal_range( resp->cmdtype() );
-                for ( auto it = range.first; it != range.second; it++ )
+                case messages::RofiCmd::JOINT_CMD:
                 {
-                    it->second.set_value( resp );
+                    int index = resp->jointresp().joint();
+                    if ( index < 0 || static_cast< size_t >( index ) > joints.size() )
+                        throw std::out_of_range( "Joint index is out of range" );
+                    joints[ index ]->onResponse( resp );
+                    break;
                 }
-                if ( range.first == range.second )
-                    std::cerr << "No waiting futures for promise\n";
-            }
-            {
-                std::lock_guard< std::mutex > lock( jdata->respCallbacksMutex );
-                for ( auto callback : jdata->respCallbacks )
-                {
-                    if ( callback.first( resp ) )
-                        std::thread( callback.second, jdata->getJoint() ).detach();
-                }
+                default:
+                    // TODO
+                    break;
             }
         }
 
@@ -71,25 +62,51 @@ namespace rofi
             return Joint( *this );
         }
 
-        messages::JointCmd RoFI::Joint::Data::getCmdMsg( messages::JointCmd::Type type ) const
+        messages::RofiCmd RoFI::Joint::Data::getCmdMsg( messages::JointCmd::Type type ) const
         {
-            messages::JointCmd jointCmd;
-            jointCmd.set_joint( jointNumber );
-            jointCmd.set_cmdtype( type );
-            return jointCmd;
+            messages::RofiCmd rofiCmd;
+            rofiCmd.set_cmdtype( messages::RofiCmd::JOINT_CMD );
+            rofiCmd.mutable_jointcmd()->set_joint( jointNumber );
+            rofiCmd.mutable_jointcmd()->set_cmdtype( type );
+            return rofiCmd;
         }
 
-        std::future< RoFI::Joint::Data::JointRespPtr >
-                RoFI::Joint::Data::registerPromise( messages::JointCmd::Type type )
+        std::future< RoFI::Data::RofiRespPtr > RoFI::Joint::Data::registerPromise( messages::JointCmd::Type type )
         {
             std::lock_guard< std::mutex > lg( respMapMutex );
-            return respMap.emplace( type, std::promise< JointRespPtr >() )->second.get_future();
+            return respMap.emplace( type, std::promise< RoFI::Data::RofiRespPtr >() )->second.get_future();
         }
 
-        void RoFI::Joint::Data::registerCallback( std::function< bool( JointRespPtr ) > pred, std::function< void( Joint ) > callback )
+        void RoFI::Joint::Data::registerCallback( std::function< bool( const messages::JointResp & ) > pred, std::function< void( Joint ) > callback )
         {
             std::lock_guard< std::mutex > lock( respCallbacksMutex );
             respCallbacks.emplace_back( pred, callback );
+        }
+
+        void RoFI::Joint::Data::onResponse( const RoFI::Data::RofiRespPtr & resp )
+        {
+            assert( resp->resptype() == messages::RofiCmd::JOINT_CMD );
+            assert( resp->jointresp().joint() == jointNumber );
+
+            {
+                std::lock_guard< std::mutex > lg( respMapMutex );
+                auto range = respMap.equal_range( resp->jointresp().cmdtype() );
+                for ( auto it = range.first; it != range.second; it++ )
+                {
+                    it->second.set_value( resp );
+                }
+                respMap.erase( range.first, range.second );
+                if ( range.first == range.second )
+                    std::cerr << "No promises for response\n";
+            }
+            {
+                std::lock_guard< std::mutex > lock( respCallbacksMutex );
+                for ( auto callback : respCallbacks )
+                {
+                    if ( callback.first( resp->jointresp() ) )
+                        std::thread( callback.second, getJoint() ).detach();
+                }
+            }
         }
 
 
@@ -100,9 +117,9 @@ namespace rofi
             jdata->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
-            if ( resp->values_size() != 1 )
+            if ( resp->jointresp().values_size() != 1 )
                 throw std::runtime_error( "Unexpected size of values from response" );
-            return resp->values().Get( 0 );
+            return resp->jointresp().values().Get( 0 );
         }
 
         float RoFI::Joint::minPosition() const
@@ -112,9 +129,9 @@ namespace rofi
             jdata->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
-            if ( resp->values_size() != 1 )
+            if ( resp->jointresp().values_size() != 1 )
                 throw std::runtime_error( "Unexpected size of values from response" );
-            return resp->values().Get( 0 );
+            return resp->jointresp().values().Get( 0 );
         }
 
         float RoFI::Joint::maxSpeed() const
@@ -124,9 +141,9 @@ namespace rofi
             jdata->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
-            if ( resp->values_size() != 1 )
+            if ( resp->jointresp().values_size() != 1 )
                 throw std::runtime_error( "Unexpected size of values from response" );
-            return resp->values().Get( 0 );
+            return resp->jointresp().values().Get( 0 );
         }
 
         float RoFI::Joint::minSpeed() const
@@ -136,9 +153,9 @@ namespace rofi
             jdata->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
-            if ( resp->values_size() != 1 )
+            if ( resp->jointresp().values_size() != 1 )
                 throw std::runtime_error( "Unexpected size of values from response" );
-            return resp->values().Get( 0 );
+            return resp->jointresp().values().Get( 0 );
         }
 
         float RoFI::Joint::maxTorque() const
@@ -148,9 +165,9 @@ namespace rofi
             jdata->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
-            if ( resp->values_size() != 1 )
+            if ( resp->jointresp().values_size() != 1 )
                 throw std::runtime_error( "Unexpected size of values from response" );
-            return resp->values().Get( 0 );
+            return resp->jointresp().values().Get( 0 );
         }
 
         float RoFI::Joint::getSpeed() const
@@ -160,15 +177,15 @@ namespace rofi
             jdata->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
-            if ( resp->values_size() != 1 )
+            if ( resp->jointresp().values_size() != 1 )
                 throw std::runtime_error( "Unexpected size of values from response" );
-            return resp->values().Get( 0 );
+            return resp->jointresp().values().Get( 0 );
         }
 
         void RoFI::Joint::setSpeed( float speed )
         {
             auto msg = jdata->getCmdMsg( messages::JointCmd::SET_SPEED );
-            msg.mutable_setspeed()->set_speed( speed );
+            msg.mutable_jointcmd()->mutable_setspeed()->set_speed( speed );
             jdata->rofi.pub->Publish( msg, true );
         }
 
@@ -179,28 +196,28 @@ namespace rofi
             jdata->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
-            if ( resp->values_size() != 1 )
+            if ( resp->jointresp().values_size() != 1 )
                 throw std::runtime_error( "Unexpected size of values from response" );
-            return resp->values().Get( 0 );
+            return resp->jointresp().values().Get( 0 );
         }
 
         void RoFI::Joint::setPosition( float pos, float speed, void ( *callback )( RoFI::Joint ) )
         {
             if ( callback )
             {
-                jdata->registerCallback( [ pos ]( Data::JointRespPtr resp ){
-                            if ( resp->cmdtype() != messages::JointCmd::SET_POS_WITH_SPEED )
+                jdata->registerCallback( [ pos ]( const messages::JointResp & resp ){
+                            if ( resp.cmdtype() != messages::JointCmd::SET_POS_WITH_SPEED )
                                 return false;
-                            if ( resp->values_size() != 1 )
+                            if ( resp.values_size() != 1 )
                                 return false;
-                            return resp->values().Get( 0 ) == pos;
+                            return resp.values().Get( 0 ) == pos;
                             },
                         callback );
             }
 
             auto msg = jdata->getCmdMsg( messages::JointCmd::SET_POS_WITH_SPEED );
-            msg.mutable_setposwithspeed()->set_position( pos );
-            msg.mutable_setposwithspeed()->set_speed( speed );
+            msg.mutable_jointcmd()->mutable_setposwithspeed()->set_position( pos );
+            msg.mutable_jointcmd()->mutable_setposwithspeed()->set_speed( speed );
             jdata->rofi.pub->Publish( msg, true );
         }
 
@@ -211,15 +228,15 @@ namespace rofi
             jdata->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
-            if ( resp->values_size() != 1 )
+            if ( resp->jointresp().values_size() != 1 )
                 throw std::runtime_error( "Unexpected size of values from response" );
-            return resp->values().Get( 0 );
+            return resp->jointresp().values().Get( 0 );
         }
 
         void RoFI::Joint::setTorque( float torque )
         {
             auto msg = jdata->getCmdMsg( messages::JointCmd::SET_TORQUE );
-            msg.mutable_settorque()->set_torque( torque );
+            msg.mutable_jointcmd()->mutable_settorque()->set_torque( torque );
             jdata->rofi.pub->Publish( msg, true );
         }
     }
