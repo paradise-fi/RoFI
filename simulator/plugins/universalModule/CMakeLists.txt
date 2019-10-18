@@ -15,10 +15,13 @@ foreach(ITR ${GAZEBO_INCLUDE_DIRS})
 endforeach()
 
 set (msgs
+    messages/commands/rofiCmd.proto
     messages/commands/jointCmd.proto
     messages/commands/jointSetPosWithSpeedCmd.proto
     messages/commands/jointSetSpeedCmd.proto
     messages/commands/jointSetTorqueCmd.proto
+
+    messages/responses/rofiResp.proto
     messages/responses/jointResp.proto
 )
 

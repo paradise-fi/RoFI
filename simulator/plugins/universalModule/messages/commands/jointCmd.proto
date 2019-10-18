@@ -19,8 +19,8 @@ message JointCmd {
         SET_SPEED = 9;
         SET_TORQUE = 10;
     }
-    Type cmdType = 1;
-    int32 joint = 2;
+    int32 joint = 1;
+    Type cmdType = 2;
 
     JointSetPosWithSpeedCmd setPosWithSpeed = 4;
     JointSetSpeedCmd setSpeed = 3;

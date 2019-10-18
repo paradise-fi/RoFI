@@ -1,0 +1,17 @@
+syntax = "proto3";
+package rofi.messages;
+
+import "jointCmd.proto";
+
+message RofiCmd {
+    enum Type {
+        NO_CMD = 0;
+        JOINT_CMD = 1;
+        DOCK_CMD = 2;
+    }
+
+    int32 rofiId = 1;
+    Type cmdType = 2;
+
+    JointCmd jointCmd = 3;
+}
