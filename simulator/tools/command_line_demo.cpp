@@ -110,47 +110,79 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
     switch ( getJointCmdType( tokens[2] ) )
     {
         case JointCmd::GET_MAX_POSITION:
-            std::cout << "Max position: " << joint.maxPosition() << "\n";
+        {
+            auto result = joint.maxPosition();
+            std::cout << "Max position: " << result << "\n";
             break;
+		}
         case JointCmd::GET_MIN_POSITION:
-            std::cout << "Min position: " << joint.minPosition() << "\n";
+        {
+            auto result = joint.minPosition();
+            std::cout << "Min position: " << result << "\n";
             break;
+        }
         case JointCmd::GET_MAX_SPEED:
-            std::cout << "Max speed: " << joint.maxSpeed() << "\n";
+        {
+            auto result = joint.maxSpeed();
+            std::cout << "Max speed: " << result << "\n";
             break;
+		}
         case JointCmd::GET_MIN_SPEED:
-            std::cout << "Min speed: " << joint.minSpeed() << "\n";
+        {
+            auto result = joint.minSpeed();
+            std::cout << "Min speed: " << result << "\n";
             break;
+		}
         case JointCmd::GET_MAX_TORQUE:
-            std::cout << "Max torque: " << joint.maxTorque() << "\n";
+        {
+            auto result = joint.maxTorque();
+            std::cout << "Max torque: " << result << "\n";
             break;
+		}
         case JointCmd::GET_SPEED:
-            std::cout << "Current speed: " << joint.getSpeed() << "\n";
+        {
+            auto result = joint.getSpeed();
+            std::cout << "Current speed: " << result << "\n";
             break;
+		}
         case JointCmd::SET_SPEED:
+        {
             if ( tokens.size() != 4 )
                 throw std::runtime_error("Wrong number of arguments");
             joint.setSpeed( readFloat( tokens[3] ) );
             break;
+		}
         case JointCmd::GET_POSITION:
-            std::cout << "Current position: " << joint.getPosition() << "\n";
+        {
+            auto result = joint.getPosition();
+            std::cout << "Current position: " << result << "\n";
             break;
+		}
         case JointCmd::SET_POS_WITH_SPEED:
+        {
             if ( tokens.size() != 5 )
                 throw std::runtime_error("Wrong number of arguments");
             joint.setPosition( readFloat( tokens[3] ), readFloat( tokens[4] ), nullptr ); // TODO callback
             break;
+		}
         case JointCmd::GET_TORQUE:
-            std::cout << "Current torque: " << joint.getTorque() << "\n";
+        {
+            auto result = joint.getTorque();
+            std::cout << "Current torque: " << result << "\n";
             break;
+		}
         case JointCmd::SET_TORQUE:
+        {
             if ( tokens.size() != 4 )
                 throw std::runtime_error("Wrong number of arguments");
             joint.setTorque( readFloat( tokens[3] ) );
             break;
+		}
         default:
+        {
             printHelp();
             break;
+		}
     }
 }
 

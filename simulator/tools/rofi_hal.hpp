@@ -11,7 +11,7 @@ namespace rofi
             class Joint;
 
         private:
-            std::shared_ptr< Data > rdata;
+            boost::shared_ptr< Data > rdata;
 
         public:
             // TODO constructors
@@ -24,11 +24,12 @@ namespace rofi
             public:
                 class Data;
                 // TODO class JointError {};
-                std::shared_ptr< Data > jdata;
+
+                Data * jdata;
 
             private:
                 friend class RoFI::Data;
-                Joint() = default;
+                Joint( Data & data );
 
             public:
                 float maxPosition() const;
@@ -39,7 +40,7 @@ namespace rofi
                 float getSpeed() const;
                 void setSpeed( float speed );
                 float getPosition() const;
-                void setPosition( float pos, float speed, void (*callback)( Joint ));
+                void setPosition( float pos, float speed, void ( *callback )( Joint ) );
                 float getTorque() const;
                 void setTorque( float torque );
                 // TODO void onError( void ( *callback )( JointError ) );
