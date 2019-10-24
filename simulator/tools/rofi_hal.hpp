@@ -19,6 +19,12 @@ namespace rofi
             // Destructor is default, but has to be defined in implementation (for unique_ptr)
             ~RoFI();
 
+            RoFI( const RoFI & ) = delete;
+            RoFI & operator=( const RoFI & ) = delete;
+
+            RoFI( RoFI && ) = default;
+            RoFI & operator=( RoFI && ) = default;
+
             static RoFI & getLocalRoFI();
 
             Joint getJoint( int index );
@@ -36,6 +42,9 @@ namespace rofi
                 Joint( Data & data );
 
             public:
+                Joint( const Joint & ) = default;
+                Joint & operator=( const Joint & ) = default;
+
                 float maxPosition() const;
                 float minPosition() const;
                 float maxSpeed() const;
