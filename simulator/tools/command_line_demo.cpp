@@ -191,7 +191,7 @@ int main( int argc, char **argv )
     {
         gazebo::client::setup( argc, argv );
 
-        auto rofi = rofi::hal::RoFI();
+        auto & rofi = rofi::hal::RoFI::getLocalRoFI();
 
         for ( std::string line; std::getline( std::cin, line ); )
         {

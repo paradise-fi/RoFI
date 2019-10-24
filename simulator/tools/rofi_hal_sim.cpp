@@ -8,6 +8,13 @@ namespace rofi
     {
         RoFI::RoFI() : rdata( boost::make_shared< Data >( 3 ) ) {}
 
+        RoFI & RoFI::getLocalRoFI()
+        {
+            static RoFI localRoFI;
+            return localRoFI;
+        }
+
+
         RoFI::Joint RoFI::getJoint( int index )
         {
             if ( index < 0 || static_cast< size_t >( index ) > rdata->joints.size() )

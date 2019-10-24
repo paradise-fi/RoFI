@@ -13,9 +13,10 @@ namespace rofi
         private:
             boost::shared_ptr< Data > rdata;
 
+            RoFI();
+
         public:
-            // TODO constructors
-            explicit RoFI();
+            static RoFI & getLocalRoFI();
 
             Joint getJoint( int index );
 
