@@ -73,7 +73,7 @@ namespace rofi
 
         std::future< RoFI::Data::RofiRespPtr > RoFI::Joint::Data::registerPromise( messages::JointCmd::Type type )
         {
-            std::lock_guard< std::mutex > lg( respMapMutex );
+            std::lock_guard< std::mutex > lock( respMapMutex );
             return respMap.emplace( type, std::promise< RoFI::Data::RofiRespPtr >() )->second.get_future();
         }
 
@@ -89,7 +89,7 @@ namespace rofi
             assert( resp->jointresp().joint() == jointNumber );
 
             {
-                std::lock_guard< std::mutex > lg( respMapMutex );
+                std::lock_guard< std::mutex > lock( respMapMutex );
                 auto range = respMap.equal_range( resp->jointresp().cmdtype() );
                 for ( auto it = range.first; it != range.second; it++ )
                 {
