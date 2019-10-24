@@ -12,8 +12,6 @@
 
 #include "rofi_hal.hpp"
 
-#define CONNECT 1 // Want to connect to gazebo?
-
 
 inline std::string_view ltrim( std::string_view line, std::string_view ws = " \t" )
 {
