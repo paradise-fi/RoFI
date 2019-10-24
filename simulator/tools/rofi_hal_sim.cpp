@@ -6,7 +6,9 @@ namespace rofi
 {
     namespace hal
     {
-        RoFI::RoFI() : rdata( boost::make_shared< Data >( 3 ) ) {}
+        RoFI::RoFI() : rdata( std::make_unique< Data >( 3 ) ) {}
+
+        RoFI::~RoFI() = default;
 
         RoFI & RoFI::getLocalRoFI()
         {

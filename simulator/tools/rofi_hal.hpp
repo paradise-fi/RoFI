@@ -11,11 +11,14 @@ namespace rofi
             class Joint;
 
         private:
-            boost::shared_ptr< Data > rdata;
+            std::unique_ptr< Data > rdata;
 
             RoFI();
 
         public:
+            // Destructor is default, but has to be defined in implementation (for unique_ptr)
+            ~RoFI();
+
             static RoFI & getLocalRoFI();
 
             Joint getJoint( int index );
