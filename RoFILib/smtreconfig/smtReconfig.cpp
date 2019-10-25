@@ -4,12 +4,19 @@
 
 namespace rofi::smtr {
 
+void collectVar( const SinCosAngle& a, std::vector< z3::expr >& out ) {
+    out.insert( out.end(), { a.sin, a.sinhalf, a.cos, a.coshalf } );
+}
+
+
 void collectVar( const Shoe& s, std::vector< z3::expr >& out ) {
     out.insert( out.end(), { s.x, s.y, s.z, s.qa, s.qb, s.qc, s.qd } );
 }
 
 void collectVar( const Module& m, std::vector< z3::expr >& out ) {
-    out.insert( out.end(), { m.alpha, m.beta, m.gamma } );
+    collectVar( m.alpha, out );
+    collectVar( m.beta, out );
+    collectVar( m.gamma, out );
     for ( const auto& shoe : m.shoes ) {
         collectVar( shoe, out );
     }
@@ -70,6 +77,15 @@ Shoe buildShoe( z3::context& c, std::string shoeName, int moduleId, int cfgId ) 
     };
 }
 
+SinCosAngle buildAngle( z3::context& c, std::string name ) {
+    return {
+        realVar( c, name + "_sin" ),
+        realVar( c, name + "_sinhalf" ) ,
+        realVar( c, name + "_cos" ),
+        realVar( c, name + "_coshalf" )
+    };
+}
+
 std::vector< std::tuple< int, ShoeId, int, ShoeId > > allShoePairs( int count ) {
     std::vector< std::tuple< int, ShoeId, int, ShoeId > > ret;
 
@@ -110,9 +126,9 @@ SmtConfiguration buildConfiguration( z3::context& ctx,
     std::sort( moduleIds.begin(), moduleIds.end() );
     for( const auto& moduleId : moduleIds ) {
         Module m {
-            realVar( ctx, modulePrefix + "alpha", cfgId, moduleId ),
-            realVar( ctx, modulePrefix + "beta", cfgId, moduleId ),
-            realVar( ctx, modulePrefix + "gamma", cfgId, moduleId ),
+            buildAngle( ctx, fmt::format( modulePrefix + "alpha", cfgId, moduleId ) ),
+            buildAngle( ctx, fmt::format( modulePrefix + "beta", cfgId, moduleId ) ),
+            buildAngle( ctx, fmt::format( modulePrefix + "gamma", cfgId, moduleId ) ),
             {
                 buildShoe( ctx, "A", cfgId, moduleId ),
                 buildShoe( ctx, "B", cfgId, moduleId )
@@ -159,12 +175,12 @@ z3::expr phiNoIntersect( const SmtConfiguration& cfg ) {
     using namespace smt;
     z3::expr phi = cfg.context.bool_val( true );
     for ( auto [ m, ms, n, ns ] : allShoePairs( cfg.modules.size() ) ) {
-        auto shoeM = cfg.modules[ m ].shoes[ ms ];
-        auto shoeN = cfg.modules[ n ].shoes[ ns ];
+        const auto& shoeM = cfg.modules[ m ].shoes[ ms ];
+        const auto& shoeN = cfg.modules[ n ].shoes[ ns ];
         phi = phi &&
             ( square( shoeM.x - shoeN.x ) +
             square( shoeM.y - shoeN.y ) +
-            square( shoeM.z - shoeN.z ) ) >= cfg.context.real_val( 1 );
+            square( shoeM.z - shoeN.z ) ) >= 1;
 
     }
     return phi;
@@ -172,6 +188,91 @@ z3::expr phiNoIntersect( const SmtConfiguration& cfg ) {
 
 z3::expr phiIsConnected( const SmtConfiguration& cfg ) {
     return cfg.context.bool_val( true ); // ToDo
+}
+
+z3::expr phiShoeConsistent( const SmtConfiguration& cfg ) {
+    using namespace smt;
+    z3::expr phi = cfg.context.bool_val( true );
+    for ( const auto& module : cfg.modules ) {
+        const auto a = module.shoes[ ShoeId::A ];
+        const auto b = module.shoes[ ShoeId::B ];
+        phi = phi &&
+            b.x == a.x
+                + 2 * module.alpha.cos * ( a.qa * a.qc + a.qb * a.qd )
+                + 2 * module.alpha.sin * ( a.qa * a.qd - a.qb * a.qc )
+            &&
+            b.y == a.y
+                + 2 * module.alpha.cos * ( a.qc * a.qd - a.qa * a.qb )
+                + module.alpha.sin * ( -a.qa * a.qa + a.qb * a.qb - a.qc * a.qc + a.qd * a.qd )
+            &&
+            b.z == a.z
+                + module.alpha.cos * ( a.qa * a.qa - a.qb * a.qb - a.qc * a.qc + a.qd * a.qd )
+                - 2 * module.alpha.sin * (a.qa * a.qb + a.qc * a.qd );
+
+        phi = phi &&
+            b.qa ==
+                 a.qa * module.alpha.coshalf * module.beta.sinhalf * module.gamma.sinhalf
+                + a.qa * module.alpha.sinhalf * module.beta.coshalf * module.gamma.sinhalf
+                + a.qb * module.alpha.coshalf * module.beta.coshalf * module.gamma.sinhalf
+                - a.qb * module.alpha.sinhalf * module.beta.sinhalf * module.gamma.sinhalf
+                - a.qc * module.alpha.coshalf * module.beta.coshalf * module.gamma.coshalf
+                - a.qc * module.alpha.sinhalf * module.beta.sinhalf * module.gamma.coshalf
+                + a.qd * module.alpha.coshalf * module.beta.sinhalf * module.gamma.coshalf
+                - a.qd * module.alpha.sinhalf * module.beta.coshalf * module.gamma.coshalf
+            &&
+            b.qb ==
+                -a.qa * module.alpha.coshalf * module.beta.coshalf * module.gamma.sinhalf
+                + a.qa * module.alpha.sinhalf * module.beta.sinhalf * module.gamma.sinhalf
+                + a.qb * module.alpha.coshalf * module.beta.sinhalf * module.gamma.sinhalf
+                + a.qb * module.alpha.sinhalf * module.beta.coshalf * module.gamma.sinhalf
+                - a.qc * module.alpha.coshalf * module.beta.sinhalf * module.gamma.coshalf
+                + a.qc * module.alpha.sinhalf * module.beta.coshalf * module.gamma.coshalf
+                - a.qd * module.alpha.coshalf * module.beta.coshalf * module.gamma.coshalf
+                - a.qd * module.alpha.sinhalf * module.beta.sinhalf * module.gamma.coshalf
+            &&
+            b.qc ==
+                  a.qa * module.alpha.coshalf * module.beta.coshalf * module.gamma.coshalf
+                + a.qa * module.alpha.sinhalf * module.beta.sinhalf * module.gamma.coshalf
+                + a.qb * module.alpha.coshalf * module.beta.sinhalf * module.gamma.coshalf
+                - a.qb * module.alpha.sinhalf * module.beta.coshalf * module.gamma.coshalf
+                + a.qc * module.alpha.coshalf * module.beta.sinhalf * module.gamma.sinhalf
+                + a.qc * module.alpha.sinhalf * module.beta.coshalf * module.gamma.sinhalf
+                - a.qd * module.alpha.coshalf * module.beta.coshalf * module.gamma.sinhalf
+                + a.qd * module.alpha.sinhalf * module.beta.sinhalf * module.gamma.sinhalf
+            &&
+            b.qd ==
+                - a.qa * module.alpha.coshalf * module.beta.sinhalf * module.gamma.coshalf
+                + a.qa * module.alpha.sinhalf * module.beta.coshalf * module.gamma.coshalf
+                + a.qb * module.alpha.coshalf * module.beta.coshalf * module.gamma.coshalf
+                + a.qb * module.alpha.sinhalf * module.beta.sinhalf * module.gamma.coshalf
+                + a.qc * module.alpha.coshalf * module.beta.coshalf * module.gamma.sinhalf
+                - a.qc * module.alpha.sinhalf * module.beta.sinhalf * module.gamma.sinhalf
+                + a.qd * module.alpha.coshalf * module.beta.sinhalf * module.gamma.sinhalf
+                + a.qd * module.alpha.sinhalf * module.beta.coshalf * module.gamma.sinhalf
+            ;
+    }
+    return phi;
+}
+
+z3::expr phiSinCos( const SinCosAngle& a ) {
+    using namespace smt;
+    return
+        square( a.sin ) + square( a.cos ) == 1 &&
+        a.sin == 2 * a.sinhalf * a.coshalf &&
+        a.cos == 1 - 2 * square( a.sinhalf ) &&
+        a.sin >= -1 && a.sin <= 1 &&
+        a.cos >= -1 && a.cos <= 1 &&
+        a.sinhalf >= -1 && a.sinhalf <= 1 &&
+        a.coshalf >= -1 && a.coshalf <= 1;
+}
+
+z3::expr phiSinCos( const SmtConfiguration& cfg ) {
+    z3::expr phi = cfg.context.bool_val( true );
+    for ( const auto& module : cfg.modules ) {
+        phi = phi &&
+            phiSinCos( module.alpha ) && phiSinCos( module.beta ) && phiSinCos( module.gamma );
+    }
+    return phi;
 }
 
 } // namespace rofi::smtr
