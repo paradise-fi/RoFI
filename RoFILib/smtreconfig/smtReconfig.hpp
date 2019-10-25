@@ -18,8 +18,12 @@ struct Shoe {
     z3::expr qa, qb, qc, qd; // Shoe orientation
 };
 
+struct SinCosAngle {
+    z3::expr sin, sinhalf, cos, coshalf;
+};
+
 struct Module {
-    z3::expr alpha, beta, gamma; // Joint position
+    SinCosAngle alpha, beta, gamma; // Joint position
     std::array< Shoe, 2 > shoes; // Shoes
 };
 
@@ -47,6 +51,7 @@ struct SmtConfiguration {
     }
 };
 
+void collectVar( const SinCosAngle& a, std::vector< z3::expr >& out );
 void collectVar( const Shoe& s, std::vector< z3::expr >& out );
 void collectVar( const Module& m, std::vector< z3::expr >& out );
 void collectVar( const SmtConfiguration& c, std::vector< z3::expr >& out );
@@ -65,5 +70,7 @@ z3::expr phiValid( const SmtConfiguration& cfg );
 z3::expr phiConsistent( const SmtConfiguration& cfg );
 z3::expr phiNoIntersect( const SmtConfiguration& cfg );
 z3::expr phiIsConnected( const SmtConfiguration& cfg );
+z3::expr phiShoeConsistent( const SmtConfiguration& cfg );
+z3::expr phiSinCos( const SmtConfiguration& cfg );
 
 } // rofi::smtr

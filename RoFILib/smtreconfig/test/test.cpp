@@ -123,5 +123,64 @@ TEST_CASE( "phiNoIntersect" ) {
 
         REQUIRE( s.check() == z3::unsat );
     }
+}
 
+TEST_CASE( "Shoe consistency" ) {
+    z3::context ctx;
+    Configuration rofiCfg;
+    SECTION( "Default position" ) {
+        rofiCfg.addModule( 0, 0, 0, 0 );
+        auto smtCfg = buildConfiguration( ctx, rofiCfg, 0 );
+        z3::solver s( ctx );
+
+        s.add( phiShoeConsistent( smtCfg ) );
+        s.add( phiSinCos( smtCfg ) );
+        auto module = smtCfg.modules[ 0 ];
+        auto sA = module.shoes[ ShoeId::A ];
+        auto sB = module.shoes[ ShoeId::B ];
+
+        s.add( sA.x == 0 && sA.y == 0 && sA.z == 0 );
+        s.add( sA.qa == 1 && sA.qb == 0 && sA.qc == 0 && sA.qd == 0 );
+        s.add( sB.x == 0 && sB.y == 0 && sB.z == 1 );
+        s.add( sB.qa == 0 && sB.qb == 0 && sB.qc == 1 && sB.qd == 0 );
+
+        s.add( module.alpha.sin == 0 && module.alpha.sinhalf == 0 );
+        s.add( module.alpha.cos == 1 && module.alpha.coshalf == 1 );
+
+        s.add( module.beta.sin == 0 && module.beta.sinhalf == 0 );
+        s.add( module.beta.cos == 1 && module.beta.coshalf == 1 );
+
+        s.add( module.gamma.sin == 0 && module.gamma.sinhalf == 0 );
+        s.add( module.gamma.cos == 1 && module.gamma.coshalf == 1 );
+
+         REQUIRE( s.check() == z3::sat );
+    }
+
+    SECTION( "Invalid position" ) {
+        rofiCfg.addModule( 0, 0, 0, 0 );
+        auto smtCfg = buildConfiguration( ctx, rofiCfg, 0 );
+        z3::solver s( ctx );
+
+        s.add( phiShoeConsistent( smtCfg ) );
+        s.add( phiSinCos( smtCfg ) );
+        auto module = smtCfg.modules[ 0 ];
+        auto sA = module.shoes[ ShoeId::A ];
+        auto sB = module.shoes[ ShoeId::B ];
+
+        s.add( sA.x == 0 && sA.y == 0 && sA.z == 0 );
+        s.add( sA.qa == 1 && sA.qb == 0 && sA.qc == 0 && sA.qd == 0 );
+        s.add( sB.x == 0 && sB.y == 0 && sB.z == 1 );
+        s.add( sB.qa == 1 && sB.qb == 0 && sB.qc == 0 && sB.qd == 0 );
+
+        s.add( module.alpha.sin == 0 && module.alpha.sinhalf == 0 );
+        s.add( module.alpha.cos == 1 && module.alpha.coshalf == 1 );
+
+        s.add( module.beta.sin == 0 && module.beta.sinhalf == 0 );
+        s.add( module.beta.cos == 1 && module.beta.coshalf == 1 );
+
+        s.add( module.gamma.sin == 0 && module.gamma.sinhalf == 0 );
+        s.add( module.gamma.cos == 1 && module.gamma.coshalf == 1 );
+
+         REQUIRE( s.check() == z3::unsat );
+    }
 }
