@@ -164,7 +164,7 @@ z3::expr phiNoIntersect( const SmtConfiguration& cfg ) {
         phi = phi &&
             ( square( shoeM.x - shoeN.x ) +
             square( shoeM.y - shoeN.y ) +
-            square( shoeM.z - shoeN.z ) ) <= cfg.context.real_val( 1 );
+            square( shoeM.z - shoeN.z ) ) >= cfg.context.real_val( 1 );
 
     }
     return phi;

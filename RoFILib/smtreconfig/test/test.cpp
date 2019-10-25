@@ -64,3 +64,64 @@ TEST_CASE("SmtConfiguration building") {
     REQUIRE( smt3.connection( 2, ShoeId::B, ZMinus, 0, ShoeId::A, XPlus, North )
         .decl().name().str() == "cfg0_c_42A+X_44B-Z_N" );
 }
+
+TEST_CASE( "phiNoIntersect" ) {
+    z3::context ctx;
+    Configuration rofiCfg;
+    rofiCfg.addModule( 0, 0, 0, 42 );
+    rofiCfg.addModule( 0, 0, 0, 43 );
+    auto smtCfg = buildConfiguration( ctx, rofiCfg, 0 );
+
+    SECTION( "No intersection" ) {
+        z3::solver s( ctx );
+        s.add( phiNoIntersect( smtCfg ) );
+
+        // Place shoes in space
+        auto msA = smtCfg.modules[ 0 ].shoes[ ShoeId::A ];
+        auto msB = smtCfg.modules[ 0 ].shoes[ ShoeId::B ];
+        s.add( msA.x == ctx.real_val( 0 ) );
+        s.add( msA.y == ctx.real_val( 0 ) );
+        s.add( msA.z == ctx.real_val( 0 ) );
+        s.add( msB.x == ctx.real_val( 1 ) );
+        s.add( msB.y == ctx.real_val( 0 ) );
+        s.add( msB.z == ctx.real_val( 0 ) );
+
+        auto nsA = smtCfg.modules[ 1 ].shoes[ ShoeId::A ];
+        auto nsB = smtCfg.modules[ 1 ].shoes[ ShoeId::B ];
+        s.add( nsA.x == ctx.real_val( 0 ) );
+        s.add( nsA.y == ctx.real_val( 1 ) );
+        s.add( nsA.z == ctx.real_val( 0 ) );
+        s.add( nsB.x == ctx.real_val( 1 ) );
+        s.add( nsB.y == ctx.real_val( 1 ) );
+        s.add( nsB.z == ctx.real_val( 0 ) );
+
+        REQUIRE( s.check() == z3::sat );
+    }
+
+    SECTION( "Intersection" ) {
+        z3::solver s( ctx );
+        s.add( phiNoIntersect( smtCfg ) );
+
+        // Place shoes in space
+        auto msA = smtCfg.modules[ 0 ].shoes[ ShoeId::A ];
+        auto msB = smtCfg.modules[ 0 ].shoes[ ShoeId::B ];
+        s.add( msA.x == ctx.real_val( 0 ) );
+        s.add( msA.y == ctx.real_val( 0 ) );
+        s.add( msA.z == ctx.real_val( 0 ) );
+        s.add( msB.x == ctx.real_val( 1 ) );
+        s.add( msB.y == ctx.real_val( 0 ) );
+        s.add( msB.z == ctx.real_val( 0 ) );
+
+        auto nsA = smtCfg.modules[ 1 ].shoes[ ShoeId::A ];
+        auto nsB = smtCfg.modules[ 1 ].shoes[ ShoeId::B ];
+        s.add( nsA.x == ctx.real_val( 0 ) );
+        s.add( nsA.y == ctx.real_val( 1, 2 ) );
+        s.add( nsA.z == ctx.real_val( 0 ) );
+        s.add( nsB.x == ctx.real_val( 1 ) );
+        s.add( nsB.y == ctx.real_val( 1, 2 ) );
+        s.add( nsB.z == ctx.real_val( 0 ) );
+
+        REQUIRE( s.check() == z3::unsat );
+    }
+
+}
