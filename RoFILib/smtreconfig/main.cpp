@@ -1,4 +1,6 @@
 #include <z3++.h>
+#include <Configuration.h>
+
 
 bool doesDeMorganHold() {
     z3::context c;
