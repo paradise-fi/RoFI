@@ -1,4 +1,5 @@
 #include "smtReconfig.hpp"
+#include "smt.hpp"
 #include <fmt/format.h>
 
 namespace rofi::smtr {
@@ -56,7 +57,7 @@ z3::expr boolVar( z3::context& c, const std::string& format, Args... args ) {
     return c.bool_const( fmt::format( format, args... ).c_str() );
 }
 
-Shoe buildShoe( z3::context& c, std::string shoeName, int moduleId ) {
+Shoe buildShoe( z3::context& c, std::string shoeName, int moduleId, int cfgId ) {
     const std::string shoePrefix = "cfg{}_m{}_s" + shoeName + "_";
     return {
         realVar( c, shoePrefix + "x", cfgId, moduleId ),
@@ -99,7 +100,7 @@ auto allShoeConnections() ->
 }
 
 SmtConfiguration buildConfiguration( z3::context& ctx,
-    const Configuration& cfg )
+    const Configuration& cfg, int cfgId )
 {
     SmtConfiguration smtCfg{ {}, {}, ctx };
 
@@ -155,7 +156,18 @@ z3::expr phiConsistent( const SmtConfiguration& cfg ) {
 }
 
 z3::expr phiNoIntersect( const SmtConfiguration& cfg ) {
-    return cfg.context.bool_val( true ); // ToDo
+    using namespace smt;
+    z3::expr phi = cfg.context.bool_val( true );
+    for ( auto [ m, ms, n, ns ] : allShoePairs( cfg.modules.size() ) ) {
+        auto shoeM = cfg.modules[ m ].shoes[ ms ];
+        auto shoeN = cfg.modules[ n ].shoes[ ns ];
+        phi = phi &&
+            ( square( shoeM.x - shoeN.x ) +
+            square( shoeM.y - shoeN.y ) +
+            square( shoeM.z - shoeN.z ) ) <= cfg.context.real_val( 1 );
+
+    }
+    return phi;
 }
 
 z3::expr phiIsConnected( const SmtConfiguration& cfg ) {
