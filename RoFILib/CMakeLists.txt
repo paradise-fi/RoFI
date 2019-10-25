@@ -15,6 +15,7 @@ find_package(Armadillo REQUIRED)
 find_package(VTK REQUIRED)
 include(${VTK_USE_FILE})
 
+add_subdirectory("extlib/fmt-6.0.0")
 
 add_subdirectory(configuration)
 add_subdirectory(distribute)
