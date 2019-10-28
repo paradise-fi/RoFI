@@ -12,8 +12,6 @@
 
 #include "udp_6Example.hpp"
 
-// esp32-003 ipv6 fc07:3:3ffb:1a80:0:0:0:3
-// esp32-004 ipv6 fc07:4:3ffb:1a80:0:0:0:4
 
 void setupStack() {
     tcpip_adapter_init();
@@ -92,20 +90,19 @@ extern "C" void app_main() {
 	ESP_ERROR_CHECK( r );
 
 	_rofi::RoIF6 roif(
+		// _rofi::Ip6Addr( getAddress( getId() ) ),
 		mac(),
-		//getOwn( getId() ),
-		getAddress( getId() ),
-		"fe80::",
-		"fe80::",
 		docks( getId() ) );
 
 	roif.setUp();
 	roif.printAddresses();
-
-	if ( getId() == 1 )
+	if ( getId() == 1 ) {
+		roif.addAddress( _rofi::Ip6Addr( "fe80::1" ) );
 		udpEx6::runMaster();
-	else
-		udpEx6::runSlave( /* "fe80:0:0:0:ae30:0:cce5:14a4" */ "fe80::1" );
+	} else
+		udpEx6::runSlave( // "fe80:0:0:0:ae30:0:cce5:14a4"
+						  "fe80::1"
+						);
 	
-	while ( true ) vTaskDelay( 2000 / portTICK_PERIOD_MS );
+	while ( true ) vTaskDelay( 1000 / portTICK_PERIOD_MS );
 }

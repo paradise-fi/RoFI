@@ -697,7 +697,7 @@
 /**
  * IP_DEBUG: Enable debugging for IP.
  */
-#define IP_DEBUG                        LWIP_DBG_OFF
+#define IP_DEBUG                        LWIP_DBG_ON
 
 /**
  * MEMP_DEBUG: Enable debugging in memp.c.

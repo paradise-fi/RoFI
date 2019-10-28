@@ -21,11 +21,10 @@ inline void onMasterPacket(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 	if ( !p ) return;
 
 	auto packet = _rofi::PBuf::own( p );
-	std::cout << std::hex << _rofi::Ip6Addr( addr->u_addr.ip6 ) << ":" << port << " sent: "
-				<< packet.asString() << " (on master packet)" << std::dec << std::endl;
+	std::cout << std::hex << _rofi::Ip6Addr( addr->u_addr.ip6 ) << std::dec
+		<< "; port: " << port << " sent: "	<< packet.asString() << std::endl;
 	
 	udp_sendto( pcb, packet.get(), addr, port );
-	// free(p);
 }
 
 inline void onSlavePacket(void *arg, struct udp_pcb *pcb, struct pbuf *p,
@@ -34,9 +33,8 @@ inline void onSlavePacket(void *arg, struct udp_pcb *pcb, struct pbuf *p,
 	if ( !p ) return;
 
 	auto packet = _rofi::PBuf::own( p );
-	std::cout << std::hex << _rofi::Ip6Addr( addr->u_addr.ip6 ) << ":" << port << " responded: "
-				<< packet.asString() << " (on slave packet)" << std::dec << std::endl;
-	// free(p);
+	std::cout << std::hex << _rofi::Ip6Addr( addr->u_addr.ip6 ) << std::dec 
+		<< "; port: " << port << " responded: " << packet.asString() << std::endl;
 }
 
 inline void runMaster() {
