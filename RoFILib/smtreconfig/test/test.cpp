@@ -1,4 +1,4 @@
-#include <catch.hpp>
+#include <catch2/catch.hpp>
 #include <smtReconfig.hpp>
 
 using namespace rofi::smtr;

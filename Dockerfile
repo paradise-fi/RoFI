@@ -22,4 +22,11 @@ RUN llvm-cov --version
 RUN gcov --version
 RUN clang-tidy --version
 
+RUN cd /tmp; \
+    git clone https://github.com/catchorg/Catch2.git; \
+    cd Catch2; \
+    git checkout v2.10.2; \
+    cmake -Bbuild -H. -DBUILD_TESTING=OFF; \
+    cmake --build build/ --target install
+
 CMD ["bash"]
