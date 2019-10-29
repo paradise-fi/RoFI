@@ -5,7 +5,7 @@ using namespace rofi::smtr;
 
 TEST_CASE("SmtConfiguration building") {
     Configuration rofiCfg;
-    z3::context c;
+    Context c;
 
     auto smtEmpty = buildConfiguration( c, rofiCfg, 0 );
     REQUIRE( smtEmpty.modules.size() == 0 );
@@ -66,75 +66,76 @@ TEST_CASE("SmtConfiguration building") {
 }
 
 TEST_CASE( "phiNoIntersect" ) {
-    z3::context ctx;
+    Context ctx;
     Configuration rofiCfg;
     rofiCfg.addModule( 0, 0, 0, 42 );
     rofiCfg.addModule( 0, 0, 0, 43 );
     auto smtCfg = buildConfiguration( ctx, rofiCfg, 0 );
 
     SECTION( "No intersection" ) {
-        z3::solver s( ctx );
-        s.add( phiNoIntersect( smtCfg ) );
+        z3::solver s( ctx.ctx );
+        s.add( phiNoIntersect( ctx, smtCfg ) );
 
         // Place shoes in space
         auto msA = smtCfg.modules[ 0 ].shoes[ ShoeId::A ];
         auto msB = smtCfg.modules[ 0 ].shoes[ ShoeId::B ];
-        s.add( msA.x == ctx.real_val( 0 ) );
-        s.add( msA.y == ctx.real_val( 0 ) );
-        s.add( msA.z == ctx.real_val( 0 ) );
-        s.add( msB.x == ctx.real_val( 1 ) );
-        s.add( msB.y == ctx.real_val( 0 ) );
-        s.add( msB.z == ctx.real_val( 0 ) );
+        s.add( msA.x == ctx.ctx.real_val( 0 ) );
+        s.add( msA.y == ctx.ctx.real_val( 0 ) );
+        s.add( msA.z == ctx.ctx.real_val( 0 ) );
+        s.add( msB.x == ctx.ctx.real_val( 1 ) );
+        s.add( msB.y == ctx.ctx.real_val( 0 ) );
+        s.add( msB.z == ctx.ctx.real_val( 0 ) );
 
         auto nsA = smtCfg.modules[ 1 ].shoes[ ShoeId::A ];
         auto nsB = smtCfg.modules[ 1 ].shoes[ ShoeId::B ];
-        s.add( nsA.x == ctx.real_val( 0 ) );
-        s.add( nsA.y == ctx.real_val( 1 ) );
-        s.add( nsA.z == ctx.real_val( 0 ) );
-        s.add( nsB.x == ctx.real_val( 1 ) );
-        s.add( nsB.y == ctx.real_val( 1 ) );
-        s.add( nsB.z == ctx.real_val( 0 ) );
+        s.add( nsA.x == ctx.ctx.real_val( 0 ) );
+        s.add( nsA.y == ctx.ctx.real_val( 1 ) );
+        s.add( nsA.z == ctx.ctx.real_val( 0 ) );
+        s.add( nsB.x == ctx.ctx.real_val( 1 ) );
+        s.add( nsB.y == ctx.ctx.real_val( 1 ) );
+        s.add( nsB.z == ctx.ctx.real_val( 0 ) );
 
         REQUIRE( s.check() == z3::sat );
     }
 
     SECTION( "Intersection" ) {
-        z3::solver s( ctx );
-        s.add( phiNoIntersect( smtCfg ) );
+        z3::solver s( ctx.ctx );
+        s.add( phiNoIntersect( ctx, smtCfg ) );
 
         // Place shoes in space
         auto msA = smtCfg.modules[ 0 ].shoes[ ShoeId::A ];
         auto msB = smtCfg.modules[ 0 ].shoes[ ShoeId::B ];
-        s.add( msA.x == ctx.real_val( 0 ) );
-        s.add( msA.y == ctx.real_val( 0 ) );
-        s.add( msA.z == ctx.real_val( 0 ) );
-        s.add( msB.x == ctx.real_val( 1 ) );
-        s.add( msB.y == ctx.real_val( 0 ) );
-        s.add( msB.z == ctx.real_val( 0 ) );
+        s.add( msA.x == ctx.ctx.real_val( 0 ) );
+        s.add( msA.y == ctx.ctx.real_val( 0 ) );
+        s.add( msA.z == ctx.ctx.real_val( 0 ) );
+        s.add( msB.x == ctx.ctx.real_val( 1 ) );
+        s.add( msB.y == ctx.ctx.real_val( 0 ) );
+        s.add( msB.z == ctx.ctx.real_val( 0 ) );
 
         auto nsA = smtCfg.modules[ 1 ].shoes[ ShoeId::A ];
         auto nsB = smtCfg.modules[ 1 ].shoes[ ShoeId::B ];
-        s.add( nsA.x == ctx.real_val( 0 ) );
-        s.add( nsA.y == ctx.real_val( 1, 2 ) );
-        s.add( nsA.z == ctx.real_val( 0 ) );
-        s.add( nsB.x == ctx.real_val( 1 ) );
-        s.add( nsB.y == ctx.real_val( 1, 2 ) );
-        s.add( nsB.z == ctx.real_val( 0 ) );
+        s.add( nsA.x == ctx.ctx.real_val( 0 ) );
+        s.add( nsA.y == ctx.ctx.real_val( 1, 2 ) );
+        s.add( nsA.z == ctx.ctx.real_val( 0 ) );
+        s.add( nsB.x == ctx.ctx.real_val( 1 ) );
+        s.add( nsB.y == ctx.ctx.real_val( 1, 2 ) );
+        s.add( nsB.z == ctx.ctx.real_val( 0 ) );
 
         REQUIRE( s.check() == z3::unsat );
     }
 }
 
 TEST_CASE( "Shoe consistency" ) {
-    z3::context ctx;
+    Context ctx;
     Configuration rofiCfg;
     SECTION( "Default position" ) {
         rofiCfg.addModule( 0, 0, 0, 0 );
         auto smtCfg = buildConfiguration( ctx, rofiCfg, 0 );
-        z3::solver s( ctx );
+        z3::solver s( ctx.ctx );
 
-        s.add( phiShoeConsistent( smtCfg ) );
-        s.add( phiSinCos( smtCfg ) );
+        s.add( phiShoeConsistent( ctx, smtCfg ) );
+        s.add( phiSinCos( ctx, smtCfg ) );
+        s.add( ctx.constraints() );
         auto module = smtCfg.modules[ 0 ];
         auto sA = module.shoes[ ShoeId::A ];
         auto sB = module.shoes[ ShoeId::B ];
@@ -153,16 +154,17 @@ TEST_CASE( "Shoe consistency" ) {
         s.add( module.gamma.sin == 0 && module.gamma.sinhalf == 0 );
         s.add( module.gamma.cos == 1 && module.gamma.coshalf == 1 );
 
-         REQUIRE( s.check() == z3::sat );
+        REQUIRE( s.check() == z3::sat );
     }
 
     SECTION( "Invalid position" ) {
         rofiCfg.addModule( 0, 0, 0, 0 );
         auto smtCfg = buildConfiguration( ctx, rofiCfg, 0 );
-        z3::solver s( ctx );
+        z3::solver s( ctx.ctx );
 
-        s.add( phiShoeConsistent( smtCfg ) );
-        s.add( phiSinCos( smtCfg ) );
+        s.add( phiShoeConsistent( ctx, smtCfg ) );
+        s.add( phiSinCos( ctx, smtCfg ) );
+        s.add( ctx.constraints() );
         auto module = smtCfg.modules[ 0 ];
         auto sA = module.shoes[ ShoeId::A ];
         auto sB = module.shoes[ ShoeId::B ];
@@ -181,6 +183,32 @@ TEST_CASE( "Shoe consistency" ) {
         s.add( module.gamma.sin == 0 && module.gamma.sinhalf == 0 );
         s.add( module.gamma.cos == 1 && module.gamma.coshalf == 1 );
 
-         REQUIRE( s.check() == z3::unsat );
+        REQUIRE( s.check() == z3::unsat );
+    }
+}
+
+TEST_CASE( "Connector consistency" ) {
+    Context ctx;
+    Configuration rofiCfg;
+    rofiCfg.addModule( 0, 0, 0, 42 );
+    rofiCfg.addModule( 0, 0, 0, 43 );
+    SmtConfiguration smtCfg = buildConfiguration( ctx, rofiCfg, 0 );
+    SECTION( "X- to Z-" ) {
+        z3::solver s( ctx.ctx );
+        s.add( ctx.constraints() );
+        s.add( phiSinCos( ctx, smtCfg ) );
+        s.add( phiConnectorConsistent( ctx, smtCfg ) );
+        s.add( smtCfg.connection( 0, ShoeId::A, XMinus, 1, ShoeId::A, ZMinus, North ) );
+
+        auto sA = smtCfg.modules[ 0 ].shoes[ ShoeId::A ];
+        s.add( sA.x == 0 && sA.y == 0 && sA.z == 0 );
+        s.add( sA.qa == 1 && sA.qb == 0 && sA.qc == 0 && sA.qd == 0 );
+
+        auto sB = smtCfg.modules[ 1 ].shoes[ ShoeId::B ];
+        s.add( sB.x == 1 && sB.y == 0 && sB.z == 0 );
+        s.add( sB.qa == - ctx.sqrt2 / 2 && sB.qb == 0 &&
+            sB.qc == -ctx.sqrt2 / 2 && sB.qd == 0 );
+
+        REQUIRE( s.check() == z3::sat );
     }
 }
