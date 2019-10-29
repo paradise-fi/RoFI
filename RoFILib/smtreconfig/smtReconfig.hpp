@@ -21,6 +21,7 @@ struct SinCosAngle {
 struct Module {
     SinCosAngle alpha, beta, gamma; // Joint position
     std::array< Shoe, 2 > shoes; // Shoes
+    std::string prefix;
 };
 
 struct SmtConfiguration {

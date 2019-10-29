@@ -514,7 +514,15 @@ public:
 
     bool findEdge(const Edge& edge) const
     {
+        int idx = edge.side1() * 3 + edge.dock1();
         return edges.at(edge.id1())[edge.side1() * 3 + edge.dock1()].has_value();
+    }
+
+    bool findConnection(const Edge& edge) const
+    {
+        int idx = edge.side1() * 3 + edge.dock1();
+        const auto edgeCandidate = edges.at(edge.id1())[idx];
+        return edgeCandidate.has_value() && edgeCandidate.value() == edge;
     }
 
     void setFixed(ID initID, ShoeId initSide, const Matrix& initRotation)

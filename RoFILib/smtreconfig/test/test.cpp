@@ -212,3 +212,76 @@ TEST_CASE( "Connector consistency" ) {
         REQUIRE( s.check() == z3::sat );
     }
 }
+
+TEST_CASE( "phiIs Connected" ) {
+    Context ctx;
+
+    SECTION( "Disconnected 1" ) {
+        Configuration rofiCfg;
+        rofiCfg.addModule( 0, 0, 0, 42 );
+        rofiCfg.addModule( 0, 0, 0, 43 );
+        SmtConfiguration smtCfg = buildConfiguration( ctx, rofiCfg, 0 );
+
+        z3::solver s ( ctx.ctx );
+        s.add( ctx.constraints() );
+        s.add( phiIsConnected( ctx, smtCfg ) );
+        s.add( phiEqual( ctx, smtCfg, rofiCfg ).simplify() );
+
+        auto res = s.check();
+        // CAPTURE( s.to_smt2() );
+        // CAPTURE( s.get_model() );
+        REQUIRE( res == z3::unsat );
+    }
+
+    SECTION( "Disconnected 2" ) {
+        Configuration rofiCfg;
+        rofiCfg.addModule( 0, 0, 0, 42 );
+        rofiCfg.addModule( 0, 0, 0, 43 );
+        rofiCfg.addModule( 0, 0, 0, 44 );
+        rofiCfg.addEdge( { 42, A, XPlus, North, XPlus, A, 43 } );
+        rofiCfg.addEdge( { 42, B, XPlus, North, XPlus, B, 43 } );
+        SmtConfiguration smtCfg = buildConfiguration( ctx, rofiCfg, 0 );
+
+        z3::solver s ( ctx.ctx );
+        s.add( ctx.constraints() );
+        s.add( phiIsConnected( ctx, smtCfg ) );
+        s.add( phiEqual( ctx, smtCfg, rofiCfg ) );
+
+        auto res = s.check();
+        // CAPTURE( s.get_model() );
+        REQUIRE( res == z3::unsat );
+    }
+
+    SECTION( "Connected 1" ) {
+        Configuration rofiCfg;
+        rofiCfg.addModule( 0, 0, 0, 42 );
+        rofiCfg.addModule( 0, 0, 0, 43 );
+        rofiCfg.addEdge( { 42, A, XPlus, North, XPlus, A, 43 } );
+        SmtConfiguration smtCfg = buildConfiguration( ctx, rofiCfg, 0 );
+
+        z3::solver s ( ctx.ctx );
+        s.add( ctx.constraints() );
+        s.add( phiIsConnected( ctx, smtCfg ) );
+        s.add( phiEqual( ctx, smtCfg, rofiCfg ).simplify() );
+
+        // CAPTURE( s.to_smt2() );
+        REQUIRE( s.check() == z3::sat );
+    }
+
+    SECTION( "Connected 2 " ) {
+        Configuration rofiCfg;
+        rofiCfg.addModule( 0, 0, 0, 42 );
+        rofiCfg.addModule( 0, 0, 0, 43 );
+        rofiCfg.addModule( 0, 0, 0, 44 );
+        rofiCfg.addEdge( { 42, A, XPlus, North, XPlus, A, 43 } );
+        rofiCfg.addEdge( { 43, B, XPlus, North, XPlus, B, 44 } );
+        SmtConfiguration smtCfg = buildConfiguration( ctx, rofiCfg, 0 );
+
+        z3::solver s ( ctx.ctx );
+        s.add( ctx.constraints() );
+        s.add( phiIsConnected( ctx, smtCfg ) );
+        s.add( phiEqual( ctx, smtCfg, rofiCfg ) );
+
+        REQUIRE( s.check() == z3::sat );
+    }
+}

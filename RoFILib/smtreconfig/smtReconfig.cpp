@@ -1,6 +1,7 @@
 #include "smtReconfig.hpp"
 #include "smt.hpp"
 #include <fmt/format.h>
+#include <IO.h>
 
 namespace rofi::smtr {
 
@@ -132,7 +133,8 @@ SmtConfiguration buildConfiguration( Context& ctx,
             {
                 buildShoe( ctx.ctx, "A", cfgId, moduleId ),
                 buildShoe( ctx.ctx, "B", cfgId, moduleId )
-            }
+            },
+            fmt::format( modulePrefix, cfgId, moduleId )
         };
         smtCfg.modules.push_back( m );
     };
@@ -187,8 +189,64 @@ z3::expr phiNoIntersect( Context& ctx, const SmtConfiguration& cfg ) {
     return phi;
 }
 
+z3::expr phiIsConnected( Context& ctx, const SmtConfiguration& cfg,
+    int moduleA, int moduleB )
+{
+    z3::expr phi = ctx.ctx.bool_val( false );
+    for ( auto ms : { A, B } ) {
+        for ( auto ns: { A, B } ) {
+            for ( auto [ mc, nc, o ] : allShoeConnections() ) {
+                phi = phi || cfg.connection( moduleA, ms, mc, moduleB, ns, nc, o );
+            }
+        }
+    }
+    return phi;
+}
+
 z3::expr phiIsConnected( Context& ctx, const SmtConfiguration& cfg ) {
-    return ctx.ctx.bool_val( true ); // ToDo
+    z3::expr phi = ctx.ctx.bool_val( true );
+
+    // Source: https://cs.stackexchange.com/questions/111410/sat-algorithm-for-determining-if-a-graph-is-disjoint
+
+    std::vector< std::vector< z3::expr > > reachable; // in n steps
+    for ( const auto& module : cfg.modules ) {
+        reachable.push_back( {} );
+        std::string format = module.prefix + "reachable{}";
+        for ( int i = 0; i != cfg.modules.size(); i++ ) {
+            reachable.back().push_back( boolVar( ctx.ctx, format, i ) );
+        }
+    }
+
+    phi = phi && reachable[ 0 ][ 0 ];
+    for ( int i = 1; i < reachable.size(); i++ ) {
+        phi = phi && !reachable[ i ][ 0 ];
+    }
+
+    // std::cout << "Phi: " << phi << "\n";
+    for ( int moduleIdx = 0; moduleIdx != cfg.modules.size(); moduleIdx++ ) {
+        for ( int i = 0; i < reachable[ moduleIdx ].size() - 1; i++ ) {
+            z3::expr neighUnreach = ctx.ctx.bool_val( true );
+            for ( int otherIdx = 0; otherIdx != reachable.size(); otherIdx++ ) {
+                if ( moduleIdx == otherIdx )
+                    continue;
+                neighUnreach = neighUnreach && smt::implies(
+                    phiIsConnected( ctx, cfg, moduleIdx, otherIdx ),
+                        !reachable[ otherIdx ][ i ] );
+            }
+            phi = phi &&
+                smt::implies( !reachable[ moduleIdx ][ i ] && neighUnreach,
+                    !reachable[ moduleIdx ][ i + 1 ] );
+            // std::cout << "(" << moduleIdx << "): ";
+            // std::cout << phi << "\n";
+        }
+    }
+
+    int last = cfg.modules.size() - 1;
+    for ( const auto& moduleReachables : reachable ) {
+        phi = phi && moduleReachables[ last ];
+    }
+    // std::cout << "Result: " << phi << "\n";
+    return phi;
 }
 
 z3::expr phiShoeConsistent( Context& ctx, const SmtConfiguration& cfg ) {
@@ -504,12 +562,14 @@ z3::expr phiEqual( Context& ctx, const SmtConfiguration& smtCfg,
 
     for ( auto [ m, ms, n, ns ] : allShoePairs( moduleIds.size() ) ) {
         for ( auto [ mc, nc, o ] : allShoeConnections() ) {
-            Edge e(moduleIds[ m ], ms, mc, o, nc, ns, n );
+            Edge e(moduleIds[ m ], ms, mc, o, nc, ns, moduleIds[ n ] );
             const auto& connection = smtCfg.connection( m, ms, mc, n, ns, nc, o );
-            if ( cfg.findEdge( e ) )
+            if ( cfg.findConnection( e ) ) {
                 phi = phi && connection;
-            else
+            }
+            else {
                 phi = phi && !connection;
+            }
         }
     }
 
