@@ -4,13 +4,13 @@
 
 TEST_CASE("Connections")
 {
-    for (Side side1 : {A, B})
+    for (ShoeId side1 : {A, B})
     {
-        for (Side side2 : {A, B})
+        for (ShoeId side2 : {A, B})
         {
-            for (Dock dock1 : {Zn, Xp, Xn})
+            for (ConnectorId dock1 : {ZMinus, XPlus, XMinus})
             {
-                for (Dock dock2 : {Zn, Xp, Xn})
+                for (ConnectorId dock2 : {ZMinus, XPlus, XMinus})
                 {
                     for (unsigned int ori : {0,1,2,3})
                     {
@@ -36,16 +36,16 @@ TEST_CASE("Connections")
 TEST_CASE("Edge generation")
 {
     //std::array<unsigned, 5> array = {0,0,0,0,0};
-    Edge edge1(0, A, Xp, 0, Xp, A, 1);
-    for (Side side2 : {A, B})
+    Edge edge1(0, A, XPlus, 0, XPlus, A, 1);
+    for (ShoeId side2 : {A, B})
     {
-        for (Dock dock2 : {Xp, Xn, Zn})
+        for (ConnectorId dock2 : {XPlus, XMinus, ZMinus})
         {
             for (unsigned ori : {0,1,2,3})
             {
-                for (Dock dock1 : {Xp, Xn, Zn})
+                for (ConnectorId dock1 : {XPlus, XMinus, ZMinus})
                 {
-                    for (Side side1 : {A, B})
+                    for (ShoeId side1 : {A, B})
                     {
                         Edge edge2(0, side1, dock1, ori, dock2, side2, 1);
                         //std::cout << printer.print(edge) << printer.print(edge2) << std::endl;
@@ -63,7 +63,7 @@ TEST_CASE("Edge generation")
 
 TEST_CASE("Generate all edges")
 {
-    Edge edge(0, A, Xp, 0, Xp, A, 1);
+    Edge edge(0, A, XPlus, 0, XPlus, A, 1);
     auto edgeOpt = nextEdge(edge);
     while (edgeOpt.has_value())
     {
@@ -151,7 +151,7 @@ TEST_CASE("Generate angles")
 {
     std::vector<ID> ids = {0, 1};
     std::vector<Edge> edges;
-    edges.emplace_back(0, A, Xp, 0, Zn, B, 1);
+    edges.emplace_back(0, A, XPlus, 0, ZMinus, B, 1);
 
     auto cfg = generateAngles(ids, edges);
     REQUIRE(cfg.has_value());
@@ -205,8 +205,8 @@ TEST_CASE("Diff only rotations - more changes") {
 
 TEST_CASE("Diff only reconnections") {
     Configuration cfg1, cfg2;
-    Edge edge1(1, static_cast<Side>(0), static_cast<Dock>(0), 0, static_cast<Dock>(0), static_cast<Side>(1), 2);
-    Edge edge2(0, static_cast<Side>(1), static_cast<Dock>(2), 1, static_cast<Dock>(2), static_cast<Side>(0), 1);
+    Edge edge1(1, static_cast<ShoeId>(0), static_cast<ConnectorId>(0), 0, static_cast<ConnectorId>(0), static_cast<ShoeId>(1), 2);
+    Edge edge2(0, static_cast<ShoeId>(1), static_cast<ConnectorId>(2), 1, static_cast<ConnectorId>(2), static_cast<ShoeId>(0), 1);
 
     cfg1.addModule(90, 90, 0, 0);
     cfg1.addModule(0, 90, 90, 1);
@@ -241,8 +241,8 @@ TEST_CASE("Diff only reconnections") {
 
 TEST_CASE("Diff reconnections and rotations") {
     Configuration cfg1, cfg2;
-    Edge edge1(1, static_cast<Side>(0), static_cast<Dock>(0), 0, static_cast<Dock>(0), static_cast<Side>(1), 2);
-    Edge edge2(0, static_cast<Side>(1), static_cast<Dock>(2), 1, static_cast<Dock>(2), static_cast<Side>(0), 1);
+    Edge edge1(1, static_cast<ShoeId>(0), static_cast<ConnectorId>(0), 0, static_cast<ConnectorId>(0), static_cast<ShoeId>(1), 2);
+    Edge edge2(0, static_cast<ShoeId>(1), static_cast<ConnectorId>(2), 1, static_cast<ConnectorId>(2), static_cast<ShoeId>(0), 1);
 
     cfg1.addModule(90, 90, 0, 0);
     cfg1.addModule(0, 90, 90, 1);

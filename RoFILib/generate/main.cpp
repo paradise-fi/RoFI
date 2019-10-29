@@ -42,10 +42,10 @@ Configuration sampleTree(std::vector<ID>& ids)
     Configuration cfg;
 
     cfg.addModule(90 * ab(e), 90 * ab(e), 90 * c(e), ids[0]);
-    std::vector<std::tuple<ID, Side, Dock>> unoccupied;
-    for (Side s : {A, B})
+    std::vector<std::tuple<ID, ShoeId, ConnectorId>> unoccupied;
+    for (ShoeId s : {A, B})
     {
-        for (Dock d : {Xn, Xp, Zn})
+        for (ConnectorId d : {XMinus, XPlus, ZMinus})
         {
             unoccupied.emplace_back(ids[0], s, d);
         }
@@ -58,20 +58,20 @@ Configuration sampleTree(std::vector<ID>& ids)
         while (true)
         {
             ID id2;
-            Side s2;
-            Dock d2;
+            ShoeId s2;
+            ConnectorId d2;
             std::tie(id2, s2, d2) = unoccupied[dock(e)];
-            Side s1 = Side((c(e) + 1) % 2);
-            Dock d1 = Dock(ab(e) + 1);
+            ShoeId s1 = ShoeId((c(e) + 1) % 2);
+            ConnectorId d1 = ConnectorId(ab(e) + 1);
             auto ori = static_cast<unsigned int>(c(e) + 1);
             Configuration cfg2 = cfg;
             cfg2.addEdge({id1, s1, d1, ori, d2, s2, id2});
             if (cfg2.isValid())
             {
                 cfg.addEdge({id1, s1, d1, ori, d2, s2, id2});
-                for (Side s : {A, B})
+                for (ShoeId s : {A, B})
                 {
-                    for (Dock d : {Xn, Xp, Zn})
+                    for (ConnectorId d : {XMinus, XPlus, ZMinus})
                     {
                         unoccupied.emplace_back(id1, s, d);
                     }

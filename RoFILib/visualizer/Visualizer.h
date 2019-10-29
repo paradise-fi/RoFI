@@ -42,7 +42,7 @@ Matrix bodyMatrix(double alpha)
     return rotate(M_PI/2 + diff, X);
 }
 
-Matrix dockMatrix(Dock dock, bool on, double onCoeff = -1)
+Matrix dockMatrix(ConnectorId dock, bool on, double onCoeff = -1)
 {
     double d;
     if (onCoeff < 0){
@@ -51,9 +51,9 @@ Matrix dockMatrix(Dock dock, bool on, double onCoeff = -1)
         d = onCoeff * 0.05;
     }
     Matrix docks[3] = {
-            translate(Vector{d,0,0}) * rotate(M_PI, Z), // Xp
-            translate(Vector{-d,0,0}) * identity, // Xn
-            translate(Vector{0,0,-d}) * rotate(-M_PI/2, Y) // Zn
+            translate(Vector{d,0,0}) * rotate(M_PI, Z), // XPlus
+            translate(Vector{-d,0,0}) * identity, // XMinus
+            translate(Vector{0,0,-d}) * rotate(-M_PI/2, Y) // ZMinus
     };
     return docks[dock];
 }
@@ -144,13 +144,13 @@ void Visualizer::drawConfiguration(const Configuration &config, const std::strin
         int color =  id % 7 + 3;
         const Module& mod = config.getModules().at(id);
         EdgeList edges = config.getEdges().at(id);
-        for (Side s : {A, B})
+        for (ShoeId s : {A, B})
         {
             Joint j = s == A ? Alpha : Beta;
             addActor("shoe", matrices[s] * shoeMatrix(), color);
             addActor("body", matrices[s] * bodyMatrix(mod.getJoint(j)), color);
 
-            for (Dock dock : {Xp, Xn, Zn})
+            for (ConnectorId dock : {XPlus, XMinus, ZMinus})
             {
                 bool on = edges[s * 3 + dock].has_value();
                 double onCoeff = on ? edges[s * 3 + dock].value().onCoeff() : 0;

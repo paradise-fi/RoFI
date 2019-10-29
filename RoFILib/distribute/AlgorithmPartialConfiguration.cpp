@@ -230,7 +230,7 @@ bool AlgorithmPartialConfiguration::tryConnect(const Edge &edge, int step) {
     MPI_Bcast(&id2, 1, MPI_INT, currModule.getId(), MPI_COMM_WORLD);
 
     Matrix matrix;
-    if (edge.side1() == Side::A) {
+    if (edge.side1() == ShoeId::A) {
         matrix = matrixA * transformConnection(edge.dock1(), edge.ori(), edge.dock2());
     } else {
         matrix = matrixB * transformConnection(edge.dock1(), edge.ori(), edge.dock2());
@@ -267,8 +267,8 @@ void AlgorithmPartialConfiguration::tryConnect(ID other) {
     MPI_Recv(pairToRecvChar, sizeof(std::pair<Matrix, Edge>), MPI_CHAR, other, shareMatrixForConnectTag, MPI_COMM_WORLD, &status);
     auto [matrix, edge] = *reinterpret_cast<std::pair<Matrix, Edge> *>(pairToRecvChar);
 
-    bool canConnect = (edge.side2() == Side::A && equals(matrixA, matrix))
-                      || (edge.side2() == Side::B && equals(matrixB, matrix));
+    bool canConnect = (edge.side2() == ShoeId::A && equals(matrixA, matrix))
+                      || (edge.side2() == ShoeId::B && equals(matrixB, matrix));
     MPI_Send(&canConnect, 1, MPI_CXX_BOOL, other, canConnectTag, MPI_COMM_WORLD);
 
     if (canConnect) {
@@ -531,8 +531,8 @@ void AlgorithmPartialConfiguration::getNeighboursIds(int *otherNeighbours, ID ro
     MPI_Gather(neighbourIds, 6, MPI_INT, otherNeighbours, 6, MPI_INT, root, MPI_COMM_WORLD);
 }
 
-bool AlgorithmPartialConfiguration::getIds(const int *neighboursId, Side side, std::set<ID> &idsOnSide) const {
-    Side otherSide = side == A ? B : A;
+bool AlgorithmPartialConfiguration::getIds(const int *neighboursId, ShoeId side, std::set<ID> &idsOnSide) const {
+    ShoeId otherSide = side == A ? B : A;
 
     std::set<ID> otherSideIds;
     for (int i = currModule.getId() * 6 + 3 * otherSide; i < currModule.getId() * 6 + 3 * otherSide + 3; i++) {
