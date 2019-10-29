@@ -31,10 +31,9 @@ struct SmtConfiguration {
     PerModuleShoe< PerModuleShoe < std::vector< z3::expr > > > connections;
         // All possible connections between shoe connectors
     std::vector< Module > modules; // All modules in the configuration
-    z3::context& context; // Z3 context for the variables
 
-    z3::expr connection( ModuleIdx m, ShoeId ms, ConnectorId mc,
-        ModuleIdx n, ShoeId ns, ConnectorId nc, Orientation o )
+    const z3::expr& connection( ModuleIdx m, ShoeId ms, ConnectorId mc,
+        ModuleIdx n, ShoeId ns, ConnectorId nc, Orientation o ) const
     {
         assert( m != n );
         if ( m > n ) {
@@ -44,6 +43,20 @@ struct SmtConfiguration {
         assert( connections[ m ][ ms ].size() > n - m - 1 );
         assert( connections[ m ][ ms ][ n - m - 1 ][ ns ].size() == 36 );
         return connections[ m ][ ms ][ n - m - 1 ][ ns ][ 3 * 4 * mc  + 4 * nc + o ];
+    }
+};
+
+struct Context {
+    z3::context ctx;
+
+    z3::expr sqrt2, sqrt3;
+
+    Context():
+        ctx(), sqrt2( ctx.real_const( "sqrt2" ) ), sqrt3( ctx.real_const( "sqrt3" ) )
+    {}
+
+    z3::expr constraints() const {
+        return sqrt2 * sqrt2 == 2 && sqrt3 * sqrt3 == 3;
     }
 };
 
@@ -59,14 +72,20 @@ std::vector< z3::expr > collectVar( const T& o ) {
     return ret;
 }
 
-SmtConfiguration buildConfiguration( z3::context& ctx,
+Context buildContext();
+SmtConfiguration buildConfiguration( Context& ctx,
     const Configuration& cfg, int cfgId );
 
-z3::expr phiValid( const SmtConfiguration& cfg );
-z3::expr phiConsistent( const SmtConfiguration& cfg );
-z3::expr phiNoIntersect( const SmtConfiguration& cfg );
-z3::expr phiIsConnected( const SmtConfiguration& cfg );
-z3::expr phiShoeConsistent( const SmtConfiguration& cfg );
-z3::expr phiSinCos( const SmtConfiguration& cfg );
+z3::expr phiValid( Context& ctx, const SmtConfiguration& cfg );
+z3::expr phiConsistent( Context& ctx, const SmtConfiguration& cfg );
+z3::expr phiNoIntersect( Context& ctx, const SmtConfiguration& cfg );
+z3::expr phiIsConnected( Context& ctx, const SmtConfiguration& cfg );
+z3::expr phiShoeConsistent( Context& ctx, const SmtConfiguration& cfg );
+z3::expr phiSinCos( Context& ctx, const SmtConfiguration& cfg );
+z3::expr phiConnectorConsistent( Context& ctx, const SmtConfiguration& cfg );
+z3::expr phiEqual( Context& ctx, const SmtConfiguration& smtCfg, Configuration& cfg );
+z3::expr phiRootModule( Context& ctx, const SmtConfiguration& cfg, int moduleIdx );
+z3::expr phiEqualJoints( Context& ctx, const SmtConfiguration& a,
+        const SmtConfiguration& b );
 
 } // rofi::smtr
