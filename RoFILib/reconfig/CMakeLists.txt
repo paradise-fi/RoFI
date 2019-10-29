@@ -16,5 +16,6 @@ target_include_directories(reconfig INTERFACE .)
 target_link_libraries(reconfig INTERFACE configuration)
 
 add_executable(reconfig-test test/main.cpp test/test.cpp)
-target_link_libraries(reconfig-test configuration reconfig)
+target_link_libraries(reconfig-test configuration reconfig Catch2::Catch2)
 target_include_directories(reconfig-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/)
+catch_discover_tests(reconfig-test)
