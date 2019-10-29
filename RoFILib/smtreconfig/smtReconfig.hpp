@@ -87,5 +87,11 @@ z3::expr phiEqual( Context& ctx, const SmtConfiguration& smtCfg, Configuration& 
 z3::expr phiRootModule( Context& ctx, const SmtConfiguration& cfg, int moduleIdx );
 z3::expr phiEqualJoints( Context& ctx, const SmtConfiguration& a,
         const SmtConfiguration& b );
+z3::expr phiStepConnect( Context& ctx, const SmtConfiguration& a,
+        const SmtConfiguration& b );
+z3::expr phiStepDisconnect( Context& ctx, const SmtConfiguration& a,
+        const SmtConfiguration& b );
+z3::expr phiStepRotate( Context& ctx, const SmtConfiguration& a,
+        const SmtConfiguration& b );
 
 } // rofi::smtr

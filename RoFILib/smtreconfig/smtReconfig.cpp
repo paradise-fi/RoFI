@@ -527,6 +527,7 @@ z3::expr phiRootModule( Context& ctx, const SmtConfiguration& cfg,
 z3::expr phiEqualJoints( Context& ctx, const SmtConfiguration& a,
     const SmtConfiguration& b )
 {
+    assert( a.modules.size() == b.modules.size() );
     z3::expr phi = ctx.ctx.bool_val( true );
 
     for ( int i = 0; i != a.modules.size(); i++ ) {
@@ -539,5 +540,61 @@ z3::expr phiEqualJoints( Context& ctx, const SmtConfiguration& a,
     }
     return phi;
 }
+
+z3::expr phiEqualConnections( Context& ctx, const SmtConfiguration& a,
+    const SmtConfiguration& b )
+{
+    z3::expr phi = ctx.ctx.bool_val( true );
+
+    for ( auto [ m, ms, n, ns ] : allShoePairs( a.modules.size() ) ) {
+        for ( auto [ mc, nc, o ] : allShoeConnections() ) {
+            phi = phi &&
+                a.connection( m, ms, mc, n, ns, nc, o ) == b.connection( m, ms, mc, n, ns, nc, o );
+        }
+    }
+
+    return phi;
+}
+
+z3::expr phiStepConnect( Context& ctx, const SmtConfiguration& a,
+        const SmtConfiguration& b )
+{
+    z3::expr phi = phiEqualJoints( ctx, a, b );
+
+    for ( auto [ m, ms, n, ns ] : allShoePairs( a.modules.size() ) ) {
+        for ( auto [ mc, nc, o ] : allShoeConnections() ) {
+            phi = phi && smt::implies( a.connection( m, ms, mc, n, ns, nc, o ),
+                b.connection( m, ms, mc, n, ns, nc, o ) );
+        }
+    }
+
+    return phi;
+}
+
+z3::expr phiStepDisconnect( Context& ctx, const SmtConfiguration& a,
+        const SmtConfiguration& b )
+{
+    z3::expr phi = phiEqualJoints( ctx, a, b );
+
+    for ( auto [ m, ms, n, ns ] : allShoePairs( a.modules.size() ) ) {
+        for ( auto [ mc, nc, o ] : allShoeConnections() ) {
+            phi = phi && smt::implies( b.connection( m, ms, mc, n, ns, nc, o ),
+                a.connection( m, ms, mc, n, ns, nc, o ) );
+        }
+    }
+
+    return phi;
+}
+
+z3::expr phiStepRotate( Context& ctx, const SmtConfiguration& a,
+        const SmtConfiguration& b )
+{
+    z3::expr phi = phiEqualConnections( ctx, a, b );
+
+    // ToDo: Add rotation constraints
+
+    return phi;
+}
+
 
 } // namespace rofi::smtr
