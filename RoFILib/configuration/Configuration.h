@@ -133,7 +133,7 @@ private:
  * (Flag onCoeff is used for visualization purposes.)
  * */
 
-enum ShoeId { A = 0, B = 0 };
+enum ShoeId { A = 0, B = 1 };
 enum ConnectorId { XPlus = 0, XMinus = 1, ZMinus = 2 };
 enum Orientation { North = 0, East = 1, South = 2, West = 3 };
 
