@@ -77,8 +77,8 @@ TEST_CASE("Visualizer simple generate"){
     cfg1.addModule(0,0,0, 0);
     cfg1.addModule(0,0,0, 1);
     cfg1.addModule(0,0,0, 2);
-    Edge e1(0, static_cast<Side>(0), static_cast<Dock>(0), 2, static_cast<Dock>(1), static_cast<Side>(0), 1);
-    Edge e2(1, static_cast<Side>(0), static_cast<Dock>(0), 2, static_cast<Dock>(1), static_cast<Side>(0), 2);
+    Edge e1(0, static_cast<ShoeId>(0), static_cast<ConnectorId>(0), 2, static_cast<ConnectorId>(1), static_cast<ShoeId>(0), 1);
+    Edge e2(1, static_cast<ShoeId>(0), static_cast<ConnectorId>(0), 2, static_cast<ConnectorId>(1), static_cast<ShoeId>(0), 2);
     cfg1.addEdge(e1);
     cfg1.addEdge(e2);
 
@@ -86,8 +86,8 @@ TEST_CASE("Visualizer simple generate"){
     cfg2.addModule(0,90,0, 0);
     cfg2.addModule(0,10,0, 1);
     cfg2.addModule(0,0,0, 2);
-    Edge e3(0, static_cast<Side>(0), static_cast<Dock>(0), 2, static_cast<Dock>(1), static_cast<Side>(0), 1);
-    Edge e4(1, static_cast<Side>(0), static_cast<Dock>(0), 2, static_cast<Dock>(1), static_cast<Side>(0), 2);
+    Edge e3(0, static_cast<ShoeId>(0), static_cast<ConnectorId>(0), 2, static_cast<ConnectorId>(1), static_cast<ShoeId>(0), 1);
+    Edge e4(1, static_cast<ShoeId>(0), static_cast<ConnectorId>(0), 2, static_cast<ConnectorId>(1), static_cast<ShoeId>(0), 2);
     cfg2.addEdge(e3);
     cfg2.addEdge(e4);
 
@@ -115,7 +115,7 @@ TEST_CASE("Visualizer simple generate"){
     }
 
     SECTION("Add edge") {
-        Edge e5(1, static_cast<Side>(1), static_cast<Dock>(1), 2, static_cast<Dock>(0), static_cast<Side>(1), 2);
+        Edge e5(1, static_cast<ShoeId>(1), static_cast<ConnectorId>(1), 2, static_cast<ConnectorId>(0), static_cast<ShoeId>(1), 2);
         cfg2.addEdge(e5);
         std::vector<Configuration> generatedConfigs;
         double maxPhi = 30;
@@ -160,7 +160,7 @@ TEST_CASE("Visualizer simple generate"){
     }
 
     SECTION("Remove edge"){
-        Edge e5(1, static_cast<Side>(1), static_cast<Dock>(1), 2, static_cast<Dock>(0), static_cast<Side>(1), 2);
+        Edge e5(1, static_cast<ShoeId>(1), static_cast<ConnectorId>(1), 2, static_cast<ConnectorId>(0), static_cast<ShoeId>(1), 2);
         cfg1.addEdge(e5);
         std::vector<Configuration> generatedConfigs;
         double maxPhi = 30;

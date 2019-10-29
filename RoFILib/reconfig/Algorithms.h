@@ -128,7 +128,7 @@ namespace Eval
         for ( auto& [id, ms] : curr.getMatrices() )
         {
             const auto& other = goal.getMatrices().at(id);
-            for (Side s : {A, B})
+            for (ShoeId s : {A, B})
             {
                 result += distance(center(ms[s]), center(other[s]));
             }
@@ -142,7 +142,7 @@ namespace Eval
         for ( auto& [id, ms] : curr.getMatrices() )
         {
             const auto& other = goal.getMatrices().at(id);
-            for (Side s : {A, B})
+            for (ShoeId s : {A, B})
             {
                 result += distance(ms[s], other[s]);
             }
@@ -416,10 +416,10 @@ inline std::optional<Edge> generateEdge(ID id1, ID id2, std::unordered_map<ID, s
         return std::nullopt;
     }
     int ori = dist(rd) % 4;
-    auto s1 = Side(index1 % 3 % 2);
-    auto d1 = Dock(index1 / 3);
-    auto s2 = Side(index2 % 3 % 2);
-    auto d2 = Dock(index2 / 3);
+    auto s1 = ShoeId(index1 % 3 % 2);
+    auto d1 = ConnectorId(index1 / 3);
+    auto s2 = ShoeId(index2 % 3 % 2);
+    auto d2 = ConnectorId(index2 / 3);
     return Edge(id1, s1, d1, ori, d2, s2, id2);
 }
 

@@ -61,7 +61,7 @@ private:
 
     void tryRotationStaticModules(ID other, int rotateModulesCount) const;
 
-    bool getIds(const int *neighboursId, Side side, std::set<ID> &idsOnSide) const;
+    bool getIds(const int *neighboursId, ShoeId side, std::set<ID> &idsOnSide) const;
 
     void getNeighboursIds(int *otherNeighbours, ID root) const;
 

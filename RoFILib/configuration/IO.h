@@ -25,12 +25,12 @@ namespace IO
 
 // Attributes
 
-    inline std::string toString(Dock d)
+    inline std::string toString(ConnectorId d)
     {
         return conName[d];
     }
 
-    inline std::string toString(Side s)
+    inline std::string toString(ShoeId s)
     {
         return sideName[s];
     }
@@ -149,13 +149,13 @@ namespace IO
 
 // Reading attributes and edges.
 
-    inline Dock readCon(const std::string &in)
+    inline ConnectorId readCon(const std::string &in)
     {
         for (unsigned i = 0; i < 3; ++i) {
             if (in == conName[i])
-                return static_cast<Dock>(i);
+                return static_cast<ConnectorId>(i);
             if (in == conNum[i])
-                return static_cast<Dock>(i);
+                return static_cast<ConnectorId>(i);
         }
         throw std::runtime_error("Expected connector (+X, -X, -Z), got " + in + ".");
     }
@@ -171,13 +171,13 @@ namespace IO
         throw std::runtime_error("Expected orientation (N, E, S, W), got " + in + ".");
     }
 
-    inline Side readSide(const std::string &in)
+    inline ShoeId readSide(const std::string &in)
     {
         for (unsigned i = 0; i < 2; ++i) {
             if (in == sideName[i])
-                return static_cast<Side>(i);
+                return static_cast<ShoeId>(i);
             if (in == sideNum[i])
-                return static_cast<Side>(i);
+                return static_cast<ShoeId>(i);
         }
         throw std::runtime_error("Expected side (A, B), got " + in + ".");
     }

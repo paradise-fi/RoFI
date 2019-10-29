@@ -7,10 +7,6 @@
 
 namespace rofi::smtr {
 
-enum ShoeId { A = 0, B = 1 };
-enum ConnectorId { XPlus = 0, XMinus = 1, ZMinus = 2 };
-enum Orientation { North = 0, West = 1, South = 2, East = 3 };
-
 using ModuleIdx = int;
 
 struct Shoe {

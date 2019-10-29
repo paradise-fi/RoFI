@@ -15,6 +15,7 @@
 #include <algorithm>
 #include <random>
 #include <set>
+#include <cassert>
 
 using ID = unsigned int;
 const double threshold = 0.0001;
@@ -132,22 +133,22 @@ private:
  * (Flag onCoeff is used for visualization purposes.)
  * */
 
-enum Side { A, B };
-
-enum Dock { Xp, Xn, Zn };
+enum ShoeId { A = 0, B = 0 };
+enum ConnectorId { XPlus = 0, XMinus = 1, ZMinus = 2 };
+enum Orientation { North = 0, East = 1, South = 2, West = 3 };
 
 class Edge
 {
 public:
-    Edge(ID id1, Side side1, Dock dock1, unsigned int ori, Dock dock2, Side side2, ID id2, double onCoeff = 1) :
+    Edge(ID id1, ShoeId side1, ConnectorId dock1, unsigned int ori, ConnectorId dock2, ShoeId side2, ID id2, double onCoeff = 1) :
             id1_(id1), id2_(id2), side1_(side1), side2_(side2), dock1_(dock1), dock2_(dock2), ori_(ori), onCoeff_(onCoeff) {}
 
     ID id1() const { return id1_; }
     ID id2() const { return id2_; }
-    Side side1() const { return side1_; }
-    Side side2() const { return side2_; }
-    Dock dock1() const { return dock1_; }
-    Dock dock2() const { return dock2_; }
+    ShoeId side1() const { return side1_; }
+    ShoeId side2() const { return side2_; }
+    ConnectorId dock1() const { return dock1_; }
+    ConnectorId dock2() const { return dock2_; }
     unsigned int ori() const { return ori_; }
 
     double onCoeff() const { return onCoeff_; }
@@ -173,8 +174,8 @@ public:
 
 private:
     ID id1_, id2_;
-    Side side1_, side2_;
-    Dock dock1_, dock2_;
+    ShoeId side1_, side2_;
+    ConnectorId dock1_, dock2_;
     unsigned int ori_;
     double onCoeff_ = 1;     //for visualizer
 };
@@ -209,11 +210,11 @@ inline std::optional<Edge> nextEdge(const Edge& edge)
     if (next == init)
         return std::nullopt;
     return Edge(edge.id1(),
-                static_cast<Side>(next[0]),
-                static_cast<Dock>(next[1]),
+                static_cast<ShoeId>(next[0]),
+                static_cast<ConnectorId>(next[1]),
                 next[2],
-                static_cast<Dock>(next[3]),
-                static_cast<Side>(next[4]),
+                static_cast<ConnectorId>(next[3]),
+                static_cast<ShoeId>(next[4]),
                 edge.id2());
 }
 
@@ -261,7 +262,7 @@ public:
     {
     public:
 
-        Reconnect() : _add(false), _edge({0,A,Zn,0,Zn,A,0}) {};
+        Reconnect() : _add(false), _edge({0,A,ZMinus,0,ZMinus,A,0}) {};
         Reconnect(bool add, const Edge& edge) :
                 _add(add), _edge(edge) {}
 
@@ -410,18 +411,18 @@ inline Matrix transformJoint(double alpha, double beta, double gamma)
     return rotate(alpha, X) * rotate(gamma, Z) * translate(Z) * rotate(M_PI, Y) * rotate(-beta, X);
 }
 
-inline Matrix transformConnection(Dock d1, int ori, Dock d2)
+inline Matrix transformConnection(ConnectorId d1, int ori, ConnectorId d2)
 {
     static const std::array<Matrix, 3> dockFaceUp = {
-            rotate(M_PI, Z) * rotate(-M_PI/2, Y), // Xp
-            rotate(M_PI, Z) * rotate(M_PI/2, Y),  // Xn
-            identity  // Zn
+            rotate(M_PI, Z) * rotate(-M_PI/2, Y), // XPlus
+            rotate(M_PI, Z) * rotate(M_PI/2, Y),  // XMinus
+            identity  // ZMinus
     };
 
     static const std::array<Matrix, 3> faceToDock = {
-            rotate(M_PI, Z) * rotate(M_PI/2, Y), // Xp
-            rotate(M_PI, Z) * rotate(-M_PI/2, Y),   // Xn
-            identity // Zn
+            rotate(M_PI, Z) * rotate(M_PI/2, Y), // XPlus
+            rotate(M_PI, Z) * rotate(-M_PI/2, Y),   // XMinus
+            identity // ZMinus
     };
 
     return faceToDock[d1] * rotate(ori * M_PI/2, Z) * translate(-Z) * dockFaceUp[d2] * rotate(M_PI, X);
@@ -446,6 +447,12 @@ public:
     const ModuleMap& getModules() const { return modules; }
     const EdgeMap& getEdges() const { return edges; }
     const MatrixMap & getMatrices() const { return matrices; }
+
+    Module& getModule( ID id ) {
+        auto it = modules.find( id );
+        assert( it != modules.end() );
+        return it->second;
+    }
 
     std::vector<ID> getIDs() const
     {
@@ -510,7 +517,7 @@ public:
         return edges.at(edge.id1())[edge.side1() * 3 + edge.dock1()].has_value();
     }
 
-    void setFixed(ID initID, Side initSide, const Matrix& initRotation)
+    void setFixed(ID initID, ShoeId initSide, const Matrix& initRotation)
     {
         fixedId = initID;
         fixedSide = initSide;
@@ -722,7 +729,7 @@ public:
                 if (id1 >= id2)
                     continue;
 
-                Edge edge(id1, A, Xp, 0, Xp, A, id2);
+                Edge edge(id1, A, XPlus, 0, XPlus, A, id2);
                 auto edgeOpt = nextEdge(edge);
 
                 while (edgeOpt.has_value())
@@ -879,7 +886,7 @@ private:
 
     // Fixed module side: all other modules are rotated with respect to this one.
     ID fixedId = 0;
-    Side fixedSide = A;
+    ShoeId fixedSide = A;
     Matrix fixedMatrix = identity;
 
     Value connectedVal = Unknown;
@@ -905,7 +912,7 @@ private:
         return true;
     }
 
-    Matrix computeOtherSideMatrix(ID id, Side side) const
+    Matrix computeOtherSideMatrix(ID id, ShoeId side) const
     {
         auto const& mod = modules.at(id);
         auto const& matrix = matrices.at(id)[side];
@@ -943,12 +950,12 @@ private:
     }
 
     // Fix given module: one side is fixed. Fix all connected.
-    bool computeMatricesRec(ID id, Side side)
+    bool computeMatricesRec(ID id, ShoeId side)
     {
         bool result = true;
 
         // At first, fix other side of the module.
-        Side side2 = side == A ? B : A;
+        ShoeId side2 = side == A ? B : A;
         auto& matrixCurr = matrices.at(id);
         matrixCurr[side2] = computeOtherSideMatrix(id, side);
 
@@ -959,7 +966,7 @@ private:
             const Edge& edge = edgeOpt.value();
 
             ID idNext = edge.id2();
-            Side sideNext = edge.side2();
+            ShoeId sideNext = edge.side2();
 
             // Compute, where next module should be.
             Matrix matrixCmp = computeConnectedMatrix(edge);
