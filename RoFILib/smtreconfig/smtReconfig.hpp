@@ -77,6 +77,9 @@ Context buildContext();
 SmtConfiguration buildConfiguration( Context& ctx,
     const Configuration& cfg, int cfgId );
 
+z3::expr reconfig( Context& ctx, int len, const Configuration& init,
+    const Configuration target );
+
 z3::expr phiValid( Context& ctx, const SmtConfiguration& cfg );
 z3::expr phiConsistent( Context& ctx, const SmtConfiguration& cfg );
 z3::expr phiNoIntersect( Context& ctx, const SmtConfiguration& cfg );
@@ -84,7 +87,8 @@ z3::expr phiIsConnected( Context& ctx, const SmtConfiguration& cfg );
 z3::expr phiShoeConsistent( Context& ctx, const SmtConfiguration& cfg );
 z3::expr phiSinCos( Context& ctx, const SmtConfiguration& cfg );
 z3::expr phiConnectorConsistent( Context& ctx, const SmtConfiguration& cfg );
-z3::expr phiEqual( Context& ctx, const SmtConfiguration& smtCfg, Configuration& cfg );
+z3::expr phiEqual( Context& ctx, const SmtConfiguration& smtCfg,
+        const Configuration& cfg );
 z3::expr phiRootModule( Context& ctx, const SmtConfiguration& cfg, int moduleIdx );
 z3::expr phiEqualJoints( Context& ctx, const SmtConfiguration& a,
         const SmtConfiguration& b );
@@ -93,6 +97,8 @@ z3::expr phiStepConnect( Context& ctx, const SmtConfiguration& a,
 z3::expr phiStepDisconnect( Context& ctx, const SmtConfiguration& a,
         const SmtConfiguration& b );
 z3::expr phiStepRotate( Context& ctx, const SmtConfiguration& a,
+        const SmtConfiguration& b );
+z3::expr phiStep( Context& ctx, const SmtConfiguration& a,
         const SmtConfiguration& b );
 
 } // rofi::smtr

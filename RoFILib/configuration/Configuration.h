@@ -454,6 +454,12 @@ public:
         return it->second;
     }
 
+    const Module& getModule( ID id ) const {
+        auto it = modules.find( id );
+        assert( it != modules.end() );
+        return it->second;
+    }
+
     std::vector<ID> getIDs() const
     {
         std::vector<ID> ids;
