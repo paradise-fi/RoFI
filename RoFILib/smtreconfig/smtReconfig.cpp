@@ -539,7 +539,7 @@ double degToRad( double d ) {
 }
 
 z3::expr phiEqual( Context& ctx, const SmtConfiguration& smtCfg,
-    Configuration& cfg )
+    const Configuration& cfg )
 {
     z3::expr phi = ctx.ctx.bool_val( true );
 
@@ -581,7 +581,7 @@ z3::expr phiRootModule( Context& ctx, const SmtConfiguration& cfg,
 {
     const auto& shoe = cfg.modules[ 0 ].shoes[ A ];
     return shoe.x == 0 && shoe.y == 0 && shoe.z == 0 &&
-        shoe.qa == 1 && shoe.qb == 0 && shoe.qc == 0 && shoe.qd;
+        shoe.qa == 1 && shoe.qb == 0 && shoe.qc == 0 && shoe.qd == 0;
 }
 
 z3::expr phiEqualJoints( Context& ctx, const SmtConfiguration& a,
@@ -651,10 +651,37 @@ z3::expr phiStepRotate( Context& ctx, const SmtConfiguration& a,
 {
     z3::expr phi = phiEqualConnections( ctx, a, b );
 
+    for ( int i = 0; i != a.modules.size(); i++ ) {
+
+    }
+
     // ToDo: Add rotation constraints
 
     return phi;
 }
 
+z3::expr phiStep( Context& ctx, const SmtConfiguration& a,
+        const SmtConfiguration& b )
+{
+    return phiStepConnect( ctx, a, b ) || phiStepDisconnect( ctx, a, b );
+        // || phiStepRotate( ctx, a, b );
+}
+
+z3::expr reconfig( Context& ctx, int len, const Configuration& init,
+    const Configuration target )
+{
+    assert( len >= 2 );
+    std::vector< SmtConfiguration > cfgs;
+    for ( int i = 0; i != len; i++ )
+        cfgs.push_back( buildConfiguration( ctx, init, i ) );
+    z3::expr phi = phiEqual( ctx, cfgs.front(), init ) &&
+        phiEqual( ctx, cfgs.back(), target );
+    for ( int i = 0; i != len; i++ )
+        phi = phi && phiValid( ctx, cfgs[ i ] ) && phiRootModule( ctx, cfgs[ i ], 0 );
+    for ( int i = 0; i != len - 1; i++ )
+        phi = phi && phiStep( ctx, cfgs[ i ], cfgs[ i + 1 ] );
+    phi = phi && ctx.constraints();
+    return phi;
+}
 
 } // namespace rofi::smtr
