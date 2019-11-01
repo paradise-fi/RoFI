@@ -11,6 +11,6 @@ add_executable(smt-reconfig main.cpp)
 target_link_libraries(smt-reconfig PRIVATE smt-reconfig-lib fmt)
 
 add_executable(smt-reconfig-test test/main.cpp test/test.cpp)
-target_link_libraries(smt-reconfig-test PRIVATE smt-reconfig-lib Catch2::Catch2)
+target_link_libraries(smt-reconfig-test PRIVATE fmt smt-reconfig-lib Catch2::Catch2 )
 target_include_directories(smt-reconfig-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} )
 catch_discover_tests(smt-reconfig-test)
