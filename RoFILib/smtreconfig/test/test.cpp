@@ -1,7 +1,28 @@
 #include <catch2/catch.hpp>
 #include <smtReconfig.hpp>
+#include <fmt/format.h>
 
 using namespace rofi::smtr;
+
+std::string captureShoe( const std::string& name, const z3::model& m,
+    const Shoe&  s )
+{
+    std::string pos = fmt::format("{}_pos = Matrix([[{}], [{}], [{}], [1]])",
+        name,
+        m.eval( s.x ).get_decimal_string( 5 ),
+        m.eval( s.y ).get_decimal_string( 5 ),
+        m.eval( s.z ).get_decimal_string( 5 )
+    );
+
+    std::string rot = fmt::format("{}_rot = Quaternion( {}, {}, {}, {} )",
+        name,
+        m.eval( s.qa ).get_decimal_string( 5 ),
+        m.eval( s.qb ).get_decimal_string( 5 ),
+        m.eval( s.qc ).get_decimal_string( 5 ),
+        m.eval( s.qd ).get_decimal_string( 5 )
+    );
+    return pos + "\n" + rot;
+}
 
 TEST_CASE("SmtConfiguration building") {
     Configuration rofiCfg;
@@ -210,6 +231,100 @@ TEST_CASE( "Connector consistency" ) {
             sB.qc == -ctx.sqrt2 / 2 && sB.qd == 0 );
 
         REQUIRE( s.check() == z3::sat );
+    }
+}
+
+TEST_CASE( "Connector & shoe consistency" ) {
+    SECTION( "Trivial" ) {
+        Context ctx;
+        Configuration rofiCfg;
+        rofiCfg.addModule( 0, 0, 0, 41 );
+        rofiCfg.addModule( 0, 0, 0, 42 );
+        rofiCfg.addEdge( { 41, A, XPlus, South, XMinus, A, 42 } );
+        SmtConfiguration smtCfg = buildConfiguration( ctx, rofiCfg, 0 );
+
+        SECTION( "Connected" ) {
+            z3::solver s( ctx.ctx );
+            s.add( ctx.constraints() );
+            s.add( phiRootModule( ctx, smtCfg, 0 ) );
+            s.add( phiEqual( ctx, smtCfg, rofiCfg ) );
+            s.add( phiIsConnected( ctx, smtCfg ) );
+
+            auto res = s.check();
+            REQUIRE( res == z3::sat );
+        }
+
+        SECTION( "Connected + shoe consistent" ) {
+            z3::solver s( ctx.ctx );
+            s.add( ctx.constraints() );
+            s.add( phiRootModule( ctx, smtCfg, 0 ) );
+            s.add( phiEqual( ctx, smtCfg, rofiCfg ) );
+            s.add( phiIsConnected( ctx, smtCfg ) );
+            s.add( phiShoeConsistent( ctx, smtCfg ) );
+
+            auto res = s.check();
+            REQUIRE( res == z3::sat );
+        }
+
+        SECTION( "Connected + shoe consistent + connector consistent" ) {
+            z3::solver s( ctx.ctx );
+            s.add( ctx.constraints() );
+            s.add( phiRootModule( ctx, smtCfg, 0 ) );
+            s.add( phiEqual( ctx, smtCfg, rofiCfg ) );
+            s.add( phiIsConnected( ctx, smtCfg ) );
+            s.add( phiShoeConsistent( ctx, smtCfg ) );
+            s.add( phiConnectorConsistent( ctx, smtCfg ) );
+
+            auto res = s.check();
+            z3::model m = s.get_model();
+
+            const auto& shoeA0 = smtCfg.modules[ 0 ].shoes[ A ];
+            const auto& shoeB0 = smtCfg.modules[ 0 ].shoes[ B ];
+            const auto& shoeA1 = smtCfg.modules[ 1 ].shoes[ A ];
+            const auto& shoeB1 = smtCfg.modules[ 1 ].shoes[ B ];
+
+            std::string out =
+                captureShoe( "A0", m, shoeA0 ) + "\n" +
+                captureShoe( "B0", m, shoeB0 ) + "\n" +
+                captureShoe( "A1", m, shoeA1 ) + "\n" +
+                captureShoe( "B1", m, shoeB1 );
+            CAPTURE( out );
+
+            CHECK( m.eval( shoeA0.x ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeA0.y ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeA0.z ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeA0.qa ).get_decimal_string( 1 ) == "1" );
+            CHECK( m.eval( shoeA0.qb ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeA0.qc ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeA0.qd ).get_decimal_string( 1 ) == "0" );
+
+            CHECK( m.eval( shoeB0.x ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeB0.y ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeB0.z ).get_decimal_string( 1 ) == "1" );
+            CHECK( m.eval( shoeB0.qa ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeB0.qb ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeB0.qc ).get_decimal_string( 1 ) == "1" );
+            CHECK( m.eval( shoeB0.qd ).get_decimal_string( 1 ) == "0" );
+
+            CHECK( m.eval( shoeA1.x ).get_decimal_string( 1 ) == "1" );
+            CHECK( m.eval( shoeA1.y ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeA1.z ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeA1.qa ).get_decimal_string( 1 ) == "1" );
+            CHECK( m.eval( shoeA1.qb ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeA1.qc ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeA1.qd ).get_decimal_string( 1 ) == "0" );
+
+            CHECK( m.eval( shoeB1.x ).get_decimal_string( 1 ) == "1" );
+            CHECK( m.eval( shoeB1.y ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeB1.z ).get_decimal_string( 1 ) == "1" );
+            CHECK( m.eval( shoeB1.qa ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeB1.qb ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( shoeB1.qc ).get_decimal_string( 1 ) == "1" );
+            CHECK( m.eval( shoeB1.qd ).get_decimal_string( 1 ) == "0" );
+            CHECK( m.eval( smtCfg.connection( 0, A, XPlus, 1, A, XMinus, South ) ).bool_value() );
+
+            REQUIRE( res == z3::sat );
+        }
     }
 }
 
