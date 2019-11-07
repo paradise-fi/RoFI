@@ -9,6 +9,20 @@ namespace rofi::smtr {
 
 using ModuleIdx = int;
 
+struct Context {
+    z3::context ctx;
+
+    z3::expr sqrt2, sqrt3;
+
+    Context():
+        ctx(), sqrt2( ctx.real_const( "sqrt2" ) ), sqrt3( ctx.real_const( "sqrt3" ) )
+    {}
+
+    z3::expr constraints() const {
+        return sqrt2 * sqrt2 == 2 && sqrt3 * sqrt3 == 3;
+    }
+};
+
 struct Shoe {
     z3::expr x, y, z; // Shoe center position
     z3::expr qa, qb, qc, qd; // Shoe orientation
@@ -45,20 +59,8 @@ struct SmtConfiguration {
         assert( connections[ m ][ ms ][ n - m - 1 ][ ns ].size() == 36 );
         return connections[ m ][ ms ][ n - m - 1 ][ ns ][ 3 * 4 * mc  + 4 * nc + o ];
     }
-};
 
-struct Context {
-    z3::context ctx;
-
-    z3::expr sqrt2, sqrt3;
-
-    Context():
-        ctx(), sqrt2( ctx.real_const( "sqrt2" ) ), sqrt3( ctx.real_const( "sqrt3" ) )
-    {}
-
-    z3::expr constraints() const {
-        return sqrt2 * sqrt2 == 2 && sqrt3 * sqrt3 == 3;
-    }
+    z3::expr constraints( Context& ctx ) const;
 };
 
 void collectVar( const SinCosAngle& a, std::vector< z3::expr >& out );
