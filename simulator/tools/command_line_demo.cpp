@@ -195,21 +195,28 @@ int main( int argc, char **argv )
 
         for ( std::string line; std::getline( std::cin, line ); )
         {
-            auto tokens = split( line );
-            if ( tokens.empty() )
-                continue;
-
-            if ( tokens.front() == "quit" )
-                break;
-
-            if ( tokens.front() == "joint" )
+            try
             {
-                processJointCmd( rofi, tokens );
-                continue;
-            }
+                auto tokens = split( line );
+                if ( tokens.empty() )
+                    continue;
 
-            std::cerr << "Not yet implemented\n\n";
-            printHelp();
+                if ( tokens.front() == "quit" )
+                    break;
+
+                if ( tokens.front() == "joint" )
+                {
+                    processJointCmd( rofi, tokens );
+                    continue;
+                }
+
+                std::cerr << "Not yet implemented\n\n";
+                printHelp();
+            }
+            catch ( const std::runtime_error & e )
+            {
+                std::cerr << "ERROR: " << e.what() << "\n";
+            }
         }
 
         gazebo::client::shutdown();
