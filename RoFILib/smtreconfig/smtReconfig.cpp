@@ -116,6 +116,20 @@ auto allShoeConnections() ->
     return ret;
 }
 
+auto allConnectors( int count ) ->
+    std::vector< std::tuple< ModuleIdx, ShoeId, ConnectorId > >
+{
+    std::vector< std::tuple< ModuleIdx, ShoeId, ConnectorId > > ret;
+    for ( int m = 0; m < count; m++ ) {
+        for ( auto ms : { ShoeId::A, ShoeId::B } ) {
+            for ( auto mc : { XMinus, XPlus, ZMinus } ) {
+                ret.push_back( { m, ms, mc } );
+            }
+        }
+    }
+    return ret;
+}
+
 SmtConfiguration buildConfiguration( Context& ctx,
     const Configuration& cfg, int cfgId )
 {
@@ -833,7 +847,39 @@ z3::expr reconfig( Context& ctx, int len, const Configuration& init,
     for ( int i = 0; i != len - 1; i++ )
         phi = phi && phiStep( ctx, cfgs[ i ], cfgs[ i + 1 ] );
     phi = phi && ctx.constraints();
+    for ( const auto& cfg : cfgs ) {
+        phi = phi && cfg.constraints( ctx );
+    }
     return phi;
+}
+
+z3::expr SmtConfiguration::constraints( Context& ctx ) const {
+    z3::expr res = ctx.ctx.bool_val( true );
+    // Each two shoes have at most one connection
+    for ( auto [ m, ms, n, ns ] : allShoePairs( modules.size() ) ) {
+        std::vector< z3::expr > conns;
+        for ( auto [ mc, nc, o ] : allShoeConnections() ) {
+            conns.push_back( connection( m, ms, mc, n, ns, nc, o ) );
+        }
+        if ( conns.size() > 1 )
+            res = res && smt::atMostOne( ctx.ctx, conns );
+    }
+
+    // Each connector has at most one connection
+    for ( auto [ m, ms, mc ] : allConnectors( modules.size() ) ) {
+        std::vector< z3::expr > conns;
+        for ( auto [ n, ns, nc ] : allConnectors( modules.size() ) ) {
+            if ( n == m )
+                continue;
+            for ( auto o : { North, East, South, West } ) {
+                conns.push_back( connection( m, ms, mc, n, ns, nc, o ) );
+            }
+        }
+        if ( conns.size() > 1 )
+            res = res && smt::atMostOne( ctx.ctx, conns );
+    }
+
+    return res;
 }
 
 } // namespace rofi::smtr

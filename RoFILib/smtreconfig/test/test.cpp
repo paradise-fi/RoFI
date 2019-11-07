@@ -284,6 +284,7 @@ TEST_CASE( "Connector & shoe consistency" ) {
             s.add( phiIsConnected( ctx, smtCfg ) );
             s.add( phiShoeConsistent( ctx, smtCfg ) );
             s.add( phiConnectorConsistent( ctx, smtCfg ) );
+            s.add( smtCfg.constraints( ctx ) );
 
             dumpFormula( "CS-Consistency-SingleA", s );
 
@@ -374,6 +375,7 @@ TEST_CASE( "Connector & shoe consistency" ) {
             s.add( phiIsConnected( ctx, smtCfg ) );
             s.add( phiShoeConsistent( ctx, smtCfg ) );
             s.add( phiConnectorConsistent( ctx, smtCfg ) );
+            s.add( smtCfg.constraints( ctx ) );
 
             dumpFormula( "CS-Consistency-SingleB", s );
 
@@ -465,6 +467,7 @@ TEST_CASE( "Connector & shoe consistency" ) {
             s.add( phiIsConnected( ctx, smtCfg ) );
             s.add( phiShoeConsistent( ctx, smtCfg ) );
             s.add( phiConnectorConsistent( ctx, smtCfg ) );
+            s.add( smtCfg.constraints( ctx ) );
 
 
             dumpFormula( "CS-Consistency-Double", s );
