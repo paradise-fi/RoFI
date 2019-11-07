@@ -31,5 +31,5 @@ add_library(universalModulePluginMsgs SHARED ${PROTO_SRCS})
 target_link_libraries(universalModulePluginMsgs ${PROTOBUF_LIBRARY})
 target_include_directories(universalModulePluginMsgs INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
 
-add_library(universalModulePlugin SHARED main.cpp)
+add_library(universalModulePlugin SHARED universalModulePlugin.cpp)
 target_link_libraries(universalModulePlugin ${GAZEBO_LIBRARIES} universalModulePluginMsgs)
