@@ -1,5 +1,6 @@
 #include "universalModulePlugin.hpp"
 
+#include <cmath>
 #include <iostream>
 
 #include <rofiResp.pb.h>
@@ -35,27 +36,36 @@ rofi::messages::RofiResp getJointRofiResp( rofi::messages::JointCmd::Type cmdtyp
 
 using UMP = UniversalModulePlugin;
 
+double trim( double value, double min, double max )
+{
+    if ( value < min )
+        return min;
+    if ( value > max )
+        return max;
+    return value;
+}
+
+double trim( double value, const UMP::limitPair & limits )
+{
+    return trim( value, limits.first, limits.second );
+}
+
 void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf ) {
     std::cerr << "\nThe UM plugin is attached to model ["
             << model->GetName() << "]\n";
 
-    std::cerr << "Number of joints is " << model->GetJoints().size() << "\n";
-    _model = model;
-    auto _bodyJoint = _model->GetJoint( "bodyRev" );
-    auto _shoeAJoint = _model->GetJoint( "shoeARev" );
-    auto _shoeBJoint = _model->GetJoint( "shoeBRev" );
-    if ( !_bodyJoint || !_shoeAJoint || !_shoeBJoint ) {
-        std::cerr << "\nCould not get all joints\n";
+    std::cerr << "Number of joints is " << numOfJoints << "\n";
+    if ( numOfJoints > model->GetJoints().size() ) {
+        std::cerr << "Number of joints in gazebo model is lower than expected\n";
+        std::cerr << "Aborting...\n";
         return;
     }
-    for ( auto &joint : { _shoeAJoint, _shoeBJoint } )
-    {
-        joint->SetParam( "vel", 0, 0.0 );
-        joint->SetParam( "fmax", 0, maxJointTorque );
-    }
 
-    _bodyJoint->SetParam( "vel", 0, 0.0 );
-    _bodyJoint->SetParam( "fmax", 0, maxJointTorque );
+    _model = model;
+    for ( int i = 0; i < numOfJoints; i++ )
+    {
+        setVelocity( i, 0 );
+    }
 
     _node->Init( _model->GetWorld()->Name() );
     std::string topicName = "~/" + _model->GetName() + "/control";
@@ -85,7 +95,7 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr &msg)
 void UMP::onJointCmd( const rofi::messages::JointCmd &msg )
 {
     int joint = msg.joint();
-    if ( joint < 0 || joint >= 3 )
+    if ( joint < 0 || joint >= numOfJoints )
     {
         std::cerr << "Warning: invalid joint " << joint << " specified\n";
         return;
@@ -97,14 +107,14 @@ void UMP::onJointCmd( const rofi::messages::JointCmd &msg )
 
     case JointCmd::GET_MAX_POSITION:
     {
-        double maxPosition = jointPositionBoundaries.second;
+        double maxPosition = jointPositionBoundaries[ joint ].second;
         std::cout << "Returning max position of joint " << joint << ": " << maxPosition << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_POSITION, joint, maxPosition ) );
         break;
     }
     case JointCmd::GET_MIN_POSITION:
     {
-        double minPosition = jointPositionBoundaries.first;
+        double minPosition = jointPositionBoundaries[ joint ].first;
         std::cout << "Returning min position of joint " << joint << ": " << minPosition << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_POSITION, joint, minPosition ) );
         break;
@@ -132,7 +142,7 @@ void UMP::onJointCmd( const rofi::messages::JointCmd &msg )
     }
     case JointCmd::GET_VELOCITY:
     {
-        double velocity = 0; // TODO get velocity
+        double velocity = _model->GetJoints()[ joint ]->GetVelocity( 0 );
         std::cout << "Returning current velocity of joint " << joint << ": " << velocity << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_VELOCITY, joint, velocity ) );
         break;
@@ -141,17 +151,13 @@ void UMP::onJointCmd( const rofi::messages::JointCmd &msg )
     {
         double velocity = msg.setvelocity().velocity();
 
-        // TODO set max force
-        auto &modelJoint = _model->GetJoints()[ joint ];
-        modelJoint->SetParam( "fmax", 0, maxJointTorque );
-        modelJoint->SetParam( "vel", 0, velocity );
+        setVelocity( joint, velocity );
         std::cerr << "Setting velocity of joint " << joint << " to " << velocity << "\n";
-        // TODO set boundaries
         break;
     }
     case JointCmd::GET_POSITION:
     {
-        double position = 0; // TODO get position
+        double position = _model->GetJoints()[ joint ]->Position( 0 );
         std::cout << "Returning current position of joint " << joint << ": " << position << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_POSITION, joint, position ) );
         break;
@@ -159,20 +165,18 @@ void UMP::onJointCmd( const rofi::messages::JointCmd &msg )
     case JointCmd::SET_POS_WITH_SPEED:
     {
         double position = msg.setposwithspeed().position();
-        double velocity = msg.setposwithspeed().speed();
+        double speed = msg.setposwithspeed().speed();
 
-        // TODO change sign of velocity if position is on the other side
-        // TODO set max force
-        auto &modelJoint = _model->GetJoints()[ joint ];
-        modelJoint->SetParam( "fmax", 0, maxJointTorque );
-        modelJoint->SetParam( "vel", 0, velocity );
-        std::cerr << "Setting position of joint " << joint << " to " << position << " with speed " << velocity << "\n";
-        // TODO set boundary (position)
+        setPositionWithSpeed( joint, position, speed );
+
+        std::cerr << "Setting position of joint " << joint << " to " << position << " with speed " << speed << "\n";
         break;
     }
     case JointCmd::GET_TORQUE:
     {
         double torque = 0; // TODO get torque
+        std::cerr << "Torque:\n" << to_string( _model->GetJoints()[ joint ]->GetForceTorque( 0 ) ) << "\n";
+
         std::cout << "Returning current torque of joint " << joint << ": " << torque << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_TORQUE, joint, torque ) );
         break;
@@ -180,18 +184,58 @@ void UMP::onJointCmd( const rofi::messages::JointCmd &msg )
     case JointCmd::SET_TORQUE:
     {
         double torque = msg.settorque().torque();
-
-        // TODO set torque
-        auto &modelJoint = _model->GetJoints()[ joint ];
+        setTorque( joint, torque );
         std::cerr << "Setting torque of joint " << joint << " to " << torque << "\n";
-
-        std::cerr << "Torque:\n" << to_string( modelJoint->GetForceTorque( 0 ) ) << "\n";
         break;
     }
     default:
         std::cerr << "Unknown command type: " << msg.cmdtype() << " of joint " << joint << "\n";
         break;
     }
+}
+
+void UMP::setVelocity( int joint, double velocity )
+{
+    velocity = trim( velocity, -jointSpeedBoundaries.second, jointSpeedBoundaries.second );
+    auto modelJoint = _model->GetJoints()[ joint ];
+    modelJoint->SetParam( "fmax", 0, maxJointTorque );
+    modelJoint->SetParam( "vel", 0, velocity );
+    modelJoint->SetParam( "lo_stop", 0, jointPositionBoundaries[ joint ].first );
+    modelJoint->SetParam( "hi_stop", 0, jointPositionBoundaries[ joint ].second );
+}
+
+void UMP::setTorque( int joint, double torque )
+{
+    torque = trim( torque, -maxJointTorque, maxJointTorque );
+    auto modelJoint = _model->GetJoints()[ joint ];
+    modelJoint->SetParam( "fmax", 0, std::abs( torque ) );
+    modelJoint->SetParam( "vel", 0, std::copysign( jointSpeedBoundaries.second, torque ) );
+    modelJoint->SetParam( "lo_stop", 0, jointPositionBoundaries[ joint ].first );
+    modelJoint->SetParam( "hi_stop", 0, jointPositionBoundaries[ joint ].second );
+}
+
+void UMP::setPositionWithSpeed( int joint, double position, double speed )
+{
+    position = trim( position, jointPositionBoundaries[ joint ] );
+    speed = trim( speed, 0, jointSpeedBoundaries.second );
+
+    auto modelJoint = _model->GetJoints()[ joint ];
+
+    double actualPosition = modelJoint->Position( 0 );
+    if ( position > actualPosition )
+    {
+        modelJoint->SetParam( "lo_stop", 0, jointPositionBoundaries[ joint ].first );
+        modelJoint->SetParam( "hi_stop", 0, position );
+        modelJoint->SetParam( "vel", 0, speed );
+    }
+    else
+    {
+        modelJoint->SetParam( "lo_stop", 0, position );
+        modelJoint->SetParam( "hi_stop", 0, jointPositionBoundaries[ joint ].second );
+        modelJoint->SetParam( "vel", 0, -speed );
+    }
+
+    modelJoint->SetParam( "fmax", 0, maxJointTorque );
 }
 
 GZ_REGISTER_MODEL_PLUGIN(UniversalModulePlugin)
