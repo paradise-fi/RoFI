@@ -50,6 +50,11 @@ double trim( double value, const UMP::limitPair & limits )
     return trim( value, limits.first, limits.second );
 }
 
+bool equal( double first, double second, double precision = UMP::doublePrecision )
+{
+    return first <= second + precision && second <= first + precision;
+}
+
 void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf ) {
     std::cerr << "\nThe UM plugin is attached to model ["
             << model->GetName() << "]\n";

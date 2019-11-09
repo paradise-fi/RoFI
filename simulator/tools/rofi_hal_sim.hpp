@@ -16,6 +16,13 @@ namespace rofi
 {
     namespace hal
     {
+        constexpr double doublePrecision = 0.01;
+
+        inline bool equal( double first, double second, double precision = doublePrecision )
+        {
+            return first <= second + precision && second <= first + precision;
+        }
+
         class RoFI::Data
         {
         public:

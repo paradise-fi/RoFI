@@ -23,6 +23,7 @@ public:
         };
 
     static constexpr int numOfJoints = 3;
+    static constexpr double doublePrecision = 0.01;
 
     UniversalModulePlugin() :
             _pid( 0.1, 0, 0 ),

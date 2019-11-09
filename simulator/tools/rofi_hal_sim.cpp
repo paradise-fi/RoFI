@@ -219,7 +219,7 @@ namespace rofi
                                 return false;
                             if ( resp.values_size() != 1 )
                                 return false;
-                            return resp.values().Get( 0 ) == pos;
+                            return equal( resp.values().Get( 0 ), pos );
                             },
                         callback );
             }
