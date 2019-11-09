@@ -14,12 +14,12 @@ namespace gazebo {
 class UniversalModulePlugin : public ModelPlugin {
 public:
     using limitPair = std::pair< double, double >;
-    static constexpr double maxJointTorque = 10; // Max torque of joint motors
-    static constexpr limitPair jointSpeedBoundaries = { 0, 10 }; // Max speed of joint motors
-    static constexpr std::array< limitPair, 3 > jointPositionBoundaries = {
+    static constexpr double maxJointTorque = 1.5; // [Nm]
+    static constexpr limitPair jointSpeedBoundaries = { 0.0, 6.545 }; // [rad/s] // 0, 60/0.16 deg/s
+    static constexpr std::array< limitPair, 3 > jointPositionBoundaries = { // [rad]
             limitPair( std::numeric_limits< double >::lowest(), std::numeric_limits< double >::max() ),
-            limitPair( -1.5708, 1.5708 ),
-            limitPair( -1.5708, 1.5708 )
+            limitPair( -1.5708, 1.5708 ), // -90 deg, 90 deg
+            limitPair( -1.5708, 1.5708 ) // -90 deg, 90 deg
         };
 
     static constexpr int numOfJoints = 3;
