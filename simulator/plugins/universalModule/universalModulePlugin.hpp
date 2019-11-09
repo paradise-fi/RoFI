@@ -1,4 +1,5 @@
 #include <gazebo/gazebo.hh>
+#include <gazebo/common/Events.hh>
 #include <gazebo/physics/physics.hh>
 #include <gazebo/transport/transport.hh>
 #include <gazebo/msgs/msgs.hh>
@@ -44,12 +45,15 @@ private:
     void setTorque( int joint, double torque );
     void setPositionWithSpeed( int joint, double position, double speed );
 
+    void setPositionCheck( int joint, double position );
 
     physics::ModelPtr _model;
     common::PID _pid;
     transport::NodePtr _node;
     transport::SubscriberPtr _sub;
     transport::PublisherPtr _pub;
+
+    std::array< event::ConnectionPtr, numOfJoints > setPositionHandle;
 };
 
 } // namespace gazebo

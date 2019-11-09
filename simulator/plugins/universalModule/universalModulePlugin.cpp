@@ -241,6 +241,23 @@ void UMP::setPositionWithSpeed( int joint, double position, double speed )
     }
 
     modelJoint->SetParam( "fmax", 0, maxJointTorque );
+
+    setPositionHandle[ joint ] = event::Events::ConnectWorldUpdateEnd( std::bind( &UMP::setPositionCheck, this, joint, position ) );
+}
+
+void UMP::setPositionCheck( int joint, double position )
+{
+    using rofi::messages::JointCmd;
+
+    double currentPosition = _model->GetJoints()[ joint ]->Position( 0 );
+
+    if ( !equal( position, currentPosition ) )
+        return;
+
+    setPositionHandle[ joint ] = {};
+
+    std::cout << "Returning position reached of joint " << joint << ": " << currentPosition << "\n";
+    _pub->Publish( getJointRofiResp( JointCmd::SET_POS_WITH_SPEED, joint, currentPosition ) );
 }
 
 GZ_REGISTER_MODEL_PLUGIN(UniversalModulePlugin)
