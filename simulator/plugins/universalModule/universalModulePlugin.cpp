@@ -80,7 +80,7 @@ void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf ) {
     std::cerr << "Listening...\n";
 }
 
-void UMP::onRofiCmd( const UMP::RofiCmdPtr &msg)
+void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
 {
     using rofi::messages::RofiCmd;
 
@@ -97,8 +97,10 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr &msg)
     }
 }
 
-void UMP::onJointCmd( const rofi::messages::JointCmd &msg )
+void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
 {
+    using rofi::messages::JointCmd;
+
     int joint = msg.joint();
     if ( joint < 0 || joint >= numOfJoints )
     {
@@ -108,7 +110,6 @@ void UMP::onJointCmd( const rofi::messages::JointCmd &msg )
 
     switch ( msg.cmdtype() )
     {
-        using JointCmd = rofi::messages::JointCmd;
 
     case JointCmd::GET_MAX_POSITION:
     {

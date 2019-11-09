@@ -1,3 +1,4 @@
+#include <functional>
 #include <memory>
 
 namespace rofi
@@ -53,7 +54,7 @@ namespace rofi
                 float getVelocity() const;
                 void setVelocity( float velocity );
                 float getPosition() const;
-                void setPosition( float pos, float speed, void ( *callback )( Joint ) );
+                void setPosition( float pos, float speed, std::function< void( Joint ) > callback );
                 float getTorque() const;
                 void setTorque( float torque );
                 // TODO void onError( void ( *callback )( JointError ) );

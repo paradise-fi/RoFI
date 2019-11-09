@@ -86,10 +86,10 @@ namespace rofi
             return respMap.emplace( type, std::promise< RoFI::Data::RofiRespPtr >() )->second.get_future();
         }
 
-        void RoFI::Joint::Data::registerCallback( std::function< bool( const messages::JointResp & ) > pred, std::function< void( Joint ) > callback )
+        void RoFI::Joint::Data::registerCallback( std::function< bool( const messages::JointResp & ) > && pred, std::function< void( Joint ) > && callback )
         {
             std::lock_guard< std::mutex > lock( respCallbacksMutex );
-            respCallbacks.emplace_back( pred, callback );
+            respCallbacks.emplace_back( std::move( pred ), std::move( callback ) );
         }
 
         void RoFI::Joint::Data::onResponse( const RoFI::Data::RofiRespPtr & resp )
@@ -210,7 +210,7 @@ namespace rofi
             return resp->jointresp().values().Get( 0 );
         }
 
-        void RoFI::Joint::setPosition( float pos, float speed, void ( *callback )( RoFI::Joint ) )
+        void RoFI::Joint::setPosition( float pos, float speed, std::function< void( Joint ) > callback )
         {
             if ( callback )
             {
@@ -221,7 +221,7 @@ namespace rofi
                                 return false;
                             return equal( resp.values().Get( 0 ), pos );
                             },
-                        callback );
+                        std::move( callback ) );
             }
 
             auto msg = jdata->getCmdMsg( messages::JointCmd::SET_POS_WITH_SPEED );

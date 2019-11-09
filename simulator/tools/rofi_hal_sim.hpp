@@ -61,7 +61,7 @@ namespace rofi
             messages::RofiCmd getCmdMsg( messages::JointCmd::Type type ) const;
             std::future< RoFI::Data::RofiRespPtr > registerPromise( messages::JointCmd::Type type );
 
-            void registerCallback( std::function< bool( const messages::JointResp & ) > pred, std::function< void( Joint ) > callback );
+            void registerCallback( std::function< bool( const messages::JointResp & ) > && pred, std::function< void( Joint ) > && callback );
 
             void onResponse( const RoFI::Data::RofiRespPtr & resp );
         };
