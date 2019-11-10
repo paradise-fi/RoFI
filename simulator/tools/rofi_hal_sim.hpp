@@ -33,11 +33,13 @@ namespace rofi
             private:
                 gazebo::transport::NodePtr node;
                 std::vector< std::unique_ptr< JointData > > joints;
+                std::vector< std::unique_ptr< ConnectorData > > connectors;
 
             public:
-                RoFIData( int jointNumber );
+                RoFIData( int jointNumber, int connectorNumber );
 
                 Joint getJoint( int index );
+                Connector getConnector( int index );
 
                 void onResponse( const RofiRespPtr & resp );
 
@@ -60,7 +62,7 @@ namespace rofi
                 std::pair< Check, Callback > respCallback;
                 std::mutex respCallbackMutex;
 
-                int jointNumber;
+                const int jointNumber;
 
             public:
                 JointData( RoFIData & rofi, int jointNumber ) : rofi( rofi ), jointNumber( jointNumber ) {}
@@ -71,6 +73,24 @@ namespace rofi
 
                 std::future< RoFIData::RofiRespPtr > registerPromise( messages::JointCmd::Type type );
                 void registerCallback( Check && pred, Callback && callback );
+
+                void onResponse( const RoFIData::RofiRespPtr & resp );
+            };
+
+            class ConnectorData
+            {
+            public:
+                RoFIData & rofi;
+
+            private:
+                const int connectorNumber;
+
+            public:
+                ConnectorData( RoFIData & rofi, int connectorNumber ) : rofi( rofi ), connectorNumber( connectorNumber ) {}
+
+                Connector getConnector();
+
+                messages::RofiCmd getCmdMsg( messages::ConnectorCmd::Type type );
 
                 void onResponse( const RoFIData::RofiRespPtr & resp );
             };

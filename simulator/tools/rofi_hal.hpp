@@ -9,10 +9,12 @@ namespace rofi
         {
             class RoFIData;
             class JointData;
+            class ConnectorData;
         } // namespace detail
 
         class RoFI;
         class Joint;
+        class Connector;
 
         class RoFI
         {
@@ -33,6 +35,7 @@ namespace rofi
             static RoFI & getLocalRoFI();
 
             Joint getJoint( int index );
+            Connector getConnector( int index );
         };
 
         class Joint
@@ -61,6 +64,29 @@ namespace rofi
             float getTorque() const;
             void setTorque( float torque );
             // TODO void onError( void ( *callback )( JointError ) );
+        };
+
+        class Connector
+        {
+            friend class detail::ConnectorData;
+
+            detail::ConnectorData * connectorData;
+
+            Connector( detail::ConnectorData & cdata );
+
+        public:
+            Connector( const Connector & ) = default;
+            Connector & operator=( const Connector & ) = default;
+
+            // State getState() const;
+            void connect();
+            void disconnect();
+            // void onConnectorEvent( std::function< void ( Connector, ConnectorEvent ) > callback );
+            // void onPacket( std::function< void ( Connector, Packet ) > callback );
+            // void send( Packet packet );
+            // void connectPower( Line );
+            // void disconnectPower( Line );
+            // PowerState getPowerState( Line );
         };
     } // namespace hal
 } // namespace rofi
