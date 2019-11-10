@@ -36,18 +36,24 @@ rofi::messages::RofiResp getJointRofiResp( rofi::messages::JointCmd::Type cmdtyp
 
 using UMP = UniversalModulePlugin;
 
-double trim( double value, double min, double max )
+double trim( double value, double min, double max, std::string debugName )
 {
     if ( value < min )
+    {
+        gzwarn << "Value of " << debugName << " trimmed from " << value << " to " << min << "\n";
         return min;
+    }
     if ( value > max )
+    {
+        gzwarn << "Value of " << debugName << " trimmed from " << value << " to " << max << "\n";
         return max;
+    }
     return value;
 }
 
-double trim( double value, const UMP::limitPair & limits )
+double trim( double value, const UMP::limitPair & limits, std::string debugName )
 {
-    return trim( value, limits.first, limits.second );
+    return trim( value, limits.first, limits.second, std::move( debugName ) );
 }
 
 bool equal( double first, double second, double precision = UMP::doublePrecision )
@@ -56,13 +62,12 @@ bool equal( double first, double second, double precision = UMP::doublePrecision
 }
 
 void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf ) {
-    std::cerr << "\nThe UM plugin is attached to model ["
+    gzmsg << "The UM plugin is attached to model ["
             << model->GetName() << "]\n";
 
-    std::cerr << "Number of joints is " << numOfJoints << "\n";
+    gzmsg << "Number of joints is " << numOfJoints << "\n";
     if ( numOfJoints > model->GetJoints().size() ) {
-        std::cerr << "Number of joints in gazebo model is lower than expected\n";
-        std::cerr << "Aborting...\n";
+        gzerr << "Number of joints in gazebo model is lower than expected\nAborting...\n";
         return;
     }
 
@@ -77,7 +82,7 @@ void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf ) {
     _sub = _node->Subscribe( topicName, &UniversalModulePlugin::onRofiCmd, this );
     _pub = _node->Advertise< rofi::messages::RofiResp >( "~/" + _model->GetName() + "/response" );
 
-    std::cerr << "Listening...\n";
+    gzmsg << "Listening...\n";
 }
 
 void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
@@ -92,7 +97,7 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
             onJointCmd( msg->jointcmd() );
             break;
         case RofiCmd::DOCK_CMD:
-            std::cerr << "Dock commands not implemented\n";
+            gzwarn << "Dock commands not implemented\n";
             break;
     }
 }
@@ -104,7 +109,7 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
     int joint = msg.joint();
     if ( joint < 0 || joint >= numOfJoints )
     {
-        std::cerr << "Warning: invalid joint " << joint << " specified\n";
+        gzwarn << "Invalid joint " << joint << " specified\n";
         return;
     }
 
@@ -114,42 +119,42 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
     case JointCmd::GET_MAX_POSITION:
     {
         double maxPosition = jointPositionBoundaries[ joint ].second;
-        std::cout << "Returning max position of joint " << joint << ": " << maxPosition << "\n";
+        gzmsg << "Returning max position of joint " << joint << ": " << maxPosition << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_POSITION, joint, maxPosition ) );
         break;
     }
     case JointCmd::GET_MIN_POSITION:
     {
         double minPosition = jointPositionBoundaries[ joint ].first;
-        std::cout << "Returning min position of joint " << joint << ": " << minPosition << "\n";
+        gzmsg << "Returning min position of joint " << joint << ": " << minPosition << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_POSITION, joint, minPosition ) );
         break;
     }
     case JointCmd::GET_MAX_SPEED:
     {
         double maxSpeed = jointSpeedBoundaries.second;
-        std::cout << "Returning max speed of joint " << joint << ": " << maxSpeed << "\n";
+        gzmsg << "Returning max speed of joint " << joint << ": " << maxSpeed << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_SPEED, joint, maxSpeed ) );
         break;
     }
     case JointCmd::GET_MIN_SPEED:
     {
         double minSpeed = jointSpeedBoundaries.first;
-        std::cout << "Returning min speed of joint " << joint << ": " << minSpeed << "\n";
+        gzmsg << "Returning min speed of joint " << joint << ": " << minSpeed << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_SPEED, joint, minSpeed ) );
         break;
     }
     case JointCmd::GET_MAX_TORQUE:
     {
         double maxTorque = maxJointTorque;
-        std::cout << "Returning max torque of joint " << joint << ": " << maxTorque << "\n";
+        gzmsg << "Returning max torque of joint " << joint << ": " << maxTorque << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_TORQUE, joint, maxTorque ) );
         break;
     }
     case JointCmd::GET_VELOCITY:
     {
         double velocity = _model->GetJoints()[ joint ]->GetVelocity( 0 );
-        std::cout << "Returning current velocity of joint " << joint << ": " << velocity << "\n";
+        gzmsg << "Returning current velocity of joint " << joint << ": " << velocity << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_VELOCITY, joint, velocity ) );
         break;
     }
@@ -158,13 +163,13 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
         double velocity = msg.setvelocity().velocity();
 
         setVelocity( joint, velocity );
-        std::cerr << "Setting velocity of joint " << joint << " to " << velocity << "\n";
+        gzmsg << "Setting velocity of joint " << joint << " to " << velocity << "\n";
         break;
     }
     case JointCmd::GET_POSITION:
     {
         double position = _model->GetJoints()[ joint ]->Position( 0 );
-        std::cout << "Returning current position of joint " << joint << ": " << position << "\n";
+        gzmsg << "Returning current position of joint " << joint << ": " << position << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_POSITION, joint, position ) );
         break;
     }
@@ -175,15 +180,15 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
 
         setPositionWithSpeed( joint, position, speed );
 
-        std::cerr << "Setting position of joint " << joint << " to " << position << " with speed " << speed << "\n";
+        gzmsg << "Setting position of joint " << joint << " to " << position << " with speed " << speed << "\n";
         break;
     }
     case JointCmd::GET_TORQUE:
     {
-        double torque = 0; // TODO get torque
-        std::cerr << "Torque:\n" << to_string( _model->GetJoints()[ joint ]->GetForceTorque( 0 ) ) << "\n";
+        double torque = -1.0;
+        gzwarn << "Get torque joint command not implemented\n";
 
-        std::cout << "Returning current torque of joint " << joint << ": " << torque << "\n";
+        gzmsg << "Returning current torque of joint " << joint << ": " << torque << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_TORQUE, joint, torque ) );
         break;
     }
@@ -191,18 +196,18 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
     {
         double torque = msg.settorque().torque();
         setTorque( joint, torque );
-        std::cerr << "Setting torque of joint " << joint << " to " << torque << "\n";
+        gzmsg << "Setting torque of joint " << joint << " to " << torque << "\n";
         break;
     }
     default:
-        std::cerr << "Unknown command type: " << msg.cmdtype() << " of joint " << joint << "\n";
+        gzwarn << "Unknown command type: " << msg.cmdtype() << " of joint " << joint << "\n";
         break;
     }
 }
 
 void UMP::setVelocity( int joint, double velocity )
 {
-    velocity = trim( velocity, -jointSpeedBoundaries.second, jointSpeedBoundaries.second );
+    velocity = trim( velocity, -jointSpeedBoundaries.second, jointSpeedBoundaries.second, "velocity" );
     auto modelJoint = _model->GetJoints()[ joint ];
     modelJoint->SetParam( "fmax", 0, maxJointTorque );
     modelJoint->SetParam( "vel", 0, velocity );
@@ -212,7 +217,7 @@ void UMP::setVelocity( int joint, double velocity )
 
 void UMP::setTorque( int joint, double torque )
 {
-    torque = trim( torque, -maxJointTorque, maxJointTorque );
+    torque = trim( torque, -maxJointTorque, maxJointTorque, "torque" );
     auto modelJoint = _model->GetJoints()[ joint ];
     modelJoint->SetParam( "fmax", 0, std::abs( torque ) );
     modelJoint->SetParam( "vel", 0, std::copysign( jointSpeedBoundaries.second, torque ) );
@@ -220,10 +225,10 @@ void UMP::setTorque( int joint, double torque )
     modelJoint->SetParam( "hi_stop", 0, jointPositionBoundaries[ joint ].second );
 }
 
-void UMP::setPositionWithSpeed( int joint, double position, double speed )
+void UMP::setPositionWithSpeed( int joint, double desiredPosition, double speed )
 {
-    position = trim( position, jointPositionBoundaries[ joint ] );
-    speed = trim( speed, 0, jointSpeedBoundaries.second );
+    double position = trim( desiredPosition, jointPositionBoundaries[ joint ], "position" );
+    speed = trim( speed, 0, jointSpeedBoundaries.second, "speed" );
 
     auto modelJoint = _model->GetJoints()[ joint ];
 
@@ -243,10 +248,11 @@ void UMP::setPositionWithSpeed( int joint, double position, double speed )
 
     modelJoint->SetParam( "fmax", 0, maxJointTorque );
 
-    setPositionHandle[ joint ] = event::Events::ConnectWorldUpdateEnd( std::bind( &UMP::setPositionCheck, this, joint, position ) );
+    setPositionHandle[ joint ] = event::Events::ConnectWorldUpdateEnd(
+        std::bind( &UMP::setPositionCheck, this, joint, position, desiredPosition ) );
 }
 
-void UMP::setPositionCheck( int joint, double position )
+void UMP::setPositionCheck( int joint, double position, double desiredPosition )
 {
     using rofi::messages::JointCmd;
 
@@ -257,8 +263,12 @@ void UMP::setPositionCheck( int joint, double position )
 
     setPositionHandle[ joint ] = {};
 
-    std::cout << "Returning position reached of joint " << joint << ": " << currentPosition << "\n";
-    _pub->Publish( getJointRofiResp( JointCmd::SET_POS_WITH_SPEED, joint, currentPosition ) );
+    setVelocity( joint, 0 );
+
+    gzmsg << "Returning position reached of joint " << joint << ": " << desiredPosition
+        << " (actual position: " << currentPosition << ")\n";
+
+    _pub->Publish( getJointRofiResp( JointCmd::SET_POS_WITH_SPEED, joint, desiredPosition ) );
 }
 
 GZ_REGISTER_MODEL_PLUGIN(UniversalModulePlugin)

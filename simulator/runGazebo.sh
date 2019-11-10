@@ -4,4 +4,4 @@ export GAZEBO_PLUGIN_PATH=`readlink -f build/plugins/universalModule`:$GAZEBO_PL
 echo GAZEBO_MODEL_PATH = $GAZEBO_MODEL_PATH
 echo GAZEBO_PLUGIN_PATH = $GAZEBO_PLUGIN_PATH
 
-gazebo
+gazebo $@

@@ -43,9 +43,9 @@ private:
 
     void setVelocity( int joint, double velocity );
     void setTorque( int joint, double torque );
-    void setPositionWithSpeed( int joint, double position, double speed );
+    void setPositionWithSpeed( int joint, double desiredPosition, double speed );
 
-    void setPositionCheck( int joint, double position );
+    void setPositionCheck( int joint, double position, double desiredPosition );
 
     physics::ModelPtr _model;
     common::PID _pid;
