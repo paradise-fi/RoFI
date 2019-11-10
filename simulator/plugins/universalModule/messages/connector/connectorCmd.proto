@@ -1,0 +1,24 @@
+syntax = "proto3";
+package rofi.messages;
+
+import "connectorPacket.proto";
+import "connectorPowerState.proto";
+
+message ConnectorCmd {
+    enum Type {
+        GET_STATE = 0;
+        CONNECT = 1;
+        DISCONNECT = 2;
+        CONNECTOR_EVENT = 3;
+        PACKET = 4;
+        CONNECT_POWER = 5;
+        DISCONNECT_POWER = 6;
+        POWER_STATE = 7;
+    }
+
+    int32 connector = 1;
+    Type cmdType = 2;
+
+    Packet packet = 3;
+    PowerState.Line line = 4;
+}

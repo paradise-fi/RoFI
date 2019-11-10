@@ -1,0 +1,11 @@
+syntax = "proto3";
+package rofi.messages;
+
+message PowerState {
+    enum Line {
+        INT_LINE = 0;
+        OUT_LINE = 1;
+    }
+
+    Line line = 1;
+}

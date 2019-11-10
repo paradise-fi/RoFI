@@ -32,7 +32,7 @@ public:
     {}
 
     // Expects that first #numOfJoints gazebo joints of @model are RoFI Joints
-    // and next #numOfDocks gazebo joints of @model are RoFI Docks
+    // and next #numOfConnectors gazebo joints of @model are RoFI Connectors
     virtual void Load( physics::ModelPtr model, sdf::ElementPtr sdf );
 
 private:

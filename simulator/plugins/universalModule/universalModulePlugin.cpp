@@ -96,8 +96,8 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
         case RofiCmd::JOINT_CMD:
             onJointCmd( msg->jointcmd() );
             break;
-        case RofiCmd::DOCK_CMD:
-            gzwarn << "Dock commands not implemented\n";
+        case RofiCmd::CONNECTOR_CMD:
+            gzwarn << "Connector commands not implemented\n";
             break;
     }
 }

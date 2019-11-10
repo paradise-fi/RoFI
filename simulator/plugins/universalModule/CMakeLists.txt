@@ -15,14 +15,19 @@ foreach(ITR ${GAZEBO_INCLUDE_DIRS})
 endforeach()
 
 set (msgs
-    messages/commands/rofiCmd.proto
-    messages/commands/jointCmd.proto
-    messages/commands/jointSetPosWithSpeedCmd.proto
-    messages/commands/jointSetVelocityCmd.proto
-    messages/commands/jointSetTorqueCmd.proto
+    messages/rofi/rofiCmd.proto
+    messages/rofi/rofiResp.proto
 
-    messages/responses/rofiResp.proto
-    messages/responses/jointResp.proto
+    messages/joint/jointCmd.proto
+    messages/joint/jointResp.proto
+    messages/joint/jointSetPosWithSpeedCmd.proto
+    messages/joint/jointSetVelocityCmd.proto
+    messages/joint/jointSetTorqueCmd.proto
+
+    messages/connector/connectorCmd.proto
+    messages/connector/connectorResp.proto
+    messages/connector/connectorPacket.proto
+    messages/connector/connectorPowerState.proto
 )
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${msgs})

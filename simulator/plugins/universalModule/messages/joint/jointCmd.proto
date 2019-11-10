@@ -19,6 +19,7 @@ message JointCmd {
         SET_VELOCITY = 9;
         SET_TORQUE = 10;
     }
+
     int32 joint = 1;
     Type cmdType = 2;
 

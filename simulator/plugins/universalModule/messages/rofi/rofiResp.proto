@@ -3,10 +3,12 @@ package rofi.messages;
 
 import "rofiCmd.proto";
 import "jointResp.proto";
+import "connectorResp.proto";
 
 message RofiResp {
     int32 rofiId = 1;
     RofiCmd.Type respType = 2;
 
     JointResp jointResp = 3;
+    ConnectorResp connectorResp = 4;
 }
