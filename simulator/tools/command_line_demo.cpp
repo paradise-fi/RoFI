@@ -4,6 +4,7 @@
 #include <gazebo/gazebo_client.hh>
 
 #include <jointCmd.pb.h>
+#include <connectorCmd.pb.h>
 
 #include <iostream>
 #include <string>
@@ -64,7 +65,7 @@ int readInt( std::string_view str )
 }
 
 
-inline rofi::messages::JointCmd::Type getJointCmdType( std::string_view token )
+rofi::messages::JointCmd::Type getJointCmdType( std::string_view token )
 {
     using rofi::messages::JointCmd;
 
@@ -88,12 +89,33 @@ inline rofi::messages::JointCmd::Type getJointCmdType( std::string_view token )
     return it->second;
 }
 
+inline rofi::messages::ConnectorCmd::Type getConnectorCmdType( std::string_view token )
+{
+    using rofi::messages::ConnectorCmd;
+
+    const std::map< std::string_view, ConnectorCmd::Type > map = {
+        { "getstate", ConnectorCmd::GET_STATE },
+        { "connect", ConnectorCmd::CONNECT },
+        { "disconnect", ConnectorCmd::DISCONNECT },
+        { "sendpacket", ConnectorCmd::PACKET },
+        { "connectpower", ConnectorCmd::CONNECT_POWER },
+        { "disconnectpower", ConnectorCmd::DISCONNECT_POWER },
+        { "getpowerstate", ConnectorCmd::POWER_STATE }
+    };
+
+    auto it = map.find( token );
+    if ( it == map.end() )
+        throw std::runtime_error("Unknown connector cmd type");
+    return it->second;
+}
+
 void printHelp()
 {
     std::cerr << "Help not yet implemented\n  write 'quit' for quit\nExample of usage:\n"
               << "\tjoint 2 setvelocity 8.5\n"
               << "\tjoint 1 settorque -3.4\n"
-              << "\tjoint 2 getmaxposition\n";
+              << "\tjoint 2 getmaxposition\n"
+              << "\tconnector 3 connect\n";
 }
 
 void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_view > & tokens )
@@ -184,6 +206,45 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
     }
 }
 
+void processConnectorCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_view > & tokens )
+{
+    using rofi::messages::ConnectorCmd;
+
+    if ( tokens.size() < 3 )
+        throw std::runtime_error("Wrong number of arguments");
+
+    auto connector = rofi.getConnector( readInt( tokens[1] ) );
+
+    switch ( getConnectorCmdType( tokens[2] ) )
+    {  
+        case ConnectorCmd::CONNECT:
+        {
+            connector.connect();
+            std::cout << "Connecting\n";
+            break;
+		}
+        case ConnectorCmd::DISCONNECT:
+        {
+            connector.disconnect();
+            std::cout << "Disconnecting\n";
+            break;
+		}
+        case ConnectorCmd::GET_STATE:
+        case ConnectorCmd::PACKET:
+        case ConnectorCmd::CONNECT_POWER:
+        case ConnectorCmd::DISCONNECT_POWER:
+        case ConnectorCmd::POWER_STATE:
+        {
+            std::cout << "Connector command not implemented\n";
+		}
+        default:
+        {
+            printHelp();
+            break;
+		}
+    }
+}
+
 
 int main( int argc, char **argv )
 {
@@ -207,6 +268,12 @@ int main( int argc, char **argv )
                 if ( tokens.front() == "joint" )
                 {
                     processJointCmd( rofi, tokens );
+                    continue;
+                }
+
+                if ( tokens.front() == "connector" )
+                {
+                    processConnectorCmd( rofi, tokens );
                     continue;
                 }
 
