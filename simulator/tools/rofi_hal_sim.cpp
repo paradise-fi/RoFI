@@ -6,7 +6,7 @@ namespace rofi
 {
     namespace hal
     {
-        RoFI::RoFI() : rdata( std::make_unique< Data >( 3 ) ) {}
+        RoFI::RoFI() : rofiData( std::make_unique< detail::RoFIData >( 3 ) ) {}
 
         RoFI::~RoFI() = default;
 
@@ -16,124 +16,18 @@ namespace rofi
             return localRoFI;
         }
 
-
-        RoFI::Joint RoFI::getJoint( int index )
+        Joint RoFI::getJoint( int index )
         {
-            if ( index < 0 || static_cast< size_t >( index ) > rdata->joints.size() )
-                throw std::out_of_range( "Joint index is out of range" );
-            return rdata->joints[ index ]->getJoint();
+            return rofiData->getJoint( index );
         }
 
-        RoFI::Joint::Joint( RoFI::Joint::Data & data ) : jdata( &data ) {}
+        Joint::Joint( detail::JointData & jdata ) : jointData( & jdata ) {}
 
-        RoFI::Data::Data( int jointNumber )
+        float Joint::maxPosition() const
         {
-            for ( int i = 0; i < jointNumber; i++ )
-            {
-                joints.push_back( std::make_unique< Joint::Data >( *this, i ) );
-            }
-
-            node = gazebo::transport::NodePtr( new gazebo::transport::Node() );
-            node->Init();
-
-            std::string moduleName = "universalModule";
-
-            sub = node->Subscribe( "~/" + moduleName + "/response", &RoFI::Data::onResponse, this );
-            pub = node->Advertise< rofi::messages::RofiCmd >( "~/" + moduleName + "/control" );
-
-            std::cerr << "Waiting for connection...\n";
-            pub->WaitForConnection();
-            std::cerr << "Connected\n";
-        }
-
-        void RoFI::Data::onResponse( const RoFI::Data::RofiRespPtr & resp )
-        {
-            messages::RofiCmd::Type resptype = resp->resptype();
-            switch ( resptype )
-            {
-                case messages::RofiCmd::JOINT_CMD:
-                {
-                    int index = resp->jointresp().joint();
-                    if ( index < 0 || static_cast< size_t >( index ) > joints.size() )
-                        throw std::out_of_range( "Joint index is out of range" );
-                    joints[ index ]->onResponse( resp );
-                    break;
-                }
-                default:
-                    // TODO
-                    break;
-            }
-        }
-
-        RoFI::Joint RoFI::Joint::Data::getJoint()
-        {
-            return Joint( *this );
-        }
-
-        messages::RofiCmd RoFI::Joint::Data::getCmdMsg( messages::JointCmd::Type type ) const
-        {
-            messages::RofiCmd rofiCmd;
-            rofiCmd.set_cmdtype( messages::RofiCmd::JOINT_CMD );
-            rofiCmd.mutable_jointcmd()->set_joint( jointNumber );
-            rofiCmd.mutable_jointcmd()->set_cmdtype( type );
-            return rofiCmd;
-        }
-
-        std::future< RoFI::Data::RofiRespPtr > RoFI::Joint::Data::registerPromise( messages::JointCmd::Type type )
-        {
-            std::lock_guard< std::mutex > lock( respMapMutex );
-            return respMap.emplace( type, std::promise< RoFI::Data::RofiRespPtr >() )->second.get_future();
-        }
-
-        void RoFI::Joint::Data::registerCallback( std::function< bool( const messages::JointResp & ) > && pred, std::function< void( Joint ) > && callback )
-        {
-            std::function< void( Joint ) > oldCallback;
-            {
-                std::lock_guard< std::mutex > lock( respCallbackMutex );
-                oldCallback = std::move( respCallback.second );
-                respCallback = { std::move( pred ), std::move( callback ) };
-            }
-            if ( oldCallback )
-            {
-                std::cerr << "Aborting old callback\n";
-                // TODO abort oldCallback
-            }
-        }
-
-        void RoFI::Joint::Data::onResponse( const RoFI::Data::RofiRespPtr & resp )
-        {
-            assert( resp->resptype() == messages::RofiCmd::JOINT_CMD );
-            assert( resp->jointresp().joint() == jointNumber );
-
-            {
-                std::lock_guard< std::mutex > lock( respMapMutex );
-                auto range = respMap.equal_range( resp->jointresp().cmdtype() );
-                for ( auto it = range.first; it != range.second; it++ )
-                {
-                    it->second.set_value( resp );
-                }
-                respMap.erase( range.first, range.second );
-            }
-            {
-                std::lock_guard< std::mutex > lock( respCallbackMutex );
-                auto & check = respCallback.first;
-                if ( check && check( resp->jointresp() ) )
-                {
-                    if ( respCallback.second )
-                    {
-                        std::thread( std::move( respCallback.second ), getJoint() ).detach();
-                    }
-                    respCallback = {};
-                }
-            }
-        }
-
-
-        float RoFI::Joint::maxPosition() const
-        {
-            auto result = jdata->registerPromise( messages::JointCmd::GET_MAX_POSITION );
-            auto msg = jdata->getCmdMsg( messages::JointCmd::GET_MAX_POSITION );
-            jdata->rofi.pub->Publish( msg, true );
+            auto result = jointData->registerPromise( messages::JointCmd::GET_MAX_POSITION );
+            auto msg = jointData->getCmdMsg( messages::JointCmd::GET_MAX_POSITION );
+            jointData->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
             if ( resp->jointresp().values_size() != 1 )
@@ -141,11 +35,11 @@ namespace rofi
             return resp->jointresp().values().Get( 0 );
         }
 
-        float RoFI::Joint::minPosition() const
+        float Joint::minPosition() const
         {
-            auto result = jdata->registerPromise( messages::JointCmd::GET_MIN_POSITION );
-            auto msg = jdata->getCmdMsg( messages::JointCmd::GET_MIN_POSITION );
-            jdata->rofi.pub->Publish( msg, true );
+            auto result = jointData->registerPromise( messages::JointCmd::GET_MIN_POSITION );
+            auto msg = jointData->getCmdMsg( messages::JointCmd::GET_MIN_POSITION );
+            jointData->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
             if ( resp->jointresp().values_size() != 1 )
@@ -153,11 +47,11 @@ namespace rofi
             return resp->jointresp().values().Get( 0 );
         }
 
-        float RoFI::Joint::maxSpeed() const
+        float Joint::maxSpeed() const
         {
-            auto result = jdata->registerPromise( messages::JointCmd::GET_MAX_SPEED );
-            auto msg = jdata->getCmdMsg( messages::JointCmd::GET_MAX_SPEED );
-            jdata->rofi.pub->Publish( msg, true );
+            auto result = jointData->registerPromise( messages::JointCmd::GET_MAX_SPEED );
+            auto msg = jointData->getCmdMsg( messages::JointCmd::GET_MAX_SPEED );
+            jointData->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
             if ( resp->jointresp().values_size() != 1 )
@@ -165,11 +59,11 @@ namespace rofi
             return resp->jointresp().values().Get( 0 );
         }
 
-        float RoFI::Joint::minSpeed() const
+        float Joint::minSpeed() const
         {
-            auto result = jdata->registerPromise( messages::JointCmd::GET_MIN_SPEED );
-            auto msg = jdata->getCmdMsg( messages::JointCmd::GET_MIN_SPEED );
-            jdata->rofi.pub->Publish( msg, true );
+            auto result = jointData->registerPromise( messages::JointCmd::GET_MIN_SPEED );
+            auto msg = jointData->getCmdMsg( messages::JointCmd::GET_MIN_SPEED );
+            jointData->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
             if ( resp->jointresp().values_size() != 1 )
@@ -177,11 +71,11 @@ namespace rofi
             return resp->jointresp().values().Get( 0 );
         }
 
-        float RoFI::Joint::maxTorque() const
+        float Joint::maxTorque() const
         {
-            auto result = jdata->registerPromise( messages::JointCmd::GET_MAX_TORQUE );
-            auto msg = jdata->getCmdMsg( messages::JointCmd::GET_MAX_TORQUE );
-            jdata->rofi.pub->Publish( msg, true );
+            auto result = jointData->registerPromise( messages::JointCmd::GET_MAX_TORQUE );
+            auto msg = jointData->getCmdMsg( messages::JointCmd::GET_MAX_TORQUE );
+            jointData->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
             if ( resp->jointresp().values_size() != 1 )
@@ -189,11 +83,11 @@ namespace rofi
             return resp->jointresp().values().Get( 0 );
         }
 
-        float RoFI::Joint::getVelocity() const
+        float Joint::getVelocity() const
         {
-            auto result = jdata->registerPromise( messages::JointCmd::GET_VELOCITY );
-            auto msg = jdata->getCmdMsg( messages::JointCmd::GET_VELOCITY );
-            jdata->rofi.pub->Publish( msg, true );
+            auto result = jointData->registerPromise( messages::JointCmd::GET_VELOCITY );
+            auto msg = jointData->getCmdMsg( messages::JointCmd::GET_VELOCITY );
+            jointData->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
             if ( resp->jointresp().values_size() != 1 )
@@ -201,18 +95,18 @@ namespace rofi
             return resp->jointresp().values().Get( 0 );
         }
 
-        void RoFI::Joint::setVelocity( float velocity )
+        void Joint::setVelocity( float velocity )
         {
-            auto msg = jdata->getCmdMsg( messages::JointCmd::SET_VELOCITY );
+            auto msg = jointData->getCmdMsg( messages::JointCmd::SET_VELOCITY );
             msg.mutable_jointcmd()->mutable_setvelocity()->set_velocity( velocity );
-            jdata->rofi.pub->Publish( msg, true );
+            jointData->rofi.pub->Publish( msg, true );
         }
 
-        float RoFI::Joint::getPosition() const
+        float Joint::getPosition() const
         {
-            auto result = jdata->registerPromise( messages::JointCmd::GET_POSITION );
-            auto msg = jdata->getCmdMsg( messages::JointCmd::GET_POSITION );
-            jdata->rofi.pub->Publish( msg, true );
+            auto result = jointData->registerPromise( messages::JointCmd::GET_POSITION );
+            auto msg = jointData->getCmdMsg( messages::JointCmd::GET_POSITION );
+            jointData->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
             if ( resp->jointresp().values_size() != 1 )
@@ -220,31 +114,31 @@ namespace rofi
             return resp->jointresp().values().Get( 0 );
         }
 
-        void RoFI::Joint::setPosition( float pos, float speed, std::function< void( Joint ) > callback )
+        void Joint::setPosition( float pos, float speed, std::function< void( Joint ) > callback )
         {
             if ( callback )
             {
-                jdata->registerCallback( [ pos ]( const messages::JointResp & resp ){
+                jointData->registerCallback( [ pos ]( const messages::JointResp & resp ){
                             if ( resp.cmdtype() != messages::JointCmd::SET_POS_WITH_SPEED )
                                 return false;
                             if ( resp.values_size() != 1 )
                                 return false;
-                            return equal( resp.values().Get( 0 ), pos );
+                            return detail::equal( resp.values().Get( 0 ), pos );
                             },
                         std::move( callback ) );
             }
 
-            auto msg = jdata->getCmdMsg( messages::JointCmd::SET_POS_WITH_SPEED );
+            auto msg = jointData->getCmdMsg( messages::JointCmd::SET_POS_WITH_SPEED );
             msg.mutable_jointcmd()->mutable_setposwithspeed()->set_position( pos );
             msg.mutable_jointcmd()->mutable_setposwithspeed()->set_speed( speed );
-            jdata->rofi.pub->Publish( msg, true );
+            jointData->rofi.pub->Publish( msg, true );
         }
 
-        float RoFI::Joint::getTorque() const
+        float Joint::getTorque() const
         {
-            auto result = jdata->registerPromise( messages::JointCmd::GET_TORQUE );
-            auto msg = jdata->getCmdMsg( messages::JointCmd::GET_TORQUE );
-            jdata->rofi.pub->Publish( msg, true );
+            auto result = jointData->registerPromise( messages::JointCmd::GET_TORQUE );
+            auto msg = jointData->getCmdMsg( messages::JointCmd::GET_TORQUE );
+            jointData->rofi.pub->Publish( msg, true );
 
             auto resp = result.get();
             if ( resp->jointresp().values_size() != 1 )
@@ -252,11 +146,132 @@ namespace rofi
             return resp->jointresp().values().Get( 0 );
         }
 
-        void RoFI::Joint::setTorque( float torque )
+        void Joint::setTorque( float torque )
         {
-            auto msg = jdata->getCmdMsg( messages::JointCmd::SET_TORQUE );
+            auto msg = jointData->getCmdMsg( messages::JointCmd::SET_TORQUE );
             msg.mutable_jointcmd()->mutable_settorque()->set_torque( torque );
-            jdata->rofi.pub->Publish( msg, true );
+            jointData->rofi.pub->Publish( msg, true );
         }
-    }
-}
+
+        namespace detail
+        {
+            RoFIData::RoFIData( int jointNumber )
+            {
+                for ( int i = 0; i < jointNumber; i++ )
+                {
+                    joints.push_back( std::make_unique< JointData >( *this, i ) );
+                }
+
+                node = boost::make_shared< gazebo::transport::Node >();
+                node->Init();
+
+                std::string moduleName = "universalModule";
+
+                sub = node->Subscribe( "~/" + moduleName + "/response", & RoFIData::onResponse, this );
+                pub = node->Advertise< rofi::messages::RofiCmd >( "~/" + moduleName + "/control" );
+
+                std::cerr << "Waiting for connection...\n";
+                pub->WaitForConnection();
+                std::cerr << "Connected\n";
+            }
+
+            Joint RoFIData::getJoint( int index )
+            {
+                if ( index < 0 || static_cast< size_t >( index ) > joints.size() )
+                {
+                    throw std::out_of_range( "Joint index is out of range" );
+                }
+                return joints[ index ]->getJoint();
+            }
+
+            void RoFIData::onResponse( const RoFIData::RofiRespPtr & resp )
+            {
+                using rofi::messages::RofiCmd;
+
+                RofiCmd::Type resptype = resp->resptype();
+                switch ( resptype )
+                {
+                    case RofiCmd::JOINT_CMD:
+                    {
+                        int index = resp->jointresp().joint();
+                        if ( index < 0 || static_cast< size_t >( index ) > joints.size() )
+                        {
+                            std::cerr << "Joint index of response is out of range\nIgnoring...\n";
+                            return;
+                        }
+                        joints[ index ]->onResponse( resp );
+                        break;
+                    }
+                    default:
+                    {
+                        std::cerr << "Not implemented\nIgnoring...\n";
+                        break;
+                    }
+                }
+            }
+
+            Joint JointData::getJoint()
+            {
+                return Joint( *this );
+            }
+
+            messages::RofiCmd JointData::getCmdMsg( messages::JointCmd::Type type )
+            {
+                messages::RofiCmd rofiCmd;
+                rofiCmd.set_cmdtype( messages::RofiCmd::JOINT_CMD );
+                rofiCmd.mutable_jointcmd()->set_joint( jointNumber );
+                rofiCmd.mutable_jointcmd()->set_cmdtype( type );
+                return rofiCmd;
+            }
+
+            std::future< RoFIData::RofiRespPtr > JointData::registerPromise( messages::JointCmd::Type type )
+            {
+                std::lock_guard< std::mutex > lock( respMapMutex );
+                return respMap.emplace( type, std::promise< RoFIData::RofiRespPtr >() )->second.get_future();
+            }
+
+            void JointData::registerCallback( Check && pred, Callback && callback )
+            {
+                std::function< void( Joint ) > oldCallback;
+                {
+                    std::lock_guard< std::mutex > lock( respCallbackMutex );
+                    oldCallback = std::move( respCallback.second );
+                    respCallback = { std::move( pred ), std::move( callback ) };
+                }
+                if ( oldCallback )
+                {
+                    std::cerr << "Aborting old callback\n";
+                    // TODO abort oldCallback
+                }
+            }
+
+            void JointData::onResponse( const RoFIData::RofiRespPtr & resp )
+            {
+                assert( resp->resptype() == messages::RofiCmd::JOINT_CMD );
+                assert( resp->jointresp().joint() == jointNumber );
+
+                {
+                    std::lock_guard< std::mutex > lock( respMapMutex );
+                    auto range = respMap.equal_range( resp->jointresp().cmdtype() );
+                    for ( auto it = range.first; it != range.second; it++ )
+                    {
+                        it->second.set_value( resp );
+                    }
+                    respMap.erase( range.first, range.second );
+                }
+                {
+                    std::lock_guard< std::mutex > lock( respCallbackMutex );
+                    auto & check = respCallback.first;
+                    if ( check && check( resp->jointresp() ) )
+                    {
+                        if ( respCallback.second )
+                        {
+                            std::thread( std::move( respCallback.second ), getJoint() ).detach();
+                        }
+                        respCallback = {};
+                    }
+                }
+            }
+        } // namespace detail
+    } // namespace hal
+} // namespace rofi

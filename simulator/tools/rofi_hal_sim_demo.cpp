@@ -8,6 +8,7 @@
 #include "rofi_hal.hpp"
 
 using rofi::hal::RoFI;
+using rofi::hal::Joint;
 
 using Callback = std::function< void( void ) >;
 using FunWithCallback = std::function< void( Callback ) >;
@@ -37,10 +38,10 @@ FunWithCallback operator>>( std::function< void( void ) > lhs, F rhs )
     return addCallback( lhs ) >> rhs;
 }
 
-FunWithCallback setPosition( RoFI::Joint joint, double pos, double speed = 1.5 )
+FunWithCallback setPosition( Joint joint, double pos, double speed = 1.5 )
 {
     return [ = ]( Callback cb ){
-        RoFI::Joint( joint ).setPosition( pos, speed, [ = ]( RoFI::Joint ){ cb(); } );
+        Joint( joint ).setPosition( pos, speed, [ cb ]( Joint ){ cb(); } );
     };
 }
 

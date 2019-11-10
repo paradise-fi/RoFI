@@ -5,14 +5,18 @@ namespace rofi
 {
     namespace hal
     {
+        namespace detail
+        {
+            class RoFIData;
+            class JointData;
+        } // namespace detail
+
+        class RoFI;
+        class Joint;
+
         class RoFI
         {
-        public:
-            class Data;
-            class Joint;
-
-        private:
-            std::unique_ptr< Data > rdata;
+            std::unique_ptr< detail::RoFIData > rofiData;
 
             RoFI();
 
@@ -29,37 +33,34 @@ namespace rofi
             static RoFI & getLocalRoFI();
 
             Joint getJoint( int index );
-
-            class Joint
-            {
-            public:
-                class Data;
-                // TODO class JointError {};
-
-                Data * jdata;
-
-            private:
-                friend class RoFI::Data;
-                Joint( Data & data );
-
-            public:
-                Joint( const Joint & ) = default;
-                Joint & operator=( const Joint & ) = default;
-
-                float maxPosition() const;
-                float minPosition() const;
-                float maxSpeed() const;
-                float minSpeed() const;
-                float maxTorque() const;
-                float getVelocity() const;
-                void setVelocity( float velocity );
-                float getPosition() const;
-                void setPosition( float pos, float speed, std::function< void( Joint ) > callback );
-                float getTorque() const;
-                void setTorque( float torque );
-                // TODO void onError( void ( *callback )( JointError ) );
-
-            };
         };
-    }
-}
+
+        class Joint
+        {
+            // TODO class JointError {};
+
+            friend class detail::JointData;
+
+            detail::JointData * jointData;
+
+            Joint( detail::JointData & data );
+
+        public:
+            Joint( const Joint & ) = default;
+            Joint & operator=( const Joint & ) = default;
+
+            float maxPosition() const;
+            float minPosition() const;
+            float maxSpeed() const;
+            float minSpeed() const;
+            float maxTorque() const;
+            float getVelocity() const;
+            void setVelocity( float velocity );
+            float getPosition() const;
+            void setPosition( float pos, float speed, std::function< void ( Joint ) > callback );
+            float getTorque() const;
+            void setTorque( float torque );
+            // TODO void onError( void ( *callback )( JointError ) );
+        };
+    } // namespace hal
+} // namespace rofi
