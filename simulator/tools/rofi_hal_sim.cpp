@@ -48,7 +48,6 @@ namespace rofi
 
         void RoFI::Data::onResponse( const RoFI::Data::RofiRespPtr & resp )
         {
-            std::cerr << "Got response\n";
             messages::RofiCmd::Type resptype = resp->resptype();
             switch ( resptype )
             {
@@ -88,8 +87,17 @@ namespace rofi
 
         void RoFI::Joint::Data::registerCallback( std::function< bool( const messages::JointResp & ) > && pred, std::function< void( Joint ) > && callback )
         {
-            std::lock_guard< std::mutex > lock( respCallbacksMutex );
-            respCallbacks.emplace_back( std::move( pred ), std::move( callback ) );
+            std::function< void( Joint ) > oldCallback;
+            {
+                std::lock_guard< std::mutex > lock( respCallbackMutex );
+                oldCallback = std::move( respCallback.second );
+                respCallback = { std::move( pred ), std::move( callback ) };
+            }
+            if ( oldCallback )
+            {
+                std::cerr << "Aborting old callback\n";
+                // TODO abort oldCallback
+            }
         }
 
         void RoFI::Joint::Data::onResponse( const RoFI::Data::RofiRespPtr & resp )
@@ -105,15 +113,17 @@ namespace rofi
                     it->second.set_value( resp );
                 }
                 respMap.erase( range.first, range.second );
-                if ( range.first == range.second )
-                    std::cerr << "No promises for response\n";
             }
             {
-                std::lock_guard< std::mutex > lock( respCallbacksMutex );
-                for ( auto callback : respCallbacks )
+                std::lock_guard< std::mutex > lock( respCallbackMutex );
+                auto & check = respCallback.first;
+                if ( check && check( resp->jointresp() ) )
                 {
-                    if ( callback.first( resp->jointresp() ) )
-                        std::thread( callback.second, getJoint() ).detach();
+                    if ( respCallback.second )
+                    {
+                        std::thread( std::move( respCallback.second ), getJoint() ).detach();
+                    }
+                    respCallback = {};
                 }
             }
         }

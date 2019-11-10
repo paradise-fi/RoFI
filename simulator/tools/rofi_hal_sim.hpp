@@ -47,8 +47,8 @@ namespace rofi
             std::unordered_multimap< messages::JointCmd::Type, std::promise< RoFI::Data::RofiRespPtr > > respMap;
             std::mutex respMapMutex;
 
-            std::vector< std::pair< std::function< bool( const messages::JointResp & ) >, std::function< void( Joint ) > > > respCallbacks;
-            std::mutex respCallbacksMutex;
+            std::pair< std::function< bool( const messages::JointResp & ) >, std::function< void( Joint ) > > respCallback;
+            std::mutex respCallbackMutex;
 
         public:
             Data( RoFI::Data & rofi, int jointNumber ) : rofi( rofi ), jointNumber( jointNumber ) {}
