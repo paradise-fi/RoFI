@@ -1,45 +1,10 @@
 #include "universalModulePlugin.hpp"
 
 #include <cmath>
-#include <iostream>
 
-#include <rofiResp.pb.h>
 
-namespace gazebo {
-
-template <typename T>
-std::string to_string(const ignition::math::Vector3<T> &v)
+namespace gazebo
 {
-    using std::to_string;
-    return "X = " + to_string(v.X()) + ", Y = " + to_string(v.Y()) + ", Z = " + to_string(v.Z());
-}
-
-std::string to_string(const gazebo::physics::JointWrench &jw)
-{
-    return "Forces:\n\tbody1: " + to_string(jw.body1Force) + "\n\tbody2: " + to_string(jw.body2Force)
-    + "\nTorques:\n\tbody1: " + to_string(jw.body1Torque) + "\n\tbody2: " + to_string(jw.body2Torque);
-}
-
-rofi::messages::RofiResp getJointRofiResp( rofi::messages::JointCmd::Type cmdtype, int joint, float value )
-{
-    rofi::messages::RofiResp resp;
-    resp.set_resptype( rofi::messages::RofiCmd::JOINT_CMD );
-    auto & jointResp = *resp.mutable_jointresp();
-    jointResp.set_joint( joint );
-    jointResp.set_cmdtype( cmdtype );
-
-    jointResp.add_values( value );
-
-    return resp;
-}
-
-rofi::messages::RofiResp getConnectorRofiResp( const rofi::messages::ConnectorResp & connectorResp )
-{
-    rofi::messages::RofiResp resp;
-    resp.set_resptype( rofi::messages::RofiCmd::CONNECTOR_CMD );
-    *resp.mutable_connectorresp() = connectorResp;
-    return resp;
-}
 
 using UMP = UniversalModulePlugin;
 
@@ -68,6 +33,26 @@ bool equal( double first, double second, double precision = UMP::doublePrecision
     return first <= second + precision && second <= first + precision;
 }
 
+std::string getElemPath( gazebo::physics::BasePtr elem )
+{
+    std::vector< std::string > names;
+
+    while ( elem )
+    {
+        names.push_back( elem->GetName() );
+        elem = elem->GetParent();
+    }
+
+    std::string elemPath;
+    for ( auto it = names.rbegin(); it != names.rend(); it++ )
+    {
+        elemPath += *it + "/";
+    }
+
+    return elemPath;
+}
+
+
 void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf ) {
     gzmsg << "The UM plugin is attached to model ["
             << model->GetName() << "]\n";
@@ -86,8 +71,20 @@ void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf ) {
 
 void UMP::initCommunication()
 {
-    auto topicName = _model->GetWorld()->Name() + "/" + _model->GetName();
-    _node->Init( topicName );
+    if ( !_model )
+    {
+        gzerr << "Model has to be set before initializing communication\n";
+        return;
+    }
+
+    if ( _node )
+    {
+        _node->Fini();
+    }
+
+    _node = boost::make_shared< transport::Node >();
+    _node->Init( _model->GetWorld()->Name() + "/" + _model->GetName() );
+
     _sub = _node->Subscribe( "~/control", & UMP::onRofiCmd, this );
     _pub = _node->Advertise< rofi::messages::RofiResp >( "~/response" );
 }
@@ -99,26 +96,8 @@ void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )
         gzerr << "Init communication before adding connectors\n";
         return;
     }
-    std::vector< std::string > names;
 
-    gazebo::physics::BasePtr elem = connectorModel;
-    while ( elem && elem != _model )
-    {
-        names.push_back( elem->GetName() );
-        elem = elem->GetParent();
-    }
-
-    if ( !elem )
-    {
-        gzerr << "Connector model in not a child of this model\n";
-        return;
-    }
-
-    std::string topicName = "~/";
-    for ( auto it = names.rbegin(); it != names.rend(); it++ )
-    {
-        topicName += *it + "/";
-    }
+    std::string topicName = getElemPath( connectorModel );
 
     auto pub = _node->Advertise< rofi::messages::ConnectorCmd >( topicName + "control" );
     auto sub = _node->Subscribe( topicName + "response", & UMP::onConnectorResp, this );
@@ -140,8 +119,23 @@ void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )
     connectors.back().first->Publish( std::move( emptyCmd ) );
 }
 
+void UMP::clearConnectors()
+{
+    for ( auto & pair : connectors )
+    {
+        pair.first->Fini();
+    }
+    connectors = {};
+}
+
 void UMP::findAndInitJoints()
 {
+    if ( !_node->IsInitialized() )
+    {
+        gzerr << "Init communication before adding joints\n";
+        return;
+    }
+
     joints = {};
 
     for ( auto joint : _model->GetJoints() )
@@ -177,13 +171,26 @@ void UMP::findAndInitConnectors( sdf::ElementPtr sdf )
     }
 }
 
-void UMP::clearConnectors()
+rofi::messages::RofiResp UMP::getJointRofiResp( rofi::messages::JointCmd::Type cmdtype, int joint, float value ) const
 {
-    for ( auto & pair : connectors )
-    {
-        pair.first->Fini();
-    }
-    connectors = {};
+    rofi::messages::RofiResp resp;
+    resp.set_resptype( rofi::messages::RofiCmd::JOINT_CMD );
+
+    auto & jointResp = *resp.mutable_jointresp();
+    jointResp.set_joint( joint );
+    jointResp.set_cmdtype( cmdtype );
+
+    jointResp.add_values( value );
+
+    return resp;
+}
+
+rofi::messages::RofiResp UMP::getConnectorRofiResp( const rofi::messages::ConnectorResp & connectorResp ) const
+{
+    rofi::messages::RofiResp resp;
+    resp.set_resptype( rofi::messages::RofiCmd::CONNECTOR_CMD );
+    *resp.mutable_connectorresp() = connectorResp;
+    return resp;
 }
 
 void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
@@ -397,6 +404,6 @@ void UMP::setPositionCheck( int joint, double position, double desiredPosition )
     _pub->Publish( getJointRofiResp( JointCmd::SET_POS_WITH_SPEED, joint, desiredPosition ) );
 }
 
-GZ_REGISTER_MODEL_PLUGIN(UniversalModulePlugin)
+GZ_REGISTER_MODEL_PLUGIN( UniversalModulePlugin )
 
 } // namespace gazebo

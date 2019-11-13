@@ -1,12 +1,8 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/physics/physics.hh>
-#include <gazebo/sensors/sensors.hh>
-#include <gazebo/transport/transport.hh>
 
-#include <array>
-#include <limits>
-#include <utility>
+#include <mutex>
 
 #include <connectorCmd.pb.h>
 #include <connectorResp.pb.h>
@@ -22,17 +18,17 @@ public:
 
     using PacketPtr = boost::shared_ptr< const rofi::messages::Packet >;
 
-    ConnectorPlugin()
-        : _node( boost::make_shared< transport::Node >() ),
-        _sensorNode( boost::make_shared< transport::Node >() )
-    {}
+    ConnectorPlugin() = default;
+
+    ConnectorPlugin( const ConnectorPlugin & ) = delete;
+    ConnectorPlugin & operator=( const ConnectorPlugin & ) = delete;
 
     ~ConnectorPlugin()
     {
         _node->Fini();
     }
 
-    virtual void Load( physics::ModelPtr model, sdf::ElementPtr sdf );
+    virtual void Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ );
 
     void connect();
     void disconnect();
@@ -51,6 +47,7 @@ private:
 
     rofi::messages::ConnectorResp getConnectorResp( rofi::messages::ConnectorCmd::Type cmdtype ) const;
 
+
     physics::ModelPtr _model;
 
     transport::NodePtr _node;
@@ -58,9 +55,7 @@ private:
     transport::SubscriberPtr _subRofi;
     transport::PublisherPtr _pubOutside;
     transport::SubscriberPtr _subOutside;
-
-    transport::NodePtr _sensorNode;
-    transport::SubscriberPtr _sensorSub;
+    transport::SubscriberPtr _subSensor;
 
     physics::JointPtr connection;
 

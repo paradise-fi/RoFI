@@ -1,19 +1,20 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/physics/physics.hh>
-#include <gazebo/transport/transport.hh>
-#include <gazebo/msgs/msgs.hh>
 
-#include <array>
 #include <limits>
 #include <utility>
+#include <vector>
 
 #include <rofiCmd.pb.h>
-#include <connectorResp.pb.h>
+#include <rofiResp.pb.h>
 
-namespace gazebo {
 
-class UniversalModulePlugin : public ModelPlugin {
+namespace gazebo
+{
+
+class UniversalModulePlugin : public ModelPlugin
+{
 public:
     using limitPair = std::pair< double, double >;
     static constexpr double maxJointTorque = 1.5; // [Nm]
@@ -26,13 +27,14 @@ public:
 
     static constexpr double doublePrecision = 0.01;
 
-    UniversalModulePlugin() :
-            _pid( 0.1, 0, 0 ),
-            _node( boost::make_shared< transport::Node >() )
-    {}
+    UniversalModulePlugin() = default;
+
+    UniversalModulePlugin( const UniversalModulePlugin & ) = delete;
+    UniversalModulePlugin & operator=( const UniversalModulePlugin & ) = delete;
 
     ~UniversalModulePlugin()
     {
+        clearConnectors();
         _node->Fini();
     }
 
@@ -44,13 +46,15 @@ private:
 
     void initCommunication();
 
-    void findAndInitJoints();
-
     // Connectors have to be models, that start with prefix "connector",
     // have all unique names and have functionality of plugin "connectorPlugin.so"
     void addConnector( gazebo::physics::ModelPtr connectorModel );
-    void findAndInitConnectors( sdf::ElementPtr sdf );
     void clearConnectors();
+    void findAndInitJoints();
+    void findAndInitConnectors( sdf::ElementPtr sdf );
+
+    rofi::messages::RofiResp getJointRofiResp( rofi::messages::JointCmd::Type cmdtype, int joint, float value ) const;
+    rofi::messages::RofiResp getConnectorRofiResp( const rofi::messages::ConnectorResp & connectorResp ) const;
 
     void onRofiCmd( const RofiCmdPtr & msg );
     void onJointCmd( const rofi::messages::JointCmd & msg );
@@ -64,8 +68,9 @@ private:
 
     void setPositionCheck( int joint, double position, double desiredPosition );
 
+
     physics::ModelPtr _model;
-    common::PID _pid;
+
     transport::NodePtr _node;
     transport::SubscriberPtr _sub;
     transport::PublisherPtr _pub;

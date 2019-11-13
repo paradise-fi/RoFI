@@ -1,13 +1,54 @@
 #include "connectorPlugin.hpp"
 
-#include <iostream>
-
-#include <connectorResp.pb.h>
 
 namespace gazebo
 {
+std::string getElemPath( gazebo::physics::BasePtr elem )
+{
+    std::vector< std::string > names;
 
-void ConnectorPlugin::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
+    while ( elem )
+    {
+        names.push_back( elem->GetName() );
+        elem = elem->GetParent();
+    }
+
+    std::string elemPath;
+    for ( auto it = names.rbegin(); it != names.rend(); it++ )
+    {
+        elemPath += *it + "/";
+    }
+
+    return elemPath;
+}
+
+// Gets path delimeted with '::' and returns path delimeted by '/'
+std::string replaceDelimeter( std::string_view sensorPath )
+{
+    std::vector< std::string_view > splitPath;
+    int last = 0;
+    for ( int i = 0; i < sensorPath.size() - 1; i++ )
+    {
+        if ( sensorPath[ i ] == ':' && sensorPath[ i + 1 ] == ':' )
+        {
+            splitPath.push_back( sensorPath.substr( last, i - last ) );
+            last = i + 2;
+        }
+    }
+    splitPath.push_back( sensorPath.substr( last ) );
+
+    std::string topicName;
+    for ( auto name : splitPath )
+    {
+        topicName += name;
+        topicName += "/";
+    }
+
+    return topicName;
+}
+
+
+void ConnectorPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
 {
     gzmsg << "The Connector plugin is attached to model ["
             << model->GetName() << "]\n";
@@ -56,55 +97,17 @@ void ConnectorPlugin::initCommunication()
         gzerr << "Model has to be set before initializing sensor communication\n";
         return;
     }
-    if ( !_node )
+
+    if ( _node )
     {
-        gzerr << "Couldn't load node\n";
-        return;
+        _node->Fini();
     }
 
-    std::vector< std::string > names;
+    _node = boost::make_shared< transport::Node >();
+    _node->Init( getElemPath( _model ) );
 
-    gazebo::physics::BasePtr elem = _model;
-    while ( elem )
-    {
-        names.push_back( elem->GetName() );
-        elem = elem->GetParent();
-    }
-
-    std::string topicName;
-    for ( auto it = names.rbegin(); it != names.rend(); it++ )
-    {
-        topicName += *it + "/";
-    }
-
-    _node->Init( topicName );
     _pubRofi = _node->Advertise< rofi::messages::ConnectorResp >( "~/response" );
     _subRofi = _node->Subscribe( "~/control", & ConnectorPlugin::onConnectorCmd, this );
-}
-
-// Gets path delimeted with '::' and returns path delimeted by '/'
-std::string getTopicPath( std::string_view sensorPath )
-{
-    std::vector< std::string_view > splitPath;
-    int last = 0;
-    for ( int i = 0; i < sensorPath.size() - 1; i++ )
-    {
-        if ( sensorPath[ i ] == ':' && sensorPath[ i + 1 ] == ':' )
-        {
-            splitPath.push_back( sensorPath.substr( last, i - last ) );
-            last = i + 2;
-        }
-    }
-    splitPath.push_back( sensorPath.substr( last ) );
-
-    std::string topicName;
-    for ( auto name : splitPath )
-    {
-        topicName += name;
-        topicName += "/";
-    }
-
-    return topicName;
 }
 
 void ConnectorPlugin::initSensorCommunication()
@@ -112,11 +115,6 @@ void ConnectorPlugin::initSensorCommunication()
     if ( !_node->IsInitialized() )
     {
         gzerr << "Initialize communication before initializing sensor communication\n";
-        return;
-    }
-    if ( !_sensorNode )
-    {
-        gzerr << "Couldn't load sensor node\n";
         return;
     }
 
@@ -128,15 +126,14 @@ void ConnectorPlugin::initSensorCommunication()
         return;
     }
 
-    _sensorNode->Init( getTopicPath( sensors.front() ) );
-    _sensorSub = _sensorNode->Subscribe( "~/contacts", & ConnectorPlugin::onSensorMessage, this );
+    auto topicName = replaceDelimeter( sensors.front() ) + "contacts";
+    _subSensor = _node->Subscribe( std::move( topicName ), & ConnectorPlugin::onSensorMessage, this );
 }
 
 void ConnectorPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
 {
     using rofi::messages::ConnectorCmd;
 
-    gzmsg << "Msg type: " << _sensorNode->GetMsgType( "~/contacts" ) << "\n";
     connectorNumber = msg->connector();
 
     switch ( msg->cmdtype() )
