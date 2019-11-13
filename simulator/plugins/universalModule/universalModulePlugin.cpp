@@ -92,12 +92,36 @@ void UMP::initCommunication()
     _pub = _node->Advertise< rofi::messages::RofiResp >( "~/response" );
 }
 
-void UMP::addConnector( std::string name )
+void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )
 {
-    auto topicName = "~/" + name;
+    if ( !_node->IsInitialized() )
+    {
+        gzerr << "Init communication before adding connectors\n";
+        return;
+    }
+    std::vector< std::string > names;
 
-    auto pub = _node->Advertise< rofi::messages::ConnectorCmd >( topicName + "/control" );
-    auto sub = _node->Subscribe( topicName + "/response", & UMP::onConnectorResp, this );
+    gazebo::physics::BasePtr elem = connectorModel;
+    while ( elem && elem != _model )
+    {
+        names.push_back( elem->GetName() );
+        elem = elem->GetParent();
+    }
+
+    if ( !elem )
+    {
+        gzerr << "Connector model in not a child of this model\n";
+        return;
+    }
+
+    std::string topicName = "~/";
+    for ( auto it = names.rbegin(); it != names.rend(); it++ )
+    {
+        topicName += *it + "/";
+    }
+
+    auto pub = _node->Advertise< rofi::messages::ConnectorCmd >( topicName + "control" );
+    auto sub = _node->Subscribe( topicName + "response", & UMP::onConnectorResp, this );
 
     for ( auto & elem : connectors )
     {
@@ -109,6 +133,7 @@ void UMP::addConnector( std::string name )
     }
 
     connectors.emplace_back( std::move( pub ), std::move( sub ) );
+
     rofi::messages::ConnectorCmd emptyCmd;
     emptyCmd.set_connector( connectors.size() - 1 );
     emptyCmd.set_cmdtype( rofi::messages::ConnectorCmd::NO_CMD );
@@ -143,24 +168,12 @@ void UMP::findAndInitConnectors( sdf::ElementPtr sdf )
 
     clearConnectors();
 
-    auto elem = sdf->GetParent()->GetFirstElement();
-    if ( elem->GetName() != "model" )
+    for ( auto nested : _model->NestedModels() )
     {
-        elem = elem->GetNextElement( "model" );
-    }
-
-    while ( elem )
-    {
-        std::string name;
-        if ( elem->HasAttribute( "name" ) && elem->GetAttribute( "name" )->Get( name ) )
+        if ( nested->GetName().compare( 0, 9, "connector" ) == 0 )
         {
-            if ( name.compare( 0, 9, "connector" ) == 0 )
-            {
-                addConnector( std::move( name ) );
-            }
+            addConnector( nested );
         }
-
-        elem = elem->GetNextElement( "model" );
     }
 }
 

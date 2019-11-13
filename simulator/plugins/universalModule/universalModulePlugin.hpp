@@ -48,7 +48,7 @@ private:
 
     // Connectors have to be models, that start with prefix "connector",
     // have all unique names and have functionality of plugin "connectorPlugin.so"
-    void addConnector( std::string name );
+    void addConnector( gazebo::physics::ModelPtr connectorModel );
     void findAndInitConnectors( sdf::ElementPtr sdf );
     void clearConnectors();
 
