@@ -109,6 +109,10 @@ void UMP::addConnector( std::string name )
     }
 
     connectors.emplace_back( std::move( pub ), std::move( sub ) );
+    rofi::messages::ConnectorCmd emptyCmd;
+    emptyCmd.set_connector( connectors.size() - 1 );
+    emptyCmd.set_cmdtype( rofi::messages::ConnectorCmd::NO_CMD );
+    connectors.back().first->Publish( std::move( emptyCmd ) );
 }
 
 void UMP::findAndInitJoints()
@@ -201,7 +205,11 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
 
     switch ( msg.cmdtype() )
     {
-
+    case JointCmd::NO_CMD:
+    {
+        _pub->Publish( getJointRofiResp( JointCmd::NO_CMD, joint, 0 ) );
+        break;
+    }
     case JointCmd::GET_MAX_POSITION:
     {
         double maxPosition = jointPositionBoundaries[ joint ].second;

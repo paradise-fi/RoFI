@@ -129,6 +129,10 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
 
     switch ( getJointCmdType( tokens[2] ) )
     {
+        case JointCmd::NO_CMD:
+        {
+            break;
+        }
         case JointCmd::GET_MAX_POSITION:
         {
             auto result = joint.maxPosition();
@@ -217,6 +221,10 @@ void processConnectorCmd( rofi::hal::RoFI & rofi, const std::vector< std::string
 
     switch ( getConnectorCmdType( tokens[2] ) )
     {  
+        case ConnectorCmd::NO_CMD:
+        {
+            break;
+        }
         case ConnectorCmd::CONNECT:
         {
             connector.connect();

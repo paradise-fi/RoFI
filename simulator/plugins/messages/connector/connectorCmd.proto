@@ -6,14 +6,15 @@ import "connectorPowerState.proto";
 
 message ConnectorCmd {
     enum Type {
-        GET_STATE = 0;
-        CONNECT = 1;
-        DISCONNECT = 2;
-        CONNECTOR_EVENT = 3;
-        PACKET = 4;
-        CONNECT_POWER = 5;
-        DISCONNECT_POWER = 6;
-        POWER_STATE = 7;
+        NO_CMD = 0;
+        GET_STATE = 1;
+        CONNECT = 2;
+        DISCONNECT = 3;
+        CONNECTOR_EVENT = 4;
+        PACKET = 5;
+        CONNECT_POWER = 6;
+        DISCONNECT_POWER = 7;
+        POWER_STATE = 8;
     }
 
     int32 connector = 1;
