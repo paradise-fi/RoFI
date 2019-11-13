@@ -191,6 +191,7 @@
             </visual>
         </link>
 
+        <model name="connectorAplusX">
         <link name="connectorAplusX">
             <pose frame="">0.043 -0.05 0 0 -0 0</pose>
             <inertial>
@@ -240,7 +241,9 @@
                 </material>
             </visual>
         </link>
+        </model>
 
+        <model name="connectorAminusZ">
         <link name="connectorAminusZ">
             <pose frame="">0 -0.093 0 0 -0 0</pose>
             <inertial>
@@ -290,7 +293,9 @@
                 </material>
             </visual>
         </link>
+        </model>
 
+        <model name="connectorAminusX">
         <link name="connectorAminusX">
             <pose frame="">-0.043 -0.05 0 0 -0 0</pose>
             <inertial>
@@ -340,7 +345,9 @@
                 </material>
             </visual>
         </link>
+        </model>
 
+        <model name="connectorBplusX">
         <link name="connectorBplusX">
             <pose frame="">-0.043 0.051 0.0015 0 -0 0</pose>
             <inertial>
@@ -390,7 +397,9 @@
                 </material>
             </visual>
         </link>
+        </model>
 
+        <model name="connectorBminusZ">
         <link name="connectorBminusZ">
             <pose frame="">0 0.094 0.0015 0 -0 0</pose>
             <inertial>
@@ -440,7 +449,9 @@
                 </material>
             </visual>
         </link>
+        </model>
 
+        <model name="connectorBminusX">
         <link name="connectorBminusX">
             <pose frame="">0.043 0.051 0.0015 0 -0 0</pose>
             <inertial>
@@ -490,6 +501,7 @@
                 </material>
             </visual>
         </link>
+        </model>
 
 
         <joint name="bodyRev" type="revolute">
@@ -540,7 +552,7 @@
         </joint>
 
         <joint name="connectorAplusX" type="prismatic">
-            <child>connectorAplusX</child>
+            <child>connectorAplusX::connectorAplusX</child>
             <parent>shoeA</parent>
             <axis>
                 <xyz>1 0 0</xyz>
@@ -559,7 +571,7 @@
         </joint>
 
         <joint name="connectorAminusZ" type="prismatic">
-            <child>connectorAminusZ</child>
+            <child>connectorAminusZ::connectorAminusZ</child>
             <parent>shoeA</parent>
             <axis>
                 <xyz>0 -1 0</xyz>
@@ -578,7 +590,7 @@
         </joint>
 
         <joint name="connectorAminusX" type="prismatic">
-            <child>connectorAminusX</child>
+            <child>connectorAminusX::connectorAminusX</child>
             <parent>shoeA</parent>
             <axis>
                 <xyz>-1 0 0</xyz>
@@ -597,7 +609,7 @@
         </joint>
 
         <joint name="connectorBplusX" type="prismatic">
-            <child>connectorBplusX</child>
+            <child>connectorBplusX::connectorBplusX</child>
             <parent>shoeB</parent>
             <axis>
                 <xyz>-1 0 0</xyz>
@@ -616,7 +628,7 @@
         </joint>
 
         <joint name="connectorBminusZ" type="prismatic">
-            <child>connectorBminusZ</child>
+            <child>connectorBminusZ::connectorBminusZ</child>
             <parent>shoeB</parent>
             <axis>
                 <xyz>0 1 0</xyz>
@@ -635,7 +647,7 @@
         </joint>
 
         <joint name="connectorBminusX" type="prismatic">
-            <child>connectorBminusX</child>
+            <child>connectorBminusX::connectorBminusX</child>
             <parent>shoeB</parent>
             <axis>
                 <xyz>1 0 0</xyz>

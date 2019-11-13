@@ -33,6 +33,13 @@ rofi::messages::RofiResp getJointRofiResp( rofi::messages::JointCmd::Type cmdtyp
     return resp;
 }
 
+rofi::messages::RofiResp getConnectorRofiResp( const rofi::messages::ConnectorResp & connectorResp )
+{
+    rofi::messages::RofiResp resp;
+    resp.set_resptype( rofi::messages::RofiCmd::CONNECTOR_CMD );
+    *resp.mutable_connectorresp() = connectorResp;
+    return resp;
+}
 
 using UMP = UniversalModulePlugin;
 
@@ -65,24 +72,101 @@ void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf ) {
     gzmsg << "The UM plugin is attached to model ["
             << model->GetName() << "]\n";
 
-    gzmsg << "Number of joints is " << numOfJoints << "\n";
-    if ( numOfJoints > model->GetJoints().size() ) {
-        gzerr << "Number of joints in gazebo model is lower than expected\nAborting...\n";
-        return;
+    _model = model;
+
+    initCommunication();
+
+    findAndInitJoints();
+    findAndInitConnectors( sdf );
+
+    gzmsg << "Number of joints is " << joints.size() << "\n";
+    gzmsg << "Number of connectors is " << connectors.size() << "\n";
+    gzmsg << "Listening...\n";
+}
+
+void UMP::initCommunication()
+{
+    auto topicName = _model->GetWorld()->Name() + "/" + _model->GetName();
+    _node->Init( topicName );
+    _sub = _node->Subscribe( "~/control", & UMP::onRofiCmd, this );
+    _pub = _node->Advertise< rofi::messages::RofiResp >( "~/response" );
+}
+
+void UMP::addConnector( std::string name )
+{
+    auto topicName = "~/" + name;
+
+    auto pub = _node->Advertise< rofi::messages::ConnectorCmd >( topicName + "/control" );
+    auto sub = _node->Subscribe( topicName + "/response", & UMP::onConnectorResp, this );
+
+    for ( auto & elem : connectors )
+    {
+        if ( pub->GetTopic() == elem.first->GetTopic() )
+        {
+            gzerr << "All connector names have to be different\n";
+            return;
+        }
     }
 
-    _model = model;
-    for ( int i = 0; i < numOfJoints; i++ )
+    connectors.emplace_back( std::move( pub ), std::move( sub ) );
+}
+
+void UMP::findAndInitJoints()
+{
+    joints = {};
+
+    for ( auto joint : _model->GetJoints() )
+    {
+        if ( joint->GetMsgType() == msgs::Joint::REVOLUTE )
+        {
+            joints.emplace_back( std::move( joint ), event::ConnectionPtr() );
+        }
+    }
+
+    for ( int i = 0; i < joints.size(); i++ )
     {
         setVelocity( i, 0 );
     }
+}
 
-    _node->Init( _model->GetWorld()->Name() );
-    std::string topicName = "~/" + _model->GetName() + "/control";
-    _sub = _node->Subscribe( topicName, &UniversalModulePlugin::onRofiCmd, this );
-    _pub = _node->Advertise< rofi::messages::RofiResp >( "~/" + _model->GetName() + "/response" );
+void UMP::findAndInitConnectors( sdf::ElementPtr sdf )
+{
+    if ( !_node->IsInitialized() )
+    {
+        gzerr << "Init communication before adding connectors\n";
+        return;
+    }
 
-    gzmsg << "Listening...\n";
+    clearConnectors();
+
+    auto elem = sdf->GetParent()->GetFirstElement();
+    if ( elem->GetName() != "model" )
+    {
+        elem = elem->GetNextElement( "model" );
+    }
+
+    while ( elem )
+    {
+        std::string name;
+        if ( elem->HasAttribute( "name" ) && elem->GetAttribute( "name" )->Get( name ) )
+        {
+            if ( name.compare( 0, 9, "connector" ) == 0 )
+            {
+                addConnector( std::move( name ) );
+            }
+        }
+
+        elem = elem->GetNextElement( "model" );
+    }
+}
+
+void UMP::clearConnectors()
+{
+    for ( auto & pair : connectors )
+    {
+        pair.first->Fini();
+    }
+    connectors = {};
 }
 
 void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
@@ -97,8 +181,10 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
             onJointCmd( msg->jointcmd() );
             break;
         case RofiCmd::CONNECTOR_CMD:
-            gzwarn << "Connector commands not implemented\n";
+            onConnectorCmd( msg->connectorcmd() );
             break;
+        default:
+            gzwarn << "Unknown RoFI command type\n";
     }
 }
 
@@ -107,7 +193,7 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
     using rofi::messages::JointCmd;
 
     int joint = msg.joint();
-    if ( joint < 0 || joint >= numOfJoints )
+    if ( joint < 0 || joint >= joints.size() )
     {
         gzwarn << "Invalid joint " << joint << " specified\n";
         return;
@@ -153,7 +239,7 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
     }
     case JointCmd::GET_VELOCITY:
     {
-        double velocity = _model->GetJoints()[ joint ]->GetVelocity( 0 );
+        double velocity = joints.at( joint ).first->GetVelocity( 0 );
         gzmsg << "Returning current velocity of joint " << joint << ": " << velocity << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_VELOCITY, joint, velocity ) );
         break;
@@ -168,7 +254,7 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
     }
     case JointCmd::GET_POSITION:
     {
-        double position = _model->GetJoints()[ joint ]->Position( 0 );
+        double position = joints.at( joint ).first->Position();
         gzmsg << "Returning current position of joint " << joint << ": " << position << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_POSITION, joint, position ) );
         break;
@@ -205,10 +291,29 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
     }
 }
 
+void UMP::onConnectorCmd( const rofi::messages::ConnectorCmd & msg )
+{
+    using rofi::messages::ConnectorCmd;
+
+    int connector = msg.connector();
+    if ( connector < 0 || static_cast< size_t >( connector ) >= connectors.size() )
+    {
+        gzwarn << "Invalid connector " << connector << " specified\n";
+        return;
+    }
+
+    connectors[ connector ].first->Publish( msg );
+}
+
+void UMP::onConnectorResp( const UMP::ConnectorRespPtr & msg )
+{
+    _pub->Publish( getConnectorRofiResp( *msg ) );
+}
+
 void UMP::setVelocity( int joint, double velocity )
 {
     velocity = trim( velocity, -jointSpeedBoundaries.second, jointSpeedBoundaries.second, "velocity" );
-    auto modelJoint = _model->GetJoints()[ joint ];
+    auto modelJoint = joints.at( joint ).first;
     modelJoint->SetParam( "fmax", 0, maxJointTorque );
     modelJoint->SetParam( "vel", 0, velocity );
     modelJoint->SetParam( "lo_stop", 0, jointPositionBoundaries[ joint ].first );
@@ -218,7 +323,7 @@ void UMP::setVelocity( int joint, double velocity )
 void UMP::setTorque( int joint, double torque )
 {
     torque = trim( torque, -maxJointTorque, maxJointTorque, "torque" );
-    auto modelJoint = _model->GetJoints()[ joint ];
+    auto modelJoint = joints.at( joint ).first;
     modelJoint->SetParam( "fmax", 0, std::abs( torque ) );
     modelJoint->SetParam( "vel", 0, std::copysign( jointSpeedBoundaries.second, torque ) );
     modelJoint->SetParam( "lo_stop", 0, jointPositionBoundaries[ joint ].first );
@@ -230,9 +335,9 @@ void UMP::setPositionWithSpeed( int joint, double desiredPosition, double speed 
     double position = trim( desiredPosition, jointPositionBoundaries[ joint ], "position" );
     speed = trim( speed, 0, jointSpeedBoundaries.second, "speed" );
 
-    auto modelJoint = _model->GetJoints()[ joint ];
+    auto modelJoint = joints.at( joint ).first;
 
-    double actualPosition = modelJoint->Position( 0 );
+    double actualPosition = modelJoint->Position();
     if ( position > actualPosition )
     {
         modelJoint->SetParam( "lo_stop", 0, jointPositionBoundaries[ joint ].first );
@@ -248,7 +353,7 @@ void UMP::setPositionWithSpeed( int joint, double desiredPosition, double speed 
 
     modelJoint->SetParam( "fmax", 0, maxJointTorque );
 
-    setPositionHandle[ joint ] = event::Events::ConnectWorldUpdateEnd(
+    joints.at( joint ).second = event::Events::ConnectWorldUpdateEnd(
         std::bind( &UMP::setPositionCheck, this, joint, position, desiredPosition ) );
 }
 
@@ -256,12 +361,12 @@ void UMP::setPositionCheck( int joint, double position, double desiredPosition )
 {
     using rofi::messages::JointCmd;
 
-    double currentPosition = _model->GetJoints()[ joint ]->Position( 0 );
+    double currentPosition = joints.at( joint ).first->Position();
 
     if ( !equal( position, currentPosition ) )
         return;
 
-    setPositionHandle[ joint ] = {};
+    joints.at( joint ).second = {};
 
     setVelocity( joint, 0 );
 
