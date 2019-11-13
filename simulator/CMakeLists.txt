@@ -9,4 +9,5 @@ endif(${LIBCXX})
 
 add_subdirectory(plugins/messages)
 add_subdirectory(plugins/universalModule)
+add_subdirectory(plugins/connector)
 add_subdirectory(tools)
