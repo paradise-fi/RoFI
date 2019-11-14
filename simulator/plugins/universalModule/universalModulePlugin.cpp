@@ -46,7 +46,7 @@ std::string getElemPath( gazebo::physics::BasePtr elem )
     std::string elemPath;
     for ( auto it = names.rbegin(); it != names.rend(); it++ )
     {
-        elemPath += *it + "/";
+        elemPath += "/" + *it;
     }
 
     return elemPath;
@@ -97,10 +97,10 @@ void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )
         return;
     }
 
-    std::string topicName = getElemPath( connectorModel );
+    std::string topicName = "/gazebo" + getElemPath( connectorModel );
 
-    auto pub = _node->Advertise< rofi::messages::ConnectorCmd >( topicName + "control" );
-    auto sub = _node->Subscribe( topicName + "response", & UMP::onConnectorResp, this );
+    auto pub = _node->Advertise< rofi::messages::ConnectorCmd >( topicName + "/control" );
+    auto sub = _node->Subscribe( topicName + "/response", & UMP::onConnectorResp, this );
 
     for ( auto & elem : connectors )
     {

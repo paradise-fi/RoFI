@@ -16,7 +16,7 @@ std::string getElemPath( gazebo::physics::BasePtr elem )
     std::string elemPath;
     for ( auto it = names.rbegin(); it != names.rend(); it++ )
     {
-        elemPath += *it + "/";
+        elemPath += "/" + *it;
     }
 
     return elemPath;
@@ -40,8 +40,8 @@ std::string replaceDelimeter( std::string_view sensorPath )
     std::string topicName;
     for ( auto name : splitPath )
     {
-        topicName += name;
         topicName += "/";
+        topicName += name;
     }
 
     return topicName;
@@ -126,7 +126,7 @@ void ConnectorPlugin::initSensorCommunication()
         return;
     }
 
-    auto topicName = replaceDelimeter( sensors.front() ) + "contacts";
+    auto topicName = "/gazebo" + replaceDelimeter( sensors.front() ) + "/contacts";
     _subSensor = _node->Subscribe( std::move( topicName ), & ConnectorPlugin::onSensorMessage, this );
 }
 
