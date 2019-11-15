@@ -97,3 +97,31 @@ inline std::string replaceDelimeter( std::string_view sensorPath )
 
     return topicName;
 }
+
+bool isRofiConnector( gazebo::physics::ModelPtr model )
+{
+    if ( model->GetPluginCount() == 0 )
+    {
+        return false;
+    }
+
+    ignition::msgs::Plugin_V plugins;
+    bool success = false;
+    model->PluginInfo( getURIFromModel( model, "plugin" ), plugins, success );
+
+    if ( !success )
+    {
+        gzwarn << "Did not succeed in getting plugins from nested model\n";
+        return false;
+    }
+
+    for ( auto & plugin : plugins.plugins() )
+    {
+        if ( plugin.has_filename() && plugin.filename() == "libconnectorPlugin.so" )
+        {
+            return true;
+        }
+    }
+
+    return false;
+}

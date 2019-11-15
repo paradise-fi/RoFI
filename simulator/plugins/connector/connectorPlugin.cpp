@@ -146,14 +146,14 @@ void ConnectorPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
         if ( !collision  || !collision2 )
         {
             gzwarn << "Got empty collision\n";
-            return;
+            continue;
         }
         if ( collision->GetModel() == _model )
         {
             if ( collision2->GetModel() == _model )
             {
                 gzwarn << "Both collisions are from this model\n";
-                return;
+                continue;
             }
             collision = std::move( collision2 );
         }
@@ -162,10 +162,17 @@ void ConnectorPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
             if ( collision2->GetModel() != _model )
             {
                 gzwarn << "None of the collisions are from this model\n";
-                return;
+                continue;
             }
             collision2 = {};
         }
+
+        if ( !isRofiConnector( collision->GetModel() ) )
+        {
+            continue;
+        }
+
+        gzmsg << "Collision with rofi connector\n";
 
         for ( int j = 0; j < contact.position_size(); j++ )
         {
