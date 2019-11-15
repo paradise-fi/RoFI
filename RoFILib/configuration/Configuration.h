@@ -17,7 +17,7 @@
 #include <set>
 #include <cassert>
 
-using ID = unsigned int;
+using ID = int;
 const double threshold = 0.0001;
 
 class Configuration;
