@@ -1,53 +1,9 @@
 #include "connectorPlugin.hpp"
 
+#include "../common/utils.hpp"
 
 namespace gazebo
 {
-std::string getElemPath( gazebo::physics::BasePtr elem )
-{
-    std::vector< std::string > names;
-
-    while ( elem )
-    {
-        names.push_back( elem->GetName() );
-        elem = elem->GetParent();
-    }
-
-    std::string elemPath;
-    for ( auto it = names.rbegin(); it != names.rend(); it++ )
-    {
-        elemPath += "/" + *it;
-    }
-
-    return elemPath;
-}
-
-// Gets path delimeted with '::' and returns path delimeted by '/'
-std::string replaceDelimeter( std::string_view sensorPath )
-{
-    std::vector< std::string_view > splitPath;
-    int last = 0;
-    for ( size_t i = 0; i < sensorPath.size() - 1; i++ )
-    {
-        if ( sensorPath[ i ] == ':' && sensorPath[ i + 1 ] == ':' )
-        {
-            splitPath.push_back( sensorPath.substr( last, i - last ) );
-            last = i + 2;
-        }
-    }
-    splitPath.push_back( sensorPath.substr( last ) );
-
-    std::string topicName;
-    for ( auto name : splitPath )
-    {
-        topicName += "/";
-        topicName += name;
-    }
-
-    return topicName;
-}
-
-
 void ConnectorPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
 {
     gzmsg << "The Connector plugin is attached to model ["

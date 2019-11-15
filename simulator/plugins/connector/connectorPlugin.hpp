@@ -28,7 +28,7 @@ public:
         _node->Fini();
     }
 
-    virtual void Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ );
+    virtual void Load( physics::ModelPtr model, sdf::ElementPtr sdf );
 
     void connect();
     void disconnect();
@@ -45,6 +45,7 @@ private:
     void onConnectorCmd( const ConnectorCmdPtr & msg );
     void onSensorMessage( const ContactsMsgPtr & contacts );
 
+    physics::CollisionPtr getCollisionByScopedName( const std::string & collisionName ) const;
     rofi::messages::ConnectorResp getConnectorResp( rofi::messages::ConnectorCmd::Type cmdtype ) const;
 
 

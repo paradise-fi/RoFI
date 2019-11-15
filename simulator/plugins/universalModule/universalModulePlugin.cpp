@@ -2,56 +2,11 @@
 
 #include <cmath>
 
+#include "../common/utils.hpp"
 
 namespace gazebo
 {
-
 using UMP = UniversalModulePlugin;
-
-double trim( double value, double min, double max, std::string debugName )
-{
-    if ( value < min )
-    {
-        gzwarn << "Value of " << debugName << " trimmed from " << value << " to " << min << "\n";
-        return min;
-    }
-    if ( value > max )
-    {
-        gzwarn << "Value of " << debugName << " trimmed from " << value << " to " << max << "\n";
-        return max;
-    }
-    return value;
-}
-
-double trim( double value, const UMP::limitPair & limits, std::string debugName )
-{
-    return trim( value, limits.first, limits.second, std::move( debugName ) );
-}
-
-bool equal( double first, double second, double precision = UMP::doublePrecision )
-{
-    return first <= second + precision && second <= first + precision;
-}
-
-std::string getElemPath( gazebo::physics::BasePtr elem )
-{
-    std::vector< std::string > names;
-
-    while ( elem )
-    {
-        names.push_back( elem->GetName() );
-        elem = elem->GetParent();
-    }
-
-    std::string elemPath;
-    for ( auto it = names.rbegin(); it != names.rend(); it++ )
-    {
-        elemPath += "/" + *it;
-    }
-
-    return elemPath;
-}
-
 
 void UMP::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ ) {
     gzmsg << "The UM plugin is attached to model ["
@@ -97,7 +52,7 @@ void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )
         return;
     }
 
-    std::string topicName = "/gazebo" + getElemPath( connectorModel );
+    std::string topicName = "/gazebo/" + getElemPath( connectorModel );
 
     auto pub = _node->Advertise< rofi::messages::ConnectorCmd >( topicName + "/control" );
     auto sub = _node->Subscribe( topicName + "/response", & UMP::onConnectorResp, this );
@@ -391,7 +346,7 @@ void UMP::setPositionCheck( int joint, double position, double desiredPosition )
 
     double currentPosition = joints.at( joint ).first->Position();
 
-    if ( !equal( position, currentPosition ) )
+    if ( !equal( position, currentPosition, doublePrecision ) )
         return;
 
     joints.at( joint ).second = {};
