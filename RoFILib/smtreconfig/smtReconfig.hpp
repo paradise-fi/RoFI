@@ -75,12 +75,18 @@ std::vector< z3::expr > collectVar( const T& o ) {
     return ret;
 }
 
+std::vector< std::tuple< int, ShoeId, int, ShoeId > > allShoePairs( int count );
+auto allShoeConnections() ->
+    std::vector< std::tuple< ConnectorId, ConnectorId, Orientation > >;
+auto allConnectors( int count ) ->
+    std::vector< std::tuple< ModuleIdx, ShoeId, ConnectorId > >;
+
 Context buildContext();
 SmtConfiguration buildConfiguration( Context& ctx,
     const Configuration& cfg, int cfgId );
 
-z3::expr reconfig( Context& ctx, int len, const Configuration& init,
-    const Configuration target );
+std::pair< z3::expr, std::vector< SmtConfiguration > > reconfig( Context& ctx,
+    int len, const Configuration& init, const Configuration target );
 
 z3::expr phiValid( Context& ctx, const SmtConfiguration& cfg );
 z3::expr phiConsistent( Context& ctx, const SmtConfiguration& cfg );

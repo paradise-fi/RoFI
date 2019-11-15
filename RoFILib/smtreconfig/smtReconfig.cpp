@@ -818,7 +818,6 @@ z3::expr phiStepRotate( Context& ctx, const SmtConfiguration& a,
     z3::expr phi = phiEqualConnections( ctx, a, b );
 
     for ( int i = 0; i != a.modules.size(); i++ ) {
-
     }
 
     // ToDo: Add rotation constraints
@@ -829,12 +828,12 @@ z3::expr phiStepRotate( Context& ctx, const SmtConfiguration& a,
 z3::expr phiStep( Context& ctx, const SmtConfiguration& a,
         const SmtConfiguration& b )
 {
-    return phiStepConnect( ctx, a, b ) || phiStepDisconnect( ctx, a, b );
-        // || phiStepRotate( ctx, a, b );
+    return phiStepConnect( ctx, a, b ) || phiStepDisconnect( ctx, a, b )
+         || phiStepRotate( ctx, a, b );
 }
 
-z3::expr reconfig( Context& ctx, int len, const Configuration& init,
-    const Configuration target )
+std::pair< z3::expr, std::vector< SmtConfiguration > > reconfig( Context& ctx,
+    int len, const Configuration& init, const Configuration target )
 {
     assert( len >= 2 );
     std::vector< SmtConfiguration > cfgs;
@@ -850,7 +849,7 @@ z3::expr reconfig( Context& ctx, int len, const Configuration& init,
     for ( const auto& cfg : cfgs ) {
         phi = phi && cfg.constraints( ctx );
     }
-    return phi;
+    return { phi, cfgs };
 }
 
 z3::expr SmtConfiguration::constraints( Context& ctx ) const {
