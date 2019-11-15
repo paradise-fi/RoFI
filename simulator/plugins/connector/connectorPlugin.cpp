@@ -139,28 +139,52 @@ void ConnectorPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
 
 void ConnectorPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
 {
-    // TODO
-
-    for ( int i = 0; i < contacts->contact_size(); i++ )
+    for ( auto & contact : contacts->contact() )
     {
-        auto & contact = contacts->contact( i );
-
-        std::cout << "Collision between[" << contact.collision1()
-                << "] and [" << contact.collision2() << "]\n";
+        auto collision = getCollisionByScopedName( contact.collision1() );
+        auto collision2 = getCollisionByScopedName( contact.collision2() );
+        if ( !collision  || !collision2 )
+        {
+            gzwarn << "Got empty collision\n";
+            return;
+        }
+        if ( collision->GetModel() == _model )
+        {
+            if ( collision2->GetModel() == _model )
+            {
+                gzwarn << "Both collisions are from this model\n";
+                return;
+            }
+            collision = std::move( collision2 );
+        }
+        else
+        {
+            if ( collision2->GetModel() != _model )
+            {
+                gzwarn << "None of the collisions are from this model\n";
+                return;
+            }
+            collision2 = {};
+        }
 
         for ( int j = 0; j < contact.position_size(); j++ )
         {
-            std::cout << j << "  Position:"
+            gzmsg << j << "  Position:"
                     << contact.position( j ).x() << " "
                     << contact.position( j ).y() << " "
                     << contact.position( j ).z() << "\n";
-            std::cout << "   Normal:"
+            gzmsg << "   Normal:"
                     << contact.normal( j ).x() << " "
                     << contact.normal( j ).y() << " "
                     << contact.normal( j ).z() << "\n";
-            std::cout << "   Depth:" << contact.depth( j ) << "\n";
+            gzmsg << "   Depth:" << contact.depth( j ) << "\n";
         }
     }
+}
+
+physics::CollisionPtr ConnectorPlugin::getCollisionByScopedName( const std::string & collisionName ) const
+{
+    return boost::dynamic_pointer_cast< physics::Collision >( _model->GetWorld()->EntityByName( collisionName ) );
 }
 
 rofi::messages::ConnectorResp ConnectorPlugin::getConnectorResp( rofi::messages::ConnectorCmd::Type cmdtype ) const

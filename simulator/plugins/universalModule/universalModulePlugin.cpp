@@ -119,9 +119,20 @@ void UMP::findAndInitConnectors()
 
     for ( auto nested : _model->NestedModels() )
     {
-        if ( nested->GetName().compare( 0, 9, "connector" ) == 0 )
+        ignition::msgs::Plugin_V plugins;
+        bool success = false;
+        nested->PluginInfo( getURIFromModel( nested, "plugin" ), plugins, success );
+        if ( !success )
         {
-            addConnector( nested );
+            gzwarn << "Did not succeed in getting plugins from nested model\n";
+            continue;
+        }
+        for ( auto & plugin : plugins.plugins() )
+        {
+            if ( plugin.has_filename() && plugin.filename() == "libconnectorPlugin.so" )
+            {
+                addConnector( nested );
+            }
         }
     }
 }
