@@ -1,0 +1,17 @@
+syntax = "proto3";
+package rofi.messages;
+
+message ConnectorState {
+    enum Orientation {
+        NORTH = 0;
+        EAST = 1;
+        SOUTH = 2;
+        WEST = 3;
+    }
+
+    bool position = 1;
+    bool internal = 2;
+    bool external = 3;
+    bool connected = 4;
+    Orientation orientation = 5;
+}

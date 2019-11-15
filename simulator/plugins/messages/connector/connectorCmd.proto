@@ -2,7 +2,6 @@ syntax = "proto3";
 package rofi.messages;
 
 import "connectorPacket.proto";
-import "connectorPowerState.proto";
 
 message ConnectorCmd {
     enum Type {
@@ -14,12 +13,16 @@ message ConnectorCmd {
         PACKET = 5;
         CONNECT_POWER = 6;
         DISCONNECT_POWER = 7;
-        POWER_STATE = 8;
+    }
+
+    enum Line {
+        INT_LINE = 0;
+        OUT_LINE = 1;
     }
 
     int32 connector = 1;
     Type cmdType = 2;
 
     Packet packet = 3;
-    PowerState.Line line = 4;
+    Line line = 4;
 }

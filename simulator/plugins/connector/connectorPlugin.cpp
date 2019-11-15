@@ -175,12 +175,6 @@ void ConnectorPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
         gzmsg << "Disconnecting power line is not implemented\n";
         break;
     }
-    case ConnectorCmd::POWER_STATE:
-    {
-        gzmsg << "Getting power state is not implemented\n";
-        _pubRofi->Publish( getConnectorResp( ConnectorCmd::POWER_STATE ) );
-        break;
-    }
     default:
         gzwarn << "Unknown command type: " << msg->cmdtype() << " of connector " << connectorNumber << "\n";
         break;

@@ -16,6 +16,10 @@ namespace rofi
         class Joint;
         class Connector;
 
+        enum class ConnectorPosition : bool;
+        enum class ConnectorOrientation : signed char;
+        struct ConnectorState;
+
         class RoFI
         {
             std::unique_ptr< detail::RoFIData > rofiData;
@@ -68,6 +72,14 @@ namespace rofi
 
         class Connector
         {
+        public:
+            using State = ConnectorState;
+            using Position = ConnectorPosition;
+            using Orientation = ConnectorOrientation;
+
+            using Packet = std::vector< std::byte >;
+
+        private:
             friend class detail::ConnectorData;
 
             detail::ConnectorData * connectorData;
@@ -78,15 +90,37 @@ namespace rofi
             Connector( const Connector & ) = default;
             Connector & operator=( const Connector & ) = default;
 
-            // State getState() const;
+            // ConnectorState getState() const;
             void connect();
             void disconnect();
             // void onConnectorEvent( std::function< void ( Connector, ConnectorEvent ) > callback );
             // void onPacket( std::function< void ( Connector, Packet ) > callback );
             // void send( Packet packet );
-            // void connectPower( Line );
-            // void disconnectPower( Line );
-            // PowerState getPowerState( Line );
+            // void connectPower( ConnectorLine );
+            // void disconnectPower( ConnectorLine );
+        };
+
+        enum class ConnectorPosition : bool
+        {
+            Retracted = false,
+            Expanded = true
+        };
+
+        enum class ConnectorOrientation : signed char
+        {
+            North = 0,
+            East = 1,
+            South = 2,
+            West = 3
+        };
+
+        struct ConnectorState
+        {
+            ConnectorPosition position = ConnectorPosition::Retracted;
+            bool internal = false;
+            bool external = false;
+            bool connected = false;
+            ConnectorOrientation orientation = ConnectorOrientation::North;
         };
     } // namespace hal
 } // namespace rofi

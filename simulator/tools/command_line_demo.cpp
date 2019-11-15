@@ -100,7 +100,6 @@ inline rofi::messages::ConnectorCmd::Type getConnectorCmdType( std::string_view 
         { "sendpacket", ConnectorCmd::PACKET },
         { "connectpower", ConnectorCmd::CONNECT_POWER },
         { "disconnectpower", ConnectorCmd::DISCONNECT_POWER },
-        { "getpowerstate", ConnectorCmd::POWER_STATE }
     };
 
     auto it = map.find( token );
@@ -138,7 +137,7 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
             auto result = joint.maxPosition();
             std::cout << "Max position: " << result << "\n";
             break;
-		}
+        }
         case JointCmd::GET_MIN_POSITION:
         {
             auto result = joint.minPosition();
@@ -150,63 +149,63 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
             auto result = joint.maxSpeed();
             std::cout << "Max speed: " << result << "\n";
             break;
-		}
+        }
         case JointCmd::GET_MIN_SPEED:
         {
             auto result = joint.minSpeed();
             std::cout << "Min speed: " << result << "\n";
             break;
-		}
+        }
         case JointCmd::GET_MAX_TORQUE:
         {
             auto result = joint.maxTorque();
             std::cout << "Max torque: " << result << "\n";
             break;
-		}
+        }
         case JointCmd::GET_VELOCITY:
         {
             auto result = joint.getVelocity();
             std::cout << "Current velocity: " << result << "\n";
             break;
-		}
+        }
         case JointCmd::SET_VELOCITY:
         {
             if ( tokens.size() != 4 )
                 throw std::runtime_error("Wrong number of arguments");
             joint.setVelocity( readFloat( tokens[3] ) );
             break;
-		}
+        }
         case JointCmd::GET_POSITION:
         {
             auto result = joint.getPosition();
             std::cout << "Current position: " << result << "\n";
             break;
-		}
+        }
         case JointCmd::SET_POS_WITH_SPEED:
         {
             if ( tokens.size() != 5 )
                 throw std::runtime_error("Wrong number of arguments");
             joint.setPosition( readFloat( tokens[3] ), readFloat( tokens[4] ), nullptr ); // TODO callback
             break;
-		}
+        }
         case JointCmd::GET_TORQUE:
         {
             auto result = joint.getTorque();
             std::cout << "Current torque: " << result << "\n";
             break;
-		}
+        }
         case JointCmd::SET_TORQUE:
         {
             if ( tokens.size() != 4 )
                 throw std::runtime_error("Wrong number of arguments");
             joint.setTorque( readFloat( tokens[3] ) );
             break;
-		}
+        }
         default:
         {
             printHelp();
             break;
-		}
+        }
     }
 }
 
@@ -230,26 +229,27 @@ void processConnectorCmd( rofi::hal::RoFI & rofi, const std::vector< std::string
             connector.connect();
             std::cout << "Connecting\n";
             break;
-		}
+        }
         case ConnectorCmd::DISCONNECT:
         {
             connector.disconnect();
             std::cout << "Disconnecting\n";
             break;
-		}
+        }
         case ConnectorCmd::GET_STATE:
         case ConnectorCmd::PACKET:
         case ConnectorCmd::CONNECT_POWER:
         case ConnectorCmd::DISCONNECT_POWER:
-        case ConnectorCmd::POWER_STATE:
         {
             std::cout << "Connector command not implemented\n";
-		}
+            printHelp();
+            break;
+        }
         default:
         {
             printHelp();
             break;
-		}
+        }
     }
 }
 

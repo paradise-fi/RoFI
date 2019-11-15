@@ -18,9 +18,7 @@ namespace rofi
     {
         namespace detail
         {
-            constexpr double doublePrecision = 0.01;
-
-            inline bool equal( double first, double second, double precision = doublePrecision )
+            inline bool equal( double first, double second, double precision = 0.01 )
             {
                 return first <= second + precision && second <= first + precision;
             }
