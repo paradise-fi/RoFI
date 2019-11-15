@@ -51,7 +51,7 @@ private:
     void addConnector( gazebo::physics::ModelPtr connectorModel );
     void clearConnectors();
     void findAndInitJoints();
-    void findAndInitConnectors( sdf::ElementPtr sdf );
+    void findAndInitConnectors();
 
     rofi::messages::RofiResp getJointRofiResp( rofi::messages::JointCmd::Type cmdtype, int joint, float value ) const;
     rofi::messages::RofiResp getConnectorRofiResp( const rofi::messages::ConnectorResp & connectorResp ) const;

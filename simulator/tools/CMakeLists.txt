@@ -1,11 +1,9 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
-
 find_package(gazebo REQUIRED)
 include_directories(${GAZEBO_INCLUDE_DIRS})
 link_directories(${GAZEBO_LIBRARY_DIRS})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS} ${SOURCE_CODE_FLAGS}")
 
 add_executable(command_line_demo command_line_demo.cpp rofi_hal_sim.cpp)
 target_link_libraries(command_line_demo rofiMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})

@@ -27,7 +27,7 @@ std::string replaceDelimeter( std::string_view sensorPath )
 {
     std::vector< std::string_view > splitPath;
     int last = 0;
-    for ( int i = 0; i < sensorPath.size() - 1; i++ )
+    for ( size_t i = 0; i < sensorPath.size() - 1; i++ )
     {
         if ( sensorPath[ i ] == ':' && sensorPath[ i + 1 ] == ':' )
         {

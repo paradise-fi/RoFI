@@ -53,7 +53,7 @@ std::string getElemPath( gazebo::physics::BasePtr elem )
 }
 
 
-void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf ) {
+void UMP::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ ) {
     gzmsg << "The UM plugin is attached to model ["
             << model->GetName() << "]\n";
 
@@ -62,7 +62,7 @@ void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf ) {
     initCommunication();
 
     findAndInitJoints();
-    findAndInitConnectors( sdf );
+    findAndInitConnectors();
 
     gzmsg << "Number of joints is " << joints.size() << "\n";
     gzmsg << "Number of connectors is " << connectors.size() << "\n";
@@ -146,13 +146,13 @@ void UMP::findAndInitJoints()
         }
     }
 
-    for ( int i = 0; i < joints.size(); i++ )
+    for ( size_t i = 0; i < joints.size(); i++ )
     {
         setVelocity( i, 0 );
     }
 }
 
-void UMP::findAndInitConnectors( sdf::ElementPtr sdf )
+void UMP::findAndInitConnectors()
 {
     if ( !_node->IsInitialized() )
     {
@@ -217,7 +217,7 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
     using rofi::messages::JointCmd;
 
     int joint = msg.joint();
-    if ( joint < 0 || joint >= joints.size() )
+    if ( joint < 0 || static_cast< size_t >( joint ) >= joints.size() )
     {
         gzwarn << "Invalid joint " << joint << " specified\n";
         return;
