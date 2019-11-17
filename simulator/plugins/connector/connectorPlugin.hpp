@@ -18,6 +18,14 @@ public:
 
     using PacketPtr = boost::shared_ptr< const rofi::messages::Packet >;
 
+    enum class Position : signed char
+    {
+        Retracted = 0,
+        Extending = 1,
+        Extended = 2,
+        Connected = 3,
+    };
+
     ConnectorPlugin() = default;
 
     ConnectorPlugin( const ConnectorPlugin & ) = delete;
@@ -48,6 +56,7 @@ private:
     physics::CollisionPtr getCollisionByScopedName( const std::string & collisionName ) const;
     rofi::messages::ConnectorResp getConnectorResp( rofi::messages::ConnectorCmd::Type cmdtype ) const;
 
+    bool canBeConnected( physics::ModelPtr otherConnector ) const;
 
     physics::ModelPtr _model;
 
@@ -61,6 +70,10 @@ private:
     physics::JointPtr connection;
 
     int connectorNumber = 0;
+
+    std::mutex connectionMutex;
+    Position position = Position::Retracted;
+    rofi::messages::ConnectorState::Orientation orientation{};
 };
 
 } // namespace gazebo

@@ -19,12 +19,30 @@ void ConnectorPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
 void ConnectorPlugin::connect()
 {
     gzmsg << "Connecting connector " << connectorNumber << "\n";
+
+    std::lock_guard< std::mutex > lock( connectionMutex );
+    if ( position != Position::Retracted )
+    {
+        gzmsg << "Already extended\n";
+        return;
+    }
+    position = Position::Extending;
+
     // TODO
 }
 
 void ConnectorPlugin::disconnect()
 {
     gzmsg << "Disconnecting connector " << connectorNumber << "\n";
+
+    std::lock_guard< std::mutex > lock( connectionMutex );
+    if ( position == Position::Retracted )
+    {
+        gzmsg << "Not extended\n";
+        return;
+    }
+    position = Position::Retracted;
+
     // TODO
 }
 
@@ -102,8 +120,26 @@ void ConnectorPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
     }
     case ConnectorCmd::GET_STATE:
     {
-        // TODO
-        gzmsg << "Getting state is not implemented\n";
+        auto msg = getConnectorResp( ConnectorCmd::GET_STATE );
+        auto & state = *msg.mutable_state();
+        {
+            std::lock_guard< std::mutex > lock( connectionMutex );
+            switch ( position )
+            {
+                case Position::Connected:
+                    state.set_connected( true );
+                    state.set_orientation( orientation );
+                    [[ fallthrough ]];
+                case Position::Extended:
+                case Position::Extending:
+                    state.set_position( true );
+                    break;
+                case Position::Retracted:
+                    break;
+            }
+        }
+        _pubRofi->Publish( std::move( msg ) );
+        gzmsg << "Returning state\n";
         break;
     }
     case ConnectorCmd::CONNECT:
@@ -139,53 +175,53 @@ void ConnectorPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
 
 void ConnectorPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
 {
+    std::lock_guard< std::mutex > lock( connectionMutex );
+    if ( position != Position::Extending )
+    {
+        return;
+    }
+
     for ( auto & contact : contacts->contact() )
     {
-        auto collision = getCollisionByScopedName( contact.collision1() );
-        auto collision2 = getCollisionByScopedName( contact.collision2() );
-        if ( !collision  || !collision2 )
+        auto otherCollision = getCollisionByScopedName( contact.collision2() );
+        auto thisCollision = getCollisionByScopedName( contact.collision1() );
+        if ( !thisCollision  || !otherCollision )
         {
             gzwarn << "Got empty collision\n";
             continue;
         }
-        if ( collision->GetModel() == _model )
+        if ( thisCollision->GetModel() != _model )
         {
-            if ( collision2->GetModel() == _model )
-            {
-                gzwarn << "Both collisions are from this model\n";
-                continue;
-            }
-            collision = std::move( collision2 );
-        }
-        else
-        {
-            if ( collision2->GetModel() != _model )
+            if ( otherCollision->GetModel() != _model )
             {
                 gzwarn << "None of the collisions are from this model\n";
                 continue;
             }
-            collision2 = {};
+            otherCollision = std::move( thisCollision );
+        }
+        else
+        {
+            if ( otherCollision->GetModel() == _model )
+            {
+                gzwarn << "Both collisions are from this model\n";
+                continue;
+            }
+            thisCollision = {};
         }
 
-        if ( !isRofiConnector( collision->GetModel() ) )
+        if ( !canBeConnected( otherCollision->GetModel() ) )
         {
             continue;
         }
 
-        gzmsg << "Collision with rofi connector\n";
+        gzmsg << "Connecting with " << otherCollision->GetModel()->GetScopedName() << "\n";
 
-        for ( int j = 0; j < contact.position_size(); j++ )
-        {
-            gzmsg << j << "  Position:"
-                    << contact.position( j ).x() << " "
-                    << contact.position( j ).y() << " "
-                    << contact.position( j ).z() << "\n";
-            gzmsg << "   Normal:"
-                    << contact.normal( j ).x() << " "
-                    << contact.normal( j ).y() << " "
-                    << contact.normal( j ).z() << "\n";
-            gzmsg << "   Depth:" << contact.depth( j ) << "\n";
-        }
+        position = Position::Connected;
+
+        // TODO connect on the right place
+        // TODO start communication
+
+        return;
     }
 }
 
@@ -202,6 +238,17 @@ rofi::messages::ConnectorResp ConnectorPlugin::getConnectorResp( rofi::messages:
     return resp;
 }
 
+bool ConnectorPlugin::canBeConnected( physics::ModelPtr otherConnector ) const
+{
+    if ( !isRofiConnector( otherConnector ) )
+    {
+        return false;
+    }
+
+    // TODO check position and rotation
+
+    return true;
+}
 
 GZ_REGISTER_MODEL_PLUGIN( ConnectorPlugin )
 
