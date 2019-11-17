@@ -98,7 +98,7 @@ inline std::string replaceDelimeter( std::string_view sensorPath )
     return topicName;
 }
 
-bool isRofiConnector( gazebo::physics::ModelPtr model )
+bool isRofiCoM( gazebo::physics::ModelPtr model )
 {
     if ( model->GetPluginCount() == 0 )
     {
@@ -117,7 +117,7 @@ bool isRofiConnector( gazebo::physics::ModelPtr model )
 
     for ( auto & plugin : plugins.plugins() )
     {
-        if ( plugin.has_filename() && plugin.filename() == "libconnectorPlugin.so" )
+        if ( plugin.has_filename() && plugin.filename() == "libroficomPlugin.so" )
         {
             return true;
         }

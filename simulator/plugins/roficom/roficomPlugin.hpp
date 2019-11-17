@@ -10,7 +10,7 @@
 namespace gazebo
 {
 
-class ConnectorPlugin : public ModelPlugin
+class RoFICoMPlugin : public ModelPlugin
 {
 public:
     static constexpr double speed = 1.5; // [m/s]
@@ -26,12 +26,12 @@ public:
         Connected = 3,
     };
 
-    ConnectorPlugin() = default;
+    RoFICoMPlugin() = default;
 
-    ConnectorPlugin( const ConnectorPlugin & ) = delete;
-    ConnectorPlugin & operator=( const ConnectorPlugin & ) = delete;
+    RoFICoMPlugin( const RoFICoMPlugin & ) = delete;
+    RoFICoMPlugin & operator=( const RoFICoMPlugin & ) = delete;
 
-    ~ConnectorPlugin()
+    ~RoFICoMPlugin()
     {
         _node->Fini();
     }

@@ -240,13 +240,13 @@
                     </shader>
                 </material>
             </visual>
-            <sensor name='roficonnector-sensor' type='contact'>
+            <sensor name='roficom-sensor' type='contact'>
                 <contact>
                     <collision>connectorAplusX-collision</collision>
                 </contact>
             </sensor>
         </link>
-        <plugin name="connector" filename="libconnectorPlugin.so"/>
+        <plugin name="connector" filename="libroficomPlugin.so"/>
         </model>
 
         <model name="connectorAminusZ">
@@ -298,13 +298,13 @@
                     </shader>
                 </material>
             </visual>
-            <sensor name='roficonnector-sensor' type='contact'>
+            <sensor name='roficom-sensor' type='contact'>
                 <contact>
                     <collision>connectorAminusZ-collision</collision>
                 </contact>
             </sensor>
         </link>
-        <plugin name="connector" filename="libconnectorPlugin.so"/>
+        <plugin name="connector" filename="libroficomPlugin.so"/>
         </model>
 
         <model name="connectorAminusX">
@@ -356,13 +356,13 @@
                     </shader>
                 </material>
             </visual>
-            <sensor name='roficonnector-sensor' type='contact'>
+            <sensor name='roficom-sensor' type='contact'>
                 <contact>
                     <collision>connectorAminusX-collision</collision>
                 </contact>
             </sensor>
         </link>
-        <plugin name="connector" filename="libconnectorPlugin.so"/>
+        <plugin name="connector" filename="libroficomPlugin.so"/>
         </model>
 
         <model name="connectorBplusX">
@@ -414,13 +414,13 @@
                     </shader>
                 </material>
             </visual>
-            <sensor name='roficonnector-sensor' type='contact'>
+            <sensor name='roficom-sensor' type='contact'>
                 <contact>
                     <collision>connectorBplusX-collision</collision>
                 </contact>
             </sensor>
         </link>
-        <plugin name="connector" filename="libconnectorPlugin.so"/>
+        <plugin name="connector" filename="libroficomPlugin.so"/>
         </model>
 
         <model name="connectorBminusZ">
@@ -472,13 +472,13 @@
                     </shader>
                 </material>
             </visual>
-            <sensor name='roficonnector-sensor' type='contact'>
+            <sensor name='roficom-sensor' type='contact'>
                 <contact>
                     <collision>connectorBminusZ-collision</collision>
                 </contact>
             </sensor>
         </link>
-        <plugin name="connector" filename="libconnectorPlugin.so"/>
+        <plugin name="connector" filename="libroficomPlugin.so"/>
         </model>
 
         <model name="connectorBminusX">
@@ -530,13 +530,13 @@
                     </shader>
                 </material>
             </visual>
-            <sensor name='roficonnector-sensor' type='contact'>
+            <sensor name='roficom-sensor' type='contact'>
                 <contact>
                     <collision>connectorBminusX-collision</collision>
                 </contact>
             </sensor>
         </link>
-        <plugin name="connector" filename="libconnectorPlugin.so"/>
+        <plugin name="connector" filename="libroficomPlugin.so"/>
         </model>
 
 

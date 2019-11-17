@@ -1,22 +1,21 @@
-#include "connectorPlugin.hpp"
+#include "roficomPlugin.hpp"
 
 #include "../common/utils.hpp"
 
 namespace gazebo
 {
-void ConnectorPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
+void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
 {
-    gzmsg << "The Connector plugin is attached to model ["
-            << model->GetName() << "]\n";
     _model = model;
+    gzmsg << "The RoFICoM plugin is attached to model [" << _model->GetName() << "]\n";
 
     initCommunication();
     initSensorCommunication();
 
-    gzmsg << "Connector plugin ready\n";
+    gzmsg << "RoFICoM plugin ready\n";
 }
 
-void ConnectorPlugin::connect()
+void RoFICoMPlugin::connect()
 {
     gzmsg << "Connecting connector " << connectorNumber << "\n";
 
@@ -27,11 +26,12 @@ void ConnectorPlugin::connect()
         return;
     }
     position = Position::Extending;
+    gzmsg << "Extending connector " << connectorNumber << "\n";
 
     // TODO
 }
 
-void ConnectorPlugin::disconnect()
+void RoFICoMPlugin::disconnect()
 {
     gzmsg << "Disconnecting connector " << connectorNumber << "\n";
 
@@ -42,11 +42,12 @@ void ConnectorPlugin::disconnect()
         return;
     }
     position = Position::Retracted;
+    gzmsg << "Retracting connector " << connectorNumber << "\n";
 
     // TODO
 }
 
-void ConnectorPlugin::sendPacket( const rofi::messages::Packet & packet )
+void RoFICoMPlugin::sendPacket( const rofi::messages::Packet & packet )
 {
     gzmsg << "Sending packet from RoFI in connector " << connectorNumber << "\n";
 
@@ -55,7 +56,7 @@ void ConnectorPlugin::sendPacket( const rofi::messages::Packet & packet )
     _pubOutside->Publish( std::move( msg ) );
 }
 
-void ConnectorPlugin::onPacket( const ConnectorPlugin::PacketPtr & packet )
+void RoFICoMPlugin::onPacket( const RoFICoMPlugin::PacketPtr & packet )
 {
     gzmsg << "Received packet in connector " << connectorNumber << "\nSending to RoFI\n";
 
@@ -64,7 +65,7 @@ void ConnectorPlugin::onPacket( const ConnectorPlugin::PacketPtr & packet )
     _pubRofi->Publish( std::move( msg ) );
 }
 
-void ConnectorPlugin::initCommunication()
+void RoFICoMPlugin::initCommunication()
 {
     if ( !_model )
     {
@@ -81,10 +82,10 @@ void ConnectorPlugin::initCommunication()
     _node->Init( getElemPath( _model ) );
 
     _pubRofi = _node->Advertise< rofi::messages::ConnectorResp >( "~/response" );
-    _subRofi = _node->Subscribe( "~/control", & ConnectorPlugin::onConnectorCmd, this );
+    _subRofi = _node->Subscribe( "~/control", & RoFICoMPlugin::onConnectorCmd, this );
 }
 
-void ConnectorPlugin::initSensorCommunication()
+void RoFICoMPlugin::initSensorCommunication()
 {
     if ( !_node->IsInitialized() )
     {
@@ -92,19 +93,19 @@ void ConnectorPlugin::initSensorCommunication()
         return;
     }
 
-    auto sensors = _model->SensorScopedName( "roficonnector-sensor" );
+    auto sensors = _model->SensorScopedName( "roficom-sensor" );
 
     if ( sensors.size() != 1 )
     {
-        gzerr << "Connector plugin expects exactly 1 nested sensor named 'roficonnector-sensor' (found " << sensors.size() << ")\n";
+        gzerr << "RoFICoM plugin expects exactly 1 nested sensor named 'roficom-sensor' (found " << sensors.size() << ")\n";
         return;
     }
 
     auto topicName = "/gazebo" + replaceDelimeter( sensors.front() ) + "/contacts";
-    _subSensor = _node->Subscribe( std::move( topicName ), & ConnectorPlugin::onSensorMessage, this );
+    _subSensor = _node->Subscribe( std::move( topicName ), & RoFICoMPlugin::onSensorMessage, this );
 }
 
-void ConnectorPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
+void RoFICoMPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
 {
     using rofi::messages::ConnectorCmd;
 
@@ -173,7 +174,7 @@ void ConnectorPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
     }
 }
 
-void ConnectorPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
+void RoFICoMPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
 {
     std::lock_guard< std::mutex > lock( connectionMutex );
     if ( position != Position::Extending )
@@ -225,12 +226,12 @@ void ConnectorPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
     }
 }
 
-physics::CollisionPtr ConnectorPlugin::getCollisionByScopedName( const std::string & collisionName ) const
+physics::CollisionPtr RoFICoMPlugin::getCollisionByScopedName( const std::string & collisionName ) const
 {
     return boost::dynamic_pointer_cast< physics::Collision >( _model->GetWorld()->EntityByName( collisionName ) );
 }
 
-rofi::messages::ConnectorResp ConnectorPlugin::getConnectorResp( rofi::messages::ConnectorCmd::Type cmdtype ) const
+rofi::messages::ConnectorResp RoFICoMPlugin::getConnectorResp( rofi::messages::ConnectorCmd::Type cmdtype ) const
 {
     rofi::messages::ConnectorResp resp;
     resp.set_connector( connectorNumber );
@@ -238,9 +239,9 @@ rofi::messages::ConnectorResp ConnectorPlugin::getConnectorResp( rofi::messages:
     return resp;
 }
 
-bool ConnectorPlugin::canBeConnected( physics::ModelPtr otherConnector ) const
+bool RoFICoMPlugin::canBeConnected( physics::ModelPtr otherConnector ) const
 {
-    if ( !isRofiConnector( otherConnector ) )
+    if ( !isRofiCoM( otherConnector ) )
     {
         return false;
     }
@@ -250,6 +251,6 @@ bool ConnectorPlugin::canBeConnected( physics::ModelPtr otherConnector ) const
     return true;
 }
 
-GZ_REGISTER_MODEL_PLUGIN( ConnectorPlugin )
+GZ_REGISTER_MODEL_PLUGIN( RoFICoMPlugin )
 
 } // namespace gazebo

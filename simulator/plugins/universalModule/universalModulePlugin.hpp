@@ -46,8 +46,8 @@ private:
 
     void initCommunication();
 
-    // Connectors have to be models, that start with prefix "connector",
-    // have all unique names and have functionality of plugin "connectorPlugin.so"
+    // Connectors have to be models, that have attached plugin "libroficomPlugin.so"
+    // Ideally these are nested models of RoFICoM
     void addConnector( gazebo::physics::ModelPtr connectorModel );
     void clearConnectors();
     void findAndInitJoints();

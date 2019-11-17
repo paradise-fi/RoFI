@@ -5,5 +5,5 @@ include_directories(${GAZEBO_INCLUDE_DIRS})
 link_directories(${GAZEBO_LIBRARY_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS} ${SOURCE_CODE_FLAGS}")
 
-add_library(connectorPlugin SHARED connectorPlugin.cpp)
-target_link_libraries(connectorPlugin ${GAZEBO_LIBRARIES} rofiMessages)
+add_library(roficomPlugin SHARED roficomPlugin.cpp)
+target_link_libraries(roficomPlugin ${GAZEBO_LIBRARIES} rofiMessages)
