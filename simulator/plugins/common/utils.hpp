@@ -22,11 +22,6 @@ inline double trim( double value, double min, double max, std::string debugName 
     return value;
 }
 
-inline double trim( double value, const std::pair< double, double > & limits, std::string debugName )
-{
-    return trim( value, limits.first, limits.second, std::move( debugName ) );
-}
-
 inline bool equal( double first, double second, double precision )
 {
     return first <= second + precision && second <= first + precision;
@@ -100,11 +95,7 @@ inline std::string replaceDelimeter( std::string_view sensorPath )
 
 bool isRofiCoM( gazebo::physics::ModelPtr model )
 {
-    if ( !model )
-    {
-        return false;
-    }
-    if ( model->GetPluginCount() == 0 )
+    if ( !model || model->GetPluginCount() == 0 )
     {
         return false;
     }

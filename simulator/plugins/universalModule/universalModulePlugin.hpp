@@ -13,18 +13,21 @@
 namespace gazebo
 {
 
+struct JointData
+{
+    double minPosition = std::numeric_limits< double >::lowest();   // [rad]
+    double maxPosition = std::numeric_limits< double >::max();      // [rad]
+    double minSpeed = std::numeric_limits< double >::min();         // [rad/s] // No min speed in simulation
+    double maxSpeed = std::numeric_limits< double >::max();         // [rad/s]
+    double maxTorque = std::numeric_limits< double >::max();        // [Nm]
+
+    physics::JointPtr joint;
+    event::ConnectionPtr callbackConnection;
+};
+
 class UniversalModulePlugin : public ModelPlugin
 {
 public:
-    using limitPair = std::pair< double, double >;
-    static constexpr double maxJointTorque = 1.5; // [Nm]
-    static constexpr limitPair jointSpeedBoundaries = { 0.0, 6.545 }; // [rad/s] // 0, 60/0.16 deg/s
-    static constexpr std::array< limitPair, 3 > jointPositionBoundaries = { // [rad]
-            limitPair( std::numeric_limits< double >::lowest(), std::numeric_limits< double >::max() ),
-            limitPair( -1.5708, 1.5708 ), // -90 deg, 90 deg
-            limitPair( -1.5708, 1.5708 ) // -90 deg, 90 deg
-        };
-
     static constexpr double doublePrecision = 0.01;
 
     UniversalModulePlugin() = default;
@@ -78,7 +81,7 @@ private:
     transport::SubscriberPtr _sub;
     transport::PublisherPtr _pub;
 
-    std::vector< std::pair< physics::JointPtr, event::ConnectionPtr > > joints;
+    std::vector< JointData > joints;
     std::vector< std::pair< transport::PublisherPtr, transport::SubscriberPtr > > connectors;
 };
 
