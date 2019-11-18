@@ -76,6 +76,7 @@ inline void runSlave( const char* masterAddr ) {
 		std::cout << "Sending message: " << buffer.asString() << " to ";
 		std::cout << std::hex; printA(std::cout, *(ip6_addr_t*) &addr) << std::dec << std::endl;
 		res = udp_sendto( pcb, buffer.get(), &addr, 7777 );
+		// std::cout << "udp_sendto returned " << res << std::endl;
 		vTaskDelay( 2000 / portTICK_PERIOD_MS );
 	}
 }

@@ -90,7 +90,7 @@ extern "C" void app_main() {
 	ESP_ERROR_CHECK( r );
 
 	_rofi::RoIF6 roif(
-		// _rofi::Ip6Addr( getAddress( getId() ) ),
+		_rofi::Ip6Addr( getAddress( getId() ) ),
 		mac(),
 		docks( getId() ) );
 
