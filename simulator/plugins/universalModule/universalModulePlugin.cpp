@@ -8,11 +8,10 @@ namespace gazebo
 {
 using UMP = UniversalModulePlugin;
 
-void UMP::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ ) {
-    gzmsg << "The UM plugin is attached to model ["
-            << model->GetName() << "]\n";
-
+void UMP::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
+{
     _model = model;
+    gzmsg << "The UM plugin is attached to model [" << _model->GetName() << "]\n";
 
     initCommunication();
 

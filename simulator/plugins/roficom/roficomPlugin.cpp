@@ -12,17 +12,24 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
     extendJoint = _model->GetJoint( "extendJoint" );
     if ( !extendJoint )
     {
-        extendJoint = _model->GetJoint( "RoFICoM::extendJoint" );
+        for ( auto joint : _model->GetJoints() )
+        {
+            auto name = joint->GetName();
+            if ( name.compare( name.size() - 13, 13, "::extendJoint" ) == 0 )
+            {
+                if ( extendJoint )
+                {
+                    gzwarn << "Found two extendJoints: " << extendJoint->GetName() << ", " << joint->GetName() << "\n";
+                    break;
+                }
+                extendJoint = std::move( joint );
+            }
+        }
     }
     if ( !extendJoint )
     {
-        if ( _model->GetJointCount() == 0 )
-        {
-            gzerr << "Could not get any joint from RoFICoM plugin\n";
-            return;
-        }
-        extendJoint = _model->GetJoints()[ 0 ];
-        gzwarn << "Could not get extend joint from RoFICoM plugin, using first joint " << extendJoint->GetName() << "\n";
+        gzerr << "Could not get any joint from RoFICoM plugin\n";
+        return;
     }
 
     extendJoint->SetParam( "fmax", 0, maxJointForce );
