@@ -100,6 +100,10 @@ inline std::string replaceDelimeter( std::string_view sensorPath )
 
 bool isRofiCoM( gazebo::physics::ModelPtr model )
 {
+    if ( !model )
+    {
+        return false;
+    }
     if ( model->GetPluginCount() == 0 )
     {
         return false;

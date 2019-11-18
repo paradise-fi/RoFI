@@ -9,8 +9,29 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
     _model = model;
     gzmsg << "The RoFICoM plugin is attached to model [" << _model->GetName() << "]\n";
 
+    extendJoint = _model->GetJoint( "extendJoint" );
+    if ( !extendJoint )
+    {
+        extendJoint = _model->GetJoint( "RoFICoM::extendJoint" );
+    }
+    if ( !extendJoint )
+    {
+        if ( _model->GetJointCount() == 0 )
+        {
+            gzerr << "Could not get any joint from RoFICoM plugin\n";
+            return;
+        }
+        extendJoint = _model->GetJoints()[ 0 ];
+        gzwarn << "Could not get extend joint from RoFICoM plugin, using first joint " << extendJoint->GetName() << "\n";
+    }
+
+    extendJoint->SetParam( "fmax", 0, maxJointForce );
+    stop();
+
     initCommunication();
     initSensorCommunication();
+
+    onUpdateConnection = event::Events::ConnectWorldUpdateBegin( std::bind( &RoFICoMPlugin::onUpdate, this ) );
 
     gzmsg << "RoFICoM plugin ready\n";
 }
@@ -28,7 +49,7 @@ void RoFICoMPlugin::connect()
     position = Position::Extending;
     gzmsg << "Extending connector " << connectorNumber << "\n";
 
-    // TODO
+    extend();
 }
 
 void RoFICoMPlugin::disconnect()
@@ -44,7 +65,7 @@ void RoFICoMPlugin::disconnect()
     position = Position::Retracted;
     gzmsg << "Retracting connector " << connectorNumber << "\n";
 
-    // TODO
+    retract();
 }
 
 void RoFICoMPlugin::sendPacket( const rofi::messages::Packet & packet )
@@ -103,6 +124,96 @@ void RoFICoMPlugin::initSensorCommunication()
 
     auto topicName = "/gazebo" + replaceDelimeter( sensors.front() ) + "/contacts";
     _subSensor = _node->Subscribe( std::move( topicName ), & RoFICoMPlugin::onSensorMessage, this );
+}
+
+void RoFICoMPlugin::onUpdate()
+{
+    std::lock_guard< std::mutex > lock( connectionMutex );
+
+    if ( position == Position::Retracted )
+    {
+        if ( equal( extendJoint->Position(), extendJoint->LowerLimit( 0 ), positionPrecision ) )
+        {
+            onRetracted();
+        }
+        return;
+    }
+
+    if ( equal( extendJoint->Position(), extendJoint->UpperLimit( 0 ), positionPrecision ) )
+    {
+        onExtended();
+    }
+
+    checkConnection();
+}
+
+void RoFICoMPlugin::stop()
+{
+    if ( currentVelocity != 0.0 )
+    {
+        gzmsg << "stop\n";
+        currentVelocity = 0.0;
+        extendJoint->SetParam( "vel", 0, currentVelocity );
+    }
+}
+
+void RoFICoMPlugin::extend()
+{
+    if ( currentVelocity != maxJointSpeed )
+    {
+        gzmsg << "extend\n";
+        currentVelocity = maxJointSpeed;
+        extendJoint->SetParam( "vel", 0, currentVelocity );
+    }
+}
+
+void RoFICoMPlugin::retract()
+{
+    if ( currentVelocity != -maxJointSpeed )
+    {
+        gzmsg << "retract\n";
+        currentVelocity = -maxJointSpeed;
+        extendJoint->SetParam( "vel", 0, currentVelocity );
+    }
+}
+
+void RoFICoMPlugin::onExtended()
+{
+    stop();
+    if ( position == Position::Extending )
+    {
+        position = Position::Extended;
+    }
+}
+
+void RoFICoMPlugin::onRetracted()
+{
+    stop();
+    if ( position == Position::Connected )
+    {
+        endConnection();
+    }
+    position = Position::Retracted;
+}
+
+void RoFICoMPlugin::checkConnection()
+{
+    if ( position != Position::Connected )
+    {
+        return;
+    }
+
+    // TODO check if still connected
+    if ( false )
+    {
+        endConnection();
+        position = Position::Extended;
+    }
+}
+
+void RoFICoMPlugin::endConnection()
+{
+    // TODO
 }
 
 void RoFICoMPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
@@ -184,38 +295,14 @@ void RoFICoMPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
 
     for ( auto & contact : contacts->contact() )
     {
-        auto otherCollision = getCollisionByScopedName( contact.collision2() );
-        auto thisCollision = getCollisionByScopedName( contact.collision1() );
-        if ( !thisCollision  || !otherCollision )
-        {
-            gzwarn << "Got empty collision\n";
-            continue;
-        }
-        if ( thisCollision->GetModel() != _model )
-        {
-            if ( otherCollision->GetModel() != _model )
-            {
-                gzwarn << "None of the collisions are from this model\n";
-                continue;
-            }
-            otherCollision = std::move( thisCollision );
-        }
-        else
-        {
-            if ( otherCollision->GetModel() == _model )
-            {
-                gzwarn << "Both collisions are from this model\n";
-                continue;
-            }
-            thisCollision = {};
-        }
+        auto otherModel = getModelOfOther( contact );
 
-        if ( !canBeConnected( otherCollision->GetModel() ) )
+        if ( !canBeConnected( otherModel ) )
         {
             continue;
         }
 
-        gzmsg << "Connecting with " << otherCollision->GetModel()->GetScopedName() << "\n";
+        gzmsg << "Connecting with " << otherModel->GetScopedName() << "\n";
 
         position = Position::Connected;
 
@@ -224,6 +311,35 @@ void RoFICoMPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
 
         return;
     }
+}
+
+physics::ModelPtr RoFICoMPlugin::getModelOfOther( const msgs::Contact & contact ) const
+{
+    auto collision1 = getCollisionByScopedName( contact.collision1() );
+    auto collision2 = getCollisionByScopedName( contact.collision2() );
+    if ( !collision1  || !collision2 )
+    {
+        gzwarn << "Got empty collision\n";
+        return {};
+    }
+
+    auto model1 = collision1->GetModel();
+    auto model2 = collision2->GetModel();
+    if ( model1 == _model )
+    {
+        if ( model2 == _model )
+        {
+            gzwarn << "Both collisions are from this model\n";
+            return {};
+        }
+        return model2;
+    }
+    if ( model2 != _model )
+    {
+        gzwarn << "None of the collisions are from this model\n";
+        return {};
+    }
+    return model1;
 }
 
 physics::CollisionPtr RoFICoMPlugin::getCollisionByScopedName( const std::string & collisionName ) const

@@ -13,8 +13,9 @@ namespace gazebo
 class RoFICoMPlugin : public ModelPlugin
 {
 public:
-    static constexpr double speed = 1.5; // [m/s]
-    static constexpr double doublePrecision = 0.01;
+    static constexpr double maxJointSpeed = 0.012; // [m/s]
+    static constexpr double maxJointForce = 1.5; // [Nm]
+    static constexpr double positionPrecision = 0.0001;
 
     using PacketPtr = boost::shared_ptr< const rofi::messages::Packet >;
 
@@ -50,9 +51,28 @@ private:
     void initCommunication();
     void initSensorCommunication();
 
+    void onUpdate();
+
+    // Called while holding connectionMutex
+    void stop();
+    // Called while holding connectionMutex
+    void extend();
+    // Called while holding connectionMutex
+    void retract();
+
+    // Called while holding connectionMutex
+    void onExtended();
+    // Called while holding connectionMutex
+    void onRetracted();
+    // Called while holding connectionMutex
+    void checkConnection();
+    // Called while holding connectionMutex
+    void endConnection();
+
     void onConnectorCmd( const ConnectorCmdPtr & msg );
     void onSensorMessage( const ContactsMsgPtr & contacts );
 
+    physics::ModelPtr getModelOfOther( const msgs::Contact & ) const;
     physics::CollisionPtr getCollisionByScopedName( const std::string & collisionName ) const;
     rofi::messages::ConnectorResp getConnectorResp( rofi::messages::ConnectorCmd::Type cmdtype ) const;
 
@@ -67,10 +87,13 @@ private:
     transport::SubscriberPtr _subOutside;
     transport::SubscriberPtr _subSensor;
 
+    physics::JointPtr extendJoint;
+    double currentVelocity = 0.0;
     physics::JointPtr connection;
 
     int connectorNumber = 0;
 
+    event::ConnectionPtr onUpdateConnection;
     std::mutex connectionMutex;
     Position position = Position::Retracted;
     rofi::messages::ConnectorState::Orientation orientation{};
