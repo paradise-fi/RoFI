@@ -34,7 +34,10 @@ public:
 
     ~RoFICoMPlugin()
     {
-        _node->Fini();
+        if ( _node )
+        {
+            _node->Fini();
+        }
     }
 
     virtual void Load( physics::ModelPtr model, sdf::ElementPtr sdf );

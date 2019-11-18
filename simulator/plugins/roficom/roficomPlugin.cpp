@@ -29,6 +29,11 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
     if ( !extendJoint )
     {
         gzerr << "Could not get any joint from RoFICoM plugin\n";
+        gzerr << "Available joint (" << _model->GetJointCount() << ")\n";
+        for ( auto joint : _model->GetJoints() )
+        {
+            gzerr << "Joint: '" << joint->GetName() << "'\n";
+        }
         return;
     }
 
@@ -107,15 +112,25 @@ void RoFICoMPlugin::initCommunication()
     }
 
     _node = boost::make_shared< transport::Node >();
+    if ( !_node )
+    {
+        gzerr << "Could not create new Node\n";
+        throw std::runtime_error( "Could not create new Node" );
+    }
     _node->Init( getElemPath( _model ) );
 
     _pubRofi = _node->Advertise< rofi::messages::ConnectorResp >( "~/response" );
     _subRofi = _node->Subscribe( "~/control", & RoFICoMPlugin::onConnectorCmd, this );
+    if ( !_subRofi || !_pubRofi )
+    {
+        gzerr << "Subcriber or Publisher not created\n";
+        throw std::runtime_error( "Subcriber or Publisher not created" );
+    }
 }
 
 void RoFICoMPlugin::initSensorCommunication()
 {
-    if ( !_node->IsInitialized() )
+    if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Initialize communication before initializing sensor communication\n";
         return;

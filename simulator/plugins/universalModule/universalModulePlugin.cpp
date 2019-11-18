@@ -37,15 +37,25 @@ void UMP::initCommunication()
     }
 
     _node = boost::make_shared< transport::Node >();
+    if ( !_node )
+    {
+        gzerr << "Could not create new Node\n";
+        throw std::runtime_error( "Could not create new Node" );
+    }
     _node->Init( _model->GetWorld()->Name() + "/" + _model->GetName() );
 
     _sub = _node->Subscribe( "~/control", & UMP::onRofiCmd, this );
     _pub = _node->Advertise< rofi::messages::RofiResp >( "~/response" );
+    if ( !_sub || !_pub )
+    {
+        gzerr << "Subcriber or Publisher not created\n";
+        throw std::runtime_error( "Subcriber or Publisher not created" );
+    }
 }
 
 void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )
 {
-    if ( !_node->IsInitialized() )
+    if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Init communication before adding connectors\n";
         return;
@@ -55,6 +65,12 @@ void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )
 
     auto pub = _node->Advertise< rofi::messages::ConnectorCmd >( topicName + "/control" );
     auto sub = _node->Subscribe( topicName + "/response", & UMP::onConnectorResp, this );
+
+    if ( !sub || !pub )
+    {
+        gzerr << "Connector Subcriber or Publisher not created\n";
+        return;
+    }
 
     for ( auto & elem : connectors )
     {
@@ -77,14 +93,17 @@ void UMP::clearConnectors()
 {
     for ( auto & pair : connectors )
     {
-        pair.first->Fini();
+        if ( pair.first )
+        {
+            pair.first->Fini();
+        }
     }
     connectors = {};
 }
 
 void UMP::findAndInitJoints()
 {
-    if ( !_node->IsInitialized() )
+    if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Init communication before adding joints\n";
         return;
@@ -108,7 +127,7 @@ void UMP::findAndInitJoints()
 
 void UMP::findAndInitConnectors()
 {
-    if ( !_node->IsInitialized() )
+    if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Init communication before adding connectors\n";
         return;
