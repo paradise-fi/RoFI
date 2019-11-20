@@ -15,8 +15,10 @@ For an in-depth description of the RoFI platform see the related work below.
 
 ## Related Work
 
-- [RoFI: Distributed Metamorphic Robots](https://github.com/yaqwsx/mgrthesis) -
+- [RoFI: Distributed Metamorphic Robots](https://is.muni.cz/th/y1s7e/) -
   Master's thesis providing the RoFI project overview.
+- [Motion Planing for the RoFI Platform](https://is.muni.cz/th/w7y7w/) -
+  Master's thesis dealing with basic reconfiguration algorithms for the platform
 
 ## Repository Structure
 
