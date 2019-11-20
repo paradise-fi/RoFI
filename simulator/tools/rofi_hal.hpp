@@ -19,6 +19,7 @@ namespace rofi
 
         enum class ConnectorPosition : bool;
         enum class ConnectorOrientation : signed char;
+        enum class ConnectorLine : bool;
         struct ConnectorState;
 
         class RoFI
@@ -91,14 +92,14 @@ namespace rofi
             Connector( const Connector & ) = default;
             Connector & operator=( const Connector & ) = default;
 
-            // ConnectorState getState() const;
+            ConnectorState getState() const;
             void connect();
             void disconnect();
-            // void onConnectorEvent( std::function< void ( Connector, ConnectorEvent ) > callback );
-            // void onPacket( std::function< void ( Connector, Packet ) > callback );
-            // void send( Packet packet );
-            // void connectPower( ConnectorLine );
-            // void disconnectPower( ConnectorLine );
+            // TODO void onConnectorEvent( std::function< void ( Connector, ConnectorEvent ) > callback );
+            void onPacket( std::function< void ( Connector, Packet ) > callback );
+            void send( Packet packet );
+            void connectPower( ConnectorLine );
+            void disconnectPower( ConnectorLine );
         };
 
         enum class ConnectorPosition : bool
@@ -113,6 +114,12 @@ namespace rofi
             East = 1,
             South = 2,
             West = 3
+        };
+
+        enum class ConnectorLine : bool
+        {
+            Internal = 0,
+            External = 1
         };
 
         struct ConnectorState

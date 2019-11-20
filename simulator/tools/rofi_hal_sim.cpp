@@ -162,6 +162,23 @@ namespace rofi
 
         Connector::Connector( detail::ConnectorData & cdata ) : connectorData( & cdata ) {}
 
+        ConnectorState Connector::getState() const
+        {
+            auto result = connectorData->registerPromise( messages::ConnectorCmd::GET_STATE );
+            auto msg = connectorData->getCmdMsg( messages::ConnectorCmd::GET_STATE );
+            connectorData->rofi.pub->Publish( std::move( msg ), true );
+
+            auto resp = result.get();
+            auto respState = resp->connectorresp().state();
+            return {
+                static_cast< ConnectorPosition >( respState.position() ),
+                respState.internal(),
+                respState.external(),
+                respState.connected(),
+                static_cast< ConnectorOrientation >( respState.orientation() )
+            };
+        }
+
         void Connector::connect()
         {
             auto msg = connectorData->getCmdMsg( messages::ConnectorCmd::CONNECT );
@@ -171,6 +188,40 @@ namespace rofi
         void Connector::disconnect()
         {
             auto msg = connectorData->getCmdMsg( messages::ConnectorCmd::DISCONNECT );
+            connectorData->rofi.pub->Publish( std::move( msg ), true );
+        }
+
+        void Connector::onPacket( std::function< void ( Connector, Packet ) > callback )
+        {
+            if ( !callback )
+            {
+                return;
+            }
+            connectorData->registerCallback( []( const messages::ConnectorResp & resp ){
+                        return resp.cmdtype() == messages::ConnectorCmd::PACKET;
+                        },
+                    [ callback = std::move( callback ) ]( Connector connector, detail::RoFIData::RofiRespPtr resp ){
+                        callback( connector, detail::ConnectorData::getPacket( std::move( resp ) ) );
+                        } );
+        }
+
+        void Connector::send( Packet packet )
+        {
+            static_assert( sizeof( Packet::value_type ) == sizeof( char ) );
+            auto msg = connectorData->getCmdMsg( messages::ConnectorCmd::PACKET );
+            msg.mutable_connectorcmd()->mutable_packet()->set_message( packet.data(), packet.size() );
+            connectorData->rofi.pub->Publish( std::move( msg ), true );
+        }
+
+        void Connector::connectPower( ConnectorLine )
+        {
+            auto msg = connectorData->getCmdMsg( messages::ConnectorCmd::CONNECT_POWER );
+            connectorData->rofi.pub->Publish( std::move( msg ), true );
+        }
+
+        void Connector::disconnectPower( ConnectorLine )
+        {
+            auto msg = connectorData->getCmdMsg( messages::ConnectorCmd::DISCONNECT_POWER );
             connectorData->rofi.pub->Publish( std::move( msg ), true );
         }
 
@@ -262,7 +313,7 @@ namespace rofi
                 return Joint( *this );
             }
 
-            messages::RofiCmd JointData::getCmdMsg( messages::JointCmd::Type type )
+            messages::RofiCmd JointData::getCmdMsg( messages::JointCmd::Type type ) const
             {
                 messages::RofiCmd rofiCmd;
                 rofiCmd.set_cmdtype( messages::RofiCmd::JOINT_CMD );
@@ -279,7 +330,7 @@ namespace rofi
 
             void JointData::registerCallback( Check && pred, Callback && callback )
             {
-                std::function< void( Joint ) > oldCallback;
+                Callback oldCallback;
                 {
                     std::lock_guard< std::mutex > lock( respCallbackMutex );
                     oldCallback = std::move( respCallback.second );
@@ -326,7 +377,7 @@ namespace rofi
                 return Connector( *this );
             }
 
-            messages::RofiCmd ConnectorData::getCmdMsg( messages::ConnectorCmd::Type type )
+            messages::RofiCmd ConnectorData::getCmdMsg( messages::ConnectorCmd::Type type ) const
             {
                 messages::RofiCmd rofiCmd;
                 rofiCmd.set_cmdtype( messages::RofiCmd::CONNECTOR_CMD );
@@ -335,10 +386,60 @@ namespace rofi
                 return rofiCmd;
             }
 
+            Connector::Packet ConnectorData::getPacket( RoFIData::RofiRespPtr resp )
+            {
+                static_assert( sizeof( Connector::Packet::value_type ) == sizeof( char ) );
+
+                const auto & message = resp->connectorresp().packet().message();
+                Connector::Packet packet;
+                packet.reserve( message.size() );
+                for ( auto byte : message )
+                {
+                    packet.push_back( static_cast< Connector::Packet::value_type >( byte ) );
+                }
+                return packet;
+            }
+
+            std::future< RoFIData::RofiRespPtr > ConnectorData::registerPromise( messages::ConnectorCmd::Type type )
+            {
+                std::lock_guard< std::mutex > lock( respMapMutex );
+                return respMap.emplace( type, std::promise< RoFIData::RofiRespPtr >() )->second.get_future();
+            }
+
+            void ConnectorData::registerCallback( Check && pred, Callback && callback )
+            {
+                std::lock_guard< std::mutex > lock( respCallbacksMutex );
+                respCallbacks.emplace_back( std::move( pred ), std::move( callback ) );
+            }
+
             void ConnectorData::onResponse( const RoFIData::RofiRespPtr & resp )
             {
                 assert( resp->resptype() == messages::RofiCmd::CONNECTOR_CMD );
                 assert( resp->connectorresp().connector() == connectorNumber );
+
+                {
+                    std::lock_guard< std::mutex > lock( respMapMutex );
+                    auto range = respMap.equal_range( resp->connectorresp().cmdtype() );
+                    for ( auto it = range.first; it != range.second; it++ )
+                    {
+                        it->second.set_value( resp );
+                    }
+                    respMap.erase( range.first, range.second );
+                }
+                {
+                    std::lock_guard< std::mutex > lock( respCallbacksMutex );
+                    for ( const auto & respCallback : respCallbacks )
+                    {
+                        auto & check = respCallback.first;
+                        if ( check && check( resp->connectorresp() ) )
+                        {
+                            if ( respCallback.second )
+                            {
+                                std::thread( respCallback.second, getConnector(), resp ).detach();
+                            }
+                        }
+                    }
+                }
             }
         } // namespace detail
     } // namespace hal

@@ -67,7 +67,7 @@ namespace rofi
 
                 Joint getJoint();
 
-                messages::RofiCmd getCmdMsg( messages::JointCmd::Type type );
+                messages::RofiCmd getCmdMsg( messages::JointCmd::Type type ) const;
 
                 std::future< RoFIData::RofiRespPtr > registerPromise( messages::JointCmd::Type type );
                 void registerCallback( Check && pred, Callback && callback );
@@ -78,9 +78,18 @@ namespace rofi
             class ConnectorData
             {
             public:
+                using Check = std::function< bool( const messages::ConnectorResp & ) >;
+                using Callback = std::function< void( Connector, RoFIData::RofiRespPtr ) >;
+
                 RoFIData & rofi;
 
             private:
+                std::unordered_multimap< messages::ConnectorCmd::Type, std::promise< RoFIData::RofiRespPtr > > respMap;
+                std::mutex respMapMutex;
+
+                std::vector< std::pair< Check, Callback > > respCallbacks;
+                std::mutex respCallbacksMutex;
+
                 const int connectorNumber;
 
             public:
@@ -88,7 +97,11 @@ namespace rofi
 
                 Connector getConnector();
 
-                messages::RofiCmd getCmdMsg( messages::ConnectorCmd::Type type );
+                messages::RofiCmd getCmdMsg( messages::ConnectorCmd::Type type ) const;
+                static Connector::Packet getPacket( RoFIData::RofiRespPtr );
+
+                std::future< RoFIData::RofiRespPtr > registerPromise( messages::ConnectorCmd::Type type );
+                void registerCallback( Check && pred, Callback && callback );
 
                 void onResponse( const RoFIData::RofiRespPtr & resp );
             };
