@@ -1,3 +1,4 @@
+#include <atomic>
 #include <functional>
 #include <future>
 #include <map>
@@ -32,9 +33,11 @@ namespace rofi
                 gazebo::transport::NodePtr node;
                 std::vector< std::unique_ptr< JointData > > joints;
                 std::vector< std::unique_ptr< ConnectorData > > connectors;
+                std::mutex descriptionMutex;
+                std::atomic_bool hasDescription = false;
 
             public:
-                RoFIData( int jointNumber, int connectorNumber );
+                RoFIData();
 
                 Joint getJoint( int index );
                 Connector getConnector( int index );
@@ -43,6 +46,9 @@ namespace rofi
 
                 gazebo::transport::PublisherPtr pub;
                 gazebo::transport::SubscriberPtr sub;
+
+            private:
+                void getDescription();
             };
 
             class JointData

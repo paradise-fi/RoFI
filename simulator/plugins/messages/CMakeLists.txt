@@ -17,6 +17,7 @@ endforeach()
 set (msgs
     rofi/rofiCmd.proto
     rofi/rofiResp.proto
+    rofi/rofiDescription.proto
 
     joint/jointCmd.proto
     joint/jointResp.proto

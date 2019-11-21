@@ -202,6 +202,19 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
         case RofiCmd::CONNECTOR_CMD:
             onConnectorCmd( msg->connectorcmd() );
             break;
+        case RofiCmd::DESCRIPTION:
+        {
+            rofi::messages::RofiResp resp;
+            resp.set_resptype( rofi::messages::RofiCmd::DESCRIPTION );
+            auto description = resp.mutable_rofidescription();
+            description->set_jointcount( joints.size() );
+            description->set_connectorcount( connectors.size() );
+            gzmsg << "Returning description ("
+                << resp.rofidescription().jointcount() << " joints, "
+                << resp.rofidescription().connectorcount() << " connectors)\n";
+            _pub->Publish( std::move( resp ) );
+            break;
+        }
         default:
             gzwarn << "Unknown RoFI command type\n";
     }

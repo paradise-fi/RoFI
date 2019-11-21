@@ -9,6 +9,7 @@ message RofiCmd {
         NO_CMD = 0;
         JOINT_CMD = 1;
         CONNECTOR_CMD = 2;
+        DESCRIPTION = 3;
     }
 
     int32 rofiId = 1;

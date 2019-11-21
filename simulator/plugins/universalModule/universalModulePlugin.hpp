@@ -28,7 +28,7 @@ struct JointData
 class UniversalModulePlugin : public ModelPlugin
 {
 public:
-    static constexpr double doublePrecision = 0.01;
+    static constexpr double doublePrecision = 0.001;
 
     UniversalModulePlugin() = default;
 

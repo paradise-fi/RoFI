@@ -1,12 +1,14 @@
 #include "rofi_hal_sim.hpp"
 
 #include <cassert>
+#include <chrono>
+#include <thread>
 
 namespace rofi
 {
     namespace hal
     {
-        RoFI::RoFI() : rofiData( std::make_unique< detail::RoFIData >( 3, 6 ) ) {}
+        RoFI::RoFI() : rofiData( std::make_unique< detail::RoFIData >() ) {}
 
         RoFI::~RoFI() = default;
 
@@ -227,34 +229,27 @@ namespace rofi
 
         namespace detail
         {
-            RoFIData::RoFIData( int jointNumber, int connectorNumber )
+            RoFIData::RoFIData()
             {
-                for ( int i = 0; i < jointNumber; i++ )
-                {
-                    joints.push_back( std::make_unique< JointData >( *this, i ) );
-                }
-
-                for ( int i = 0; i < connectorNumber; i++ )
-                {
-                    connectors.push_back( std::make_unique< ConnectorData >( *this, i ) );
-                }
-
                 node = boost::make_shared< gazebo::transport::Node >();
                 node->Init();
 
                 std::string moduleName = "universalModule";
 
-                sub = node->Subscribe( "~/" + moduleName + "/response", & RoFIData::onResponse, this );
                 pub = node->Advertise< rofi::messages::RofiCmd >( "~/" + moduleName + "/control" );
+                sub = node->Subscribe( "~/" + moduleName + "/response", & RoFIData::onResponse, this );
+
 
                 std::cerr << "Waiting for connection...\n";
                 pub->WaitForConnection();
                 std::cerr << "Connected\n";
+
+                getDescription();
             }
 
             Joint RoFIData::getJoint( int index )
             {
-                if ( index < 0 || static_cast< size_t >( index ) > joints.size() )
+                if ( index < 0 || static_cast< size_t >( index ) >= joints.size() )
                 {
                     throw std::out_of_range( "Joint index is out of range" );
                 }
@@ -263,7 +258,7 @@ namespace rofi
 
             Connector RoFIData::getConnector( int index )
             {
-                if ( index < 0 || static_cast< size_t >( index ) > connectors.size() )
+                if ( index < 0 || static_cast< size_t >( index ) >= connectors.size() )
                 {
                     throw std::out_of_range( "Connector index is out of range" );
                 }
@@ -280,7 +275,7 @@ namespace rofi
                     case RofiCmd::JOINT_CMD:
                     {
                         int index = resp->jointresp().joint();
-                        if ( index < 0 || static_cast< size_t >( index ) > joints.size() )
+                        if ( index < 0 || static_cast< size_t >( index ) >= joints.size() )
                         {
                             std::cerr << "Joint index of response is out of range\nIgnoring...\n";
                             return;
@@ -291,7 +286,7 @@ namespace rofi
                     case RofiCmd::CONNECTOR_CMD:
                     {
                         int index = resp->connectorresp().connector();
-                        if ( index < 0 || static_cast< size_t >( index ) > connectors.size() )
+                        if ( index < 0 || static_cast< size_t >( index ) >= connectors.size() )
                         {
                             std::cerr << "Connector index of response is out of range\nIgnoring...\n";
                             return;
@@ -299,11 +294,48 @@ namespace rofi
                         connectors[ index ]->onResponse( resp );
                         break;
                     }
+                    case RofiCmd::DESCRIPTION:
+                    {
+                        std::lock_guard< std::mutex > lock( descriptionMutex );
+                        auto & description = resp->rofidescription();
+
+                        if ( description.jointcount() > 0 )
+                        {
+                            while ( joints.size() < static_cast< unsigned >( description.jointcount() ) )
+                            {
+                                joints.push_back( std::make_unique< detail::JointData >( *this, joints.size() ) );
+                            }
+                        }
+                        if ( description.connectorcount() > 0 )
+                        {
+                            while ( connectors.size() < static_cast< unsigned >( description.connectorcount() ) )
+                            {
+                                connectors.push_back( std::make_unique< detail::ConnectorData >( *this, connectors.size() ) );
+                            }
+                        }
+
+                        std::cerr << "Number of joints: " << joints.size() << "\n";
+                        std::cerr << "Number of connectors: " << connectors.size() << "\n";
+                        hasDescription = true;
+                        break;
+                    }
                     default:
                     {
                         std::cerr << "Not recognized rofi cmd type\nIgnoring...\n";
                         break;
                     }
+                }
+            }
+
+            void RoFIData::getDescription()
+            {
+                while ( !hasDescription )
+                {
+                    messages::RofiCmd rofiCmd;
+                    rofiCmd.set_cmdtype( messages::RofiCmd::DESCRIPTION );
+                    pub->WaitForConnection();
+                    pub->Publish( std::move( rofiCmd ) );
+                    std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
                 }
             }
 
