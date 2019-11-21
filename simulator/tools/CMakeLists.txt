@@ -8,5 +8,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS} ${SOURCE_CODE_FLAGS}
 add_executable(command_line_demo command_line_demo.cpp rofi_hal_sim.cpp)
 target_link_libraries(command_line_demo rofiMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 
-add_executable(sim_demo rofi_hal_sim_demo.cpp rofi_hal_sim.cpp)
-target_link_libraries(sim_demo rofiMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+add_executable(joint_move_demo joint_move_demo.cpp rofi_hal_sim.cpp)
+target_link_libraries(joint_move_demo rofiMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+
+add_executable(packet_demo packet_demo.cpp rofi_hal_sim.cpp )
+target_link_libraries(packet_demo rofiMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
