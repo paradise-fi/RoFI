@@ -8,7 +8,8 @@ namespace rofi
 {
     namespace hal
     {
-        RoFI::RoFI() : rofiData( std::make_unique< detail::RoFIData >() ) {}
+        RoFI::RoFI() : RoFI( 0 ) {}
+        RoFI::RoFI( Id remoteId ) : rofiData( std::make_unique< detail::RoFIData >( remoteId ) ) {}
 
         RoFI::~RoFI() = default;
 
@@ -16,6 +17,23 @@ namespace rofi
         {
             static RoFI localRoFI;
             return localRoFI;
+        }
+
+        RoFI & RoFI::getRemoteRoFI( Id remoteId )
+        {
+            if ( remoteId == 0 )
+            {
+                return getLocalRoFI();
+            }
+
+            static std::map< Id, RoFI > remotes;
+            return remotes.emplace( remoteId, std::move( RoFI( remoteId ) ) ).first->second;
+        }
+
+        RoFI::Id RoFI::getId() const
+        {
+            assert( rofiData );
+            return rofiData->getId();
         }
 
         Joint RoFI::getJoint( int index )
@@ -231,22 +249,35 @@ namespace rofi
 
         namespace detail
         {
-            RoFIData::RoFIData()
+            RoFIData::RoFIData( RoFI::Id id ) : id( id )
             {
                 node = boost::make_shared< gazebo::transport::Node >();
                 node->Init();
 
                 std::string moduleName = "universalModule";
+                std::string rofiName = "local RoFI";
+                if ( id > 0 )
+                {
+                    moduleName += "_" + std::to_string( static_cast< int >( id - 1 ) );
+                    rofiName = "RoFI " + std::to_string( static_cast< int >( id ) );
+                }
 
                 pub = node->Advertise< rofi::messages::RofiCmd >( "~/" + moduleName + "/control" );
                 sub = node->Subscribe( "~/" + moduleName + "/response", & RoFIData::onResponse, this );
 
 
-                std::cerr << "Waiting for connection...\n";
+                std::cerr << "Waiting for connection with " << rofiName << "...\n";
                 pub->WaitForConnection();
-                std::cerr << "Connected\n";
+                std::cerr << "Connected to " << rofiName << "\n";
 
                 getDescription();
+
+                std::cerr << rofiName << " is ready...\n";
+            }
+
+            RoFI::Id RoFIData::getId() const
+            {
+                return id;
             }
 
             Joint RoFIData::getJoint( int index )
@@ -334,6 +365,7 @@ namespace rofi
                 while ( !hasDescription )
                 {
                     messages::RofiCmd rofiCmd;
+                    rofiCmd.set_rofiid( id );
                     rofiCmd.set_cmdtype( messages::RofiCmd::DESCRIPTION );
                     pub->WaitForConnection();
                     pub->Publish( std::move( rofiCmd ) );
@@ -350,6 +382,7 @@ namespace rofi
             messages::RofiCmd JointData::getCmdMsg( messages::JointCmd::Type type ) const
             {
                 messages::RofiCmd rofiCmd;
+                rofiCmd.set_rofiid( rofi.getId() );
                 rofiCmd.set_cmdtype( messages::RofiCmd::JOINT_CMD );
                 rofiCmd.mutable_jointcmd()->set_joint( jointNumber );
                 rofiCmd.mutable_jointcmd()->set_cmdtype( type );
@@ -414,6 +447,7 @@ namespace rofi
             messages::RofiCmd ConnectorData::getCmdMsg( messages::ConnectorCmd::Type type ) const
             {
                 messages::RofiCmd rofiCmd;
+                rofiCmd.set_rofiid( rofi.getId() );
                 rofiCmd.set_cmdtype( messages::RofiCmd::CONNECTOR_CMD );
                 rofiCmd.mutable_connectorcmd()->set_connector( connectorNumber );
                 rofiCmd.mutable_connectorcmd()->set_cmdtype( type );

@@ -258,9 +258,21 @@ int main( int argc, char **argv )
 {
     try
     {
-        gazebo::client::setup( argc, argv );
+        int rofiId = 0;
 
-        auto & rofi = rofi::hal::RoFI::getLocalRoFI();
+        if ( argc > 1 )
+        {
+            rofiId = readInt( argv[ 1 ] );
+            argv[ 1 ] = argv[ 0 ];
+            gazebo::client::setup( argc - 1, argv + 1 );
+        }
+        else
+        {
+            gazebo::client::setup( argc, argv );
+        }
+
+        std::cerr << "Acquiring RoFI " << rofiId << "\n";
+        auto & rofi = rofi::hal::RoFI::getRemoteRoFI( rofiId );
 
         for ( std::string line; std::getline( std::cin, line ); )
         {

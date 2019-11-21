@@ -24,9 +24,14 @@ namespace rofi
 
         class RoFI
         {
+        public:
+            using Id = int;
+
+        private:
             std::unique_ptr< detail::RoFIData > rofiData;
 
             RoFI();
+            RoFI( Id remoteId );
 
         public:
             // Destructor is default, but has to be defined in implementation (for unique_ptr)
@@ -39,7 +44,9 @@ namespace rofi
             RoFI & operator=( RoFI && ) = default;
 
             static RoFI & getLocalRoFI();
+            static RoFI & getRemoteRoFI( Id remoteId );
 
+            Id getId() const;
             Joint getJoint( int index );
             Connector getConnector( int index );
         };

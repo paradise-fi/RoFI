@@ -30,6 +30,7 @@ namespace rofi
                 using RofiRespPtr = boost::shared_ptr< const messages::RofiResp >;
 
             private:
+                RoFI::Id id;
                 gazebo::transport::NodePtr node;
                 std::vector< std::unique_ptr< JointData > > joints;
                 std::vector< std::unique_ptr< ConnectorData > > connectors;
@@ -37,8 +38,9 @@ namespace rofi
                 std::atomic_bool hasDescription = false;
 
             public:
-                RoFIData();
+                RoFIData( RoFI::Id id );
 
+                RoFI::Id getId() const;
                 Joint getJoint( int index );
                 Connector getConnector( int index );
 

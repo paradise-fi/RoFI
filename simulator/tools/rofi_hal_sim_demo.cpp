@@ -20,16 +20,20 @@ FunWithCallback addCallback( FunWithCallback f )
 
 FunWithCallback addCallback( std::function< void( void ) > f )
 {
-    return [ f ]( Callback cb ){
-        f();
-        cb();
-    };
+    return [ f = std::move( f ) ]( Callback cb )
+        {
+            f();
+            cb();
+        };
 }
 
 template < typename F >
 FunWithCallback operator>>( FunWithCallback lhs, F rhs )
 {
-    return [=]( Callback cb ){ lhs( std::bind( addCallback( rhs ), cb ) ); };
+    return [ lhs = std::move( lhs ), rhs = std::move( rhs ) ]( Callback cb )
+        {
+            lhs( std::bind( addCallback( rhs ), cb ) );
+        };
 }
 
 template < typename F >
@@ -40,22 +44,26 @@ FunWithCallback operator>>( std::function< void( void ) > lhs, F rhs )
 
 FunWithCallback setPosition( Joint joint, double pos, double speed = 1.5 )
 {
-    return [ = ]( Callback cb ){
-        Joint( joint ).setPosition( pos, speed, [ cb ]( Joint ){ cb(); } );
-    };
+    return [ = ]( Callback cb )
+        {
+            Joint( joint ).setPosition( pos, speed, [ cb = std::move( cb ) ]( Joint ){ cb(); } );
+        };
 }
 
-std::function< void( void ) > printStr( const std::string & str )
+std::function< void( void ) > printStr( std::string str )
 {
-    return [ = ](){
-        std::cout << str;
-        std::cout.flush();
-    };
+    static std::mutex printMutex;
+    return [ str = std::move( str ) ]()
+        {
+            std::lock_guard< std::mutex > lock( printMutex );
+            std::cout << str;
+            std::cout.flush();
+        };
 }
 
 std::function< void( void ) > loop( FunWithCallback f )
 {
-    return [ f ](){ f( loop( f ) ); };
+    return [ f = std::move( f ) ](){ f( loop( f ) ); };
 }
 
 int main( int argc, char **argv )
@@ -64,26 +72,33 @@ int main( int argc, char **argv )
 
     gazebo::client::setup( argc, argv );
 
-    RoFI & rofi = RoFI::getLocalRoFI();
-
     constexpr double deg90 = 1.5708;
 
-    auto sequence = printStr( "1\n" )
-            >> setPosition( rofi.getJoint( 0 ), 3.14 )
-            >> printStr( "2\n" )
-            >> setPosition( rofi.getJoint( 1 ), deg90 )
-            >> printStr( "3\n" )
-            >> setPosition( rofi.getJoint( 2 ), deg90 )
-            >> printStr( "4\n" )
-            >> setPosition( rofi.getJoint( 0 ), 0 )
-            >> printStr( "5\n" )
-            >> setPosition( rofi.getJoint( 1 ), -deg90 )
-            >> printStr( "6\n" )
-            >> setPosition( rofi.getJoint( 2 ), -deg90 );
+    auto moveLoop = []( RoFI & rofi )
+        {
+            using std::to_string;
+            const std::string rofiName = "RoFI " + to_string( rofi.getId() ) + ": ";
+            auto moveSequence = printStr( rofiName + "1\n" )
+                    >> setPosition( rofi.getJoint( 0 ), 3.14 )
+                    >> printStr( rofiName + "2\n" )
+                    >> setPosition( rofi.getJoint( 1 ), deg90 )
+                    >> printStr( rofiName + "3\n" )
+                    >> setPosition( rofi.getJoint( 2 ), deg90 )
+                    >> printStr( rofiName + "4\n" )
+                    >> setPosition( rofi.getJoint( 0 ), 0 )
+                    >> printStr( rofiName + "5\n" )
+                    >> setPosition( rofi.getJoint( 1 ), -deg90 )
+                    >> printStr( rofiName + "6\n" )
+                    >> setPosition( rofi.getJoint( 2 ), -deg90 );
+            std::thread( loop( moveSequence ) ).detach();
+        };
 
-    auto loop1 = loop( sequence );
 
-    loop1();
+    RoFI & localRofi = RoFI::getLocalRoFI();
+    RoFI & otherRofi = RoFI::getRemoteRoFI( 1 );
+
+    moveLoop( localRofi );
+    moveLoop( otherRofi );
 
     while ( true )
         std::this_thread::sleep_for( std::chrono::seconds( 2 ) );
