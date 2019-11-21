@@ -16,15 +16,18 @@ public:
     static constexpr double maxJointSpeed = 0.012; // [m/s]
     static constexpr double maxJointForce = 1.5; // [Nm]
     static constexpr double positionPrecision = 0.0001;
+    static constexpr double minConnectionCosAngle = 0.9992; // cos of maximal angle when connection succeeds
+    static constexpr double maxConnectionCenterDistance = 0.004; // [m]
+    static constexpr double extendDistance = 0.006; // [m] min expanded distance to be concidered extended
 
     using PacketPtr = boost::shared_ptr< const rofi::messages::Packet >;
 
     enum class Position : signed char
     {
         Retracted = 0,
-        Extending = 1,
-        Extended = 2,
-        Connected = 3,
+        Retracting = 1,
+        Extending = 2,
+        Extended = 3,
     };
 
     RoFICoMPlugin() = default;
@@ -47,6 +50,8 @@ public:
     void sendPacket( const rofi::messages::Packet & packet );
     void onPacket( const PacketPtr & packet );
 
+    bool isConnected() const;
+
 private:
     using ConnectorCmdPtr = boost::shared_ptr< const rofi::messages::ConnectorCmd >;
     using ContactsMsgPtr = boost::shared_ptr< const msgs::Contacts >;
@@ -64,11 +69,11 @@ private:
     void retract();
 
     // Called while holding connectionMutex
-    void onExtended();
+    void startCommunication( physics::ModelPtr otherModel );
     // Called while holding connectionMutex
-    void onRetracted();
+    void createConnection( physics::LinkPtr otherConnectionLink );
     // Called while holding connectionMutex
-    void checkConnection();
+    void updateConnection();
     // Called while holding connectionMutex
     void endConnection();
 
@@ -79,7 +84,10 @@ private:
     physics::CollisionPtr getCollisionByScopedName( const std::string & collisionName ) const;
     rofi::messages::ConnectorResp getConnectorResp( rofi::messages::ConnectorCmd::Type cmdtype ) const;
 
-    bool canBeConnected( physics::ModelPtr otherConnector ) const;
+    bool canBeConnected( physics::LinkPtr otherConnectionLink ) const;
+    static physics::LinkPtr getConnectionLink( physics::ModelPtr roficom );
+
+    physics::JointPtr getConnectionJoint( physics::LinkPtr otherConnectionLink ) const;
 
     physics::ModelPtr _model;
 
@@ -91,8 +99,10 @@ private:
     transport::SubscriberPtr _subSensor;
 
     physics::JointPtr extendJoint;
+    physics::LinkPtr thisConnectionLink;
     double currentVelocity = 0.0;
-    physics::JointPtr connection;
+    physics::JointPtr connectionJoint;
+    physics::LinkPtr connectedWith;
 
     int connectorNumber = 0;
 
