@@ -20,11 +20,13 @@ namespace rofi
 
         Joint RoFI::getJoint( int index )
         {
+            assert( rofiData );
             return rofiData->getJoint( index );
         }
 
         Connector RoFI::getConnector( int index )
         {
+            assert( rofiData );
             return rofiData->getConnector( index );
         }
 

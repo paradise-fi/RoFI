@@ -1,20 +1,31 @@
 #include "roficomPlugin.hpp"
 
+#include <cassert>
+
 #include "../common/utils.hpp"
 
 namespace gazebo
 {
 void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
 {
-    _model = model;
+    _model = std::move( model );
+    assert( _model );
     gzmsg << "The RoFICoM plugin is attached to model [" << _model->GetName() << "]\n";
 
     extendJoint = _model->GetJoint( "extendJoint" );
     if ( !extendJoint )
     {
+        extendJoint = _model->GetJoint( "RoFICoM::extendJoint" );
+    }
+    if ( !extendJoint )
+    {
         for ( auto joint : _model->GetJoints() )
         {
             auto name = joint->GetName();
+            if ( name.size() < 13 )
+            {
+                continue;
+            }
             if ( name.compare( name.size() - 13, 13, "::extendJoint" ) == 0 )
             {
                 if ( extendJoint )
@@ -28,13 +39,9 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
     }
     if ( !extendJoint )
     {
-        gzerr << "Could not get any joint from RoFICoM plugin\n";
-        gzerr << "Available joint (" << _model->GetJointCount() << ")\n";
-        for ( auto joint : _model->GetJoints() )
-        {
-            gzerr << "Joint: '" << joint->GetName() << "'\n";
-        }
-        return;
+        gzerr << "Could not get extend joint in RoFICoM plugin\n";
+
+        throw std::runtime_error( "Could not get extend joint in RoFICoM plugin" );
     }
 
     extendJoint->SetParam( "fmax", 0, maxJointForce );
@@ -100,11 +107,7 @@ void RoFICoMPlugin::onPacket( const RoFICoMPlugin::PacketPtr & packet )
 
 void RoFICoMPlugin::initCommunication()
 {
-    if ( !_model )
-    {
-        gzerr << "Model has to be set before initializing sensor communication\n";
-        return;
-    }
+    assert( _model );
 
     if ( _node )
     {
@@ -112,29 +115,20 @@ void RoFICoMPlugin::initCommunication()
     }
 
     _node = boost::make_shared< transport::Node >();
-    if ( !_node )
-    {
-        gzerr << "Could not create new Node\n";
-        throw std::runtime_error( "Could not create new Node" );
-    }
+    assert( _node );
     _node->Init( getElemPath( _model ) );
 
     _pubRofi = _node->Advertise< rofi::messages::ConnectorResp >( "~/response" );
     _subRofi = _node->Subscribe( "~/control", & RoFICoMPlugin::onConnectorCmd, this );
-    if ( !_subRofi || !_pubRofi )
-    {
-        gzerr << "Subcriber or Publisher not created\n";
-        throw std::runtime_error( "Subcriber or Publisher not created" );
-    }
+    assert( _pubRofi );
+    assert( _subRofi );
 }
 
 void RoFICoMPlugin::initSensorCommunication()
 {
-    if ( !_node || !_node->IsInitialized() )
-    {
-        gzerr << "Initialize communication before initializing sensor communication\n";
-        return;
-    }
+    assert( _model );
+    assert( _node );
+    assert( _node->IsInitialized() );
 
     auto sensors = _model->SensorScopedName( "roficom-sensor" );
 
