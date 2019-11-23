@@ -118,6 +118,11 @@
                         <scale>0.001 0.001 0.001</scale>
                     </mesh>
                 </geometry>
+                <surface>
+                    <contact>
+                        <collide_bitmask>0x0F</collide_bitmask>
+                    </contact>
+                </surface>
             </collision>
             <visual name="shoeA-visual">
                 <pose frame="">0.0265 0.05 -0 0 -0 0</pose>
@@ -166,6 +171,11 @@
                         <scale>0.001 0.001 0.001</scale>
                     </mesh>
                 </geometry>
+                <surface>
+                    <contact>
+                        <collide_bitmask>0x0F</collide_bitmask>
+                    </contact>
+                </surface>
             </collision>
             <visual name="shoeB-visual">
                 <pose frame="">0.0265 -0.05 -0.0015 0 -0 0</pose>
