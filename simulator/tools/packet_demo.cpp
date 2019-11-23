@@ -77,57 +77,30 @@ auto onPacketCallback( std::string prefix )
 int main( int argc, char **argv )
 {
     using rofi::hal::RoFI;
+    using namespace std::string_literals;
 
     gazebo::client::setup( argc, argv );
 
     RoFI & localRofi = RoFI::getLocalRoFI();
-    try
-    {
-        using std::to_string;
-        int i = 0;
-        while ( true )
-        {
-            localRofi.getConnector( i ).connect();
-            auto callback = onPacketCallback( "localRoFI connector " + to_string( i ) + ":\n" );
-            localRofi.getConnector( i ).onPacket( std::move( callback ) );
-            auto pingLoop = []( rofi::hal::Connector connector ){
-                while ( true )
-                {
-                    sendPacket( connector, "ping" );
-                    std::this_thread::sleep_for( std::chrono::seconds( 6 ) );
-                }
-            };
-            std::thread( std::move( pingLoop ), localRofi.getConnector( i ) ).detach();
-            i++;
-            std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
-        }
-    }
-    catch ( const std::exception & e ) {}
-
     RoFI & otherRofi = RoFI::getRemoteRoFI( 1 );
-    try
+    auto connectors = { std::make_pair( localRofi.getConnector( 0 ), "Local RoFI (c. 0)"s ),
+                        std::make_pair( otherRofi.getConnector( 3 ), "Remote RoFI (c. 3)"s ) };
+    for ( auto [ connector, name ] : connectors )
     {
-        using std::to_string;
-        int i = 0;
-        while ( true )
-        {
-            otherRofi.getConnector( i ).connect();
-            auto callback = onPacketCallback( "otherRoFI connector " + to_string( i ) + ":\n" );
-            otherRofi.getConnector( i ).onPacket( std::move( callback ) );
-            auto pingLoop = []( rofi::hal::Connector connector ){
+        connector.connect();
+        printStr( "Extending " + name );
+        connector.onPacket( onPacketCallback( name + " got message:\n" ) );
+        auto pingLoop = [ name = std::move( name ) ]( rofi::hal::Connector connector )
+            {
                 while ( true )
                 {
-                    sendPacket( connector, "ping" );
-                    std::this_thread::sleep_for( std::chrono::seconds( 6 ) );
+                    std::this_thread::sleep_for( std::chrono::seconds( 4 ) );
+                    sendPacket( connector, "ping from " + name );
                 }
             };
-            std::thread( std::move( pingLoop ), otherRofi.getConnector( i ) ).detach();
-            i++;
-            std::this_thread::sleep_for( std::chrono::milliseconds( 500 ) );
-        }
+        std::thread( std::move( pingLoop ), connector ).detach();
+        std::this_thread::sleep_for( std::chrono::seconds( 2 ) );
     }
-    catch ( const std::exception & e ) {}
-
 
     while ( true )
         std::this_thread::sleep_for( std::chrono::seconds( 2 ) );

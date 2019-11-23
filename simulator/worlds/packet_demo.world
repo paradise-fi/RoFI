@@ -1,0 +1,3013 @@
+<sdf version='1.6'>
+  <world name='default'>
+    <light name='sun' type='directional'>
+      <cast_shadows>1</cast_shadows>
+      <pose frame=''>0 0 10 0 -0 0</pose>
+      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <specular>0.2 0.2 0.2 1</specular>
+      <attenuation>
+        <range>1000</range>
+        <constant>0.9</constant>
+        <linear>0.01</linear>
+        <quadratic>0.001</quadratic>
+      </attenuation>
+      <direction>-0.5 0.1 -0.9</direction>
+    </light>
+    <model name='ground_plane'>
+      <static>1</static>
+      <link name='link'>
+        <collision name='collision'>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <surface>
+            <friction>
+              <ode>
+                <mu>100</mu>
+                <mu2>50</mu2>
+              </ode>
+              <torsional>
+                <ode/>
+              </torsional>
+            </friction>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+          </surface>
+          <max_contacts>10</max_contacts>
+        </collision>
+        <visual name='visual'>
+          <cast_shadows>0</cast_shadows>
+          <geometry>
+            <plane>
+              <normal>0 0 1</normal>
+              <size>100 100</size>
+            </plane>
+          </geometry>
+          <material>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Grey</name>
+            </script>
+          </material>
+        </visual>
+        <self_collide>0</self_collide>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+    </model>
+    <gravity>0 0 -9.8</gravity>
+    <magnetic_field>6e-06 2.3e-05 -4.2e-05</magnetic_field>
+    <atmosphere type='adiabatic'/>
+    <physics name='default_physics' default='0' type='ode'>
+      <max_step_size>0.001</max_step_size>
+      <real_time_factor>1</real_time_factor>
+      <real_time_update_rate>1000</real_time_update_rate>
+    </physics>
+    <scene>
+      <ambient>0.4 0.4 0.4 1</ambient>
+      <background>0.7 0.7 0.7 1</background>
+      <shadows>1</shadows>
+    </scene>
+    <wind/>
+    <spherical_coordinates>
+      <surface_model>EARTH_WGS84</surface_model>
+      <latitude_deg>0</latitude_deg>
+      <longitude_deg>0</longitude_deg>
+      <elevation>0</elevation>
+      <heading_deg>0</heading_deg>
+    </spherical_coordinates>
+    <model name='universalModule'>
+      <link name='bodyA'>
+        <self_collide>1</self_collide>
+        <inertial>
+          <pose frame=''>0 -0.029663 0 0 -0 0</pose>
+          <mass>0.201058</mass>
+          <inertia>
+            <ixx>0.00016</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.00013</iyy>
+            <iyz>0</iyz>
+            <izz>0.000158</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual-bodyA'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/model.obj</uri>
+              <scale>0.001 0.001 0.001</scale>
+              <submesh>
+                <name>bodyA</name>
+              </submesh>
+            </mesh>
+          </geometry>
+          <material>
+            <lighting>1</lighting>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/DarkGrey</name>
+            </script>
+            <shader type='pixel'>
+              <normal_map>__default__</normal_map>
+            </shader>
+          </material>
+        </visual>
+        <collision name='collision-bodyA'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/bodyA.stl</uri>
+              <scale>0.001 0.001 0.001</scale>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <link name='bodyB'>
+        <self_collide>1</self_collide>
+        <inertial>
+          <pose frame=''>0 0.029663 0 0 -0 0</pose>
+          <mass>0.201058</mass>
+          <inertia>
+            <ixx>0.00016</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.00013</iyy>
+            <iyz>0</iyz>
+            <izz>0.000158</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual-bodyB'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/model.obj</uri>
+              <scale>0.001 0.001 0.001</scale>
+              <submesh>
+                <name>bodyB</name>
+              </submesh>
+            </mesh>
+          </geometry>
+          <material>
+            <lighting>1</lighting>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/DarkGrey</name>
+            </script>
+            <shader type='pixel'>
+              <normal_map>__default__</normal_map>
+            </shader>
+          </material>
+        </visual>
+        <collision name='collision-bodyB'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/bodyB.stl</uri>
+              <scale>0.001 0.001 0.001</scale>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <link name='shoeA'>
+        <self_collide>0</self_collide>
+        <pose frame=''>-0.0265 -0.05 0 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.0265 -0.012973 0 0 -0 0</pose>
+          <mass>0.089474</mass>
+          <inertia>
+            <ixx>5.9e-05</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.000103</iyy>
+            <iyz>0</iyz>
+            <izz>0.000117</izz>
+          </inertia>
+        </inertial>
+        <collision name='shoeA-collision'>
+          <pose frame=''>0.0265 0.05 -0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/shoeA.stl</uri>
+              <scale>0.001 0.001 0.001</scale>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='shoeA-visual'>
+          <pose frame=''>0.0265 0.05 -0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/model.obj</uri>
+              <scale>0.001 0.001 0.001</scale>
+              <submesh>
+                <name>shoeA</name>
+              </submesh>
+            </mesh>
+          </geometry>
+          <material>
+            <lighting>1</lighting>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Yellow</name>
+            </script>
+            <shader type='pixel'>
+              <normal_map>__default__</normal_map>
+            </shader>
+          </material>
+        </visual>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <link name='shoeB'>
+        <self_collide>0</self_collide>
+        <pose frame=''>-0.0265 0.05 0.0015 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.0265 0.012973 0 0 -0 0</pose>
+          <mass>0.089474</mass>
+          <inertia>
+            <ixx>5.9e-05</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.000103</iyy>
+            <iyz>0</iyz>
+            <izz>0.000117</izz>
+          </inertia>
+        </inertial>
+        <collision name='shoeB-collision'>
+          <pose frame=''>0.0265 -0.05 -0.0015 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/shoeB.stl</uri>
+              <scale>0.001 0.001 0.001</scale>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='shoeB-visual'>
+          <pose frame=''>0.0265 -0.05 -0.0015 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/model.obj</uri>
+              <scale>0.001 0.001 0.001</scale>
+              <submesh>
+                <name>shoeB</name>
+              </submesh>
+            </mesh>
+          </geometry>
+          <material>
+            <lighting>1</lighting>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Yellow</name>
+            </script>
+            <shader type='pixel'>
+              <normal_map>__default__</normal_map>
+            </shader>
+          </material>
+        </visual>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <model name='connectorAplusX'>
+        <pose frame=''>0.043 -0.05 0 0 1.57 0</pose>
+        <self_collide>0</self_collide>
+        <link name='RoFICoM::outer'>
+          <pose frame=''>0 0 -0.008 0 -0 0</pose>
+          <inertial>
+            <mass>0.009155</mass>
+            <inertia>
+              <ixx>1.62578e-06</ixx>
+              <iyy>1.62578e-06</iyy>
+              <izz>2.86094e-06</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='outer-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <link name='RoFICoM::inner'>
+          <pose frame=''>0 0 -0.0035 0 -0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.3633e-07</ixx>
+              <iyy>1.3633e-07</iyy>
+              <izz>2.645e-07</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='inner-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <sensor name='roficom-sensor' type='contact'>
+            <contact>
+              <collision>inner-collision</collision>
+              <topic>__default_topic__</topic>
+            </contact>
+          </sensor>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::extendJoint' type='prismatic'>
+          <parent>RoFICoM::outer</parent>
+          <child>RoFICoM::inner</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>0</lower>
+              <upper>0.007</upper>
+              <effort>1.5</effort>
+              <velocity>0.012</velocity>
+            </limit>
+            <initial_position>0</initial_position>
+            <dynamics>
+              <friction>0.3</friction>
+              <spring_reference>0</spring_reference>
+              <spring_stiffness>0</spring_stiffness>
+            </dynamics>
+            <use_parent_model_frame>1</use_parent_model_frame>
+          </axis>
+        </joint>
+        <link name='RoFICoM::connectionLink'>
+          <gravity>0</gravity>
+          <self_collide>0</self_collide>
+          <inertial>
+            <mass>0.0001</mass>
+            <inertia>
+              <ixx>1e-12</ixx>
+              <iyy>1e-12</iyy>
+              <izz>1e-12</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::connectionJoint' type='fixed'>
+          <parent>RoFICoM::inner</parent>
+          <child>RoFICoM::connectionLink</child>
+        </joint>
+        <plugin name='roficom' filename='libroficomPlugin.so'/>
+      </model>
+      <model name='connectorAminusZ'>
+        <pose frame=''>0 -0.093 0 1.57 -0 0</pose>
+        <self_collide>0</self_collide>
+        <link name='RoFICoM::outer'>
+          <pose frame=''>0 0 -0.008 0 -0 0</pose>
+          <inertial>
+            <mass>0.009155</mass>
+            <inertia>
+              <ixx>1.62578e-06</ixx>
+              <iyy>1.62578e-06</iyy>
+              <izz>2.86094e-06</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='outer-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <link name='RoFICoM::inner'>
+          <pose frame=''>0 0 -0.0035 0 -0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.3633e-07</ixx>
+              <iyy>1.3633e-07</iyy>
+              <izz>2.645e-07</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='inner-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <sensor name='roficom-sensor' type='contact'>
+            <contact>
+              <collision>inner-collision</collision>
+              <topic>__default_topic__</topic>
+            </contact>
+          </sensor>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::extendJoint' type='prismatic'>
+          <parent>RoFICoM::outer</parent>
+          <child>RoFICoM::inner</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>0</lower>
+              <upper>0.007</upper>
+              <effort>1.5</effort>
+              <velocity>0.012</velocity>
+            </limit>
+            <initial_position>0</initial_position>
+            <dynamics>
+              <friction>0.3</friction>
+              <spring_reference>0</spring_reference>
+              <spring_stiffness>0</spring_stiffness>
+            </dynamics>
+            <use_parent_model_frame>1</use_parent_model_frame>
+          </axis>
+        </joint>
+        <link name='RoFICoM::connectionLink'>
+          <gravity>0</gravity>
+          <self_collide>0</self_collide>
+          <inertial>
+            <mass>0.0001</mass>
+            <inertia>
+              <ixx>1e-12</ixx>
+              <iyy>1e-12</iyy>
+              <izz>1e-12</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::connectionJoint' type='fixed'>
+          <parent>RoFICoM::inner</parent>
+          <child>RoFICoM::connectionLink</child>
+        </joint>
+        <plugin name='roficom' filename='libroficomPlugin.so'/>
+      </model>
+      <model name='connectorAminusX'>
+        <pose frame=''>-0.043 -0.05 0 0 -1.57 0</pose>
+        <self_collide>0</self_collide>
+        <link name='RoFICoM::outer'>
+          <pose frame=''>0 0 -0.008 0 -0 0</pose>
+          <inertial>
+            <mass>0.009155</mass>
+            <inertia>
+              <ixx>1.62578e-06</ixx>
+              <iyy>1.62578e-06</iyy>
+              <izz>2.86094e-06</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='outer-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <link name='RoFICoM::inner'>
+          <pose frame=''>0 0 -0.0035 0 -0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.3633e-07</ixx>
+              <iyy>1.3633e-07</iyy>
+              <izz>2.645e-07</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='inner-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <sensor name='roficom-sensor' type='contact'>
+            <contact>
+              <collision>inner-collision</collision>
+              <topic>__default_topic__</topic>
+            </contact>
+          </sensor>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::extendJoint' type='prismatic'>
+          <parent>RoFICoM::outer</parent>
+          <child>RoFICoM::inner</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>0</lower>
+              <upper>0.007</upper>
+              <effort>1.5</effort>
+              <velocity>0.012</velocity>
+            </limit>
+            <initial_position>0</initial_position>
+            <dynamics>
+              <friction>0.3</friction>
+              <spring_reference>0</spring_reference>
+              <spring_stiffness>0</spring_stiffness>
+            </dynamics>
+            <use_parent_model_frame>1</use_parent_model_frame>
+          </axis>
+        </joint>
+        <link name='RoFICoM::connectionLink'>
+          <gravity>0</gravity>
+          <self_collide>0</self_collide>
+          <inertial>
+            <mass>0.0001</mass>
+            <inertia>
+              <ixx>1e-12</ixx>
+              <iyy>1e-12</iyy>
+              <izz>1e-12</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::connectionJoint' type='fixed'>
+          <parent>RoFICoM::inner</parent>
+          <child>RoFICoM::connectionLink</child>
+        </joint>
+        <plugin name='roficom' filename='libroficomPlugin.so'/>
+      </model>
+      <model name='connectorBplusX'>
+        <pose frame=''>-0.043 0.051 0.0015 0 -1.57 0</pose>
+        <self_collide>0</self_collide>
+        <link name='RoFICoM::outer'>
+          <pose frame=''>0 0 -0.008 0 -0 0</pose>
+          <inertial>
+            <mass>0.009155</mass>
+            <inertia>
+              <ixx>1.62578e-06</ixx>
+              <iyy>1.62578e-06</iyy>
+              <izz>2.86094e-06</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='outer-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <link name='RoFICoM::inner'>
+          <pose frame=''>0 0 -0.0035 0 -0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.3633e-07</ixx>
+              <iyy>1.3633e-07</iyy>
+              <izz>2.645e-07</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='inner-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <sensor name='roficom-sensor' type='contact'>
+            <contact>
+              <collision>inner-collision</collision>
+              <topic>__default_topic__</topic>
+            </contact>
+          </sensor>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::extendJoint' type='prismatic'>
+          <parent>RoFICoM::outer</parent>
+          <child>RoFICoM::inner</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>0</lower>
+              <upper>0.007</upper>
+              <effort>1.5</effort>
+              <velocity>0.012</velocity>
+            </limit>
+            <initial_position>0</initial_position>
+            <dynamics>
+              <friction>0.3</friction>
+              <spring_reference>0</spring_reference>
+              <spring_stiffness>0</spring_stiffness>
+            </dynamics>
+            <use_parent_model_frame>1</use_parent_model_frame>
+          </axis>
+        </joint>
+        <link name='RoFICoM::connectionLink'>
+          <gravity>0</gravity>
+          <self_collide>0</self_collide>
+          <inertial>
+            <mass>0.0001</mass>
+            <inertia>
+              <ixx>1e-12</ixx>
+              <iyy>1e-12</iyy>
+              <izz>1e-12</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::connectionJoint' type='fixed'>
+          <parent>RoFICoM::inner</parent>
+          <child>RoFICoM::connectionLink</child>
+        </joint>
+        <plugin name='roficom' filename='libroficomPlugin.so'/>
+      </model>
+      <model name='connectorBminusZ'>
+        <pose frame=''>0 0.094 0.0015 -1.57 -0 0</pose>
+        <self_collide>0</self_collide>
+        <link name='RoFICoM::outer'>
+          <pose frame=''>0 0 -0.008 0 -0 0</pose>
+          <inertial>
+            <mass>0.009155</mass>
+            <inertia>
+              <ixx>1.62578e-06</ixx>
+              <iyy>1.62578e-06</iyy>
+              <izz>2.86094e-06</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='outer-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <link name='RoFICoM::inner'>
+          <pose frame=''>0 0 -0.0035 0 -0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.3633e-07</ixx>
+              <iyy>1.3633e-07</iyy>
+              <izz>2.645e-07</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='inner-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <sensor name='roficom-sensor' type='contact'>
+            <contact>
+              <collision>inner-collision</collision>
+              <topic>__default_topic__</topic>
+            </contact>
+          </sensor>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::extendJoint' type='prismatic'>
+          <parent>RoFICoM::outer</parent>
+          <child>RoFICoM::inner</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>0</lower>
+              <upper>0.007</upper>
+              <effort>1.5</effort>
+              <velocity>0.012</velocity>
+            </limit>
+            <initial_position>0</initial_position>
+            <dynamics>
+              <friction>0.3</friction>
+              <spring_reference>0</spring_reference>
+              <spring_stiffness>0</spring_stiffness>
+            </dynamics>
+            <use_parent_model_frame>1</use_parent_model_frame>
+          </axis>
+        </joint>
+        <link name='RoFICoM::connectionLink'>
+          <gravity>0</gravity>
+          <self_collide>0</self_collide>
+          <inertial>
+            <mass>0.0001</mass>
+            <inertia>
+              <ixx>1e-12</ixx>
+              <iyy>1e-12</iyy>
+              <izz>1e-12</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::connectionJoint' type='fixed'>
+          <parent>RoFICoM::inner</parent>
+          <child>RoFICoM::connectionLink</child>
+        </joint>
+        <plugin name='roficom' filename='libroficomPlugin.so'/>
+      </model>
+      <model name='connectorBminusX'>
+        <pose frame=''>0.043 0.051 0.0015 0 1.57 0</pose>
+        <self_collide>0</self_collide>
+        <link name='RoFICoM::outer'>
+          <pose frame=''>0 0 -0.008 0 -0 0</pose>
+          <inertial>
+            <mass>0.009155</mass>
+            <inertia>
+              <ixx>1.62578e-06</ixx>
+              <iyy>1.62578e-06</iyy>
+              <izz>2.86094e-06</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='outer-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <link name='RoFICoM::inner'>
+          <pose frame=''>0 0 -0.0035 0 -0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.3633e-07</ixx>
+              <iyy>1.3633e-07</iyy>
+              <izz>2.645e-07</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='inner-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <sensor name='roficom-sensor' type='contact'>
+            <contact>
+              <collision>inner-collision</collision>
+              <topic>__default_topic__</topic>
+            </contact>
+          </sensor>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::extendJoint' type='prismatic'>
+          <parent>RoFICoM::outer</parent>
+          <child>RoFICoM::inner</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>0</lower>
+              <upper>0.007</upper>
+              <effort>1.5</effort>
+              <velocity>0.012</velocity>
+            </limit>
+            <initial_position>0</initial_position>
+            <dynamics>
+              <friction>0.3</friction>
+              <spring_reference>0</spring_reference>
+              <spring_stiffness>0</spring_stiffness>
+            </dynamics>
+            <use_parent_model_frame>1</use_parent_model_frame>
+          </axis>
+        </joint>
+        <link name='RoFICoM::connectionLink'>
+          <gravity>0</gravity>
+          <self_collide>0</self_collide>
+          <inertial>
+            <mass>0.0001</mass>
+            <inertia>
+              <ixx>1e-12</ixx>
+              <iyy>1e-12</iyy>
+              <izz>1e-12</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::connectionJoint' type='fixed'>
+          <parent>RoFICoM::inner</parent>
+          <child>RoFICoM::connectionLink</child>
+        </joint>
+        <plugin name='roficom' filename='libroficomPlugin.so'/>
+      </model>
+      <joint name='bodyRev' type='revolute'>
+        <child>bodyB</child>
+        <parent>bodyA</parent>
+        <axis>
+          <xyz>0 0.01 0</xyz>
+          <limit>
+            <velocity>6.545</velocity>
+            <effort>1.5</effort>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <friction>0.3</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+      <joint name='shoeARev' type='revolute'>
+        <child>shoeA</child>
+        <parent>bodyA</parent>
+        <axis>
+          <xyz>-0.01 0 0</xyz>
+          <limit>
+            <lower>-1.5708</lower>
+            <upper>1.5708</upper>
+            <velocity>6.545</velocity>
+            <effort>1.5</effort>
+          </limit>
+          <dynamics>
+            <friction>0.3</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+      <joint name='shoeBRev' type='revolute'>
+        <child>shoeB</child>
+        <parent>bodyB</parent>
+        <axis>
+          <xyz>0.01 0 0</xyz>
+          <limit>
+            <lower>-1.5708</lower>
+            <upper>1.5708</upper>
+            <velocity>6.545</velocity>
+            <effort>1.5</effort>
+          </limit>
+          <dynamics>
+            <friction>0.3</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+      <joint name='connectorAplusX' type='fixed'>
+        <child>connectorAplusX::RoFICoM::outer</child>
+        <parent>shoeA</parent>
+      </joint>
+      <joint name='connectorAminusZ' type='fixed'>
+        <child>connectorAminusZ::RoFICoM::outer</child>
+        <parent>shoeA</parent>
+      </joint>
+      <joint name='connectorAminusX' type='fixed'>
+        <child>connectorAminusX::RoFICoM::outer</child>
+        <parent>shoeA</parent>
+      </joint>
+      <joint name='connectorBplusX' type='fixed'>
+        <child>connectorBplusX::RoFICoM::outer</child>
+        <parent>shoeB</parent>
+      </joint>
+      <joint name='connectorBminusZ' type='fixed'>
+        <child>connectorBminusZ::RoFICoM::outer</child>
+        <parent>shoeB</parent>
+      </joint>
+      <joint name='connectorBminusX' type='fixed'>
+        <child>connectorBminusX::RoFICoM::outer</child>
+        <parent>shoeB</parent>
+      </joint>
+      <plugin name='control' filename='libuniversalModulePlugin.so'/>
+      <pose frame=''>-0.111452 0.059007 0 0 -0 0</pose>
+    </model>
+    <model name='universalModule_0'>
+      <link name='bodyA'>
+        <self_collide>1</self_collide>
+        <inertial>
+          <pose frame=''>0 -0.029663 0 0 -0 0</pose>
+          <mass>0.201058</mass>
+          <inertia>
+            <ixx>0.00016</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.00013</iyy>
+            <iyz>0</iyz>
+            <izz>0.000158</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual-bodyA'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/model.obj</uri>
+              <scale>0.001 0.001 0.001</scale>
+              <submesh>
+                <name>bodyA</name>
+              </submesh>
+            </mesh>
+          </geometry>
+          <material>
+            <lighting>1</lighting>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/DarkGrey</name>
+            </script>
+            <shader type='pixel'>
+              <normal_map>__default__</normal_map>
+            </shader>
+          </material>
+        </visual>
+        <collision name='collision-bodyA'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/bodyA.stl</uri>
+              <scale>0.001 0.001 0.001</scale>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <link name='bodyB'>
+        <self_collide>1</self_collide>
+        <inertial>
+          <pose frame=''>0 0.029663 0 0 -0 0</pose>
+          <mass>0.201058</mass>
+          <inertia>
+            <ixx>0.00016</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.00013</iyy>
+            <iyz>0</iyz>
+            <izz>0.000158</izz>
+          </inertia>
+        </inertial>
+        <visual name='visual-bodyB'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/model.obj</uri>
+              <scale>0.001 0.001 0.001</scale>
+              <submesh>
+                <name>bodyB</name>
+              </submesh>
+            </mesh>
+          </geometry>
+          <material>
+            <lighting>1</lighting>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/DarkGrey</name>
+            </script>
+            <shader type='pixel'>
+              <normal_map>__default__</normal_map>
+            </shader>
+          </material>
+        </visual>
+        <collision name='collision-bodyB'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/bodyB.stl</uri>
+              <scale>0.001 0.001 0.001</scale>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <link name='shoeA'>
+        <self_collide>0</self_collide>
+        <pose frame=''>-0.0265 -0.05 0 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.0265 -0.012973 0 0 -0 0</pose>
+          <mass>0.089474</mass>
+          <inertia>
+            <ixx>5.9e-05</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.000103</iyy>
+            <iyz>0</iyz>
+            <izz>0.000117</izz>
+          </inertia>
+        </inertial>
+        <collision name='shoeA-collision'>
+          <pose frame=''>0.0265 0.05 -0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/shoeA.stl</uri>
+              <scale>0.001 0.001 0.001</scale>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='shoeA-visual'>
+          <pose frame=''>0.0265 0.05 -0 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/model.obj</uri>
+              <scale>0.001 0.001 0.001</scale>
+              <submesh>
+                <name>shoeA</name>
+              </submesh>
+            </mesh>
+          </geometry>
+          <material>
+            <lighting>1</lighting>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Yellow</name>
+            </script>
+            <shader type='pixel'>
+              <normal_map>__default__</normal_map>
+            </shader>
+          </material>
+        </visual>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <link name='shoeB'>
+        <self_collide>0</self_collide>
+        <pose frame=''>-0.0265 0.05 0.0015 0 -0 0</pose>
+        <inertial>
+          <pose frame=''>0.0265 0.012973 0 0 -0 0</pose>
+          <mass>0.089474</mass>
+          <inertia>
+            <ixx>5.9e-05</ixx>
+            <ixy>0</ixy>
+            <ixz>0</ixz>
+            <iyy>0.000103</iyy>
+            <iyz>0</iyz>
+            <izz>0.000117</izz>
+          </inertia>
+        </inertial>
+        <collision name='shoeB-collision'>
+          <pose frame=''>0.0265 -0.05 -0.0015 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/shoeB.stl</uri>
+              <scale>0.001 0.001 0.001</scale>
+            </mesh>
+          </geometry>
+          <max_contacts>10</max_contacts>
+          <surface>
+            <contact>
+              <ode/>
+            </contact>
+            <bounce/>
+            <friction>
+              <torsional>
+                <ode/>
+              </torsional>
+              <ode/>
+            </friction>
+          </surface>
+        </collision>
+        <visual name='shoeB-visual'>
+          <pose frame=''>0.0265 -0.05 -0.0015 0 -0 0</pose>
+          <geometry>
+            <mesh>
+              <uri>model://universalModule/meshes/model.obj</uri>
+              <scale>0.001 0.001 0.001</scale>
+              <submesh>
+                <name>shoeB</name>
+              </submesh>
+            </mesh>
+          </geometry>
+          <material>
+            <lighting>1</lighting>
+            <script>
+              <uri>file://media/materials/scripts/gazebo.material</uri>
+              <name>Gazebo/Yellow</name>
+            </script>
+            <shader type='pixel'>
+              <normal_map>__default__</normal_map>
+            </shader>
+          </material>
+        </visual>
+        <enable_wind>0</enable_wind>
+        <kinematic>0</kinematic>
+      </link>
+      <model name='connectorAplusX'>
+        <pose frame=''>0.043 -0.05 0 0 1.57 0</pose>
+        <self_collide>0</self_collide>
+        <link name='RoFICoM::outer'>
+          <pose frame=''>0 0 -0.008 0 -0 0</pose>
+          <inertial>
+            <mass>0.009155</mass>
+            <inertia>
+              <ixx>1.62578e-06</ixx>
+              <iyy>1.62578e-06</iyy>
+              <izz>2.86094e-06</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='outer-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <link name='RoFICoM::inner'>
+          <pose frame=''>0 0 -0.0035 0 -0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.3633e-07</ixx>
+              <iyy>1.3633e-07</iyy>
+              <izz>2.645e-07</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='inner-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <sensor name='roficom-sensor' type='contact'>
+            <contact>
+              <collision>inner-collision</collision>
+              <topic>__default_topic__</topic>
+            </contact>
+          </sensor>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::extendJoint' type='prismatic'>
+          <parent>RoFICoM::outer</parent>
+          <child>RoFICoM::inner</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>0</lower>
+              <upper>0.007</upper>
+              <effort>1.5</effort>
+              <velocity>0.012</velocity>
+            </limit>
+            <initial_position>0</initial_position>
+            <dynamics>
+              <friction>0.3</friction>
+              <spring_reference>0</spring_reference>
+              <spring_stiffness>0</spring_stiffness>
+            </dynamics>
+            <use_parent_model_frame>1</use_parent_model_frame>
+          </axis>
+        </joint>
+        <link name='RoFICoM::connectionLink'>
+          <gravity>0</gravity>
+          <self_collide>0</self_collide>
+          <inertial>
+            <mass>0.0001</mass>
+            <inertia>
+              <ixx>1e-12</ixx>
+              <iyy>1e-12</iyy>
+              <izz>1e-12</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::connectionJoint' type='fixed'>
+          <parent>RoFICoM::inner</parent>
+          <child>RoFICoM::connectionLink</child>
+        </joint>
+        <plugin name='roficom' filename='libroficomPlugin.so'/>
+      </model>
+      <model name='connectorAminusZ'>
+        <pose frame=''>0 -0.093 0 1.57 -0 0</pose>
+        <self_collide>0</self_collide>
+        <link name='RoFICoM::outer'>
+          <pose frame=''>0 0 -0.008 0 -0 0</pose>
+          <inertial>
+            <mass>0.009155</mass>
+            <inertia>
+              <ixx>1.62578e-06</ixx>
+              <iyy>1.62578e-06</iyy>
+              <izz>2.86094e-06</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='outer-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <link name='RoFICoM::inner'>
+          <pose frame=''>0 0 -0.0035 0 -0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.3633e-07</ixx>
+              <iyy>1.3633e-07</iyy>
+              <izz>2.645e-07</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='inner-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <sensor name='roficom-sensor' type='contact'>
+            <contact>
+              <collision>inner-collision</collision>
+              <topic>__default_topic__</topic>
+            </contact>
+          </sensor>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::extendJoint' type='prismatic'>
+          <parent>RoFICoM::outer</parent>
+          <child>RoFICoM::inner</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>0</lower>
+              <upper>0.007</upper>
+              <effort>1.5</effort>
+              <velocity>0.012</velocity>
+            </limit>
+            <initial_position>0</initial_position>
+            <dynamics>
+              <friction>0.3</friction>
+              <spring_reference>0</spring_reference>
+              <spring_stiffness>0</spring_stiffness>
+            </dynamics>
+            <use_parent_model_frame>1</use_parent_model_frame>
+          </axis>
+        </joint>
+        <link name='RoFICoM::connectionLink'>
+          <gravity>0</gravity>
+          <self_collide>0</self_collide>
+          <inertial>
+            <mass>0.0001</mass>
+            <inertia>
+              <ixx>1e-12</ixx>
+              <iyy>1e-12</iyy>
+              <izz>1e-12</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::connectionJoint' type='fixed'>
+          <parent>RoFICoM::inner</parent>
+          <child>RoFICoM::connectionLink</child>
+        </joint>
+        <plugin name='roficom' filename='libroficomPlugin.so'/>
+      </model>
+      <model name='connectorAminusX'>
+        <pose frame=''>-0.043 -0.05 0 0 -1.57 0</pose>
+        <self_collide>0</self_collide>
+        <link name='RoFICoM::outer'>
+          <pose frame=''>0 0 -0.008 0 -0 0</pose>
+          <inertial>
+            <mass>0.009155</mass>
+            <inertia>
+              <ixx>1.62578e-06</ixx>
+              <iyy>1.62578e-06</iyy>
+              <izz>2.86094e-06</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='outer-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <link name='RoFICoM::inner'>
+          <pose frame=''>0 0 -0.0035 0 -0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.3633e-07</ixx>
+              <iyy>1.3633e-07</iyy>
+              <izz>2.645e-07</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='inner-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <sensor name='roficom-sensor' type='contact'>
+            <contact>
+              <collision>inner-collision</collision>
+              <topic>__default_topic__</topic>
+            </contact>
+          </sensor>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::extendJoint' type='prismatic'>
+          <parent>RoFICoM::outer</parent>
+          <child>RoFICoM::inner</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>0</lower>
+              <upper>0.007</upper>
+              <effort>1.5</effort>
+              <velocity>0.012</velocity>
+            </limit>
+            <initial_position>0</initial_position>
+            <dynamics>
+              <friction>0.3</friction>
+              <spring_reference>0</spring_reference>
+              <spring_stiffness>0</spring_stiffness>
+            </dynamics>
+            <use_parent_model_frame>1</use_parent_model_frame>
+          </axis>
+        </joint>
+        <link name='RoFICoM::connectionLink'>
+          <gravity>0</gravity>
+          <self_collide>0</self_collide>
+          <inertial>
+            <mass>0.0001</mass>
+            <inertia>
+              <ixx>1e-12</ixx>
+              <iyy>1e-12</iyy>
+              <izz>1e-12</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::connectionJoint' type='fixed'>
+          <parent>RoFICoM::inner</parent>
+          <child>RoFICoM::connectionLink</child>
+        </joint>
+        <plugin name='roficom' filename='libroficomPlugin.so'/>
+      </model>
+      <model name='connectorBplusX'>
+        <pose frame=''>-0.043 0.051 0.0015 0 -1.57 0</pose>
+        <self_collide>0</self_collide>
+        <link name='RoFICoM::outer'>
+          <pose frame=''>0 0 -0.008 0 -0 0</pose>
+          <inertial>
+            <mass>0.009155</mass>
+            <inertia>
+              <ixx>1.62578e-06</ixx>
+              <iyy>1.62578e-06</iyy>
+              <izz>2.86094e-06</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='outer-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <link name='RoFICoM::inner'>
+          <pose frame=''>0 0 -0.0035 0 -0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.3633e-07</ixx>
+              <iyy>1.3633e-07</iyy>
+              <izz>2.645e-07</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='inner-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <sensor name='roficom-sensor' type='contact'>
+            <contact>
+              <collision>inner-collision</collision>
+              <topic>__default_topic__</topic>
+            </contact>
+          </sensor>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::extendJoint' type='prismatic'>
+          <parent>RoFICoM::outer</parent>
+          <child>RoFICoM::inner</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>0</lower>
+              <upper>0.007</upper>
+              <effort>1.5</effort>
+              <velocity>0.012</velocity>
+            </limit>
+            <initial_position>0</initial_position>
+            <dynamics>
+              <friction>0.3</friction>
+              <spring_reference>0</spring_reference>
+              <spring_stiffness>0</spring_stiffness>
+            </dynamics>
+            <use_parent_model_frame>1</use_parent_model_frame>
+          </axis>
+        </joint>
+        <link name='RoFICoM::connectionLink'>
+          <gravity>0</gravity>
+          <self_collide>0</self_collide>
+          <inertial>
+            <mass>0.0001</mass>
+            <inertia>
+              <ixx>1e-12</ixx>
+              <iyy>1e-12</iyy>
+              <izz>1e-12</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::connectionJoint' type='fixed'>
+          <parent>RoFICoM::inner</parent>
+          <child>RoFICoM::connectionLink</child>
+        </joint>
+        <plugin name='roficom' filename='libroficomPlugin.so'/>
+      </model>
+      <model name='connectorBminusZ'>
+        <pose frame=''>0 0.094 0.0015 -1.57 -0 0</pose>
+        <self_collide>0</self_collide>
+        <link name='RoFICoM::outer'>
+          <pose frame=''>0 0 -0.008 0 -0 0</pose>
+          <inertial>
+            <mass>0.009155</mass>
+            <inertia>
+              <ixx>1.62578e-06</ixx>
+              <iyy>1.62578e-06</iyy>
+              <izz>2.86094e-06</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='outer-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <link name='RoFICoM::inner'>
+          <pose frame=''>0 0 -0.0035 0 -0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.3633e-07</ixx>
+              <iyy>1.3633e-07</iyy>
+              <izz>2.645e-07</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='inner-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <sensor name='roficom-sensor' type='contact'>
+            <contact>
+              <collision>inner-collision</collision>
+              <topic>__default_topic__</topic>
+            </contact>
+          </sensor>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::extendJoint' type='prismatic'>
+          <parent>RoFICoM::outer</parent>
+          <child>RoFICoM::inner</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>0</lower>
+              <upper>0.007</upper>
+              <effort>1.5</effort>
+              <velocity>0.012</velocity>
+            </limit>
+            <initial_position>0</initial_position>
+            <dynamics>
+              <friction>0.3</friction>
+              <spring_reference>0</spring_reference>
+              <spring_stiffness>0</spring_stiffness>
+            </dynamics>
+            <use_parent_model_frame>1</use_parent_model_frame>
+          </axis>
+        </joint>
+        <link name='RoFICoM::connectionLink'>
+          <gravity>0</gravity>
+          <self_collide>0</self_collide>
+          <inertial>
+            <mass>0.0001</mass>
+            <inertia>
+              <ixx>1e-12</ixx>
+              <iyy>1e-12</iyy>
+              <izz>1e-12</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::connectionJoint' type='fixed'>
+          <parent>RoFICoM::inner</parent>
+          <child>RoFICoM::connectionLink</child>
+        </joint>
+        <plugin name='roficom' filename='libroficomPlugin.so'/>
+      </model>
+      <model name='connectorBminusX'>
+        <pose frame=''>0.043 0.051 0.0015 0 1.57 0</pose>
+        <self_collide>0</self_collide>
+        <link name='RoFICoM::outer'>
+          <pose frame=''>0 0 -0.008 0 -0 0</pose>
+          <inertial>
+            <mass>0.009155</mass>
+            <inertia>
+              <ixx>1.62578e-06</ixx>
+              <iyy>1.62578e-06</iyy>
+              <izz>2.86094e-06</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='outer-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.025</radius>
+                <length>0.016</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <link name='RoFICoM::inner'>
+          <pose frame=''>0 0 -0.0035 0 -0 0</pose>
+          <inertial>
+            <mass>0.001</mass>
+            <inertia>
+              <ixx>1.3633e-07</ixx>
+              <iyy>1.3633e-07</iyy>
+              <izz>2.645e-07</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <collision name='inner-collision'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <max_contacts>10</max_contacts>
+            <surface>
+              <contact>
+                <ode/>
+              </contact>
+              <bounce/>
+              <friction>
+                <torsional>
+                  <ode/>
+                </torsional>
+                <ode/>
+              </friction>
+            </surface>
+          </collision>
+          <visual name='visual'>
+            <geometry>
+              <cylinder>
+                <radius>0.023</radius>
+                <length>0.007</length>
+              </cylinder>
+            </geometry>
+            <material>
+              <script>
+                <uri>file://media/materials/scripts/gazebo.material</uri>
+                <name>Gazebo/DarkGrey</name>
+              </script>
+            </material>
+          </visual>
+          <sensor name='roficom-sensor' type='contact'>
+            <contact>
+              <collision>inner-collision</collision>
+              <topic>__default_topic__</topic>
+            </contact>
+          </sensor>
+          <self_collide>0</self_collide>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::extendJoint' type='prismatic'>
+          <parent>RoFICoM::outer</parent>
+          <child>RoFICoM::inner</child>
+          <axis>
+            <xyz>0 0 1</xyz>
+            <limit>
+              <lower>0</lower>
+              <upper>0.007</upper>
+              <effort>1.5</effort>
+              <velocity>0.012</velocity>
+            </limit>
+            <initial_position>0</initial_position>
+            <dynamics>
+              <friction>0.3</friction>
+              <spring_reference>0</spring_reference>
+              <spring_stiffness>0</spring_stiffness>
+            </dynamics>
+            <use_parent_model_frame>1</use_parent_model_frame>
+          </axis>
+        </joint>
+        <link name='RoFICoM::connectionLink'>
+          <gravity>0</gravity>
+          <self_collide>0</self_collide>
+          <inertial>
+            <mass>0.0001</mass>
+            <inertia>
+              <ixx>1e-12</ixx>
+              <iyy>1e-12</iyy>
+              <izz>1e-12</izz>
+              <ixy>0</ixy>
+              <ixz>0</ixz>
+              <iyz>0</iyz>
+            </inertia>
+            <pose frame=''>0 0 0 0 -0 0</pose>
+          </inertial>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <enable_wind>0</enable_wind>
+          <kinematic>0</kinematic>
+        </link>
+        <joint name='RoFICoM::connectionJoint' type='fixed'>
+          <parent>RoFICoM::inner</parent>
+          <child>RoFICoM::connectionLink</child>
+        </joint>
+        <plugin name='roficom' filename='libroficomPlugin.so'/>
+      </model>
+      <joint name='bodyRev' type='revolute'>
+        <child>bodyB</child>
+        <parent>bodyA</parent>
+        <axis>
+          <xyz>0 0.01 0</xyz>
+          <limit>
+            <velocity>6.545</velocity>
+            <effort>1.5</effort>
+            <lower>-1e+16</lower>
+            <upper>1e+16</upper>
+          </limit>
+          <dynamics>
+            <friction>0.3</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+      <joint name='shoeARev' type='revolute'>
+        <child>shoeA</child>
+        <parent>bodyA</parent>
+        <axis>
+          <xyz>-0.01 0 0</xyz>
+          <limit>
+            <lower>-1.5708</lower>
+            <upper>1.5708</upper>
+            <velocity>6.545</velocity>
+            <effort>1.5</effort>
+          </limit>
+          <dynamics>
+            <friction>0.3</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+      <joint name='shoeBRev' type='revolute'>
+        <child>shoeB</child>
+        <parent>bodyB</parent>
+        <axis>
+          <xyz>0.01 0 0</xyz>
+          <limit>
+            <lower>-1.5708</lower>
+            <upper>1.5708</upper>
+            <velocity>6.545</velocity>
+            <effort>1.5</effort>
+          </limit>
+          <dynamics>
+            <friction>0.3</friction>
+            <spring_reference>0</spring_reference>
+            <spring_stiffness>0</spring_stiffness>
+          </dynamics>
+          <use_parent_model_frame>1</use_parent_model_frame>
+        </axis>
+      </joint>
+      <joint name='connectorAplusX' type='fixed'>
+        <child>connectorAplusX::RoFICoM::outer</child>
+        <parent>shoeA</parent>
+      </joint>
+      <joint name='connectorAminusZ' type='fixed'>
+        <child>connectorAminusZ::RoFICoM::outer</child>
+        <parent>shoeA</parent>
+      </joint>
+      <joint name='connectorAminusX' type='fixed'>
+        <child>connectorAminusX::RoFICoM::outer</child>
+        <parent>shoeA</parent>
+      </joint>
+      <joint name='connectorBplusX' type='fixed'>
+        <child>connectorBplusX::RoFICoM::outer</child>
+        <parent>shoeB</parent>
+      </joint>
+      <joint name='connectorBminusZ' type='fixed'>
+        <child>connectorBminusZ::RoFICoM::outer</child>
+        <parent>shoeB</parent>
+      </joint>
+      <joint name='connectorBminusX' type='fixed'>
+        <child>connectorBminusX::RoFICoM::outer</child>
+        <parent>shoeB</parent>
+      </joint>
+      <plugin name='control' filename='libuniversalModulePlugin.so'/>
+      <pose frame=''>0.120518 -0.073118 0 0 -0 0</pose>
+    </model>
+    <state world_name='default'>
+      <sim_time>0 0</sim_time>
+      <real_time>0 0</real_time>
+      <wall_time>1574470146 389035100</wall_time>
+      <iterations>0</iterations>
+      <model name='ground_plane'>
+        <pose frame=''>0 0 0 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='link'>
+          <pose frame=''>0 0 0 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+      </model>
+      <model name='universalModule'>
+        <pose frame=''>-0.05 0.05 0.045 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='bodyA'>
+          <pose frame=''>-0.05 0.05 0.045 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='bodyB'>
+          <pose frame=''>-0.05 0.05 0.045 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='shoeA'>
+          <pose frame=''>-0.0765 0 0.045 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='shoeB'>
+          <pose frame=''>-0.0765 0.1 0.0465 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <model name='connectorAminusX'>
+          <pose frame=''>-0.093 0 0.045 0 -1.57 0</pose>
+          <scale>1 1 1</scale>
+          <link name='RoFICoM::connectionLink'>
+            <pose frame=''>-0.093 0 0.045 0 -1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::inner'>
+            <pose frame=''>-0.0895 0 0.044997 0 -1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::outer'>
+            <pose frame=''>-0.085 0 0.044994 0 -1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+        </model>
+        <model name='connectorAminusZ'>
+          <pose frame=''>-0.05 -0.043 0.045 1.57 -0 0</pose>
+          <scale>1 1 1</scale>
+          <link name='RoFICoM::connectionLink'>
+            <pose frame=''>-0.05 -0.043 0.045 1.57 -0 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::inner'>
+            <pose frame=''>-0.05 -0.0395 0.044997 1.57 -0 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::outer'>
+            <pose frame=''>-0.05 -0.035 0.044994 1.57 -0 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+        </model>
+        <model name='connectorAplusX'>
+          <pose frame=''>-0.007 0 0.045 0 1.57 0</pose>
+          <scale>1 1 1</scale>
+          <link name='RoFICoM::connectionLink'>
+            <pose frame=''>-0.007 0 0.045 0 1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::inner'>
+            <pose frame=''>-0.0105 0 0.044997 0 1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::outer'>
+            <pose frame=''>-0.015 0 0.044994 0 1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+        </model>
+        <model name='connectorBminusX'>
+          <pose frame=''>-0.007 0.101 0.0465 0 1.57 0</pose>
+          <scale>1 1 1</scale>
+          <link name='RoFICoM::connectionLink'>
+            <pose frame=''>-0.007 0.101 0.0465 0 1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::inner'>
+            <pose frame=''>-0.0105 0.101 0.046497 0 1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::outer'>
+            <pose frame=''>-0.015 0.101 0.046494 0 1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+        </model>
+        <model name='connectorBminusZ'>
+          <pose frame=''>-0.05 0.144 0.0465 -1.57 0 0</pose>
+          <scale>1 1 1</scale>
+          <link name='RoFICoM::connectionLink'>
+            <pose frame=''>-0.05 0.144 0.0465 -1.57 0 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::inner'>
+            <pose frame=''>-0.05 0.1405 0.046497 -1.57 0 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::outer'>
+            <pose frame=''>-0.05 0.136 0.046494 -1.57 0 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+        </model>
+        <model name='connectorBplusX'>
+          <pose frame=''>-0.093 0.101 0.0465 0 -1.57 0</pose>
+          <scale>1 1 1</scale>
+          <link name='RoFICoM::connectionLink'>
+            <pose frame=''>-0.093 0.101 0.0465 0 -1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::inner'>
+            <pose frame=''>-0.0895 0.101 0.046497 0 -1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::outer'>
+            <pose frame=''>-0.085 0.101 0.046494 0 -1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+        </model>
+      </model>
+      <model name='universalModule_0'>
+        <pose frame=''>0.05 -0.05 0.045 0 -0 0</pose>
+        <scale>1 1 1</scale>
+        <link name='bodyA'>
+          <pose frame=''>0.05 -0.05 0.045 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='bodyB'>
+          <pose frame=''>0.05 -0.05 0.045 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='shoeA'>
+          <pose frame=''>0.0235 -0.1 0.045 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <link name='shoeB'>
+          <pose frame=''>0.0235 0 0.0465 0 -0 0</pose>
+          <velocity>0 0 0 0 -0 0</velocity>
+          <acceleration>0 0 0 0 -0 0</acceleration>
+          <wrench>0 0 0 0 -0 0</wrench>
+        </link>
+        <model name='connectorAminusX'>
+          <pose frame=''>0.007 -0.1 0.045 0 -1.57 0</pose>
+          <scale>1 1 1</scale>
+          <link name='RoFICoM::connectionLink'>
+            <pose frame=''>0.007 -0.1 0.045 0 -1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::inner'>
+            <pose frame=''>0.0105 -0.1 0.044997 0 -1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::outer'>
+            <pose frame=''>0.015 -0.1 0.044994 0 -1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+        </model>
+        <model name='connectorAminusZ'>
+          <pose frame=''>0.05 -0.143 0.045 1.57 -0 0</pose>
+          <scale>1 1 1</scale>
+          <link name='RoFICoM::connectionLink'>
+            <pose frame=''>0.05 -0.143 0.045 1.57 -0 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::inner'>
+            <pose frame=''>0.05 -0.1395 0.044997 1.57 -0 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::outer'>
+            <pose frame=''>0.05 -0.135 0.044994 1.57 -0 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+        </model>
+        <model name='connectorAplusX'>
+          <pose frame=''>0.093 -0.1 0.045 0 1.57 0</pose>
+          <scale>1 1 1</scale>
+          <link name='RoFICoM::connectionLink'>
+            <pose frame=''>0.093 -0.1 0.045 0 1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::inner'>
+            <pose frame=''>0.0895 -0.1 0.044997 0 1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::outer'>
+            <pose frame=''>0.085 -0.1 0.044994 0 1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+        </model>
+        <model name='connectorBminusX'>
+          <pose frame=''>0.093 0.001 0.0465 0 1.57 0</pose>
+          <scale>1 1 1</scale>
+          <link name='RoFICoM::connectionLink'>
+            <pose frame=''>0.093 0.001 0.0465 0 1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::inner'>
+            <pose frame=''>0.0895 0.001 0.046497 0 1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::outer'>
+            <pose frame=''>0.085 0.001 0.046494 0 1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+        </model>
+        <model name='connectorBminusZ'>
+          <pose frame=''>0.05 0.044 0.0465 -1.57 0 0</pose>
+          <scale>1 1 1</scale>
+          <link name='RoFICoM::connectionLink'>
+            <pose frame=''>0.05 0.044 0.0465 -1.57 0 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::inner'>
+            <pose frame=''>0.05 0.0405 0.046497 -1.57 0 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::outer'>
+            <pose frame=''>0.05 0.036 0.046494 -1.57 0 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+        </model>
+        <model name='connectorBplusX'>
+          <pose frame=''>0.007 0.001 0.0465 0 -1.57 0</pose>
+          <scale>1 1 1</scale>
+          <link name='RoFICoM::connectionLink'>
+            <pose frame=''>0.007 0.001 0.0465 0 -1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::inner'>
+            <pose frame=''>0.0105 0.001 0.046497 0 -1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+          <link name='RoFICoM::outer'>
+            <pose frame=''>0.015 0.001 0.046494 0 -1.57 0</pose>
+            <velocity>0 0 0 0 -0 0</velocity>
+            <acceleration>0 0 0 0 -0 0</acceleration>
+            <wrench>0 0 0 0 -0 0</wrench>
+          </link>
+        </model>
+      </model>
+      <light name='sun'>
+        <pose frame=''>0 0 10 0 -0 0</pose>
+      </light>
+    </state>
+    <gui fullscreen='0'>
+      <camera name='user_camera'>
+        <pose frame=''>0.164896 -0.77043 0.765645 0 0.705796 1.68817</pose>
+        <view_controller>orbit</view_controller>
+        <projection_type>perspective</projection_type>
+      </camera>
+    </gui>
+  </world>
+</sdf>
