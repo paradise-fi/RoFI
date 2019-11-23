@@ -7,15 +7,15 @@
 #include <connectorCmd.pb.h>
 #include <connectorResp.pb.h>
 
+#include "../common/utils.hpp"
+
 namespace gazebo
 {
 
 class RoFICoMPlugin : public ModelPlugin
 {
 public:
-    static constexpr double maxJointSpeed = 0.012; // [m/s]
-    static constexpr double maxJointForce = 1.5; // [Nm]
-    static constexpr double positionPrecision = 0.0001;
+    static constexpr double positionPrecision = 0.0001; // [m]
     static constexpr double minConnectionCosAngle = 0.9992; // cos of maximal angle when connection succeeds
     static constexpr double maxConnectionCenterDistance = 0.004; // [m]
 
@@ -89,6 +89,7 @@ private:
 
     bool canBeConnected( physics::LinkPtr otherConnectionLink ) const;
     static physics::LinkPtr getConnectionLink( physics::ModelPtr roficom );
+    static physics::JointPtr getExtendJoint( physics::ModelPtr roficom );
 
     physics::JointPtr getConnectionJoint( physics::LinkPtr otherConnectionLink ) const;
 
@@ -101,7 +102,7 @@ private:
     transport::SubscriberPtr _subOutside;
     transport::SubscriberPtr _subSensor;
 
-    physics::JointPtr extendJoint;
+    JointData extendJoint;
     physics::LinkPtr thisConnectionLink;
     double currentVelocity = 0.0;
     physics::JointPtr connectionJoint;

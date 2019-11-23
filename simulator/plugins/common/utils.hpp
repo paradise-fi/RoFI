@@ -6,6 +6,59 @@
 #include <utility>
 #include <vector>
 
+namespace gazebo
+{
+struct JointData
+{
+    // Prismatic joints: [m]
+    // Revolute joints: [rad]
+    double minPosition = std::numeric_limits< double >::lowest();
+    // Prismatic joints: [m]
+    // Revolute joints: [rad]
+    double maxPosition = std::numeric_limits< double >::max();
+    // Prismatic joints: [m/s]
+    // Revolute joints: [rad/s]
+    double minSpeed = std::numeric_limits< double >::min();
+    // Prismatic joints: [m/s]
+    // Revolute joints: [rad/s]
+    double maxSpeed = std::numeric_limits< double >::max();
+    // Prismatic joints: [N]
+    // Revolute joints: [Nm]
+    double maxEffort = std::numeric_limits< double >::max();
+
+    physics::JointPtr joint;
+
+    JointData() = default;
+
+    explicit JointData( physics::JointPtr joint ) : joint( std::move( joint ) )
+    {
+        if ( !this->joint )
+        {
+            return;
+        }
+
+        auto limits = this->joint->GetSDF()->GetElement( "axis" )->GetElement( "limit" );
+        limits->GetElement( "lower" )->GetValue()->Get( minPosition );
+        limits->GetElement( "upper" )->GetValue()->Get( maxPosition );
+        limits->GetElement( "velocity" )->GetValue()->Get( maxSpeed );
+        limits->GetElement( "effort" )->GetValue()->Get( maxEffort );
+
+        if ( maxSpeed < 0 )
+        {
+            maxSpeed = std::numeric_limits< double >::max();
+        }
+        if ( maxEffort < 0 )
+        {
+            maxEffort = std::numeric_limits< double >::max();
+        }
+
+        if ( minPosition > maxPosition )
+        {
+            gzerr << "Minimal position is larger than maximal\n";
+            throw std::runtime_error( "Minimal position of is larger than maximal" );
+        }
+    }
+};
 
 inline double trim( double value, double min, double max, std::string debugName )
 {
@@ -120,3 +173,4 @@ bool isRoFICoM( gazebo::physics::ModelPtr model )
 
     return false;
 }
+} // namespace gazebo

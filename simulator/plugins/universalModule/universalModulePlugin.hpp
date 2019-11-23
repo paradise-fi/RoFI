@@ -9,24 +9,22 @@
 #include <rofiCmd.pb.h>
 #include <rofiResp.pb.h>
 
+#include "../common/utils.hpp"
 
 namespace gazebo
 {
 
-struct JointData
-{
-    double minPosition = std::numeric_limits< double >::lowest();   // [rad]
-    double maxPosition = std::numeric_limits< double >::max();      // [rad]
-    double minSpeed = std::numeric_limits< double >::min();         // [rad/s] // No min speed in simulation
-    double maxSpeed = std::numeric_limits< double >::max();         // [rad/s]
-    double maxTorque = std::numeric_limits< double >::max();        // [Nm]
-
-    physics::JointPtr joint;
-    event::ConnectionPtr callbackConnection;
-};
-
 class UniversalModulePlugin : public ModelPlugin
 {
+    struct JointDataWithOnUpdateConnection
+    {
+        JointData jointData;
+        event::ConnectionPtr onUpdate;
+
+        explicit JointDataWithOnUpdateConnection( physics::JointPtr joint )
+            : jointData( std::move( joint ) ) {}
+    };
+
 public:
     static constexpr double doublePrecision = 0.001;
 
@@ -81,7 +79,7 @@ private:
     transport::SubscriberPtr _sub;
     transport::PublisherPtr _pub;
 
-    std::vector< JointData > joints;
+    std::vector< JointDataWithOnUpdateConnection > joints;
     std::vector< std::pair< transport::PublisherPtr, transport::SubscriberPtr > > connectors;
 };
 

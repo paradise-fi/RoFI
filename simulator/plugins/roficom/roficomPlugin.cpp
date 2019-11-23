@@ -3,8 +3,6 @@
 #include <cassert>
 #include <cmath>
 
-#include "../common/utils.hpp"
-
 namespace gazebo
 {
 std::mutex RoFICoMPlugin::positionsMapMutex;
@@ -16,32 +14,8 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
     assert( _model );
     gzmsg << "The RoFICoM plugin is attached to model [" << _model->GetScopedName() << "]\n";
 
-    extendJoint = _model->GetJoint( "extendJoint" );
-    if ( !extendJoint )
-    {
-        extendJoint = _model->GetJoint( "RoFICoM::extendJoint" );
-    }
-    if ( !extendJoint )
-    {
-        for ( auto joint : _model->GetJoints() )
-        {
-            auto name = joint->GetName();
-            if ( name.size() < 13 )
-            {
-                continue;
-            }
-            if ( name.compare( name.size() - 13, 13, "::extendJoint" ) == 0 )
-            {
-                if ( extendJoint )
-                {
-                    gzwarn << "Found two extendJoints: " << extendJoint->GetName() << ", " << joint->GetName() << "\n";
-                    break;
-                }
-                extendJoint = std::move( joint );
-            }
-        }
-    }
-    if ( !extendJoint )
+    extendJoint = JointData( getExtendJoint( _model ) );
+    if ( !extendJoint.joint )
     {
         gzerr << "Could not get extend joint in RoFICoM plugin\n";
 
@@ -58,7 +32,7 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
 
     updatePosition( Position::Retracted );
 
-    extendJoint->SetParam( "fmax", 0, maxJointForce );
+    extendJoint.joint->SetParam( "fmax", 0, extendJoint.maxEffort );
     stop();
 
     initCommunication();
@@ -174,7 +148,7 @@ void RoFICoMPlugin::onUpdate()
 
     if ( position == Position::Retracting )
     {
-        if ( equal( extendJoint->Position(), extendJoint->LowerLimit( 0 ), positionPrecision ) )
+        if ( equal( extendJoint.joint->Position(), extendJoint.minPosition, positionPrecision ) )
         {
             stop();
             updatePosition( Position::Retracted );
@@ -182,7 +156,7 @@ void RoFICoMPlugin::onUpdate()
     }
     if ( position == Position::Extending )
     {
-        if ( equal( extendJoint->Position(), extendJoint->UpperLimit( 0 ), positionPrecision ) )
+        if ( equal( extendJoint.joint->Position(), extendJoint.maxPosition, positionPrecision ) )
         {
             stop();
             updatePosition( Position::Extended );
@@ -198,27 +172,27 @@ void RoFICoMPlugin::stop()
     {
         gzmsg << "stop (" << _model->GetScopedName() << ")\n";
         currentVelocity = 0.0;
-        extendJoint->SetParam( "vel", 0, currentVelocity );
+        extendJoint.joint->SetParam( "vel", 0, currentVelocity );
     }
 }
 
 void RoFICoMPlugin::extend()
 {
-    if ( currentVelocity != maxJointSpeed )
+    if ( currentVelocity != extendJoint.maxSpeed )
     {
         gzmsg << "extend (" << _model->GetScopedName() << ")\n";
-        currentVelocity = maxJointSpeed;
-        extendJoint->SetParam( "vel", 0, currentVelocity );
+        currentVelocity = extendJoint.maxSpeed;
+        extendJoint.joint->SetParam( "vel", 0, currentVelocity );
     }
 }
 
 void RoFICoMPlugin::retract()
 {
-    if ( currentVelocity != -maxJointSpeed )
+    if ( currentVelocity != -extendJoint.maxSpeed )
     {
         gzmsg << "retract (" << _model->GetScopedName() << ")\n";
-        currentVelocity = -maxJointSpeed;
-        extendJoint->SetParam( "vel", 0, currentVelocity );
+        currentVelocity = -extendJoint.maxSpeed;
+        extendJoint.joint->SetParam( "vel", 0, currentVelocity );
     }
 }
 
@@ -547,6 +521,39 @@ physics::LinkPtr RoFICoMPlugin::getConnectionLink( physics::ModelPtr roficom )
         }
     }
     return linkPtr;
+}
+
+physics::JointPtr RoFICoMPlugin::getExtendJoint( physics::ModelPtr roficom )
+{
+    assert( roficom );
+    assert( isRoFICoM( roficom ) );
+
+    auto extendJoint = roficom->GetJoint( "extendJoint" );
+    if ( !extendJoint )
+    {
+        extendJoint = roficom->GetJoint( "RoFICoM::extendJoint" );
+    }
+    if ( !extendJoint )
+    {
+        for ( auto joint : roficom->GetJoints() )
+        {
+            auto name = joint->GetName();
+            if ( name.size() < 13 )
+            {
+                continue;
+            }
+            if ( name.compare( name.size() - 13, 13, "::extendJoint" ) == 0 )
+            {
+                if ( extendJoint )
+                {
+                    gzwarn << "Found two extendJoints: " << extendJoint->GetName() << ", " << joint->GetName() << "\n";
+                    break;
+                }
+                extendJoint = std::move( joint );
+            }
+        }
+    }
+    return extendJoint;
 }
 
 physics::JointPtr RoFICoMPlugin::getConnectionJoint( physics::LinkPtr otherConnectionLink ) const
