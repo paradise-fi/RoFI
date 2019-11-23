@@ -7,6 +7,9 @@
 
 namespace gazebo
 {
+std::mutex RoFICoMPlugin::positionsMapMutex;
+std::map< const physics::Model *, RoFICoMPlugin::Position > RoFICoMPlugin::positionsMap;
+
 void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
 {
     _model = std::move( model );
@@ -53,6 +56,8 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
         throw std::runtime_error( "Could not get connection link in RoFICoM plugin" );
     }
 
+    updatePosition( Position::Retracted );
+
     extendJoint->SetParam( "fmax", 0, maxJointForce );
     stop();
 
@@ -75,7 +80,7 @@ void RoFICoMPlugin::connect()
         gzmsg << "Already extended (" << _model->GetScopedName() << ")\n";
         return;
     }
-    position = Position::Extending;
+    updatePosition( Position::Extending );
     gzmsg << "Extending connector  (" << _model->GetScopedName() << ")\n";
 
     extend();
@@ -93,7 +98,7 @@ void RoFICoMPlugin::disconnect()
     }
 
     gzmsg << "Retracting connector " << connectorNumber << " (" << _model->GetScopedName() << ")\n";
-    position = Position::Retracting;
+    updatePosition( Position::Retracting );
     endConnection();
 
     retract();
@@ -172,7 +177,7 @@ void RoFICoMPlugin::onUpdate()
         if ( equal( extendJoint->Position(), extendJoint->LowerLimit( 0 ), positionPrecision ) )
         {
             stop();
-            position = Position::Retracted;
+            updatePosition( Position::Retracted );
         }
     }
     if ( position == Position::Extending )
@@ -180,7 +185,7 @@ void RoFICoMPlugin::onUpdate()
         if ( equal( extendJoint->Position(), extendJoint->UpperLimit( 0 ), positionPrecision ) )
         {
             stop();
-            position = Position::Extended;
+            updatePosition( Position::Extended );
         }
     }
 
@@ -226,6 +231,7 @@ void RoFICoMPlugin::updateConnection()
 
     if ( position == Position::Extended || position == Position::Extending )
     {
+        assert( connectionJoint );
         if ( !connectionJoint->AreConnected( thisConnectionLink, connectedWith ) )
         {
             endConnection();
@@ -255,12 +261,28 @@ void RoFICoMPlugin::endConnection()
     }
 }
 
+void RoFICoMPlugin::updatePosition( Position newPosition )
+{
+    assert( _model );
+    std::lock_guard< std::mutex > lock( positionsMapMutex );
+    position = newPosition;
+    positionsMap[ _model.get() ] = position;
+}
+
+RoFICoMPlugin::Position RoFICoMPlugin::getOtherPosition( physics::ModelPtr roficom )
+{
+    assert( roficom );
+    assert( isRoFICoM( roficom ) );
+    std::lock_guard< std::mutex > lock( positionsMapMutex );
+    return positionsMap[ roficom.get() ];
+}
+
 void RoFICoMPlugin::createConnection( physics::LinkPtr otherConnectionLink )
 {
     assert( thisConnectionLink );
     assert( otherConnectionLink );
     assert( thisConnectionLink != otherConnectionLink );
-    assert( isRofiCoM( otherConnectionLink->GetModel() ) );
+    assert( isRoFICoM( otherConnectionLink->GetModel() ) );
     assert( !isConnected() );
 
     connectionJoint = getConnectionJoint( otherConnectionLink );
@@ -373,8 +395,9 @@ void RoFICoMPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
 
     for ( auto & contact : contacts->contact() )
     {
+        assert( !isConnected() );
         auto otherModel = getModelOfOther( contact );
-        if ( !isRofiCoM( otherModel ) )
+        if ( !isRoFICoM( otherModel ) )
         {
             break;
         }
@@ -395,6 +418,7 @@ void RoFICoMPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
                 gzmsg << "Connected by " << otherModel->GetScopedName() << " (" << _model->GetScopedName() << ")\n";
                 connectedWith = otherLink;
                 startCommunication( otherLink->GetModel() );
+                assert( isConnected() );
                 return;
             }
         }
@@ -407,6 +431,7 @@ void RoFICoMPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
                 gzmsg << "Connecting with " << otherLink->GetModel()->GetScopedName() << " (" << _model->GetScopedName() << ")\n";
 
                 createConnection( otherLink );
+                assert( isConnected() );
                 return;
             }
         }
@@ -460,7 +485,13 @@ bool RoFICoMPlugin::canBeConnected( physics::LinkPtr otherConnectionLink ) const
     assert( thisConnectionLink );
     assert( otherConnectionLink );
     assert( thisConnectionLink != otherConnectionLink );
-    assert( isRofiCoM( otherConnectionLink->GetModel() ) );
+    assert( isRoFICoM( otherConnectionLink->GetModel() ) );
+
+    Position otherPosition = getOtherPosition( otherConnectionLink->GetModel() );
+    if ( otherPosition == Position::Retracted || otherPosition == Position::Retracting )
+    {
+        return false;
+    }
 
     auto thisPos = thisConnectionLink->WorldPose().Pos();
     auto otherPos = otherConnectionLink->WorldPose().Pos();
@@ -471,16 +502,8 @@ bool RoFICoMPlugin::canBeConnected( physics::LinkPtr otherConnectionLink ) const
         return false;
     }
 
-    auto otherModelPose = otherConnectionLink->GetModel()->WorldPose();
-    auto squaredExtendDistance = ( otherModelPose.Pos() - otherPos ).SquaredLength();
-
-    if ( squaredExtendDistance < extendDistance * extendDistance )
-    {
-        return false;
-    }
-
     auto thisVector = _model->WorldPose().Rot().RotateVector( { 0, 0, 1 } );
-    auto otherVector = otherModelPose.Rot().RotateVector( { 0, 0, -1 } );
+    auto otherVector = otherConnectionLink->GetModel()->WorldPose().Rot().RotateVector( { 0, 0, -1 } );
 
     auto cosAngle = thisVector.Dot( otherVector ) / ( thisVector.Length() * otherVector.Length() );
     if ( cosAngle <= minConnectionCosAngle )
@@ -496,7 +519,7 @@ bool RoFICoMPlugin::canBeConnected( physics::LinkPtr otherConnectionLink ) const
 physics::LinkPtr RoFICoMPlugin::getConnectionLink( physics::ModelPtr roficom )
 {
     assert( roficom );
-    assert( isRofiCoM( roficom ) );
+    assert( isRoFICoM( roficom ) );
 
     auto linkPtr = roficom->GetLink( "connectionLink" );
     if ( !linkPtr )
@@ -533,11 +556,6 @@ physics::JointPtr RoFICoMPlugin::getConnectionJoint( physics::LinkPtr otherConne
     assert( otherConnectionLink );
     assert( thisConnectionLink != otherConnectionLink );
 
-    if ( !extendJoint->AreConnected( thisConnectionLink, otherConnectionLink ) )
-    {
-        return {};
-    }
-
     auto outerConnection = otherConnectionLink->GetModel()->GetJoint( "outerConnection" );
 
     if ( outerConnection )
@@ -554,7 +572,7 @@ physics::JointPtr RoFICoMPlugin::getConnectionJoint( physics::LinkPtr otherConne
             return outerConnection;
         }
     }
-    return outerConnection;
+    return {};
 }
 
 GZ_REGISTER_MODEL_PLUGIN( RoFICoMPlugin )

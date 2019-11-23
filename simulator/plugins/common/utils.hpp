@@ -93,7 +93,7 @@ inline std::string replaceDelimeter( std::string_view sensorPath )
     return topicName;
 }
 
-bool isRofiCoM( gazebo::physics::ModelPtr model )
+bool isRoFICoM( gazebo::physics::ModelPtr model )
 {
     if ( !model || model->GetPluginCount() == 0 )
     {

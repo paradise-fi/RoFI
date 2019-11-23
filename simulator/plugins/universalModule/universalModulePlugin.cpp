@@ -159,7 +159,7 @@ void UMP::findAndInitConnectors()
 
     for ( auto nested : _model->NestedModels() )
     {
-        if ( isRofiCoM( nested ) )
+        if ( isRoFICoM( nested ) )
         {
             addConnector( nested );
         }

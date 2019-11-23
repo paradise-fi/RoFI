@@ -18,7 +18,6 @@ public:
     static constexpr double positionPrecision = 0.0001;
     static constexpr double minConnectionCosAngle = 0.9992; // cos of maximal angle when connection succeeds
     static constexpr double maxConnectionCenterDistance = 0.004; // [m]
-    static constexpr double extendDistance = 0.006; // [m] min expanded distance to be concidered extended
 
     using PacketPtr = boost::shared_ptr< const rofi::messages::Packet >;
 
@@ -76,6 +75,10 @@ private:
     void updateConnection();
     // Called while holding connectionMutex
     void endConnection();
+    // Called while holding connectionMutex
+    void updatePosition( Position newPosition );
+
+    static Position getOtherPosition( physics::ModelPtr roficom );
 
     void onConnectorCmd( const ConnectorCmdPtr & msg );
     void onSensorMessage( const ContactsMsgPtr & contacts );
@@ -110,6 +113,9 @@ private:
     std::mutex connectionMutex;
     Position position = Position::Retracted;
     rofi::messages::ConnectorState::Orientation orientation{};
+
+    static std::mutex positionsMapMutex;
+    static std::map< const physics::Model *, Position > positionsMap;
 };
 
 } // namespace gazebo
