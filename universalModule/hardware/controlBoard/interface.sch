@@ -4,7 +4,7 @@ EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 6 6
+Sheet 5 6
 Title ""
 Date ""
 Rev ""
@@ -15,184 +15,173 @@ Comment3 ""
 Comment4 ""
 $EndDescr
 $Comp
-L Connector_Generic:Conn_01x04 J5
-U 1 1 5E8D0EF2
-P 3300 2150
-F 0 "J?" H 3380 2142 50  0000 L CNN
-F 1 "MOTOR_BUS" H 3380 2051 50  0000 L CNN
-F 2 "Connector_PinHeader_2.00mm:PinHeader_1x04_P2.00mm_Vertical" H 3300 2150 50  0001 C CNN
-F 3 "~" H 3300 2150 50  0001 C CNN
-	1    3300 2150
+L Connector_Generic:Conn_01x04 J?
+U 1 1 5DEE0984
+P 2600 3800
+AR Path="/5E080FD6/5DEE0984" Ref="J?"  Part="1" 
+AR Path="/5E8D0C73/5DEE0984" Ref="J2"  Part="1" 
+F 0 "J2" H 2680 3792 50  0000 L CNN
+F 1 "OLED_DISPLAY" H 2680 3701 50  0000 L CNN
+F 2 "rofi:OLED_128_32_I2C" H 2600 3800 50  0001 C CNN
+F 3 "~" H 2600 3800 50  0001 C CNN
+	1    2600 3800
+	1    0    0    -1  
+$EndComp
+Text Notes 2800 3450 0    50   ~ 0
+USER_INTERFACE\n\nOLED DISPLAY WITH\nNAVIGATION CROSS
+$Comp
+L Switch:SW_Push SW?
+U 1 1 5DEE098E
+P 7000 3550
+AR Path="/5E080FD6/5DEE098E" Ref="SW?"  Part="1" 
+AR Path="/5E8D0C73/5DEE098E" Ref="SW3"  Part="1" 
+F 0 "SW3" H 7000 3835 50  0000 C CNN
+F 1 "SW_Push" H 7000 3744 50  0000 C CNN
+F 2 "rofi:BUTTON_SMT_G_4_3" H 7000 3750 50  0001 C CNN
+F 3 "~" H 7000 3750 50  0001 C CNN
+F 4 "PTS636 SL43 LFS" H 7000 3550 50  0001 C CNN "#manf"
+	1    7000 3550
 	1    0    0    -1  
 $EndComp
 $Comp
-L Connector_Generic:Conn_01x03 J6
-U 1 1 5E8D1385
-P 3300 2700
-F 0 "J?" H 3380 2742 50  0000 L CNN
-F 1 "MOTOR_BUS_ALT" H 3380 2651 50  0000 L CNN
-F 2 "Connector_PinHeader_2.00mm:PinHeader_1x03_P2.00mm_Vertical" H 3300 2700 50  0001 C CNN
-F 3 "~" H 3300 2700 50  0001 C CNN
-	1    3300 2700
+L Switch:SW_Push SW?
+U 1 1 5DEE0996
+P 5450 3550
+AR Path="/5E080FD6/5DEE0996" Ref="SW?"  Part="1" 
+AR Path="/5E8D0C73/5DEE0996" Ref="SW1"  Part="1" 
+F 0 "SW1" H 5450 3835 50  0000 C CNN
+F 1 "SW_Push" H 5450 3744 50  0000 C CNN
+F 2 "rofi:BUTTON_SMT_G_4_3" H 5450 3750 50  0001 C CNN
+F 3 "~" H 5450 3750 50  0001 C CNN
+F 4 "PTS636 SL43 LFS" H 5450 3550 50  0001 C CNN "#manf"
+	1    5450 3550
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR045
-U 1 1 5E8D1CC7
-P 3100 2050
-F 0 "#PWR?" H 3100 1800 50  0001 C CNN
-F 1 "GND" V 3105 1922 50  0000 R CNN
-F 2 "" H 3100 2050 50  0001 C CNN
-F 3 "" H 3100 2050 50  0001 C CNN
-	1    3100 2050
-	0    1    1    0   
-$EndComp
-Text GLabel 3100 2150 0    50   Input ~ 0
-BATT_VDD
-Text GLabel 3100 2350 0    50   Input ~ 0
-MOTORS_TX
-Text GLabel 3100 2700 0    50   Input ~ 0
-BATT_VDD
-$Comp
-L power:GND #PWR046
-U 1 1 5E8D4C43
-P 3100 2600
-F 0 "#PWR?" H 3100 2350 50  0001 C CNN
-F 1 "GND" V 3105 2472 50  0000 R CNN
-F 2 "" H 3100 2600 50  0001 C CNN
-F 3 "" H 3100 2600 50  0001 C CNN
-	1    3100 2600
-	0    1    1    0   
-$EndComp
-Text GLabel 3100 2800 0    50   Input ~ 0
-MOTORS_TX
-$Comp
-L Connector_Generic:Conn_02x05_Odd_Even J4
-U 1 1 5E8D7CD3
-P 3250 4150
-F 0 "J?" H 3300 4567 50  0000 C CNN
-F 1 "ShoeAConnectors" H 3300 4476 50  0000 C CNN
-F 2 "Connector_PinHeader_2.00mm:PinHeader_2x05_P2.00mm_Vertical" H 3250 4150 50  0001 C CNN
-F 3 "~" H 3250 4150 50  0001 C CNN
-	1    3250 4150
+L Switch:SW_Push SW?
+U 1 1 5DEE099D
+P 9050 3550
+AR Path="/5E080FD6/5DEE099D" Ref="SW?"  Part="1" 
+AR Path="/5E8D0C73/5DEE099D" Ref="SW5"  Part="1" 
+F 0 "SW5" H 9050 3835 50  0000 C CNN
+F 1 "SW_Push" H 9050 3744 50  0000 C CNN
+F 2 "rofi:BUTTON_SMT_G_4_3" H 9050 3750 50  0001 C CNN
+F 3 "~" H 9050 3750 50  0001 C CNN
+F 4 "PTS636 SL43 LFS" H 9050 3550 50  0001 C CNN "#manf"
+	1    9050 3550
 	1    0    0    -1  
 $EndComp
 $Comp
-L power:GND #PWR044
-U 1 1 5E8D8579
-P 3050 4350
-F 0 "#PWR?" H 3050 4100 50  0001 C CNN
-F 1 "GND" H 3055 4177 50  0000 C CNN
-F 2 "" H 3050 4350 50  0001 C CNN
-F 3 "" H 3050 4350 50  0001 C CNN
-	1    3050 4350
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:GND #PWR047
-U 1 1 5E8D8BD2
-P 3550 4350
-F 0 "#PWR?" H 3550 4100 50  0001 C CNN
-F 1 "GND" H 3555 4177 50  0000 C CNN
-F 2 "" H 3550 4350 50  0001 C CNN
-F 3 "" H 3550 4350 50  0001 C CNN
-	1    3550 4350
-	1    0    0    -1  
-$EndComp
-Text GLabel 3050 3950 0    50   Input ~ 0
-BATT_VDD
-Text GLabel 2400 4050 0    50   Input ~ 0
-INT
-Wire Wire Line
-	2400 4050 2450 4050
-$Comp
-L power:+12V #PWR043
-U 1 1 5E8D94AA
-P 2450 3950
-F 0 "#PWR?" H 2450 3800 50  0001 C CNN
-F 1 "+12V" H 2465 4123 50  0000 C CNN
-F 2 "" H 2450 3950 50  0001 C CNN
-F 3 "" H 2450 3950 50  0001 C CNN
-	1    2450 3950
+L Device:C C?
+U 1 1 5DEE09B8
+P 5200 3700
+AR Path="/5E080FD6/5DEE09B8" Ref="C?"  Part="1" 
+AR Path="/5E8D0C73/5DEE09B8" Ref="C45"  Part="1" 
+F 0 "C45" H 5315 3746 50  0000 L CNN
+F 1 "100n" H 5315 3655 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0402_1005Metric" H 5238 3550 50  0001 C CNN
+F 3 "~" H 5200 3700 50  0001 C CNN
+F 4 "885012105016" H 5200 3700 50  0001 C CNN "#manf"
+	1    5200 3700
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	2450 3950 2450 4050
-Connection ~ 2450 4050
+	5200 3550 5250 3550
 Wire Wire Line
-	2450 4050 3050 4050
-Text GLabel 3050 4150 0    50   Input ~ 0
-EXT
-Text GLabel 3050 4250 0    50   Input ~ 0
-SPI_SCK
-Text GLabel 3550 4250 2    50   Input ~ 0
-SPI_MISO_MOSI
-Text GLabel 3550 4150 2    50   Input ~ 0
-DOCK_1_CE
-Text GLabel 3550 4050 2    50   Input ~ 0
-DOCK_2_CE
-Text GLabel 3550 3950 2    50   Input ~ 0
-DOCK_3_CE
+	8800 3550 8850 3550
 $Comp
-L Connector_Generic:Conn_01x13 J7
-U 1 1 5E8E8B82
-P 6850 3000
-F 0 "J?" H 6930 3042 50  0000 L CNN
-F 1 "ShoeBConnectors" H 6930 2951 50  0000 L CNN
-F 2 "Connector_PinHeader_1.27mm:PinHeader_1x13_P1.27mm_Vertical" H 6850 3000 50  0001 C CNN
-F 3 "~" H 6850 3000 50  0001 C CNN
-	1    6850 3000
+L Device:C C?
+U 1 1 5DEE09C7
+P 8800 3700
+AR Path="/5E080FD6/5DEE09C7" Ref="C?"  Part="1" 
+AR Path="/5E8D0C73/5DEE09C7" Ref="C47"  Part="1" 
+F 0 "C47" H 8915 3746 50  0000 L CNN
+F 1 "100n" H 8915 3655 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0402_1005Metric" H 8838 3550 50  0001 C CNN
+F 3 "~" H 8800 3700 50  0001 C CNN
+F 4 "885012105016" H 8800 3700 50  0001 C CNN "#manf"
+	1    8800 3700
 	1    0    0    -1  
 $EndComp
-Text GLabel 6650 2500 0    50   Input ~ 0
-BATT_VDD
 $Comp
-L power:GND #PWR049
-U 1 1 5E8E9AE7
-P 6650 2400
-F 0 "#PWR?" H 6650 2150 50  0001 C CNN
-F 1 "GND" V 6655 2272 50  0000 R CNN
-F 2 "" H 6650 2400 50  0001 C CNN
-F 3 "" H 6650 2400 50  0001 C CNN
-	1    6650 2400
-	0    1    1    0   
-$EndComp
-Text GLabel 3100 2250 0    50   Input ~ 0
-MOTORS_RX
-Text GLabel 6650 2600 0    50   Input ~ 0
-MOTORS_RX
-Text GLabel 6650 2700 0    50   Input ~ 0
-MOTORS_TX
-Text GLabel 6650 2800 0    50   Input ~ 0
-INT
-Text GLabel 6650 2900 0    50   Input ~ 0
-EXT
-Text GLabel 6650 3000 0    50   Input ~ 0
-SPI_SCK
-Text GLabel 6650 3100 0    50   Input ~ 0
-SPI_MISO_MOSI
-Text GLabel 6650 3200 0    50   Input ~ 0
-DOCK_4_CE
-Text GLabel 6650 3300 0    50   Input ~ 0
-DOCK_5_CE
-Text GLabel 6650 3400 0    50   Input ~ 0
-DOCK_6_CE
-Wire Wire Line
-	6650 3500 6550 3500
-Wire Wire Line
-	6550 3500 6550 3600
-Wire Wire Line
-	6550 3600 6650 3600
-$Comp
-L power:GND #PWR048
-U 1 1 5E8F0432
-P 6550 3600
-F 0 "#PWR?" H 6550 3350 50  0001 C CNN
-F 1 "GND" H 6555 3427 50  0000 C CNN
-F 2 "" H 6550 3600 50  0001 C CNN
-F 3 "" H 6550 3600 50  0001 C CNN
-	1    6550 3600
+L Device:C C?
+U 1 1 5DEE09D4
+P 6750 3700
+AR Path="/5E080FD6/5DEE09D4" Ref="C?"  Part="1" 
+AR Path="/5E8D0C73/5DEE09D4" Ref="C46"  Part="1" 
+F 0 "C46" H 6865 3746 50  0000 L CNN
+F 1 "100n" H 6865 3655 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0402_1005Metric" H 6788 3550 50  0001 C CNN
+F 3 "~" H 6750 3700 50  0001 C CNN
+F 4 "885012105016" H 6750 3700 50  0001 C CNN "#manf"
+	1    6750 3700
 	1    0    0    -1  
 $EndComp
-Connection ~ 6550 3600
+Wire Wire Line
+	6800 3550 6750 3550
+Text HLabel 2400 4000 0    50   Input ~ 0
+GND
+Text HLabel 2400 3900 0    50   Input ~ 0
+3V3
+Text HLabel 5000 3550 0    50   Input ~ 0
+SW_LEFT
+Wire Wire Line
+	5000 3550 5200 3550
+Connection ~ 5200 3550
+Text HLabel 5200 3850 3    50   Input ~ 0
+GND
+Text HLabel 6750 3850 3    50   Input ~ 0
+GND
+Text HLabel 8800 3850 3    50   Input ~ 0
+GND
+Text HLabel 5650 3550 2    50   Input ~ 0
+GND
+Text HLabel 7200 3550 2    50   Input ~ 0
+GND
+Text HLabel 9250 3550 2    50   Input ~ 0
+GND
+Text HLabel 6750 3550 0    50   Input ~ 0
+SW_MID
+Text HLabel 8800 3550 0    50   Input ~ 0
+SW_RIGHT
+$Comp
+L Switch:SW_Push SW?
+U 1 1 5DEF5CA3
+P 7800 2200
+AR Path="/5DFADF1E/5DEF5CA3" Ref="SW?"  Part="1" 
+AR Path="/5E8D0C73/5DEF5CA3" Ref="SW4"  Part="1" 
+F 0 "SW4" H 7800 2485 50  0000 C CNN
+F 1 "START_BUTTON" H 7800 2394 50  0000 C CNN
+F 2 "rofi:BUTTON_SMT_G_4_3" H 7800 2400 50  0001 C CNN
+F 3 "~" H 7800 2400 50  0001 C CNN
+F 4 "PTS636 SL43 LFS" H 7800 2200 50  0001 C CNN "#manf"
+	1    7800 2200
+	1    0    0    -1  
+$EndComp
+$Comp
+L Switch:SW_Push SW?
+U 1 1 5DEF5CAA
+P 6350 2200
+AR Path="/5DFADF1E/5DEF5CAA" Ref="SW?"  Part="1" 
+AR Path="/5E8D0C73/5DEF5CAA" Ref="SW2"  Part="1" 
+F 0 "SW2" H 6350 2485 50  0000 C CNN
+F 1 "STOP_BUTTON" H 6350 2394 50  0000 C CNN
+F 2 "rofi:BUTTON_SMT_G_4_3" H 6350 2400 50  0001 C CNN
+F 3 "~" H 6350 2400 50  0001 C CNN
+F 4 "PTS636 SL43 LFS" H 6350 2200 50  0001 C CNN "#manf"
+	1    6350 2200
+	1    0    0    -1  
+$EndComp
+Text HLabel 8000 2200 2    50   Input ~ 0
+GND
+Text HLabel 6550 2200 2    50   Input ~ 0
+GND
+Text HLabel 6150 2200 0    50   Input ~ 0
+STOP_BUTTON
+Text HLabel 7600 2200 0    50   Input ~ 0
+START_BUTTON
+Text HLabel 2400 3700 0    50   Input ~ 0
+SDA
+Text HLabel 2400 3800 0    50   Input ~ 0
+SCL
 $EndSCHEMATC
