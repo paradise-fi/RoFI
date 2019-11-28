@@ -32,3 +32,6 @@ _autosave-*
 gerber_*
 *-gerber
 *-gerber.zip
+
+manu
+manu/**
