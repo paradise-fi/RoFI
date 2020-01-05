@@ -114,26 +114,6 @@
                 <use_parent_model_frame>1</use_parent_model_frame>
             </axis>
         </joint>
-
-        <link name="connectionLink">
-            <gravity>false</gravity>
-            <self_collide>false</self_collide>
-            <inertial>
-                <mass>1e-4</mass>
-                <inertia>
-                    <ixx>1e-12</ixx>
-                    <iyy>1e-12</iyy>
-                    <izz>1e-12</izz>
-                    <ixy>0.0</ixy>
-                    <ixz>0.0</ixz>
-                    <iyz>0.0</iyz>
-                </inertia>
-            </inertial>
-        </link>
-        <joint name="connectionJoint" type="fixed">
-            <parent>inner</parent>
-            <child>connectionLink</child>
-        </joint>
         <plugin name="roficom" filename="libroficomPlugin.so"/>
     </model>
 </sdf>

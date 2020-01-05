@@ -515,25 +515,25 @@ physics::LinkPtr RoFICoMPlugin::getConnectionLink( physics::ModelPtr roficom )
     assert( roficom );
     assert( isRoFICoM( roficom ) );
 
-    auto linkPtr = roficom->GetLink( "connectionLink" );
+    auto linkPtr = roficom->GetLink( "inner" );
     if ( !linkPtr )
     {
-        linkPtr = roficom->GetLink( "RoFICoM::connectionLink" );
+        linkPtr = roficom->GetLink( "RoFICoM::inner" );
     }
     if ( !linkPtr )
     {
         for ( auto link : roficom->GetLinks() )
         {
             auto name = link->GetName();
-            if ( name.size() < 16 )
+            if ( name.size() < 7 )
             {
                 continue;
             }
-            if ( name.compare( name.size() - 16, 16, "::connectionLink" ) == 0 )
+            if ( name.compare( name.size() - 7, 7, "::inner" ) == 0 )
             {
                 if ( linkPtr )
                 {
-                    gzwarn << "Found two extendJoints: " << linkPtr->GetName() << ", " << link->GetName() << "\n";
+                    gzwarn << "Found two inner links: " << linkPtr->GetName() << ", " << link->GetName() << "\n";
                     break;
                 }
                 linkPtr = std::move( link );
