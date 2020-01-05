@@ -590,4 +590,70 @@ Wire Wire Line
 Connection ~ 6000 3200
 Wire Wire Line
 	6000 3200 6450 3200
+$Comp
+L Mechanical:MountingHole H4
+U 1 1 5DE07B9A
+P 750 2200
+F 0 "H4" H 850 2246 50  0000 L CNN
+F 1 "MountingHole" H 850 2155 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 750 2200 50  0001 C CNN
+F 3 "~" H 750 2200 50  0001 C CNN
+	1    750  2200
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H3
+U 1 1 5DE0904B
+P 750 2000
+F 0 "H3" H 850 2046 50  0000 L CNN
+F 1 "MountingHole" H 850 1955 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 750 2000 50  0001 C CNN
+F 3 "~" H 750 2000 50  0001 C CNN
+	1    750  2000
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H2
+U 1 1 5DE091EE
+P 750 1800
+F 0 "H2" H 850 1846 50  0000 L CNN
+F 1 "MountingHole" H 850 1755 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 750 1800 50  0001 C CNN
+F 3 "~" H 750 1800 50  0001 C CNN
+	1    750  1800
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H1
+U 1 1 5DE0947E
+P 750 1600
+F 0 "H1" H 850 1646 50  0000 L CNN
+F 1 "MountingHole" H 850 1555 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 750 1600 50  0001 C CNN
+F 3 "~" H 750 1600 50  0001 C CNN
+	1    750  1600
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H5
+U 1 1 5DE0BB0E
+P 9600 5300
+F 0 "H5" H 9700 5346 50  0000 L CNN
+F 1 "MountingHole" H 9700 5255 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 9600 5300 50  0001 C CNN
+F 3 "~" H 9600 5300 50  0001 C CNN
+	1    9600 5300
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H6
+U 1 1 5DE0DC9E
+P 9600 5500
+F 0 "H6" H 9700 5546 50  0000 L CNN
+F 1 "MountingHole" H 9700 5455 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 9600 5500 50  0001 C CNN
+F 3 "~" H 9600 5500 50  0001 C CNN
+	1    9600 5500
+	1    0    0    -1  
+$EndComp
 $EndSCHEMATC

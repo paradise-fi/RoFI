@@ -22,7 +22,7 @@ F 0 "U6" H 2200 3375 50  0000 C CNN
 F 1 "ESP32-WROVER" H 2200 3284 50  0000 C CNN
 F 2 "rofi:ESP32-WROVER" H 2200 2950 50  0001 C CNN
 F 3 "https://www.espressif.com/sites/default/files/documentation/esp32-wrover_datasheet_en.pdf" H 2200 2950 50  0001 C CNN
-F 4 "ESP32-WROVER-B (16MB)" H 2200 2000 50  0001 C CNN "#manf"
+F 4 "356-ESP32-WROB(16MB)" H 2200 2000 50  0001 C CNN "#manf"
 	1    2200 2000
 	1    0    0    -1  
 $EndComp
