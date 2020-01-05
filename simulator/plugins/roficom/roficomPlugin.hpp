@@ -1,3 +1,5 @@
+#pragma once
+
 #include <gazebo/gazebo.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/physics/physics.hh>
@@ -91,7 +93,7 @@ private:
     static physics::LinkPtr getConnectionLink( physics::ModelPtr roficom );
     static physics::JointPtr getExtendJoint( physics::ModelPtr roficom );
 
-    physics::JointPtr getConnectionJoint( physics::LinkPtr otherConnectionLink ) const;
+    physics::JointPtr getOtherConnectionJoint( physics::LinkPtr otherConnectionLink ) const;
 
     physics::ModelPtr _model;
 

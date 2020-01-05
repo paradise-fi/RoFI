@@ -114,7 +114,7 @@ void UMP::findAndInitJoints()
         if ( jointPtr->GetMsgType() == msgs::Joint::REVOLUTE )
         {
             joints.emplace_back( std::move( jointPtr ) );
-            assert( joints.back().jointData.joint );
+            assert( joints.back().jointData );
         }
     }
 

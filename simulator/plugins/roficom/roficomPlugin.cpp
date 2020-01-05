@@ -15,7 +15,7 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
     gzmsg << "The RoFICoM plugin is attached to model [" << _model->GetScopedName() << "]\n";
 
     extendJoint = JointData( getExtendJoint( _model ) );
-    if ( !extendJoint.joint )
+    if ( !extendJoint )
     {
         gzerr << "Could not get extend joint in RoFICoM plugin\n";
 
@@ -222,6 +222,16 @@ void RoFICoMPlugin::updateConnection()
 
 void RoFICoMPlugin::endConnection()
 {
+    if ( !isConnected() )
+    {
+        gzwarn << "Ending not existing connection (" << _model->GetScopedName() << ")\n";
+    }
+
+    if ( connectedWith )
+    {
+        gzmsg << "Ending connection (" << _model->GetScopedName() << ") with " << connectedWith->GetScopedName() << "\n";
+    }
+
     connectedWith = {};
     if ( connectionJoint )
     {
@@ -257,9 +267,14 @@ void RoFICoMPlugin::createConnection( physics::LinkPtr otherConnectionLink )
     assert( otherConnectionLink );
     assert( thisConnectionLink != otherConnectionLink );
     assert( isRoFICoM( otherConnectionLink->GetModel() ) );
-    assert( !isConnected() );
+    if ( isConnected() )
+    {
+        gzwarn << _model->GetScopedName() << " was already connected\n";
+    }
 
-    connectionJoint = getConnectionJoint( otherConnectionLink );
+    gzmsg << "Create connection with " << otherConnectionLink->GetScopedName() << " (" << thisConnectionLink->GetScopedName() << ")\n";
+
+    connectionJoint = getOtherConnectionJoint( otherConnectionLink );
 
     if ( !connectionJoint )
     {
@@ -371,6 +386,11 @@ void RoFICoMPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
     {
         assert( !isConnected() );
         auto otherModel = getModelOfOther( contact );
+        if ( otherModel == _model )
+        {
+            break;
+        }
+
         if ( !isRoFICoM( otherModel ) )
         {
             break;
@@ -385,7 +405,7 @@ void RoFICoMPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
 
         if ( position == Position::Extended )
         {
-            connectionJoint = getConnectionJoint( otherLink );
+            connectionJoint = getOtherConnectionJoint( otherLink );
 
             if ( connectionJoint )
             {
@@ -556,7 +576,7 @@ physics::JointPtr RoFICoMPlugin::getExtendJoint( physics::ModelPtr roficom )
     return extendJoint;
 }
 
-physics::JointPtr RoFICoMPlugin::getConnectionJoint( physics::LinkPtr otherConnectionLink ) const
+physics::JointPtr RoFICoMPlugin::getOtherConnectionJoint( physics::LinkPtr otherConnectionLink ) const
 {
     assert( !connectionJoint );
     assert( thisConnectionLink );

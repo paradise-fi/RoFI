@@ -1,3 +1,5 @@
+#pragma once
+
 #include <gazebo/gazebo.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/physics/physics.hh>
@@ -57,6 +59,11 @@ struct JointData
             gzerr << "Minimal position is larger than maximal\n";
             throw std::runtime_error( "Minimal position of is larger than maximal" );
         }
+    }
+
+    operator bool() const
+    {
+        return bool( joint );
     }
 };
 

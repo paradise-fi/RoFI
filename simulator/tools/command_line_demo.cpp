@@ -219,7 +219,7 @@ void processConnectorCmd( rofi::hal::RoFI & rofi, const std::vector< std::string
     auto connector = rofi.getConnector( readInt( tokens[1] ) );
 
     switch ( getConnectorCmdType( tokens[2] ) )
-    {  
+    {
         case ConnectorCmd::NO_CMD:
         {
             break;

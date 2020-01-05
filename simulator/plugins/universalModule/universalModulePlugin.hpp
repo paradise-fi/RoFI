@@ -1,3 +1,5 @@
+#pragma once
+
 #include <gazebo/gazebo.hh>
 #include <gazebo/common/Events.hh>
 #include <gazebo/physics/physics.hh>
