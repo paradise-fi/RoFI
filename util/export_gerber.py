@@ -64,9 +64,7 @@ plot_plan = [
     ("MaskBottom", B_Mask, "Mask bottom"),
     ("MaskTop", F_Mask, "Mask top"),
     ("EdgeCuts", Edge_Cuts, "Edges"),
-    ("CmtUser", Cmts_User, "V-CUT"),
-    ("Eco1.User", Eco1_User, "V-CUT"),
-    ("Eco2.User", Eco2_User, "V-CUT"),
+    ("CmtUser", Cmts_User, "V-CUT")
 ]
 
 
