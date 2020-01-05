@@ -6,7 +6,7 @@ CONTROL_BOARDS = manu/batteryBoard.kicad_pcb manu/powerBoard.kicad_pcb manu/cpuB
 .PHONY: ele_manu clean controlBoard slipRing slipRingBrush
 
 define build_gerber
-	export_gerber.py $(1) manu/$(notdir $(1:.kicad_pcb=-gerber))
+	kicadExportGerber.py $(1) manu/$(notdir $(1:.kicad_pcb=-gerber))
 	zip -j manu/$(notdir $(1:.kicad_pcb=-gerber.zip)) `find manu/$(notdir $(1:.kicad_pcb=-gerber))`
 endef
 

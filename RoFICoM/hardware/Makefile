@@ -13,7 +13,7 @@ clean:
 	rm -rf $(BOARDS:.kicad_pcb=-gerber.zip)
 
 %-gerber: %.kicad_pcb
-	export_gerber.py $< $@
+	kicadExportGerber.py $< $@
 
 %-gerber.zip: %-gerber
 	zip -j $@ `find $<`

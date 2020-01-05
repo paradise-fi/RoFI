@@ -8,7 +8,7 @@ import os
 from pcbnew import *
 
 def help():
-    print("Usage: export_gerber.py <board file> [<output dir>]")
+    print("Usage: kicadExportGerber.py <board file> [<output dir>]")
     print("    Default output dir '<board file>-gerber'")
 
 if len(sys.argv) == 1 or len(sys.argv) > 3:
