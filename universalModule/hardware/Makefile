@@ -30,16 +30,16 @@ controlBoard:
 	mkdir -p manu/controlBoard
 	splitBoard.py controlBoard/controlBoard.kicad_pcb 206 76 70 85 manu/batteryBoard.kicad_pcb
 	$(call build_gerber, manu/batteryBoard.kicad_pcb)
-	$(call build_stencil, $(realpath manu/batteryBoard.kicad_pcb))
+	$(call build_stencil, $(abspath manu/batteryBoard.kicad_pcb))
 	splitBoard.py controlBoard/controlBoard.kicad_pcb 130 76 70 85 manu/powerBoard.kicad_pcb
 	$(call build_gerber, manu/powerBoard.kicad_pcb)
-	$(call build_stencil, $(realpath manu/powerBoard.kicad_pcb))
+	$(call build_stencil, $(abspath manu/powerBoard.kicad_pcb))
 	splitBoard.py controlBoard/controlBoard.kicad_pcb 55 76 70 85 manu/cpuBoard.kicad_pcb
 	$(call build_gerber, manu/cpuBoard.kicad_pcb)
-	$(call build_stencil, $(realpath manu/cpuBoard.kicad_pcb))
+	$(call build_stencil, $(abspath manu/cpuBoard.kicad_pcb))
 	splitBoard.py controlBoard/controlBoard.kicad_pcb 20 90 35 60 manu/uiBoard.kicad_pcb
 	$(call build_gerber, manu/uiBoard.kicad_pcb)
-	$(call build_stencil, $(realpath manu/uiBoard.kicad_pcb))
+	$(call build_stencil, $(abspath manu/uiBoard.kicad_pcb))
 
 slipRing:
 	$(call build_gerber, slipRing/slipRing.kicad_pcb)
