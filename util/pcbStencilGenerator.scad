@@ -21,15 +21,16 @@ module stencilSubstrate(outlineDxf, thickness, frameHeight,
 }
 
 module stencil(outlineDxf, holesDxf, thickness = 0.2, frameHeight = 1,
-    frameWidth = 1, frameClearance = 0.1, front = true)
+    frameWidth = 1, frameClearance = 0.1, enlargeHoles = 0.05, front = true)
 {
     zScale = front ? -1 : 1;
-    scale([1, 1, zScale])
+    xRotate = front ? 180 : 0;
+    rotate(a = xRotate, v = [1, 0, 0])
         difference() {
             scale([1, 1, zScale]) stencilSubstrate(outlineDxf, thickness,
                 frameHeight, frameWidth, frameClearance);
             linear_extrude(height = 4 * thickness, center = true)
-                import(file = holesDxf);
+                offset(delta = enlargeHoles) import(file = holesDxf);
         };
 }
 
@@ -37,7 +38,8 @@ $fa = 0.4;
 $fs = 0.4;
 thickness = 0.2;
 frameHeight = 1;
-frameWidth = 1;
-frameClearance = 0.1;
+frameWidth = 2;
+enlargeHoles = 0.0;
+frameClearance = 0;
 stencil(outline, mask, thickness = thickness, frameHeight = frameHeight,
     frameWidth = frameWidth, frameClearance = frameClearance, front=front);
