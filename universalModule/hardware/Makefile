@@ -11,11 +11,12 @@ define build_gerber
 endef
 
 define build_stencil
-	kicadExportDxf.py $(1)
-	openscad -o $(1:.kicad_pcb=-stencilTop.stl) -Doutline=\"$(1:.kicad_pcb=-EdgeCuts.dxf)\" -Dmask=\"$(1:.kicad_pcb=-PasteTop.dxf)\" -Dfront=1 ../../util/pcbStencilGenerator.scad
-	admesh --write-binary-stl=$(1:.kicad_pcb=-stencilTop.stl) $(1:.kicad_pcb=-stencilTop.stl)
-	openscad -o $(1:.kicad_pcb=-stencilBottom.stl) -Doutline=\"$(1:.kicad_pcb=-EdgeCuts.dxf)\" -Dmask=\"$(1:.kicad_pcb=-PasteBottom.dxf)\" -Dfront=0 ../../util/pcbStencilGenerator.scad
-	admesh --write-binary-stl=$(1:.kicad_pcb=-stencilBottom.stl) $(1:.kicad_pcb=-stencilBottom.stl)
+	kicadSquarePads.py $(1) $(1:.kicad_pcb=-squared.kicad_pcb)
+	kicadExportDxf.py $(1:.kicad_pcb=-squared.kicad_pcb)
+	openscad -o $(1:.kicad_pcb=-squared-stencilTop.stl) -Doutline=\"$(1:.kicad_pcb=-squared-EdgeCuts.dxf)\" -Dmask=\"$(1:.kicad_pcb=-squared-PasteTop.dxf)\" -Dfront=1 ../../util/pcbStencilGenerator.scad
+	admesh --write-binary-stl=$(1:.kicad_pcb=-squared-stencilTop.stl) $(1:.kicad_pcb=-squared-stencilTop.stl)
+	openscad -o $(1:.kicad_pcb=-squared-stencilBottom.stl) -Doutline=\"$(1:.kicad_pcb=-squared-EdgeCuts.dxf)\" -Dmask=\"$(1:.kicad_pcb=-squared-PasteBottom.dxf)\" -Dfront=0 ../../util/pcbStencilGenerator.scad
+	admesh --write-binary-stl=$(1:.kicad_pcb=-squared-stencilBottom.stl) $(1:.kicad_pcb=-squared-stencilBottom.stl)
 endef
 
 ele_manu: controlBoard slipRing slipRingBrush
