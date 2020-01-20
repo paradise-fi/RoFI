@@ -9,13 +9,24 @@ namespace rofi::smtr {
 
 using ModuleIdx = int;
 
+struct Parameters {
+    enum class StepSize { Step90, Continuous };
+
+    StepSize stepSize = StepSize::Continuous;
+    bool shoeLimitConstain = false;
+    bool connectorLimitConstrain = false;
+    bool simplify = false;
+};
+
 struct Context {
+    Parameters cfg;
     z3::context ctx;
 
     z3::expr sqrt2, sqrt3;
 
-    Context():
-        ctx(), sqrt2( ctx.real_const( "sqrt2" ) ), sqrt3( ctx.real_const( "sqrt3" ) )
+    Context( Parameters c = {} ):
+        cfg( c ), ctx(), sqrt2( ctx.real_const( "sqrt2" ) ),
+        sqrt3( ctx.real_const( "sqrt3" ) )
     {}
 
     z3::expr constraints() const {
