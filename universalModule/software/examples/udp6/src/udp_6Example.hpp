@@ -48,7 +48,7 @@ inline void runMaster() {
 	udp_recv( pcb, onMasterPacket, nullptr );
 
 	while ( true )
-		vTaskDelay( 4000 / portTICK_PERIOD_MS );
+		vTaskDelay( 2000 / portTICK_PERIOD_MS );
 }
 
 inline void runSlave( const char* masterAddr ) {
@@ -76,7 +76,7 @@ inline void runSlave( const char* masterAddr ) {
 		std::cout << "Sending message: " << buffer.asString() << " to ";
 		std::cout << std::hex; printA(std::cout, *(ip6_addr_t*) &addr) << std::dec << std::endl;
 		res = udp_sendto( pcb, buffer.get(), &addr, 7777 );
-		vTaskDelay( 4000 / portTICK_PERIOD_MS );
+		vTaskDelay( 2000 / portTICK_PERIOD_MS );
 	}
 }
 
