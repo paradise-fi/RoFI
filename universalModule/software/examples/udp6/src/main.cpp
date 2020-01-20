@@ -28,7 +28,7 @@ const char* getOwn( int id ) {
 
 const char* buildAddress ( int id ) {
 	std::ostringstream s;
-	s << "fe80::" << id;
+	s << "fc07::" << id;
 	return s.str().c_str();
 }
 
@@ -69,7 +69,7 @@ _rofi::PhysAddr mac() {
 }
 
 std::vector< gpio_num_t > docks( int id ) {
-	if ( id == 1 || id == 11 )
+	if ( id == 1 && id == 11 )
 		return { GPIO_NUM_14, GPIO_NUM_27 };
 	return { GPIO_NUM_14 };
 }
@@ -98,9 +98,9 @@ extern "C" void app_main() {
 		                                 // "fe80::1" ) );
 		udpEx6::runMaster();
 	} else
-		udpEx6::runSlave( // "fe80:0:0:0:ae30:0:8083:10a4"
-						   "fe80::11"
+		udpEx6::runSlave(  // "fe80:0:0:0:ae30:0:8083:10a4"
+						   "fc07::11"
 						);
 	
-	while ( true ) vTaskDelay( 4000 / portTICK_PERIOD_MS );
+	while ( true ) vTaskDelay( 2000 / portTICK_PERIOD_MS );
 }
