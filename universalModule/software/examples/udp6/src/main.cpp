@@ -26,17 +26,10 @@ const char* getOwn( int id ) {
 	return "fe80:0:0:0:32ae:a4ff:fe17:a888";
 }
 
-const char* getAddress ( int id ) {
-	if ( id == 1 ) {
-		return "fe80::1";
-	} else if ( id == 3 ) {
-		return "fe80::3";
-	} else if ( id == 4 ) {
-		return "fe80::4";
-	} else if ( id == 0 ) {
-		return "fe80::0";	
-	}
-	return "fe80::16";
+const char* buildAddress ( int id ) {
+	std::ostringstream s;
+	s << "fe80::" << id;
+	return s.str().c_str();
 }
 
 int getId() {
@@ -51,6 +44,10 @@ int getId() {
 			result = 3;
 		else if ( macAddress[ 5 ] == 136 )
 			result = 4;
+		else if ( macAddress[ 5 ] == 128 )
+			result = 11;
+		else if ( macAddress[ 5 ] == 164 )
+			result = 12;
 		else
 			result = 0;
 		
@@ -72,7 +69,7 @@ _rofi::PhysAddr mac() {
 }
 
 std::vector< gpio_num_t > docks( int id ) {
-	if ( id == 1 )
+	if ( id == 1 || id == 11 )
 		return { GPIO_NUM_14, GPIO_NUM_27 };
 	return { GPIO_NUM_14 };
 }
@@ -90,19 +87,20 @@ extern "C" void app_main() {
 	ESP_ERROR_CHECK( r );
 
 	_rofi::RoIF6 roif(
-		_rofi::Ip6Addr( getAddress( getId() ) ),
+		_rofi::Ip6Addr( buildAddress( getId() ) ),
 		mac(),
 		docks( getId() ) );
 
 	roif.setUp();
 	roif.printAddresses();
-	if ( getId() == 1 ) {
-		roif.addAddress( _rofi::Ip6Addr( "fe80::1" ) );
+	if ( getId() == 11 ) {
+		//roif.addAddress( _rofi::Ip6Addr( "fe80:0:0:0:ae30:0:8083:10a4" ) );
+		                                 // "fe80::1" ) );
 		udpEx6::runMaster();
 	} else
-		udpEx6::runSlave( // "fe80:0:0:0:ae30:0:cce5:14a4"
-						  "fe80::1"
+		udpEx6::runSlave( // "fe80:0:0:0:ae30:0:8083:10a4"
+						   "fe80::11"
 						);
 	
-	while ( true ) vTaskDelay( 1000 / portTICK_PERIOD_MS );
+	while ( true ) vTaskDelay( 4000 / portTICK_PERIOD_MS );
 }

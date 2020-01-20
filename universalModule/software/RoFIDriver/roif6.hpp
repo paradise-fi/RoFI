@@ -180,7 +180,6 @@ public:
 	}
 
 	void setUp() {
-		netif_set_default( &_netif );
 		netif_create_ip6_linklocal_address( &_netif, 0 );
 		netif_set_up( &_netif );
 	}
@@ -194,7 +193,10 @@ public:
 		n->output_ip6 = output;
 		n->input = netif_input;
 		n->linkoutput = linkOutput;
-		n->flags |= NETIF_FLAG_LINK_UP | NETIF_FLAG_MLD6 | NETIF_FLAG_UP;
+		n->flags |= NETIF_FLAG_LINK_UP 
+                 | NETIF_FLAG_IGMP
+                 // | NETIF_FLAG_MLD6
+                 | NETIF_FLAG_UP;
 		n->num = _seqNum();
 		nd6_set_cb( n, ncb );
 		return ERR_OK;
@@ -203,12 +205,7 @@ public:
 	static err_t output( struct netif* n, struct pbuf *p, const ip6_addr_t *ipaddr) {
 		auto self = reinterpret_cast< Netif* >( n->state );
 		self->_send( /* Ip6Addr( *ipaddr ),*/ PBuf::reference( p ) );
-		if ( self->_loopback ) {
-			pbuf_ref( p );
-			self->_loopback( p, n );
-		} else {
-			std::cout << "loopback is null! \n";
-		}
+
 		return ERR_OK;
 	}
 
@@ -243,6 +240,7 @@ private:
                 packet.release();
         } else {
 			_rtable.update( packet, dock.id() );
+			packet.release();
 		}
     }
 
@@ -253,149 +251,43 @@ private:
 	PhysAddr _pAddr;
 	Dock _dock;
 	struct netif _netif;
-	std::function< void( struct pbuf*, struct netif* )> _loopback;
 	RoutingTable& _rtable;
 
 	friend class RoIF6;
 };
 
-
-class VirtNetif {
-public:
-	VirtNetif( Ip6Addr addr, RoutingTable& rt )
-	: _rtable( rt ) {
-		netif_set_default( &_netif );
-		netif_add( &_netif, NULL, NULL, NULL, this, virt_init, tcpip_input );
-		netif_add_ip6_address( &_netif, static_cast< ip6_addr_t* >( &addr ), 0 );
-		netif_ip6_addr_set_state( &_netif, 0, IP6_ADDR_TENTATIVE );
-		dhcp_stop( &_netif );
-		netif_set_up( &_netif );
-		_rtable.addRecord( addr, 0, static_cast< gpio_num_t >( 0 ) );
-	}
-
-	void addAddress( const Ip6Addr& addr ) {
-		netif_add_ip6_address( &_netif, as< ip6_addr_t* >( &addr.addr ), nullptr );
-	}
-
-	void addAddress( const Ip6Addr& addr, s8_t index ) {
-		netif_add_ip6_address( &_netif, as< ip6_addr_t* >( &addr.addr ), &index );
-		netif_ip6_addr_set_state( &_netif, index, IP6_ADDR_TENTATIVE );
-	}
-
-	const ip6_addr_t* getAddress( int index ) const {
-		return as< const ip6_addr_t* >( &_netif.ip6_addr[index] );
-	}
-
-	const ip6_addr_t* getAddress() const {
-		return getAddress( 0 );
-	}
-
-	static err_t virt_init( struct netif* n ) {
-		n->mtu = 120;
-		n->hwaddr_len = 6;
-		n->name[ 0 ] = 'r'; n->name[ 1 ] = 'o';
-		n->output_ip6 = output;
-		n->input = netif_input;
-		n->linkoutput = linkOutput;
-		n->flags |= NETIF_FLAG_LINK_UP | NETIF_FLAG_MLD6 | NETIF_FLAG_UP;
-		n->num = _seqNum();
-		nd6_set_cb( n, ncb );
-		return ERR_OK;
-	}
-
-	void printAddresses() const {
-		std::cout << "Addresses are \n" << std::hex;
-		for ( const auto& n : _netif.ip6_addr ) {
-			std::cout << "\t" << *( (ip6_addr_t*) &n ) << std::endl;
-		}
-		std::cout << std::dec;
-	}
-
-	static err_t output( struct netif* n, struct pbuf* p, const ip6_addr_t* ipaddr ) {
-		auto self = reinterpret_cast< VirtNetif* >( n->state );
-		auto* rec = self->_rtable.search( Ip6Addr( *ipaddr ) );
-		if ( rec ) {
-			std::cout << "res is not null, sending via dock " << rec->dockC << std::endl;
-			self->_sendBy( n, p, rec->dockC );
-		}
-		return ERR_OK;
-	}
-
-	static err_t linkOutput( struct netif* n, struct pbuf *p ) {
-		assert( false && "Link output should not be directly used" );
-		return ERR_OK;
-	}
-
-private:
-	static int _seqNum() {
-        static int num = 0;
-        return num++;
-    }
-
-	void _broadcast( struct netif* n, struct pbuf *p, const ip6_addr_t* ipaddr ) {
-		_brd( n, p, ipaddr );
-	}
-
-	void _setBroadcast( std::function< void( struct netif* n, struct pbuf *p, const ip6_addr_t* ipaddr ) > f ) {
-		_brd = f;
-	}
-
-	void _setSendBy( std::function< void( struct netif* n, struct pbuf* p, gpio_num_t dock ) > f ) {
-		_sendBy = f;
-	}
-
-	struct netif _netif;
-	RoutingTable& _rtable;
-	std::function< void( struct netif* n, struct pbuf *p, const ip6_addr_t* ipaddr ) > _brd;
-	std::function< void( struct netif* n, struct pbuf* p, gpio_num_t dock ) > _sendBy;
-
-	friend class RoIF6;
-};
 
 // RoFi Network Interface for IPv6
 class RoIF6 {
 public:
 	RoIF6( Ip6Addr addr, PhysAddr pAddr, std::vector< gpio_num_t > dockCs, spi_host_device_t spiHost = HSPI_HOST)
-	: _main( addr, _rtable ) {
-		_main._setBroadcast( [this]( struct netif* n, struct pbuf *p, const ip6_addr_t* ipaddr ) {
-			_broadcast( n, p, ipaddr );
-		} );
-
-		_main._setSendBy( [this]( struct netif* n, struct pbuf* p, gpio_num_t dock ) {
-			_sendBy( n, p, dock );
-		});
+	{
+		netif_set_default( &_netif );
+		netif_add( &_netif, NULL, NULL, NULL, this, init, tcpip_input );
+		netif_add_ip6_address( &_netif, static_cast< ip6_addr_t* >( &addr ), 0 );
+		netif_ip6_addr_set_state( &_netif, 0, IP6_ADDR_TENTATIVE );
+		dhcp_stop( &_netif );
+		_rtable.addRecord( addr, 0, static_cast< gpio_num_t >( 0 ) );
 
 		_netifs.reserve( dockCs.size() );
 		for ( auto cs : dockCs ) {
 			_netifs.emplace_back( pAddr, cs, spiHost, _rtable );
-			_netifs.back()._loopback = [this]( struct pbuf* p, struct netif* n ) {
-				std::cout << "loopback called\n";
-				_main._netif.input( p, n );
-			};
+			// _netifs.back()._setSend( _send );
 		}
+
 	}
 
 	void printAddresses() const {
 		int counter = 0;
-		std::cout << "for _main\n"; _main.printAddresses();
+		std::cout << "Roif6 address is\n" << std::hex;
+		for ( const auto& n : _netif.ip6_addr ) {
+			std::cout << "\t" <<  *( ( ip6_addr_t* ) &n ) << std::endl;
+		}
 		for ( const auto& n : _netifs ) {
 			std::cout << "netif number " << counter++ << std::endl;
 			n.printAddresses();
 		}
-	}
-
-	/*
-	void addAddrTo( Ip6Addr addr ) {
-		_main.addAddress( addr );
-	}*/
-
-	void addAddress( Ip6Addr addr ) {
-		std::cout << "VirtNetif addresses \n";
-		_main.printAddresses();
-		std::cout << "netifs addresses \n";
-		for ( auto& n : _netifs ) {
-			n.printAddresses();
-		}
+		std::cout << std::dec;
 	}
 
 	void setUp() {
@@ -406,40 +298,76 @@ public:
 		_mappingTimer = rtos::Timer( 5000 / portTICK_PERIOD_MS, rtos::Timer::Type::Periodic,
             [this]() {
                 for ( auto& n : _netifs ) {
-					n._send( _rtable.toSend(), 1 );
+					n._send( std::move( _rtable.toSend() ), 1 );
 				}
             } );
         _mappingTimer.start();
 	}
 
+	static err_t init( struct netif* roif ) {
+        roif->mtu = 120;
+        roif->name[ 0 ] = 'r'; roif->name[ 1 ] = 'o';
+        roif->output_ip6 = output;
+        roif->linkoutput = linkOutput;
+        roif->flags |= NETIF_FLAG_LINK_UP
+                    | NETIF_FLAG_IGMP
+                    // | NETIF_FLAG_MLD6
+                    | NETIF_FLAG_UP;
+        roif->num = _seqNum();
+		nd6_set_cb( roif, ncb );
+        return ERR_OK;
+    }
+
+    static err_t output( struct netif* roif, struct pbuf *p,
+        const ip6_addr_t *ipaddr )
+    {
+        auto self = reinterpret_cast< RoIF6* >( roif->state );
+        self->_send( Ip6Addr( *ipaddr ), PBuf::reference( p ) );
+        return ERR_OK;
+    }
+
+    static err_t linkOutput( struct netif* roif, struct pbuf *p ) {
+        assert( false && "Link output should not be directly used" );
+        return ERR_OK;
+    }
+
 private:
-	void _broadcast( struct netif* n, struct pbuf* p, const ip6_addr_t* ipaddr ) {
-		// std::cout << "_broadcast inside of RoIF6" << std::endl;
-		for ( auto& net : _netifs ) {
-			pbuf_ref( p );
-			net._netif.output_ip6( &net._netif, p, ipaddr );
-		}
-	}
+    static int _seqNum() {
+        static int num = 0;
+        return num++;
+    }
 
-	bool _sendBy( struct netif* n, struct pbuf* p, gpio_num_t dock ) {
-		if ( dock == 0 ) { // special case when we want to target our virtual netif
-			std::cout << "_main here \n";
-			_main._netif.input( p, n );
-			return true;
-		}
+    void _onPacket( Dock& dock, int contentType, PBuf&& packet ) {
+        if ( contentType == 0 ) {
+            if ( !netif_is_up( &_netif ) )
+                return;
+            if ( _netif.input( packet.get(), &_netif ) == ERR_OK )
+                packet.release();
+        } else if ( contentType == 1 ) {
+            _rtable.update( packet, dock.id() );
+			packet.release();
+        }
+    }
 
-		for ( auto& net :_netifs ) {
-			if ( net.getDockGPIO() == dock ) {
-				std::cout << "dock used " << dock << std::endl;
-				net._send( PBuf::reference( p ) );
-				return true;
+	void _send( Ip6Addr addr, PBuf&& packet ) {
+		auto rec = _rtable.search( addr );
+		std::cout << "_send used and rec is " << (rec ? "not null " : "null ") << std::endl;
+		if (rec) {
+			for ( auto& n : _netifs ) {
+				if ( n.getDockGPIO() == rec->dockC )
+					n._dock.sendBlob( 0, std::move( packet ) );
+					break;
+			}
+		} else {
+			for ( auto& n : _netifs ) {
+				// n._netif.output_ip6( &n._netif, packet.get(), &addr );
 			}
 		}
-		return false;
 	}
 
+
 	RoutingTable _rtable;
-	VirtNetif _main;
+	netif _netif;
 	std::vector< Netif > _netifs;
 	rtos::Timer _mappingTimer;
 };
