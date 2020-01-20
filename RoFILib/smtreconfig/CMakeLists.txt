@@ -10,6 +10,7 @@ target_include_directories(smt-reconfig-lib INTERFACE .)
 
 add_executable(smt-reconfig main.cpp)
 target_link_libraries(smt-reconfig PRIVATE smt-reconfig-lib fmt)
+target_include_directories(smt-reconfig  PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/)
 
 add_executable(smt-reconfig-test test/main.cpp test/test.cpp test/smtTest.cpp)
 target_link_libraries(smt-reconfig-test PRIVATE fmt smt-reconfig-lib Catch2::Catch2 )

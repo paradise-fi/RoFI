@@ -9,7 +9,6 @@ void collectVar( const SinCosAngle& a, std::vector< z3::expr >& out ) {
     out.insert( out.end(), { a.sin, a.sinhalf, a.cos, a.coshalf } );
 }
 
-
 void collectVar( const Shoe& s, std::vector< z3::expr >& out ) {
     out.insert( out.end(), { s.x, s.y, s.z, s.qa, s.qb, s.qc, s.qd } );
 }
@@ -41,17 +40,17 @@ void collectVar( const SmtConfiguration& c, std::vector< z3::expr >& out ) {
 }
 
 std::string toString( ShoeId s ) {
-    std::string names[] = { "A", "B" };
+    static const std::string names[] = { "A", "B" };
     return names[ s ];
 }
 
 std::string toString( ConnectorId c ) {
-    std::string names[] = { "+X", "-X", "-Z" };
+    static const std::string names[] = { "+X", "-X", "-Z" };
     return names[ c ];
 }
 
 std::string toString( Orientation o ) {
-    std::string names[] = { "N", "W", "S", "E" };
+    static const std::string names[] = { "N", "W", "S", "E" };
     return names[ o ];
 }
 
@@ -244,7 +243,6 @@ z3::expr phiIsConnected( Context& ctx, const SmtConfiguration& cfg ) {
         phi = phi && !reachable[ i ][ 0 ];
     }
 
-    // std::cout << "Phi: " << phi << "\n";
     for ( int moduleIdx = 0; moduleIdx != cfg.modules.size(); moduleIdx++ ) {
         for ( int i = 0; i < reachable[ moduleIdx ].size() - 1; i++ ) {
             z3::expr neighUnreach = ctx.ctx.bool_val( true );
@@ -258,8 +256,6 @@ z3::expr phiIsConnected( Context& ctx, const SmtConfiguration& cfg ) {
             phi = phi &&
                 z3::implies( !reachable[ moduleIdx ][ i ] && neighUnreach,
                     !reachable[ moduleIdx ][ i + 1 ] );
-            // std::cout << "(" << moduleIdx << "): ";
-            // std::cout << phi << "\n";
         }
     }
 
@@ -267,7 +263,6 @@ z3::expr phiIsConnected( Context& ctx, const SmtConfiguration& cfg ) {
     for ( const auto& moduleReachables : reachable ) {
         phi = phi && moduleReachables[ last ];
     }
-    // std::cout << "Result: " << phi << "\n";
     return phi;
 }
 
@@ -854,28 +849,45 @@ std::pair< z3::expr, std::vector< SmtConfiguration > > reconfig( Context& ctx,
 
 z3::expr SmtConfiguration::constraints( Context& ctx ) const {
     z3::expr res = ctx.ctx.bool_val( true );
-    // Each two shoes have at most one connection
-    for ( auto [ m, ms, n, ns ] : allShoePairs( modules.size() ) ) {
-        std::vector< z3::expr > conns;
-        for ( auto [ mc, nc, o ] : allShoeConnections() ) {
-            conns.push_back( connection( m, ms, mc, n, ns, nc, o ) );
-        }
-        if ( conns.size() > 1 )
-            res = res && smt::atMostOne( ctx.ctx, conns );
-    }
-
-    // Each connector has at most one connection
-    for ( auto [ m, ms, mc ] : allConnectors( modules.size() ) ) {
-        std::vector< z3::expr > conns;
-        for ( auto [ n, ns, nc ] : allConnectors( modules.size() ) ) {
-            if ( n == m )
-                continue;
-            for ( auto o : { North, East, South, West } ) {
+    if ( ctx.cfg.shoeLimitConstain ) {
+        // Each two shoes have at most one connection
+        for ( auto [ m, ms, n, ns ] : allShoePairs( modules.size() ) ) {
+            std::vector< z3::expr > conns;
+            for ( auto [ mc, nc, o ] : allShoeConnections() ) {
                 conns.push_back( connection( m, ms, mc, n, ns, nc, o ) );
             }
+            if ( conns.size() > 1 )
+                res = res && smt::atMostOne( ctx.ctx, conns );
         }
-        if ( conns.size() > 1 )
-            res = res && smt::atMostOne( ctx.ctx, conns );
+    }
+
+    if ( ctx.cfg.connectorLimitConstrain ) {
+        // Each connector has at most one connection
+        for ( auto [ m, ms, mc ] : allConnectors( modules.size() ) ) {
+            std::vector< z3::expr > conns;
+            for ( auto [ n, ns, nc ] : allConnectors( modules.size() ) ) {
+                if ( n == m )
+                    continue;
+                for ( auto o : { North, East, South, West } ) {
+                    conns.push_back( connection( m, ms, mc, n, ns, nc, o ) );
+                }
+            }
+            if ( conns.size() > 1 )
+                res = res && smt::atMostOne( ctx.ctx, conns );
+        }
+    }
+
+    res = res && phiSinCos( ctx, *this );
+
+    if ( ctx.cfg.stepSize == Parameters::StepSize::Step90 ) {
+        for ( const Module& m : modules ) {
+            res = res &&
+                ( m.alpha.sin == 0 || m.alpha.sin == 1 || m.alpha.sin == -1 );
+            res = res &&
+                ( m.beta.sin == 0 || m.beta.sin == 1 || m.beta.sin == -1 );
+            res = res &&
+                ( m.gamma.sin == 0 || m.gamma.sin == 1 || m.gamma.sin == -1 );
+        }
     }
 
     return res;
