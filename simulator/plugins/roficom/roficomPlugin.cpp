@@ -270,19 +270,53 @@ void RoFICoMPlugin::createConnection( physics::LinkPtr otherConnectionLink, RoFI
 
     gzmsg << "Create connection with " << otherConnectionLink->GetScopedName() << " (" << thisConnectionLink->GetScopedName() << ")\n";
 
+    connectedWith = otherConnectionLink;
+    orientation = newOrientation;
+    startCommunication( otherConnectionLink->GetModel() );
+
     connectionJoint = getOtherConnectionJoint( otherConnectionLink );
 
-    if ( !connectionJoint )
+    if ( connectionJoint )
     {
-        // TODO create joint
-        connectionJoint = _model->CreateJoint( "outerConnection", "prismatic", thisConnectionLink, otherConnectionLink );
-        connectionJoint->SetParam( "fmax", 0, 15.0 );
-        connectionJoint->SetParam( "vel", 0, 0.0 );
+        gzmsg << "Found existing connection(" << _model->GetScopedName() << ")\n";
+
+        assert( connectionJoint->AreConnected( thisConnectionLink, connectedWith ) );
+        return;
+    }
+
+    gzmsg << "Creating new connection joint (" << _model->GetName() << ")\n";
+
+    auto thisWorldPose = thisConnectionLink->WorldPose();
+    auto otherWorldPose = otherConnectionLink->WorldPose();
+
+    auto thisNewWorldPose = otherWorldPose;
+    thisNewWorldPose.Pos() = thisNewWorldPose.CoordPositionAdd( { 0, 0, extendJoint->joint->Position() } );
+
+    // TODO rotate according to orientation
+    thisNewWorldPose.Rot() *= getThisToOtherRotation( newOrientation );
+    thisNewWorldPose.Rot() *= ignition::math::Quaterniond( { 1, 0, 0 }, ignition::math::Angle::Pi.Radian() );
+    std::cout << "This model new world pose: " << thisNewWorldPose << "\n";
+    _model->SetWorldPose( thisNewWorldPose );
+    _model->Update();
+
+    connectionJoint = _model->GetJoint( "outerConnection" );
+    if ( connectionJoint )
+    {
+        assert( connectionJoint->GetMsgType() == msgs::Joint::FIXED );
+        connectionJoint->Reset();
+        connectionJoint->Attach( thisConnectionLink, otherConnectionLink );
+        assert( connectionJoint->AreConnected( thisConnectionLink, otherConnectionLink ) );
+    }
+    else
+    {
+        connectionJoint = _model->CreateJoint( "outerConnection", "fixed", thisConnectionLink, otherConnectionLink );
+        // connectionJoint = _model->GetWorld()->Physics()->CreateJoint( "fixed", _model );
+        // connectionJoint->Attach( thisConnectionLink, otherConnectionLink );
         connectionJoint->Init();
     }
 
-    connectedWith = otherConnectionLink;
-    startCommunication( otherConnectionLink->GetModel() );
+    assert( connectionJoint );
+    assert( connectionJoint->AreConnected( thisConnectionLink, connectedWith ) );
 }
 
 void RoFICoMPlugin::startCommunication( physics::ModelPtr otherModel )
