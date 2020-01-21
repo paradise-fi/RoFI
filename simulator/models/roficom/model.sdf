@@ -114,6 +114,19 @@
                 <use_parent_model_frame>1</use_parent_model_frame>
             </axis>
         </joint>
-        <plugin name="roficom" filename="libroficomPlugin.so"/>
+        <plugin name="roficom" filename="libroficomPlugin.so">
+            <controller>
+                <joint>extendJoint</joint>
+                <velocity>
+                    <pid_gains>0 0 0</pid_gains>    <!-- TODO set -->
+                    <i_max>1000000</i_max>          <!-- TODO set -->
+                </velocity>
+                <position>
+                    <pid_gains>0 0 0</pid_gains>    <!-- TODO set -->
+                    <i_max>1000000</i_max>          <!-- TODO set -->
+                    <init_target> 0 </init_target>
+                </position>
+            </controller>
+        </plugin>
     </model>
 </sdf>

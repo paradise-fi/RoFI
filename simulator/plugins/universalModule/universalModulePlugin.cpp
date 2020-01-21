@@ -1,6 +1,8 @@
 #include "universalModulePlugin.hpp"
 
 #include <cmath>
+#include <functional>
+
 
 namespace gazebo
 {
@@ -96,7 +98,7 @@ void UMP::clearConnectors()
             pair.first->Fini();
         }
     }
-    connectors = {};
+    connectors.clear();
 }
 
 void UMP::findAndInitJoints()
@@ -107,20 +109,25 @@ void UMP::findAndInitJoints()
         return;
     }
 
-    joints = {};
-
-    for ( auto jointPtr : _model->GetJoints() )
-    {
-        if ( jointPtr->GetMsgType() == msgs::Joint::REVOLUTE )
+    const auto callback = [ this ]( int joint, double desiredPosition )
         {
-            joints.emplace_back( std::move( jointPtr ) );
-            assert( joints.back().jointData );
-        }
-    }
+            gzmsg << "Returning position reached of joint " << joint << ": " << desiredPosition << "\n";
 
-    for ( size_t i = 0; i < joints.size(); i++ )
+            _pub->Publish( getJointRofiResp( rofi::messages::JointCmd::SET_POS_WITH_SPEED, joint, desiredPosition ) );
+        };
+
+    auto pidValuesVector = PIDLoader::loadControllerValues( getPluginSdf( _model->GetSDF(), "universalModelPlugin.so" ) );
+
+    joints.clear();
+
+    for ( auto & pidValues : pidValuesVector )
     {
-        setVelocity( i, 0 );
+        if ( auto joint = _model->GetJoint( pidValues.jointName ) )
+        {
+            joints.emplace_back( std::move( joint ), std::move( pidValues ), std::bind( callback, joints.size(), std::placeholders::_1 ) );
+            assert( joints.back() );
+            assert( joints.back().joint->GetMsgType() == msgs::Joint::REVOLUTE );
+        }
     }
 }
 
@@ -217,42 +224,42 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
     }
     case JointCmd::GET_MAX_POSITION:
     {
-        double maxPosition = joints.at( joint ).jointData.maxPosition;
+        double maxPosition = joints.at( joint ).maxPosition;
         gzmsg << "Returning max position of joint " << joint << ": " << maxPosition << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_POSITION, joint, maxPosition ) );
         break;
     }
     case JointCmd::GET_MIN_POSITION:
     {
-        double minPosition = joints.at( joint ).jointData.minPosition;
+        double minPosition = joints.at( joint ).minPosition;
         gzmsg << "Returning min position of joint " << joint << ": " << minPosition << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_POSITION, joint, minPosition ) );
         break;
     }
     case JointCmd::GET_MAX_SPEED:
     {
-        double maxSpeed = joints.at( joint ).jointData.maxSpeed;
+        double maxSpeed = joints.at( joint ).maxSpeed;
         gzmsg << "Returning max speed of joint " << joint << ": " << maxSpeed << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_SPEED, joint, maxSpeed ) );
         break;
     }
     case JointCmd::GET_MIN_SPEED:
     {
-        double minSpeed = joints.at( joint ).jointData.minSpeed;
+        double minSpeed = joints.at( joint ).minSpeed;
         gzmsg << "Returning min speed of joint " << joint << ": " << minSpeed << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_SPEED, joint, minSpeed ) );
         break;
     }
     case JointCmd::GET_MAX_TORQUE:
     {
-        double maxTorque = joints.at( joint ).jointData.maxEffort;
+        double maxTorque = joints.at( joint ).maxEffort;
         gzmsg << "Returning max torque of joint " << joint << ": " << maxTorque << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_TORQUE, joint, maxTorque ) );
         break;
     }
     case JointCmd::GET_VELOCITY:
     {
-        double velocity = joints.at( joint ).jointData.joint->GetVelocity( 0 );
+        double velocity = joints.at( joint ).joint->GetVelocity( 0 );
         gzmsg << "Returning current velocity of joint " << joint << ": " << velocity << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_VELOCITY, joint, velocity ) );
         break;
@@ -267,7 +274,7 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
     }
     case JointCmd::GET_POSITION:
     {
-        double position = joints.at( joint ).jointData.joint->Position();
+        double position = joints.at( joint ).joint->Position();
         gzmsg << "Returning current position of joint " << joint << ": " << position << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_POSITION, joint, position ) );
         break;
@@ -325,71 +332,17 @@ void UMP::onConnectorResp( const UMP::ConnectorRespPtr & msg )
 
 void UMP::setVelocity( int joint, double velocity )
 {
-    auto maxSpeed = joints.at( joint ).jointData.maxSpeed;
-    velocity = trim( velocity, -maxSpeed, maxSpeed, "velocity" );
-    auto modelJoint = joints.at( joint ).jointData.joint;
-    modelJoint->SetParam( "fmax", 0, joints.at( joint ).jointData.maxEffort );
-    modelJoint->SetParam( "vel", 0, velocity );
-    modelJoint->SetParam( "lo_stop", 0, joints.at( joint ).jointData.minPosition );
-    modelJoint->SetParam( "hi_stop", 0, joints.at( joint ).jointData.maxPosition );
+    joints.at( joint ).pid.setTargetVelocity( velocity );
 }
 
 void UMP::setTorque( int joint, double torque )
 {
-    auto maxTorque = joints.at( joint ).jointData.maxEffort;
-    torque = trim( torque, -maxTorque, maxTorque, "torque" );
-    auto modelJoint = joints.at( joint ).jointData.joint;
-    modelJoint->SetParam( "fmax", 0, std::abs( torque ) );
-    modelJoint->SetParam( "vel", 0, std::copysign( joints.at( joint ).jointData.maxSpeed, torque ) );
-    modelJoint->SetParam( "lo_stop", 0, joints.at( joint ).jointData.minPosition );
-    modelJoint->SetParam( "hi_stop", 0, joints.at( joint ).jointData.maxPosition );
+    joints.at( joint ).pid.setTargetForce( torque );
 }
 
 void UMP::setPositionWithSpeed( int joint, double desiredPosition, double speed )
 {
-    double position = trim( desiredPosition, joints.at( joint ).jointData.minPosition,
-                                             joints.at( joint ).jointData.maxPosition, "position" );
-    speed = trim( speed, 0, joints.at( joint ).jointData.maxSpeed, "speed" );
-
-    auto modelJoint = joints.at( joint ).jointData.joint;
-
-    double actualPosition = modelJoint->Position();
-    if ( position > actualPosition )
-    {
-        modelJoint->SetParam( "lo_stop", 0, joints.at( joint ).jointData.minPosition );
-        modelJoint->SetParam( "hi_stop", 0, position );
-        modelJoint->SetParam( "vel", 0, speed );
-    }
-    else
-    {
-        modelJoint->SetParam( "lo_stop", 0, position );
-        modelJoint->SetParam( "hi_stop", 0, joints.at( joint ).jointData.maxPosition );
-        modelJoint->SetParam( "vel", 0, -speed );
-    }
-
-    modelJoint->SetParam( "fmax", 0, joints.at( joint ).jointData.maxEffort );
-
-    joints.at( joint ).onUpdate = event::Events::ConnectWorldUpdateEnd(
-        std::bind( &UMP::setPositionCheck, this, joint, position, desiredPosition ) );
-}
-
-void UMP::setPositionCheck( int joint, double position, double desiredPosition )
-{
-    using rofi::messages::JointCmd;
-
-    double currentPosition = joints.at( joint ).jointData.joint->Position();
-
-    if ( !equal( position, currentPosition, doublePrecision ) )
-        return;
-
-    joints.at( joint ).onUpdate = {};
-
-    setVelocity( joint, 0 );
-
-    gzmsg << "Returning position reached of joint " << joint << ": " << desiredPosition
-        << " (actual position: " << currentPosition << ")\n";
-
-    _pub->Publish( getJointRofiResp( JointCmd::SET_POS_WITH_SPEED, joint, desiredPosition ) );
+    joints.at( joint ).pid.setTargetPositionWithSpeed( desiredPosition, speed );
 }
 
 GZ_REGISTER_MODEL_PLUGIN( UniversalModulePlugin )

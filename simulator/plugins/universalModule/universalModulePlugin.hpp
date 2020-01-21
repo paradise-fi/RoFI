@@ -4,6 +4,7 @@
 #include <gazebo/common/Events.hh>
 #include <gazebo/physics/physics.hh>
 
+#include <deque>
 #include <limits>
 #include <utility>
 #include <vector>
@@ -12,21 +13,14 @@
 #include <rofiResp.pb.h>
 
 #include "../common/utils.hpp"
+#include "../common/pidController.hpp"
+#include "../common/pidLoader.hpp"
 
 namespace gazebo
 {
 
 class UniversalModulePlugin : public ModelPlugin
 {
-    struct JointDataWithOnUpdateConnection
-    {
-        JointData jointData;
-        event::ConnectionPtr onUpdate;
-
-        explicit JointDataWithOnUpdateConnection( physics::JointPtr joint )
-            : jointData( std::move( joint ) ) {}
-    };
-
 public:
     static constexpr double doublePrecision = 0.001;
 
@@ -72,8 +66,6 @@ private:
     void setTorque( int joint, double torque );
     void setPositionWithSpeed( int joint, double desiredPosition, double speed );
 
-    void setPositionCheck( int joint, double position, double desiredPosition );
-
 
     physics::ModelPtr _model;
 
@@ -81,7 +73,7 @@ private:
     transport::SubscriberPtr _sub;
     transport::PublisherPtr _pub;
 
-    std::vector< JointDataWithOnUpdateConnection > joints;
+    std::deque< JointData< PIDController > > joints;
     std::vector< std::pair< transport::PublisherPtr, transport::SubscriberPtr > > connectors;
 };
 

@@ -4,12 +4,17 @@
 #include <gazebo/common/Events.hh>
 #include <gazebo/physics/physics.hh>
 
+#include <memory>
 #include <mutex>
+#include <optional>
 
 #include <connectorCmd.pb.h>
 #include <connectorResp.pb.h>
 
 #include "../common/utils.hpp"
+#include "../common/pidController.hpp"
+#include "../common/pidLoader.hpp"
+
 
 namespace gazebo
 {
@@ -17,11 +22,12 @@ namespace gazebo
 class RoFICoMPlugin : public ModelPlugin
 {
 public:
-    static constexpr double positionPrecision = 0.0001; // [m]
     static constexpr double minConnectionCosAngle = 0.9992; // cos of maximal angle when connection succeeds
+    static constexpr double minOrientationCosAngle = 0.8660; // cos of maximal angle to get orientation
     static constexpr double maxConnectionCenterDistance = 0.004; // [m]
 
     using PacketPtr = boost::shared_ptr< const rofi::messages::Packet >;
+    using Orientation = rofi::messages::ConnectorState::Orientation;
 
     enum class Position : signed char
     {
@@ -44,7 +50,8 @@ public:
         }
     }
 
-    virtual void Load( physics::ModelPtr model, sdf::ElementPtr sdf );
+    void Load( physics::ModelPtr model, sdf::ElementPtr sdf ) override;
+    void loadJoint();
 
     void connect();
     void disconnect();
@@ -63,8 +70,6 @@ private:
     void onUpdate();
 
     // Called while holding connectionMutex
-    void stop();
-    // Called while holding connectionMutex
     void extend();
     // Called while holding connectionMutex
     void retract();
@@ -72,7 +77,7 @@ private:
     // Called while holding connectionMutex
     void startCommunication( physics::ModelPtr otherModel );
     // Called while holding connectionMutex
-    void createConnection( physics::LinkPtr otherConnectionLink );
+    void createConnection( physics::LinkPtr otherConnectionLink, Orientation orientation );
     // Called while holding connectionMutex
     void updateConnection();
     // Called while holding connectionMutex
@@ -89,7 +94,7 @@ private:
     physics::CollisionPtr getCollisionByScopedName( const std::string & collisionName ) const;
     rofi::messages::ConnectorResp getConnectorResp( rofi::messages::ConnectorCmd::Type cmdtype ) const;
 
-    bool canBeConnected( physics::LinkPtr otherConnectionLink ) const;
+    std::optional< Orientation > canBeConnected( physics::LinkPtr otherConnectionLink ) const;
     static physics::LinkPtr getConnectionLink( physics::ModelPtr roficom );
     static physics::JointPtr getExtendJoint( physics::ModelPtr roficom );
 
@@ -104,7 +109,7 @@ private:
     transport::SubscriberPtr _subOutside;
     transport::SubscriberPtr _subSensor;
 
-    JointData extendJoint;
+    std::unique_ptr< JointData< PIDController > > extendJoint;
     physics::LinkPtr thisConnectionLink;
     double currentVelocity = 0.0;
     physics::JointPtr connectionJoint;
@@ -115,7 +120,7 @@ private:
     event::ConnectionPtr onUpdateConnection;
     std::mutex connectionMutex;
     Position position = Position::Retracted;
-    rofi::messages::ConnectorState::Orientation orientation{};
+    Orientation orientation{};
 
     static std::mutex positionsMapMutex;
     static std::map< const physics::Model *, Position > positionsMap;

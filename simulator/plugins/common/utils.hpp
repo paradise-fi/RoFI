@@ -4,14 +4,23 @@
 #include <gazebo/common/Events.hh>
 #include <gazebo/physics/physics.hh>
 
+#include <algorithm>
 #include <string>
 #include <utility>
 #include <vector>
 
+
 namespace gazebo
 {
-struct JointData
+
+struct JointDataBase
 {
+    // Used for position set callback and for boundaries
+    // Prismatic joints: [m]
+    // Revolute joints: [rad]
+    static constexpr double positionPrecision = 1e-6;
+    static_assert( positionPrecision > 0 );
+
     // Prismatic joints: [m]
     // Revolute joints: [rad]
     double minPosition = std::numeric_limits< double >::lowest();
@@ -30,9 +39,18 @@ struct JointData
 
     physics::JointPtr joint;
 
-    JointData() = default;
+    operator bool() const
+    {
+        return bool( joint );
+    }
 
-    explicit JointData( physics::JointPtr joint ) : joint( std::move( joint ) )
+protected:
+    ~JointDataBase() = default;
+
+    JointDataBase( const JointDataBase & ) = default;
+    JointDataBase & operator=( const JointDataBase & ) = default;
+
+    explicit JointDataBase( physics::JointPtr joint ) : joint( std::move( joint ) )
     {
         if ( !this->joint )
         {
@@ -60,31 +78,47 @@ struct JointData
             throw std::runtime_error( "Minimal position of is larger than maximal" );
         }
     }
-
-    operator bool() const
-    {
-        return bool( joint );
-    }
 };
 
-inline double trim( double value, double min, double max, std::string debugName )
+template< typename _PID >
+struct JointData : public JointDataBase
 {
+    _PID pid;
+
+    template< typename ... Args >
+    explicit JointData( physics::JointPtr joint, Args && ... args ) :
+            JointDataBase( std::move( joint ) ),
+            pid( *this, std::forward< Args >( args )... )
+    {}
+
+    ~JointData() = default;
+};
+
+inline double verboseClamp( double value, double min, double max, std::string debugName )
+{
+    assert( min <= max );
     if ( value < min )
     {
-        gzwarn << "Value of " << debugName << " trimmed from " << value << " to " << min << "\n";
+        gzwarn << "Value of " << debugName << " clamped from " << value << " to " << min << "\n";
         return min;
     }
     if ( value > max )
     {
-        gzwarn << "Value of " << debugName << " trimmed from " << value << " to " << max << "\n";
+        gzwarn << "Value of " << debugName << " clamped from " << value << " to " << max << "\n";
         return max;
     }
     return value;
 }
 
+inline double clamp( double value, double min, double max )
+{
+    assert( min <= max );
+    return std::clamp( value, min, max );
+}
+
 inline bool equal( double first, double second, double precision )
 {
-    return first <= second + precision && second <= first + precision;
+    return std::abs( first - second ) <= precision;
 }
 
 inline gazebo::common::URI getURIFromModel( gazebo::physics::ModelPtr model, const std::string & postfix )
@@ -153,31 +187,27 @@ inline std::string replaceDelimeter( std::string_view sensorPath )
     return topicName;
 }
 
-inline bool isRoFICoM( gazebo::physics::ModelPtr model )
+inline sdf::ElementPtr getPluginSdf( sdf::ElementPtr modelSdf, const std::string & pluginName )
 {
-    if ( !model || model->GetPluginCount() == 0 )
+    for ( auto child = modelSdf->GetElement( "plugin" ); child; child = child->GetNextElement( "plugin" ) )
     {
-        return false;
-    }
-
-    ignition::msgs::Plugin_V plugins;
-    bool success = false;
-    model->PluginInfo( getURIFromModel( model, "plugin" ), plugins, success );
-
-    if ( !success )
-    {
-        gzwarn << "Did not succeed in getting plugins from nested model\n";
-        return false;
-    }
-
-    for ( auto & plugin : plugins.plugins() )
-    {
-        if ( plugin.has_filename() && plugin.filename() == "libroficomPlugin.so" )
+        if ( !child->HasAttribute( "filename" ) )
         {
-            return true;
+            continue;
+        }
+
+        auto value = child->Get< std::string >( "filename", "" );
+        if ( value.second && value.first == pluginName )
+        {
+            return child;
         }
     }
-
-    return false;
+    return {};
 }
+
+inline bool isRoFICoM( gazebo::physics::ModelPtr model )
+{
+    return model && getPluginSdf( model->GetSDF(), "libroficomPlugin.so" ) != nullptr;
+}
+
 } // namespace gazebo
