@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<sdf version="1.6">
+    <model name="StaticRoFICoM">
+        <pose frame="">0 0 16e-3 0 0 0</pose>
+        <include>
+            <uri>model://roficom</uri>
+        </include>
+        <joint name="fixToWorld" type="fixed">
+            <parent>world</parent>
+            <child>outer</child>
+        </joint>
+    </model>
+</sdf>
