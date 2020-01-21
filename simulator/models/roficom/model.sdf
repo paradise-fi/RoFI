@@ -102,12 +102,12 @@
                 <limit>
                     <lower>0</lower>
                     <upper>7e-3</upper>
-                    <effort>100</effort>
-                    <velocity>12e-3</velocity>
+                    <effort>50</effort>
+                    <velocity>24e-3</velocity>
                 </limit>
                 <initial_position>0</initial_position>
                 <dynamics>
-                    <friction>0.3</friction>
+                    <friction>1</friction>
                     <spring_reference>0</spring_reference>
                     <spring_stiffness>0</spring_stiffness>
                 </dynamics>

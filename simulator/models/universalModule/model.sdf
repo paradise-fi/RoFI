@@ -251,10 +251,10 @@
                 <xyz>0 0.01 0</xyz>
                 <limit>
                     <velocity>6.545</velocity> <!-- 60/0.16 deg/s -->
-                    <effort>1.5</effort> <!-- max torque [Nm] -->
+                    <effort>1.2</effort> <!-- max torque [Nm] -->
                 </limit>
                 <dynamics>
-                    <friction>0.3</friction>
+                    <friction>1</friction>
                     <spring_reference>0</spring_reference>
                     <spring_stiffness>0</spring_stiffness>
                 </dynamics>
@@ -271,10 +271,10 @@
                     <lower>-1.57079632679</lower>
                     <upper>1.57079632679</upper>
                     <velocity>6.545</velocity> <!-- 60/0.16 deg/s -->
-                    <effort>1.5</effort> <!-- max torque [Nm] -->
+                    <effort>1.2</effort> <!-- max torque [Nm] -->
                 </limit>
                 <dynamics>
-                    <friction>0.3</friction>
+                    <friction>1</friction>
                     <spring_reference>0</spring_reference>
                     <spring_stiffness>0</spring_stiffness>
                 </dynamics>
@@ -291,10 +291,10 @@
                     <lower>-1.57079632679</lower>
                     <upper>1.57079632679</upper>
                     <velocity>6.545</velocity> <!-- 60/0.16 deg/s -->
-                    <effort>1.5</effort> <!-- max torque [Nm] -->
+                    <effort>1.2</effort> <!-- max torque [Nm] -->
                 </limit>
                 <dynamics>
-                    <friction>0.3</friction>
+                    <friction>1</friction>
                     <spring_reference>0</spring_reference>
                     <spring_stiffness>0</spring_stiffness>
                 </dynamics>
