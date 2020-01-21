@@ -55,10 +55,7 @@ public:
     {
         assert( _jointData );
 
-        gzmsg << "Openning tmp_data for writing\n"; // TODO remove ( used for testing )
-        outFile.open( "tmp_data.txt" ); // TODO remove ( used for testing )
     }
-    std::ofstream outFile; // TODO remove ( used for testing )
 
     void forcePhysicsUpdate()
     {
@@ -122,14 +119,6 @@ public:
     {
         assert( _jointData );
         _velPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
-        outFile << "PID values: p: " << _velController.GetPGain()
-                << ", i: " << _velController.GetIGain()
-                << ", d: " << _velController.GetDGain()
-                << ", imax: " << _velController.GetIMax()
-                << ", imin: " << _velController.GetIMin()
-                << ", cmdmax: " << _velController.GetCmdMax()
-                << ", cmdmin: " << _velController.GetCmdMin()
-                << std::endl; // TODO remove ( used for testing )
     }
 
     void velPhysicsUpdate()
@@ -153,16 +142,6 @@ public:
         assert( force < _jointData.maxEffort );
         assert( force > -_jointData.maxEffort );
         _jointData.joint->SetForce( 0, force );
-
-        double p = 0, i = 0, d = 0; // TODO remove ( used for testing )
-        _velController.GetErrors( p, i, d ); // TODO remove ( used for testing )
-        outFile << "Step: time: " << _velPrevUpdateTime.Double()
-                << ", curVel: " << _jointData.joint->GetVelocity( 0 )
-                << ", targetVel: " << _targetVelocity
-                << ", errors: " << p << " : " << i << " : " << d
-                << ", linError: " << linearError
-                << ", force: " << force
-                << std::endl; // TODO remove ( used for testing )
     }
 
     void resetVelocityPID( PidControlType lastControlType )
