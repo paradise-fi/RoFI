@@ -276,17 +276,18 @@ int main( int argc, char **argv ) {
     std::string initial, final;
     int length = -1;
     options.add_options()
-        ("positional", "[smt|reconfig]",
+        ( "positional", "[smt|reconfig]",
             cxxopts::value< std::vector< std::string > >() )
-        ("f, final", "file with target configuration",
+        ( "f, final", "file with target configuration",
             cxxopts::value< std::string >( final ) )
-        ("i, initial", "file with initial configuration",
+        ( "i, initial", "file with initial configuration",
             cxxopts::value< std::string >( initial ) )
-        ("l, length", "either upper bound for the smt command or the formula length",
+        ( "l, length", "either upper bound for the smt command or the formula length",
             cxxopts::value< int >( length ), "N" )
-        ("s, simplify", "simplify the formula")
+        ( "s, simplify", "simplify the formula")
         ( "shoeLimitConstrain", "" )
-        ( "connectorLimitConstrain", "" );
+        ( "connectorLimitConstrain", "" )
+        ( "90degReconfig", "");
     options.parse_positional( { "positional" } );
 
     auto args = options.parse( argc, argv );
@@ -310,6 +311,9 @@ int main( int argc, char **argv ) {
     params.simplify = args.count( "simplify" );
     params.connectorLimitConstrain = args.count( "connectorLimitConstrain" );
     params.shoeLimitConstain = args.count( "shoeLimitConstrain" );
+    if ( args.count( "90degReconfig" ) ) {
+        params.stepSize = rofi::smtr::Parameters::StepSize::Step90;
+    }
 
     auto command = getCommand( args );
     if ( command == "smt" ) {
