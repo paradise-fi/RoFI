@@ -1,0 +1,50 @@
+[
+    {
+        "name": "trivial-1",
+        "initCfgFile": "../../data/trivial/trivial-1.initial",
+        "targetCfgFile": "../../data/trivial/trivial-1.goal",
+        "maxSteps": 4
+    },
+    {
+        "name": "trivial-2",
+        "initCfgFile": "../../data/trivial/trivial-2.initial",
+        "targetCfgFile": "../../data/trivial/trivial-2.goal",
+        "maxSteps": 6
+    },
+    {
+        "name": "trivial-3",
+        "initCfgFile": "../../data/trivial/trivial-3.initial",
+        "targetCfgFile": "../../data/trivial/trivial-3.goal",
+        "maxSteps": 6
+    },
+    {
+        "name": "trivial-4",
+        "initCfgFile": "../../data/trivial/trivial-4.initial",
+        "targetCfgFile": "../../data/trivial/trivial-4.goal",
+        "maxSteps": 6
+    },
+    {
+        "name": "2-climb",
+        "initCfgFile": "../../data/2-climb/init.in",
+        "targetCfgFile": "../../data/2-climb/goal.in",
+        "maxSteps": 6
+    },
+    {
+        "name": "3-attach",
+        "initCfgFile": "../../data/3-attach/init.in",
+        "targetCfgFile": "../../data/3-attach/goal.in",
+        "maxSteps": 10
+    },
+    {
+        "name": "6-roller",
+        "initCfgFile": "../../data/6-roller/init.in",
+        "targetCfgFile": "../../data/6-roller/goal.in",
+        "maxSteps": 12
+    },
+    {
+        "name": "8-parallel",
+        "initCfgFile": "../../data/8-parallel/init.in",
+        "targetCfgFile": "../../data/8-parallel/goal.in",
+        "maxSteps": 10
+    }
+]
