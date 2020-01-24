@@ -103,11 +103,11 @@
                     <lower>0</lower>
                     <upper>7e-3</upper>
                     <effort>50</effort>
-                    <velocity>24e-3</velocity>
+                    <velocity>25e-3</velocity>
                 </limit>
                 <initial_position>0</initial_position>
                 <dynamics>
-                    <friction>1</friction>
+                    <friction>0</friction>
                     <spring_reference>0</spring_reference>
                     <spring_stiffness>0</spring_stiffness>
                 </dynamics>
@@ -118,13 +118,14 @@
             <controller>
                 <joint>extendJoint</joint>
                 <velocity>
-                    <pid_gains>0 0 0</pid_gains>    <!-- TODO set -->
-                    <i_max>1000000</i_max>          <!-- TODO set -->
+                    <pid_gains>0.8 200 0.006</pid_gains>
+                    <i_max>1</i_max>
+                    <init_target>24e-3</init_target> <!-- TODO remove -->
                 </velocity>
                 <position>
                     <pid_gains>0 0 0</pid_gains>    <!-- TODO set -->
                     <i_max>1000000</i_max>          <!-- TODO set -->
-                    <init_target> 0 </init_target>
+                    <!-- <init_target> 0 </init_target> TODO set to 0 -->
                 </position>
             </controller>
         </plugin>

@@ -11,3 +11,6 @@ build-all: build
 
 clean:
 	rm -rf build
+
+run: build-all
+	./runGazebo.sh --verbose -e bullet

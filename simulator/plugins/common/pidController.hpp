@@ -28,7 +28,7 @@ protected:
 private:
     double _targetForce = 0;
 
-    bool atPositionBoundary() const
+    bool forceAtPositionBoundary() const
     {
         assert( _jointData );
         assert( _jointData.joint );
@@ -39,14 +39,9 @@ private:
         }
         if ( _targetForce < 0 )
         {
-            return equal( _jointData.joint->Position( 0 ), _jointData.minPosition,
-                          _jointData.positionPrecision );
+            return _jointData.joint->Position( 0 ) <= _jointData.getMinPosition();
         }
-        else
-        {
-            return equal( _jointData.joint->Position( 0 ), _jointData.maxPosition,
-                          _jointData.positionPrecision );
-        }
+        return _jointData.joint->Position( 0 ) >= _jointData.getMaxPosition();
     }
 
 public:
@@ -67,20 +62,20 @@ public:
             return;
         }
 
-        if ( atPositionBoundary() )
+        if ( forceAtPositionBoundary() )
         {
             gzmsg << "Boundary reached with force: " << _targetForce << ", setting to 0.\n";
             _targetForce = 0;
         }
 
-        assert( _targetForce < _jointData.maxEffort );
-        assert( _targetForce > -_jointData.maxEffort );
+        assert( _targetForce <= _jointData.maxEffort );
+        assert( _targetForce >= -_jointData.maxEffort );
         _jointData.joint->SetForce( 0, _targetForce );
     }
 
     void setTargetForce( double targetForce )
     {
-        _targetForce = verboseClamp( targetForce, -_jointData.maxEffort, _jointData.maxEffort, "targetForce" );
+        _targetForce = verboseClamp( targetForce, _jointData.getLowestEffort(), _jointData.getMaxEffort(), "targetForce" );
     }
 };
 
@@ -90,8 +85,18 @@ class VelocityPIDController : public ForceController
     common::Time _velPrevUpdateTime;
 
     double _targetVelocity = 0;
+    double _lastForceApplied = 0;
 
-    bool atPositionBoundary() const
+    void updateLastForceApplied( double newForce )
+    {
+        assert( newForce <= _jointData.maxEffort );
+        assert( newForce >= -_jointData.maxEffort );
+        _lastForceApplied = newForce;
+        _velController.SetCmdMin( _jointData.getLowestEffort() - _lastForceApplied );
+        _velController.SetCmdMax( _jointData.getMaxEffort() - _lastForceApplied );
+    }
+
+    bool velocityAtPositionBoundary() const
     {
         assert( _jointData );
         assert( _jointData.joint );
@@ -102,20 +107,15 @@ class VelocityPIDController : public ForceController
         }
         if ( _targetVelocity < 0 )
         {
-            return equal( _jointData.joint->Position( 0 ), _jointData.minPosition,
-                          _jointData.positionPrecision );
+            return _jointData.joint->Position( 0 ) <= _jointData.getMinPosition();
         }
-        else
-        {
-            return equal( _jointData.joint->Position( 0 ), _jointData.maxPosition,
-                          _jointData.positionPrecision );
-        }
+        return _jointData.joint->Position( 0 ) >= _jointData.getMaxPosition();
     }
 
 public:
     VelocityPIDController( JointDataBase & jointData, const PIDLoader::ControllerValues & pidValues ) :
             ForceController( jointData ),
-            _velController( pidValues.getVelocity().getPID( _jointData.maxEffort ) )
+            _velController( pidValues.getVelocity().getPID( _jointData.getMaxEffort(), _jointData.getLowestEffort() ) )
     {
         assert( _jointData );
         _velPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
@@ -129,19 +129,22 @@ public:
         common::Time currTime = _jointData.joint->GetWorld()->SimTime();
         common::Time stepTime = currTime - _velPrevUpdateTime;
         _velPrevUpdateTime = currTime;
-        assert( stepTime >= 0 && "time went backwards" );
+        assert( stepTime > 0 && "time went backwards" );
 
-        if ( atPositionBoundary() )
+        if ( velocityAtPositionBoundary() )
         {
+            gzmsg << "Boundary reached with velocity: " << _targetVelocity << ", setting to 0.\n";
             _targetVelocity = 0;
         }
 
         double linearError = _jointData.joint->GetVelocity( 0 ) - _targetVelocity;
 
-        auto force = _velController.Update( linearError, stepTime );
-        assert( force < _jointData.maxEffort );
-        assert( force > -_jointData.maxEffort );
+        auto force = _lastForceApplied + _velController.Update( linearError, stepTime );
+        assert( force <= _jointData.maxEffort );
+        assert( force >= -_jointData.maxEffort );
+
         _jointData.joint->SetForce( 0, force );
+        updateLastForceApplied( force );
     }
 
     void resetVelocityPID( PidControlType lastControlType )
@@ -157,11 +160,12 @@ public:
 
         _velPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
         _velController.Reset();
+        updateLastForceApplied( 0 );
     }
 
     void setTargetVelocity( double targetVelocity, std::optional< PidControlType > lastControlType )
     {
-        _targetVelocity = verboseClamp( targetVelocity, -_jointData.maxSpeed, _jointData.maxSpeed, "targetVelocity" );
+        _targetVelocity = verboseClamp( targetVelocity, _jointData.getLowestVelocity(), _jointData.getMaxVelocity(), "targetVelocity" );
 
         if ( lastControlType )
         {
@@ -187,7 +191,7 @@ public:
                            const PIDLoader::ControllerValues & pidValues,
                            Callback && positionReachedCallback ) :
             VelocityPIDController( jointData, pidValues ),
-            _posController( pidValues.getPosition().getPID( _jointData.maxEffort ) ),
+            _posController( pidValues.getPosition().getPID( _jointData.getLowestVelocity(), _jointData.getMaxVelocity() ) ),
             _positionReachedCallback( std::forward< Callback >( positionReachedCallback ) )
     {
         _posPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
@@ -211,7 +215,7 @@ public:
             if ( _positionReachedCallback )
             {
                 assert( _targetPosition ==
-                        clamp( _desiredPosition, _jointData.minPosition, _jointData.maxPosition ) );
+                        clamp( _desiredPosition, _jointData.getMinPosition(), _jointData.getMaxPosition() ) );
                 _positionReachedCallback( _desiredPosition );
             }
             else
@@ -220,8 +224,13 @@ public:
             }
         }
 
+        // TODO account for last velocity and update cmd bounds
         auto vel = _posController.Update( linearError, stepTime );
-        VelocityPIDController::setTargetVelocity( clamp( vel, -_maxSpeed, _maxSpeed ), std::nullopt );
+        assert( _maxSpeed >= 0 );
+        assert( _maxSpeed <= _jointData.maxSpeed );
+        assert( vel <= -_maxSpeed );
+        assert( vel >= _maxSpeed );
+        VelocityPIDController::setTargetVelocity( vel, std::nullopt );
         VelocityPIDController::velPhysicsUpdate();
     }
 
@@ -241,7 +250,7 @@ public:
     void setTargetPositionWithSpeed( double targetPosition, double maxSpeed, std::optional< PidControlType > lastControlType )
     {
         _desiredPosition = targetPosition;
-        _targetPosition = verboseClamp( targetPosition, _jointData.minPosition, _jointData.maxPosition, "targetPosition" );
+        _targetPosition = verboseClamp( targetPosition, _jointData.getMinPosition(), _jointData.getMaxPosition(), "targetPosition" );
         _positionReached = false;
 
         if ( maxSpeed <= 0 )
@@ -250,7 +259,9 @@ public:
             _targetPosition = _jointData.joint->Position( 0 );
             _positionReached = true;
         }
-        _maxSpeed = verboseClamp( maxSpeed, _jointData.minSpeed, _jointData.maxSpeed, "speed" );
+        _maxSpeed = verboseClamp( maxSpeed, _jointData.getMinVelocity(), _jointData.getMaxVelocity(), "speed" );
+        _posController.SetCmdMin( -_maxSpeed );
+        _posController.SetCmdMax( _maxSpeed );
 
         if ( lastControlType )
         {
@@ -297,7 +308,7 @@ public:
         if ( pidValues.getPosition().initTarget )
         {
             auto position = *pidValues.getPosition().initTarget;
-            auto speed = pidValues.getVelocity().initTarget.value_or( _jointData.maxSpeed );
+            auto speed = pidValues.getVelocity().initTarget.value_or( _jointData.getMaxVelocity() );
             setTargetPositionWithSpeed( position, speed );
         }
         else if ( pidValues.getVelocity().initTarget )
@@ -310,7 +321,7 @@ public:
         }
         else
         {
-            setTargetPositionWithSpeed( _jointData.joint->Position( 0 ), _jointData.maxSpeed );
+            setTargetPositionWithSpeed( _jointData.joint->Position( 0 ), _jointData.getMaxVelocity() );
         }
     }
 

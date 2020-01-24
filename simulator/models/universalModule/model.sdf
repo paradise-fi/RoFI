@@ -254,7 +254,7 @@
                     <effort>1.2</effort> <!-- max torque [Nm] -->
                 </limit>
                 <dynamics>
-                    <friction>1</friction>
+                    <friction>0</friction>
                     <spring_reference>0</spring_reference>
                     <spring_stiffness>0</spring_stiffness>
                 </dynamics>
@@ -274,7 +274,7 @@
                     <effort>1.2</effort> <!-- max torque [Nm] -->
                 </limit>
                 <dynamics>
-                    <friction>1</friction>
+                    <friction>0</friction>
                     <spring_reference>0</spring_reference>
                     <spring_stiffness>0</spring_stiffness>
                 </dynamics>
@@ -294,7 +294,7 @@
                     <effort>1.2</effort> <!-- max torque [Nm] -->
                 </limit>
                 <dynamics>
-                    <friction>1</friction>
+                    <friction>0</friction>
                     <spring_reference>0</spring_reference>
                     <spring_stiffness>0</spring_stiffness>
                 </dynamics>

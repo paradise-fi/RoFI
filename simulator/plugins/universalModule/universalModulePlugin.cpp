@@ -224,35 +224,35 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
     }
     case JointCmd::GET_MAX_POSITION:
     {
-        double maxPosition = joints.at( joint ).maxPosition;
+        double maxPosition = joints.at( joint ).getMaxPosition();
         gzmsg << "Returning max position of joint " << joint << ": " << maxPosition << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_POSITION, joint, maxPosition ) );
         break;
     }
     case JointCmd::GET_MIN_POSITION:
     {
-        double minPosition = joints.at( joint ).minPosition;
+        double minPosition = joints.at( joint ).getMinPosition();
         gzmsg << "Returning min position of joint " << joint << ": " << minPosition << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_POSITION, joint, minPosition ) );
         break;
     }
     case JointCmd::GET_MAX_SPEED:
     {
-        double maxSpeed = joints.at( joint ).maxSpeed;
+        double maxSpeed = joints.at( joint ).getMaxVelocity();
         gzmsg << "Returning max speed of joint " << joint << ": " << maxSpeed << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_SPEED, joint, maxSpeed ) );
         break;
     }
     case JointCmd::GET_MIN_SPEED:
     {
-        double minSpeed = joints.at( joint ).minSpeed;
+        double minSpeed = joints.at( joint ).getMinVelocity();
         gzmsg << "Returning min speed of joint " << joint << ": " << minSpeed << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_SPEED, joint, minSpeed ) );
         break;
     }
     case JointCmd::GET_MAX_TORQUE:
     {
-        double maxTorque = joints.at( joint ).maxEffort;
+        double maxTorque = joints.at( joint ).getMaxEffort();
         gzmsg << "Returning max torque of joint " << joint << ": " << maxTorque << "\n";
         _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_TORQUE, joint, maxTorque ) );
         break;

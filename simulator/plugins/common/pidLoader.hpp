@@ -22,13 +22,13 @@ public:
         std::optional< double > iMax = {};
         std::optional< double > initTarget = {};
 
-        common::PID getPID( double maxForce ) const
+        common::PID getPID( double maxCmd, double minCmd ) const
         {
             auto tmpPidGains = pidGains.value_or( ignition::math::Vector3d() );
             auto tmpIMax = iMax.value_or( std::numeric_limits< double >::max() );
 
             return common::PID( tmpPidGains.X(), tmpPidGains.Y(), tmpPidGains.Z(),
-                                tmpIMax, -tmpIMax, maxForce, -maxForce );
+                                tmpIMax, -tmpIMax, maxCmd, minCmd );
         }
     };
     struct ControllerValues

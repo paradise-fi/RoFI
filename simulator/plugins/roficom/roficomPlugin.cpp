@@ -38,18 +38,16 @@ void RoFICoMPlugin::loadJoint()
         {
             assert( this->extendJoint );
             assert( *this->extendJoint );
-            assert( this->extendJoint->maxPosition - this->extendJoint->minPosition
-                    > 2 * this->extendJoint->positionPrecision && "precision is too loose" );
 
             std::lock_guard< std::mutex > lock( this->connectionMutex );
 
             if ( std::abs( desiredPosition - this->extendJoint->minPosition )
-                    < this->extendJoint->positionPrecision )
+                    <= this->extendJoint->positionPrecision )
             {
                 this->updatePosition( Position::Retracted );
             }
             else if ( std::abs( desiredPosition - this->extendJoint->maxPosition )
-                    < this->extendJoint->positionPrecision )
+                    <= this->extendJoint->positionPrecision )
             {
                 this->updatePosition( Position::Extended );
             }
@@ -183,13 +181,13 @@ void RoFICoMPlugin::onUpdate()
 void RoFICoMPlugin::extend()
 {
     assert( extendJoint );
-    extendJoint->pid.setTargetPositionWithSpeed( extendJoint->maxPosition, extendJoint->maxSpeed );
+    extendJoint->pid.setTargetPositionWithSpeed( extendJoint->getMaxPosition(), extendJoint->getMaxVelocity() );
 }
 
 void RoFICoMPlugin::retract()
 {
     assert( extendJoint );
-    extendJoint->pid.setTargetPositionWithSpeed( extendJoint->minPosition, extendJoint->maxSpeed );
+    extendJoint->pid.setTargetPositionWithSpeed( extendJoint->getMinPosition(), extendJoint->getMaxVelocity() );
 }
 
 void RoFICoMPlugin::updateConnection()
