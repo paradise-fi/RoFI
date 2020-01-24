@@ -120,12 +120,12 @@
                 <velocity>
                     <pid_gains>0.8 200 0.006</pid_gains>
                     <i_max>1</i_max>
-                    <init_target>24e-3</init_target> <!-- TODO remove -->
+                    <init_target>24e-3</init_target>
                 </velocity>
                 <position>
-                    <pid_gains>0 0 0</pid_gains>    <!-- TODO set -->
-                    <i_max>1000000</i_max>          <!-- TODO set -->
-                    <!-- <init_target> 0 </init_target> TODO set to 0 -->
+                    <pid_gains>1 0 0.03</pid_gains>
+                    <i_max>1000000</i_max>          <!-- Not needed -->
+                    <init_target>0</init_target>
                 </position>
             </controller>
         </plugin>
