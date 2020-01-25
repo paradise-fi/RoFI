@@ -186,23 +186,9 @@ class PositionPIDController : public VelocityPIDController
 
     double _desiredPosition = 0;
     double _targetPosition = 0;
-    double _lastVelocity = 0;
     double _maxSpeed = 0;
     const std::function< void( double ) > _positionReachedCallback;
     bool _positionReached = true;
-
-    void updatePosCmdLimits()
-    {
-        assert( _maxSpeed > 0 );
-        assert( _maxSpeed <= _jointData.getMaxVelocity() );
-        assert( -_maxSpeed >= _jointData.getLowestVelocity() );
-
-        assert( _lastVelocity <= _jointData.maxSpeed );
-        assert( _lastVelocity >= -_jointData.maxSpeed );
-
-        _posController.SetCmdMin( -_maxSpeed - _lastVelocity );
-        _posController.SetCmdMax( _maxSpeed - _lastVelocity );
-    }
 
     template< bool Verbose = true >
     void setTargetPosition( double desiredPosition )
@@ -221,7 +207,10 @@ class PositionPIDController : public VelocityPIDController
     void setMaxSpeed( double maxSpeed )
     {
         assert( _jointData.getMinVelocity() >= _jointData.velocityPrecision );
+
         _maxSpeed = verboseClamp( maxSpeed, _jointData.getMinVelocity(), _jointData.getMaxVelocity(), "maxSpeed" );
+        _posController.SetCmdMin( -_maxSpeed );
+        _posController.SetCmdMax( _maxSpeed );
     }
 
 public:
@@ -234,6 +223,7 @@ public:
             _positionReachedCallback( std::forward< Callback >( positionReachedCallback ) )
     {
         assert( _jointData );
+        assert( _jointData.getLowestVelocity() == -_jointData.getMaxVelocity() );
         _posPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
         setTargetPosition< false >( _desiredPosition );
     }
@@ -265,14 +255,13 @@ public:
             }
         }
 
-        updatePosCmdLimits();
-        _lastVelocity = _lastVelocity + _posController.Update( linearError, stepTime );
+        auto velocity = _posController.Update( linearError, stepTime );
         assert( _maxSpeed > _jointData.getMinVelocity() );
         assert( _maxSpeed <= _jointData.getMaxVelocity() );
 
-        assert( std::abs( _lastVelocity ) <= _maxSpeed + _jointData.positionPrecision );
+        assert( std::abs( velocity ) <= _maxSpeed + _jointData.positionPrecision );
 
-        VelocityPIDController::setTargetVelocity( _lastVelocity, std::nullopt );
+        VelocityPIDController::setTargetVelocity( velocity, std::nullopt );
         VelocityPIDController::velPhysicsUpdate< false >();
     }
 
@@ -285,7 +274,6 @@ public:
 
         _posPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
         _posController.Reset();
-        _lastVelocity = 0;
 
         VelocityPIDController::resetVelocityPID( lastControlType );
     }

@@ -123,7 +123,7 @@
                     <init_target>24e-3</init_target>
                 </velocity>
                 <position>
-                    <pid_gains>1 0 0.03</pid_gains>
+                    <pid_gains>50 0 0</pid_gains>
                     <i_max>1</i_max>
                     <init_target>0</init_target>
                 </position>
