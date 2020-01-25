@@ -188,27 +188,6 @@ inline bool equal( double first, double second, double precision )
     return std::abs( first - second ) <= precision;
 }
 
-inline gazebo::common::URI getURIFromModel( gazebo::physics::ModelPtr model, const std::string & postfix )
-{
-    std::string uriString = "data://world/" + model->GetWorld()->Name();
-
-    std::vector< std::string > modelNames;
-    for ( gazebo::physics::BasePtr elem = model; elem; elem = elem->GetParent() )
-    {
-        if ( elem->HasType( gazebo::physics::Base::EntityType::MODEL ) )
-        {
-            modelNames.push_back( elem->GetName() );
-        }
-    }
-
-    for ( auto it = modelNames.rbegin(); it != modelNames.rend(); it++ )
-    {
-        uriString += "/model/" + *it;
-    }
-
-    return { std::move( uriString ) + "/" + postfix };
-}
-
 inline std::string getElemPath( gazebo::physics::BasePtr elem, const std::string & delim = "/" )
 {
     std::vector< std::string > names;

@@ -121,21 +121,25 @@ public:
         _velPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
     }
 
+    template< bool Verbose = true >
     void velPhysicsUpdate()
     {
         assert( _jointData );
         assert( _jointData.joint );
 
+        if ( velocityAtPositionBoundary() )
+        {
+            if constexpr ( Verbose )
+            {
+                gzmsg << "Boundary reached with velocity: " << _targetVelocity << ", setting to 0.\n";
+            }
+            _targetVelocity = 0;
+        }
+
         common::Time currTime = _jointData.joint->GetWorld()->SimTime();
         common::Time stepTime = currTime - _velPrevUpdateTime;
         _velPrevUpdateTime = currTime;
         assert( stepTime > 0 && "time went backwards" );
-
-        if ( velocityAtPositionBoundary() )
-        {
-            gzmsg << "Boundary reached with velocity: " << _targetVelocity << ", setting to 0.\n";
-            _targetVelocity = 0;
-        }
 
         double linearError = _jointData.joint->GetVelocity( 0 ) - _targetVelocity;
 
@@ -200,10 +204,18 @@ class PositionPIDController : public VelocityPIDController
         _posController.SetCmdMax( _maxSpeed - _lastVelocity );
     }
 
+    template< bool Verbose = true >
     void setTargetPosition( double desiredPosition )
     {
         _desiredPosition = desiredPosition;
-        _targetPosition = verboseClamp( _desiredPosition, _jointData.getMinPosition(), _jointData.getMaxPosition(), "targetPosition" );
+        if constexpr ( Verbose )
+        {
+            _targetPosition = verboseClamp( _desiredPosition, _jointData.getMinPosition(), _jointData.getMaxPosition(), "targetPosition" );
+        }
+        else
+        {
+            _targetPosition = clamp( _desiredPosition, _jointData.getMinPosition(), _jointData.getMaxPosition() );
+        }
     }
 
     void setMaxSpeed( double maxSpeed )
@@ -223,7 +235,7 @@ public:
     {
         assert( _jointData );
         _posPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
-        setTargetPosition( _desiredPosition );
+        setTargetPosition< false >( _desiredPosition );
     }
 
     void posPhysicsUpdate()
@@ -255,13 +267,13 @@ public:
 
         updatePosCmdLimits();
         _lastVelocity = _lastVelocity + _posController.Update( linearError, stepTime );
-        assert( _maxSpeed > 0 );
-        assert( _maxSpeed <= _jointData.maxSpeed );
+        assert( _maxSpeed > _jointData.getMinVelocity() );
+        assert( _maxSpeed <= _jointData.getMaxVelocity() );
 
         assert( std::abs( _lastVelocity ) <= _maxSpeed + _jointData.positionPrecision );
 
         VelocityPIDController::setTargetVelocity( _lastVelocity, std::nullopt );
-        VelocityPIDController::velPhysicsUpdate();
+        VelocityPIDController::velPhysicsUpdate< false >();
     }
 
     void resetPositionPID( PidControlType lastControlType )
@@ -288,7 +300,7 @@ public:
         else
         {
             gzwarn << "Speed non-positive for setting position, setting desired position to current position\n";
-            setTargetPosition( _jointData.joint->Position( 0 ) );
+            setTargetPosition< false >( _jointData.joint->Position( 0 ) );
             _positionReached = true;
         }
         setMaxSpeed( maxSpeed );

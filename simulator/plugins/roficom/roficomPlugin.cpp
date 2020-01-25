@@ -41,13 +41,13 @@ void RoFICoMPlugin::loadJoint()
 
             std::lock_guard< std::mutex > lock( this->connectionMutex );
 
-            if ( std::abs( desiredPosition - this->extendJoint->minPosition )
-                    <= this->extendJoint->positionPrecision )
+            if ( desiredPosition <=
+                    this->extendJoint->getMinPosition() + this->extendJoint->positionPrecision )
             {
                 this->updatePosition( Position::Retracted );
             }
-            else if ( std::abs( desiredPosition - this->extendJoint->maxPosition )
-                    <= this->extendJoint->positionPrecision )
+            else if ( desiredPosition >=
+                    this->extendJoint->getMaxPosition() - this->extendJoint->positionPrecision )
             {
                 this->updatePosition( Position::Extended );
             }
@@ -79,7 +79,7 @@ void RoFICoMPlugin::connect()
 
     std::lock_guard< std::mutex > lock( connectionMutex );
 
-    if ( position != Position::Retracted && position != Position::Retracting )
+    if ( position == Position::Extended || position == Position::Extending )
     {
         gzmsg << "Already extended (" << _model->GetScopedName() << ")\n";
         return;
@@ -242,7 +242,6 @@ void RoFICoMPlugin::endConnection()
 void RoFICoMPlugin::updatePosition( Position newPosition )
 {
     assert( _model );
-    std::lock_guard< std::mutex > lock( positionsMapMutex );
     position = newPosition;
     positionsMap[ _model.get() ] = position;
 }

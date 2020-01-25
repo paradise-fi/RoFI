@@ -124,7 +124,7 @@
                 </velocity>
                 <position>
                     <pid_gains>1 0 0.03</pid_gains>
-                    <i_max>1000000</i_max>          <!-- Not needed -->
+                    <i_max>1</i_max>
                     <init_target>0</init_target>
                 </position>
             </controller>

@@ -116,7 +116,7 @@ void UMP::findAndInitJoints()
             _pub->Publish( getJointRofiResp( rofi::messages::JointCmd::SET_POS_WITH_SPEED, joint, desiredPosition ) );
         };
 
-    auto pidValuesVector = PIDLoader::loadControllerValues( getPluginSdf( _model->GetSDF(), "universalModelPlugin.so" ) );
+    auto pidValuesVector = PIDLoader::loadControllerValues( getPluginSdf( _model->GetSDF(), "libuniversalModulePlugin.so" ) );
 
     joints.clear();
 
