@@ -728,6 +728,25 @@ public:
 //        }
     }
 
+    void generateSimpleActions(std::vector<Action>& res, unsigned step) const
+    {
+        std::vector<Action::Rotate> rotations;
+        generateRotations(rotations, step);
+        std::vector<Action::Reconnect> reconnections;
+        generateReconnect(reconnections);
+
+
+        for (auto& rotation : rotations)
+        {
+            res.emplace_back({rotation}, {});
+        }
+
+        for (auto& reconnection : reconnections)
+        {
+            res.emplace_back({}, {reconnection});
+        }
+    }
+
     void generateReconnect(std::vector<Action::Reconnect>& res) const
     {
         generateConnections(res);
@@ -806,6 +825,20 @@ public:
         std::vector<Action> actions;
         generateActions(actions, step, bound);
         //auto actions = generateActions(step, bound);
+        for (auto& action : actions)
+        {
+            auto cfgOpt = executeIfValid(action);
+            if (cfgOpt.has_value())
+            {
+                res.push_back(cfgOpt.value());
+            }
+        }
+    }
+
+    void simpleNext(std::vector<Configuration>& res, unsigned step) const
+    {
+        std::vector<Action> actions;
+        generateSimpleActions(actions, step);
         for (auto& action : actions)
         {
             auto cfgOpt = executeIfValid(action);
