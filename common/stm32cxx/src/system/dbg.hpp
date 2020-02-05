@@ -2,6 +2,7 @@
 
 #include <drivers/uart.hpp>
 #include <system/memory.hpp>
+#include <printf.h>
 
 class Dbg;
 extern Dbg& dbgInstance();

@@ -21,13 +21,16 @@ file(GLOB_RECURSE CMSIS_STARTUP ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Source/
 # Function 2
 add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/extlib/function2")
 
+# Printf
+add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/extlib/printf")
+
 # STM32CXX
 file(GLOB_RECURSE SRC src/*.cpp src/*.c)
 
 add_library(stm32cxx STATIC ${SRC} ${HAL_SOURCES} ${CMSIS_SYSTEM} ${CMSIS_STARTUP})
 target_compile_options(stm32cxx PUBLIC -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER -D${MCU_FAMILY})
 set_property(TARGET stm32cxx PROPERTY CXX_STANDARD 17)
-target_link_libraries(stm32cxx PUBLIC function2)
+target_link_libraries(stm32cxx PUBLIC function2 PUBLIC printf)
 target_include_directories(stm32cxx PUBLIC src)
 target_include_directories(stm32cxx SYSTEM PUBLIC ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Include)
 target_include_directories(stm32cxx SYSTEM PUBLIC ${STM_LIB}/CMSIS/Include)
