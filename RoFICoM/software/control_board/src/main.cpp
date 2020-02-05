@@ -3,7 +3,7 @@
 
 #include <cassert>
 #include <system/dbg.hpp>
-#include <system/clock.hpp>
+#include <drivers/clock.hpp>
 #include <drivers/gpio.hpp>
 #include <drivers/timer.hpp>
 #include <drivers/spi.hpp>
@@ -18,6 +18,15 @@
 
 
 using Block = memory::Pool::Block;
+
+Dbg& dbgInstance() {
+    static Dbg inst(
+        USART1, LL_DMA_CHANNEL_1, LL_DMA_CHANNEL_2,
+        TxOn( GpioB[ 6 ] ),
+        RxOn( GpioB[ 7 ] ),
+        Baudrate( 115200 ) );
+    return inst;
+}
 
 void onCmdVersion( SpiInterface& interf ) {
     auto block = memory::Pool::allocate( 4 );
