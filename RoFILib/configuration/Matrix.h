@@ -58,6 +58,17 @@ inline double distance(const Matrix& a, const Matrix& b)
     return res;
 }
 
+inline double centerSqDistance(const Matrix& a, const Matrix& b)
+{
+    double res = 0;
+    for (int i = 0; i < 4; ++i)
+    {
+        double diff = a(i, 3) - b(i, 3);
+        res += diff * diff;
+    }
+    return std::round(res * precision) / precision;
+}
+
 inline Matrix rotate(double r, const Vector &u)
 {
     const int x = 0, y = 1, z = 2;

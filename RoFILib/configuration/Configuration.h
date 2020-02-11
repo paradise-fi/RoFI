@@ -287,6 +287,16 @@ public:
     Action(std::vector<Rotate> rot, std::vector<Reconnect> rec) :
             _rotations(std::move(rot)), _reconnections(std::move(rec)) {}
 
+    Action(Rotate rot) :
+            _rotations(), _reconnections() {
+                _rotations.push_back(rot);
+            }
+
+    Action(Reconnect rec) :
+            _rotations(), _reconnections() {
+                _reconnections.push_back(rec);
+            }
+
     Action divide(double factor) const
     {
         std::vector<Rotate> division;
@@ -574,6 +584,7 @@ public:
 
     bool collisionFree() const
     {
+        /*
         std::vector<Vector> centers;
         for (const auto& [id, ms] : matrices)
         {
@@ -585,6 +596,32 @@ public:
             for (unsigned j = i + 1; j < centers.size(); ++j)
             {
                 if (distance(centers[i], centers[j]) < 1)
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+        */
+        for (auto it1 = matrices.begin(); it1 != matrices.end(); ++it1)
+        {
+            for (auto it2 = it1; it2 != matrices.end(); ++it2)
+            {
+                const auto& ms1 = it1->second;
+                const auto& ms2 = it2->second;
+                if (it1 == it2) 
+                {
+                    if (centerSqDistance(ms1[A], ms1[B]) < 1)
+                    {
+                        return false;
+                    }
+                }
+                else if (
+                    centerSqDistance(ms1[A], ms2[A]) < 1 ||
+                    centerSqDistance(ms1[B], ms2[B]) < 1 ||
+                    centerSqDistance(ms1[B], ms2[A]) < 1 ||
+                    centerSqDistance(ms1[A], ms2[B]) < 1
+                )
                 {
                     return false;
                 }
@@ -735,15 +772,14 @@ public:
         std::vector<Action::Reconnect> reconnections;
         generateReconnect(reconnections);
 
-
         for (auto& rotation : rotations)
         {
-            res.emplace_back({rotation}, {});
+            res.emplace_back(rotation);
         }
 
         for (auto& reconnection : reconnections)
         {
-            res.emplace_back({}, {reconnection});
+            res.emplace_back(reconnection);
         }
     }
 
@@ -823,7 +859,11 @@ public:
     void next(std::vector<Configuration>& res, unsigned step, unsigned bound = 1) const
     {
         std::vector<Action> actions;
-        generateActions(actions, step, bound);
+        if (bound == 1) {
+            generateSimpleActions(actions, step);
+        } else {
+            generateActions(actions, step, bound);
+        }
         //auto actions = generateActions(step, bound);
         for (auto& action : actions)
         {
