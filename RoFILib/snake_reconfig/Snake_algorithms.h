@@ -94,9 +94,9 @@ private:
     std::unordered_set<std::unique_ptr<Configuration>, ConfigurationPtrHash> pool;
 };
 
-inline double eval(const Configuration& configuration) {
-    SpaceGrid grid(configuration);
-    return grid.getDist();
+inline double eval(const Configuration& configuration, SpaceGrid& sg) {
+    sg.loadConfig(configuration);
+    return sg.getDist();
 }
 
 inline std::vector<Configuration> createPath(ConfigPred& pred, const Configuration* goal)
@@ -159,20 +159,19 @@ inline std::vector<Configuration> createPath(ConfigEdges& edges, const Configura
 
 inline std::vector<Configuration> SnakeStar(const Configuration& init, AlgorithmStat* stat = nullptr, int limit = -1)
 {
-    srand(time(NULL));
-
     unsigned step = 90;
 
     ConfigPred pred;
     ConfigPool pool;
 
+    SpaceGrid grid(init.getIDs().size());
     // Already computed shortest distance from init to configuration.
     ConfigValue initDist;
 
     // Shortest distance from init through this configuration to goal.
     ConfigValue goalDist;
 
-    double startDist = eval(init);
+    double startDist = eval(init, grid);
 
     if (startDist == 0)
     {
@@ -184,6 +183,7 @@ inline std::vector<Configuration> SnakeStar(const Configuration& init, Algorithm
     const Configuration* pointer = pool.insert(init);
     const Configuration* bestConfig = pointer;
     unsigned bestScore = startDist;
+    double worstDist = startDist;
 
     initDist[pointer] = 0;
     goalDist[pointer] = startDist;
@@ -207,9 +207,16 @@ inline std::vector<Configuration> SnakeStar(const Configuration& init, Algorithm
         for (const auto& next : nextCfgs)
         {
             const Configuration* pointerNext;
-            double currEval = eval(next);
-            double newDist = currDist + 1 + currEval;
+            double newEval = eval(next, grid);
+            double newDist = currDist + 1 + newEval;
             bool update = false;
+
+            if (newEval != 0 && newDist > worstDist && limit < queue.size() + i) {
+                continue;
+            }
+            if (newDist > worstDist) {
+                worstDist = newDist;
+            }
 
             if (!pool.find(next))
             {
@@ -222,8 +229,8 @@ inline std::vector<Configuration> SnakeStar(const Configuration& init, Algorithm
                 pointerNext = pool.get(next);
             }
 
-            if (currEval < bestScore) {
-                bestScore = currEval;
+            if (newEval < bestScore) {
+                bestScore = newEval;
                 bestConfig = pointerNext;
             }
 
@@ -235,7 +242,7 @@ inline std::vector<Configuration> SnakeStar(const Configuration& init, Algorithm
                 queue.push({newDist, pointerNext});
             }
 
-            if (currEval == 0)
+            if (newEval == 0)
             {
                 auto path = createPath(pred, pointerNext);
                 if (stat != nullptr)

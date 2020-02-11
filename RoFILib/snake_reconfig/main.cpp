@@ -8,7 +8,7 @@
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
-        throw std::invalid_argument("No path given");
+        throw std::invalid_argument("No filepath given");
     }
 
     std::ifstream initInput;
@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
         sg.printGrid();
     }
     */
-
+    /* */
     std::vector<Configuration> path;
     AlgorithmStat stat;
     int moduleCount = init.getIDs().size();
@@ -40,4 +40,5 @@ int main(int argc, char* argv[])
         std::cout << "Could not find a path with given parameters\n";
         return 0;
     }
+    /* */
 }
