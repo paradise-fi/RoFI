@@ -494,6 +494,19 @@ public:
         return res;
     }
 
+    std::vector<Edge> getEdges(ID id, const std::unordered_set<ID>& exclude) const
+    {
+        std::vector<Edge> res;
+        for (auto& e : edges.at(id))
+        {
+            if (e.has_value() && exclude.find(e->id2()) == exclude.end())
+            {
+                res.push_back(e.value());
+            }
+        }
+        return res;
+    }
+
     // Creates new module with given ID and angles. Creates an empty set of edges corresponding to the module.
     void addModule(double alpha, double beta, double gamma, ID id)
     {
@@ -584,25 +597,7 @@ public:
 
     bool collisionFree() const
     {
-        /*
-        std::vector<Vector> centers;
-        for (const auto& [id, ms] : matrices)
-        {
-            centers.push_back(center(ms[A]));
-            centers.push_back(center(ms[B]));
-        }
-        for (unsigned i = 0; i < centers.size(); ++i)
-        {
-            for (unsigned j = i + 1; j < centers.size(); ++j)
-            {
-                if (distance(centers[i], centers[j]) < 1)
-                {
-                    return false;
-                }
-            }
-        }
-        return true;
-        */
+
         for (auto it1 = matrices.begin(); it1 != matrices.end(); ++it1)
         {
             for (auto it2 = it1; it2 != matrices.end(); ++it2)
@@ -962,6 +957,16 @@ public:
     }
 
     friend ConfigurationHash;
+
+    void clearEdges() {
+        for (auto& [id, el] : edges) {
+            for (auto& opt : el) {
+                if (opt) {
+                    opt = std::nullopt;
+                }
+            }
+        }
+    }
 
 private:
     // Maps module ID to data about the module.
