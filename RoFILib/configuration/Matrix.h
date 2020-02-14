@@ -48,6 +48,17 @@ inline double distance(const Vector& a, const Vector& b)
     return std::round(sqrt(res) * precision) / precision;
 }
 
+inline double sqDistance(const Vector& a, const Vector& b)
+{
+    Vector diff = a - b;
+    double res = 0;
+    for (int i = 0; i < 4; ++i)
+    {
+        res += diff(i) * diff(i);
+    }
+    return std::round(res * precision) / precision;
+}
+
 inline double distance(const Matrix& a, const Matrix& b)
 {
     double res = 0;
@@ -67,6 +78,18 @@ inline double centerSqDistance(const Matrix& a, const Matrix& b)
         res += diff * diff;
     }
     return std::round(res * precision) / precision;
+}
+
+inline double sqDistVM(const Matrix&a , const Vector& c) 
+{
+    double res = 0;
+    for (int i = 0; i < 4; ++i)
+    {
+        double diff = a(i, 3) - c(i);
+        res += diff * diff;
+    }
+    return std::round(res * precision) / precision;
+
 }
 
 inline Matrix rotate(double r, const Vector &u)
