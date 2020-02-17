@@ -26,6 +26,10 @@ int getId() {
             result = 3;
         else if ( macAddress[ 5 ] == 136 )
             result = 4;
+        else if ( macAddress[ 5 ] == 128 )
+            result = 11;
+        else if ( macAddress[ 5 ] == 164 )
+            result = 12;
         else
             result = 0;
 

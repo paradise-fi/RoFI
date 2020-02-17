@@ -85,7 +85,7 @@ extern "C" void app_main() {
 
     if ( getId() == 1 )
         udpEx::runMaster();
-    els1e
+    else
         udpEx::runSlave( "192.168.42.1" );
 
     while ( true ) vTaskDelay( 2000 / portTICK_PERIOD_MS );
