@@ -1,6 +1,5 @@
 #include <driver/gpio.h>
 #include <tcpip_adapter.h>
-#include <esp_wifi.h>
 
 #include <vector>
 #include <tuple>
@@ -10,15 +9,9 @@
 
 #include "udpExample.hpp"
 
-extern "C" wifi_init_config_t getDefaultWifiCfg() ;
 
 void setupStack() {
     tcpip_adapter_init();
-    // WiFi is hard-wired into ESP-IDF and into the stack; not initializing it
-    // causes crash.
-    auto cfg = getDefaultWifiCfg();
-    esp_wifi_init( &cfg );
-    esp_wifi_start();
 }
 
 int getId() {
@@ -33,6 +26,10 @@ int getId() {
             result = 3;
         else if ( macAddress[ 5 ] == 136 )
             result = 4;
+        else if ( macAddress[ 5 ] == 128 )
+            result = 11;
+        else if ( macAddress[ 5 ] == 164 )
+            result = 12;
         else
             result = 0;
 
@@ -88,7 +85,7 @@ extern "C" void app_main() {
 
     if ( getId() == 1 )
         udpEx::runMaster();
-    else
+    els1e
         udpEx::runSlave( "192.168.42.1" );
 
     while ( true ) vTaskDelay( 2000 / portTICK_PERIOD_MS );
