@@ -1,6 +1,5 @@
 #include <driver/gpio.h>
 #include <tcpip_adapter.h>
-#include <esp_wifi.h>
 
 #include <vector>
 #include <tuple>
@@ -10,15 +9,9 @@
 
 #include "tcpExample.hpp"
 
-extern "C" wifi_init_config_t getDefaultWifiCfg() ;
 
 void setupStack() {
     tcpip_adapter_init();
-    // WiFi is hard-wired into ESP-IDF and into the stack; not initializing it
-    // causes crash.
-    auto cfg = getDefaultWifiCfg();
-    esp_wifi_init( &cfg );
-    esp_wifi_start();
 }
 
 int getId() {
