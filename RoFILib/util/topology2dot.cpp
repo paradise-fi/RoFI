@@ -5,20 +5,20 @@
 #include <string>
 
 
-std::string sTS(Side s) {
+std::string sTS(ShoeId s) {
     switch(s){
-        case Side::A:
+        case ShoeId::A:
             return "A";
         default:
             return "B";
     }
 }
 
-std::string dTS(Dock d) {
+std::string dTS(ConnectorId d) {
     switch(d) {
-        case Dock::Xp:
+        case ConnectorId::XPlus:
             return "X+";
-        case Dock::Xn:
+        case ConnectorId::XMinus:
             return "X-";
         default:
             return "Z";
@@ -103,7 +103,7 @@ int main(int argc, char* argv[]) {
         std::cout << "Could not read config" << std::endl;
         return 1;
     }
-    
+
     drawDot(output, config);
     return 0;
 }
