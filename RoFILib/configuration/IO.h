@@ -182,7 +182,7 @@ namespace IO
         throw std::runtime_error("Expected side (A, B), got " + in + ".");
     }
 
-    inline Edge readEdge(std::stringstream &tmp)
+    inline Edge readEdge(std::istringstream &tmp)
     {
         ID id1, id2;
         std::string s1, p1, ori, p2, s2;
@@ -197,23 +197,24 @@ namespace IO
         std::string s;
 
         while (getline(input, s)) {
-            if (s.empty()) {
-                break;
-            }
-            char type;
-            std::stringstream tmp(s);
+            std::string type;
+            std::istringstream tmp(s);
             tmp >> type;
-            if (type == 'M') {
+            if (type.empty() || type[0] == '#' ) {
+                continue; // Empty line or a comment
+            }
+
+            if (type == "M") {
                 double alpha, beta, gamma;
                 unsigned int id;
                 tmp >> id >> alpha >> beta >> gamma;
                 cfg.addModule(alpha, beta, gamma, id);
             }
-            if (type == 'E') {
+            else if (type == "E") {
                 cfg.addEdge(readEdge(tmp));
             }
-            if ((type != 'M') && (type != 'E')) {
-                throw std::runtime_error("Expected side module (M) or edge (E), got " + std::string(1, type) + ".");
+            else {
+                throw std::runtime_error("Expected side module (M) or edge (E), got " + type + ".");
             }
         }
 
@@ -243,7 +244,7 @@ namespace IO
             }
 
             char type;
-            std::stringstream tmp(s);
+            std::istringstream tmp(s);
             tmp >> type;
             if (type == 'R') {
                 unsigned int id, joint;

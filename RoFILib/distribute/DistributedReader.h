@@ -62,7 +62,7 @@ public:
                 break;
             }
             char type;
-            std::stringstream tmp(s);
+            std::istringstream tmp(s);
             tmp >> type;
             if (type == 'M') {
                 double alpha, beta, gamma;
