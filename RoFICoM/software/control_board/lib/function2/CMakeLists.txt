@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.6)
 project(function2 VERSION 4.0.0 LANGUAGES CXX)
 
 if (NOT FU2_IS_FIND_INCLUDED)

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.6)
 project(rofi)
 
 add_executable(rofi-vis ${ARMADILLO_LIBRARIES} main.cpp Generator.h Camera.h Animator.h)
