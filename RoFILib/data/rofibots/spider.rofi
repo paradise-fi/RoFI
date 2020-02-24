@@ -1,0 +1,23 @@
+# Body modules
+M 0 -30 50 0
+M 1 -30 50 0
+M 2 -30 50 0
+M 3 -30 50 0
+
+# Connect bodies to cluster
+E 0 A +X N -Z A 1
+E 1 A +X N -Z A 2
+E 2 A +X N -Z A 3
+E 3 A +X N -Z A 0
+
+# Leg modules
+M 4 -60 0 0
+M 5 -60 0 0
+M 6 -60 0 0
+M 7 -60 0 0
+
+# Connect legs
+E 0 B -Z N -Z A 4
+E 1 B -Z N -Z A 5
+E 2 B -Z N -Z A 6
+E 3 B -Z N -Z A 7
