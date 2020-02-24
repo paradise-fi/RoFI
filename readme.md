@@ -11,14 +11,8 @@ larger robots (RoFIbots) from a small number of module types.
 The modules of the platform can connect together using RoFI dock. Mechanically
 connected modules can communicate over TCP/IP and share power.
 
-For an in-depth description of the RoFI platform see the related work below.
-
-## Related Work
-
-- [RoFI: Distributed Metamorphic Robots](https://is.muni.cz/th/y1s7e/) -
-  Master's thesis providing the RoFI project overview.
-- [Motion Planing for the RoFI Platform](https://is.muni.cz/th/w7y7w/) -
-  Master's thesis dealing with basic reconfiguration algorithms for the platform
+For an in-depth description of the RoFI platform see the [project
+website](https://rofi.fi.muni.cz/).
 
 ## Repository Structure
 
@@ -35,6 +29,8 @@ There are following parts of the RoFI project:
   power-sharing lines.
 - Universal module - the foundational module of the platform demonstrating the
   capabilities of the platform.
+- RoFILib - collection of libraries and corresponding tools for the platform as
+  a whole.
 
 ## Licensing
 
