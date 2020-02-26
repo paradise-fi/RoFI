@@ -21,19 +21,17 @@
 
 #include "dock.hpp"
 
+/*
+This interface uses modified version of lwip which supports routing.
+TODO: Add tutorial & readme into the repository.
+*/
+
+
 namespace _rofi {
 	class RoIF6;
 
-inline std::ostream& operator<<( std::ostream& o, ip6_addr_t a ) {
-	o << IP6_ADDR_BLOCK1(&a) << ":" << IP6_ADDR_BLOCK2(&a) << ":" << IP6_ADDR_BLOCK3(&a)
-		<< ":" << IP6_ADDR_BLOCK4(&a) << ":" << IP6_ADDR_BLOCK5(&a) << ":" << IP6_ADDR_BLOCK6(&a)
-		<< ":" << IP6_ADDR_BLOCK7(&a) << ":" << IP6_ADDR_BLOCK8(&a);
-	return o;
-}
-
-
 static void ncb(netif* n, u8_t s) {
-	// std::cout << std::hex << "nd6_callback! " << std::endl;
+	std::cout << "nd6_callback! " << std::endl;
 }
 
 // C++ wrapper for lwip addr for IPv6
@@ -53,27 +51,18 @@ struct Ip6Addr : ip6_addr_t {
     static int size() { return 16; }
 };
 
+inline std::ostream& operator<<( std::ostream& o, Ip6Addr a ) {
+	o << IP6_ADDR_BLOCK1(&a) << ":" << IP6_ADDR_BLOCK2(&a)
+	    << ":" << IP6_ADDR_BLOCK3(&a) << ":" << IP6_ADDR_BLOCK4(&a) << ":" << IP6_ADDR_BLOCK5(&a)
+		<< ":" << IP6_ADDR_BLOCK6(&a) << ":" << IP6_ADDR_BLOCK7(&a) << ":" << IP6_ADDR_BLOCK8(&a);
+	return o;
+}
+
 struct Entry {
 	Ip6Addr addr;
 	uint8_t mask;
 
 	static int size() { return Ip6Addr::size() + 1; }
-};
-
-struct PhysAddr {
-    PhysAddr( uint8_t *a ) {
-        std::copy_n( a, 6, addr );
-    }
-    PhysAddr( uint8_t a, uint8_t b, uint8_t c, uint8_t d, uint8_t e, uint8_t f ) {
-        addr[ 0 ] = a; addr[ 1 ] = b; addr[ 2 ] = c;
-        addr[ 3 ] = d; addr[ 4 ] = e; addr[ 5 ] = f;
-    }
-    PhysAddr( const PhysAddr& ) = default;
-    PhysAddr& operator=( const PhysAddr& ) = default;
-
-    static int size() { return 6; }
-
-    uint8_t addr[ 6 ];
 };
 
 struct Record {
@@ -109,11 +98,15 @@ public:
 	}
 
 	void removeRecord( const Ip6Addr& addr, uint8_t mask, gpio_num_t dock ) {
-		// TODO
+		for ( auto it = _records.begin(); it != _records.end(); it++ ) {
+			if ( it->ip == addr && it->dockC == dock ) { // TODO: mask should be checked
+				_records.erase( it );
+				it--;
+			}
+		}
 	}
 
 	const Record* search( const Ip6Addr& ip ) const {
-		// std::cout << std::hex << " searching for " << ip << std::dec << std::endl;
 		for ( const auto& r : _records ) {
 			if ( r.ip == ip) // TODO: mask should be checked too!
 				return &r;
@@ -135,7 +128,7 @@ public:
         return p;
 	}
 
-	void update( const PBuf& packet, gpio_num_t dock ) {
+	void update( const PBuf& packet, gpio_num_t dock, struct netif* n ) {
         if ( packet.size() < 3 )
             return;
         if ( as< uint8_t >( packet.payload() + 1 ) != Ip6Addr::size() )
@@ -143,10 +136,12 @@ public:
         int count = as< uint8_t >( packet.payload() + 2 );
         if ( packet.size() != 3 + count * Entry::size() )
             return;
+
         for ( int i = 0; i != count; i++ ) {
             const uint8_t *entry = packet.payload() + 3 + i * Entry::size();
             Ip6Addr addr = as< Ip6Addr >( entry );
             uint8_t mask = as< uint8_t >( entry + Ip6Addr::size() );
+			ip_add_route( &addr, mask, n );
             addRecord( addr, mask, dock );
         }
 		print();
@@ -159,6 +154,22 @@ public:
 			std::cout << std::endl;
 		}
 	}
+};
+
+struct PhysAddr {
+    PhysAddr( uint8_t *a ) {
+        std::copy_n( a, 6, addr );
+    }
+    PhysAddr( uint8_t a, uint8_t b, uint8_t c, uint8_t d, uint8_t e, uint8_t f ) {
+        addr[ 0 ] = a; addr[ 1 ] = b; addr[ 2 ] = c;
+        addr[ 3 ] = d; addr[ 4 ] = e; addr[ 5 ] = f;
+    }
+    PhysAddr( const PhysAddr& ) = default;
+    PhysAddr& operator=( const PhysAddr& ) = default;
+
+    static int size() { return 6; }
+
+    uint8_t addr[ 6 ];
 };
 
 
@@ -195,7 +206,6 @@ public:
 		n->linkoutput = linkOutput;
 		n->flags |= NETIF_FLAG_LINK_UP 
                  | NETIF_FLAG_IGMP
-                 // | NETIF_FLAG_MLD6
                  | NETIF_FLAG_UP;
 		n->num = _seqNum();
 		nd6_set_cb( n, ncb );
@@ -204,7 +214,7 @@ public:
 
 	static err_t output( struct netif* n, struct pbuf *p, const ip6_addr_t *ipaddr) {
 		auto self = reinterpret_cast< Netif* >( n->state );
-		self->_send( /* Ip6Addr( *ipaddr ),*/ PBuf::reference( p ) );
+		self->_send( PBuf::reference( p ) );
 
 		return ERR_OK;
 	}
@@ -234,12 +244,13 @@ private:
 
     void _onPacket( Dock& dock, int contentType, PBuf&& packet ) {
         if ( contentType == 0 ) {
-            if ( netif_is_up( &_netif ) )
+            if ( netif_is_up( &_netif ) ) {
                 _netif.input( packet.get(), &_netif );
+				packet.release();
+			}			
         } else {
-			_rtable.update( packet, dock.id() );
+			_rtable.update( packet, dock.id(), &_netif );
 		}
-		packet.release();
     }
 
     void _send( PBuf&& packet, int contentType = 0 ) {
@@ -270,7 +281,6 @@ public:
 		_netifs.reserve( dockCs.size() );
 		for ( auto cs : dockCs ) {
 			_netifs.emplace_back( pAddr, cs, spiHost, _rtable );
-			// _netifs.back()._setSend( _send );
 		}
 
 	}
@@ -293,11 +303,9 @@ public:
 			n.setUp();
 		}
 
-		_mappingTimer = rtos::Timer( 5000 / portTICK_PERIOD_MS, rtos::Timer::Type::Periodic,
+		_mappingTimer = rtos::Timer( 2000 / portTICK_PERIOD_MS, rtos::Timer::Type::Periodic,
             [this]() {
-                for ( auto& n : _netifs ) {
-					n._send( std::move( _rtable.toSend() ), 1 );
-				}
+                _broadcastRTable();
             } );
         _mappingTimer.start();
 	}
@@ -335,27 +343,17 @@ private:
         return num++;
     }
 
-    void _onPacket( Dock& dock, int contentType, PBuf&& packet ) {
-        if ( contentType == 0 ) {
-            if ( netif_is_up( &_netif ) )
-                _netif.input( packet.get(), &_netif );
-                // packet.release();
-        } else if ( contentType == 1 ) {
-            _rtable.update( packet, dock.id() );
-			// packet.release();
-        }
-    }
-
 	void _send( Ip6Addr addr, PBuf&& packet ) {
-		auto rec = _rtable.search( addr );
-		// std::cout << "_send used and rec is " << (rec ? "not null " : "null ") << std::endl;
-		if (rec) {
-			for ( auto& n : _netifs ) {
-				if ( n.getDockGPIO() == rec->dockC ) {
-					n._dock.sendBlob( 0, std::move( packet ) );
-					break;
-				}
-			}
+		auto entry = ip_find_route( &addr );
+		if ( entry ) {
+			entry->gw->output_ip6( entry->gw, packet.get(), &addr );
+			packet.release();
+		}
+	}
+
+	void _broadcastRTable() {
+		for ( auto& n : _netifs ) {
+			n._send( std::move( _rtable.toSend() ), 1 );
 		}
 	}
 
