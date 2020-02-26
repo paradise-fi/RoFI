@@ -9,6 +9,8 @@
 #include <lwip/nd6.h>
 #include <lwip/mld6.h>
 
+#include <lwip/raw.h>
+
 #include <algorithm>
 #include <iostream>
 #include <array>
@@ -20,6 +22,7 @@
 #include <string>
 
 #include "dock.hpp"
+#include "rtable.hpp"
 
 /*
 This interface uses modified version of lwip which supports routing.
@@ -33,128 +36,6 @@ namespace _rofi {
 static void ncb(netif* n, u8_t s) {
 	// std::cout << "nd6_callback! " << std::endl;
 }
-
-// C++ wrapper for lwip addr for IPv6
-struct Ip6Addr : ip6_addr_t {
-	Ip6Addr( const char* str ) {
-        ip6_addr_t ipad;
-		ip6addr_aton(str, &ipad);
-		addr[0] = ipad.addr[0]; addr[1] = ipad.addr[1];
-		addr[2] = ipad.addr[2]; addr[3] = ipad.addr[3];
-    }
-    Ip6Addr( ip6_addr addr ): ip6_addr( addr ) {}
-
-    bool operator==( const Ip6Addr& o ) const {
-		return addr[0] == o.addr[0] && addr[1] == o.addr[1] && addr[2] == o.addr[2] && addr[3] == o.addr[3];
-	}
-
-    static int size() { return 16; }
-};
-
-inline std::ostream& operator<<( std::ostream& o, Ip6Addr a ) {
-	o << IP6_ADDR_BLOCK1(&a) << ":" << IP6_ADDR_BLOCK2(&a)
-	    << ":" << IP6_ADDR_BLOCK3(&a) << ":" << IP6_ADDR_BLOCK4(&a) << ":" << IP6_ADDR_BLOCK5(&a)
-		<< ":" << IP6_ADDR_BLOCK6(&a) << ":" << IP6_ADDR_BLOCK7(&a) << ":" << IP6_ADDR_BLOCK8(&a);
-	return o;
-}
-
-struct Entry {
-	Ip6Addr addr;
-	uint8_t mask;
-
-	static int size() { return Ip6Addr::size() + 1; }
-};
-
-struct Record {
-	Ip6Addr ip;
-	uint8_t mask;
-	gpio_num_t dockC;
-
-	void print() const {
-		std::cout << std::hex << ip << std::dec << "        " << (int) mask << "                " << (int) dockC;
-	}
-};
-
-class RoutingTable {
-	std::vector< Record > _records;
-public:
-	enum class Command : uint8_t { Call = 0, Response = 1 };
-
-	void addRecord( const Record& r ) {
-		addRecord( r.ip, r.mask, r.dockC );
-	}
-
-	void addRecord( const Ip6Addr& addr, uint8_t mask, gpio_num_t dock ) {
-		for ( auto& rec : _records ) {
-			if ( addr == rec.ip ) { // TODO: mask and dock should be checked
-				return;
-			}
-		}
-		_records.push_back( { addr, mask, dock } );
-	}
-
-	void removeRecord( const Record& r ) {
-		removeRecord( r.ip, r.mask, r.dockC );
-	}
-
-	void removeRecord( const Ip6Addr& addr, uint8_t mask, gpio_num_t dock ) {
-		for ( auto it = _records.begin(); it != _records.end(); it++ ) {
-			if ( it->ip == addr && it->dockC == dock ) { // TODO: mask should be checked
-				_records.erase( it );
-				it--;
-			}
-		}
-	}
-
-	const Record* search( const Ip6Addr& ip ) const {
-		for ( const auto& r : _records ) {
-			if ( r.ip == ip) // TODO: mask should be checked too!
-				return &r;
-		}
-		return nullptr;
-	}
-
-	PBuf toSend() const {
-		auto p = PBuf::allocate( 3 +  Entry::size() * _records.size() );
-        as< Command >( p.payload() + 0 ) = Command::Response;
-        as< uint8_t >( p.payload() + 1 ) = Ip6Addr::size();
-        as< uint8_t >( p.payload() + 2 ) = _records.size();
-		auto dataField = p.payload() + 3;
-		for ( const auto& rec : _records ) {
-			as< Ip6Addr >( dataField ) = rec.ip;
-			as< uint8_t >( dataField + Ip6Addr::size() ) = rec.mask;
-			dataField += Ip6Addr::size() + 1;
-		}
-        return p;
-	}
-
-	void update( const PBuf& packet, gpio_num_t dock, struct netif* n ) {
-        if ( packet.size() < 3 )
-            return;
-        if ( as< uint8_t >( packet.payload() + 1 ) != Ip6Addr::size() )
-            return;
-        int count = as< uint8_t >( packet.payload() + 2 );
-        if ( packet.size() != 3 + count * Entry::size() )
-            return;
-
-        for ( int i = 0; i != count; i++ ) {
-            const uint8_t *entry = packet.payload() + 3 + i * Entry::size();
-            Ip6Addr addr = as< Ip6Addr >( entry );
-            uint8_t mask = as< uint8_t >( entry + Ip6Addr::size() );
-			ip_add_route( &addr, mask, n );
-            addRecord( addr, mask, dock );
-        }
-		// print();
-    }
-
-	void print() const {
-		std::cout << "ip                      mask                dock\n";
-		for ( const auto& r : _records ) {
-			r.print();
-			std::cout << std::endl;
-		}
-	}
-};
 
 struct PhysAddr {
     PhysAddr( uint8_t *a ) {
@@ -176,17 +57,24 @@ struct PhysAddr {
 class Netif {
 public:
 	Netif( PhysAddr pAddr, gpio_num_t dockCs, spi_host_device_t spiHost, RoutingTable& rt )
-	: _pAddr(pAddr), _dock( spiHost, dockCs ), _rtable( rt ) {
-		_dock.onReceive( [this]( Dock& dock, int contentType, PBuf&& data ) {
+	: _pAddr( pAddr ), _dock( spiHost, dockCs ), _rtable( rt ) {
+		_dock.onReceive( [ this ]( Dock& dock, int contentType, PBuf&& data ) {
 			_onPacket( dock, contentType, std::move( data ) );
 		} );
 
 		netif_add( &_netif, NULL, NULL, NULL, this, init, tcpip_input );
+
+		ip6_addr_t ip;
+		ip6addr_aton( "ff05::1f", &ip );
+		auto res = mld6_joingroup_netif( &_netif , &ip );
+		if ( res != ERR_OK )
+			std::cout << "Error - ot joined mld6 group - " << lwip_strerr( res ) << std::endl;
+		create_rrp_listener();
 	}
 
 	void addAddress( Ip6Addr addr, s8_t i ) {
 		netif_add_ip6_address( &_netif, ( ip6_addr_t* ) addr.addr, &i );
-		if (i < LWIP_IPV6_NUM_ADDRESSES && i > 0)
+		if ( i < LWIP_IPV6_NUM_ADDRESSES && i > 0 )
 			netif_ip6_addr_set_state( &_netif, i, IP6_ADDR_TENTATIVE );
 	}
 
@@ -204,9 +92,7 @@ public:
 		n->output_ip6 = output;
 		n->input = netif_input;
 		n->linkoutput = linkOutput;
-		n->flags |= NETIF_FLAG_LINK_UP 
-                 | NETIF_FLAG_IGMP
-                 | NETIF_FLAG_UP;
+		n->flags |= NETIF_FLAG_LINK_UP | NETIF_FLAG_IGMP | NETIF_FLAG_UP | NETIF_FLAG_MLD6;
 		n->num = _seqNum();
 		nd6_set_cb( n, ncb );
 		return ERR_OK;
@@ -225,11 +111,10 @@ public:
 	}
 
 	void printAddresses() const {
-		std::cout << "Addresses are \n" << std::hex;
-		for ( const auto& n : _netif.ip6_addr ) {
-			std::cout << "\t" <<  *( ( ip6_addr_t* ) &n ) << std::endl;
+		std::cout << "Addresses are \n";
+		for ( int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++ ) {
+			std::cout << "\t" << ipaddr_ntoa( &_netif.ip6_addr[ i ] ) << std::endl;
 		}
-		std::cout << std::dec;
 	}
 
 	gpio_num_t getDockGPIO() const {
@@ -257,6 +142,32 @@ private:
 		_dock.sendBlob( contentType, std::move( packet ) );
     }
 
+	u8_t static onRRP(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_addr_t *addr) {
+		auto self = reinterpret_cast< Netif* >( arg );
+		if ( self ) {
+			pbuf_remove_header( p, IP6_HLEN );
+			self->_rtable.update( PBuf::reference( p ), self->getDockGPIO(), &self->_netif );
+			pbuf_add_header( p, IP6_HLEN );
+			return 0;
+		}
+		return 0;
+	}
+
+	void sendRRP() {
+		ip_addr_t ip;
+	    ipaddr_aton( "ff05::1f", &ip );
+		raw_sendto_if_src( pcb, _rtable.toSend().get(), &ip, &_netif, &_netif.ip6_addr[0] );
+	}
+
+	void create_rrp_listener() {
+		pcb = raw_new_ip6( IP6_NEXTH_ICMP6 );
+		if ( !pcb ) 
+			assert( false && "raw_new_ip6 failed, pcb is null!");
+		raw_bind_netif( pcb, &_netif );
+		raw_recv( pcb, onRRP, this );
+	}
+
+	struct raw_pcb* pcb;
 	PhysAddr _pAddr;
 	Dock _dock;
 	struct netif _netif;
@@ -276,7 +187,7 @@ public:
 		netif_add_ip6_address( &_netif, static_cast< ip6_addr_t* >( &addr ), 0 );
 		netif_ip6_addr_set_state( &_netif, 0, IP6_ADDR_TENTATIVE );
 		dhcp_stop( &_netif );
-		_rtable.addRecord( addr, 0, static_cast< gpio_num_t >( 0 ) );
+		_rtable.addRecord( addr, 0, &_netif );
 
 		_netifs.reserve( dockCs.size() );
 		for ( auto cs : dockCs ) {
@@ -287,15 +198,14 @@ public:
 
 	void printAddresses() const {
 		int counter = 0;
-		std::cout << "Roif6 address is\n" << std::hex;
-		for ( const auto& n : _netif.ip6_addr ) {
-			std::cout << "\t" <<  *( ( ip6_addr_t* ) &n ) << std::endl;
+		std::cout << "Roif6 address is\n";
+		for ( int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++ ) {
+			std::cout << "\t" << ipaddr_ntoa( &_netif.ip6_addr[ i ] ) << std::endl;
 		}
 		for ( const auto& n : _netifs ) {
 			std::cout << "netif number " << counter++ << std::endl;
 			n.printAddresses();
 		}
-		std::cout << std::dec;
 	}
 
 	void setUp() {
@@ -303,8 +213,8 @@ public:
 			n.setUp();
 		}
 
-		_mappingTimer = rtos::Timer( 2000 / portTICK_PERIOD_MS, rtos::Timer::Type::Periodic,
-            [this]() {
+		_mappingTimer = rtos::Timer( 5000 / portTICK_PERIOD_MS, rtos::Timer::Type::Periodic,
+            [ this ]() {
                 _broadcastRTable();
             } );
         _mappingTimer.start();
@@ -315,18 +225,13 @@ public:
         roif->name[ 0 ] = 'r'; roif->name[ 1 ] = 'o';
         roif->output_ip6 = output;
         roif->linkoutput = linkOutput;
-        roif->flags |= NETIF_FLAG_LINK_UP
-                    | NETIF_FLAG_IGMP
-                    // | NETIF_FLAG_MLD6
-                    | NETIF_FLAG_UP;
+        roif->flags |= NETIF_FLAG_LINK_UP | NETIF_FLAG_IGMP | NETIF_FLAG_UP | NETIF_FLAG_MLD6;
         roif->num = _seqNum();
 		nd6_set_cb( roif, ncb );
         return ERR_OK;
     }
 
-    static err_t output( struct netif* roif, struct pbuf *p,
-        const ip6_addr_t *ipaddr )
-    {
+    static err_t output( struct netif* roif, struct pbuf *p, const ip6_addr_t *ipaddr ) {
         auto self = reinterpret_cast< RoIF6* >( roif->state );
         self->_send( Ip6Addr( *ipaddr ), PBuf::reference( p ) );
         return ERR_OK;
@@ -347,16 +252,14 @@ private:
 		auto entry = ip_find_route( &addr );
 		if ( entry ) {
 			entry->gw->output_ip6( entry->gw, packet.get(), &addr );
-			packet.release();
 		}
 	}
 
 	void _broadcastRTable() {
 		for ( auto& n : _netifs ) {
-			n._send( std::move( _rtable.toSend() ), 1 );
+			n.sendRRP();
 		}
 	}
-
 
 	RoutingTable _rtable;
 	netif _netif;
