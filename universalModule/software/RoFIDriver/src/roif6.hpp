@@ -31,7 +31,7 @@ namespace _rofi {
 	class RoIF6;
 
 static void ncb(netif* n, u8_t s) {
-	std::cout << "nd6_callback! " << std::endl;
+	// std::cout << "nd6_callback! " << std::endl;
 }
 
 // C++ wrapper for lwip addr for IPv6
@@ -144,7 +144,7 @@ public:
 			ip_add_route( &addr, mask, n );
             addRecord( addr, mask, dock );
         }
-		print();
+		// print();
     }
 
 	void print() const {

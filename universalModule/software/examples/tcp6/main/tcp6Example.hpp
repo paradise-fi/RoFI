@@ -41,8 +41,6 @@ err_t masterReceive( void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err )
 }
 
 err_t accept( void *arg, tcp_pcb *pcb, err_t err ) {
-	std::cout << "accept!" << std::endl;
-
     tcp_arg( pcb, reinterpret_cast< void* >( ++connCounter ) );
     std::cout << "New connection (" << connCounter << ") established\n";
 
@@ -67,8 +65,6 @@ void runMaster() {
 }
 
 err_t slaveReceive( void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err ) {
-	std::cout << "Slave receive!" << std::endl;
-
     if ( err == ERR_OK && p == nullptr ) {
         // close the connection
         tcp_close( pcb );
@@ -102,7 +98,7 @@ err_t connect( void *arg, struct tcp_pcb* pcb, err_t err ) {
 
 void runSlave( const char* masterAddr ) {
     std::cout << "Starting TCP client\n";
-    vTaskDelay( 10000 / portTICK_PERIOD_MS );
+    vTaskDelay( 4000 / portTICK_PERIOD_MS );
     tcp_pcb* pcb = tcp_new();
     tcp_recv( pcb, slaveReceive );
     tcp_sent( pcb, send );
