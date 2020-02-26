@@ -64,7 +64,7 @@ _rofi::PhysAddr mac() {
 }
 
 std::vector< gpio_num_t > docks( int id ) {
-	if ( id == 1 && id == 11 )
+	if ( id == 1 )
 		return { GPIO_NUM_14, GPIO_NUM_27 };
 	return { GPIO_NUM_14 };
 }
@@ -88,14 +88,10 @@ extern "C" void app_main() {
 
 	roif.setUp();
 	roif.printAddresses();
-	if ( getId() == 11 ) {
-		//roif.addAddress( _rofi::Ip6Addr( "fe80:0:0:0:ae30:0:8083:10a4" ) );
-		                                 // "fe80::1" ) );
+	if ( getId() == 1 ) {
 		udpEx6::runMaster();
 	} else
-		udpEx6::runSlave(  // "fe80:0:0:0:ae30:0:8083:10a4"
-						   "fc07::11"
-						);
+		udpEx6::runSlave( "fc07::1" );
 	
 	while ( true ) vTaskDelay( 2000 / portTICK_PERIOD_MS );
 }
