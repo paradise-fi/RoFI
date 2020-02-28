@@ -29,6 +29,8 @@
 #include <vtkOBJReader.h>
 #include <vtkRenderLargeImage.h>
 
+#include <resources.hpp>
+
 using Resolution = std::pair<int, int>;
 
 Matrix shoeMatrix()
@@ -223,14 +225,26 @@ void Visualizer::drawConfiguration(const Configuration &config, const std::strin
     }
 }
 
+std::filesystem::path getModel( const std::string& model ) {
+    static ResourceFile body = LOAD_RESOURCE_FILE( visualizer_model_body_obj );
+    static ResourceFile shoe = LOAD_RESOURCE_FILE( visualizer_model_shoe_obj );
+    static ResourceFile connector = LOAD_RESOURCE_FILE( visualizer_model_connector_obj );
+
+    if ( model == "body" )
+        return body.name();
+    if ( model == "shoe" )
+        return shoe.name();
+    if ( model == "connector" )
+        return connector.name();
+    throw std::runtime_error( "Invalid model '" + model + "' requested" );
+}
+
 
 void Visualizer::addActor(const std::string &model, const Matrix &matrix, int color) const
 {
-    std::stringstream path;
-    path << "../model/" << model << ".obj";
     vtkSmartPointer<vtkOBJReader> reader =
             vtkSmartPointer<vtkOBJReader>::New();
-    reader->SetFileName( path.str().c_str() );
+    reader->SetFileName( getModel(model).c_str() );
     reader->Update();
 
     vtkSmartPointer<vtkTransform> rotation = vtkSmartPointer<vtkTransform>::New();
