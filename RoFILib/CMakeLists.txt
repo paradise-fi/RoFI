@@ -22,7 +22,7 @@ include(Catch)
 add_subdirectory("extlib/fmt-6.0.0")
 
 
-
+add_subdirectory(atoms)
 add_subdirectory(configuration)
 add_subdirectory(distribute)
 add_subdirectory(generate)
