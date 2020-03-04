@@ -8,14 +8,13 @@ if(${LIBCXX})
 endif(${LIBCXX})
 
 add_executable(rofi-reconfig main.cpp)
-target_link_libraries(rofi-reconfig configuration)
-target_include_directories(rofi-reconfig PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/)
+target_link_libraries(rofi-reconfig configuration cxxopts)
 
 add_library(reconfig INTERFACE)
 target_include_directories(reconfig INTERFACE .)
-target_link_libraries(reconfig INTERFACE configuration)
+target_link_libraries(reconfig INTERFACE configuration cxxopts)
 
 add_executable(reconfig-test test/main.cpp test/test.cpp)
 target_link_libraries(reconfig-test configuration reconfig Catch2::Catch2)
-target_include_directories(reconfig-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/)
+target_include_directories(reconfig-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 catch_discover_tests(reconfig-test)

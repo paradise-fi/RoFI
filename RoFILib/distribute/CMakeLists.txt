@@ -10,14 +10,10 @@ include(${VTK_USE_FILE})
 set(SOURCES DistributedModuleProperties.h DistributedModule.cpp DistributedModule.h DistributedPrinter.h DistributedReader.h AlgorithmFullConfiguration.cpp AlgorithmFullConfiguration.h AlgorithmPartialConfiguration.cpp AlgorithmPartialConfiguration.h)
 
 add_executable(rofi-distribute main.cpp ${SOURCES})
-target_link_libraries(rofi-distribute reconfig ${VTK_LIBRARIES})
-target_include_directories(rofi-distribute PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/)
-
+target_link_libraries(rofi-distribute reconfig cxxopts ${VTK_LIBRARIES})
 
 add_executable(rofi-distribute-postprocessing postprocessing/main.cpp postprocessing/postprocessing.h postprocessing/postprocessing.cpp)
-target_include_directories(rofi-distribute-postprocessing PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/)
-target_link_libraries(rofi-distribute-postprocessing reconfig)
+target_link_libraries(rofi-distribute-postprocessing reconfig cxxopts)
 
 add_executable(rofi-distribute-preprocessing preprocessing/main.cpp)
-target_include_directories(rofi-distribute-preprocessing PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/)
-target_link_libraries(rofi-distribute-preprocessing reconfig)
+target_link_libraries(rofi-distribute-preprocessing reconfig cxxopts)
