@@ -55,6 +55,8 @@ void UMP::initCommunication()
 
 void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )
 {
+    assert( connectorModel );
+
     if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Init communication before adding connectors\n";
@@ -124,6 +126,7 @@ void UMP::findAndInitJoints()
     {
         if ( auto joint = _model->GetJoint( pidValues.jointName ) )
         {
+            assert( joint );
             joints.emplace_back( std::move( joint ), std::move( pidValues ), std::bind( callback, joints.size(), std::placeholders::_1 ) );
             assert( joints.back() );
             assert( joints.back().joint->GetMsgType() == msgs::Joint::REVOLUTE );

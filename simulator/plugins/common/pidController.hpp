@@ -139,7 +139,7 @@ public:
         common::Time currTime = _jointData.joint->GetWorld()->SimTime();
         common::Time stepTime = currTime - _velPrevUpdateTime;
         _velPrevUpdateTime = currTime;
-        assert( stepTime > 0 && "time went backwards" );
+        assert( stepTime >= 0 && "time went backwards" );
 
         double linearError = _jointData.joint->GetVelocity( 0 ) - _targetVelocity;
 
@@ -236,7 +236,7 @@ public:
         common::Time currTime = _jointData.joint->GetWorld()->SimTime();
         common::Time stepTime = currTime - _posPrevUpdateTime;
         _posPrevUpdateTime = currTime;
-        assert( stepTime > 0 && "time went backwards" );
+        assert( stepTime >= 0 && "time went backwards" );
 
         double linearError = _jointData.joint->Position( 0 ) - _targetPosition;
 

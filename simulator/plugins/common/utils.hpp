@@ -190,6 +190,8 @@ inline bool equal( double first, double second, double precision )
 
 inline std::string getElemPath( gazebo::physics::BasePtr elem, const std::string & delim = "/" )
 {
+    assert( elem );
+
     std::vector< std::string > names;
 
     while ( elem )
@@ -198,6 +200,7 @@ inline std::string getElemPath( gazebo::physics::BasePtr elem, const std::string
         elem = elem->GetParent();
     }
 
+    assert( !names.empty() );
     auto it = names.rbegin();
     std::string elemPath = *it++;
     while ( it != names.rend() )
@@ -235,6 +238,13 @@ inline std::string replaceDelimeter( std::string_view sensorPath )
 
 inline sdf::ElementPtr getPluginSdf( sdf::ElementPtr modelSdf, const std::string & pluginName )
 {
+    assert( modelSdf );
+
+    if ( !modelSdf->HasElement( "plugin" ) )
+    {
+        return {};
+    }
+
     for ( auto child = modelSdf->GetElement( "plugin" ); child; child = child->GetNextElement( "plugin" ) )
     {
         if ( !child->HasAttribute( "filename" ) )
