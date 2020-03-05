@@ -12,7 +12,7 @@
 #include <optional>
 #include <vector>
 
-#include "../common/utils.hpp"
+#include "utils.hpp"
 
 
 namespace gazebo

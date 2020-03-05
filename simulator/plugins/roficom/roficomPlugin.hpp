@@ -11,9 +11,9 @@
 #include <connectorCmd.pb.h>
 #include <connectorResp.pb.h>
 
-#include "../common/utils.hpp"
-#include "../common/pidController.hpp"
-#include "../common/pidLoader.hpp"
+#include "utils.hpp"
+#include "pidController.hpp"
+#include "pidLoader.hpp"
 
 
 namespace gazebo
