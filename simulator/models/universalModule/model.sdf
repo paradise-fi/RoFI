@@ -204,42 +204,42 @@
         </link>
 
         <model name="connectorAplusX">
-            <pose frame="">0.043 -0.05 0 0 1.57 0</pose>
+            <pose frame="">0.042 -0.05 0 0 1.57 0</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
         </model>
 
         <model name="connectorAminusZ">
-            <pose frame="">0 -0.093 0 1.57 -0 0</pose>
+            <pose frame="">0 -0.092 0 1.57 -0 0</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
         </model>
 
         <model name="connectorAminusX">
-            <pose frame="">-0.043 -0.05 0 0 -1.57 0</pose>
+            <pose frame="">-0.042 -0.05 0 0 -1.57 0</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
         </model>
 
         <model name="connectorBplusX">
-            <pose frame="">-0.043 0.051 0.0015 0 -1.57 0</pose>
+            <pose frame="">-0.042 0.051 0.0015 0 -1.57 0</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
         </model>
 
         <model name="connectorBminusZ">
-            <pose frame="">0 0.094 0.0015 -1.57 -0 0</pose>
+            <pose frame="">0 0.092 0.0015 -1.57 -0 0</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
         </model>
 
         <model name="connectorBminusX">
-            <pose frame="">0.043 0.051 0.0015 0 1.57 0</pose>
+            <pose frame="">0.042 0.050 0.0015 0 1.57 0</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
