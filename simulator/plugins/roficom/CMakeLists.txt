@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 
+add_subdirectory(tests)
+
 find_package(gazebo REQUIRED)
 include_directories(${GAZEBO_INCLUDE_DIRS})
 link_directories(${GAZEBO_LIBRARY_DIRS})

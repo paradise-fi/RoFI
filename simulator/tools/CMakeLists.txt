@@ -11,7 +11,6 @@ target_include_directories(rofiHal INTERFACE ${CMAKE_CURRENT_LIST_DIR})
 
 add_subdirectory(tests)
 
-
 add_executable(command_line_demo command_line_demo.cpp)
 target_link_libraries(command_line_demo rofiHal)
 
