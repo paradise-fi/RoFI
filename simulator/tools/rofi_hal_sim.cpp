@@ -27,7 +27,7 @@ namespace rofi
             }
 
             static std::map< Id, RoFI > remotes;
-            return remotes.emplace( remoteId, std::move( RoFI( remoteId ) ) ).first->second;
+            return remotes.emplace( remoteId, RoFI( remoteId ) ).first->second;
         }
 
         RoFI::Id RoFI::getId() const

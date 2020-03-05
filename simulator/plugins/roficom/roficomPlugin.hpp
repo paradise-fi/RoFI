@@ -111,7 +111,6 @@ private:
 
     std::unique_ptr< JointData< PIDController > > extendJoint;
     physics::LinkPtr thisConnectionLink;
-    double currentVelocity = 0.0;
     physics::JointPtr connectionJoint;
     physics::LinkPtr connectedWith;
 
