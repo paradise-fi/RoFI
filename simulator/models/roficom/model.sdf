@@ -23,7 +23,7 @@
                 <geometry>
                     <cylinder>
                         <radius>25e-3</radius>
-                        <length>16e-3</length> <!-- Real value is 17e-3 -->
+                        <length>17e-3</length>
                     </cylinder>
                 </geometry>
             </collision>
@@ -32,7 +32,7 @@
                 <geometry>
                     <cylinder>
                         <radius>25e-3</radius>
-                        <length>16e-3</length> <!-- Real value is 17e-3 -->
+                        <length>17e-3</length>
                     </cylinder>
                 </geometry>
                 <material>
@@ -67,11 +67,6 @@
                         <length>7e-3</length>
                     </cylinder>
                 </geometry>
-                <surface>
-                    <contact>
-                        <collide_bitmask>0xF0</collide_bitmask>
-                    </contact>
-                </surface>
             </collision>
             <visual name="visual">
                 <pose>0 0 -3.5e-3 0 0 0</pose>

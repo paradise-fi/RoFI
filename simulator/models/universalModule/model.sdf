@@ -41,8 +41,11 @@
                 <pose frame="">0 0 0 0 -0 0</pose>
                 <geometry>
                     <mesh>
-                        <uri>model://universalModule/meshes/bodyA.stl</uri>
+                        <uri>model://universalModule/meshes/model.obj</uri>
                         <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>bodyA</name>
+                        </submesh>
                     </mesh>
                 </geometry>
             </collision>
@@ -88,8 +91,11 @@
                 <pose frame="">0 0 0 0 -0 0</pose>
                 <geometry>
                     <mesh>
-                        <uri>model://universalModule/meshes/bodyB.stl</uri>
+                        <uri>model://universalModule/meshes/model.obj</uri>
                         <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>bodyB</name>
+                        </submesh>
                     </mesh>
                 </geometry>
             </collision>
@@ -114,15 +120,13 @@
                 <pose frame="">0.0265 0.05 -0 0 -0 0</pose>
                 <geometry>
                     <mesh>
-                        <uri>model://universalModule/meshes/shoeA.stl</uri>
+                        <uri>model://universalModule/meshes/model.obj</uri>
                         <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>shoeA</name>
+                        </submesh>
                     </mesh>
                 </geometry>
-                <surface>
-                    <contact>
-                        <collide_bitmask>0x0F</collide_bitmask>
-                    </contact>
-                </surface>
             </collision>
             <visual name="shoeA-visual">
                 <pose frame="">0.0265 0.05 -0 0 -0 0</pose>
@@ -167,15 +171,13 @@
                 <pose frame="">0.0265 -0.05 -0.0015 0 -0 0</pose>
                 <geometry>
                     <mesh>
-                        <uri>model://universalModule/meshes/shoeB.stl</uri>
+                        <uri>model://universalModule/meshes/model.obj</uri>
                         <scale>0.001 0.001 0.001</scale>
+                        <submesh>
+                            <name>shoeB</name>
+                        </submesh>
                     </mesh>
                 </geometry>
-                <surface>
-                    <contact>
-                        <collide_bitmask>0x0F</collide_bitmask>
-                    </contact>
-                </surface>
             </collision>
             <visual name="shoeB-visual">
                 <pose frame="">0.0265 -0.05 -0.0015 0 -0 0</pose>
@@ -338,14 +340,14 @@
                 <joint>shoeARev</joint>
                 <joint>shoeBRev</joint>
                 <velocity>
-                    <pid_gains> 0 0 0 </pid_gains>
-                    <i_max> 1000000 </i_max>
-                    <init_target> 1.0 </init_target>
+                    <pid_gains>0 0 0</pid_gains>
+                    <i_max>1000000</i_max>
+                    <init_target>1.0</init_target>
                 </velocity>
                 <position>
-                    <pid_gains> 0 0 0 </pid_gains>
-                    <i_max> 1000000 </i_max>
-                    <init_target> 0 </init_target>
+                    <pid_gains>0 0 0</pid_gains>
+                    <i_max>1000000</i_max>
+                    <init_target>0</init_target>
                 </position>
             </controller>
         </plugin>
