@@ -71,6 +71,7 @@ namespace IO
     inline std::string toString(const Configuration &cfg)
     {
         std::stringstream out;
+        out << "C\n";
         for (const auto&[id, mod] : cfg.getModules()) {
             out << "M " << toString(mod) << std::endl;
         }
@@ -195,14 +196,29 @@ namespace IO
     inline bool readConfiguration(std::istream &input, Configuration &cfg)
     {
         std::string s;
+        std::streampos lineStart;
+        bool first = true;
 
-        while (getline(input, s)) {
+        while (lineStart = input.tellg(), getline(input, s)) {
             std::string type;
             std::istringstream tmp(s);
             tmp >> type;
             if (type.empty() || type[0] == '#' ) {
                 continue; // Empty line or a comment
             }
+
+            if (type == "C") {
+                if ( !first ) {
+                    // Next configuration found, revert last line
+                    input.seekg(lineStart);
+                    return !cfg.empty();
+                }
+                first = false;
+                continue;
+            }
+
+            if ( first )
+                throw std::runtime_error("Configuration does not start with command 'C'");
 
             if (type == "M") {
                 double alpha, beta, gamma;
