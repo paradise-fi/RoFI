@@ -17,3 +17,6 @@ run: build-all
 
 bullet: build-all
 	./runGazebo.sh --verbose -e bullet
+
+tests-roficom: build-all
+	./build/plugins/roficom/tests/tests_roficom
