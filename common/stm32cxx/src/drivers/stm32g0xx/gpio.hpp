@@ -73,6 +73,18 @@ public:
         else
             LL_EXTI_SetEXTISource( LL_EXTI_CONFIG_PORTB, _extiConfigLine( line ) );
     }
+
+protected:
+    static uint32_t _getAdcChannel( GPIO_TypeDef */*port*/, int /*pos*/ ) {
+        assert( false && "Not implemented" );
+        __builtin_trap();
+    }
+
+    static ADC_TypeDef *_getAdcPeriph( GPIO_TypeDef */*port*/, int /*pos*/ ) {
+        assert( false && "Not implemented" );
+        __builtin_trap();
+    }
 };
+
 
 } // namespace detail

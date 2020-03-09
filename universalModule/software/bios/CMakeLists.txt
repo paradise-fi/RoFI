@@ -5,7 +5,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_CURRENT_SOURCE_DIR}/../../..
 set(MCU "STM32F030x8")
 set(STM_LIB ${CMAKE_SOURCE_DIR}/stm32)
 set(MCU_LINKER_SCRIPT ${CMAKE_SOURCE_DIR}/stm32/STM32F030C8Tx_FLASH.ld)
-set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
+# set(CMAKE_INTERPROCEDURAL_OPTIMIZATION TRUE)
 
 set(CMAKE_TOOLCHAIN_FILE STM32Toolchain)
 include(STM32Device)
@@ -15,8 +15,8 @@ set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Og")
 
 # Set pool memory size
-set(MEMORY_BLOCK_SIZE 128)
-set(MEMORY_BLOCK_COUNT 2)
+set(MEMORY_BLOCK_SIZE 256)
+set(MEMORY_BLOCK_COUNT 4)
 add_subdirectory(stm32cxx)
 
 project(umBios C CXX ASM)
@@ -30,8 +30,8 @@ set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CXX_STANDARD 17)
 target_include_directories(${PROJECT_NAME}.elf PRIVATE src)
 target_compile_options(${PROJECT_NAME}.elf PRIVATE -Wall -Wextra -pedantic -funwind-tables)
 target_link_options(${PROJECT_NAME}.elf PRIVATE "-Wl,-Map=${PROJECT_NAME}.map,--cref" "-Wl,--print-memory-usage" "-funwind-tables" "-fasynchronous-unwind-tables")
-target_link_libraries(${PROJECT_NAME}.elf PRIVATE "-Wl,--whole-archive" stm32cxx "-Wl,--no-whole-archive" function2)
-set_target_properties(${PROJECT_NAME}.elf PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
+target_link_libraries(${PROJECT_NAME}.elf PRIVATE stm32cxx function2)
+# set_target_properties(${PROJECT_NAME}.elf PROPERTIES CXX_CLANG_TIDY "${DO_CLANG_TIDY}")
 
 set(HEX_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.hex)
 set(BIN_FILE ${PROJECT_BINARY_DIR}/${PROJECT_NAME}.bin)

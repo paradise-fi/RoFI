@@ -15,7 +15,7 @@ set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Og")
 
 # Set pool memory size
 set(MEMORY_BLOCK_SIZE 1024)
-set(MEMORY_BLOCK_COUNT 10)
+set(MEMORY_BLOCK_COUNT 20)
 add_subdirectory(stm32cxx)
 
 project(control_board C CXX ASM)

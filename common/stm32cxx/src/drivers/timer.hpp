@@ -105,6 +105,7 @@ public:
             }
             // ToDo: More configurations
             assert( false && "Incorrect Output pin pin" );
+            __builtin_trap();
         }
 
         TIM_TypeDef *_periph;

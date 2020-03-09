@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 template < typename T >
 struct Peripheral {
     Peripheral( T *periph = nullptr ) : _periph( periph ) {}

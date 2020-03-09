@@ -154,6 +154,7 @@ private:
         if ( spi == SPI2 )
             return _spis[ 1 ];
         assert( false && "Invalid SPI specified" );
+        __builtin_trap();
     }
 
     Handlers& handlers() {

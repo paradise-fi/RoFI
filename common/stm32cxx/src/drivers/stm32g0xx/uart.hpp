@@ -80,6 +80,7 @@ public:
         if ( u == USART3 )
             return Self::_uarts[ 3 ];
         assert( false && "Invalid USART specified" );
+        __builtin_trap();
     }
 };
 
@@ -103,6 +104,7 @@ struct TxOn {
         }
         // ToDo: More configurations
         assert( false && "Incorrect TX pin" );
+        __builtin_trap();
     }
 };
 
@@ -126,6 +128,7 @@ struct RxOn {
         }
         // ToDo: More configurations
         assert( false && "Incorrect RX pin" );
+        __builtin_trap();
     }
 };
 
@@ -142,6 +145,7 @@ inline int LL_DMAMUX_REQ_RX( USART_TypeDef *uart ) {
     if ( uart == USART4 )
         return LL_DMAMUX_REQ_USART4_RX;
     assert( false && "Invalid USART specified" );
+    __builtin_trap();
 }
 
 inline int LL_DMAMUX_REQ_TX( USART_TypeDef *uart ) {
@@ -154,4 +158,5 @@ inline int LL_DMAMUX_REQ_TX( USART_TypeDef *uart ) {
     if ( uart == USART4 )
         return LL_DMAMUX_REQ_USART4_TX;
     assert( false && "Invalid USART specified" );
+    __builtin_trap();
 }

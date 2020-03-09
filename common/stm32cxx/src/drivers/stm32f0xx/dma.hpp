@@ -10,14 +10,24 @@
     if ( !LL_DMA_IsEnabledIT_ ## FLAG ( DMA1, channel ) )              \
         return false;                                                  \
     switch ( channel ) {                                               \
+    case 1: return  LL_DMA_IsActiveFlag_ ## FLAG ## 1( DMA1 );         \
+    case 2: return  LL_DMA_IsActiveFlag_ ## FLAG ## 2( DMA1 );         \
+    case 3: return  LL_DMA_IsActiveFlag_ ## FLAG ## 3( DMA1 );         \
+    case 4: return  LL_DMA_IsActiveFlag_ ## FLAG ## 4( DMA1 );         \
+    case 5: return  LL_DMA_IsActiveFlag_ ## FLAG ## 5( DMA1 );         \
     }                                                                  \
     assert( false && "Invalid channel" );                              \
+    __builtin_trap();                                                  \
 }
 
 #define GEN_CLEAR( FLAG ) static void _clear ## FLAG ( int channel ) { \
     switch ( channel ) {                                        \
+    case 1: LL_DMA_ClearFlag_ ## FLAG ## 1( DMA1 ); break;      \
+    case 2: LL_DMA_ClearFlag_ ## FLAG ## 2( DMA1 ); break;      \
+    case 3: LL_DMA_ClearFlag_ ## FLAG ## 3( DMA1 ); break;      \
+    case 4: LL_DMA_ClearFlag_ ## FLAG ## 4( DMA1 ); break;      \
+    case 5: LL_DMA_ClearFlag_ ## FLAG ## 5( DMA1 ); break;      \
     }                                                           \
-    assert( false && "Invalid channel" );                              \
 }
 
 namespace detail {

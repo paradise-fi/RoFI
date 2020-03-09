@@ -283,6 +283,61 @@ private:
     Mem _block;
 };
 
+template < typename Reader >
+class LineReader {
+public:
+    using Mem = memory::Pool::Block;
+
+    LineReader( Reader& reader, int lineBufferSize = 256 ) :
+        _reader( reader ),
+        _pos( 0 ),
+        _available( false ),
+        _lineBufferSize( lineBufferSize )
+    { }
+
+    bool available() {
+        _readLine();
+        return _available;
+    }
+
+    Mem get() {
+        assert( _available );
+        auto ret = std::move( _line );
+        _available = false;
+        return ret;
+    }
+
+private:
+    bool _readLine() {
+        if ( _available )
+            return true;
+        if ( !_line ) {
+            _line = memory::Pool::allocate( _lineBufferSize );
+            assert( _line );
+            _pos = 0;
+        }
+        while ( _reader.available() ) {
+            char chr = _reader.get();
+            if ( chr == '\n' ) {
+                _available = true;
+                _line[ _pos ] = '\0';
+                break;
+            }
+            if ( _pos < _lineBufferSize - 1 ) {
+                _line[ _pos ] = chr;
+                _pos++;
+            }
+        }
+        return _available;
+    }
+
+    Reader& _reader;
+    Mem _line;
+    int _pos;
+    bool _available;
+    int _lineBufferSize;
+};
+
 class UartWriter {
 public:
     using Mem = memory::Pool::Block;

@@ -19,6 +19,7 @@
     case 7: return  LL_DMA_IsActiveFlag_ ## FLAG ## 7( DMA1 );         \
     }                                                                  \
     assert( false && "Invalid channel" );                              \
+    __builtin_trap();                                                  \
 }
 
 #define GEN_CLEAR( FLAG ) static void _clear ## FLAG ( int channel ) { \

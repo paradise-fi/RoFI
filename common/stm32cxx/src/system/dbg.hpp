@@ -64,6 +64,7 @@ private:
         _txBusy = true;
 
         auto buffer = memory::Pool::allocate( 256 );
+        assert( buffer );
         int size = snprintf( reinterpret_cast< char * >( buffer.get() ), 256, fmt, args... );
         buffer[ size ] = '\n';
         _writer.writeBlock( std::move( buffer ), 0, size + 1, [&]( memory::Pool::Block, int ){
@@ -71,12 +72,17 @@ private:
         } );
     }
 
+    static char *errorBuffer() {
+        static char buffer[ 512 ];
+        return buffer;
+    }
+
     template < typename... Args >
     void _error( const char *fmt, Args...args ) {
         _writer.abort();
         _txBusy = false;
 
-        static char buffer[ 512 ];
+        char *buffer = errorBuffer();
         int size = snprintf( buffer, 510, fmt, args... );
         buffer[ size ] = '\n';
         buffer[ size + 1 ] = 0;

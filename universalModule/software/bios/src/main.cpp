@@ -4,9 +4,12 @@
 #include <drivers/uart.hpp>
 #include <drivers/clock.hpp>
 #include <drivers/dma.hpp>
+#include <drivers/adc.hpp>
 
 #include <stm32f0xx_hal.h>
 #include <stm32f0xx_ll_gpio.h>
+
+#include "phy.hpp"
 
 Dbg& dbgInstance() {
     static Dbg inst(
@@ -22,41 +25,28 @@ int main() {
     SystemCoreClockUpdate();
     HAL_Init();
 
-    LL_AHB1_GRP1_EnableClock(LL_AHB1_GRP1_PERIPH_GPIOB);
-    LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_6);
-    LL_GPIO_ResetOutputPin(GPIOB, LL_GPIO_PIN_7);
-    LL_GPIO_InitTypeDef GPIO_InitStruct = {};
-    GPIO_InitStruct.Pin = LL_GPIO_PIN_6;
-    GPIO_InitStruct.Mode = LL_GPIO_MODE_OUTPUT;
-    GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_LOW;
-    GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
-    GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-    LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    Phy& phy = Phy::inst();
+    LineReader< Dbg > reader( dbgInstance() );
 
-    GPIO_InitStruct.Pin = LL_GPIO_PIN_7;
-    LL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+    phy.setup();
+    phy.enableUsbToBusConverter();
+    phy.enableBattToBusConverter( false );
+    phy.enableCharger( false );
 
     while ( true ) {
-        LL_GPIO_SetOutputPin( GPIOB, LL_GPIO_PIN_6 );
-        LL_GPIO_ResetOutputPin( GPIOB, LL_GPIO_PIN_6 );
-        LL_GPIO_SetOutputPin( GPIOB, LL_GPIO_PIN_7 );
-        LL_GPIO_ResetOutputPin( GPIOB, LL_GPIO_PIN_7 );
+        HAL_Delay( 100 );
+        // Dbg::error( "%d, %d, %d", phy.btnLeft.read(), phy.btnMid.read(),
+        //     phy.btnRight.read() );
+        Dbg::info( "batt: %f, bus: %f, usb: %f",
+            phy.batteryVoltage(), phy.busVoltage(), phy.usbVoltage() );
+        if ( phy.btnLeft.read() )
+            phy.enableCharger();
+        else
+            phy.enableCharger( false );
+
+        if ( reader.available() ) {
+            Dbg::error( "Available: %s", reader.get().get() );
+        }
     }
-
-    auto pin = GpioB[ 6 ];
-    pin.setupPPOutput();
-    while ( true ) {
-        pin.write( true );
-        HAL_Delay( 1 );
-        pin.write( false );
-        HAL_Delay( 1 );
-    }
-
-    // Dbg::error( "Main clock: %d", SystemCoreClock );
-    // HAL_Delay( 100 );
-
-    // while ( true ) {
-    //     Dbg::error( "Hello world!" );
-    // }
 }
 

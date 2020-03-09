@@ -34,6 +34,7 @@ public:
 
     int alternativeFun( SPI_TypeDef *periph ) {
         assert( false && "Not implemented" );
+        __builtin_trap();
     }
 };
 
@@ -49,6 +50,7 @@ public:
 
     int alternativeFun( SPI_TypeDef *periph ) {
         assert( false && "Not implemented" );
+        __builtin_trap();
     }
 };
 
@@ -64,6 +66,7 @@ public:
 
     int alternativeFun( SPI_TypeDef *periph ) {
         assert( false && "Not implemented" );
+        __builtin_trap();
     }
 };
 
@@ -71,8 +74,10 @@ public:
 
 inline int LL_DMAMUX_REQ_RX( SPI_TypeDef *periph ) {
     assert( false && "Not implemented" );
+    __builtin_trap();
 }
 
 inline int LL_DMAMUX_REQ_TX( SPI_TypeDef *periph ) {
     assert( false && "Not implemented" );
+    __builtin_trap();
 }

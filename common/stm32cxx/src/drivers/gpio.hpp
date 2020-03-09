@@ -43,7 +43,7 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
             return *this;
         }
 
-        Pin& setupAnalog( bool pull, bool pull_up = true ) {
+        Pin& setupAnalog( bool pull = false, bool pull_up = true ) {
             port().enableClock();
             LL_GPIO_InitTypeDef cfg{};
             cfg.Pin = 1 << _pos;
@@ -52,11 +52,12 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
                 LL_GPIO_PULL_NO :
                 pull_up ? LL_GPIO_PULL_UP : LL_GPIO_PULL_DOWN;
             LL_GPIO_Init( _periph, &cfg );
+            LL_ADC_Enable( Gpio::_getAdcPeriph( _periph, _pos ) );
             return *this;
         }
 
         template < typename Callback >
-        Pin setupInterrupt( int edge, Callback c ) {
+        Pin& setupInterrupt( int edge, Callback c ) {
             port().enableClock();
             port().setExtiSource( _pos );
 
@@ -80,7 +81,7 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
             return *this;
         }
 
-        Pin invert() {
+        Pin& invert() {
             _invert = true;
             return *this;
         }
@@ -96,6 +97,15 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
                 LL_GPIO_SetOutputPin( _periph, 1 << _pos );
             else
                 LL_GPIO_ResetOutputPin( _periph, 1 << _pos );
+        }
+
+        uint32_t readAnalog() {
+            auto adc = Gpio::_getAdcPeriph( _periph, _pos );
+            auto channel = Gpio::_getAdcChannel( _periph, _pos );
+            LL_ADC_REG_SetSequencerChannels( adc, channel );
+            LL_ADC_REG_StartConversion( adc );
+            while ( LL_ADC_REG_IsConversionOngoing( adc ) );
+            return LL_ADC_REG_ReadConversionData32( adc );
         }
 
         int _pos;
@@ -114,3 +124,7 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
 
 extern Gpio GpioA;
 extern Gpio GpioB;
+
+#ifdef GPIOC
+    extern Gpio GpioC;
+#endif

@@ -46,6 +46,7 @@ public:
         }
         // ToDo: Implement more configurations
         assert( false && "Unsupported configuration" );
+        __builtin_trap();
     }
 };
 
@@ -66,6 +67,7 @@ public:
         }
         // ToDo: Implement more configurations
         assert( false && "Unsupported configuration" );
+        __builtin_trap();
     }
 };
 
@@ -86,6 +88,7 @@ public:
         }
         // ToDo: Implement more configurations
         assert( false && "Unsupported configuration" );
+        __builtin_trap();
     }
 };
 
@@ -97,6 +100,7 @@ inline int LL_DMAMUX_REQ_RX( SPI_TypeDef *periph ) {
     else if ( periph == SPI2 )
         return LL_DMAMUX_REQ_SPI2_RX;
     assert( false && "Invalid SPI peripheral" );
+    __builtin_trap();
 }
 
 inline int LL_DMAMUX_REQ_TX( SPI_TypeDef *periph ) {
@@ -105,4 +109,5 @@ inline int LL_DMAMUX_REQ_TX( SPI_TypeDef *periph ) {
     else if ( periph == SPI2 )
         return LL_DMAMUX_REQ_SPI2_TX;
     assert( false && "Invalid SPI peripheral" );
+    __builtin_trap();
 }
