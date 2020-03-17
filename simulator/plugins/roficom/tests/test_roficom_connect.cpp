@@ -1,3 +1,6 @@
+#include "stringifiers.hpp"
+
+#define CATCH_CONFIG_FALLBACK_STRINGIFIER fallback_stringifier
 #include <catch2/catch.hpp>
 
 #include "roficomConnect.hpp"
@@ -24,13 +27,39 @@ void forAllOrientations( Function function, const Pose3d & lhs, const Pose3d & r
             Pose3d( 0, 0, 0, 0, 0, -Angle::HalfPi() ),
         } )
     {
-        function( lhs, rotation * rhs );
+        function( lhs, rhs * rotation );
     }
 }
 
+#define CHECK_EQUAL( lhs, rhs )                         \
+        do                                              \
+        {                                               \
+            INFO( #lhs << ":  " << to_string( lhs ) );  \
+            INFO( #rhs << ": " << to_string( rhs ) );   \
+            CHECK( lhs == rhs );                        \
+        } while( false )
+
+void checkMutualOrientationImpl( const ignition::math::Quaterniond & lhs,
+                             const ignition::math::Quaterniond & rhs,
+                             std::optional< ConnectorState::Orientation > desiredOrientation )
+{
+    INFO( "lhs rotation: " << lhs );
+    INFO( "rhs rotation: " << rhs );
+    auto mutualOrientation = getMutualOrientation( lhs, rhs );
+    CHECK_EQUAL( mutualOrientation, desiredOrientation );
+}
+
+#define checkMutualOrientation( ... )                                             \
+        do                                                              \
+        {                                                               \
+            INFO( "line: checkMutualOrientation( " << #__VA_ARGS__ << " );" );    \
+            checkMutualOrientationImpl( __VA_ARGS__ );                            \
+        } while ( false )
+
 void checkAllGoodImpl( const Pose3d & lhs, const Pose3d & rhs )
 {
-    INFO( "lhs: " << lhs << ", rhs: " << rhs );
+    INFO( "lhs: " << lhs );
+    INFO( "rhs: " << rhs );
 
     CHECK( checkCenterDistance( lhs.Pos(), rhs.Pos() ) );
     CHECK( checkShift( lhs, rhs ) );
@@ -39,20 +68,30 @@ void checkAllGoodImpl( const Pose3d & lhs, const Pose3d & rhs )
     CHECK( mutualOrientation );
 
     auto result = canBeConnected( lhs, rhs );
-    CHECK( result );
+    REQUIRE( result );
 
-    CHECK( ( !result || result == mutualOrientation ) );
+    CHECK_EQUAL( mutualOrientation, result );
 }
 
-void checkAllGood( const Pose3d & lhs, const Pose3d & rhs )
-{
-    forAllOrientations( checkAllGoodImpl, lhs, rhs );
-}
+#define checkAllGood( ... )                                             \
+        do                                                              \
+        {                                                               \
+            INFO( "line: checkAllGood( " << #__VA_ARGS__ << " );" );    \
+            forAllOrientations( checkAllGoodImpl, __VA_ARGS__ );                            \
+        } while ( false )
 
-void checkAllGoodAtSamePosition( const Quaterniond & lhs, const Quaterniond & rhs )
+#define checkAllGoodAtSamePosition( ... )                                           \
+        do                                                                          \
+        {                                                                           \
+            INFO( "line: checkAllGoodAtSamePosition( " << #__VA_ARGS__ << " );" );  \
+            checkAllGoodAtSamePositionImpl( __VA_ARGS__ );                          \
+        } while ( false )
+
+void checkAllGoodAtSamePositionImpl( const Quaterniond & lhs, const Quaterniond & rhs )
 {
     auto pos = Vector3d(); // TODO make random
-    return checkAllGood( { pos, lhs }, { pos, rhs } );
+    INFO( "position: " << pos );
+    forAllOrientations( checkAllGoodImpl, { pos, lhs }, { pos, rhs } );
 }
 
 TEST_CASE( "Check all" )
@@ -83,63 +122,68 @@ TEST_CASE( "Check all" )
     {
         SECTION( "North" )
         {
-            checkAllGoodAtSamePosition( { 0, 0, 0 }, { Angle::Pi(), 0, 0 } );
-            checkAllGoodAtSamePosition( { Angle::Pi(), 0, 0 }, { 0, 0, 0 } );
-            checkAllGoodAtSamePosition( { Angle::Pi(), Angle::Pi(), 0 }, { 0, Angle::Pi(), 0 } );
+            checkAllGoodAtSamePosition( { 0, 0, 0 }, { Angle::Pi(), 0, 0} ); // ok
+            checkAllGoodAtSamePosition( { Angle::Pi(), 0, 0 }, { 0, 0, 0} );
+            checkAllGoodAtSamePosition( { 0, Angle::Pi(), 0 }, { 0, 0, Angle::Pi()} );
+            checkAllGoodAtSamePosition( { 0, 0, Angle::Pi() }, { 0, Angle::Pi(), 0} );
+            checkAllGoodAtSamePosition( { Angle::HalfPi(), 0, 0 }, { -Angle::HalfPi(), 0, 0} );
+            checkAllGoodAtSamePosition( { 0, 0, Angle::HalfPi() }, { 0, Angle::Pi(), -Angle::HalfPi()} );
+            checkAllGoodAtSamePosition( { Angle::Pi(), Angle::HalfPi(), 0 }, { 0, Angle::HalfPi(), 0} );
         }
 
         SECTION( "South" )
         {
-            checkAllGoodAtSamePosition( { 0, 0, 0 }, { Angle::Pi(), Angle::Pi(), 0 } );
-            checkAllGoodAtSamePosition( { Angle::Pi(), Angle::Pi(), 0 }, { 0, 0, 0 } );
-            checkAllGoodAtSamePosition( { 0, Angle::Pi(), 0 }, { Angle::Pi(), 0, 0 } );
-            checkAllGoodAtSamePosition( { Angle::Pi(), 0, 0 }, { 0, Angle::Pi(), 0 } );
-            checkAllGoodAtSamePosition( { Angle::Pi(), Angle::HalfPi(), 0 }, { 0, Angle::HalfPi(), 0 } );
+            checkAllGoodAtSamePosition( { 0, 0, 0 }, { 0, Angle::Pi(), 0} ); // ok
+            checkAllGoodAtSamePosition( { Angle::Pi(), 0, 0 }, { 0, 0, Angle::Pi()} );
+            checkAllGoodAtSamePosition( { 0, Angle::Pi(), 0 }, { 0, 0, 0} );
+            checkAllGoodAtSamePosition( { 0, 0, Angle::Pi() }, { Angle::Pi(), 0, 0} );
+            checkAllGoodAtSamePosition( { Angle::HalfPi(), 0, 0 }, { Angle::HalfPi(), 0, Angle::Pi()} );
+            checkAllGoodAtSamePosition( { 0, Angle::HalfPi(), 0 }, { 0, -Angle::HalfPi(), 0} );
+            checkAllGoodAtSamePosition( { 0, 0, Angle::HalfPi() }, { 0, Angle::Pi(), Angle::HalfPi()} );
         }
 
         SECTION( "East" )
         {
-            checkAllGoodAtSamePosition( { 0, 0, 0 }, { Angle::Pi(), Angle::HalfPi(), 0 } );
-            checkAllGoodAtSamePosition( { Angle::Pi(), Angle::HalfPi(), 0 }, { 0, 0, 0 } );
-            checkAllGoodAtSamePosition( { 0, Angle::HalfPi(), 0 }, { Angle::Pi(), 0, 0 } );
-            checkAllGoodAtSamePosition( { Angle::Pi(), 0, 0 }, { 0, Angle::HalfPi(), 0 } );
-            checkAllGoodAtSamePosition( { Angle::Pi(), Angle::HalfPi() / 2, 0 }, { 0, Angle::HalfPi() / 2, 0 } );
+            checkAllGoodAtSamePosition( { Angle::Pi(), 0, 0 }, { 0, 0, Angle::HalfPi()} );
+            checkAllGoodAtSamePosition( { 0, 0, 0 }, { Angle::Pi(), 0, -Angle::HalfPi()} );
+            checkAllGoodAtSamePosition( { 0, Angle::Pi(), 0 }, { 0, 0, -Angle::HalfPi()} );
+            checkAllGoodAtSamePosition( { 0, 0, Angle::Pi() }, { Angle::Pi(), 0, Angle::HalfPi()} );
+            checkAllGoodAtSamePosition( { Angle::HalfPi(), 0, 0 }, { 0, Angle::HalfPi(), Angle::HalfPi()} );
+            checkAllGoodAtSamePosition( { 0, Angle::HalfPi(), 0 }, { -Angle::HalfPi(), Angle::Pi(), Angle::HalfPi() } );
+            checkAllGoodAtSamePosition( { 0, 0, Angle::HalfPi() }, { 0, Angle::Pi(), Angle::Pi() } );
         }
 
         SECTION( "West" )
         {
-            checkAllGoodAtSamePosition( { 0, 0, 0 }, { Angle::Pi(), -Angle::HalfPi(), 0 } );
-            checkAllGoodAtSamePosition( { 0, 0, 0 }, { Angle::Pi(), 3 * Angle::HalfPi(), 0 } );
-            checkAllGoodAtSamePosition( { Angle::Pi(), -Angle::HalfPi(), 0 }, { 0, 0, 0 } );
-            checkAllGoodAtSamePosition( { Angle::Pi(), 3 * Angle::HalfPi(), 0 }, { 0, 0, 0 } );
-            checkAllGoodAtSamePosition( { 0, -Angle::HalfPi(), 0 }, { Angle::Pi(), 0, 0 } );
-            checkAllGoodAtSamePosition( { Angle::HalfPi(), 3 * Angle::HalfPi(), 0 }, { -Angle::HalfPi(), 0, 0 } );
-            checkAllGoodAtSamePosition( { 3 * Angle::HalfPi(), -Angle::HalfPi(), 0 }, { Angle::HalfPi(), 0, 0 } );
-            checkAllGoodAtSamePosition( { Angle::Pi(), 0, 0 }, { 0, 3 * Angle::HalfPi(), 0 } );
-            checkAllGoodAtSamePosition( { Angle::Pi(), -Angle::HalfPi() / 2, 0 }, { 0, -Angle::HalfPi() / 2, 0 } );
+            checkAllGoodAtSamePosition( { Angle::Pi(), 0, 0 }, { 0, 0, -Angle::HalfPi()} ); // ok
+            checkAllGoodAtSamePosition( { 0, 0, 0 }, { Angle::Pi(), 0, Angle::HalfPi()} ); // west
+            checkAllGoodAtSamePosition( { 0, Angle::Pi(), 0 }, { 0, 0, Angle::HalfPi()} ); // ok
+            checkAllGoodAtSamePosition( { 0, 0, Angle::Pi() }, { Angle::Pi(), 0, -Angle::HalfPi()} ); // west
+            checkAllGoodAtSamePosition( { Angle::HalfPi(), 0, 0 }, { 0, -Angle::HalfPi(), -Angle::HalfPi()} ); // west
+            checkAllGoodAtSamePosition( { 0, Angle::HalfPi(), 0 }, { Angle::HalfPi(), Angle::Pi(), -Angle::HalfPi() } );
+            checkAllGoodAtSamePosition( { 0, 0, Angle::HalfPi() }, { 0, Angle::Pi(), 0 } );
         }
     }
 }
 
 TEST_CASE( "Check shift" )
 {
-    CHECK( checkShift( { 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0 } ) );
-    CHECK( checkShift( { 234.003, -50, 10, 0, 0, 0 }, { 234, -50, 10, 0, 0, 0 } ) );
-    CHECK( checkShift( { 0.001, 0.001, 0.001, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0 } ) );
-    CHECK( checkShift( { 0.002, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0 } ) );
-    CHECK( checkShift( { 0, 0.002, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0 } ) );
+    CHECK( checkShift( { 0, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, Angle::Pi(), 0 } ) );
+    CHECK( checkShift( { 234.003, -50, 10, Angle::Pi(), 0, 0 }, { 234, -50, 10, 0, 0, 0 } ) );
+    CHECK( checkShift( { 0.001, 0.001, 0.001, Angle::Pi(), 0, 0 }, { 0, 0, 0, 0, 0, 0 } ) );
+    CHECK( checkShift( { 0.002, 0, 0, 0, 0, 0 }, { 0, 0, 0, 0, Angle::Pi(), 0 } ) );
+    CHECK( checkShift( { 0, 0.002, 0, 0, Angle::Pi(), 0 }, { 0, 0, 0, 0, 0, 0 } ) );
 
-    CHECK_FALSE( checkShift( { 0, 0.008, 0, 0, 0, 0 }, { 0, 0, 0, 0, 0, 0 } ) );
-    CHECK_FALSE( checkShift( { 0, 0, 10, 0, 0, 0 }, { 0, 0.02, 10, 0, 0, 0 } ) );
-
-    CHECK_FALSE( checkShift( { 10, 0.04, 0, 0, 0, 0 }, { 10, 0, 0, 0, 0, 0 } ) );
-    CHECK_FALSE( checkShift( { 0, 0, 10, 0, 0, 0 }, { 0.01, 0, 10, 0, 0, 0 } ) );
-    CHECK_FALSE( checkShift( { 10, 0.005, 0, 0, 0, 0 }, { 10.003, 0, 0.005, 0, 0, 0 } ) );
+    CHECK_FALSE( checkShift( { 0, 0.008, 0, 0, 0, 0 }, { 0, 0, 0, Angle::Pi(), 0, 0 } ) );
+    CHECK_FALSE( checkShift( { 0, 0, 10, 0, 0, 0 }, { 0, 0.02, 10, Angle::Pi(), 0, 0 } ) );
+    CHECK_FALSE( checkShift( { 10, 0.04, 0, 0, 0, 0 }, { 10, 0, 0, Angle::Pi(), 0, 0 } ) );
+    CHECK_FALSE( checkShift( { 0, 0, 10, 0, 0, 0 }, { 0.01, 0, 10, Angle::Pi(), 0, 0 } ) );
+    CHECK_FALSE( checkShift( { 10, 0.005, 0, 0, 0, 0 }, { 10.003, 0, 0.005, Angle::Pi(), 0, 0 } ) );
 }
 
 TEST_CASE( "Check tilt" )
 {
-    CHECK( ( false && "TODO add tests" ) );
+    REQUIRE( ( false && "TODO add tests" ) );
 }
 
 TEST_CASE( "Check center distance" )
@@ -162,97 +206,58 @@ TEST_CASE( "Orientation" )
 {
     SECTION( "North" )
     {
-        SECTION( "Has some value" )
-        {
-            CHECK( getMutualOrientation( { 0, 0, 0 }, { Angle::Pi(), 0, 0 } ) );
-            CHECK( getMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, 0, 0 } ) );
-            CHECK( getMutualOrientation( { Angle::Pi(), Angle::Pi(), 0 }, { 0, Angle::Pi(), 0 } ) );
-        }
-
-        SECTION( "Has right value" )
-        {
-            CHECK( getMutualOrientation( { 0, 0, 0 }, { Angle::Pi(), 0, 0 } ).value() == ConnectorState::NORTH );
-            CHECK( getMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, 0, 0 } ).value() == ConnectorState::NORTH );
-            CHECK( getMutualOrientation( { Angle::Pi(), Angle::Pi(), 0 }, { 0, Angle::Pi(), 0 } ).value() == ConnectorState::NORTH );
-        }
+        checkMutualOrientation( { 0, 0, 0 }, { Angle::Pi(), 0, 0}, ConnectorState::NORTH ); // ok
+        checkMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, 0, 0}, ConnectorState::NORTH );
+        checkMutualOrientation( { 0, Angle::Pi(), 0 }, { 0, 0, Angle::Pi()}, ConnectorState::NORTH );
+        checkMutualOrientation( { 0, 0, Angle::Pi() }, { 0, Angle::Pi(), 0}, ConnectorState::NORTH );
+        checkMutualOrientation( { Angle::HalfPi(), 0, 0 }, { -Angle::HalfPi(), 0, 0}, ConnectorState::NORTH );
+        checkMutualOrientation( { 0, 0, Angle::HalfPi() }, { 0, Angle::Pi(), -Angle::HalfPi()}, ConnectorState::NORTH );
+        checkMutualOrientation( { Angle::Pi(), Angle::HalfPi(), 0 }, { 0, Angle::HalfPi(), 0}, ConnectorState::NORTH );
     }
 
     SECTION( "South" )
     {
-        SECTION( "Has some value" )
-        {
-            CHECK( getMutualOrientation( { 0, 0, 0 }, { Angle::Pi(), Angle::Pi(), 0 } ) );
-            CHECK( getMutualOrientation( { Angle::Pi(), Angle::Pi(), 0 }, { 0, 0, 0 } ) );
-            CHECK( getMutualOrientation( { 0, Angle::Pi(), 0 }, { Angle::Pi(), 0, 0 } ) );
-            CHECK( getMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, Angle::Pi(), 0 } ) );
-            CHECK( getMutualOrientation( { Angle::Pi(), Angle::HalfPi(), 0 }, { 0, Angle::HalfPi(), 0 } ) );
-        }
-        SECTION( "Has right value" )
-        {
-            CHECK( getMutualOrientation( { 0, 0, 0 }, { Angle::Pi(), Angle::Pi(), 0 } ).value() == ConnectorState::SOUTH );
-            CHECK( getMutualOrientation( { Angle::Pi(), Angle::Pi(), 0 }, { 0, 0, 0 } ).value() == ConnectorState::SOUTH );
-            CHECK( getMutualOrientation( { 0, Angle::Pi(), 0 }, { Angle::Pi(), 0, 0 } ).value() == ConnectorState::SOUTH );
-            CHECK( getMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, Angle::Pi(), 0 } ).value() == ConnectorState::SOUTH );
-            CHECK( getMutualOrientation( { Angle::Pi(), Angle::HalfPi(), 0 }, { 0, Angle::HalfPi(), 0 } ).value() == ConnectorState::SOUTH );
-        }
+        checkMutualOrientation( { 0, 0, 0 }, { 0, Angle::Pi(), 0}, ConnectorState::SOUTH ); // ok
+        checkMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, 0, Angle::Pi()}, ConnectorState::SOUTH );
+        checkMutualOrientation( { 0, Angle::Pi(), 0 }, { 0, 0, 0}, ConnectorState::SOUTH );
+        checkMutualOrientation( { 0, 0, Angle::Pi() }, { Angle::Pi(), 0, 0}, ConnectorState::SOUTH );
+        checkMutualOrientation( { Angle::HalfPi(), 0, 0 }, { Angle::HalfPi(), 0, Angle::Pi()}, ConnectorState::SOUTH );
+        checkMutualOrientation( { 0, Angle::HalfPi(), 0 }, { 0, -Angle::HalfPi(), 0}, ConnectorState::SOUTH );
+        checkMutualOrientation( { 0, 0, Angle::HalfPi() }, { 0, Angle::Pi(), Angle::HalfPi()}, ConnectorState::SOUTH );
     }
 
     SECTION( "East" )
     {
-        SECTION( "Has some value" )
-        {
-            CHECK( getMutualOrientation( { 0, 0, 0 }, { Angle::Pi(), Angle::HalfPi(), 0 } ) );
-            CHECK( getMutualOrientation( { Angle::Pi(), Angle::HalfPi(), 0 }, { 0, 0, 0 } ) );
-            CHECK( getMutualOrientation( { 0, Angle::HalfPi(), 0 }, { Angle::Pi(), 0, 0 } ) );
-            CHECK( getMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, Angle::HalfPi(), 0 } ) );
-            CHECK( getMutualOrientation( { Angle::Pi(), Angle::HalfPi() / 2, 0 }, { 0, Angle::HalfPi() / 2, 0 } ) );
-        }
-        SECTION( "Has right value" )
-        {
-            CHECK( getMutualOrientation( { 0, 0, 0 }, { Angle::Pi(), Angle::HalfPi(), 0 } ).value() == ConnectorState::EAST );
-            CHECK( getMutualOrientation( { Angle::Pi(), Angle::HalfPi(), 0 }, { 0, 0, 0 } ).value() == ConnectorState::EAST );
-            CHECK( getMutualOrientation( { 0, Angle::HalfPi(), 0 }, { Angle::Pi(), 0, 0 } ).value() == ConnectorState::EAST );
-            CHECK( getMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, Angle::HalfPi(), 0 } ).value() == ConnectorState::EAST );
-            CHECK( getMutualOrientation( { Angle::Pi(), Angle::HalfPi() / 2, 0 }, { 0, Angle::HalfPi() / 2, 0 } ).value() == ConnectorState::EAST );
-        }
+        checkMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, 0, Angle::HalfPi()}, ConnectorState::EAST );
+        checkMutualOrientation( { 0, 0, 0 }, { Angle::Pi(), 0, -Angle::HalfPi()}, ConnectorState::EAST );
+        checkMutualOrientation( { 0, Angle::Pi(), 0 }, { 0, 0, -Angle::HalfPi()}, ConnectorState::EAST );
+        checkMutualOrientation( { 0, 0, Angle::Pi() }, { Angle::Pi(), 0, Angle::HalfPi()}, ConnectorState::EAST );
+        checkMutualOrientation( { Angle::HalfPi(), 0, 0 }, { 0, Angle::HalfPi(), Angle::HalfPi()}, ConnectorState::EAST );
+        checkMutualOrientation( { 0, Angle::HalfPi(), 0 }, { -Angle::HalfPi(), Angle::Pi(), Angle::HalfPi() }, ConnectorState::EAST );
+        checkMutualOrientation( { 0, 0, Angle::HalfPi() }, { 0, Angle::Pi(), Angle::Pi() }, ConnectorState::EAST );
     }
 
     SECTION( "West" )
     {
-        SECTION( "Has some value" )
-        {
-            CHECK( getMutualOrientation( { 0, 0, 0 }, { Angle::Pi(), -Angle::HalfPi(), 0 } ) );
-            CHECK( getMutualOrientation( { 0, 0, 0 }, { Angle::Pi(), 3 * Angle::HalfPi(), 0 } ) );
-            CHECK( getMutualOrientation( { Angle::Pi(), -Angle::HalfPi(), 0 }, { 0, 0, 0 } ) );
-            CHECK( getMutualOrientation( { Angle::Pi(), 3 * Angle::HalfPi(), 0 }, { 0, 0, 0 } ) );
-            CHECK( getMutualOrientation( { 0, -Angle::HalfPi(), 0 }, { Angle::Pi(), 0, 0 } ) );
-            CHECK( getMutualOrientation( { Angle::HalfPi(), 3 * Angle::HalfPi(), 0 }, { -Angle::HalfPi(), 0, 0 } ) );
-            CHECK( getMutualOrientation( { 3 * Angle::HalfPi(), -Angle::HalfPi(), 0 }, { Angle::HalfPi(), 0, 0 } ) );
-            CHECK( getMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, 3 * Angle::HalfPi(), 0 } ) );
-            CHECK( getMutualOrientation( { Angle::Pi(), -Angle::HalfPi() / 2, 0 }, { 0, -Angle::HalfPi() / 2, 0 } ) );
-        }
-        SECTION( "Has right value" )
-        {
-            CHECK( getMutualOrientation( { 0, 0, 0 }, { Angle::Pi(), -Angle::HalfPi(), 0 } ).value() == ConnectorState::WEST );
-            CHECK( getMutualOrientation( { 0, 0, 0 }, { Angle::Pi(), 3 * Angle::HalfPi(), 0 } ).value() == ConnectorState::WEST );
-            CHECK( getMutualOrientation( { Angle::Pi(), -Angle::HalfPi(), 0 }, { 0, 0, 0 } ).value() == ConnectorState::WEST );
-            CHECK( getMutualOrientation( { Angle::Pi(), 3 * Angle::HalfPi(), 0 }, { 0, 0, 0 } ).value() == ConnectorState::WEST );
-            CHECK( getMutualOrientation( { 0, -Angle::HalfPi(), 0 }, { Angle::Pi(), 0, 0 } ).value() == ConnectorState::WEST );
-            CHECK( getMutualOrientation( { Angle::HalfPi(), 3 * Angle::HalfPi(), 0 }, { -Angle::HalfPi(), 0, 0 } ).value() == ConnectorState::WEST );
-            CHECK( getMutualOrientation( { 3 * Angle::HalfPi(), -Angle::HalfPi(), 0 }, { Angle::HalfPi(), 0, 0 } ).value() == ConnectorState::WEST );
-            CHECK( getMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, 3 * Angle::HalfPi(), 0 } ).value() == ConnectorState::WEST );
-            CHECK( getMutualOrientation( { Angle::Pi(), -Angle::HalfPi() / 2, 0 }, { 0, -Angle::HalfPi() / 2, 0 } ).value() == ConnectorState::WEST );
-        }
+        checkMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, 0, -Angle::HalfPi()}, ConnectorState::WEST ); // ok
+        checkMutualOrientation( { 0, 0, 0 }, { Angle::Pi(), 0, Angle::HalfPi()}, ConnectorState::WEST ); // west
+        checkMutualOrientation( { 0, Angle::Pi(), 0 }, { 0, 0, Angle::HalfPi()}, ConnectorState::WEST ); // ok
+        checkMutualOrientation( { 0, 0, Angle::Pi() }, { Angle::Pi(), 0, -Angle::HalfPi()}, ConnectorState::WEST ); // west
+        checkMutualOrientation( { Angle::HalfPi(), 0, 0 }, { 0, -Angle::HalfPi(), -Angle::HalfPi()}, ConnectorState::WEST ); // west
+        checkMutualOrientation( { 0, Angle::HalfPi(), 0 }, { Angle::HalfPi(), Angle::Pi(), -Angle::HalfPi() }, ConnectorState::WEST );
+        checkMutualOrientation( { 0, 0, Angle::HalfPi() }, { 0, Angle::Pi(), 0 }, ConnectorState::WEST );
     }
 
     SECTION( "Nothing" )
     {
-        CHECK_FALSE( getMutualOrientation( { 0, Angle::HalfPi() / 2, 0 }, { Angle::Pi(), -Angle::HalfPi(), 0 } ) );
-        CHECK_FALSE( getMutualOrientation( { 0, -Angle::HalfPi() / 2, 0 }, { Angle::Pi(), 3 * Angle::HalfPi(), 0 } ) );
-        CHECK_FALSE( getMutualOrientation( { Angle::Pi(), -Angle::HalfPi(), 0 }, { 0, -Angle::HalfPi() / 2, 0 } ) );
-        CHECK_FALSE( getMutualOrientation( { Angle::Pi(), 3.5 * Angle::HalfPi(), 0 }, { 0, 0, 0 } ) );
-        CHECK_FALSE( getMutualOrientation( { 0, -Angle::HalfPi() / 2, 0 }, { Angle::Pi(), 0, 0 } ) );
-        CHECK_FALSE( getMutualOrientation( { Angle::Pi(), -Angle::HalfPi() / 2, 0 }, { 0, 3 * Angle::HalfPi(), 0 } ) );
-        CHECK_FALSE( getMutualOrientation( { Angle::Pi(), Angle::HalfPi() / 2, 0 }, { 0, -Angle::HalfPi() / 2, 0 } ) );
+        checkMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, 0, Angle::HalfPi() / 2 }, std::nullopt );
+        checkMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, 0, Angle::HalfPi() + Angle::HalfPi() / 2 }, std::nullopt );
+        checkMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, 0, -Angle::HalfPi() - Angle::HalfPi() / 2 }, std::nullopt );
+        checkMutualOrientation( { Angle::Pi(), 0, 0 }, { 0, 0, -Angle::HalfPi() / 2 }, std::nullopt );
+        checkMutualOrientation( { 0, Angle::Pi(), 0, 0 }, { 0, 0, Angle::HalfPi() / 2 }, std::nullopt );
+        checkMutualOrientation( { 0, Angle::Pi(), 0, 0 }, { 0, 0, Angle::HalfPi() + Angle::HalfPi() / 2 }, std::nullopt );
+        checkMutualOrientation( { 0, Angle::Pi(), 0, 0 }, { 0, 0, -Angle::HalfPi() - Angle::HalfPi() / 2 }, std::nullopt );
+        checkMutualOrientation( { 0, Angle::Pi(), 0, 0 }, { 0, 0, -Angle::HalfPi() / 2 }, std::nullopt );
+        checkMutualOrientation( { Angle::HalfPi(), Angle::HalfPi() / 2, -Angle::HalfPi() }, { -Angle::HalfPi(), 0, -Angle::HalfPi() }, std::nullopt );
     }
 }
