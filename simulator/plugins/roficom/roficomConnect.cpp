@@ -11,10 +11,10 @@ struct RoficomConnectConfig
     static constexpr double maxDistance = 5e-3; // [m]
     static constexpr double maxTilt = 0.1; // [rad] ( 6 deg )
     static constexpr double maxShift = 4e-3; // [m]
-    static constexpr double maxRotation = IGN_PI / 4; // [rad]
+    static constexpr double maxRotation = IGN_PI / 8; // [rad]
 
 
-    static_assert( 4 * maxRotation <= 2 * IGN_PI );
+    static_assert( 4 * 2 * maxRotation < 2 * IGN_PI );
 };
 
 
@@ -87,8 +87,6 @@ std::optional< rofi::messages::ConnectorState::Orientation >
                 assert( false );
             }
         }
-
-        return {};
     }
 
     return {};
