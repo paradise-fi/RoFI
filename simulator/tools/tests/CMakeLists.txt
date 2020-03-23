@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10)
 
 add_executable(test_static_rofi_hal test_static_rofi_hal.cpp)
 target_link_libraries(test_static_rofi_hal rofiHal Catch2)
