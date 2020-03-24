@@ -273,6 +273,7 @@ int main( int argc, char **argv )
 
         std::cerr << "Acquiring RoFI " << rofiId << "\n";
         auto & rofi = rofi::hal::RoFI::getRemoteRoFI( rofiId );
+        std::cerr << "Acquired RoFI " << rofiId << "\n";
 
         for ( std::string line; std::getline( std::cin, line ); )
         {

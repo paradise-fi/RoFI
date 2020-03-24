@@ -158,6 +158,7 @@ void UMP::findAndInitConnectors()
 rofi::messages::RofiResp UMP::getJointRofiResp( rofi::messages::JointCmd::Type cmdtype, int joint, float value ) const
 {
     rofi::messages::RofiResp resp;
+    resp.set_rofiid( rofiId.value_or( 0 ) );
     resp.set_resptype( rofi::messages::RofiCmd::JOINT_CMD );
 
     auto & jointResp = *resp.mutable_jointresp();
@@ -172,6 +173,7 @@ rofi::messages::RofiResp UMP::getJointRofiResp( rofi::messages::JointCmd::Type c
 rofi::messages::RofiResp UMP::getConnectorRofiResp( const rofi::messages::ConnectorResp & connectorResp ) const
 {
     rofi::messages::RofiResp resp;
+    resp.set_rofiid( rofiId.value_or( 0 ) );
     resp.set_resptype( rofi::messages::RofiCmd::CONNECTOR_CMD );
     *resp.mutable_connectorresp() = connectorResp;
     return resp;
@@ -186,14 +188,32 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
         case RofiCmd::NO_CMD:
             break;
         case RofiCmd::JOINT_CMD:
+            if ( rofiId && *rofiId != msg->rofiid() )
+            {
+                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid() << "\n";
+            }
             onJointCmd( msg->jointcmd() );
             break;
         case RofiCmd::CONNECTOR_CMD:
+            if ( rofiId && *rofiId != msg->rofiid() )
+            {
+                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid() << "\n";
+            }
             onConnectorCmd( msg->connectorcmd() );
             break;
         case RofiCmd::DESCRIPTION:
         {
+            if ( rofiId && *rofiId != msg->rofiid() )
+            {
+                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid() << "\n";
+            }
+            if ( !rofiId )
+            {
+                rofiId = msg->rofiid();
+            }
+
             rofi::messages::RofiResp resp;
+            resp.set_rofiid( rofiId.value_or( 0 ) );
             resp.set_resptype( rofi::messages::RofiCmd::DESCRIPTION );
             auto description = resp.mutable_rofidescription();
             description->set_jointcount( joints.size() );
@@ -206,12 +226,18 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
         }
         case RofiCmd::WAIT_CMD:
         {
+            if ( rofiId && *rofiId != msg->rofiid() )
+            {
+                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid() << "\n";
+            }
+
             gzmsg << "Starting waiting (" << msg->waitcmd().waitms() << " s, ID: " << msg->waitcmd().waitid() << ")\n";
             auto afterWaited = _model->GetWorld()->SimTime() + common::Time( 0, msg->waitcmd().waitms() * 1000000 );
 
             std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
             waitCallbacksMap.emplace( afterWaited, [ this, waitId = msg->waitcmd().waitid() ](){
                     rofi::messages::RofiResp resp;
+                    resp.set_rofiid( rofiId.value_or( 0 ) );
                     resp.set_resptype( rofi::messages::RofiCmd::WAIT_CMD );
                     resp.set_waitid( waitId );
                     gzmsg << "Returning waiting ended (ID: " << waitId << ")\n";

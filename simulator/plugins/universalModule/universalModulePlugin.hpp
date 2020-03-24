@@ -69,6 +69,7 @@ private:
     void setPositionWithSpeed( int joint, double desiredPosition, double speed );
 
 
+    std::optional< int > rofiId;
     physics::ModelPtr _model;
 
     transport::NodePtr _node;

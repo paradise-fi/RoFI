@@ -265,7 +265,7 @@ namespace rofi
                 std::string rofiName = "local RoFI";
                 if ( id > 0 )
                 {
-                    moduleName += "_" + std::to_string( static_cast< int >( id - 1 ) );
+                    moduleName += "_" + std::to_string( static_cast< int >( id ) - 1 );
                     rofiName = "RoFI " + std::to_string( static_cast< int >( id ) );
                 }
 
@@ -409,7 +409,7 @@ namespace rofi
                 while ( !hasDescription )
                 {
                     messages::RofiCmd rofiCmd;
-                    rofiCmd.set_rofiid( id );
+                    rofiCmd.set_rofiid( getId() );
                     rofiCmd.set_cmdtype( messages::RofiCmd::DESCRIPTION );
                     pub->WaitForConnection();
                     pub->Publish( std::move( rofiCmd ) );
