@@ -9,7 +9,7 @@ if(${LIBCXX})
     set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++")
 endif(${LIBCXX})
 
-set(SOURCE_CODE_FLAGS "-Wall -Wextra -pedantic")
+set(SOURCE_CODE_FLAGS "-g3 -Wall -Wextra -pedantic")
 
 FetchContent_Declare(
   catch

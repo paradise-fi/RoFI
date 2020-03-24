@@ -42,8 +42,12 @@ namespace rofi
                 mutable std::unordered_map< int, std::function< void() > > waitCallbacksMap;
                 mutable std::mutex waitCallbacksMapMutex;
                 mutable int waitId = 0;
+
+                static int rofiCount;
+                static std::mutex rofiCountMutex;
             public:
                 RoFIData( RoFI::Id id );
+                ~RoFIData();
 
                 RoFI::Id getId() const;
                 Joint getJoint( int index );

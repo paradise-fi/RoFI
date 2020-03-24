@@ -1,8 +1,11 @@
 #include "rofi_hal_sim.hpp"
 
+#include <gazebo/gazebo_client.hh>
+
 #include <cassert>
 #include <chrono>
 #include <thread>
+
 
 namespace rofi
 {
@@ -256,8 +259,23 @@ namespace rofi
 
         namespace detail
         {
+            int RoFIData::rofiCount = 0;
+            std::mutex RoFIData::rofiCountMutex = {};
+
             RoFIData::RoFIData( RoFI::Id id ) : id( id )
             {
+                {
+                    std::lock_guard< std::mutex > lock( rofiCountMutex );
+
+                    assert( rofiCount >= 0 );
+                    if ( rofiCount == 0 )
+                    {
+                        std::cout << "Starting gazebo client" << std::endl;
+                        gazebo::client::setup();
+                    }
+                    rofiCount++;
+                }
+
                 node = boost::make_shared< gazebo::transport::Node >();
                 node->Init();
 
@@ -280,6 +298,19 @@ namespace rofi
                 getDescription();
 
                 std::cerr << rofiName << " is ready...\n";
+            }
+
+            RoFIData::~RoFIData()
+            {
+                std::lock_guard< std::mutex > lock( rofiCountMutex );
+
+                assert( rofiCount > 0 );
+                rofiCount--;
+                if ( rofiCount == 0 )
+                {
+                    gazebo::client::shutdown();
+                    std::cout << "Ending gazebo client" << std::endl;
+                }
             }
 
             RoFI::Id RoFIData::getId() const
