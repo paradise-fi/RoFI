@@ -39,12 +39,17 @@ namespace rofi
                 std::mutex descriptionMutex;
                 std::atomic_bool hasDescription = false;
 
+                mutable std::unordered_map< int, std::function< void() > > waitCallbacksMap;
+                mutable std::mutex waitCallbacksMapMutex;
+                mutable int waitId = 0;
             public:
                 RoFIData( RoFI::Id id );
 
                 RoFI::Id getId() const;
                 Joint getJoint( int index );
                 Connector getConnector( int index );
+
+                void wait( int ms, std::function< void() > callback ) const;
 
                 void onResponse( const RofiRespPtr & resp );
 

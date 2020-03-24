@@ -62,6 +62,8 @@ private:
 
     void onConnectorResp( const ConnectorRespPtr & msg );
 
+    void onUpdate();
+
     void setVelocity( int joint, double velocity );
     void setTorque( int joint, double torque );
     void setPositionWithSpeed( int joint, double desiredPosition, double speed );
@@ -73,8 +75,13 @@ private:
     transport::SubscriberPtr _sub;
     transport::PublisherPtr _pub;
 
+    event::ConnectionPtr onUpdateConnection;
+
     std::deque< JointData< PIDController > > joints;
     std::vector< std::pair< transport::PublisherPtr, transport::SubscriberPtr > > connectors;
+
+    std::map< common::Time, std::function< void() > > waitCallbacksMap;
+    std::mutex waitCallbacksMapMutex;
 };
 
 } // namespace gazebo

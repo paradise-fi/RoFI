@@ -18,6 +18,8 @@ void UMP::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
     findAndInitJoints();
     findAndInitConnectors();
 
+    onUpdateConnection = event::Events::ConnectWorldUpdateBegin( std::bind( &UMP::onUpdate, this ) );
+
     gzmsg << "Number of joints is " << joints.size() << "\n";
     gzmsg << "Number of connectors is " << connectors.size() << "\n";
     gzmsg << "Listening...\n";
@@ -202,6 +204,22 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
             _pub->Publish( std::move( resp ) );
             break;
         }
+        case RofiCmd::WAIT_CMD:
+        {
+            gzmsg << "Starting waiting (" << msg->waitcmd().waitms() << " s, ID: " << msg->waitcmd().waitid() << ")\n";
+            auto afterWaited = _model->GetWorld()->SimTime() + common::Time( 0, msg->waitcmd().waitms() * 1000000 );
+
+            std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
+            waitCallbacksMap.emplace( afterWaited, [ this, waitId = msg->waitcmd().waitid() ](){
+                    rofi::messages::RofiResp resp;
+                    resp.set_resptype( rofi::messages::RofiCmd::WAIT_CMD );
+                    resp.set_waitid( waitId );
+                    gzmsg << "Returning waiting ended (ID: " << waitId << ")\n";
+                    _pub->Publish( std::move( resp ) );
+                } );
+
+            break;
+        }
         default:
             gzwarn << "Unknown RoFI command type\n";
     }
@@ -331,6 +349,25 @@ void UMP::onConnectorCmd( const rofi::messages::ConnectorCmd & msg )
 void UMP::onConnectorResp( const UMP::ConnectorRespPtr & msg )
 {
     _pub->Publish( getConnectorRofiResp( *msg ) );
+}
+
+void UMP::onUpdate()
+{
+    std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
+
+    assert( _model );
+    auto actualTime = _model->GetWorld()->SimTime();
+
+    auto it = waitCallbacksMap.begin();
+    for ( ; it != waitCallbacksMap.end(); it++ )
+    {
+        if ( it->first > actualTime )
+        {
+            break;
+        }
+        ( it->second )();
+    }
+    waitCallbacksMap.erase( waitCallbacksMap.begin(), it );
 }
 
 void UMP::setVelocity( int joint, double velocity )

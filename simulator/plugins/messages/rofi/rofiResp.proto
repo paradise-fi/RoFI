@@ -13,4 +13,5 @@ message RofiResp {
     JointResp jointResp = 3;
     ConnectorResp connectorResp = 4;
     RofiDescription rofiDescription = 5;
+    int32 waitid = 6;
 }

@@ -48,6 +48,13 @@ namespace rofi
             return rofiData->getConnector( index );
         }
 
+        void RoFI::wait( int ms, std::function< void() > callback )
+        {
+            auto & localRoFI = getLocalRoFI();
+            assert( localRoFI.rofiData );
+            localRoFI.rofiData->wait( ms, std::move( callback ) );
+        }
+
 
         Joint::Joint( detail::JointData & jdata ) : jointData( & jdata ) {}
 
@@ -298,6 +305,23 @@ namespace rofi
                 return connectors[ index ]->getConnector();
             }
 
+            void RoFIData::wait( int ms, std::function< void() > callback ) const
+            {
+                {
+                    std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
+                    waitId++;
+                    assert( waitCallbacksMap.find( waitId ) == waitCallbacksMap.end() );
+                    waitCallbacksMap.emplace( waitId, std::move( callback ) );
+                }
+
+                messages::RofiCmd rofiCmd;
+                rofiCmd.set_rofiid( getId() );
+                rofiCmd.set_cmdtype( messages::RofiCmd::WAIT_CMD );
+                rofiCmd.mutable_waitcmd()->set_waitid( waitId );
+                rofiCmd.mutable_waitcmd()->set_waitms( ms );
+                pub->Publish( std::move( rofiCmd ), true );
+            }
+
             void RoFIData::onResponse( const RoFIData::RofiRespPtr & resp )
             {
                 using rofi::messages::RofiCmd;
@@ -350,6 +374,26 @@ namespace rofi
                         std::cerr << "Number of joints: " << joints.size() << "\n";
                         std::cerr << "Number of connectors: " << connectors.size() << "\n";
                         hasDescription = true;
+                        break;
+                    }
+                    case RofiCmd::WAIT_CMD:
+                    {
+                        std::function< void() > callback;
+
+                        {
+                            std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
+                            auto it = waitCallbacksMap.find( resp->waitid() );
+                            if ( it != waitCallbacksMap.end() )
+                            {
+                                callback = std::move( it->second );
+                                waitCallbacksMap.erase( it );
+                            }
+                        }
+
+                        if ( callback )
+                        {
+                            callback();
+                        }
                         break;
                     }
                     default:

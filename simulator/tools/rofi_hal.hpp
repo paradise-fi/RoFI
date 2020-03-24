@@ -51,6 +51,8 @@ namespace rofi
             Id getId() const;
             Joint getJoint( int index );
             Connector getConnector( int index );
+
+            static void wait( int ms, std::function< void() > callback );
         };
 
         class Joint

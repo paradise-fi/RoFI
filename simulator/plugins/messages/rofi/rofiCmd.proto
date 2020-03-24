@@ -4,12 +4,18 @@ package rofi.messages;
 import "jointCmd.proto";
 import "connectorCmd.proto";
 
+message WaitCmd {
+    int32 waitId = 1;
+    int32 waitMs = 2;
+}
+
 message RofiCmd {
     enum Type {
         NO_CMD = 0;
         JOINT_CMD = 1;
         CONNECTOR_CMD = 2;
         DESCRIPTION = 3;
+        WAIT_CMD = 4;
     }
 
     int32 rofiId = 1;
@@ -17,4 +23,5 @@ message RofiCmd {
 
     JointCmd jointCmd = 3;
     ConnectorCmd connectorCmd = 4;
+    WaitCmd waitcmd = 5;
 }
