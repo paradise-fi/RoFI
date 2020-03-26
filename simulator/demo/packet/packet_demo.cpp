@@ -1,7 +1,6 @@
-#include <gazebo/gazebo_client.hh>
-
 #include <iostream>
 #include <chrono>
+#include <mutex>
 #include <thread>
 #include <functional>
 
@@ -74,12 +73,10 @@ auto onPacketCallback( std::string prefix )
         };
 }
 
-int main( int argc, char **argv )
+int main()
 {
     using rofi::hal::RoFI;
     using namespace std::string_literals;
-
-    gazebo::client::setup( argc, argv );
 
     RoFI & localRofi = RoFI::getLocalRoFI();
     RoFI & otherRofi = RoFI::getRemoteRoFI( 1 );

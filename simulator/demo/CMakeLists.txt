@@ -5,8 +5,7 @@ include_directories(${GAZEBO_INCLUDE_DIRS})
 link_directories(${GAZEBO_LIBRARY_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS} ${SOURCE_CODE_FLAGS}")
 
-add_library(rofiHal SHARED rofi_hal_sim.cpp)
-target_link_libraries(rofiHal rofiMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
-target_include_directories(rofiHal INTERFACE ${CMAKE_CURRENT_LIST_DIR})
 
-add_subdirectory(tests)
+add_subdirectory(command_line)
+add_subdirectory(joint_position)
+add_subdirectory(packet)

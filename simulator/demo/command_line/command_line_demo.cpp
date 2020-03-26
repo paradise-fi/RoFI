@@ -1,18 +1,39 @@
-#include <gazebo/gazebo_config.h>
-#include <gazebo/transport/transport.hh>
-#include <gazebo/msgs/msgs.hh>
-#include <gazebo/gazebo_client.hh>
-
-#include <jointCmd.pb.h>
-#include <connectorCmd.pb.h>
-
 #include <iostream>
 #include <string>
 #include <string_view>
 #include <vector>
 
+#include <gazebo/gazebo_client.hh>
+
 #include "rofi_hal.hpp"
 
+
+enum class JointCmd
+{
+    NO_CMD,
+    GET_MAX_POSITION,
+    GET_MIN_POSITION,
+    GET_MAX_SPEED,
+    GET_MIN_SPEED,
+    GET_MAX_TORQUE,
+    GET_VELOCITY,
+    SET_VELOCITY,
+    GET_POSITION,
+    SET_POS_WITH_SPEED,
+    GET_TORQUE,
+    SET_TORQUE,
+};
+
+enum class ConnectorCmd
+{
+    NO_CMD,
+    CONNECT,
+    DISCONNECT,
+    GET_STATE,
+    PACKET,
+    CONNECT_POWER,
+    DISCONNECT_POWER,
+};
 
 inline std::string_view ltrim( std::string_view line, std::string_view ws = " \t" )
 {
@@ -65,11 +86,9 @@ int readInt( std::string_view str )
 }
 
 
-rofi::messages::JointCmd::Type getJointCmdType( std::string_view token )
+JointCmd getJointCmdType( std::string_view token )
 {
-    using rofi::messages::JointCmd;
-
-    const std::map< std::string_view, JointCmd::Type > map = {
+    const std::map< std::string_view, JointCmd > map = {
         { "getmaxposition", JointCmd::GET_MAX_POSITION },
         { "getminposition", JointCmd::GET_MIN_POSITION },
         { "getmaxspeed", JointCmd::GET_MAX_SPEED },
@@ -89,11 +108,9 @@ rofi::messages::JointCmd::Type getJointCmdType( std::string_view token )
     return it->second;
 }
 
-inline rofi::messages::ConnectorCmd::Type getConnectorCmdType( std::string_view token )
+inline ConnectorCmd getConnectorCmdType( std::string_view token )
 {
-    using rofi::messages::ConnectorCmd;
-
-    const std::map< std::string_view, ConnectorCmd::Type > map = {
+    const std::map< std::string_view, ConnectorCmd > map = {
         { "getstate", ConnectorCmd::GET_STATE },
         { "connect", ConnectorCmd::CONNECT },
         { "disconnect", ConnectorCmd::DISCONNECT },
@@ -119,8 +136,6 @@ void printHelp()
 
 void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_view > & tokens )
 {
-    using rofi::messages::JointCmd;
-
     if ( tokens.size() < 3 )
         throw std::runtime_error("Wrong number of arguments");
 
@@ -211,8 +226,6 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
 
 void processConnectorCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_view > & tokens )
 {
-    using rofi::messages::ConnectorCmd;
-
     if ( tokens.size() < 3 )
         throw std::runtime_error("Wrong number of arguments");
 
@@ -263,12 +276,6 @@ int main( int argc, char **argv )
         if ( argc > 1 )
         {
             rofiId = readInt( argv[ 1 ] );
-            argv[ 1 ] = argv[ 0 ];
-            gazebo::client::setup( argc - 1, argv + 1 );
-        }
-        else
-        {
-            gazebo::client::setup( argc, argv );
         }
 
         std::cerr << "Acquiring RoFI " << rofiId << "\n";
@@ -306,8 +313,6 @@ int main( int argc, char **argv )
                 std::cerr << "ERROR: " << e.what() << "\n";
             }
         }
-
-        gazebo::client::shutdown();
     }
     catch ( const gazebo::common::Exception & e )
     {
