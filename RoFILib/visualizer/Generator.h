@@ -7,6 +7,7 @@
 
 #include <Configuration.h>
 #include <cmath>
+#include <set>
 
 class Generator{
 public:

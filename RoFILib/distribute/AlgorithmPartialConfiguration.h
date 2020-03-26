@@ -7,6 +7,8 @@
 
 
 #include "DistributedModule.h"
+#include <set>
+#include <queue>
 
 enum MPITags {
     shareModulePropTag,
