@@ -28,3 +28,5 @@ endif()
 
 add_subdirectory(plugins)
 add_subdirectory(tools)
+
+add_subdirectory(examples)

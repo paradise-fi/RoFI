@@ -2,6 +2,12 @@
 default: build-all
 .PHONY: clean build-all
 
+GAZEBO_ARGS ?= "--verbose"
+
+EXAMPLE ?= basic_joint_force
+EXAMPLE_ARGS ?= ""
+
+
 build:
 	mkdir -p build
 	cd build && cmake ..
@@ -13,10 +19,11 @@ clean:
 	rm -rf build
 
 run: build-all
-	./runGazebo.sh --verbose
-
-bullet: build-all
-	./runGazebo.sh --verbose -e bullet
+	./runGazebo.sh ${GAZEBO_ARGS}
 
 tests-roficom: build-all
 	./build/plugins/roficom/tests/tests_roficom
+
+
+example-client: build-all
+	./build/examples/${EXAMPLE}/${EXAMPLE} ${EXAMPLE_ARGS}
