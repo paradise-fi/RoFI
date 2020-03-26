@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 #include <Configuration.h>
-#include <Algorithms.h>
+#include <Generators.h>
+#include "test_rrt.h"
 
 TEST_CASE("Connections")
 {
@@ -97,7 +98,7 @@ TEST_CASE("Generate all rotations without repetitions")
     rots.push_back({1,Beta,90});
 
     std::vector<Rots> res;
-    getAllRots(rots, res, 3);
+    getAllSubsets(rots, res, 3);
 
 
     REQUIRE(res.size() == 2 + 4 + 1 + 5);
@@ -109,12 +110,12 @@ TEST_CASE("Generate all actions")
     cfg.addModule(0,0,0,0);
 
     std::vector<Action> res2;
-    cfg.generateActions(res2, 90, 1);
+    generateActions(cfg, res2, 90, 1);
 
     REQUIRE( res2.size() == 7 );
 
     std::vector<Action> res;
-    cfg.generateActions(res, 90, 2);
+    generateActions(cfg, res, 90, 2);
     REQUIRE( res.size() == 19 );
 }
 
@@ -124,7 +125,7 @@ TEST_CASE("Next configurations")
     cfg.addModule(0,0,0,0);
 
     std::vector<Configuration> nextCfgs;
-    cfg.next(nextCfgs, 90, 2);
+    next(cfg, nextCfgs, 90, 2);
 
     for (auto& next : nextCfgs)
     {

@@ -8,4 +8,4 @@ if(${LIBCXX})
 endif(${LIBCXX})
 
 add_executable(topology2dot topology2dot.cpp)
-target_link_libraries(topology2dot configuration)
+target_link_libraries(topology2dot PUBLIC configuration)

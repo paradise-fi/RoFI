@@ -4,6 +4,7 @@
 
 #include <cassert>
 #include <Configuration.h>
+#include <Generators.h>
 #include <IO.h>
 #include <chrono>
 
@@ -102,17 +103,17 @@ ConfigPair generateTest(unsigned modules, unsigned path, unsigned step, unsigned
     {
         std::vector<Action::Rotate> rotate;
         std::vector<Action::Reconnect> reconnect;
-        goal.generateReconnect(reconnect);
-        goal.generateRotations(rotate, step);
+        generateReconnect(goal, reconnect);
+        generateRotations(goal, rotate, step);
         std::uniform_int_distribution<unsigned long> flip(0, 5);
         //if ((flip(e) > 1))
         {
             std::uniform_int_distribution<unsigned long> dist(0, reconnect.size() - 1);
-            auto value = goal.executeIfValid({{},{reconnect[dist(e)]}});
+            auto value = executeIfValid(goal, {{},{reconnect[dist(e)]}});
             unsigned count = 0;
             while (!value.has_value() && count < rotate.size())
             {
-                value = goal.executeIfValid({{},{reconnect[dist(e)]}});
+                value = executeIfValid(goal, {{},{reconnect[dist(e)]}});
                 ++count;
             }
             if (count < rotate.size())
@@ -125,11 +126,11 @@ ConfigPair generateTest(unsigned modules, unsigned path, unsigned step, unsigned
         //else
         {
             std::uniform_int_distribution<unsigned long> dist(0, rotate.size() - 1);
-            auto value = goal.executeIfValid({{rotate[dist(e)]}, {}});
+            auto value = executeIfValid(goal, {{rotate[dist(e)]}, {}});
             unsigned count = 0;
             while (!value.has_value() && count < rotate.size())
             {
-                value = goal.executeIfValid({{rotate[dist(e)]}, {}});
+                value = executeIfValid(goal, {{rotate[dist(e)]}, {}});
                 ++count;
             }
             if (count < rotate.size())

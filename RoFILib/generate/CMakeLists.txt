@@ -8,5 +8,5 @@ if(${LIBCXX})
 endif(${LIBCXX})
 
 add_executable(rofi-generate ${ARMADILLO_LIBRARIES} main.cpp)
-target_link_libraries(rofi-generate configuration)
+target_link_libraries(rofi-generate PUBLIC configuration generators)
 target_include_directories(rofi-generate PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/)

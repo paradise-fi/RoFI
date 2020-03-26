@@ -3,6 +3,7 @@
 //
 
 #include "AlgorithmFullConfiguration.h"
+#include <Generators.h>
 
 AlgorithmFullConfiguration::AlgorithmFullConfiguration(unsigned int id, std::ifstream &inStream, std::ifstream &trgStream)
         : DistributedModule(id, inStream, trgStream) {
@@ -150,7 +151,7 @@ bool AlgorithmFullConfiguration::joinActions(std::vector<Action> &path) const {
         rotate.insert(rotate.end(), rotate2.begin(), rotate2.end());
         reconnect.insert(reconnect.end(), reconnect2.begin(), reconnect2.end());
 
-        auto optionalCfg = curr.executeIfValid({rotate, reconnect});
+        auto optionalCfg = executeIfValid(curr, {rotate, reconnect});
 
         if (!optionalCfg.has_value() || optionalCfg.value() != correct) {
             curr.execute(newActions.at(currIndex));
@@ -176,13 +177,13 @@ void AlgorithmFullConfiguration::swapActions(std::vector<Action> &path) const {
 
         correctOrder.execute(path.at(i - 1));
 
-        std::optional<Configuration> swapOrder = beforeFst.executeIfValid(path.at(i));
+        std::optional<Configuration> swapOrder = executeIfValid(beforeFst, path.at(i));
         if (!swapOrder.has_value()) {
             beforeFst = correctOrder;
             continue;
         }
 
-        swapOrder = swapOrder.value().executeIfValid(path.at(i - 1));
+        swapOrder = executeIfValid(swapOrder.value(), path.at(i - 1));
         if (!swapOrder.has_value()) {
             beforeFst = correctOrder;
             continue;
