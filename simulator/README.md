@@ -3,8 +3,9 @@
 ## Prerequisites
 
 The development is currently in gazebo11. To install it, see
-http://gazebosim.org/tutorials?tut=install_ubuntu. Be sure to install
-`gazebo11` and `libgazebo11-dev` if you want to compile the project.
+[the official documentation](http://gazebosim.org/tutorials?cat=install).
+Be sure to install both `gazebo11` and `libgazebo11-dev` if you want to be able to
+compile the project.
 
 ### Older version of gazebo
 It's possible to install later version of gazebo and it should still work.
