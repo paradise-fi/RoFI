@@ -40,6 +40,10 @@ To run a concrete world, run:
 ./runGazebo.sh --verbose <world_file>
 ```
 
+_Note:_ When running gazebo server with a world file, I get a lot of error from
+`World.cc:190`, but the simulation seems to load everything and seems to work
+properly.
+
 In Gazebo you can add models and control the simulation. Read more about the
 Gazebo GUI in [the official
 documentation](http://gazebosim.org/tutorials?tut=guided_b2&cat=).
