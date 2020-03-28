@@ -414,11 +414,13 @@ namespace rofi
                         {
                             std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
                             auto it = waitCallbacksMap.find( resp->waitid() );
-                            if ( it != waitCallbacksMap.end() )
+                            if ( it == waitCallbacksMap.end() )
                             {
-                                callback = std::move( it->second );
-                                waitCallbacksMap.erase( it );
+                                std::cerr << "Got wait response without a callback waiting (ID: " << resp->waitid() << ")" << std::endl;
+                                break;
                             }
+                            callback = std::move( it->second );
+                            waitCallbacksMap.erase( it );
                         }
 
                         if ( callback )
@@ -443,7 +445,7 @@ namespace rofi
                     rofiCmd.set_rofiid( getId() );
                     rofiCmd.set_cmdtype( messages::RofiCmd::DESCRIPTION );
                     pub->WaitForConnection();
-                    pub->Publish( std::move( rofiCmd ) );
+                    pub->Publish( std::move( rofiCmd ), true );
                     std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
                 }
             }

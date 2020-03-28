@@ -10,9 +10,6 @@ int main()
 
     std::cout << "Starting basic force example\n";
 
-    std::promise< void > endPromise;
-    auto endFuture = endPromise.get_future();
-
     RoFI & localRofi = RoFI::getLocalRoFI();
     auto torque = 0.5 * localRofi.getJoint( 0 ).maxTorque();
 
