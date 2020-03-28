@@ -5,7 +5,7 @@ default: build-all
 GAZEBO_ARGS ?= "--verbose"
 
 EXAMPLE ?= basic_joint_force
-EXAMPLE_ARGS ?= ""
+EXAMPLE_ARGS ?=
 
 
 build:
