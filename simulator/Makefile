@@ -1,12 +1,12 @@
 
 default: build-all
-.PHONY: clean build-all
 
 GAZEBO_ARGS ?= "--verbose"
 
 EXAMPLE ?= basic_joint_force
 EXAMPLE_ARGS ?=
 
+.PHONY: clean build-all run tests-roficom example-server example-client
 
 build:
 	mkdir -p build
