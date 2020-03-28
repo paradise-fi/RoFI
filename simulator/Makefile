@@ -25,5 +25,8 @@ tests-roficom: build-all
 	./build/plugins/roficom/tests/tests_roficom
 
 
+example-server: build-all
+	./runGazebo.sh ./examples/${EXAMPLE}/${EXAMPLE}.world ${GAZEBO_ARGS}
+
 example-client: build-all
 	./build/examples/${EXAMPLE}/${EXAMPLE} ${EXAMPLE_ARGS}
