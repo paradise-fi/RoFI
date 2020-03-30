@@ -54,32 +54,4 @@ std::optional< rofi::messages::ConnectorState::Orientation >
     return {};
 }
 
-std::optional< rofi::messages::ConnectorState::Orientation >
-        canRoficomBeConnected( const ignition::math::Pose3d & lhs, const ignition::math::Pose3d & rhs )
-{
-    using namespace ignition::math;
-
-    constexpr double maxConnectionCenterDistance = 0.004;
-    Angle maxConnectionAngle;
-    maxConnectionAngle.Degree( 4 );
-
-
-    if ( lhs.Pos().Distance( rhs.Pos() ) > maxConnectionCenterDistance )
-    {
-        return {};
-    }
-
-
-    auto lhsAxis = lhs.Rot().RotateVector( { 0, 0, 1 } );
-    auto rhsAxis = rhs.Rot().RotateVector( { 0, 0, 1 } );
-
-    auto axisAngle = getAngle( lhsAxis, rhsAxis );
-    if ( axisAngle < Angle::Pi - maxConnectionAngle )
-    {
-        return {};
-    }
-
-    return getConnectorOrientation( lhs, rhs );
-}
-
 } // namespace gazebo

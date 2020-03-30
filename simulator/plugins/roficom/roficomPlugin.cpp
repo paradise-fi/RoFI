@@ -1,13 +1,13 @@
 #include "roficomPlugin.hpp"
 
 #include "roficomUtils.hpp"
+#include "roficomConnect.hpp"
 
 #include <cassert>
 #include <cmath>
 
 namespace gazebo
 {
-std::mutex RoFICoMPlugin::positionsMapMutex;
 std::map< const physics::Model *, RoFICoMPlugin::Position > RoFICoMPlugin::positionsMap;
 
 void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
@@ -250,7 +250,6 @@ RoFICoMPlugin::Position RoFICoMPlugin::getOtherPosition( physics::ModelPtr rofic
 {
     assert( roficom );
     assert( isRoFICoM( roficom ) );
-    std::lock_guard< std::mutex > lock( positionsMapMutex );
     return positionsMap[ roficom.get() ];
 }
 
@@ -513,6 +512,7 @@ std::optional< RoFICoMPlugin::Orientation > RoFICoMPlugin::canBeConnected( physi
     assert( otherConnectionLink );
     assert( thisConnectionLink != otherConnectionLink );
     assert( isRoFICoM( otherConnectionLink->GetModel() ) );
+    assert( position == Position::Extended || position == Position::Extending );
 
     Position otherPosition = getOtherPosition( otherConnectionLink->GetModel() );
     if ( otherPosition == Position::Retracted || otherPosition == Position::Retracting )

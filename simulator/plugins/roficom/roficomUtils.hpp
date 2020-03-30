@@ -27,7 +27,5 @@ inline ignition::math::Angle
 ignition::math::Quaterniond getThisToOtherRotation( rofi::messages::ConnectorState::Orientation orientation );
 std::optional< rofi::messages::ConnectorState::Orientation >
         getConnectorOrientation( const ignition::math::Pose3d & lhs, const ignition::math::Pose3d & rhs );
-std::optional< rofi::messages::ConnectorState::Orientation >
-        canRoficomBeConnected( const ignition::math::Pose3d & lhs, const ignition::math::Pose3d & rhs );
 
 } // namespace gazebo

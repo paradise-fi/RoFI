@@ -256,7 +256,7 @@ public:
         }
 
         auto velocity = _posController.Update( linearError, stepTime );
-        assert( _maxSpeed > _jointData.getMinVelocity() );
+        assert( _maxSpeed >= _jointData.getMinVelocity() );
         assert( _maxSpeed <= _jointData.getMaxVelocity() );
 
         assert( std::abs( velocity ) <= _maxSpeed + _jointData.positionPrecision );
@@ -287,7 +287,8 @@ public:
         }
         else
         {
-            gzwarn << "Speed non-positive for setting position, setting desired position to current position\n";
+            maxSpeed = _jointData.getMinVelocity();
+            gzwarn << "Speed non-positive for setting position, setting desired position to current position with speed " << maxSpeed << "\n";
             setTargetPosition< false >( _jointData.joint->Position( 0 ) );
             _positionReached = true;
         }

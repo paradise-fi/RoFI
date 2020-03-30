@@ -67,7 +67,7 @@ void checkAllGoodImpl( const Pose3d & lhs, const Pose3d & rhs )
     auto mutualOrientation = getMutualOrientation( lhs.Rot(), rhs.Rot() );
     CHECK( mutualOrientation );
 
-    auto result = canBeConnected( lhs, rhs );
+    auto result = canRoficomBeConnected( lhs, rhs );
     REQUIRE( result );
 
     CHECK_EQUAL( mutualOrientation, result );

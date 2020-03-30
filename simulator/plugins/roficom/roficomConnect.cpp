@@ -96,8 +96,8 @@ std::optional< rofi::messages::ConnectorState::Orientation >
 
 
 std::optional< rofi::messages::ConnectorState::Orientation >
-        canBeConnected( const ignition::math::Pose3d & lhs,
-                        const ignition::math::Pose3d & rhs )
+        canRoficomBeConnected( const ignition::math::Pose3d & lhs,
+                               const ignition::math::Pose3d & rhs )
 {
     if ( !detail::checkCenterDistance( lhs.Pos(), rhs.Pos() ) )
     {

@@ -36,5 +36,5 @@ std::optional< rofi::messages::ConnectorState::Orientation >
  *      otherwise - returns the connection orientation
  */
 std::optional< rofi::messages::ConnectorState::Orientation >
-        canBeConnected( const ignition::math::Pose3d & lhs,
+        canRoficomBeConnected( const ignition::math::Pose3d & lhs,
                         const ignition::math::Pose3d & rhs );

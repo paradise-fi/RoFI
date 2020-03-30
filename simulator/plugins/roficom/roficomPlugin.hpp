@@ -122,7 +122,6 @@ private:
     Orientation orientation{};
     std::unordered_map< int, common::Time > waitMap;
 
-    static std::mutex positionsMapMutex;
     static std::map< const physics::Model *, Position > positionsMap;
 };
 
