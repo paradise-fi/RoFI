@@ -10,7 +10,7 @@ endif(${LIBCXX})
 add_executable(rofi-reconfig main.cpp)
 target_link_libraries(rofi-reconfig PUBLIC reconfig configuration generators cxxopts)
 
-add_library(reconfig STATIC astar.cpp bfs.cpp rrt.cpp)
+add_library(reconfig STATIC Algorithms.h astar.cpp bfs.cpp rrt.cpp)
 target_include_directories(reconfig INTERFACE .)
 target_link_libraries(reconfig PUBLIC configuration generators cxxopts)
 

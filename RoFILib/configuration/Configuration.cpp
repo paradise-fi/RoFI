@@ -1,6 +1,9 @@
 #include "Configuration.h"
 #include <stdexcept>
 
+
+static const double threshold = 0.0001;
+
 /* * * * * *
  * MODULE  *
  * * * * * */
@@ -29,6 +32,7 @@ bool Module::rotateJoint(Joint joint, double val) {
             break;
         case Joint::Gamma:
             res = gamma + val;
+            break;
         default:
             throw std::invalid_argument("Passed unknown joint to `Module::rotateJoint`");
     }
@@ -240,10 +244,8 @@ void Configuration::addModule(double alpha, double beta, double gamma, ID id) {
     edges.emplace(std::piecewise_construct,
                     std::forward_as_tuple(id),  // args for key
                     std::forward_as_tuple());
-    if ((modules.size() == 1) || (id < fixedId)) {
-        //TODO: je toto opravdu potřeba/proč to chceme
+    if ((modules.size() == 1) || (id < fixedId))
         fixedId = id;
-    }
 }
 
 bool Configuration::addEdge(const Edge& edge) {
@@ -402,7 +404,48 @@ bool Configuration::execute(const Action& action) {
     for (const Action::Reconnect rec : action.reconnections())
         ok &= execute(rec);
 
-    return ok;
+    return true;
+}
+
+void Configuration::jointDiff(std::vector<Action::Rotate>& rotations, ID id, const Module& otherModule) const {
+    const Module &module = modules.at(id);
+    for (Joint joint : { Alpha, Beta, Gamma }) {
+        auto val = otherModule.getJoint(joint) - module.getJoint(joint);
+        if (joint == Gamma) {
+            val = clampGamma(val);
+        }
+        if (val != 0) {
+            rotations.emplace_back(id, joint, val);
+        }
+    }
+}
+
+void Configuration::edgeDiff(std::vector<Action::Reconnect>& reconnections, ID id, const Configuration &other) const {
+    const EdgeList &edgeList = edges.at(id);
+    const EdgeList &otherEdgeList = other.edges.at(id);
+    for (unsigned int i = 0; i < 6; i++) {
+        auto &edge = edgeList.at(i);
+        auto &otherEdge = otherEdgeList.at(i);
+
+        if (edge == otherEdge)
+            continue;
+
+        if (!edge.has_value()) {
+            const Edge &edge1 = otherEdge.value();
+            if (edge1.id1() < edge1.id2())
+                reconnections.emplace_back(true, otherEdge.value());
+        } else if (!otherEdge.has_value()) {
+            const Edge &edge1 = edge.value();
+            if (edge1.id1() < edge1.id2())
+                reconnections.emplace_back(false, edge.value());
+        } else {
+            const Edge &edge1 = otherEdge.value();
+            if (edge1.id1() < edge1.id2()) {
+                reconnections.emplace_back(true, otherEdge.value());
+                reconnections.emplace_back(false, edge.value());
+            }
+        }
+    }
 }
 
 Action Configuration::diff(const Configuration &other) const {
@@ -414,42 +457,8 @@ Action Configuration::diff(const Configuration &other) const {
         if (modules.find(id) == modules.end())
             continue;
 
-        const Module &module = modules.at(id);
-        for (Joint joint : { Alpha, Beta, Gamma }) {
-            auto val = otherModule.getJoint(joint) - module.getJoint(joint);
-            if (joint == Gamma) {
-                val = clampGamma(val);
-            }
-            if (val != 0) {
-                rotations.emplace_back(id, joint, val);
-            }
-        }
-
-        const EdgeList &edgeList = edges.at(id);
-        const EdgeList &otherEdgeList = other.edges.at(id);
-        for (unsigned int i = 0; i < 6; i++) {
-            auto &edge = edgeList.at(i);
-            auto &otherEdge = otherEdgeList.at(i);
-
-            if (edge == otherEdge)
-                continue;
-
-            if (!edge.has_value()) {
-                const Edge &edge1 = otherEdge.value();
-                if (edge1.id1() < edge1.id2())
-                    reconnections.emplace_back(true, otherEdge.value());
-            } else if (!otherEdge.has_value()) {
-                const Edge &edge1 = edge.value();
-                if (edge1.id1() < edge1.id2())
-                    reconnections.emplace_back(false, edge.value());
-            } else {
-                const Edge &edge1 = otherEdge.value();
-                if (edge1.id1() < edge1.id2()) {
-                    reconnections.emplace_back(true, otherEdge.value());
-                    reconnections.emplace_back(false, edge.value());
-                }
-            }
-        }
+        jointDiff(rotations, id, otherModule);
+        edgeDiff(reconnections, id, other);
     }
 
     return {rotations, reconnections};
@@ -457,10 +466,8 @@ Action Configuration::diff(const Configuration &other) const {
 
 void Configuration::clearEdges() {
     for (auto& [id, el] : edges) {
-        for (auto& opt : el) {
-            if (opt)
-                opt = std::nullopt;
-        }
+        for (auto& opt : el)
+            opt = std::nullopt;
     }
 }
 

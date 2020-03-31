@@ -166,7 +166,7 @@ inline const Configuration* getCfg(const Configuration& cfg)
 inline const Configuration* addToTree(ConfigPool& pool, ConfigEdges& edges, 
     const Configuration* from, const Configuration& to)
 {
-    if (!pool.find(to))
+    if (!pool.has(to))
     {
         auto nextPtr = pool.insert(to);
         edges[nextPtr] = {};
@@ -427,13 +427,13 @@ std::vector<Configuration> RRT(const Configuration& init, const Configuration& g
         extendPath(pool, edges, rand, step);
         extendPath(pool, edges, goal, step);
 
-        if (pool.find(goal))
+        if (pool.has(goal))
             break;
     }
 
     stat->queueSize = 0;
     stat->seenCfgs = pool.size();
-    if (pool.find(goal))
+    if (pool.has(goal))
     {
         const Configuration * goalPtr = pool.get(goal);
         auto path = createPath(edges, initPtr, goalPtr);

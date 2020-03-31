@@ -45,7 +45,7 @@ std::vector<Configuration> AStar(const Configuration& init,
             double newDist = currDist + 1 + eval(next, goal);
             bool update = false;
 
-            if (!pool.find(next))
+            if (!pool.has(next))
             {
                 pointerNext = pool.insert(next);
                 initDist[pointerNext] = currDist + 1;

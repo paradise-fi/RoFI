@@ -22,29 +22,29 @@ public:
     };
 
     const T& max() const {
-        if (_occupied == 0) {
+        if (_occupied == 0)
             throw std::logic_error("Empty heap");
-        }
-        if (!_odd || _comp(_odd.value(), _max_heap[0])) {
+
+        if (!_odd || _comp(_odd.value(), _max_heap[0]))
             return _max_heap[0];
-        }
+
         return _odd.value();
     }
 
     const T& min() const {
-        if (_occupied == 0) {
+        if (_occupied == 0)
             throw std::logic_error("Empty heap");
-        }
-        if (!_odd || !_comp(_odd.value(), _min_heap[0])) {
+
+        if (!_odd || !_comp(_odd.value(), _min_heap[0]))
             return _min_heap[0];
-        }
+
         return _odd.value();
     }
 
     T popMax() {
-        if (_occupied == 0) {
+        if (_occupied == 0)
             throw std::logic_error("Empty heap");
-        }
+
         if (_occupied == 1) {
             --_occupied;
             T ret_val = std::move(_odd.value());
@@ -95,9 +95,9 @@ public:
     }
 
     T popMin() {
-        if (_occupied == 0) {
+        if (_occupied == 0)
             throw std::logic_error("Empty heap");
-        }
+
         if (_occupied == 1) {
             --_occupied;
             T ret_val = std::move(_odd.value());
@@ -148,9 +148,8 @@ public:
     }
 
     bool push(T new_add) {
-        if (_capacity <= _occupied) {
+        if (_capacity <= _occupied)
             return false;
-        }
 
         ++_occupied;
         if (!_odd) {
@@ -182,9 +181,9 @@ public:
     }
 
     void resize(int cap) {
-        if (cap < 0) {
+        if (cap < 0)
             throw std::logic_error("Trying to resize heap to have negative capacity");
-        }
+
         _max_heap.resize(cap/2);
         _min_heap.resize(cap/2);
         _capacity = cap;
@@ -203,7 +202,7 @@ public:
         return _occupied == 0;
     }
 
-    void print() const {
+    void debug_print() const {
         std::cout << "Max: ";
         for(const auto& e : _max_heap) {
             std::cout << e << " ";
@@ -224,27 +223,27 @@ public:
 
 private:
 
-    inline int _l(int i) const {
+    int _l(int i) const {
         return 2*i+1;
     }
 
-    inline int _r(int i) const {
+    int _r(int i) const {
         return 2*i+2;
     }
 
-    inline int _p(int i) const {
+    int _p(int i) const {
         return (i+1)/2-1;
     }
 
-    inline int _s(int i) const {
+    int _s(int i) const {
         return i & 1 ? i + 1 : i - 1;
     }
 
-    inline bool _in(int i) const {
+    bool _in(int i) const {
         return i >= 0 && i <= _last();
     }
 
-    inline int _last() const {
+    int _last() const {
         return _occupied/2 - 1;
     }
 
@@ -301,9 +300,9 @@ private:
     }
 
     void _heapify_max_up(int i) {
-        if (i == 0) {
+        if (i == 0)
             return;
-        }
+
 
         int p = _p(i);
         if (_comp(_max_heap[p], _max_heap[i])) {
@@ -313,9 +312,9 @@ private:
     }
 
     void _heapify_min_up(int i) {
-        if (i == 0) {
+        if (i == 0)
             return;
-        }
+
 
         int p = _p(i);
         if (_comp(_min_heap[i], _min_heap[p])) {

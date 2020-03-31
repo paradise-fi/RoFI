@@ -12,7 +12,6 @@
 #include <optional>
 
 using ID = int;
-const double threshold = 0.0001;
 
 class Configuration;
 class ConfigurationHash;
@@ -37,6 +36,7 @@ public:
     ID getId() const { return id; }
     double getJoint(Joint a) const;
 
+    // return value specifies if the module was changed
     bool rotateJoint(Joint joint, double val);
     bool setJoint(Joint joint, double val);
 
@@ -281,6 +281,9 @@ private:
 
     // If the given edge is in the configuration, delete it from both modules.
     bool eraseEdge(const Edge& edge);
+
+    void jointDiff(std::vector<Action::Rotate>& rotations, ID id, const Module& otherModule) const;
+    void edgeDiff(std::vector<Action::Reconnect>& reconnections, ID id, const Configuration &other) const;
 
     Matrix computeOtherSideMatrix(ID id, ShoeId side) const;
     // Fix given module: one side is fixed. Fix all connected.

@@ -66,19 +66,45 @@ void generateSimpleActions(const Configuration& config, std::vector<Action>& res
 }
 
 void generateParalyzedActions(const Configuration& config, std::vector<Action>& res, unsigned step, 
-    const std::unordered_set<unsigned>& allowed_indices) 
+    const std::unordered_set<ID>& allowed_indices)
 {
-    // TODO: improve reconnect to a*n from n*n
     std::vector<Action::Rotate> rotations;
     generateParalyzedRotations(config, rotations, step, allowed_indices);
     std::vector<Action::Reconnect> reconnections;
-    generateReconnect(config, reconnections);
+    generateParalyzedReconnect(config, reconnections, allowed_indices);
 
     for (auto& rotation : rotations)
         res.emplace_back(rotation);
 
     for (auto& reconnection : reconnections)
         res.emplace_back(reconnection);
+}
+
+void generateRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step) {
+    for (auto [id, mod] : config.getModules()) {
+        for (int d : {-step, step}) {
+            for (Joint joint : {Alpha, Beta, Gamma}) {
+                if (mod.rotateJoint(joint, d))
+                    res.emplace_back(id, joint, d);
+            }
+        }
+    }
+}
+
+void generateParalyzedRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step, 
+    const std::unordered_set<ID>& allowed_indices) 
+{
+    for (auto [id, mod] : config.getModules()) {
+        if (allowed_indices.find(id) == allowed_indices.end())
+            continue;
+
+        for (int d : {-step, step}) {
+            for (Joint joint : {Alpha, Beta, Gamma}) {
+                if (mod.rotateJoint(joint, d))
+                    res.emplace_back(id, joint, d);
+            }
+        }
+    }
 }
 
 void generateConnections(const Configuration& config, std::vector<Action::Reconnect>& res) {
@@ -110,30 +136,35 @@ void generateConnections(const Configuration& config, std::vector<Action::Reconn
     }
 }
 
-void generateRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step) {
-    for (auto [id, mod] : config.getModules()) {
-        for (int d : {-step, step}) {
-            for (Joint joint : {Alpha, Beta, Gamma}) {
-                if (mod.rotateJoint(joint, d))
-                    res.emplace_back(id, joint, d);
-            }
-        }
-    }
-}
-
-void generateParalyzedRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step, 
-    const std::unordered_set<unsigned>& allowed_indices) 
+void generateParalyzedConnections(const Configuration& config, std::vector<Action::Reconnect>& res,
+    const std::unordered_set<ID>& allowed_indices) 
 {
-    for (const auto& id : allowed_indices) {
-        auto it = config.getModules().find(id);
-        if (it == config.getModules().end())
+    for (const auto& [id1, ms1] : config.getMatrices()) {
+        if (allowed_indices.find(id1) == allowed_indices.end())
             continue;
 
-        Module mod = it->second;
-        for (int d : {-step, step}) {
-            for (Joint joint : {Alpha, Beta, Gamma}) {
-                if (mod.rotateJoint(joint, d))
-                    res.emplace_back(id, joint, d);
+        for (const auto& [id2, ms2] : config.getMatrices()) {
+            if (id1 >= id2 && allowed_indices.find(id2) != allowed_indices.end())
+                continue;
+
+            Edge edge(id1, A, XPlus, 0, XPlus, A, id2);
+            auto edgeOpt = nextEdge(edge);
+
+            while (edgeOpt.has_value()) {
+                Vector center1 = center(ms1[edge.side1()]);
+                Vector center2 = center(ms2[edge.side2()]);
+                if (distance(center1, center2) != 1) {
+                    edge = edgeOpt.value();
+                    edgeOpt = nextEdge(edge);
+                    continue;
+                }
+
+                const Matrix& matrix = ms2[edge.side2()];
+                if (equals(matrix, config.computeConnectedMatrix(edge)) && !config.findEdge(edge))
+                    res.emplace_back(true, edge);
+
+                edge = edgeOpt.value();
+                edgeOpt = nextEdge(edge);
             }
         }
     }
@@ -141,6 +172,24 @@ void generateParalyzedRotations(const Configuration& config, std::vector<Action:
 
 void generateDisconnections(const Configuration& config, std::vector<Action::Reconnect>& res) {
     for (auto& [id, set] : config.getEdges()) {
+        for (const std::optional<Edge>& edgeOpt : set) {
+            if (!edgeOpt.has_value())
+                continue;
+
+            const Edge& edge = edgeOpt.value();
+            if (edge.id1() < edge.id2())
+                res.emplace_back(false, edge);
+        }
+    }
+}
+
+void generateParalyzedDisconnections(const Configuration& config, std::vector<Action::Reconnect>& res, 
+    const std::unordered_set<ID>& allowed_indices) 
+{
+    for (auto& [id, set] : config.getEdges()) {
+        if (allowed_indices.find(id) == allowed_indices.end())
+            continue;
+
         for (const std::optional<Edge>& edgeOpt : set) {
             if (!edgeOpt.has_value())
                 continue;
@@ -178,7 +227,7 @@ void simpleNext(const Configuration& config, std::vector<Configuration>& res, un
 }
 
 void paralyzedNext(const Configuration& config, std::vector<Configuration>& res, unsigned step, 
-    const std::unordered_set<unsigned>& allowed_indices) 
+    const std::unordered_set<ID>& allowed_indices) 
 {
     std::vector<Action> actions;
     generateParalyzedActions(config, actions, step, allowed_indices);

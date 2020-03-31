@@ -72,7 +72,7 @@ public:
         return ptr->get();
     }
 
-    bool find(const Configuration& config) const {
+    bool has(const Configuration& config) const {
         auto tmp = std::make_unique<Configuration>(config);
         return (pool.find(tmp) != pool.end());
     }

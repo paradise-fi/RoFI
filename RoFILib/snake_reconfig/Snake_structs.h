@@ -4,8 +4,7 @@
 #include <IO.h>
 #include <cmath>
 
-inline std::tuple<int, int, int> tuple_center(const Matrix &m)
-{
+inline std::tuple<int, int, int> tuple_center(const Matrix &m) {
     auto v = center(m);
     return std::make_tuple(std::round(v(0)), std::round(v(1)), std::round(v(2)));
 }

@@ -31,7 +31,7 @@ std::vector<Configuration> BFS(const Configuration& init, const Configuration& g
 
         for (const auto& next : nextCfgs)
         {
-            if (!pool.find(next))
+            if (!pool.has(next))
             {
                 const Configuration* pointerNext = pool.insert(next);
                 pred.insert({pointerNext, current});
