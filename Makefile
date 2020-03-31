@@ -20,7 +20,7 @@ rofilib.gcc:
 rofilib.clang:
 	mkdir -p _build.clang/rofilib
 	cd _build.clang/rofilib; \
-	CXX=clang++ CC=clang cmake ../../RoFILib/ -DLIBCXX=1; \
+	CXX=clang++ CC=clang cmake ../../RoFILib/; \
 	make
 
 rofilib_test.gcc: rofilib.gcc
