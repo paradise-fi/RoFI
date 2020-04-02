@@ -1,7 +1,7 @@
-#include "rofi_hal.hpp"
-
-#include <iostream>
 #include <future>
+#include <iostream>
+
+#include "rofi_hal.hpp"
 
 
 int main()
@@ -19,13 +19,11 @@ int main()
         auto endCycleFuture = endCyclePromise.get_future();
 
         localRofi.getJoint( 0 ).setTorque( torque );
-        RoFI::wait( 1000, [&]{
+        RoFI::wait( 1000, [ & ] {
             localRofi.getJoint( 0 ).setTorque( -torque );
-            RoFI::wait( 1000, [&]{
+            RoFI::wait( 1000, [ & ] {
                 localRofi.getJoint( 0 ).setTorque( 0 );
-                RoFI::wait( 1000, [&]{
-                    endCyclePromise.set_value();
-                } );
+                RoFI::wait( 1000, [ & ] { endCyclePromise.set_value(); } );
             } );
         } );
 

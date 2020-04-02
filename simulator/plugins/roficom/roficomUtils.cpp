@@ -3,7 +3,6 @@
 
 namespace gazebo
 {
-
 physics::LinkPtr getLinkByName( physics::ModelPtr roficom, const std::string & linkName )
 {
     assert( roficom );
@@ -30,7 +29,8 @@ physics::LinkPtr getLinkByName( physics::ModelPtr roficom, const std::string & l
             {
                 if ( linkPtr )
                 {
-                    gzwarn << "Found two " << linkName << " links: " << linkPtr->GetName() << ", " << link->GetName() << "\n";
+                    gzwarn << "Found two " << linkName << " links: " << linkPtr->GetName() << ", "
+                           << link->GetName() << "\n";
                     break;
                 }
                 linkPtr = std::move( link );
@@ -66,7 +66,8 @@ physics::JointPtr getJointByName( physics::ModelPtr roficom, const std::string &
             {
                 if ( jointPtr )
                 {
-                    gzwarn << "Found two " << jointName << " joints: " << jointPtr->GetName() << ", " << joint->GetName() << "\n";
+                    gzwarn << "Found two " << jointName << " joints: " << jointPtr->GetName()
+                           << ", " << joint->GetName() << "\n";
                     break;
                 }
                 jointPtr = std::move( joint );

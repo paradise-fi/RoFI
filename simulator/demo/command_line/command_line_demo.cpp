@@ -104,7 +104,7 @@ JointCmd getJointCmdType( std::string_view token )
 
     auto it = map.find( token );
     if ( it == map.end() )
-        throw std::runtime_error("Unknown joint cmd type");
+        throw std::runtime_error( "Unknown joint cmd type" );
     return it->second;
 }
 
@@ -121,7 +121,7 @@ inline ConnectorCmd getConnectorCmdType( std::string_view token )
 
     auto it = map.find( token );
     if ( it == map.end() )
-        throw std::runtime_error("Unknown connector cmd type");
+        throw std::runtime_error( "Unknown connector cmd type" );
     return it->second;
 }
 
@@ -137,11 +137,11 @@ void printHelp()
 void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_view > & tokens )
 {
     if ( tokens.size() < 3 )
-        throw std::runtime_error("Wrong number of arguments");
+        throw std::runtime_error( "Wrong number of arguments" );
 
-    auto joint = rofi.getJoint( readInt( tokens[1] ) );
+    auto joint = rofi.getJoint( readInt( tokens[ 1 ] ) );
 
-    switch ( getJointCmdType( tokens[2] ) )
+    switch ( getJointCmdType( tokens[ 2 ] ) )
     {
         case JointCmd::NO_CMD:
         {
@@ -186,8 +186,8 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
         case JointCmd::SET_VELOCITY:
         {
             if ( tokens.size() != 4 )
-                throw std::runtime_error("Wrong number of arguments");
-            joint.setVelocity( readFloat( tokens[3] ) );
+                throw std::runtime_error( "Wrong number of arguments" );
+            joint.setVelocity( readFloat( tokens[ 3 ] ) );
             break;
         }
         case JointCmd::GET_POSITION:
@@ -199,8 +199,10 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
         case JointCmd::SET_POS_WITH_SPEED:
         {
             if ( tokens.size() != 5 )
-                throw std::runtime_error("Wrong number of arguments");
-            joint.setPosition( readFloat( tokens[3] ), readFloat( tokens[4] ), nullptr ); // TODO callback
+                throw std::runtime_error( "Wrong number of arguments" );
+            joint.setPosition( readFloat( tokens[ 3 ] ),
+                               readFloat( tokens[ 4 ] ),
+                               nullptr ); // TODO callback
             break;
         }
         case JointCmd::GET_TORQUE:
@@ -212,8 +214,8 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
         case JointCmd::SET_TORQUE:
         {
             if ( tokens.size() != 4 )
-                throw std::runtime_error("Wrong number of arguments");
-            joint.setTorque( readFloat( tokens[3] ) );
+                throw std::runtime_error( "Wrong number of arguments" );
+            joint.setTorque( readFloat( tokens[ 3 ] ) );
             break;
         }
         default:
@@ -227,11 +229,11 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
 void processConnectorCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_view > & tokens )
 {
     if ( tokens.size() < 3 )
-        throw std::runtime_error("Wrong number of arguments");
+        throw std::runtime_error( "Wrong number of arguments" );
 
-    auto connector = rofi.getConnector( readInt( tokens[1] ) );
+    auto connector = rofi.getConnector( readInt( tokens[ 1 ] ) );
 
-    switch ( getConnectorCmdType( tokens[2] ) )
+    switch ( getConnectorCmdType( tokens[ 2 ] ) )
     {
         case ConnectorCmd::NO_CMD:
         {
@@ -267,7 +269,7 @@ void processConnectorCmd( rofi::hal::RoFI & rofi, const std::vector< std::string
 }
 
 
-int main( int argc, char **argv )
+int main( int argc, char ** argv )
 {
     try
     {

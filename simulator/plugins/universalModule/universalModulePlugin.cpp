@@ -18,7 +18,8 @@ void UMP::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
     findAndInitJoints();
     findAndInitConnectors();
 
-    onUpdateConnection = event::Events::ConnectWorldUpdateBegin( std::bind( &UMP::onUpdate, this ) );
+    onUpdateConnection =
+            event::Events::ConnectWorldUpdateBegin( std::bind( &UMP::onUpdate, this ) );
 
     gzmsg << "Number of joints is " << joints.size() << "\n";
     gzmsg << "Number of connectors is " << connectors.size() << "\n";
@@ -46,7 +47,7 @@ void UMP::initCommunication()
     }
     _node->Init( _model->GetWorld()->Name() + "/" + _model->GetName() );
 
-    _sub = _node->Subscribe( "~/control", & UMP::onRofiCmd, this );
+    _sub = _node->Subscribe( "~/control", &UMP::onRofiCmd, this );
     _pub = _node->Advertise< rofi::messages::RofiResp >( "~/response" );
     if ( !_sub || !_pub )
     {
@@ -68,7 +69,7 @@ void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )
     std::string topicName = "/gazebo/" + getElemPath( connectorModel );
 
     auto pub = _node->Advertise< rofi::messages::ConnectorCmd >( topicName + "/control" );
-    auto sub = _node->Subscribe( topicName + "/response", & UMP::onConnectorResp, this );
+    auto sub = _node->Subscribe( topicName + "/response", &UMP::onConnectorResp, this );
 
     if ( !sub || !pub )
     {
@@ -113,14 +114,16 @@ void UMP::findAndInitJoints()
         return;
     }
 
-    const auto callback = [ this ]( int joint, double desiredPosition )
-        {
-            gzmsg << "Returning position reached of joint " << joint << ": " << desiredPosition << "\n";
+    const auto callback = [ this ]( int joint, double desiredPosition ) {
+        gzmsg << "Returning position reached of joint " << joint << ": " << desiredPosition << "\n";
 
-            _pub->Publish( getJointRofiResp( rofi::messages::JointCmd::SET_POS_WITH_SPEED, joint, desiredPosition ) );
-        };
+        _pub->Publish( getJointRofiResp( rofi::messages::JointCmd::SET_POS_WITH_SPEED,
+                                         joint,
+                                         desiredPosition ) );
+    };
 
-    auto pidValuesVector = PIDLoader::loadControllerValues( getPluginSdf( _model->GetSDF(), "libuniversalModulePlugin.so" ) );
+    auto pidValuesVector = PIDLoader::loadControllerValues(
+            getPluginSdf( _model->GetSDF(), "libuniversalModulePlugin.so" ) );
 
     joints.clear();
 
@@ -129,7 +132,9 @@ void UMP::findAndInitJoints()
         if ( auto joint = _model->GetJoint( pidValues.jointName ) )
         {
             assert( joint );
-            joints.emplace_back( std::move( joint ), std::move( pidValues ), std::bind( callback, joints.size(), std::placeholders::_1 ) );
+            joints.emplace_back( std::move( joint ),
+                                 std::move( pidValues ),
+                                 std::bind( callback, joints.size(), std::placeholders::_1 ) );
             assert( joints.back() );
             assert( joints.back().joint->GetMsgType() == msgs::Joint::REVOLUTE );
         }
@@ -155,7 +160,9 @@ void UMP::findAndInitConnectors()
     }
 }
 
-rofi::messages::RofiResp UMP::getJointRofiResp( rofi::messages::JointCmd::Type cmdtype, int joint, float value ) const
+rofi::messages::RofiResp UMP::getJointRofiResp( rofi::messages::JointCmd::Type cmdtype,
+                                                int joint,
+                                                float value ) const
 {
     rofi::messages::RofiResp resp;
     resp.set_rofiid( rofiId.value_or( 0 ) );
@@ -170,7 +177,8 @@ rofi::messages::RofiResp UMP::getJointRofiResp( rofi::messages::JointCmd::Type c
     return resp;
 }
 
-rofi::messages::RofiResp UMP::getConnectorRofiResp( const rofi::messages::ConnectorResp & connectorResp ) const
+rofi::messages::RofiResp UMP::getConnectorRofiResp(
+        const rofi::messages::ConnectorResp & connectorResp ) const
 {
     rofi::messages::RofiResp resp;
     resp.set_rofiid( rofiId.value_or( 0 ) );
@@ -190,14 +198,16 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
         case RofiCmd::JOINT_CMD:
             if ( rofiId && *rofiId != msg->rofiid() )
             {
-                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid() << "\n";
+                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid()
+                      << "\n";
             }
             onJointCmd( msg->jointcmd() );
             break;
         case RofiCmd::CONNECTOR_CMD:
             if ( rofiId && *rofiId != msg->rofiid() )
             {
-                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid() << "\n";
+                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid()
+                      << "\n";
             }
             onConnectorCmd( msg->connectorcmd() );
             break;
@@ -205,7 +215,8 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
         {
             if ( rofiId && *rofiId != msg->rofiid() )
             {
-                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid() << "\n";
+                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid()
+                      << "\n";
             }
             if ( !rofiId )
             {
@@ -218,9 +229,8 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
             auto description = resp.mutable_rofidescription();
             description->set_jointcount( joints.size() );
             description->set_connectorcount( connectors.size() );
-            gzmsg << "Returning description ("
-                << resp.rofidescription().jointcount() << " joints, "
-                << resp.rofidescription().connectorcount() << " connectors)\n";
+            gzmsg << "Returning description (" << resp.rofidescription().jointcount() << " joints, "
+                  << resp.rofidescription().connectorcount() << " connectors)\n";
             _pub->Publish( std::move( resp ) );
             break;
         }
@@ -228,21 +238,24 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
         {
             if ( rofiId && *rofiId != msg->rofiid() )
             {
-                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid() << "\n";
+                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid()
+                      << "\n";
             }
 
-            gzmsg << "Starting waiting (" << msg->waitcmd().waitms() << " s, ID: " << msg->waitcmd().waitid() << ")\n";
-            auto afterWaited = _model->GetWorld()->SimTime() + common::Time( 0, msg->waitcmd().waitms() * 1000000 );
+            gzmsg << "Starting waiting (" << msg->waitcmd().waitms()
+                  << " s, ID: " << msg->waitcmd().waitid() << ")\n";
+            auto afterWaited = _model->GetWorld()->SimTime()
+                               + common::Time( 0, msg->waitcmd().waitms() * 1000000 );
 
             std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
-            waitCallbacksMap.emplace( afterWaited, [ this, waitId = msg->waitcmd().waitid() ](){
-                    rofi::messages::RofiResp resp;
-                    resp.set_rofiid( rofiId.value_or( 0 ) );
-                    resp.set_resptype( rofi::messages::RofiCmd::WAIT_CMD );
-                    resp.set_waitid( waitId );
-                    gzmsg << "Returning waiting ended (ID: " << waitId << ")\n";
-                    _pub->Publish( std::move( resp ) );
-                } );
+            waitCallbacksMap.emplace( afterWaited, [ this, waitId = msg->waitcmd().waitid() ]() {
+                rofi::messages::RofiResp resp;
+                resp.set_rofiid( rofiId.value_or( 0 ) );
+                resp.set_resptype( rofi::messages::RofiCmd::WAIT_CMD );
+                resp.set_waitid( waitId );
+                gzmsg << "Returning waiting ended (ID: " << waitId << ")\n";
+                _pub->Publish( std::move( resp ) );
+            } );
 
             break;
         }
@@ -264,97 +277,98 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
 
     switch ( msg.cmdtype() )
     {
-    case JointCmd::NO_CMD:
-    {
-        _pub->Publish( getJointRofiResp( JointCmd::NO_CMD, joint, 0 ) );
-        break;
-    }
-    case JointCmd::GET_MAX_POSITION:
-    {
-        double maxPosition = joints.at( joint ).getMaxPosition();
-        gzmsg << "Returning max position of joint " << joint << ": " << maxPosition << "\n";
-        _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_POSITION, joint, maxPosition ) );
-        break;
-    }
-    case JointCmd::GET_MIN_POSITION:
-    {
-        double minPosition = joints.at( joint ).getMinPosition();
-        gzmsg << "Returning min position of joint " << joint << ": " << minPosition << "\n";
-        _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_POSITION, joint, minPosition ) );
-        break;
-    }
-    case JointCmd::GET_MAX_SPEED:
-    {
-        double maxSpeed = joints.at( joint ).getMaxVelocity();
-        gzmsg << "Returning max speed of joint " << joint << ": " << maxSpeed << "\n";
-        _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_SPEED, joint, maxSpeed ) );
-        break;
-    }
-    case JointCmd::GET_MIN_SPEED:
-    {
-        double minSpeed = joints.at( joint ).getMinVelocity();
-        gzmsg << "Returning min speed of joint " << joint << ": " << minSpeed << "\n";
-        _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_SPEED, joint, minSpeed ) );
-        break;
-    }
-    case JointCmd::GET_MAX_TORQUE:
-    {
-        double maxTorque = joints.at( joint ).getMaxEffort();
-        gzmsg << "Returning max torque of joint " << joint << ": " << maxTorque << "\n";
-        _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_TORQUE, joint, maxTorque ) );
-        break;
-    }
-    case JointCmd::GET_VELOCITY:
-    {
-        double velocity = joints.at( joint ).joint->GetVelocity( 0 );
-        gzmsg << "Returning current velocity of joint " << joint << ": " << velocity << "\n";
-        _pub->Publish( getJointRofiResp( JointCmd::GET_VELOCITY, joint, velocity ) );
-        break;
-    }
-    case JointCmd::SET_VELOCITY:
-    {
-        double velocity = msg.setvelocity().velocity();
+        case JointCmd::NO_CMD:
+        {
+            _pub->Publish( getJointRofiResp( JointCmd::NO_CMD, joint, 0 ) );
+            break;
+        }
+        case JointCmd::GET_MAX_POSITION:
+        {
+            double maxPosition = joints.at( joint ).getMaxPosition();
+            gzmsg << "Returning max position of joint " << joint << ": " << maxPosition << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_POSITION, joint, maxPosition ) );
+            break;
+        }
+        case JointCmd::GET_MIN_POSITION:
+        {
+            double minPosition = joints.at( joint ).getMinPosition();
+            gzmsg << "Returning min position of joint " << joint << ": " << minPosition << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_POSITION, joint, minPosition ) );
+            break;
+        }
+        case JointCmd::GET_MAX_SPEED:
+        {
+            double maxSpeed = joints.at( joint ).getMaxVelocity();
+            gzmsg << "Returning max speed of joint " << joint << ": " << maxSpeed << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_SPEED, joint, maxSpeed ) );
+            break;
+        }
+        case JointCmd::GET_MIN_SPEED:
+        {
+            double minSpeed = joints.at( joint ).getMinVelocity();
+            gzmsg << "Returning min speed of joint " << joint << ": " << minSpeed << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_SPEED, joint, minSpeed ) );
+            break;
+        }
+        case JointCmd::GET_MAX_TORQUE:
+        {
+            double maxTorque = joints.at( joint ).getMaxEffort();
+            gzmsg << "Returning max torque of joint " << joint << ": " << maxTorque << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_TORQUE, joint, maxTorque ) );
+            break;
+        }
+        case JointCmd::GET_VELOCITY:
+        {
+            double velocity = joints.at( joint ).joint->GetVelocity( 0 );
+            gzmsg << "Returning current velocity of joint " << joint << ": " << velocity << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_VELOCITY, joint, velocity ) );
+            break;
+        }
+        case JointCmd::SET_VELOCITY:
+        {
+            double velocity = msg.setvelocity().velocity();
 
-        setVelocity( joint, velocity );
-        gzmsg << "Setting velocity of joint " << joint << " to " << velocity << "\n";
-        break;
-    }
-    case JointCmd::GET_POSITION:
-    {
-        double position = joints.at( joint ).joint->Position();
-        gzmsg << "Returning current position of joint " << joint << ": " << position << "\n";
-        _pub->Publish( getJointRofiResp( JointCmd::GET_POSITION, joint, position ) );
-        break;
-    }
-    case JointCmd::SET_POS_WITH_SPEED:
-    {
-        double position = msg.setposwithspeed().position();
-        double speed = msg.setposwithspeed().speed();
+            setVelocity( joint, velocity );
+            gzmsg << "Setting velocity of joint " << joint << " to " << velocity << "\n";
+            break;
+        }
+        case JointCmd::GET_POSITION:
+        {
+            double position = joints.at( joint ).joint->Position();
+            gzmsg << "Returning current position of joint " << joint << ": " << position << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_POSITION, joint, position ) );
+            break;
+        }
+        case JointCmd::SET_POS_WITH_SPEED:
+        {
+            double position = msg.setposwithspeed().position();
+            double speed = msg.setposwithspeed().speed();
 
-        setPositionWithSpeed( joint, position, speed );
+            setPositionWithSpeed( joint, position, speed );
 
-        gzmsg << "Setting position of joint " << joint << " to " << position << " with speed " << speed << "\n";
-        break;
-    }
-    case JointCmd::GET_TORQUE:
-    {
-        double torque = -1.0;
-        gzwarn << "Get torque joint command not implemented\n";
+            gzmsg << "Setting position of joint " << joint << " to " << position << " with speed "
+                  << speed << "\n";
+            break;
+        }
+        case JointCmd::GET_TORQUE:
+        {
+            double torque = -1.0;
+            gzwarn << "Get torque joint command not implemented\n";
 
-        gzmsg << "Returning current torque of joint " << joint << ": " << torque << "\n";
-        _pub->Publish( getJointRofiResp( JointCmd::GET_TORQUE, joint, torque ) );
-        break;
-    }
-    case JointCmd::SET_TORQUE:
-    {
-        double torque = msg.settorque().torque();
-        setTorque( joint, torque );
-        gzmsg << "Setting torque of joint " << joint << " to " << torque << "\n";
-        break;
-    }
-    default:
-        gzwarn << "Unknown command type: " << msg.cmdtype() << " of joint " << joint << "\n";
-        break;
+            gzmsg << "Returning current torque of joint " << joint << ": " << torque << "\n";
+            _pub->Publish( getJointRofiResp( JointCmd::GET_TORQUE, joint, torque ) );
+            break;
+        }
+        case JointCmd::SET_TORQUE:
+        {
+            double torque = msg.settorque().torque();
+            setTorque( joint, torque );
+            gzmsg << "Setting torque of joint " << joint << " to " << torque << "\n";
+            break;
+        }
+        default:
+            gzwarn << "Unknown command type: " << msg.cmdtype() << " of joint " << joint << "\n";
+            break;
     }
 }
 

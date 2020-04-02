@@ -1,9 +1,9 @@
 #define CATCH_CONFIG_MAIN
+#include <type_traits>
+
 #include <catch2/catch.hpp>
 
 #include <rofi_hal.hpp>
-
-#include <type_traits>
 
 static_assert( !std::is_default_constructible_v< rofi::hal::RoFI > );
 

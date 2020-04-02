@@ -2,15 +2,15 @@
 
 #include <cassert>
 
-#include "roficomPlugin.hpp"
 #include "roficomConnect.hpp"
-
+#include "roficomPlugin.hpp"
 
 
 namespace gazebo
 {
-
-void RoficomConnection::load( RoFICoMPlugin & roficomPlugin, physics::ModelPtr model, transport::NodePtr node )
+void RoficomConnection::load( RoFICoMPlugin & roficomPlugin,
+                              physics::ModelPtr model,
+                              transport::NodePtr node )
 {
     _roficomPlugin = &roficomPlugin;
     assert( _roficomPlugin );
@@ -76,12 +76,14 @@ void RoficomConnection::onPacket( const RoficomConnection::PacketPtr & packet )
     _roficomPlugin->onPacket( *packet );
 }
 
-void RoficomConnection::connect( physics::ModelPtr other, RoficomConnection::Orientation orientation )
+void RoficomConnection::connect( physics::ModelPtr other,
+                                 RoficomConnection::Orientation orientation )
 {
     assert( _model );
     assert( other );
 
-    gzmsg << "Connecting RoFICoM " << _model->GetScopedName() << " to " << other->GetScopedName() << "\n";
+    gzmsg << "Connecting RoFICoM " << _model->GetScopedName() << " to " << other->GetScopedName()
+          << "\n";
 
     _orientation = orientation;
 
@@ -179,7 +181,8 @@ void RoficomConnection::connectToNearby()
     }
 }
 
-std::optional< RoficomConnection::Orientation > RoficomConnection::canBeConnected( physics::ModelPtr roficom ) const
+std::optional< RoficomConnection::Orientation > RoficomConnection::canBeConnected(
+        physics::ModelPtr roficom ) const
 {
     assert( _model );
     assert( roficom );
@@ -193,14 +196,14 @@ std::optional< RoficomConnection::Orientation > RoficomConnection::canBeConnecte
     assert( otherInnerLink );
     assert( thisInnerLink != otherInnerLink );
 
-/* TODO check other's position
-    assert( position == Position::Extended );
+    /* TODO check other's position
+        assert( position == Position::Extended );
 
-    if ( getOtherPosition( otherInnerLink->GetModel() ) != Position::Extended )
-    {
-        return {};
-    }
-*/
+        if ( getOtherPosition( otherInnerLink->GetModel() ) != Position::Extended )
+        {
+            return {};
+        }
+    */
 
     return canRoficomBeConnected( thisInnerLink->WorldPose(), otherInnerLink->WorldPose() );
 }

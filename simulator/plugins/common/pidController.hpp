@@ -1,18 +1,17 @@
 #pragma once
 
+#include <cassert>
+#include <limits>
+#include <type_traits>
+
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
-#include <cassert>
-#include <type_traits>
-#include <limits>
-
-#include "utils.hpp"
 #include "pidLoader.hpp"
+#include "utils.hpp"
 
 namespace gazebo
 {
-
 enum class PidControlType
 {
     Force,
@@ -45,11 +44,9 @@ private:
     }
 
 public:
-    ForceController( JointDataBase & jointData ) :
-            _jointData( jointData )
+    ForceController( JointDataBase & jointData ) : _jointData( jointData )
     {
         assert( _jointData );
-
     }
 
     void forcePhysicsUpdate()
@@ -75,7 +72,10 @@ public:
 
     void setTargetForce( double targetForce )
     {
-        _targetForce = verboseClamp( targetForce, _jointData.getLowestEffort(), _jointData.getMaxEffort(), "targetForce" );
+        _targetForce = verboseClamp( targetForce,
+                                     _jointData.getLowestEffort(),
+                                     _jointData.getMaxEffort(),
+                                     "targetForce" );
     }
 };
 
@@ -113,15 +113,17 @@ class VelocityPIDController : public ForceController
     }
 
 public:
-    VelocityPIDController( JointDataBase & jointData, const PIDLoader::ControllerValues & pidValues ) :
-            ForceController( jointData ),
-            _velController( pidValues.getVelocity().getPID( _jointData.getMaxEffort(), _jointData.getLowestEffort() ) )
+    VelocityPIDController( JointDataBase & jointData,
+                           const PIDLoader::ControllerValues & pidValues )
+            : ForceController( jointData )
+            , _velController( pidValues.getVelocity().getPID( _jointData.getMaxEffort(),
+                                                              _jointData.getLowestEffort() ) )
     {
         assert( _jointData );
         _velPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
     }
 
-    template< bool Verbose = true >
+    template < bool Verbose = true >
     void velPhysicsUpdate()
     {
         assert( _jointData );
@@ -131,7 +133,8 @@ public:
         {
             if constexpr ( Verbose )
             {
-                gzmsg << "Boundary reached with velocity: " << _targetVelocity << ", setting to 0.\n";
+                gzmsg << "Boundary reached with velocity: " << _targetVelocity
+                      << ", setting to 0.\n";
             }
             _targetVelocity = 0;
         }
@@ -170,7 +173,10 @@ public:
 
     void setTargetVelocity( double targetVelocity, std::optional< PidControlType > lastControlType )
     {
-        _targetVelocity = verboseClamp( targetVelocity, _jointData.getLowestVelocity(), _jointData.getMaxVelocity(), "targetVelocity" );
+        _targetVelocity = verboseClamp( targetVelocity,
+                                        _jointData.getLowestVelocity(),
+                                        _jointData.getMaxVelocity(),
+                                        "targetVelocity" );
 
         if ( lastControlType )
         {
@@ -190,17 +196,22 @@ class PositionPIDController : public VelocityPIDController
     const std::function< void( double ) > _positionReachedCallback;
     bool _positionReached = true;
 
-    template< bool Verbose = true >
+    template < bool Verbose = true >
     void setTargetPosition( double desiredPosition )
     {
         _desiredPosition = desiredPosition;
         if constexpr ( Verbose )
         {
-            _targetPosition = verboseClamp( _desiredPosition, _jointData.getMinPosition(), _jointData.getMaxPosition(), "targetPosition" );
+            _targetPosition = verboseClamp( _desiredPosition,
+                                            _jointData.getMinPosition(),
+                                            _jointData.getMaxPosition(),
+                                            "targetPosition" );
         }
         else
         {
-            _targetPosition = clamp( _desiredPosition, _jointData.getMinPosition(), _jointData.getMaxPosition() );
+            _targetPosition = clamp( _desiredPosition,
+                                     _jointData.getMinPosition(),
+                                     _jointData.getMaxPosition() );
         }
     }
 
@@ -208,19 +219,23 @@ class PositionPIDController : public VelocityPIDController
     {
         assert( _jointData.getMinVelocity() >= _jointData.velocityPrecision );
 
-        _maxSpeed = verboseClamp( maxSpeed, _jointData.getMinVelocity(), _jointData.getMaxVelocity(), "maxSpeed" );
+        _maxSpeed = verboseClamp( maxSpeed,
+                                  _jointData.getMinVelocity(),
+                                  _jointData.getMaxVelocity(),
+                                  "maxSpeed" );
         _posController.SetCmdMin( -_maxSpeed );
         _posController.SetCmdMax( _maxSpeed );
     }
 
 public:
-    template< typename Callback >
+    template < typename Callback >
     PositionPIDController( JointDataBase & jointData,
                            const PIDLoader::ControllerValues & pidValues,
-                           Callback && positionReachedCallback ) :
-            VelocityPIDController( jointData, pidValues ),
-            _posController( pidValues.getPosition().getPID( _jointData.getLowestVelocity(), _jointData.getMaxVelocity() ) ),
-            _positionReachedCallback( std::forward< Callback >( positionReachedCallback ) )
+                           Callback && positionReachedCallback )
+            : VelocityPIDController( jointData, pidValues )
+            , _posController( pidValues.getPosition().getPID( _jointData.getLowestVelocity(),
+                                                              _jointData.getMaxVelocity() ) )
+            , _positionReachedCallback( std::forward< Callback >( positionReachedCallback ) )
     {
         assert( _jointData );
         assert( _jointData.getLowestVelocity() == -_jointData.getMaxVelocity() );
@@ -246,7 +261,10 @@ public:
 
             if ( _positionReachedCallback )
             {
-                assert( _targetPosition == clamp( _desiredPosition, _jointData.getMinPosition(), _jointData.getMaxPosition() ) );
+                assert( _targetPosition
+                        == clamp( _desiredPosition,
+                                  _jointData.getMinPosition(),
+                                  _jointData.getMaxPosition() ) );
                 _positionReachedCallback( _desiredPosition );
             }
             else
@@ -278,7 +296,9 @@ public:
         VelocityPIDController::resetVelocityPID( lastControlType );
     }
 
-    void setTargetPositionWithSpeed( double targetPosition, double maxSpeed, std::optional< PidControlType > lastControlType )
+    void setTargetPositionWithSpeed( double targetPosition,
+                                     double maxSpeed,
+                                     std::optional< PidControlType > lastControlType )
     {
         if ( maxSpeed > 0 )
         {
@@ -288,7 +308,8 @@ public:
         else
         {
             maxSpeed = _jointData.getMinVelocity();
-            gzwarn << "Speed non-positive for setting position, setting desired position to current position with speed " << maxSpeed << "\n";
+            gzwarn << "Speed non-positive for setting position, setting desired position to current position with speed "
+                   << maxSpeed << "\n";
             setTargetPosition< false >( _jointData.joint->Position( 0 ) );
             _positionReached = true;
         }
@@ -329,12 +350,18 @@ class PIDController
 
 
 public:
-    template< typename Callback, typename = std::enable_if_t< std::is_invocable_v< Callback, double > > >
-    PIDController( JointDataBase & jointData, const PIDLoader::ControllerValues & pidValues, Callback && positionReachedCallback )
-        : _jointData( jointData ),
-          controller( jointData, pidValues, std::forward< Callback >( positionReachedCallback ) )
+    template < typename Callback,
+               typename = std::enable_if_t< std::is_invocable_v< Callback, double > > >
+    PIDController( JointDataBase & jointData,
+                   const PIDLoader::ControllerValues & pidValues,
+                   Callback && positionReachedCallback )
+            : _jointData( jointData )
+            , controller( jointData,
+                          pidValues,
+                          std::forward< Callback >( positionReachedCallback ) )
     {
-        _connection = event::Events::ConnectBeforePhysicsUpdate( std::bind( &PIDController::onPhysicsUpdate, this ) );
+        _connection = event::Events::ConnectBeforePhysicsUpdate(
+                std::bind( &PIDController::onPhysicsUpdate, this ) );
 
         if ( pidValues.getPosition().initTarget )
         {
@@ -352,7 +379,8 @@ public:
         }
         else
         {
-            setTargetPositionWithSpeed( _jointData.joint->Position( 0 ), _jointData.getMaxVelocity() );
+            setTargetPositionWithSpeed( _jointData.joint->Position( 0 ),
+                                        _jointData.getMaxVelocity() );
         }
     }
 

@@ -1,18 +1,17 @@
 #pragma once
 
-#include <gazebo/gazebo.hh>
-#include <gazebo/common/Events.hh>
-#include <gazebo/physics/physics.hh>
-
 #include <algorithm>
 #include <string>
 #include <utility>
 #include <vector>
 
+#include <gazebo/common/Events.hh>
+#include <gazebo/gazebo.hh>
+#include <gazebo/physics/physics.hh>
+
 
 namespace gazebo
 {
-
 struct JointDataBase
 {
     // Used for position set callback and for boundaries
@@ -147,16 +146,17 @@ protected:
     }
 };
 
-template< typename _PID >
+template < typename _PID >
 struct JointData : public JointDataBase
 {
     _PID pid;
 
-    template< typename ... Args >
-    explicit JointData( physics::JointPtr joint, Args && ... args ) :
-            JointDataBase( std::move( joint ) ),
-            pid( *this, std::forward< Args >( args )... )
-    {}
+    template < typename... Args >
+    explicit JointData( physics::JointPtr joint, Args &&... args )
+            : JointDataBase( std::move( joint ) )
+            , pid( *this, std::forward< Args >( args )... )
+    {
+    }
 
     ~JointData() = default;
 };
@@ -245,7 +245,8 @@ inline sdf::ElementPtr getPluginSdf( sdf::ElementPtr modelSdf, const std::string
         return {};
     }
 
-    for ( auto child = modelSdf->GetElement( "plugin" ); child; child = child->GetNextElement( "plugin" ) )
+    for ( auto child = modelSdf->GetElement( "plugin" ); child;
+          child = child->GetNextElement( "plugin" ) )
     {
         if ( !child->HasAttribute( "filename" ) )
         {

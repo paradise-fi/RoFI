@@ -1,18 +1,17 @@
 #pragma once
 
+#include <cassert>
+#include <limits>
+#include <type_traits>
+
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
-
-#include <cassert>
-#include <type_traits>
-#include <limits>
 
 #include "utils.hpp"
 
 
 namespace gazebo
 {
-
 class PIDLoader
 {
 public:
@@ -27,8 +26,13 @@ public:
             auto tmpPidGains = pidGains.value_or( ignition::math::Vector3d() );
             auto tmpIMax = iMax.value_or( std::numeric_limits< double >::max() );
 
-            return common::PID( tmpPidGains.X(), tmpPidGains.Y(), tmpPidGains.Z(),
-                                tmpIMax, -tmpIMax, maxCmd, minCmd );
+            return common::PID( tmpPidGains.X(),
+                                tmpPidGains.Y(),
+                                tmpPidGains.Z(),
+                                tmpIMax,
+                                -tmpIMax,
+                                maxCmd,
+                                minCmd );
         }
     };
     struct ControllerValues
@@ -188,7 +192,7 @@ public:
             if ( controllerValues.forceTarget )
             {
                 if ( controllerValues.getVelocity().initTarget
-                        || controllerValues.getPosition().initTarget )
+                     || controllerValues.getPosition().initTarget )
                 {
                     gzwarn << "Force target has no effect with other targets.\n";
                 }

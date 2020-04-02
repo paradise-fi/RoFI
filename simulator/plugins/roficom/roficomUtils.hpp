@@ -1,23 +1,22 @@
 #pragma once
 
-#include <gazebo/gazebo.hh>
+#include <optional>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include <gazebo/common/Events.hh>
+#include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
+
+#include "utils.hpp"
 
 #include <connectorCmd.pb.h>
 #include <connectorResp.pb.h>
 
-#include <string>
-#include <utility>
-#include <optional>
-#include <vector>
-
-#include "utils.hpp"
-
 
 namespace gazebo
 {
-
 enum class RoFICoMPosition : signed char
 {
     Retracted = 0,
@@ -26,8 +25,8 @@ enum class RoFICoMPosition : signed char
     Extended = 3,
 };
 
-inline ignition::math::Angle
-        getAngle( const ignition::math::Vector3d & lhs, const ignition::math::Vector3d & rhs )
+inline ignition::math::Angle getAngle( const ignition::math::Vector3d & lhs,
+                                       const ignition::math::Vector3d & rhs )
 {
     return { std::acos( lhs.Dot( rhs ) / ( lhs.Length() * rhs.Length() ) ) };
 }

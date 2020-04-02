@@ -24,6 +24,8 @@ run: build-all
 tests-roficom: build-all
 	./build/plugins/roficom/tests/tests_roficom
 
+format-all:
+	find ./ ! \( -path "./build/*" \) -a \( -type f -iname *.hpp -o -type f -iname *.cpp \) | xargs clang-format --style=file -i
 
 example-server: build-all
 	./runGazebo.sh ./examples/${EXAMPLE}/${EXAMPLE}.world ${GAZEBO_ARGS}

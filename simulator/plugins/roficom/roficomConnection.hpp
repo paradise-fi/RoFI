@@ -1,11 +1,11 @@
 #pragma once
 
-#include <gazebo/gazebo.hh>
-#include <gazebo/common/Events.hh>
-#include <gazebo/physics/physics.hh>
-
 #include <array>
 #include <optional>
+
+#include <gazebo/common/Events.hh>
+#include <gazebo/gazebo.hh>
+#include <gazebo/physics/physics.hh>
 
 #include "roficomUtils.hpp"
 
@@ -15,7 +15,6 @@
 
 namespace gazebo
 {
-
 class RoficomConnectionJoint
 {
 public:
@@ -39,7 +38,7 @@ class RoficomConnection
 public:
     using Orientation = rofi::messages::ConnectorState::Orientation;
     using PacketPtr = boost::shared_ptr< const rofi::messages::Packet >;
-    
+
     void load( RoFICoMPlugin & roficomPlugin, physics::ModelPtr model, transport::NodePtr node );
 
 

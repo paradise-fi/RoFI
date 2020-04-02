@@ -58,9 +58,9 @@ void RoFICoMPlugin::loadJoint()
     assert( joint && "no joint with specified name found" );
 
     extendJoint = std::make_unique< JointData< PIDController > >(
-                        std::move( joint ),
-                        std::move( pidValue ),
-                        [ this ]( double pos ){ this->jointPositionReachedCallback( pos ); } );
+            std::move( joint ),
+            std::move( pidValue ),
+            [ this ]( double pos ) { this->jointPositionReachedCallback( pos ); } );
 
     assert( extendJoint );
     assert( extendJoint->joint );
@@ -150,7 +150,7 @@ void RoFICoMPlugin::initCommunication()
     _node->Init( getElemPath( _model ) );
 
     _pubRofi = _node->Advertise< rofi::messages::ConnectorResp >( "~/response" );
-    _subRofi = _node->Subscribe( "~/control", & RoFICoMPlugin::onConnectorCmd, this );
+    _subRofi = _node->Subscribe( "~/control", &RoFICoMPlugin::onConnectorCmd, this );
     assert( _pubRofi );
     assert( _subRofi );
 }
@@ -158,13 +158,15 @@ void RoFICoMPlugin::initCommunication()
 void RoFICoMPlugin::extend()
 {
     assert( extendJoint );
-    extendJoint->pid.setTargetPositionWithSpeed( extendJoint->getMaxPosition(), extendJoint->getMaxVelocity() );
+    extendJoint->pid.setTargetPositionWithSpeed( extendJoint->getMaxPosition(),
+                                                 extendJoint->getMaxVelocity() );
 }
 
 void RoFICoMPlugin::retract()
 {
     assert( extendJoint );
-    extendJoint->pid.setTargetPositionWithSpeed( extendJoint->getMinPosition(), extendJoint->getMaxVelocity() );
+    extendJoint->pid.setTargetPositionWithSpeed( extendJoint->getMinPosition(),
+                                                 extendJoint->getMaxVelocity() );
 }
 std::optional< RoFICoMPlugin::Orientation > RoFICoMPlugin::getOrientation() const
 {
@@ -177,7 +179,7 @@ void RoFICoMPlugin::updatePosition( Position newPosition )
 {
     assert( _model );
 
-    std::lock_guard < std::recursive_mutex > lock( positionMutex );
+    std::lock_guard< std::recursive_mutex > lock( positionMutex );
 
     positionsMap[ _model.get() ] = newPosition;
 }
@@ -194,7 +196,7 @@ RoFICoMPlugin::Position RoFICoMPlugin::getOtherPosition( physics::ModelPtr rofic
     assert( roficom );
     assert( isRoFICoM( roficom ) );
 
-    std::lock_guard < std::recursive_mutex > lock( positionMutex );
+    std::lock_guard< std::recursive_mutex > lock( positionMutex );
 
     return positionsMap[ roficom.get() ];
 }
@@ -203,7 +205,7 @@ void RoFICoMPlugin::removePosition()
 {
     assert( _model );
 
-    std::lock_guard < std::recursive_mutex > lock( positionMutex );
+    std::lock_guard< std::recursive_mutex > lock( positionMutex );
 
     positionsMap.erase( _model.get() );
 }
@@ -217,84 +219,86 @@ void RoFICoMPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
 
     switch ( msg->cmdtype() )
     {
-    case ConnectorCmd::NO_CMD:
-    {
-        _pubRofi->Publish( getConnectorResp( ConnectorCmd::NO_CMD ), true );
-        gzmsg << "Sending response to NO_CMD message (" << _model->GetScopedName() << ")\n";
-        break;
-    }
-    case ConnectorCmd::GET_STATE:
-    {
-        auto msg = getConnectorResp( ConnectorCmd::GET_STATE );
-        auto & state = *msg.mutable_state();
-
+        case ConnectorCmd::NO_CMD:
         {
-            switch ( getPosition() )
+            _pubRofi->Publish( getConnectorResp( ConnectorCmd::NO_CMD ), true );
+            gzmsg << "Sending response to NO_CMD message (" << _model->GetScopedName() << ")\n";
+            break;
+        }
+        case ConnectorCmd::GET_STATE:
+        {
+            auto msg = getConnectorResp( ConnectorCmd::GET_STATE );
+            auto & state = *msg.mutable_state();
+
             {
-                case Position::Extended:
-                case Position::Extending:
+                switch ( getPosition() )
                 {
-                    state.set_position( true );
-
-                    auto orientation = getOrientation();
-                    assert( orientation.has_value() == isConnected() );
-
-                    if ( orientation )
+                    case Position::Extended:
+                    case Position::Extending:
                     {
-                        state.set_connected( true );
-                        state.set_orientation( *orientation );
+                        state.set_position( true );
+
+                        auto orientation = getOrientation();
+                        assert( orientation.has_value() == isConnected() );
+
+                        if ( orientation )
+                        {
+                            state.set_connected( true );
+                            state.set_orientation( *orientation );
+                        }
+                        else
+                        {
+                            state.set_connected( false );
+                        }
+                        break;
                     }
-                    else
+                    case Position::Retracting:
+                    case Position::Retracted:
                     {
+                        state.set_position( false );
                         state.set_connected( false );
+                        break;
                     }
-                    break;
-                }
-                case Position::Retracting:
-                case Position::Retracted:
-                {
-                    state.set_position( false );
-                    state.set_connected( false );
-                    break;
                 }
             }
+            _pubRofi->Publish( std::move( msg ), true );
+            gzmsg << "Returning state (" << _model->GetScopedName() << ")\n";
+            break;
         }
-        _pubRofi->Publish( std::move( msg ), true );
-        gzmsg << "Returning state (" << _model->GetScopedName() << ")\n";
-        break;
-    }
-    case ConnectorCmd::CONNECT:
-    {
-        connect();
-        break;
-    }
-    case ConnectorCmd::DISCONNECT:
-    {
-        disconnect();
-        break;
-    }
-    case ConnectorCmd::PACKET:
-    {
-        sendPacket( msg->packet() );
-        break;
-    }
-    case ConnectorCmd::CONNECT_POWER:
-    {
-        gzerr << "Connecting power line is not implemented\n";
-        break;
-    }
-    case ConnectorCmd::DISCONNECT_POWER:
-    {
-        gzerr << "Disconnecting power line is not implemented\n";
-        break;
-    }
-    default:
-        gzerr << "Unknown command type: " << msg->cmdtype() << " (" << _model->GetScopedName() << ")\n";
-        break;
+        case ConnectorCmd::CONNECT:
+        {
+            connect();
+            break;
+        }
+        case ConnectorCmd::DISCONNECT:
+        {
+            disconnect();
+            break;
+        }
+        case ConnectorCmd::PACKET:
+        {
+            sendPacket( msg->packet() );
+            break;
+        }
+        case ConnectorCmd::CONNECT_POWER:
+        {
+            gzerr << "Connecting power line is not implemented\n";
+            break;
+        }
+        case ConnectorCmd::DISCONNECT_POWER:
+        {
+            gzerr << "Disconnecting power line is not implemented\n";
+            break;
+        }
+        default:
+            gzerr << "Unknown command type: " << msg->cmdtype() << " (" << _model->GetScopedName()
+                  << ")\n";
+            break;
     }
 }
 
-rofi::messages::ConnectorResp RoFICoMPlugin::getConnectorResp( rofi::messages::ConnectorCmd::Type cmdtype ) const
+rofi::messages::ConnectorResp RoFICoMPlugin::getConnectorResp(
+        rofi::messages::ConnectorCmd::Type cmdtype ) const
 {
     rofi::messages::ConnectorResp resp;
     resp.set_connector( connectorNumber );

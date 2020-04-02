@@ -1,24 +1,23 @@
 #pragma once
 
-#include <gazebo/gazebo.hh>
-#include <gazebo/common/Events.hh>
-#include <gazebo/physics/physics.hh>
-
 #include <deque>
 #include <limits>
 #include <utility>
 #include <vector>
 
+#include <gazebo/common/Events.hh>
+#include <gazebo/gazebo.hh>
+#include <gazebo/physics/physics.hh>
+
+#include "pidController.hpp"
+#include "pidLoader.hpp"
+#include "utils.hpp"
+
 #include <rofiCmd.pb.h>
 #include <rofiResp.pb.h>
 
-#include "utils.hpp"
-#include "pidController.hpp"
-#include "pidLoader.hpp"
-
 namespace gazebo
 {
-
 class UniversalModulePlugin : public ModelPlugin
 {
 public:
@@ -53,8 +52,11 @@ private:
     void findAndInitJoints();
     void findAndInitConnectors();
 
-    rofi::messages::RofiResp getJointRofiResp( rofi::messages::JointCmd::Type cmdtype, int joint, float value ) const;
-    rofi::messages::RofiResp getConnectorRofiResp( const rofi::messages::ConnectorResp & connectorResp ) const;
+    rofi::messages::RofiResp getJointRofiResp( rofi::messages::JointCmd::Type cmdtype,
+                                               int joint,
+                                               float value ) const;
+    rofi::messages::RofiResp getConnectorRofiResp(
+            const rofi::messages::ConnectorResp & connectorResp ) const;
 
     void onRofiCmd( const RofiCmdPtr & msg );
     void onJointCmd( const rofi::messages::JointCmd & msg );

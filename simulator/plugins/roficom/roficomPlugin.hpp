@@ -1,26 +1,25 @@
 #pragma once
 
-#include <gazebo/gazebo.hh>
-#include <gazebo/common/Events.hh>
-#include <gazebo/physics/physics.hh>
-
 #include <memory>
 #include <mutex>
 #include <optional>
 
-#include <connectorCmd.pb.h>
-#include <connectorResp.pb.h>
+#include <gazebo/common/Events.hh>
+#include <gazebo/gazebo.hh>
+#include <gazebo/physics/physics.hh>
 
-#include "utils.hpp"
 #include "pidController.hpp"
 #include "pidLoader.hpp"
-#include "roficomUtils.hpp"
 #include "roficomConnection.hpp"
+#include "roficomUtils.hpp"
+#include "utils.hpp"
+
+#include <connectorCmd.pb.h>
+#include <connectorResp.pb.h>
 
 
 namespace gazebo
 {
-
 class RoFICoMPlugin : public ModelPlugin
 {
 public:
@@ -68,7 +67,8 @@ private:
 
     void onConnectorCmd( const ConnectorCmdPtr & msg );
 
-    rofi::messages::ConnectorResp getConnectorResp( rofi::messages::ConnectorCmd::Type cmdtype ) const;
+    rofi::messages::ConnectorResp getConnectorResp(
+            rofi::messages::ConnectorCmd::Type cmdtype ) const;
 
     void jointPositionReachedCallback( double desiredPosition );
 
