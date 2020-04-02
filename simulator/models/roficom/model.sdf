@@ -83,11 +83,6 @@
                     </script>
                 </material>
             </visual>
-            <sensor name="roficom-sensor" type="contact">
-                <contact>
-                    <collision>inner-collision</collision>
-                </contact>
-            </sensor>
         </link>
         <joint name="extendJoint" type="prismatic">
             <parent>outer</parent>

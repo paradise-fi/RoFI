@@ -1,13 +1,11 @@
 #include "roficomPlugin.hpp"
 
-#include "roficomUtils.hpp"
-#include "roficomConnect.hpp"
-
 #include <cassert>
 #include <cmath>
 
 namespace gazebo
 {
+std::recursive_mutex RoFICoMPlugin::positionMutex;
 std::map< const physics::Model *, RoFICoMPlugin::Position > RoFICoMPlugin::positionsMap;
 
 void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
@@ -19,116 +17,122 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
     loadJoint();
     assert( extendJoint && *extendJoint );
 
-    thisConnectionLink = getConnectionLink( _model );
-    assert( thisConnectionLink );
-
     updatePosition( Position::Retracted );
 
     initCommunication();
-    initSensorCommunication();
-
-    onUpdateConnection = event::Events::ConnectWorldUpdateBegin( std::bind( &RoFICoMPlugin::onUpdate, this ) );
+    assert( _node );
+    roficomConnection.load( *this, _model, _node );
 
     gzmsg << "RoFICoM plugin ready\n";
 }
 
+void RoFICoMPlugin::jointPositionReachedCallback( double desiredPosition )
+{
+    assert( extendJoint );
+    assert( *extendJoint );
+
+    if ( desiredPosition <= extendJoint->getMinPosition() + extendJoint->positionPrecision )
+    {
+        updatePosition( Position::Retracted );
+    }
+    else if ( desiredPosition >= extendJoint->getMaxPosition() - extendJoint->positionPrecision )
+    {
+        std::lock_guard< std::recursive_mutex > lock( positionMutex );
+        updatePosition( Position::Extended );
+        roficomConnection.connectToNearby();
+    }
+    else
+    {
+        gzerr << "Position of extend joint reached, but is not a limit\n";
+    }
+}
+
 void RoFICoMPlugin::loadJoint()
 {
-    const auto callback = [ this ]( double desiredPosition )
-        {
-            assert( this->extendJoint );
-            assert( *this->extendJoint );
-
-            std::lock_guard< std::mutex > lock( this->connectionMutex );
-
-            if ( desiredPosition <=
-                    this->extendJoint->getMinPosition() + this->extendJoint->positionPrecision )
-            {
-                this->updatePosition( Position::Retracted );
-            }
-            else if ( desiredPosition >=
-                    this->extendJoint->getMaxPosition() - this->extendJoint->positionPrecision )
-            {
-                this->updatePosition( Position::Extended );
-            }
-            else
-            {
-                gzwarn << "Position of extend joint reached, but is not a limit\n";
-            }
-        };
-
-    auto pidValuesVector = PIDLoader::loadControllerValues(
-            getPluginSdf( _model->GetSDF(), "libroficomPlugin.so" ) );
+    auto pluginSdf = getPluginSdf( _model->GetSDF(), "libroficomPlugin.so" );
+    auto pidValuesVector = PIDLoader::loadControllerValues( pluginSdf );
     assert( pidValuesVector.size() == 1 && "expected 1 controlled joint" );
+    auto & pidValue = pidValuesVector.at( 0 );
 
-    auto joint = _model->GetJoint( pidValuesVector.at( 0 ).jointName );
+    auto joint = _model->GetJoint( pidValue.jointName );
     assert( joint && "no joint with specified name found" );
 
     extendJoint = std::make_unique< JointData< PIDController > >(
                         std::move( joint ),
-                        std::move( pidValuesVector.at( 0 ) ),
-                        callback );
+                        std::move( pidValue ),
+                        [ this ]( double pos ){ this->jointPositionReachedCallback( pos ); } );
+
     assert( extendJoint );
-    assert( *extendJoint );
+    assert( extendJoint->joint );
     assert( extendJoint->joint->GetMsgType() == msgs::Joint::PRISMATIC );
 }
 
 void RoFICoMPlugin::connect()
 {
-    gzmsg << "Connecting connector " << connectorNumber << " (" << _model->GetScopedName() << ")\n";
+    gzmsg << "Extending connector " << connectorNumber << " (" << _model->GetScopedName() << ")\n";
 
-    std::lock_guard< std::mutex > lock( connectionMutex );
+    std::lock_guard< std::recursive_mutex > lock( positionMutex );
 
-    if ( position == Position::Extended || position == Position::Extending )
+    switch ( getPosition() )
     {
-        gzmsg << "Already extended (" << _model->GetScopedName() << ")\n";
-        return;
+        case Position::Extended:
+        case Position::Extending:
+        {
+            gzwarn << "Already extending (" << _model->GetScopedName() << ")\n";
+            return;
+        }
+        default:
+            break;
     }
-    updatePosition( Position::Extending );
-    gzmsg << "Extending connector  (" << _model->GetScopedName() << ")\n";
 
+    updatePosition( Position::Extending );
     extend();
 }
 
 void RoFICoMPlugin::disconnect()
 {
-    gzmsg << "Disconnecting connector " << connectorNumber << " (" << _model->GetScopedName() << ")\n";
+    gzmsg << "Retracting connector " << connectorNumber << " (" << _model->GetScopedName() << ")\n";
 
-    std::lock_guard< std::mutex > lock( connectionMutex );
-    if ( position == Position::Retracted || position == Position::Retracting )
+    std::lock_guard< std::recursive_mutex > lock( positionMutex );
+
+    switch ( getPosition() )
     {
-        gzmsg << "Not extended (" << _model->GetScopedName() << ")\n";
-        return;
+        case Position::Retracted:
+        case Position::Retracting:
+        {
+            gzwarn << "Already retracting (" << _model->GetScopedName() << ")\n";
+            return;
+        }
+        default:
+            break;
     }
 
-    gzmsg << "Retracting connector " << connectorNumber << " (" << _model->GetScopedName() << ")\n";
     updatePosition( Position::Retracting );
-    endConnection();
-
+    roficomConnection.disconnect();
     retract();
+    assert( !isConnected() );
 }
 
 void RoFICoMPlugin::sendPacket( const rofi::messages::Packet & packet )
 {
     gzmsg << "Sending packet (" << _model->GetScopedName() << ")\n";
 
-    _pubOutside->Publish( packet );
+    roficomConnection.sendPacket( packet );
 }
 
-void RoFICoMPlugin::onPacket( const RoFICoMPlugin::PacketPtr & packet )
+void RoFICoMPlugin::onPacket( const rofi::messages::Packet & packet )
 {
     gzmsg << "Received packet (" << _model->GetScopedName() << ")\n";
 
     auto msg = getConnectorResp( rofi::messages::ConnectorCmd::PACKET );
-    *msg.mutable_packet() = *packet;
-    _pubRofi->Publish( std::move( msg ) );
+    *msg.mutable_packet() = packet;
+    _pubRofi->Publish( std::move( msg ), true );
 }
 
 bool RoFICoMPlugin::isConnected() const
 {
-    bool connected = bool( connectedWith );
-    assert( connected == bool( connectionJoint ) );
-    assert( connected == bool( _subOutside ) );
+    bool connected = roficomConnection.isConnected();
+    assert( !connected || getPosition() == Position::Extended );
     return connected;
 }
 
@@ -147,35 +151,8 @@ void RoFICoMPlugin::initCommunication()
 
     _pubRofi = _node->Advertise< rofi::messages::ConnectorResp >( "~/response" );
     _subRofi = _node->Subscribe( "~/control", & RoFICoMPlugin::onConnectorCmd, this );
-    _pubOutside = _node->Advertise< rofi::messages::Packet >( "~/packets" );
     assert( _pubRofi );
     assert( _subRofi );
-    assert( _pubOutside );
-}
-
-void RoFICoMPlugin::initSensorCommunication()
-{
-    assert( _model );
-    assert( _node );
-    assert( _node->IsInitialized() );
-
-    auto sensors = _model->SensorScopedName( "roficom-sensor" );
-
-    if ( sensors.size() != 1 )
-    {
-        gzerr << "RoFICoM plugin expects exactly 1 nested sensor named 'roficom-sensor' (found " << sensors.size() << ")\n";
-        return;
-    }
-
-    auto topicName = "/gazebo" + replaceDelimeter( sensors.front() ) + "/contacts";
-    _subSensor = _node->Subscribe( std::move( topicName ), & RoFICoMPlugin::onSensorMessage, this );
-    assert( _subSensor );
-}
-
-void RoFICoMPlugin::onUpdate()
-{
-    std::lock_guard< std::mutex > lock( connectionMutex );
-    updateConnection();
 }
 
 void RoFICoMPlugin::extend()
@@ -189,144 +166,52 @@ void RoFICoMPlugin::retract()
     assert( extendJoint );
     extendJoint->pid.setTargetPositionWithSpeed( extendJoint->getMinPosition(), extendJoint->getMaxVelocity() );
 }
-
-void RoFICoMPlugin::updateConnection()
+std::optional< RoFICoMPlugin::Orientation > RoFICoMPlugin::getOrientation() const
 {
-    if ( !isConnected() )
-    {
-        return;
-    }
-
-    if ( position == Position::Extended || position == Position::Extending )
-    {
-        assert( connectionJoint );
-        if ( !connectionJoint->AreConnected( thisConnectionLink, connectedWith ) )
-        {
-            endConnection();
-            return;
-        }
-    }
-
-    if ( position == Position::Retracted || position == Position::Retracting )
-    {
-        endConnection();
-        return;
-    }
-}
-
-void RoFICoMPlugin::endConnection()
-{
-    if ( !isConnected() )
-    {
-        gzwarn << "Ending not existing connection (" << _model->GetScopedName() << ")\n";
-    }
-
-    if ( connectedWith )
-    {
-        gzmsg << "Ending connection (" << _model->GetScopedName() << ") with " << connectedWith->GetScopedName() << "\n";
-    }
-
-    connectedWith.reset();
-    if ( connectionJoint )
-    {
-        connectionJoint->Detach();
-        connectionJoint.reset();
-    }
-    if ( _subOutside )
-    {
-        _subOutside->Unsubscribe();
-        _subOutside.reset();
-    }
+    auto orientation = roficomConnection.getOrientation();
+    assert( orientation.has_value() == isConnected() );
+    return orientation;
 }
 
 void RoFICoMPlugin::updatePosition( Position newPosition )
 {
     assert( _model );
-    position = newPosition;
-    positionsMap[ _model.get() ] = position;
+
+    std::lock_guard < std::recursive_mutex > lock( positionMutex );
+
+    positionsMap[ _model.get() ] = newPosition;
+}
+
+RoFICoMPlugin::Position RoFICoMPlugin::getPosition() const
+{
+    assert( _model );
+
+    return getOtherPosition( _model );
 }
 
 RoFICoMPlugin::Position RoFICoMPlugin::getOtherPosition( physics::ModelPtr roficom )
 {
     assert( roficom );
     assert( isRoFICoM( roficom ) );
+
+    std::lock_guard < std::recursive_mutex > lock( positionMutex );
+
     return positionsMap[ roficom.get() ];
 }
 
-void RoFICoMPlugin::createConnection( physics::LinkPtr otherConnectionLink, RoFICoMPlugin::Orientation newOrientation )
+void RoFICoMPlugin::removePosition()
 {
-    assert( thisConnectionLink );
-    assert( otherConnectionLink );
-    assert( thisConnectionLink != otherConnectionLink );
-    assert( isRoFICoM( otherConnectionLink->GetModel() ) );
-    if ( isConnected() )
-    {
-        gzwarn << _model->GetScopedName() << " was already connected\n";
-    }
+    assert( _model );
 
-    gzmsg << "Create connection with " << otherConnectionLink->GetScopedName() << " (" << thisConnectionLink->GetScopedName() << ")\n";
+    std::lock_guard < std::recursive_mutex > lock( positionMutex );
 
-    connectedWith = otherConnectionLink;
-    orientation = newOrientation;
-    startCommunication( otherConnectionLink->GetModel() );
-
-    connectionJoint = getOtherConnectionJoint( otherConnectionLink );
-
-    if ( connectionJoint )
-    {
-        gzmsg << "Found existing connection(" << _model->GetScopedName() << ")\n";
-
-        assert( connectionJoint->AreConnected( thisConnectionLink, connectedWith ) );
-        return;
-    }
-
-    gzmsg << "Creating new connection joint (" << _model->GetName() << ")\n";
-
-    auto thisWorldPose = thisConnectionLink->WorldPose();
-    auto otherWorldPose = otherConnectionLink->WorldPose();
-
-    auto thisNewWorldPose = otherWorldPose;
-    thisNewWorldPose.Pos() = thisNewWorldPose.CoordPositionAdd( { 0, 0, extendJoint->joint->Position() } );
-
-    // TODO rotate according to orientation
-    thisNewWorldPose.Rot() *= getThisToOtherRotation( newOrientation );
-    thisNewWorldPose.Rot() *= ignition::math::Quaterniond( { 1, 0, 0 }, ignition::math::Angle::Pi.Radian() );
-    std::cout << "This model new world pose: " << thisNewWorldPose << "\n";
-    _model->SetWorldPose( thisNewWorldPose );
-    _model->Update();
-
-    connectionJoint = _model->GetJoint( "outerConnection" );
-    if ( connectionJoint )
-    {
-        assert( connectionJoint->GetMsgType() == msgs::Joint::FIXED );
-        connectionJoint->Reset();
-        connectionJoint->Attach( thisConnectionLink, otherConnectionLink );
-        assert( connectionJoint->AreConnected( thisConnectionLink, otherConnectionLink ) );
-    }
-    else
-    {
-        connectionJoint = _model->CreateJoint( "outerConnection", "fixed", thisConnectionLink, otherConnectionLink );
-        // connectionJoint = _model->GetWorld()->Physics()->CreateJoint( "fixed", _model );
-        // connectionJoint->Attach( thisConnectionLink, otherConnectionLink );
-        connectionJoint->Init();
-    }
-
-    assert( connectionJoint );
-    assert( connectionJoint->AreConnected( thisConnectionLink, connectedWith ) );
-}
-
-void RoFICoMPlugin::startCommunication( physics::ModelPtr otherModel )
-{
-    assert( otherModel );
-    assert( !_subOutside && "already has subsriber" );
-
-    auto path = "/gazebo/" + getElemPath( otherModel ) + "/packets";
-    _subOutside = _node->Subscribe( path, &RoFICoMPlugin::onPacket, this );
+    positionsMap.erase( _model.get() );
 }
 
 void RoFICoMPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
 {
     using rofi::messages::ConnectorCmd;
+    using rofi::messages::ConnectorState;
 
     connectorNumber = msg->connector();
 
@@ -334,7 +219,7 @@ void RoFICoMPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
     {
     case ConnectorCmd::NO_CMD:
     {
-        _pubRofi->Publish( getConnectorResp( ConnectorCmd::NO_CMD ) );
+        _pubRofi->Publish( getConnectorResp( ConnectorCmd::NO_CMD ), true );
         gzmsg << "Sending response to NO_CMD message (" << _model->GetScopedName() << ")\n";
         break;
     }
@@ -342,25 +227,39 @@ void RoFICoMPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
     {
         auto msg = getConnectorResp( ConnectorCmd::GET_STATE );
         auto & state = *msg.mutable_state();
+
         {
-            std::lock_guard< std::mutex > lock( connectionMutex );
-            switch ( position )
+            switch ( getPosition() )
             {
                 case Position::Extended:
                 case Position::Extending:
+                {
                     state.set_position( true );
-                    if ( isConnected() )
+
+                    auto orientation = getOrientation();
+                    assert( orientation.has_value() == isConnected() );
+
+                    if ( orientation )
                     {
                         state.set_connected( true );
-                        state.set_orientation( orientation );
+                        state.set_orientation( *orientation );
+                    }
+                    else
+                    {
+                        state.set_connected( false );
                     }
                     break;
+                }
                 case Position::Retracting:
                 case Position::Retracted:
+                {
+                    state.set_position( false );
+                    state.set_connected( false );
                     break;
+                }
             }
         }
-        _pubRofi->Publish( std::move( msg ) );
+        _pubRofi->Publish( std::move( msg ), true );
         gzmsg << "Returning state (" << _model->GetScopedName() << ")\n";
         break;
     }
@@ -381,121 +280,18 @@ void RoFICoMPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
     }
     case ConnectorCmd::CONNECT_POWER:
     {
-        gzmsg << "Connecting power line is not implemented\n";
+        gzerr << "Connecting power line is not implemented\n";
         break;
     }
     case ConnectorCmd::DISCONNECT_POWER:
     {
-        gzmsg << "Disconnecting power line is not implemented\n";
+        gzerr << "Disconnecting power line is not implemented\n";
         break;
     }
     default:
-        gzwarn << "Unknown command type: " << msg->cmdtype() << " (" << _model->GetScopedName() << ")\n";
+        gzerr << "Unknown command type: " << msg->cmdtype() << " (" << _model->GetScopedName() << ")\n";
         break;
     }
-}
-
-void RoFICoMPlugin::onSensorMessage( const ContactsMsgPtr & contacts )
-{
-    std::lock_guard< std::mutex > lock( connectionMutex );
-    if ( isConnected() )
-    {
-        return;
-    }
-
-    if ( position != Position::Extended && position != Position::Extending )
-    {
-        return;
-    }
-
-    for ( auto & contact : contacts->contact() )
-    {
-        assert( !isConnected() );
-        auto otherModel = getModelOfOther( contact );
-        if ( otherModel == _model )
-        {
-            break;
-        }
-
-        if ( !isRoFICoM( otherModel ) )
-        {
-            break;
-        }
-
-        auto otherLink = getConnectionLink( otherModel );
-        if ( !otherLink )
-        {
-            gzwarn << "No connection link in other RoFICoM\n";
-            break;
-        }
-
-        if ( position == Position::Extended )
-        {
-            connectionJoint = getOtherConnectionJoint( otherLink );
-            if ( !connectionJoint )
-            {
-                continue;
-            }
-
-            auto newOrientation = getConnectorOrientation( _model->WorldPose(), otherModel->WorldPose() );
-            if ( !newOrientation )
-            {
-                gzerr << "Could not get mutual orientation with " << otherModel->GetScopedName() << " (" << _model->GetScopedName() << ")\n";
-                continue;
-            }
-
-            createConnection( otherLink, *newOrientation );
-            assert( isConnected() );
-            return;
-        }
-        else
-        {
-            assert( position == Position::Extending );
-
-            if ( auto orientation = canBeConnected( otherLink ) )
-            {
-                gzmsg << "Connecting with " << otherLink->GetModel()->GetScopedName() << " (" << _model->GetScopedName() << ")\n";
-
-                createConnection( otherLink, *orientation );
-                assert( isConnected() );
-                return;
-            }
-        }
-    }
-}
-
-physics::ModelPtr RoFICoMPlugin::getModelOfOther( const msgs::Contact & contact ) const
-{
-    auto collision1 = getCollisionByScopedName( contact.collision1() );
-    auto collision2 = getCollisionByScopedName( contact.collision2() );
-    if ( !collision1  || !collision2 )
-    {
-        gzwarn << "Got empty collision\n";
-        return {};
-    }
-
-    auto model1 = collision1->GetModel();
-    auto model2 = collision2->GetModel();
-    if ( model1 == _model )
-    {
-        if ( model2 == _model )
-        {
-            gzwarn << "Both collisions are from this model\n";
-            return {};
-        }
-        return model2;
-    }
-    if ( model2 != _model )
-    {
-        gzwarn << "None of the collisions are from this model\n";
-        return {};
-    }
-    return model1;
-}
-
-physics::CollisionPtr RoFICoMPlugin::getCollisionByScopedName( const std::string & collisionName ) const
-{
-    return boost::dynamic_pointer_cast< physics::Collision >( _model->GetWorld()->EntityByName( collisionName ) );
 }
 
 rofi::messages::ConnectorResp RoFICoMPlugin::getConnectorResp( rofi::messages::ConnectorCmd::Type cmdtype ) const
@@ -504,115 +300,6 @@ rofi::messages::ConnectorResp RoFICoMPlugin::getConnectorResp( rofi::messages::C
     resp.set_connector( connectorNumber );
     resp.set_cmdtype( cmdtype );
     return resp;
-}
-
-std::optional< RoFICoMPlugin::Orientation > RoFICoMPlugin::canBeConnected( physics::LinkPtr otherConnectionLink ) const
-{
-    assert( thisConnectionLink );
-    assert( otherConnectionLink );
-    assert( thisConnectionLink != otherConnectionLink );
-    assert( isRoFICoM( otherConnectionLink->GetModel() ) );
-    assert( position == Position::Extended || position == Position::Extending );
-
-    Position otherPosition = getOtherPosition( otherConnectionLink->GetModel() );
-    if ( otherPosition == Position::Retracted || otherPosition == Position::Retracting )
-    {
-        return {};
-    }
-
-    return canRoficomBeConnected( thisConnectionLink->WorldPose(), otherConnectionLink->WorldPose() );
-}
-
-physics::LinkPtr RoFICoMPlugin::getConnectionLink( physics::ModelPtr roficom )
-{
-    assert( roficom );
-    assert( isRoFICoM( roficom ) );
-
-    auto linkPtr = roficom->GetLink( "inner" );
-    if ( !linkPtr )
-    {
-        linkPtr = roficom->GetLink( "RoFICoM::inner" );
-    }
-    if ( !linkPtr )
-    {
-        for ( auto link : roficom->GetLinks() )
-        {
-            auto name = link->GetName();
-            if ( name.size() < 7 )
-            {
-                continue;
-            }
-            if ( name.compare( name.size() - 7, 7, "::inner" ) == 0 )
-            {
-                if ( linkPtr )
-                {
-                    gzwarn << "Found two inner links: " << linkPtr->GetName() << ", " << link->GetName() << "\n";
-                    break;
-                }
-                linkPtr = std::move( link );
-            }
-        }
-    }
-    return linkPtr;
-}
-
-physics::JointPtr RoFICoMPlugin::getExtendJoint( physics::ModelPtr roficom )
-{
-    assert( roficom );
-    assert( isRoFICoM( roficom ) );
-
-    auto extendJoint = roficom->GetJoint( "extendJoint" );
-    if ( !extendJoint )
-    {
-        extendJoint = roficom->GetJoint( "RoFICoM::extendJoint" );
-    }
-    if ( !extendJoint )
-    {
-        for ( auto joint : roficom->GetJoints() )
-        {
-            auto name = joint->GetName();
-            if ( name.size() < 13 )
-            {
-                continue;
-            }
-            if ( name.compare( name.size() - 13, 13, "::extendJoint" ) == 0 )
-            {
-                if ( extendJoint )
-                {
-                    gzwarn << "Found two extendJoints: " << extendJoint->GetName() << ", " << joint->GetName() << "\n";
-                    break;
-                }
-                extendJoint = std::move( joint );
-            }
-        }
-    }
-    return extendJoint;
-}
-
-physics::JointPtr RoFICoMPlugin::getOtherConnectionJoint( physics::LinkPtr otherConnectionLink ) const
-{
-    assert( !connectionJoint );
-    assert( thisConnectionLink );
-    assert( otherConnectionLink );
-    assert( thisConnectionLink != otherConnectionLink );
-
-    auto outerConnection = otherConnectionLink->GetModel()->GetJoint( "outerConnection" );
-
-    if ( outerConnection )
-    {
-        auto parentLink = outerConnection->GetParent();
-        auto childLink = outerConnection->GetChild();
-
-        if ( parentLink == thisConnectionLink && childLink == otherConnectionLink )
-        {
-            return outerConnection;
-        }
-        if ( parentLink == otherConnectionLink && childLink == thisConnectionLink )
-        {
-            return outerConnection;
-        }
-    }
-    return {};
 }
 
 GZ_REGISTER_MODEL_PLUGIN( RoFICoMPlugin )
