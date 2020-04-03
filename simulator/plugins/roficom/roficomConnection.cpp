@@ -58,13 +58,13 @@ void RoficomConnection::connectRequest( physics::ModelPtr other,
     }
 
     rofi::messages::ConnectorAttachInfo msg;
-    msg.set_modelname1( _model->GetName() );
-    msg.set_modelname2( other->GetName() );
+    msg.set_modelname1( _model->GetScopedName() );
+    msg.set_modelname2( other->GetScopedName() );
     msg.set_attach( true );
     msg.set_orientation( orientation );
 
-    gzmsg << "Publishing to " << _pubAttachEvent->GetTopic() << "\n";
-    gzmsg << "Message\n" << msg.DebugString() << "\n";
+    gzmsg << "Publishing to " << _pubAttachEvent->GetTopic() << "\n"; // TODO remove
+    gzmsg << "Message\n" << msg.DebugString() << "\n"; // TODO remove
     _pubAttachEvent->Publish( msg, true );
 }
 
@@ -81,8 +81,8 @@ void RoficomConnection::disconnectRequest()
     assert( _connectedTo );
 
     rofi::messages::ConnectorAttachInfo msg;
-    msg.set_modelname1( _model->GetName() );
-    msg.set_modelname1( _connectedTo->GetName() );
+    msg.set_modelname1( _model->GetScopedName() );
+    msg.set_modelname1( _connectedTo->GetScopedName() );
     msg.set_attach( false );
 
     _pubAttachEvent->Publish( msg, true );
@@ -111,11 +111,11 @@ void RoficomConnection::onPacket( const RoficomConnection::PacketPtr & packet )
 void RoficomConnection::onAttachEvent( const RoficomConnection::AttachInfoPtr & attachInfo )
 {
     std::string otherRoficomName;
-    if ( _model->GetName() == attachInfo->modelname1() )
+    if ( _model->GetScopedName() == attachInfo->modelname1() )
     {
         otherRoficomName = attachInfo->modelname2();
     }
-    else if ( _model->GetName() == attachInfo->modelname2() )
+    else if ( _model->GetScopedName() == attachInfo->modelname2() )
     {
         otherRoficomName = attachInfo->modelname1();
     }

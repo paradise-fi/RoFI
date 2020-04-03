@@ -11,7 +11,7 @@ using UMP = UniversalModulePlugin;
 void UMP::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
 {
     _model = model;
-    gzmsg << "The UM plugin is attached to model [" << _model->GetName() << "]\n";
+    gzmsg << "The UM plugin is attached to model [" << _model->GetScopedName() << "]\n";
 
     initCommunication();
 
@@ -45,7 +45,7 @@ void UMP::initCommunication()
         gzerr << "Could not create new Node\n";
         throw std::runtime_error( "Could not create new Node" );
     }
-    _node->Init( _model->GetWorld()->Name() + "/" + _model->GetName() );
+    _node->Init( getElemPath( _model ) );
 
     _sub = _node->Subscribe( "~/control", &UMP::onRofiCmd, this );
     _pub = _node->Advertise< rofi::messages::RofiResp >( "~/response" );
@@ -54,6 +54,8 @@ void UMP::initCommunication()
         gzerr << "Subcriber or Publisher not created\n";
         throw std::runtime_error( "Subcriber or Publisher not created" );
     }
+
+    gzmsg << "Model is listening on topic '" << _sub->GetTopic() << "'\n";
 }
 
 void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )

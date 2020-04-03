@@ -211,31 +211,6 @@ inline std::string getElemPath( gazebo::physics::BasePtr elem, const std::string
     return elemPath;
 }
 
-// Gets path delimeted with '::' and returns path delimeted by '/'
-inline std::string replaceDelimeter( std::string_view sensorPath )
-{
-    std::vector< std::string_view > splitPath;
-    int last = 0;
-    for ( size_t i = 0; i < sensorPath.size() - 1; i++ )
-    {
-        if ( sensorPath[ i ] == ':' && sensorPath[ i + 1 ] == ':' )
-        {
-            splitPath.push_back( sensorPath.substr( last, i - last ) );
-            last = i + 2;
-        }
-    }
-    splitPath.push_back( sensorPath.substr( last ) );
-
-    std::string topicName;
-    for ( auto name : splitPath )
-    {
-        topicName += "/";
-        topicName += name;
-    }
-
-    return topicName;
-}
-
 inline sdf::ElementPtr getPluginSdf( sdf::ElementPtr modelSdf, const std::string & pluginName )
 {
     assert( modelSdf );
