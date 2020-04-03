@@ -9,6 +9,7 @@
 
 #include "roficomUtils.hpp"
 
+#include <connectorAttachInfo.pb.h>
 #include <connectorCmd.pb.h>
 #include <connectorResp.pb.h>
 
@@ -38,6 +39,7 @@ class RoficomConnection
 public:
     using Orientation = rofi::messages::ConnectorState::Orientation;
     using PacketPtr = boost::shared_ptr< const rofi::messages::Packet >;
+    using AttachInfoPtr = boost::shared_ptr< const rofi::messages::ConnectorAttachInfo >;
 
     void load( RoFICoMPlugin & roficomPlugin, physics::ModelPtr model, transport::NodePtr node );
 
@@ -48,19 +50,24 @@ public:
         return _orientation;
     }
 
-    void connectToNearby();
-    void disconnect();
+    void connectToNearbyRequest();
+    void connectRequest( physics::ModelPtr otherRoficom,
+                         RoficomConnection::Orientation orientation );
+    void disconnectRequest();
 
     void sendPacket( const rofi::messages::Packet & packet );
     void onPacket( const PacketPtr & packet );
 
-private:
-    void connect( physics::ModelPtr otherRoficom, RoficomConnection::Orientation orientation );
+    void onAttachEvent( const AttachInfoPtr & attachInfo );
+    void onConnectEvent( const std::string & otherRoficomName, Orientation orientation );
+    void onDisconnectEvent( const std::string & otherRoficomName );
 
+private:
     std::optional< Orientation > canBeConnected( physics::ModelPtr roficom ) const;
 
     void startCommunication( physics::ModelPtr otherRoficom );
-    void checkConnection( RoFICoMPosition position );
+
+    void disconnect();
 
     std::optional< Orientation > _orientation;
 
@@ -71,6 +78,10 @@ private:
     transport::PublisherPtr _pubToOther;
     transport::SubscriberPtr _subToOther;
 
+    transport::PublisherPtr _pubAttachEvent;
+    transport::SubscriberPtr _subAttachEvent;
+
+    std::string _connectedToName;
     physics::ModelPtr _connectedTo;
 };
 

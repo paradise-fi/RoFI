@@ -262,9 +262,14 @@ inline sdf::ElementPtr getPluginSdf( sdf::ElementPtr modelSdf, const std::string
     return {};
 }
 
-inline bool isRoFICoM( gazebo::physics::ModelPtr model )
+inline bool isRoFICoM( physics::ModelPtr model )
 {
     return model && getPluginSdf( model->GetSDF(), "libroficomPlugin.so" ) != nullptr;
+}
+
+inline bool hasAttacherPlugin( physics::WorldPtr world )
+{
+    return world && getPluginSdf( world->SDF(), "libattacherPlugin.so" ) != nullptr;
 }
 
 } // namespace gazebo

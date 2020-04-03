@@ -14,6 +14,12 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
     assert( _model );
     gzmsg << "The RoFICoM plugin is attached to model [" << _model->GetScopedName() << "]\n";
 
+    if ( !hasAttacherPlugin( _model->GetWorld() ) )
+    {
+        gzerr << "Could not find the attacher world plugin. "
+              << "Connecting roficoms will probably not work properly.\n";
+    }
+
     loadJoint();
     assert( extendJoint && *extendJoint );
 
@@ -39,7 +45,7 @@ void RoFICoMPlugin::jointPositionReachedCallback( double desiredPosition )
     {
         std::lock_guard< std::recursive_mutex > lock( positionMutex );
         updatePosition( Position::Extended );
-        roficomConnection.connectToNearby();
+        roficomConnection.connectToNearbyRequest();
     }
     else
     {
@@ -108,9 +114,8 @@ void RoFICoMPlugin::disconnect()
     }
 
     updatePosition( Position::Retracting );
-    roficomConnection.disconnect();
+    roficomConnection.disconnectRequest();
     retract();
-    assert( !isConnected() );
 }
 
 void RoFICoMPlugin::sendPacket( const rofi::messages::Packet & packet )

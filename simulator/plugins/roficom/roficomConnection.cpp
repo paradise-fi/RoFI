@@ -25,35 +25,67 @@ void RoficomConnection::load( RoFICoMPlugin & roficomPlugin,
 
     _pubToOther = _node->Advertise< rofi::messages::Packet >( "~/packets" );
     assert( _pubToOther );
+
+    auto attachEventPath = "/gazebo/" + _model->GetWorld()->Name() + "/attach_event";
+    _pubAttachEvent = _node->Advertise< rofi::messages::ConnectorAttachInfo >( attachEventPath );
+    assert( _pubAttachEvent );
+    gzmsg << "Advertising on topic: " << _pubAttachEvent->GetTopic() << "\n";
+
+    _subAttachEvent = _node->Subscribe( "~/attach_event", &RoficomConnection::onAttachEvent, this );
+    assert( _subAttachEvent );
 }
 
 bool RoficomConnection::isConnected() const
 {
     bool connected = getOrientation().has_value();
+    assert( connected == !_connectedToName.empty() );
     assert( connected == bool( _connectedTo ) );
     assert( connected == bool( _subToOther ) );
-
-    // TODO checks
 
     return connected;
 }
 
-void RoficomConnection::disconnect()
+void RoficomConnection::connectRequest( physics::ModelPtr other,
+                                        RoficomConnection::Orientation orientation )
 {
     assert( _model );
+    assert( _pubAttachEvent );
+    assert( other );
 
-    if ( _subToOther )
+    if ( isConnected() )
     {
-        _subToOther->Unsubscribe();
-        _subToOther.reset();
+        return;
     }
 
-    // TODO disconnect
+    rofi::messages::ConnectorAttachInfo msg;
+    msg.set_modelname1( _model->GetName() );
+    msg.set_modelname2( other->GetName() );
+    msg.set_attach( true );
+    msg.set_orientation( orientation );
 
-    _orientation = {};
-    _connectedTo = {};
+    gzmsg << "Publishing to " << _pubAttachEvent->GetTopic() << "\n";
+    gzmsg << "Message\n" << msg.DebugString() << "\n";
+    _pubAttachEvent->Publish( msg, true );
+}
 
-    assert( !isConnected() );
+void RoficomConnection::disconnectRequest()
+{
+    assert( _model );
+    assert( _pubAttachEvent );
+
+    if ( !isConnected() )
+    {
+        return;
+    }
+
+    assert( _connectedTo );
+
+    rofi::messages::ConnectorAttachInfo msg;
+    msg.set_modelname1( _model->GetName() );
+    msg.set_modelname1( _connectedTo->GetName() );
+    msg.set_attach( false );
+
+    _pubAttachEvent->Publish( msg, true );
 }
 
 void RoficomConnection::sendPacket( const rofi::messages::Packet & packet )
@@ -76,61 +108,115 @@ void RoficomConnection::onPacket( const RoficomConnection::PacketPtr & packet )
     _roficomPlugin->onPacket( *packet );
 }
 
-void RoficomConnection::connect( physics::ModelPtr other,
-                                 RoficomConnection::Orientation orientation )
+void RoficomConnection::onAttachEvent( const RoficomConnection::AttachInfoPtr & attachInfo )
+{
+    std::string otherRoficomName;
+    if ( _model->GetName() == attachInfo->modelname1() )
+    {
+        otherRoficomName = attachInfo->modelname2();
+    }
+    else if ( _model->GetName() == attachInfo->modelname2() )
+    {
+        otherRoficomName = attachInfo->modelname1();
+    }
+    else
+    {
+        gzwarn << "Roficom not one of attached/dettached roficoms\n";
+        return;
+    }
+
+    if ( attachInfo->attach() )
+    {
+        onConnectEvent( otherRoficomName, attachInfo->orientation() );
+    }
+    else
+    {
+        onDisconnectEvent( otherRoficomName );
+    }
+}
+
+void RoficomConnection::onConnectEvent( const std::string & otherRoficomName,
+                                        RoficomConnection::Orientation orientation )
 {
     assert( _model );
-    assert( other );
 
-    gzmsg << "Connecting RoFICoM " << _model->GetScopedName() << " to " << other->GetScopedName()
-          << "\n";
+    auto otherRoficom = _model->GetWorld()->ModelByName( otherRoficomName );
+    if ( !otherRoficom )
+    {
+        gzerr << "Could not find model " << otherRoficomName << "\n";
+        return;
+    }
+    if ( !isRoFICoM( otherRoficom ) )
+    {
+        gzerr << "Model " << otherRoficom->GetScopedName() << " (got name: " << otherRoficomName
+              << ") is not RoFICoM\n";
+        return;
+    }
 
+    if ( isConnected() )
+    {
+        disconnect();
+    }
+
+    _connectedToName = otherRoficomName;
+    _connectedTo = std::move( otherRoficom );
     _orientation = orientation;
 
-    // TODO connect to other
+    startCommunication( _connectedTo );
 
-    startCommunication( other );
+    gzmsg << "Connected RoFICoM " << _model->GetScopedName() << " to "
+          << _connectedTo->GetScopedName() << "\n";
 
     assert( isConnected() );
+}
+
+void RoficomConnection::onDisconnectEvent( const std::string & otherRoficomName )
+{
+    if ( !isConnected() )
+    {
+        gzerr << "Disconnecting, but wasn't connected\n";
+        return;
+    }
+
+    if ( otherRoficomName != _connectedToName )
+    {
+        gzerr << "Should disconnect with " << otherRoficomName << ", but was connected to "
+              << _connectedToName << "\n";
+        return;
+    }
+
+    disconnect();
+    assert( !isConnected() );
+}
+
+void RoficomConnection::disconnect()
+{
+    assert( _model );
+
+    if ( _subToOther )
+    {
+        _subToOther->Unsubscribe();
+        _subToOther = {};
+    }
+
+    _orientation = {};
+    _connectedToName = {};
+    _connectedTo = {};
+
+    assert( !isConnected() );
 }
 
 void RoficomConnection::startCommunication( physics::ModelPtr otherModel )
 {
     assert( _roficomPlugin );
     assert( otherModel );
-    assert( !_subToOther && "already has subsriber" );
+    assert( !_subToOther );
 
     auto path = "/gazebo/" + getElemPath( otherModel ) + "/packets";
     _subToOther = _node->Subscribe( path, &RoficomConnection::onPacket, this );
 }
 
-void RoficomConnection::checkConnection( RoFICoMPosition position )
-{
-    if ( !isConnected() )
-    {
-        // TODO detection if someone connected to me
-        return;
-    }
-
-    if ( position == RoFICoMPosition::Extended || position == RoFICoMPosition::Extending )
-    {
-        if ( false /* TODO Connection does not last */ )
-        {
-            disconnect();
-            assert( !isConnected() );
-            return;
-        }
-    }
-
-    if ( position == RoFICoMPosition::Retracted || position == RoFICoMPosition::Retracting )
-    {
-        disconnect();
-        assert( !isConnected() );
-        return;
-    }
-}
-
-void RoficomConnection::connectToNearby()
+void RoficomConnection::connectToNearbyRequest()
 {
     assert( _model );
 
@@ -148,7 +234,7 @@ void RoficomConnection::connectToNearby()
     {
         std::lock_guard< std::recursive_mutex > lock( RoFICoMPlugin::positionMutex );
 
-        assert( RoFICoMPlugin::positionsMap[ _model.get() ] == RoFICoMPosition::Extended );
+        assert( RoFICoMPlugin::getOtherPosition( _model ) == RoFICoMPosition::Extended );
 
         for ( auto pair : RoFICoMPlugin::positionsMap )
         {
@@ -177,7 +263,7 @@ void RoficomConnection::connectToNearby()
     if ( orientation )
     {
         assert( otherRoficom );
-        connect( otherRoficom, *orientation );
+        connectRequest( otherRoficom, *orientation );
     }
 }
 
@@ -196,14 +282,7 @@ std::optional< RoficomConnection::Orientation > RoficomConnection::canBeConnecte
     assert( otherInnerLink );
     assert( thisInnerLink != otherInnerLink );
 
-    /* TODO check other's position
-        assert( position == Position::Extended );
-
-        if ( getOtherPosition( otherInnerLink->GetModel() ) != Position::Extended )
-        {
-            return {};
-        }
-    */
+    assert( RoFICoMPlugin::getOtherPosition( roficom ) == RoFICoMPosition::Extended );
 
     return canRoficomBeConnected( thisInnerLink->WorldPose(), otherInnerLink->WorldPose() );
 }

@@ -27,22 +27,17 @@ The simulation consists of two parts. The server and the client (or clients.)
 
 ### Server
 
-To use RoFI models and plugins, correct Gazebo paths have to be set up. To
-ease this step, you can run `make run` which will set them and runs gazebo
-server (with empty world). Alternatively you can run
-`./runGazebo.sh [GAZEBO_ARGS]`. If you want to see messages from gazebo,
-make sure to use `--verbose`. For more details about arguments for gazebo
-run `gazebo -h`, or `./runGazebo.sh -h`.
+To use RoFI models and plugins, correct Gazebo paths have to be set up.
+To ease this step, you can run `make run` which will set them
+and runs gazebo server (with world defaulting to `empty.world`).
+Alternatively you can run `./runGazebo.sh [GAZEBO_ARGS] <world_file>`.
+If you want to see messages from gazebo, make sure to use `--verbose`.
+For more details about arguments for gazebo run `gazebo -h`,
+or `./runGazebo.sh -h`.
 
-To run a concrete world, run:
-
-```
-./runGazebo.sh --verbose <world_file>
-```
-
-_Note:_ When running gazebo server with a world file, I get a lot of error from
-`World.cc:190`, but the simulation seems to load everything and seems to work
-properly.
+_Note:_ When running gazebo server with a world file with RoFI modules,
+I get a lot of error from `World.cc:190`,
+but the simulation seems to load everything and seems to work properly.
 
 In Gazebo you can add models and control the simulation. Read more about the
 Gazebo GUI in [the official
@@ -100,4 +95,3 @@ for our purposes.
 Another usefull tutorials:
 - [Custom messages](http://gazebosim.org/tutorials?tut=custom_messages&cat=transport)
 - [SDF format specification](http://sdformat.org/spec)
-

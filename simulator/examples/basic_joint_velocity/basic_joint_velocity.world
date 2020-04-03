@@ -14,6 +14,9 @@
       <uri>model://universalModule</uri>
     </include>
 
+    <!-- Attacher plugin -->
+    <plugin name="attacher" filename="libattacherPlugin.so" />
+
     <!-- World state -->
     <state world_name='default'>
       <model name='universalModule'>

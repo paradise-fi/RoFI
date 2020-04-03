@@ -25,6 +25,7 @@ set (msgs
     joint/jointSetVelocityCmd.proto
     joint/jointSetTorqueCmd.proto
 
+    connector/connectorAttachInfo.proto
     connector/connectorCmd.proto
     connector/connectorResp.proto
     connector/connectorPacket.proto
