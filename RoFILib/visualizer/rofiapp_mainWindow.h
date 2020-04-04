@@ -1,5 +1,5 @@
-#ifndef ROFIAPPMAINWINDOW_H
-#define ROFIAPPMAINWINDOW_H
+#ifndef ROFIAPP_MAINWINDOW_H
+#define ROFIAPP_MAINWINDOW_H
 
 #include <vtkSmartPointer.h>
 #include <vtkSphereSource.h>
@@ -11,16 +11,16 @@
 #include <QMainWindow>
 
 namespace Ui {
-class RofiappMainWindow;
+class Rofiapp_MainWindow;
 }
 
-class RofiappMainWindow : public QMainWindow
+class Rofiapp_MainWindow : public QMainWindow
 {
     Q_OBJECT
 
 public:
-    explicit RofiappMainWindow(QWidget *parent = nullptr);
-    ~RofiappMainWindow();
+    explicit Rofiapp_MainWindow(QWidget *parent = nullptr);
+    ~Rofiapp_MainWindow();
 
 private slots:
     void on_pushButton_2_clicked();
@@ -29,7 +29,7 @@ private slots:
     void on_pushButton_3_clicked();
 
 private:
-    Ui::RofiappMainWindow *ui;
+    Ui::Rofiapp_MainWindow *ui;
     float bckgValue;
     bool fullScreen;
 
@@ -43,4 +43,4 @@ private:
 
 };
 
-#endif // ROFIAPPMAINWINDOW_H
+#endif // ROFIAPP_MAINWINDOW_H

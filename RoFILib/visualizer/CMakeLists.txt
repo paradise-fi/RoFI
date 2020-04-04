@@ -22,7 +22,7 @@ if(Qt5_FOUND)
   set(CMAKE_AUTOUIC ON)
 
   add_executable(rofi-app
-    rofiappmainwindow.cpp rofiapp.cpp ${modelResources} )
+    rofiapp_mainWindow.cpp rofiapp.cpp ${modelResources} )
     
   target_link_libraries(rofi-app
     Qt5::Widgets configuration atoms cxxopts ${VTK_LIBRARIES})

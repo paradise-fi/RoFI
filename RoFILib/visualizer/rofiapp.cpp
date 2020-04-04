@@ -1,4 +1,4 @@
-#include "rofiappmainwindow.h"
+#include "rofiapp_mainWindow.h"
 #include <QApplication>
 
 
@@ -13,7 +13,7 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    RofiappMainWindow w;
+    Rofiapp_MainWindow w;
 
 
 // widget.resize( 256, 256 );

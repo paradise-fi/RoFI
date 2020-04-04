@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>RofiappMainWindow</class>
- <widget class="QMainWindow" name="RofiappMainWindow">
+ <class>Rofiapp_MainWindow</class>
+ <widget class="QMainWindow" name="Rofiapp_MainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -132,7 +132,7 @@
   <connection>
    <sender>pushButton</sender>
    <signal>clicked()</signal>
-   <receiver>RofiappMainWindow</receiver>
+   <receiver>Rofiapp_MainWindow</receiver>
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
@@ -148,7 +148,7 @@
   <connection>
    <sender>actionQuit</sender>
    <signal>triggered()</signal>
-   <receiver>RofiappMainWindow</receiver>
+   <receiver>Rofiapp_MainWindow</receiver>
    <slot>close()</slot>
    <hints>
     <hint type="sourcelabel">
