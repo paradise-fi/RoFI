@@ -1,9 +1,9 @@
-#include "rofiappmainwindow.h"
-#include "ui_rofiappmainwindow.h"
+#include "rofiapp_mainWindow.h"
+#include "ui_rofiapp_mainWindow.h"
 
-RofiappMainWindow::RofiappMainWindow(QWidget *parent) :
+Rofiapp_MainWindow::Rofiapp_MainWindow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::RofiappMainWindow)
+    ui(new Ui::Rofiapp_MainWindow)
 {
     ui->setupUi(this);
     bckgValue = 1.0;
@@ -23,19 +23,19 @@ RofiappMainWindow::RofiappMainWindow(QWidget *parent) :
 
 }
 
-RofiappMainWindow::~RofiappMainWindow()
+Rofiapp_MainWindow::~Rofiapp_MainWindow()
 {
     delete ui;
 }
 
-void RofiappMainWindow::on_pushButton_2_clicked()
+void Rofiapp_MainWindow::on_pushButton_2_clicked()
 {
     ui->qvtkWidget->hide();
     renderer->AddActor( sphereActor );
     ui->qvtkWidget->show();
 }
 
-void RofiappMainWindow::on_pushButton_4_clicked()
+void Rofiapp_MainWindow::on_pushButton_4_clicked()
 {
     bckgValue -= 0.1;
     if (bckgValue < 0.5) { bckgValue = 1.0; }
@@ -43,7 +43,7 @@ void RofiappMainWindow::on_pushButton_4_clicked()
     ui->qvtkWidget->update();
 }
 
-void RofiappMainWindow::on_pushButton_3_clicked()
+void Rofiapp_MainWindow::on_pushButton_3_clicked()
 {
     if (not fullScreen) {
         this->showFullScreen();
