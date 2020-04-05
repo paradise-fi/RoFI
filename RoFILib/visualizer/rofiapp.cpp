@@ -1,7 +1,6 @@
 #include "rofiapp_mainWindow.h"
 #include <QApplication>
 
-
 #include <vtkSmartPointer.h>
 #include <vtkSphereSource.h>
 #include <vtkPolyDataMapper.h>
@@ -11,7 +10,7 @@
 
 
 int main(int argc, char *argv[])
-{
+{    
     QApplication a(argc, argv);
     Rofiapp_MainWindow w;
 
