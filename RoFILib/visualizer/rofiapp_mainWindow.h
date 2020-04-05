@@ -7,6 +7,7 @@
 #include <vtkActor.h>
 #include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
+#include <vtkProperty.h>
 
 #include <vtkRenderWindowInteractor.h>
 #include <vtkProperty.h>
@@ -69,7 +70,8 @@ private:
     vtkSmartPointer<vtkPolyDataMapper> sphereMapper;
     vtkSmartPointer<vtkActor> sphereActor;
 
-    /* Renderer, camera, addedActorsList */
+    vtkSmartPointer<vtkRenderWindow> renderWindow;
+
     vtkSmartPointer<vtkRenderer> renderer;
     vtkSmartPointer<vtkCamera> camera;
     QList<vtkSmartPointer<vtkActor>> *addedActorsList;

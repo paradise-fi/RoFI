@@ -42,14 +42,20 @@ Rofiapp_MainWindow::Rofiapp_MainWindow(QWidget *parent) :
     sphereMapper->SetInputConnection( sphereSource->GetOutputPort() );
 
     sphereActor = vtkSmartPointer<vtkActor>::New();
+    sphereActor->GetProperty()->SetFrontfaceCulling(true);
     sphereActor->SetMapper( sphereMapper );
 
     /* Fresh Renderer */
+    renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
     renderer = vtkSmartPointer<vtkRenderer>::New();
+    renderWindow->AddRenderer(renderer);
+    ui->qvtkWidget->SetRenderWindow(renderWindow);
+
     renderer->SetBackground(bckgValue, bckgValue, 1.0);
+
     vtkSmartPointer<vtkCamera> camera = vtkSmartPointer<vtkCamera>::New();
-    ui->qvtkWidget->GetRenderWindow()->AddRenderer( renderer );
     renderer->SetActiveCamera(camera);
+
     addedActorsList = new QList<vtkSmartPointer<vtkActor>>;
 
     connect(ui->actionShow_sphere, SIGNAL(triggered()), this, SLOT(showSphere()));
@@ -71,6 +77,7 @@ void Rofiapp_MainWindow::showSphere()
     addedActorsList->clear();
     renderer->AddActor( sphereActor );
     addedActorsList->append( sphereActor );
+    renderer->ResetCamera();
     ui->qvtkWidget->update();
     ui->resetCamera->setEnabled(false);
 }
@@ -166,14 +173,10 @@ void Rofiapp_MainWindow::addActor(const std::string &model, const Matrix &matrix
     // vtkOBJReader is locale sensitive!
     std::locale currentLocale;
     currentLocale = std::locale::global(std::locale::classic());
-
-    vtkSmartPointer<vtkOBJReader> reader =
-            vtkSmartPointer<vtkOBJReader>::New();
+    vtkSmartPointer<vtkOBJReader> reader = vtkSmartPointer<vtkOBJReader>::New();
     reader->SetFileName( getModel(model).c_str() );
     reader->Update();
-
     std::locale::global(currentLocale);
-
 
     vtkSmartPointer<vtkTransform> rotation = vtkSmartPointer<vtkTransform>::New();
     rotation->SetMatrix( convertMatrix(matrix) );
@@ -182,18 +185,17 @@ void Rofiapp_MainWindow::addActor(const std::string &model, const Matrix &matrix
     filter->SetTransform( rotation );
     filter->SetInputConnection( reader->GetOutputPort() );
 
-
     vtkSmartPointer<vtkPolyDataMapper> frameMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
     frameMapper->SetInputConnection(filter->GetOutputPort());
 
     vtkSmartPointer<vtkActor> frameActor = vtkSmartPointer<vtkActor>::New();
+    frameActor->GetProperty()->SetColor(colors[color][0]/256.0, colors[color][1]/256.0 , colors[color][2]/256.0);
+    frameActor->GetProperty()->SetFrontfaceCulling(true);
     frameActor->SetMapper(frameMapper);
     frameActor->SetPosition( matrix(0,3), matrix(1,3), matrix(2,3) );
     frameActor->SetScale( 1 / 95.0 );
-//	frameActor->SetUserTransform( rotation );
-    frameActor->GetProperty()->SetColor(colors[color][0]/256.0, colors[color][1]/256.0 , colors[color][2]/256.0);
 
-    renderer->AddActor(frameActor);
+    renderer->AddActor( frameActor );
     addedActorsList->append( frameActor );
 }
 
