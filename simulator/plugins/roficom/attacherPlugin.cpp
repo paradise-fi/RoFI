@@ -215,7 +215,7 @@ void AttacherPlugin::sendAttachInfoToOne( std::string modelname1,
     rofi::messages::ConnectorAttachInfo msg;
     msg.set_modelname1( std::move( modelname1 ) );
     msg.set_modelname2( std::move( modelname2 ) );
-    msg.set_attach( true );
+    msg.set_attach( attach );
     msg.set_orientation( orientation );
 
     auto model1 = _world->ModelByName( msg.modelname1() );
@@ -223,7 +223,7 @@ void AttacherPlugin::sendAttachInfoToOne( std::string modelname1,
 
     auto path = "/gazebo/" + getElemPath( model1 ) + "/attach_event";
     gzmsg << "Publishing attach info on path '" << path << "'\n";
-    _node->Publish( path, msg );
+    _node->Publish< rofi::messages::ConnectorAttachInfo >( path, msg );
 }
 
 void AttacherPlugin::attach_event_callback( const AttacherPlugin::ConnectorAttachInfoPtr & msg )

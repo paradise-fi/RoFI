@@ -64,7 +64,7 @@ void RoficomConnection::connectRequest( physics::ModelPtr other,
     msg.set_orientation( orientation );
 
     gzmsg << "Publishing to " << _pubAttachEvent->GetTopic() << "\n"; // TODO remove
-    gzmsg << "Message\n" << msg.DebugString() << "\n"; // TODO remove
+    gzmsg << "Message\n" << msg.DebugString() << "\n";                // TODO remove
     _pubAttachEvent->Publish( msg, true );
 }
 
