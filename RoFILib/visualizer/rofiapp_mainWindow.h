@@ -63,7 +63,7 @@ private:
     float bckgValue;
     bool fullScreen;
 
-    Configuration current_cfg;
+    Configuration *current_cfg;
 
     /* Sphere */
     vtkSmartPointer<vtkSphereSource> sphereSource;

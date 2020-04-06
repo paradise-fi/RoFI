@@ -28,7 +28,6 @@ Matrix dockMatrix(ConnectorId dock, bool on, double onCoeff = -1)
     return docks[dock];
 }
 
-
 Rofiapp_MainWindow::Rofiapp_MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::Rofiapp_MainWindow)
@@ -36,6 +35,8 @@ Rofiapp_MainWindow::Rofiapp_MainWindow(QWidget *parent) :
     ui->setupUi(this);
     bckgValue = 0.9;
     fullScreen = false;
+
+    current_cfg = new Configuration();
 
     sphereSource = vtkSmartPointer<vtkSphereSource>::New();
     sphereMapper = vtkSmartPointer<vtkPolyDataMapper>::New();
@@ -49,6 +50,7 @@ Rofiapp_MainWindow::Rofiapp_MainWindow(QWidget *parent) :
     renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
     renderer = vtkSmartPointer<vtkRenderer>::New();
     renderWindow->AddRenderer(renderer);
+
     ui->qvtkWidget->SetRenderWindow(renderWindow);
 
     renderer->SetBackground(bckgValue, bckgValue, 1.0);
@@ -100,7 +102,6 @@ void Rofiapp_MainWindow::toggleFullScreen()
     fullScreen = not fullScreen;
 }
 
-
 void Rofiapp_MainWindow::on_loadConf_clicked()
 {
     QString fileName =  QFileDialog::getOpenFileName(
@@ -128,7 +129,6 @@ void Rofiapp_MainWindow::on_loadConf_clicked()
         ui->resetCamera->setEnabled(true);
     }
  }
-
 
 inline vtkSmartPointer<vtkMatrix4x4> convertMatrix( const Matrix& m )
 {
@@ -166,7 +166,6 @@ std::filesystem::path Rofiapp_MainWindow::getModel( const std::string& model ) {
     throw std::runtime_error( "Invalid model '" + model + "' requested" );
 }
 
-
 void Rofiapp_MainWindow::addActor(const std::string &model, const Matrix &matrix, int color)
 {
 
@@ -189,9 +188,11 @@ void Rofiapp_MainWindow::addActor(const std::string &model, const Matrix &matrix
     frameMapper->SetInputConnection(filter->GetOutputPort());
 
     vtkSmartPointer<vtkActor> frameActor = vtkSmartPointer<vtkActor>::New();
-    frameActor->GetProperty()->SetColor(colors[color][0]/256.0, colors[color][1]/256.0 , colors[color][2]/256.0);
-    frameActor->GetProperty()->SetFrontfaceCulling(true);
     frameActor->SetMapper(frameMapper);
+    frameActor->GetProperty()->SetColor(colors[color][0]/256.0, colors[color][1]/256.0 , colors[color][2]/256.0);
+    frameActor->GetProperty()->SetOpacity(1.0);
+    frameActor->GetProperty()->SetFrontfaceCulling(true);
+    frameActor->GetProperty()->SetBackfaceCulling(true);
     frameActor->SetPosition( matrix(0,3), matrix(1,3), matrix(2,3) );
     frameActor->SetScale( 1 / 95.0 );
 
@@ -204,28 +205,25 @@ void Rofiapp_MainWindow::on_showConf_clicked()
     QString lineContents="";
     lineContents = ui->configTextWindow->toPlainText();
 
+    delete current_cfg;
+    current_cfg = new Configuration();
+
     std::istringstream iStream(lineContents.toStdString());
-    if (!IO::readConfiguration(iStream, current_cfg)) {
+    if (!IO::readConfiguration(iStream, *current_cfg)) {
         return;
     }
-
 
     for (QList<vtkSmartPointer<vtkActor>>::iterator i = addedActorsList->begin(); i != addedActorsList->end(); i++) {
         renderer->RemoveActor( *i );
     }
     addedActorsList->clear();
 
-    //qDebug("Test1");
-
-    current_cfg.computeMatrices();
-
-    //qDebug("Test2");
-
-    for ( const auto& [id, matrices] : current_cfg.getMatrices())
+    current_cfg->computeMatrices();
+    for ( const auto& [id, matrices] : current_cfg->getMatrices())
     {
         int color =  id % 7 + 3;
-        const Module& mod = current_cfg.getModules().at(id);
-        EdgeList edges = current_cfg.getEdges().at(id);
+        const Module& mod = current_cfg->getModules().at(id);
+        EdgeList edges = current_cfg->getEdges().at(id);
         for (ShoeId s : {A, B})
         {
             Joint j = s == A ? Alpha : Beta;
@@ -242,25 +240,19 @@ void Rofiapp_MainWindow::on_showConf_clicked()
     }
 
     camera = renderer -> GetActiveCamera();
-    Vector massCenter = current_cfg.massCenter();
+    Vector massCenter = current_cfg->massCenter();
     camera->SetFocalPoint(massCenter(0), massCenter(1), massCenter(2));
     camera->SetPosition(massCenter(0), massCenter(1) - 6, massCenter(2));
     camera->SetViewUp(0,0,1);
+    ui->resetCamera->setEnabled(true);
 
-
-    //qDebug("Test3");
-
-    ui->qvtkWidget->GetRenderWindow()->Render();
     ui->qvtkWidget->update();
-
-    //qDebug("Test4");
-
 }
 
 void Rofiapp_MainWindow::on_resetCamera_clicked()
 {
     camera = renderer -> GetActiveCamera();
-    Vector massCenter = current_cfg.massCenter();
+    Vector massCenter = current_cfg->massCenter();
     camera->SetFocalPoint(massCenter(0), massCenter(1), massCenter(2));
     camera->SetPosition(massCenter(0), massCenter(1) - 6, massCenter(2));
     camera->SetViewUp(0,0,1);
