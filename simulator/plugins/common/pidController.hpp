@@ -10,6 +10,9 @@
 #include "pidLoader.hpp"
 #include "utils.hpp"
 
+#include <gazebo/transport/transport.hh>
+#include <jointCmd.pb.h>
+
 namespace gazebo
 {
 enum class PidControlType
@@ -23,6 +26,8 @@ class ForceController
 {
 protected:
     JointDataBase & _jointData;
+    transport::NodePtr _node;
+    transport::PublisherPtr _pub;
 
 private:
     double _targetForce = 0;
@@ -47,6 +52,12 @@ public:
     ForceController( JointDataBase & jointData ) : _jointData( jointData )
     {
         assert( _jointData );
+
+        _node = boost::make_shared< transport::Node >();
+        assert( _node );
+        _node->Init( _jointData.joint->GetScopedName() );
+
+        _pub = _node->Advertise< rofi::messages::PIDDebug >( "~/pid_values" );
     }
 
     void forcePhysicsUpdate()
@@ -68,6 +79,10 @@ public:
         assert( _targetForce <= _jointData.maxEffort );
         assert( _targetForce >= -_jointData.maxEffort );
         _jointData.joint->SetForce( 0, _targetForce );
+
+        rofi::messages::PIDDebug msg;
+        msg.set_outputfromforce( _targetForce );
+        _pub->Publish( msg );
     }
 
     void setTargetForce( double targetForce )
@@ -153,6 +168,16 @@ public:
         assert( _lastForce >= -_jointData.maxEffort );
 
         _jointData.joint->SetForce( 0, _lastForce );
+
+        double p, i, d;
+        _velController.GetErrors( p, i, d );
+        rofi::messages::PIDDebug msg;
+        msg.set_velocityerror( linearError );
+        msg.set_outputfromvelocity( _lastForce );
+        msg.set_velperror( p );
+        msg.set_velierror( i );
+        msg.set_velderror( d );
+        _pub->Publish( msg );
     }
 
     void resetVelocityPID( PidControlType lastControlType )
@@ -281,6 +306,16 @@ public:
 
         VelocityPIDController::setTargetVelocity( velocity, std::nullopt );
         VelocityPIDController::velPhysicsUpdate< false >();
+
+        double p, i, d;
+        _posController.GetErrors( p, i, d );
+        rofi::messages::PIDDebug msg;
+        msg.set_positionerror( linearError );
+        msg.set_outputfromposition( velocity );
+        msg.set_posperror( p );
+        msg.set_posierror( i );
+        msg.set_posderror( d );
+        _pub->Publish( msg );
     }
 
     void resetPositionPID( PidControlType lastControlType )

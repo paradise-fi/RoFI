@@ -28,3 +28,17 @@ message JointCmd {
     JointSetVelocityCmd setVelocity = 3;
     JointSetTorqueCmd setTorque = 5;
 }
+
+message PIDDebug {
+    double positionError = 2;
+    double velocityError = 3;
+    double outputFromPosition = 4;
+    double outputFromVelocity = 5;
+    double outputFromForce = 6;
+    double posPError = 7;
+    double posIError = 8;
+    double posDError = 9;
+    double velPError = 10;
+    double velIError = 11;
+    double velDError = 12;
+}
