@@ -3,6 +3,7 @@
 #include <fstream>
 #include <filesystem>
 #include <cstdlib>
+#include <cstring>
 
 // There are some APIs (e.g. VTK) which can load resources only from files. This
 // APIs prevent embedding the resources. ResourceManage and ResourceFile help to
