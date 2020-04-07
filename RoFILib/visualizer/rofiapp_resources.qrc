@@ -1,0 +1,5 @@
+<RCC>
+    <qresource lang="English" prefix="/rofiapp">
+        <file>rofi-logo-2row-black.svg</file>
+    </qresource>
+</RCC>
