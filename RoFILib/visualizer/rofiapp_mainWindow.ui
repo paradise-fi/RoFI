@@ -19,6 +19,10 @@
   <property name="windowTitle">
    <string>RoFI User Application</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="rofiapp_resources.qrc">
+    <normaloff>:/rofiapp/rofi-icona.png</normaloff>:/rofiapp/rofi-icona.png</iconset>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <property name="sizePolicy">
     <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
