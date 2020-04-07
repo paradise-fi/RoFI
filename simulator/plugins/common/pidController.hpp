@@ -11,7 +11,7 @@
 #include "utils.hpp"
 
 #include <gazebo/transport/transport.hh>
-#include <jointCmd.pb.h>
+#include "utils.hpp"
 
 namespace gazebo
 {
@@ -27,7 +27,11 @@ class ForceController
 protected:
     JointDataBase & _jointData;
     transport::NodePtr _node;
-    transport::PublisherPtr _pub;
+    transport::PublisherPtr _pubForce;
+    transport::PublisherPtr _pubVelocity;
+    transport::PublisherPtr _pubPosition;
+    transport::PublisherPtr _pubVelError;
+    transport::PublisherPtr _pubPosError;
 
 private:
     double _targetForce = 0;
@@ -55,9 +59,13 @@ public:
 
         _node = boost::make_shared< transport::Node >();
         assert( _node );
-        _node->Init( _jointData.joint->GetScopedName() );
+        _node->Init( getElemPath( _jointData.joint ) );
 
-        _pub = _node->Advertise< rofi::messages::PIDDebug >( "~/pid_values" );
+        _pubForce = _node->Advertise< msgs::Vector2d >( "~/pid_values/force" );
+        _pubVelocity = _node->Advertise< msgs::Vector2d >( "~/pid_values/velocity" );
+        _pubPosition = _node->Advertise< msgs::Vector2d >( "~/pid_values/position" );
+        _pubVelError = _node->Advertise< msgs::Vector3d >( "~/pid_values/vel_error" );
+        _pubPosError = _node->Advertise< msgs::Vector3d >( "~/pid_values/pos_error" );
     }
 
     void forcePhysicsUpdate()
@@ -80,9 +88,10 @@ public:
         assert( _targetForce >= -_jointData.maxEffort );
         _jointData.joint->SetForce( 0, _targetForce );
 
-        rofi::messages::PIDDebug msg;
-        msg.set_outputfromforce( _targetForce );
-        _pub->Publish( msg );
+        msgs::Vector2d msg;
+        msg.set_x( _targetForce ); // Force set (Input == Output)
+        msg.set_y( _targetForce ); // Force set (Input == Output)
+        _pubForce->Publish( msg );
     }
 
     void setTargetForce( double targetForce )
@@ -169,15 +178,18 @@ public:
 
         _jointData.joint->SetForce( 0, _lastForce );
 
+        msgs::Vector2d msg;
+        msg.set_x( linearError ); // Input
+        msg.set_y( _lastForce ); // Output
+        _pubVelocity->Publish( msg );
+
         double p, i, d;
         _velController.GetErrors( p, i, d );
-        rofi::messages::PIDDebug msg;
-        msg.set_velocityerror( linearError );
-        msg.set_outputfromvelocity( _lastForce );
-        msg.set_velperror( p );
-        msg.set_velierror( i );
-        msg.set_velderror( d );
-        _pub->Publish( msg );
+        msgs::Vector3d msgError;
+        msgError.set_x( p );
+        msgError.set_y( i );
+        msgError.set_z( d );
+        _pubVelError->Publish( msgError );
     }
 
     void resetVelocityPID( PidControlType lastControlType )
@@ -307,15 +319,18 @@ public:
         VelocityPIDController::setTargetVelocity( velocity, std::nullopt );
         VelocityPIDController::velPhysicsUpdate< false >();
 
+        msgs::Vector2d msg;
+        msg.set_x( linearError ); // Input
+        msg.set_y( velocity ); // Output
+        _pubPosition->Publish( msg );
+
         double p, i, d;
         _posController.GetErrors( p, i, d );
-        rofi::messages::PIDDebug msg;
-        msg.set_positionerror( linearError );
-        msg.set_outputfromposition( velocity );
-        msg.set_posperror( p );
-        msg.set_posierror( i );
-        msg.set_posderror( d );
-        _pub->Publish( msg );
+        msgs::Vector3d msgError;
+        msgError.set_x( p );
+        msgError.set_y( i );
+        msgError.set_z( d );
+        _pubPosError->Publish( msgError );
     }
 
     void resetPositionPID( PidControlType lastControlType )
