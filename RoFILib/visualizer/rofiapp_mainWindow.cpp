@@ -64,6 +64,7 @@ Rofiapp_MainWindow::Rofiapp_MainWindow(QWidget *parent) :
     connect(ui->actionToggle_full_screen, SIGNAL(triggered()), this, SLOT(toggleFullScreen()));
     connect(ui->actionChange_background, SIGNAL(triggered()), this, SLOT(changeBackground()));
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
+    connect(ui->configTextWindow, SIGNAL(textChanged()),this,SLOT(on_configTextWindow_textChanged()));
 }
 
 Rofiapp_MainWindow::~Rofiapp_MainWindow()
@@ -113,20 +114,20 @@ void Rofiapp_MainWindow::on_loadConf_clicked()
     if( !fileName.isNull() ) {
 
         QString lineContents="";
-        QFile* inputFile_f = new QFile(fileName);
-        inputFile_f->open(QIODevice::ReadOnly);
-        QTextStream* inputStream = new QTextStream(inputFile_f);
-        while( !inputStream->atEnd() )
-           {
-              lineContents += inputStream->readLine()+"\n";
-           }
-        ui->configTextWindow->setPlainText(lineContents);
-        inputFile_f->close();
-        delete inputFile_f;
-        delete inputStream;
-
-        this->on_showConf_clicked();
-        ui->resetCamera->setEnabled(true);
+        QFile file(fileName);
+        if (!file.open(QIODevice::ReadOnly)) {
+            QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+        } else {
+            QTextStream inputStream(&file);
+            while( !inputStream.atEnd() )
+               {
+                  lineContents += inputStream.readLine()+"\n";
+               }
+            file.close();
+            ui->configTextWindow->setPlainText(lineContents);
+            this->on_showConf_clicked();
+            ui->resetCamera->setEnabled(true);
+        }
     }
  }
 
@@ -258,4 +259,44 @@ void Rofiapp_MainWindow::on_resetCamera_clicked()
     camera->SetViewUp(0,0,1);
     ui->qvtkWidget->update();
 
+}
+
+void Rofiapp_MainWindow::on_configTextWindow_textChanged()
+{
+
+    aux_cfg = new Configuration;
+    QString lineContents="";
+    lineContents = ui->configTextWindow->toPlainText();
+    std::istringstream iStream(lineContents.toStdString());
+    try {
+        IO::readConfiguration(iStream, *aux_cfg);
+        ui->showConf->setEnabled(true);
+        ui->saveConf->setEnabled(true);
+    } catch (...) {
+        ui->showConf->setEnabled(false);
+        ui->saveConf->setEnabled(false);
+    }
+    delete aux_cfg;
+}
+
+void Rofiapp_MainWindow::on_saveConf_clicked()
+{
+    QString fileName =  QFileDialog::getSaveFileName(
+              this,
+              "Save Configuration File",
+              QDir::currentPath(),
+              "All files (*.*)");
+
+    if( !fileName.isNull() ) {
+        QString lineContents="";
+        lineContents = ui->configTextWindow->toPlainText();
+        QFile file(fileName);
+        if (!file.open(QIODevice::WriteOnly)) {
+            QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+        } else {
+            QTextStream out(&file);
+            out << lineContents;
+            file.close();
+        }
+    }
 }

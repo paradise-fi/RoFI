@@ -26,6 +26,7 @@
 #include <vtkRenderLargeImage.h>
 
 #include <QMainWindow>
+#include <QMessageBox>
 #include <QErrorMessage>
 #include <QFileDialog>
 #include <QDebug>
@@ -57,6 +58,9 @@ private slots:
     void on_loadConf_clicked();
     void on_showConf_clicked();
     void on_resetCamera_clicked();
+    void on_configTextWindow_textChanged();
+
+    void on_saveConf_clicked();
 
 private:
     Ui::Rofiapp_MainWindow *ui;
@@ -64,6 +68,7 @@ private:
     bool fullScreen;
 
     Configuration *current_cfg;
+    Configuration *aux_cfg;
 
     /* Sphere */
     vtkSmartPointer<vtkSphereSource> sphereSource;
