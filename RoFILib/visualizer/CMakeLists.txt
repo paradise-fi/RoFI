@@ -16,16 +16,16 @@ target_include_directories(rofi-vis-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 if(Qt5_FOUND)
-  
+
   set(CMAKE_AUTOMOC ON)
   set(CMAKE_AUTORCC ON)
   set(CMAKE_AUTOUIC ON)
 
   add_executable(rofi-app
-    rofiapp_mainWindow.cpp rofiapp.cpp Camera.h Visualizer.h ${modelResources} )
-    
+    rofiapp_mainWindow.cpp rofiapp.cpp rofiapp_resources.qrc Camera.h Visualizer.h ${modelResources} )
+
   target_link_libraries(rofi-app
     Qt5::Widgets configuration atoms cxxopts ${VTK_LIBRARIES})
-  
+
 endif()
 
