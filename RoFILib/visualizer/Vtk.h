@@ -1,5 +1,7 @@
 #pragma once
 
+// #include <vtkGenericOpenGLRenderWindow.h> // VTK 8.2 and newer
+
 #include <vtkSmartPointer.h>
 #include <vtkSphereSource.h>
 #include <vtkPolyDataMapper.h>

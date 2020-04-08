@@ -13,7 +13,8 @@ Rofiapp_MainWindow::Rofiapp_MainWindow(QWidget *parent) :
 
 
     /* Fresh Renderer */
-    renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
+//    renderWindow = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();   // VTK 8.2 and newer
+    renderWindow = vtkSmartPointer<vtkRenderWindow>::New();                // VTK 7.1 and older
     renderer = vtkSmartPointer<vtkRenderer>::New();
     renderWindow->AddRenderer(renderer);
 
@@ -51,6 +52,7 @@ void Rofiapp_MainWindow::showSphere()
 
     renderer->AddActor( sphereActor );
     renderer->ResetCamera();
+    renderer->Render();
     ui->qvtkWidget->update();
     ui->resetCamera->setEnabled(false);
 }
@@ -60,6 +62,7 @@ void Rofiapp_MainWindow::changeBackground()
     bckgValue -= 0.1;
     if (bckgValue < 0.5) { bckgValue = 1.0; }
     renderer->SetBackground(bckgValue, bckgValue, 1.0);
+    renderer->Render();
     ui->qvtkWidget->update();
 }
 
@@ -132,6 +135,7 @@ void Rofiapp_MainWindow::on_resetCamera_clicked()
     camera->SetPosition(massCenter(0), massCenter(1) - 6, massCenter(2));
     camera->SetViewUp(0,0,1);
 
+    renderer -> Render();
     ui->qvtkWidget->update();
 }
 
