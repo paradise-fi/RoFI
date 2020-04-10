@@ -1,9 +1,4 @@
-cmake_minimum_required(VERSION 3.10)
-
-find_package(gazebo REQUIRED)
-include_directories(${GAZEBO_INCLUDE_DIRS})
-link_directories(${GAZEBO_LIBRARY_DIRS})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${GAZEBO_CXX_FLAGS}")
+cmake_minimum_required(VERSION 3.11)
 
 find_package(Protobuf REQUIRED)
 # Include Gazebo messages
@@ -37,3 +32,4 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${msgs})
 add_library(rofiMessages SHARED ${PROTO_SRCS})
 target_link_libraries(rofiMessages ${PROTOBUF_LIBRARY})
 target_include_directories(rofiMessages INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
+set_target_properties(rofiMessages PROPERTIES COMPILE_FLAGS "-Wno-all -Wno-extra -Wno-pedantic")

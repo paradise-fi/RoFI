@@ -253,7 +253,8 @@ void RoficomConnection::connectToNearbyRequest()
             assert( otherRoficom );
             assert( isRoFICoM( otherRoficom ) );
 
-            if ( orientation = canBeConnected( otherRoficom ) )
+            orientation = canBeConnected( otherRoficom );
+            if ( orientation )
             {
                 break;
             }
