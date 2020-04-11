@@ -1,0 +1,123 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+    <model name='RoFICoM'>
+        <self_collide>false</self_collide>
+        <link name='outer'>
+            <inertial>
+                <pose>0 0 -8e-3 0 0 0</pose>
+                <mass>10e-3</mass> <!-- TODO check -->
+                <inertia>
+                    <!-- ixx = iyy = 1/12 * mass * (3 * radius^2 + length^2) -->
+                    <!-- izz = 0.5 * mass * radius^2 -->
+                    <!-- ixy = ixz = iyz = 0 -->
+                    <ixx>1.775833e-6</ixx>
+                    <iyy>1.775833e-6</iyy>
+                    <izz>3.125e-6</izz>
+                    <ixy>0.0</ixy>
+                    <ixz>0.0</ixz>
+                    <iyz>0.0</iyz>
+                </inertia>
+            </inertial>
+            <collision name='outer-collision'>
+                <pose>0 0 -8e-3 0 0 0</pose>
+                <geometry>
+                    <cylinder>
+                        <radius>25e-3</radius>
+                        <length>17e-3</length>
+                    </cylinder>
+                </geometry>
+            </collision>
+            <visual name='visual'>
+                <pose>0 0 -8e-3 0 0 0</pose>
+                <geometry>
+                    <cylinder>
+                        <radius>25e-3</radius>
+                        <length>17e-3</length>
+                    </cylinder>
+                </geometry>
+                <material>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/DarkGrey</name>
+                    </script>
+                </material>
+            </visual>
+        </link>
+        <link name='inner'>
+            <inertial>
+                <pose>0 0 -3.5e-3 0 0 0</pose>
+                <mass>10e-3</mass> <!-- TODO check -->
+                <inertia>
+                    <!-- ixx = iyy = 1/12 * mass * (3 * radius^2 + length^2) -->
+                    <!-- izz = 0.5 * mass * radius^2 -->
+                    <!-- ixy = ixz = iyz = 0 -->
+                    <ixx>1.3633e-6</ixx>
+                    <iyy>1.3633e-6</iyy>
+                    <izz>2.645e-6</izz>
+                    <ixy>0.0</ixy>
+                    <ixz>0.0</ixz>
+                    <iyz>0.0</iyz>
+                </inertia>
+            </inertial>
+            <collision name='inner-collision'>
+                <pose>0 0 -3.5e-3 0 0 0</pose>
+                <geometry>
+                    <cylinder>
+                        <radius>23e-3</radius>
+                        <length>7e-3</length>
+                    </cylinder>
+                </geometry>
+            </collision>
+            <visual name='visual'>
+                <pose>0 0 -3.5e-3 0 0 0</pose>
+                <geometry>
+                    <cylinder>
+                        <radius>23e-3</radius>
+                        <length>7e-3</length>
+                    </cylinder>
+                </geometry>
+                <material>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/DarkGrey</name>
+                    </script>
+                </material>
+            </visual>
+        </link>
+        <joint name='extendJoint' type='prismatic'>
+            <parent>outer</parent>
+            <child>inner</child>
+            <axis>
+                <xyz>0 0 1</xyz>
+                <limit>
+                    <lower>0</lower>
+                    <upper>7e-3</upper>
+                    <effort>50</effort>
+                    <velocity>25e-3</velocity>
+                </limit>
+                <initial_position>0</initial_position>
+                <dynamics>
+                    <friction>0</friction>
+                    <spring_reference>0</spring_reference>
+                    <spring_stiffness>0</spring_stiffness>
+                </dynamics>
+                <use_parent_model_frame>1</use_parent_model_frame>
+            </axis>
+        </joint>
+        <plugin name='roficom' filename='libroficomPlugin.so'>
+            <controller>
+                <joint>extendJoint</joint>
+                <velocity>
+                    <pid_gains>0.8 200 0.006</pid_gains>
+                    <i_max>1</i_max>
+                    <init_target>24e-3</init_target>
+                </velocity>
+                <position>
+                    <pid_gains>50 0 0</pid_gains>
+                    <i_max>1</i_max>
+                    <init_target>0</init_target>
+                </position>
+            </controller>
+        </plugin>
+    </model>
+</sdf>

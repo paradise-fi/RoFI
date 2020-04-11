@@ -1,0 +1,7 @@
+syntax = "proto3";
+package rofi.messages;
+
+message JointSetPosWithSpeedCmd {
+    float position = 1;
+    float speed = 2;
+}

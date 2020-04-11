@@ -1,0 +1,6 @@
+syntax = "proto3";
+package rofi.messages;
+
+message Packet {
+    bytes message = 1;
+}
