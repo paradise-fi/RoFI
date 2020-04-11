@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cassert>
 #include <limits>
 #include <type_traits>
@@ -7,14 +8,36 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
+#include "lorrisConnector.hpp"
 #include "pidLoader.hpp"
-#include "utils.hpp"
-
-#include <gazebo/transport/transport.hh>
-#include "utils.hpp"
 
 namespace gazebo
 {
+namespace detail
+{
+template < size_t N >
+class Buffer
+{
+    std::array< double, N > _buffer = {};
+    int _pos = 0;
+    double _sum = 0;
+
+public:
+    void update( double value )
+    {
+        auto old = _buffer[ _pos ];
+        _buffer[ _pos ] = value;
+        _sum += ( value - old ) / N;
+        _pos = ( _pos + 1 ) % N;
+    }
+
+    double getAverage() const
+    {
+        return _sum;
+    }
+};
+} // namespace detail
+
 enum class PidControlType
 {
     Force,
@@ -26,12 +49,6 @@ class ForceController
 {
 protected:
     JointDataBase & _jointData;
-    transport::NodePtr _node;
-    transport::PublisherPtr _pubForce;
-    transport::PublisherPtr _pubVelocity;
-    transport::PublisherPtr _pubPosition;
-    transport::PublisherPtr _pubVelError;
-    transport::PublisherPtr _pubPosError;
 
 private:
     double _targetForce = 0;
@@ -56,16 +73,6 @@ public:
     ForceController( JointDataBase & jointData ) : _jointData( jointData )
     {
         assert( _jointData );
-
-        _node = boost::make_shared< transport::Node >();
-        assert( _node );
-        _node->Init( getElemPath( _jointData.joint ) );
-
-        _pubForce = _node->Advertise< msgs::Vector2d >( "~/pid_values/force" );
-        _pubVelocity = _node->Advertise< msgs::Vector2d >( "~/pid_values/velocity" );
-        _pubPosition = _node->Advertise< msgs::Vector2d >( "~/pid_values/position" );
-        _pubVelError = _node->Advertise< msgs::Vector3d >( "~/pid_values/vel_error" );
-        _pubPosError = _node->Advertise< msgs::Vector3d >( "~/pid_values/pos_error" );
     }
 
     void forcePhysicsUpdate()
@@ -87,11 +94,6 @@ public:
         assert( _targetForce <= _jointData.maxEffort );
         assert( _targetForce >= -_jointData.maxEffort );
         _jointData.joint->SetForce( 0, _targetForce );
-
-        msgs::Vector2d msg;
-        msg.set_x( _targetForce ); // Force set (Input == Output)
-        msg.set_y( _targetForce ); // Force set (Input == Output)
-        _pubForce->Publish( msg );
     }
 
     void setTargetForce( double targetForce )
@@ -108,17 +110,8 @@ class VelocityPIDController : public ForceController
     common::PID _velController;
     common::Time _velPrevUpdateTime;
 
+    detail::Buffer< 10 > _velBuffer;
     double _targetVelocity = 0;
-    double _lastForce = 0;
-
-    void updateVelCmdLimits()
-    {
-        assert( _lastForce <= _jointData.maxEffort );
-        assert( _lastForce >= -_jointData.maxEffort );
-
-        _velController.SetCmdMin( _jointData.getLowestEffort() - _lastForce );
-        _velController.SetCmdMax( _jointData.getMaxEffort() - _lastForce );
-    }
 
     bool velocityAtPositionBoundary() const
     {
@@ -168,28 +161,36 @@ public:
         _velPrevUpdateTime = currTime;
         assert( stepTime >= 0 && "time went backwards" );
 
-        double linearError = _jointData.joint->GetVelocity( 0 ) - _targetVelocity;
+        _velBuffer.update( _jointData.joint->GetVelocity( 0 ) );
+        double velocity = _velBuffer.getAverage();
+        double linearError = velocity - _targetVelocity;
 
-        updateVelCmdLimits();
-        _lastForce = _lastForce + _velController.Update( linearError, stepTime );
+        double force = _velController.Update( linearError, stepTime );
+        assert( force <= _jointData.maxEffort );
+        assert( force >= -_jointData.maxEffort );
 
-        assert( _lastForce <= _jointData.maxEffort );
-        assert( _lastForce >= -_jointData.maxEffort );
+        _jointData.joint->SetForce( 0, force );
 
-        _jointData.joint->SetForce( 0, _lastForce );
-
-        msgs::Vector2d msg;
-        msg.set_x( linearError ); // Input
-        msg.set_y( _lastForce ); // Output
-        _pubVelocity->Publish( msg );
-
-        double p, i, d;
-        _velController.GetErrors( p, i, d );
-        msgs::Vector3d msgError;
-        msgError.set_x( p );
-        msgError.set_y( i );
-        msgError.set_z( d );
-        _pubVelError->Publish( msgError );
+        char id = 'C';
+        if ( _jointData.joint->GetName() == "shoeARev" )
+        {
+            id = 'A';
+        }
+        else if ( _jointData.joint->GetName() == "shoeBRev" )
+        {
+            id = 'B';
+        }
+        else if ( _jointData.joint->GetName() == "bodyRev" )
+        {
+            id = 'R';
+        }
+        lorris::Packet packet;
+        packet.devId() = id;
+        packet.command() = 0;
+        packet.push< float >( _targetVelocity ); // Target
+        packet.push< float >( velocity );        // Current
+        packet.push< float >( force );           // Output
+        packet.send();
     }
 
     void resetVelocityPID( PidControlType lastControlType )
@@ -205,7 +206,6 @@ public:
 
         _velPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
         _velController.Reset();
-        _lastForce = 0;
     }
 
     void setTargetVelocity( double targetVelocity, std::optional< PidControlType > lastControlType )
@@ -227,6 +227,7 @@ class PositionPIDController : public VelocityPIDController
     common::PID _posController;
     common::Time _posPrevUpdateTime;
 
+    detail::Buffer< 10 > _posBuffer;
     double _desiredPosition = 0;
     double _targetPosition = 0;
     double _maxSpeed = 0;
@@ -290,7 +291,9 @@ public:
         _posPrevUpdateTime = currTime;
         assert( stepTime >= 0 && "time went backwards" );
 
-        double linearError = _jointData.joint->Position( 0 ) - _targetPosition;
+        _posBuffer.update( _jointData.joint->Position( 0 ) );
+        double position = _posBuffer.getAverage();
+        double linearError = position - _targetPosition;
 
         if ( !_positionReached && std::abs( linearError ) <= _jointData.positionPrecision )
         {
@@ -319,18 +322,27 @@ public:
         VelocityPIDController::setTargetVelocity( velocity, std::nullopt );
         VelocityPIDController::velPhysicsUpdate< false >();
 
-        msgs::Vector2d msg;
-        msg.set_x( linearError ); // Input
-        msg.set_y( velocity ); // Output
-        _pubPosition->Publish( msg );
 
-        double p, i, d;
-        _posController.GetErrors( p, i, d );
-        msgs::Vector3d msgError;
-        msgError.set_x( p );
-        msgError.set_y( i );
-        msgError.set_z( d );
-        _pubPosError->Publish( msgError );
+        char id = 'C';
+        if ( _jointData.joint->GetName() == "shoeARev" )
+        {
+            id = 'A';
+        }
+        else if ( _jointData.joint->GetName() == "shoeBRev" )
+        {
+            id = 'B';
+        }
+        else if ( _jointData.joint->GetName() == "bodyRev" )
+        {
+            id = 'R';
+        }
+        lorris::Packet packet;
+        packet.devId() = id;
+        packet.command() = 1;
+        packet.push< float >( _targetPosition ); // Target
+        packet.push< float >( position );        // Current
+        packet.push< float >( velocity );        // Output
+        packet.send();
     }
 
     void resetPositionPID( PidControlType lastControlType )
