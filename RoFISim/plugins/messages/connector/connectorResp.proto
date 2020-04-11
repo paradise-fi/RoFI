@@ -1,0 +1,14 @@
+syntax = "proto3";
+package rofi.messages;
+
+import "connectorCmd.proto";
+import "connectorPacket.proto";
+import "connectorState.proto";
+
+message ConnectorResp {
+    int32 connector = 1;
+    ConnectorCmd.Type cmdType = 2;
+
+    Packet packet = 3;
+    ConnectorState state = 4;
+}

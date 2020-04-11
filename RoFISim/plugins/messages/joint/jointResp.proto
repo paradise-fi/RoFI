@@ -1,0 +1,11 @@
+syntax = "proto3";
+package rofi.messages;
+
+import "jointCmd.proto";
+
+message JointResp {
+    int32 joint = 1;
+    JointCmd.Type cmdType = 2;
+
+    repeated float values = 3;
+}
