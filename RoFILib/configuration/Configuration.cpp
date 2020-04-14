@@ -404,7 +404,7 @@ bool Configuration::execute(const Action& action) {
     for (const Action::Reconnect rec : action.reconnections())
         ok &= execute(rec);
 
-    return true;
+    return ok;
 }
 
 void Configuration::jointDiff(std::vector<Action::Rotate>& rotations, ID id, const Module& otherModule) const {

@@ -8,8 +8,22 @@
 
 std::optional<Configuration> executeIfValid(const Configuration& config, const Action &action);
 
+/**
+ * \brief Generates all possible actions.
+ * 
+ * Fills \p res with all possible valid actions that contains up to \p bound rotations, connections 
+ * and disconnections in sum. Only rotations with angle + \p step and - \p step are allowed.
+ */
 void generateActions(const Configuration& config, std::vector<Action>& res, unsigned step, unsigned bound=1);
 
+/**
+ * \brief Generates all possible "simple" actions.
+ * 
+ * Simple action is an action that contains just a single rotation, connection and disconnection.
+ * Only rotations with angle + \p step and - \p step are allowed.
+ * 
+ * Fills \p res with all possible valid simple actions
+ */
 void generateSimpleActions(const Configuration& config, std::vector<Action>& res, unsigned step);
 
 void generateParalyzedActions(const Configuration& config, std::vector<Action>& res, unsigned step, 
@@ -42,10 +56,34 @@ inline void generateParalyzedReconnect(const Configuration& config, std::vector<
     generateParalyzedDisconnections(config, res, allowed_indices);
 }
 
+/**
+ * \brief Generates all possible configurations that \p config can become using one action.
+ * 
+ * Fills \p res with all possible configurations that \p config can change into using one action 
+ * that contains up to \p bound rotations, connections and disconnections in sum. Only rotations 
+ * with angle + \p step and - \p step are allowed.
+ * 
+ * If \p bound is equal to 1, it uses `generateSimpleActions` instead of `generateActions`.
+ */
 void next(const Configuration& config, std::vector<Configuration>& res, unsigned step, unsigned bound=1);
 
+/**
+ * \brief Generates all possible configurations that \p config can become using one simple action.
+ * 
+ * Fills \p res with all possible configurations that \p config can change into using one simple action 
+ * Only rotations with angle + \p step and - \p step are allowed.
+ */
 void simpleNext(const Configuration& config, std::vector<Configuration>& res, unsigned step);
 
+/**
+ * \brief Generates all possible configurations that \p config can become using one simple action that
+ * can use only modules from \p allowed_indices.
+ * 
+ * Fills \p res with all possible configurations that \p config can change into using one simple action.
+ * Only rotations of modules with id in \p allowed_indices are allowed. Only connections adn disconnections,
+ * where at least one of the modules has its ID in \p allowed_indices are allowed.
+ * Only rotations with angle + \p step and - \p step are allowed.
+ */
 void paralyzedNext(const Configuration& config, std::vector<Configuration>& res, unsigned step, 
     const std::unordered_set<unsigned>& allowed_indices);
 
