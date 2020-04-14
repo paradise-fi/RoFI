@@ -36,8 +36,26 @@ public:
     ID getId() const { return id; }
     double getJoint(Joint a) const;
 
-    // return value specifies if the module was changed
+    /**
+     * \brief Rotates joint
+     * 
+     * Failure (returning `false`) in this method leaves the joint unchanged.
+     * 
+     * \return `false` if adding \p val makes value of \p joint 
+     * overflow out of accepted range.
+     * 
+     * Throws error if \p joint is not in enum
+     */
     bool rotateJoint(Joint joint, double val);
+
+    /**
+     * \brief Sets joint
+     * 
+     * \return `false` if \p val wasn't in accepted range and thus
+     * value of joint wasn't changed
+     * 
+     * Throws error if \p joint is not in enum
+     */
     bool setJoint(Joint joint, double val);
 
     bool operator==(const Module& other) const;
@@ -97,6 +115,17 @@ inline Edge reverse(const Edge& edge) {
         edge.dock1(), edge.side1(), edge.id1(), edge.onCoeff()};
 }
 
+/**
+ * \brief Given \p edge returns next possible connection of \p edge.id1 
+ * and \p edge.id2
+ * 
+ * Calling this function until it returns std::nullopt will generate all
+ * possible edges between \p edge.id1 and \p edge.id2 -- all possible
+ * combinations of shoes, docks and orientations.
+ * 
+ * \return Edge according to thenext possible connection of \p edge.id1 
+ * and \p edge.id2
+ */
 std::optional<Edge> nextEdge(const Edge& edge);
 
 /* ACTIONS
@@ -172,8 +201,19 @@ private:
 
 };
 
-bool unique(const std::vector<Action::Rotate>& a);
+/**
+ * \brief Checks if given vector of rotations rotates every joint
+ * at most once.
+ * 
+ * \return `false` if there are at least two rotations in \p rotations 
+ * that rotate same joint of the same module
+ */
+bool unique(const std::vector<Action::Rotate>& rotations);
 
+/**
+ * \brief Copies elements of \p data to \p res if they satisfy predicate
+ * \p pred.
+ */
 template<typename T>
 void filter(const std::vector<T>& data, std::vector<T>& res, bool (*pred)(const T&)) {
     for (const T& datum : data) {
@@ -236,9 +276,42 @@ public:
 
     bool isValid();
 
-    // Fill in the rotation attribute according to the first fixed module.
+    /**
+     * \brief Computes matrices for all shoes.
+     * 
+     * This method is called in method isValid.
+     * 
+     * User should call this if they create new configuration or they change 
+     * some angles and they don't call method isValid.
+     * 
+     * \return `false` if there is inconsistency in computing matrices,
+     * i.e. matrix for one shoe was computed two different ways and 
+     * the results aren't equal
+     */
     bool computeMatrices();
+    
+    /**
+     * \brief Computes matrix for shoe at the end of \p edge from shoe at the
+     * begining of \p edge.
+     * 
+     * For example, module with id = 1 is connected from shoe A to shoe B of 
+     * module with id = 2. It takes matrix of shoe A of module 1 and computes
+     * matrix of shoe B of module 2 from that.
+     * 
+     * If neither matrix of shoes of the first module is computed, error is
+     * thrown.
+     * 
+     * \return Matrix of the shoe connected to the end of \p edge
+     */
     Matrix computeConnectedMatrix(Edge edge) const;
+
+    /**
+     * \brief Given \p id and \p side computes matrix for the other shoe 
+     * of the given module.
+     * 
+     * \return Matrix of the other shoe of the given module
+     */
+    Matrix computeOtherSideMatrix(ID id, ShoeId side) const;
 
     bool connected() const;
 
@@ -246,6 +319,17 @@ public:
 
     Vector massCenter() const;
 
+    /**
+     * \brief Tries to execute given \p action.
+     * 
+     * `False` is returned if either you try to add edge to already occupied
+     * dock, erase non-existent edge or perform invalid rotation.
+     * 
+     * This function does NOT check if two modules collide during rotations.
+     * For this functionality use `executeIfValid` from `Generators.h`
+     * 
+     * \return `True` if \p action was executed without problems.
+     */
     bool execute(const Action& action);
 
     Action diff(const Configuration &other) const;
@@ -282,10 +366,30 @@ private:
     // If the given edge is in the configuration, delete it from both modules.
     bool eraseEdge(const Edge& edge);
 
+    /**
+     * \brief Computes differences between all joints of module with ID \p id
+     * and \p otherModule
+     * 
+     * Given \p id and \p otherModule , `jointDiff` emplaces into \p rotations 
+     * rotation for each joint whose value in module with ID \p id and \p otherModule
+     * differs. 
+     * 
+     * If you would execute emplaced rotations on module with ID \p id, all joints
+     * would have the same values as the joints of \p otherModule
+     */
     void jointDiff(std::vector<Action::Rotate>& rotations, ID id, const Module& otherModule) const;
+
+    /**
+     * \brief Computes differences between all edges connected to module with ID \p id
+     * in \p self and in \p other Configuration.
+     * 
+     * Given \p id and \p otherModule , `edgeDiff` emplaces into \p reconnections 
+     * reconnection and disconnection for each dock so that if you would (and could)
+     * execute emplaced actions, module with ID \p id would have same connections in
+     * \p self and \p other -- with same IDs, same orientations and from same docks.
+     */
     void edgeDiff(std::vector<Action::Reconnect>& reconnections, ID id, const Configuration &other) const;
 
-    Matrix computeOtherSideMatrix(ID id, ShoeId side) const;
     // Fix given module: one side is fixed. Fix all connected.
     bool computeMatricesRec(ID id, ShoeId side);
     void dfsID(ID id, std::unordered_set<ID>& seen) const;
