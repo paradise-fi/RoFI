@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <chrono>
 #include <freertos/queue.h>
 #include <freertos/semphr.h>
 #include <freertos/timers.h>
@@ -296,9 +297,10 @@ public:
     enum class Type { OneShot, Periodic };
 
     Timer() : _t( nullptr ) {}
-    Timer( TickType_t interval, Type t,  Routine r ) {
+    Timer( std::chrono::milliseconds interval, Type t,  Routine r ) {
         auto* rp = new Routine( r );
-        _t = xTimerCreate( "Timer name", interval, t == Type::Periodic, rp, _run );
+        _t = xTimerCreate( "Timer name", pdMS_TO_TICKS( interval.count() ),
+                           t == Type::Periodic, rp, _run );
     }
 
     Timer( const Timer& ) = delete;
@@ -310,12 +312,17 @@ public:
         if ( !_t )
             return;
         auto routine = reinterpret_cast< Routine *>( pvTimerGetTimerID( _t ) );
-        delete routine;
         xTimerDelete( _t, portMAX_DELAY );
+        delete routine;
     }
 
     void start() {
         xTimerStart( _t, portMAX_DELAY );
+    }
+
+    void stop() {
+        if ( _t )
+            xTimerStop( _t, portMAX_DELAY );
     }
 
     void release() {
