@@ -195,7 +195,7 @@ public:
         LL_AHB1_GRP1_EnableClock( LL_AHB1_GRP1_PERIPH_DMA1 );
 
         // If DMA supports muxing
-        #if (defined(DMA1_CSELR_DEFAULT)||defined(DMA2_CSELR_DEFAULT))
+        #ifdef DMAMUX1
             LL_DMA_SetPeriphRequest( DMA1, _channel, LL_DMAMUX_REQ_RX( _uart.periph() ) );
         #endif
         LL_DMA_SetDataTransferDirection( DMA1, _channel, LL_DMA_DIRECTION_PERIPH_TO_MEMORY );
@@ -349,7 +349,7 @@ public:
         LL_AHB1_GRP1_EnableClock( LL_AHB1_GRP1_PERIPH_DMA1 );
 
         // If DMA supports muxing
-        #if (defined(DMA1_CSELR_DEFAULT)||defined(DMA2_CSELR_DEFAULT))
+        #ifdef DMAMUX1
             LL_DMA_SetPeriphRequest( DMA1, _channel, LL_DMAMUX_REQ_TX( _uart.periph() ) );
         #endif
         LL_DMA_SetDataTransferDirection( DMA1, _channel, LL_DMA_DIRECTION_MEMORY_TO_PERIPH );

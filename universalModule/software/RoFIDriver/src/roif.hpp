@@ -166,6 +166,8 @@ public:
         std::vector< gpio_num_t > dockCs, spi_host_device_t spiHost = HSPI_HOST )
     : _mask( mask ), _gateway( gateway ), _mapping( ip, pAddr )
     {
+        using std::chrono::literals;
+
         _docks.reserve( dockCs.size() );
         for ( auto cs : dockCs ) {
             _docks.emplace_back( spiHost, cs );
@@ -178,7 +180,7 @@ public:
         dhcp_stop( &_netif );
 
         // Proactivelly send mapping responses
-        _mappingTimer = rtos::Timer( 1000 / portTICK_PERIOD_MS, rtos::Timer::Type::Periodic,
+        _mappingTimer = rtos::Timer( 1000ms, rtos::Timer::Type::Periodic,
             [this]() {
                 for ( auto& d : _docks )
                     _mapping.sendResponse( d );
