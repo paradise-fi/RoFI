@@ -15,7 +15,7 @@ RUN env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommend
         clang-9  llvm-9 clang-tidy-9 libc++-9-dev libc++abi-9-dev libz3-dev- libz3-4- \
         valgrind gdb \
         git ssh rsync python3 python2 ca-certificates acl xmlstarlet \
-        zip unzip libarmadillo-dev libvtk6-dev \
+        zip unzip libarmadillo-dev libvtk6-dev libvtk6-qt-dev qtdeclarative5-dev \
         admesh
 
 RUN for i in `dpkg-query -L llvm-9 | cut -d: -f2 | grep '/usr/bin/[^/]*-9'`; do F=`echo $i | sed 's/-9$//'`; test -f $F || { echo $F; ln -s $i $F; }; done
