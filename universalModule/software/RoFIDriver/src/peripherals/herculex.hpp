@@ -7,6 +7,7 @@
 #include <chrono>
 #include <sstream>
 #include <iomanip>
+#include <iostream>
 #include <cstring>
 #include <mutex>
 
@@ -68,6 +69,45 @@ inline Angle toAngle( uint16_t rawPos ) {
 
 inline uint16_t toTicks( std::chrono::milliseconds ms ) {
     return ms.count() / 11.2;
+}
+
+inline bool containsError( uint16_t status ) {
+    uint16_t mask = 0x7F;
+    return status & mask;
+}
+
+inline std::string errorMessage( uint16_t status ) {
+    std::string msg;
+    std::string separator;
+    auto add = [&]( const std::string& m ) {
+        msg += separator + m;
+        separator = "\n";
+    };
+    char err = status;
+    char detail = status >> 8;
+    if ( err & ( 1 << 0 ) )
+        add( "Exceeded input voltage limit");
+    if ( err & ( 1 << 1 ) )
+        add( "Exceeded allows POT limit" );
+    if ( err & ( 1 << 2) )
+        add( "Exceeded tempreature limit" );
+    if ( err & ( 1 << 3 ) ) {
+        if ( detail & ( 1 << 2 ) )
+            add( "Checksum error" );
+        if ( detail & ( 1 << 3 ) )
+            add( "Unknown command" );
+        if ( detail & ( 1 << 3 ) )
+            add( "Exceeded REG range" );
+        if ( detail & ( 1 << 5 ) )
+            add( "Garbage detected" );
+    }
+    if ( err & ( 1 << 4 ) )
+        add( "Overload detected" );
+    if ( err & ( 1 << 5 ) )
+        add( "Driver fault detected" );
+    if ( err & ( 1 << 6 ) )
+        add( "EEP REG distrted" );
+    return msg;
 }
 
 using Id = uint8_t;
@@ -345,7 +385,7 @@ public:
     template < typename T >
     T get( int offset = 0 ) {
         T val;
-        memcpy( &val, _data.data() + 7, sizeof( T ) );
+        memcpy( &val, _data.data() + 7 + offset, sizeof( T ) );
         return val;
     }
 
@@ -585,7 +625,7 @@ public:
             _bus.send( Packet::ramRead( _id, RamRegister::AbsolutePosition, 2 ) );
             auto p = _bus.read();
             if ( p )
-                return toAngle( p->get< uint16_t >() );
+                return toAngle( p->get< uint16_t >( 2 ) );
             throw std::runtime_error( "Cannot read position" );
         }
 
@@ -600,7 +640,7 @@ public:
             _bus.send( Packet::ramRead( _id, RamRegister::DifferentialPosition, 2 ) );
             auto p = _bus.read();
             if ( p )
-                return toAngle( p->get< uint16_t >() ) / 0.0112;
+                return toAngle( p->get< uint16_t >( 2 ) ) / 0.0112;
             throw std::runtime_error( "Cannot read speed" );
         }
 
@@ -615,7 +655,7 @@ public:
             _bus.send( Packet::ramRead( _id, RamRegister::Pwm, 2 ) );
             auto p = _bus.read();
             if ( p )
-                return p->get< uint16_t >() / 1023.0;
+                return p->get< uint16_t >( 2 ) / 1023.0;
             throw std::runtime_error( "Cannot read torque" );
         }
 
@@ -652,12 +692,18 @@ public:
          * not executed until the transaction is started. See
          * Bus::startSynchronized().
          *
+         * \param pwm pwm value in range <-1023, 1023>
+         *
          * Has no effect without calling Servo::torqueOn() first.
          */
-        void rotate( Angle speed ) {
+        void rotate( int pwm ) {
+            if ( pwm > 1023 || pwm < -1023 )
+                throw std::runtime_error( "Invalid PWM value specified" );
             iJog jog{};
             jog.id = _id;
-            jog.jogData = speed.deg() / 0.325;
+            jog.jogData = abs( pwm );
+            if ( pwm < 0 )
+                jog.jogData |= 0x4000;
             jog.timeMs = 255;
             jog.speedMode = true;
 
@@ -666,6 +712,27 @@ public:
                 _bus.send( Packet::iJog( { jog } ) );
             else
                 _bus._movement.value().push_back( jog );
+        }
+
+        /**
+         * \brief Reset error flags
+         */
+        void resetErrors() {
+            _bus.send( Packet::ramWrite( _id, RamRegister::StatusError, uint16_t( 0 ) ) );
+        }
+
+        /**
+         * \brief Get status bitmask
+         *
+         * See manual page 39 for explanation of meaning of individual bits.
+         */
+        uint16_t status() {
+            std::scoped_lock _( _bus._mutex );
+            _bus.send( Packet::status( _id ) );
+            auto p = _bus.read( 10 / portTICK_PERIOD_MS );
+            if ( p )
+                return p->get< uint16_t >( 0 );
+            throw std::runtime_error( "Cannot read status" );
         }
 
         /**
