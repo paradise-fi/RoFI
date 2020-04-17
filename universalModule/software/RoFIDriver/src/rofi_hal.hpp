@@ -46,7 +46,8 @@ public:
             std::function< void( Joint ) > callback ) = 0;
         virtual float getTorque() = 0;
         virtual void setTorque( float torque ) = 0;
-        virtual void onError( std::function< void( Joint, Error ) > callback ) = 0;
+        virtual void onError(
+            std::function< void( Joint, Error, const std::string& ) > callback ) = 0;
     };
 
     /**
@@ -126,7 +127,7 @@ public:
     /**
      * \brief Set error handling callback
      */
-    void onError( std::function< void( Joint, Error ) > callback ) {
+    void onError( std::function< void( Joint, Error, const std::string& ) > callback ) {
         _impl->onError( callback );
     }
 
