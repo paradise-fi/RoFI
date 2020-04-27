@@ -4,22 +4,50 @@
 #include <freertos/task.h>
 
 #include <peripherals/herculex.hpp>
+#include <rofi_hal.hpp>
+
+void printPacket( rofi::hal::Connector, uint16_t contentType, rofi::hal::PBuf packet ) {
+    std::cout << "Content type: " << contentType << ": ";
+    for ( auto it = packet.chunksBegin(); it != packet.chunksEnd(); ++it ) {
+        for ( int i = 0; i != it->size(); i++ )
+            std::cout << it->mem()[ i ];
+    }
+}
 
 extern "C" void app_main() {
-    using namespace std::chrono_literals;
+    std::cout << "Program starts\n";
+    auto localRoFI = rofi::hal::RoFI::getLocalRoFI();
+    std::cout << "Got local RoFI\n";
+    auto conn1 = localRoFI.getConnector( 0 );
+    auto conn2 = localRoFI.getConnector( 1 );
 
-    bool found = false;
-    std::cout << "Searching for servos...\n";
-    rofi::herculex::Bus bus( UART_NUM_1, GPIO_NUM_4, GPIO_NUM_2 );
-    for ( int i = 0; i != 0xFE; i++ ) {
-        auto servo = bus.getServo( i );
-        if ( servo.active() ) {
-            found = true;
-            std::cout << std::hex << "  0x" << i << "(" << std::dec << i << ")\n";
-        }
+    conn1.onPacket( printPacket );
+    conn2.onPacket( printPacket );
+
+    char counter = 0;
+    while( true ) {
+        std::cout << "Send\n";
+        counter++;
+        const char* msg = "Hello from 1! ";
+        const int len = strlen( msg );
+        auto buf = rofi::hal::PBuf::allocate( len );
+        for ( int i = 0; i != len; i++ )
+            buf[ i ] = msg[ i ];
+        buf[ len - 1 ] = 'a' + ( counter ) % 26;
+        conn1.send( 0, std::move( buf ) );
+
+        const char* msg2 = "Hello form 2! ";
+        const int len2 = strlen( msg2 );
+        auto buf2 = rofi::hal::PBuf::allocate( len2 );
+        for ( int i = 0; i != len2; i++ )
+            buf2[ i ] = msg2[ i ];
+        buf2[ len - 1 ] = 'a' + ( counter ) % 26;
+        conn2.send( 1, std::move( buf2 ) );
+
+        vTaskDelay( 1000 / portTICK_PERIOD_MS );
     }
-    if ( !found )
-        std::cout << "No servos found\n";
 
-    vTaskDelay( 1000 / portTICK_PERIOD_MS );
+    while ( true ) {
+        vTaskDelay( 1000 / portTICK_PERIOD_MS );
+    }
 }

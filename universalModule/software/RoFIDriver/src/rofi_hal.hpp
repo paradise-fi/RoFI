@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <memory>
+#include "networking.hpp"
 
 namespace rofi::hal {
 
@@ -136,34 +137,40 @@ private:
     std::shared_ptr< Implementation > _impl;
 };
 
-enum class ConnectorPosition : bool {
-    Retracted = false,
-    Expanded = true
+enum ConnectorPosition {
+    Retracted = 0,
+    Expanded = 1
 };
 
-enum class ConnectorOrientation : signed char {
+enum ConnectorOrientation {
     North = 0,
     East = 1,
     South = 2,
     West = 3
 };
 
-enum class ConnectorLine : bool {
+enum ConnectorLine {
     Internal = 0,
     External = 1
 };
 
+/**
+ * \brief Connector state descriptor
+ */
 struct ConnectorState {
     ConnectorPosition position = ConnectorPosition::Retracted;
-    bool internal = false;
-    bool external = false;
-    bool connected = false;
+    bool internal = false; ///< Is internal power bus connected to the connector?
+    bool external = false; ///< Is the external power bus connected to the connector?
+    bool connected = false; ///< Is there a mating side connected?
     ConnectorOrientation orientation = ConnectorOrientation::North;
+    float internalVoltage, internalCurrent;
+    float externalVoltage, externalCurrent;
 };
 
-struct ConnectorEvent { };
-
-struct Packet { };
+enum ConnectorEvent {
+    Connected = 0,
+    Disconnected = 1
+};
 
 /**
  * \brief Proxy for controlling a single connector of RoFI
@@ -190,8 +197,9 @@ public:
         virtual void disconnect() = 0;
         virtual void onConnectorEvent(
             std::function< void ( Connector, ConnectorEvent ) > callback ) = 0;
-        virtual void onPacket( std::function< void( Connector, Packet ) > callback ) = 0;
-        virtual void send( Packet packet ) = 0;
+        virtual void onPacket( std::function< void( Connector,
+            uint16_t contentType, PBuf ) > callback ) = 0;
+        virtual void send( uint16_t contentType, PBuf packet ) = 0;
         virtual void connectPower( ConnectorLine ) = 0;
         virtual void disconnectPower( ConnectorLine ) = 0;
     };
@@ -226,8 +234,11 @@ public:
 
     /**
      * \brief Register callback for incoming packets.
+     *
+     * The callback takes connector which received the packet, contentType and
+     * the packet.
      */
-    void onPacket( std::function< void( Connector, Packet ) > callback ) {
+    void onPacket( std::function< void( Connector, uint16_t, PBuf ) > callback ) {
         _impl->onPacket( callback );
     }
 
@@ -236,7 +247,9 @@ public:
      *
      * If no mating side present, packet is discarder.
      */
-    void send( Packet packet ) { _impl->send( std::move( packet ) ); }
+    void send( uint16_t contentType, PBuf packet ) {
+        _impl->send( contentType, std::move( packet ) );
+    }
 
     /**
      * \brief Connect power of mating side to a power line.
@@ -266,6 +279,14 @@ public:
     using Id = int;
 
     /**
+     * \brief Module shape & capabilities description
+     */
+    struct Descriptor {
+        int jointCount;
+        int connectorCount;
+    };
+
+    /**
      *  \brief Interface of the actual implementation - either physical local,
      *  physical remote or a simulation one.
      *
@@ -280,6 +301,7 @@ public:
         virtual Id getId() const = 0;
         virtual Joint getJoint( int index ) = 0;
         virtual Connector getConnector( int index ) = 0;
+        virtual Descriptor getDescriptor() const = 0;
     };
 
     /**
@@ -302,6 +324,10 @@ public:
 
     Connector getConnector( int index ) {
         return _impl->getConnector( index );
+    }
+
+    Descriptor getDescriptor() const {
+        return _impl->getDescriptor();
     }
 
     /**

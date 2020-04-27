@@ -3,6 +3,8 @@
 #include <iostream>
 #include <driver/gpio.h>
 
+namespace rofi::esp32 {
+
 class Gpio {
 public:
     Gpio() {}
@@ -17,3 +19,5 @@ private:
 };
 
 std::ostream& operator<<( std::ostream& o, gpio_config_t s );
+
+} // namespace rofi::esp32
