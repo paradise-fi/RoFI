@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <chrono>
+#include <cstring>
 #include <freertos/queue.h>
 #include <freertos/semphr.h>
 #include <freertos/timers.h>

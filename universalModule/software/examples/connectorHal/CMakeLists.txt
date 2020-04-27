@@ -4,4 +4,4 @@ set(EXTRA_COMPONENT_DIRS "../../RoFIDriver")
 
 set(COMPONENTS "")
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(dockTest)
+project(servo)
