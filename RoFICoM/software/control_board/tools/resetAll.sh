@@ -3,7 +3,7 @@
 FLASHED=0
 for serial in `st-info --probe | grep serial | cut -d ":" -f 2-`
 do
-    st-flash --serial $serial "$@"
+    st-flash --serial $serial reset &
     FLASHED=1
 done
 

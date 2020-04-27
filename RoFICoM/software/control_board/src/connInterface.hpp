@@ -2,16 +2,17 @@
 
 #include <drivers/uart.hpp>
 #include <drivers/crc.hpp>
+#include <drivers/gpio.hpp>
 #include <system/defer.hpp>
 #include <system/ringBuffer.hpp>
 #include <blob.hpp>
 
-class ConnInterface {
+class ConnComInterface {
 public:
     static const int BLOB_LIMIT = 512;
     using Block = memory::Pool::Block;
 
-    ConnInterface( Uart uart )
+    ConnComInterface( Uart uart )
         : _uart( std::move( uart ) ),
           _reader( _uart ),
           _writer( _uart ),
@@ -148,4 +149,127 @@ private:
     std::function< void(void) > _notifyNewBlob;
     Block _txBlock;
     static const int _timeout = 64;
+};
+
+enum ConnectorOrientation {
+    North = 0, South = 1, East = 2, West = 3, Unknown = 4
+};
+
+class ConnectorStatus {
+public:
+    ConnectorStatus( Gpio::Pin senseA, Gpio::Pin senseB )
+        : _senseA( senseA ), _senseB( senseB ), _orientation( Unknown )
+    {
+        _senseA.setupInput( true );
+        _senseB.setupInput( true );
+    }
+
+    /**
+     * \brief Run internal routine of getting connector status
+     *
+     * \return true, if state was changed (and the master is expected to be
+     * interrupted)
+     */
+    bool run() {
+        auto aState = pinState( _senseA );
+        if ( aState == PinState::High )
+            return onNewState( North );
+        if ( aState == PinState::Low )
+            return onNewState( West );
+        auto bState = pinState( _senseB );
+        if ( bState == PinState::High )
+            return onNewState( South );
+        if ( bState == PinState::Low )
+            return onNewState( East );
+        return onNewState( Unknown );
+    }
+
+    ConnectorOrientation getOrientation() {
+        return _orientation;
+    }
+private:
+    enum class PinState { Float, High, Low };
+
+    /**
+     * \brief Check state of given pin
+     *
+     * Internally checks if pin value matches pull-up/down resistor value. If
+     * so, the pin floats, otherwise it is in given state.
+     */
+    static PinState pinState( Gpio::Pin& pin ) {
+        pin.setupInput( true, true ); // Pull-up
+        if ( !pin.read() )
+            return PinState::Low;
+        pin.setupInput( true, false ); // Pull-down
+        if ( pin.read() )
+            return PinState::High;
+        return PinState::Float;
+    }
+
+    bool onNewState( ConnectorOrientation orientation ) {
+        bool ret = orientation != _orientation;
+        _orientation = orientation;
+        return ret;
+    }
+
+    Gpio::Pin _senseA, _senseB;
+    ConnectorOrientation _orientation;
+};
+
+class PowerSwitch {
+public:
+    void run() {
+        // ToDo
+    }
+
+    /**
+     * \brief Get voltage on the internal bus
+     *
+     * \return Fixed point <8.8> number in volts
+     */
+    uint16_t getIntVoltage() {
+        // ToDo
+        return 0;
+    };
+
+    /**
+     * \brief Get voltage on the external bus
+     *
+     * \return Fixed point <8.8> number in volts
+     */
+    uint16_t getExtVoltage() {
+        // ToDo
+        return 0;
+    };
+
+    /**
+     * \brief Get current on the internal bus
+     *
+     * \return Fixed point <8.8> number in amperes
+     */
+    uint16_t getIntCurrent() {
+        // ToDo
+        return 0;
+    };
+
+    /**
+     * \brief Get current on the external bus
+     *
+     * \return Fixed point <8.8> number in amperes
+     */
+    uint16_t getExtCurrent() {
+        // ToDo
+        return 0;
+    };
+
+    void connectInternal( bool /*connect = true*/ ) {
+        // ToDo
+    }
+
+    void connectExternal( bool /*connect = true*/ ) {
+        // ToDo
+    }
+private:
+    uint16_t _intVoltage, intCurrent;
+    uint16_t _extVoltage, extCurrent;
 };
