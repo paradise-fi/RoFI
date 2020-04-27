@@ -4,6 +4,19 @@
 #include <drivers/spi.hpp>
 #include <util.hpp>
 
+struct RecoverCs:
+    public PinCfg< RecoverCs >,
+    public detail::CsOn< RecoverCs >
+{
+    RecoverCs( Gpio::Pin pin ): _pin( pin ) {}
+
+    void post( SPI_TypeDef *periph ) {
+        PinCfg< RecoverCs >::post( periph );
+    }
+
+    Gpio::Pin _pin;
+};
+
 class SpiInterface {
 public:
     enum Command { VERSION = 0, STATUS, INTERRUPT, SEND_BLOB, RECEIVE_BLOB };
@@ -11,8 +24,9 @@ public:
     using Block = memory::Pool::Block;
     using CmdHandler = std::function< void( Command, Block ) >;
 
-    SpiInterface( Spi spi, CmdHandler cmdHandler )
-        : _spi( std::move( spi ) ), _spiRw( _spi ), _cmdHandler( std::move( cmdHandler ) )
+    SpiInterface( Spi spi, Gpio::Pin csPin, CmdHandler cmdHandler )
+        : _spi( std::move( spi ) ), _spiRw( _spi ),
+          _cmdHandler( std::move( cmdHandler ) ), _csPin( csPin )
     {
         _spi.onTransactionEnds( [&]{ _startCommand(); } );
         _spi.enable();
@@ -50,7 +64,9 @@ public:
     }
 
     void interruptMaster() {
-        // ToDo
+        _csPin.setupPPOutput();
+        _csPin.write( 0 );
+        RecoverCs( _csPin ).post( _spi.periph() );
     }
 
 private:
@@ -97,4 +113,5 @@ private:
     Spi _spi;
     SpiReaderWriter _spiRw;
     CmdHandler _cmdHandler;
+    Gpio::Pin _csPin;
 };
