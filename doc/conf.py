@@ -30,7 +30,8 @@ author = 'Paradise'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'breathe'
+    'breathe',
+    'recommonmark'
 ]
 breathe_sources = {
     "driver": "../universalModule/software/RoFIDriver/",
@@ -39,6 +40,7 @@ breathe_sources = {
 }
 breathe_projects = { name: "build/doxygen/" + name + "/xml" \
     for name in breathe_sources.keys() }
+breathe_default_members = ('members', 'undoc-members')
 
 # Tell sphinx what the primary language being documented is.
 primary_domain = 'cpp'
@@ -65,6 +67,8 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+exclude_patterns = ['readme.md']
 
 if __name__ == "__main__":
     import textwrap

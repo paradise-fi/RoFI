@@ -1,23 +1,28 @@
-.. RoFIDriver documentation master file, created by
-   sphinx-quickstart on Mon Apr 13 09:31:51 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+RoFI - Technical Documentation
+==============================
 
-Welcome to RoFIDriver's documentation!
-======================================
+This document provides the technical documentation for the `RoFI Platform
+<https://ro.fi.muni.cz>`_. Start by selecting the topic:
+
+==================  ===================  ==================
+|RoFICoM|_          |Universal Module|_  |RoFI Library|_
+------------------  -------------------  ------------------
+`RoFICoM`_          `Universal Module`_  `RoFI Library`_
+==================  ===================  ==================
+
+.. |RoFICoM| image:: _static/connector_photo.jpg
+.. _RoFICoM: roficom/
+
+.. |Universal Module| image:: _static/um_photo.jpg
+.. _Universal Module: universalModule/index
+
+.. |RoFI Library| image:: _static/code.jpg
+.. _RoFI Library: rofilib/index.html
 
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
 
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
-
-.. doxygenclass:: Configuration
-   :project: lib
-   :members:
+   roficom/index
+   rofilib/index
+   universalModule/index
