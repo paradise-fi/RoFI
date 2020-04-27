@@ -12,3 +12,13 @@ script:
   - $SH "make all.clang"
   - $SH "make test.gcc"
   - $SH "make test.clang"
+  - $SH "cd doc; make"
+
+deploy:
+  provider: pages
+  skip_cleanup: true
+  github_token: $GITHUB_TOKEN
+  local-dir: doc/build/html
+  keep_history: false
+  on:
+    branch: doc

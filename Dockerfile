@@ -5,7 +5,7 @@ RUN apt-get update && \
         apt-utils wget software-properties-common gnupg
 
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -; \
-    add-apt-repository "deb http://apt.llvm.org/buster/   llvm-toolchain-buster-9  main"; \
+    add-apt-repository "deb http://apt.llvm.org/buster/ llvm-toolchain-buster-9 main"; \
     apt-get update
 
 # Ignore Z3; we will install it later
@@ -14,9 +14,11 @@ RUN env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommend
         gcc-8 g++-8 \
         clang-9  llvm-9 clang-tidy-9 libc++-9-dev libc++abi-9-dev libz3-dev- libz3-4- \
         valgrind gdb \
-        git ssh rsync python3 python2 ca-certificates acl xmlstarlet \
+        git ssh rsync python3 python3-pip ca-certificates acl xmlstarlet \
         zip unzip libarmadillo-dev libvtk6-dev libvtk6-qt-dev qtdeclarative5-dev \
+        doxygen \
         admesh
+RUN pip3 install sphinx breathe sphinx-rtd-theme
 
 RUN for i in `dpkg-query -L llvm-9 | cut -d: -f2 | grep '/usr/bin/[^/]*-9'`; do F=`echo $i | sed 's/-9$//'`; test -f $F || { echo $F; ln -s $i $F; }; done
 RUN for i in `dpkg-query -L clang-9 | cut -d: -f2 | grep '/usr/bin/[^/]*-9'`; do F=`echo $i | sed 's/-9$//'`; test -f $F || { echo $F; ln -s $i $F; }; done
