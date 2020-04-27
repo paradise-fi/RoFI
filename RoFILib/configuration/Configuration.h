@@ -268,6 +268,7 @@ public:
 
     // Adds given edge to given modules if both docks are free.
     bool addEdge(const Edge& edge);
+    bool removeEdge(const Edge& edge);
 
     bool findEdge(const Edge& edge) const;
     bool findConnection(const Edge& edge) const;

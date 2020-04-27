@@ -263,6 +263,24 @@ bool Configuration::addEdge(const Edge& edge) {
     return true;
 }
 
+bool Configuration::removeEdge(const Edge& edge) {
+    // Finds edges for both modules.
+    EdgeList& set1 = edges.at(edge.id1());
+    EdgeList& set2 = edges.at(edge.id2());
+
+    int index1 = edge.side1() * 3 + edge.dock1();
+    int index2 = edge.side2() * 3 + edge.dock2();
+    if (!set1[index1].has_value() || !set2[index2].has_value())
+        return false;
+
+    if (set1[index1].value() != edge || set2[index2].value() != reverse(edge))
+        return false;
+
+    set1[index1] = {};
+    set2[index2] = {};
+    return true;
+}
+
 bool Configuration::findEdge(const Edge& edge) const {
     int idx = edge.side1() * 3 + edge.dock1();
     return edges.at(edge.id1())[idx].has_value();
