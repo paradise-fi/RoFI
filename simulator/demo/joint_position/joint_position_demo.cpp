@@ -77,7 +77,7 @@ int main()
     };
 
 
-    RoFI & localRofi = RoFI::getLocalRoFI();
+    RoFI localRofi = RoFI::getLocalRoFI();
     moveLoop( localRofi );
 
     while ( true )

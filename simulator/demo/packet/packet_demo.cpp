@@ -6,9 +6,6 @@
 
 #include "rofi_hal.hpp"
 
-using rofi::hal::Joint;
-using rofi::hal::RoFI;
-
 using Callback = std::function< void( void ) >;
 using FunWithCallback = std::function< void( Callback ) >;
 
@@ -62,24 +59,22 @@ To toContainer( const From & from )
 
 void sendPacket( rofi::hal::Connector connector, const std::string & msg )
 {
-    connector.send( toContainer< rofi::hal::Connector::Packet >( msg ) );
+    connector.send( toContainer< rofi::hal::Packet >( msg ) );
 }
 
 auto onPacketCallback( std::string prefix )
 {
-    return [ prefix = std::move( prefix ) ]( rofi::hal::Connector,
-                                             rofi::hal::Connector::Packet packet ) {
+    return [ prefix = std::move( prefix ) ]( rofi::hal::Connector, rofi::hal::Packet packet ) {
         printStr( std::move( prefix ) + toContainer< std::string >( packet ) + "\n" )();
     };
 }
 
 int main()
 {
-    using rofi::hal::RoFI;
     using namespace std::string_literals;
 
-    RoFI & localRofi = RoFI::getLocalRoFI();
-    RoFI & otherRofi = RoFI::getRemoteRoFI( 1 );
+    auto localRofi = rofi::hal::RoFI::getLocalRoFI();
+    auto otherRofi = rofi::hal::RoFI::getRemoteRoFI( 1 );
     auto connectors = { std::make_pair( localRofi.getConnector( 0 ), "Local RoFI (c. 0)"s ),
                         std::make_pair( otherRofi.getConnector( 3 ), "Remote RoFI (c. 3)"s ) };
     for ( auto [ connector, name ] : connectors )

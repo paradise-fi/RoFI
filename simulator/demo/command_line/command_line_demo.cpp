@@ -11,11 +11,7 @@
 enum class JointCmd
 {
     NO_CMD,
-    GET_MAX_POSITION,
-    GET_MIN_POSITION,
-    GET_MAX_SPEED,
-    GET_MIN_SPEED,
-    GET_MAX_TORQUE,
+    GET_CAPABILITIES,
     GET_VELOCITY,
     SET_VELOCITY,
     GET_POSITION,
@@ -89,11 +85,7 @@ int readInt( std::string_view str )
 JointCmd getJointCmdType( std::string_view token )
 {
     const std::map< std::string_view, JointCmd > map = {
-        { "getmaxposition", JointCmd::GET_MAX_POSITION },
-        { "getminposition", JointCmd::GET_MIN_POSITION },
-        { "getmaxspeed", JointCmd::GET_MAX_SPEED },
-        { "getminspeed", JointCmd::GET_MIN_SPEED },
-        { "getmaxtorque", JointCmd::GET_MAX_TORQUE },
+        { "getmaxposition", JointCmd::GET_CAPABILITIES },
         { "getposition", JointCmd::GET_POSITION },
         { "getvelocity", JointCmd::GET_VELOCITY },
         { "gettorque", JointCmd::GET_TORQUE },
@@ -147,34 +139,18 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
         {
             break;
         }
-        case JointCmd::GET_MAX_POSITION:
+        case JointCmd::GET_CAPABILITIES:
         {
-            auto result = joint.maxPosition();
-            std::cout << "Max position: " << result << "\n";
-            break;
-        }
-        case JointCmd::GET_MIN_POSITION:
-        {
-            auto result = joint.minPosition();
-            std::cout << "Min position: " << result << "\n";
-            break;
-        }
-        case JointCmd::GET_MAX_SPEED:
-        {
-            auto result = joint.maxSpeed();
-            std::cout << "Max speed: " << result << "\n";
-            break;
-        }
-        case JointCmd::GET_MIN_SPEED:
-        {
-            auto result = joint.minSpeed();
-            std::cout << "Min speed: " << result << "\n";
-            break;
-        }
-        case JointCmd::GET_MAX_TORQUE:
-        {
-            auto result = joint.maxTorque();
-            std::cout << "Max torque: " << result << "\n";
+            auto maxPosition = joint.maxPosition();
+            auto minPosition = joint.minPosition();
+            auto maxSpeed = joint.maxSpeed();
+            auto minSpeed = joint.minSpeed();
+            auto maxTorque = joint.maxTorque();
+            std::cout << "Max position: " << maxPosition << "\n";
+            std::cout << "Min position: " << minPosition << "\n";
+            std::cout << "Max speed: " << maxSpeed << "\n";
+            std::cout << "Min speed: " << minSpeed << "\n";
+            std::cout << "Max torque: " << maxTorque << "\n";
             break;
         }
         case JointCmd::GET_VELOCITY:
@@ -281,7 +257,7 @@ int main( int argc, char ** argv )
         }
 
         std::cerr << "Acquiring RoFI " << rofiId << "\n";
-        auto & rofi = rofi::hal::RoFI::getRemoteRoFI( rofiId );
+        auto rofi = rofi::hal::RoFI::getRemoteRoFI( rofiId );
         std::cerr << "Acquired RoFI " << rofiId << "\n";
 
         for ( std::string line; std::getline( std::cin, line ); )

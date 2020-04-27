@@ -16,6 +16,7 @@ set (msgs
 
     joint/jointCmd.proto
     joint/jointResp.proto
+    joint/jointCapabilities.proto
     joint/jointSetPosWithSpeedCmd.proto
     joint/jointSetVelocityCmd.proto
     joint/jointSetTorqueCmd.proto

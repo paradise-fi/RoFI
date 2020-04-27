@@ -10,7 +10,7 @@ int main()
 
     std::cout << "Starting basic velocity example\n";
 
-    RoFI & localRofi = RoFI::getLocalRoFI();
+    RoFI localRofi = RoFI::getLocalRoFI();
     auto speed = 0.5 * localRofi.getJoint( 0 ).maxSpeed();
 
     while ( true )

@@ -17,7 +17,7 @@ message ConnectorCmd {
 
     enum Line {
         INT_LINE = 0;
-        OUT_LINE = 1;
+        EXT_LINE = 1;
     }
 
     int32 connector = 1;

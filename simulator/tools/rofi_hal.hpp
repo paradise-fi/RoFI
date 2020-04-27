@@ -1,116 +1,180 @@
 #pragma once
-
-#include <cstddef>
 #include <functional>
 #include <memory>
 
-namespace rofi
+namespace rofi::hal
 {
-namespace hal
-{
-namespace detail
-{
-class RoFIData;
-class JointData;
-class ConnectorData;
-} // namespace detail
-
-class RoFI;
-class Joint;
-class Connector;
-
-enum class ConnectorPosition : bool;
-enum class ConnectorOrientation : signed char;
-enum class ConnectorLine : bool;
-struct ConnectorState;
-
-class RoFI
-{
-public:
-    using Id = int;
-
-private:
-    std::unique_ptr< detail::RoFIData > rofiData;
-
-    RoFI();
-    RoFI( Id remoteId );
-
-public:
-    // Destructor is default, but has to be defined in implementation (for unique_ptr)
-    ~RoFI();
-
-    RoFI( const RoFI & ) = delete;
-    RoFI & operator=( const RoFI & ) = delete;
-
-    RoFI( RoFI && ) = default;
-    RoFI & operator=( RoFI && ) = default;
-
-    static RoFI & getLocalRoFI();
-    static RoFI & getRemoteRoFI( Id remoteId );
-
-    Id getId() const;
-    Joint getJoint( int index );
-    Connector getConnector( int index );
-
-    static void wait( int ms, std::function< void() > callback );
-};
-
+/**
+ * \brief Proxy for controlling a single joint of RoFI
+ *
+ * Joint cannot be instantiated on its own; you can obtain its instance from
+ * RoFI::getJoint().
+ *
+ * Since the class is only a proxy it can be safely copied and passed around.
+ */
 class Joint
 {
-    // TODO class JointError {};
-
-    friend class detail::JointData;
-
-    detail::JointData * jointData;
-
-    Joint( detail::JointData & data );
-
 public:
-    Joint( const Joint & ) = default;
-    Joint & operator=( const Joint & ) = default;
+    /**
+     * \brief
+     */
+    enum class Error
+    {
+        Communication, ///< Cannot communicate with the servo motor
+        Hardware       ///< Servo motor responded with an error
+    };
 
-    float maxPosition() const;
-    float minPosition() const;
-    float maxSpeed() const;
-    float minSpeed() const;
-    float maxTorque() const;
-    float getVelocity() const;
-    void setVelocity( float velocity );
-    float getPosition() const;
-    void setPosition( float pos, float speed, std::function< void( Joint ) > callback );
-    float getTorque() const;
-    void setTorque( float torque );
-    // TODO void onError( void ( *callback )( JointError ) );
-};
+    /**
+     *  \brief Interface of the actual implementation - either physical local,
+     *  physical remote or a simulation one.
+     *
+     *  To provide an implementation, simply inherit from this class.
+     *
+     *  For method description, see description of Joint.
+     */
+    class Implementation : public std::enable_shared_from_this< Implementation >
+    {
+    protected:
+        ~Implementation() = default;
 
-class Connector
-{
-public:
-    using State = ConnectorState;
-    using Position = ConnectorPosition;
-    using Orientation = ConnectorOrientation;
+    public:
+        struct Capabilities
+        {
+            float maxPosition, minPosition;
+            float maxSpeed, minSpeed;
+            float maxTorque;
+        };
 
-    using Packet = std::vector< std::byte >;
+        virtual const Capabilities & getCapabilities() = 0;
+        virtual float getVelocity() = 0;
+        virtual void setVelocity( float velocity ) = 0;
+        virtual float getPosition() = 0;
+        virtual void setPosition( float pos,
+                                  float velocity,
+                                  std::function< void( Joint ) > callback ) = 0;
+        virtual float getTorque() = 0;
+        virtual void setTorque( float torque ) = 0;
+        virtual void onError(
+                std::function< void( Joint, Error, const std::string & ) > callback ) = 0;
+    };
+
+    /**
+     * \brief Get maximal joint poisition in radians
+     */
+    float maxPosition() const
+    {
+        return _impl->getCapabilities().maxPosition;
+    }
+
+    /**
+     * \brief Get minimal joint poisition in radians
+     */
+    float minPosition() const
+    {
+        return _impl->getCapabilities().minPosition;
+    }
+
+    /**
+     * \brief Get maximal joint speed in rad / s
+     */
+    float maxSpeed() const
+    {
+        return _impl->getCapabilities().maxSpeed;
+    }
+
+    /**
+     * \brief Get minimal joint speed in rad / s
+     */
+    float minSpeed() const
+    {
+        return _impl->getCapabilities().minSpeed;
+    }
+
+    /**
+     * \brief Get maximal joint torque in N * m
+     */
+    float maxTorque() const
+    {
+        return _impl->getCapabilities().maxTorque;
+    }
+
+    /**
+     * \brief Get current joint velocity.
+     *
+     * \return velocity setpoint in rad / s
+     */
+    float getVelocity()
+    {
+        return _impl->getVelocity();
+    }
+
+    /**
+     * \brief Change the joint's control mode to velocity and start moving at
+     * velocity.
+     */
+    void setVelocity( float velocity )
+    {
+        _impl->setVelocity( velocity );
+    }
+
+    /**
+     * \brief Get current joint position in rad
+     *
+     * This works in all three control modes - position, velocity and torque
+     * mode.
+     */
+    float getPosition()
+    {
+        return _impl->getPosition();
+    }
+
+    /**
+     * \brief Change the joint's control mode to position and move to position.
+     *
+     * \param pos required position in rad
+     * \param velocity velocity limit in rad/s, required to be positive and
+     * non-zero
+     * \param callback callback to be called once the position is reached
+     */
+    void setPosition( float pos, float velocity, std::function< void( Joint ) > callback )
+    {
+        _impl->setPosition( pos, velocity, callback );
+    }
+
+    /**
+     * \brief Get the current torque of the joint.
+     *
+     * \return torque in N * m
+     */
+    float getTorque()
+    {
+        return _impl->getTorque();
+    }
+
+    /**
+     * \brief Change the joint's control mode to torque and provide given torque
+     *
+     * \param torque torque setpoint in N * m
+     */
+    void setTorque( float torque )
+    {
+        return _impl->setTorque( torque );
+    }
+
+    /**
+     * \brief Set error handling callback
+     */
+    void onError( std::function< void( Joint, Error, const std::string & ) > callback )
+    {
+        _impl->onError( callback );
+    }
+
+    Joint( std::shared_ptr< Implementation > impl ) : _impl( impl )
+    {
+    }
 
 private:
-    friend class detail::ConnectorData;
-
-    detail::ConnectorData * connectorData;
-
-    Connector( detail::ConnectorData & cdata );
-
-public:
-    Connector( const Connector & ) = default;
-    Connector & operator=( const Connector & ) = default;
-
-    ConnectorState getState() const;
-    void connect();
-    void disconnect();
-    // TODO void onConnectorEvent( std::function< void ( Connector, ConnectorEvent ) > callback );
-    void onPacket( std::function< void( Connector, Packet ) > callback );
-    void send( Packet packet );
-    void connectPower( ConnectorLine );
-    void disconnectPower( ConnectorLine );
+    std::shared_ptr< Implementation > _impl;
 };
 
 enum class ConnectorPosition : bool
@@ -141,5 +205,194 @@ struct ConnectorState
     bool connected = false;
     ConnectorOrientation orientation = ConnectorOrientation::North;
 };
-} // namespace hal
-} // namespace rofi
+
+struct ConnectorEvent
+{
+};
+
+using Packet = std::vector< std::byte >;
+
+/**
+ * \brief Proxy for controlling a single connector of RoFI
+ *
+ * Joint cannot be instantiated on its own; you can obtain its instance from
+ * RoFI::getConnector().
+ *
+ * Since the class is only a proxy it can be safely copied and passed around.
+ */
+class Connector
+{
+public:
+    /**
+     *  \brief Interface of the actual implementation - either physical local,
+     *  physical remote or a simulation one.
+     *
+     *  To provide an implementation, simply inherit from this class.
+     *
+     *  For method description, see description of Connector.
+     */
+    class Implementation : public std::enable_shared_from_this< Implementation >
+    {
+    protected:
+        ~Implementation() = default;
+
+    public:
+        virtual ConnectorState getState() = 0;
+        virtual void connect() = 0;
+        virtual void disconnect() = 0;
+        virtual void onConnectorEvent(
+                std::function< void( Connector, ConnectorEvent ) > callback ) = 0;
+        virtual void onPacket( std::function< void( Connector, Packet ) > callback ) = 0;
+        virtual void send( Packet packet ) = 0;
+        virtual void connectPower( ConnectorLine ) = 0;
+        virtual void disconnectPower( ConnectorLine ) = 0;
+    };
+
+    /**
+     * \brief Get connector state
+     */
+    ConnectorState getState()
+    {
+        return _impl->getState();
+    }
+
+    /**
+     * \brief Expand the connector to be ready to accept connection.
+     *
+     * This action does not establishes connection, register a callback via
+     * Connector::onConnectorEvent().
+     */
+    void connect()
+    {
+        _impl->connect();
+    }
+
+    /**
+     * \brief Retract the connector.
+     *
+     * Does not releases connection immediately - after the connection is broken
+     * physically, calls callback registered via Connector::onConnectorEvent().
+     */
+    void disconnect()
+    {
+        _impl->disconnect();
+    }
+
+    /**
+     * \brief Register callback for connector events
+     */
+    void onConnectorEvent( std::function< void( Connector, ConnectorEvent ) > callback )
+    {
+        _impl->onConnectorEvent( callback );
+    }
+
+    /**
+     * \brief Register callback for incoming packets.
+     */
+    void onPacket( std::function< void( Connector, Packet ) > callback )
+    {
+        _impl->onPacket( callback );
+    }
+
+    /**
+     * \brief Send a packet to mating side.
+     *
+     * If no mating side present, packet is discarder.
+     */
+    void send( Packet packet )
+    {
+        _impl->send( std::move( packet ) );
+    }
+
+    /**
+     * \brief Connect power of mating side to a power line.
+     */
+    void connectPower( ConnectorLine line );
+
+    /**
+     * \brief Disconnect power of mating side from a power line.
+     */
+    void disconnectPower( ConnectorLine line );
+
+    Connector( std::shared_ptr< Implementation > impl ) : _impl( impl )
+    {
+    }
+
+private:
+    std::shared_ptr< Implementation > _impl;
+};
+
+/**
+ * \brief Proxy for accessing RoFI hardware.
+ *
+ * The class has a private constructor - you can obtain an instance by calling
+ * static methods RoFI::getLocalRoFI and RoFI::getRemoteRoFI.
+ *
+ * Since the class is only a proxy it can be safely copied and passed around.
+ */
+class RoFI
+{
+public:
+    using Id = int;
+
+    /**
+     *  \brief Interface of the actual implementation - either physical local,
+     *  physical remote or a simulation one.
+     *
+     *  To provide an implementation, simply inherit from this class and
+     *  implement the RoFI::getLocalRoFI() and RoFI::getRemoteRoFI() in a cpp
+     *  file to return RoFI initialized with an instance of your implementation.
+     *
+     *  For method description, see description of RoFI.
+     */
+    class Implementation
+    {
+    protected:
+        ~Implementation() = default;
+
+    public:
+        virtual Id getId() const = 0;
+        virtual Joint getJoint( int index ) = 0;
+        virtual Connector getConnector( int index ) = 0;
+    };
+
+    /**
+     * \brief Get a proxy for control of a local RoFI.
+     */
+    static RoFI getLocalRoFI();
+
+    /**
+     *  \brief Get a proxy for control a remore RoFI identified by Id.
+     */
+    static RoFI getRemoteRoFI( Id remoteId );
+
+    Id getId() const
+    {
+        return _impl->getId();
+    }
+
+    Joint getJoint( int index )
+    {
+        return _impl->getJoint( index );
+    }
+
+    Connector getConnector( int index )
+    {
+        return _impl->getConnector( index );
+    }
+
+    /**
+     * \brief Call callback after given delay
+     * \param ms delay specified in milliseconds
+     * \param callback callback to be called
+     */
+    static void wait( int ms, std::function< void() > callback );
+
+private:
+    RoFI( std::shared_ptr< Implementation > impl ) : _impl( impl )
+    {
+    }
+    std::shared_ptr< Implementation > _impl;
+};
+
+} // namespace rofi::hal

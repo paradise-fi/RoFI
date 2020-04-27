@@ -5,15 +5,22 @@
 
 #include <rofi_hal.hpp>
 
-static_assert( !std::is_default_constructible_v< rofi::hal::RoFI > );
+using namespace rofi::hal;
 
-static_assert( !std::is_copy_constructible_v< rofi::hal::RoFI > );
-static_assert( !std::is_copy_assignable_v< rofi::hal::RoFI > );
+static_assert( !std::is_default_constructible_v< RoFI > );
+static_assert( std::is_copy_constructible_v< RoFI > );
+static_assert( std::is_copy_assignable_v< RoFI > );
+static_assert( std::is_move_constructible_v< RoFI > );
+static_assert( std::is_move_assignable_v< RoFI > );
 
-static_assert( std::is_move_constructible_v< rofi::hal::RoFI > );
-static_assert( std::is_move_assignable_v< rofi::hal::RoFI > );
+static_assert( !std::is_constructible_v< Joint > );
+static_assert( std::is_copy_constructible_v< Joint > );
+static_assert( std::is_copy_assignable_v< Joint > );
+static_assert( std::is_move_constructible_v< Joint > );
+static_assert( std::is_move_assignable_v< Joint > );
 
-
-static_assert( !std::is_constructible_v< rofi::hal::Joint > );
-static_assert( std::is_copy_constructible_v< rofi::hal::Joint > );
-static_assert( std::is_copy_assignable_v< rofi::hal::Joint > );
+static_assert( !std::is_constructible_v< Connector > );
+static_assert( std::is_copy_constructible_v< Connector > );
+static_assert( std::is_copy_assignable_v< Connector > );
+static_assert( std::is_move_constructible_v< Connector > );
+static_assert( std::is_move_assignable_v< Connector > );
