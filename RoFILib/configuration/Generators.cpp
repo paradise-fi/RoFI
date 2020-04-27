@@ -65,6 +65,21 @@ void generateSimpleActions(const Configuration& config, std::vector<Action>& res
         res.emplace_back(reconnection);
 }
 
+void generateBisimpleActions(const Configuration& config, std::vector<Action>& res, unsigned step) {
+    std::vector<Action::Rotate> rotations;
+    generateRotations(config, rotations, step);
+    std::vector<Action::Reconnect> reconnections;
+    generateReconnect(config, reconnections);
+
+    for (auto it1 = rotations.begin(); it1 != rotations.end(); ++it1) {
+        res.emplace_back(*it1);
+        for (auto it2 = it1; it2 != rotations.end(); ++it2)
+            res.emplace_back(std::vector<Action::Rotate>{*it1, *it2}, std::vector<Action::Reconnect>{});
+    }
+    for (auto& reconnection : reconnections)
+        res.emplace_back(reconnection);
+}
+
 void generateParalyzedActions(const Configuration& config, std::vector<Action>& res, unsigned step, 
     const std::unordered_set<ID>& allowed_indices)
 {
@@ -225,6 +240,18 @@ void simpleNext(const Configuration& config, std::vector<Configuration>& res, un
             res.push_back(cfgOpt.value());
     }
 }
+
+
+void bisimpleNext(const Configuration& config, std::vector<Configuration>& res, unsigned step) {
+    std::vector<Action> actions;
+    generateBisimpleActions(config, actions, step);
+    for (const auto& action : actions) {
+        auto cfgOpt = executeIfValid(config, action);
+        if (cfgOpt.has_value())
+            res.push_back(cfgOpt.value());
+    }
+}
+
 
 void paralyzedNext(const Configuration& config, std::vector<Configuration>& res, unsigned step, 
     const std::unordered_set<ID>& allowed_indices) 

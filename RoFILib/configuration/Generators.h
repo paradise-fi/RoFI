@@ -26,6 +26,16 @@ void generateActions(const Configuration& config, std::vector<Action>& res, unsi
  */
 void generateSimpleActions(const Configuration& config, std::vector<Action>& res, unsigned step);
 
+/**
+ * \brief Generates all possible "bisimple" actions.
+ * 
+ * Bisimple action is an action that contains up to two rotations, or just a connection or a disconnection.
+ * Only rotations with angle + \p step and - \p step are allowed.
+ * 
+ * Fills \p res with all possible valid bisimple actions
+ */
+void generateBisimpleActions(const Configuration& config, std::vector<Action>& res, unsigned step);
+
 void generateParalyzedActions(const Configuration& config, std::vector<Action>& res, unsigned step, 
     const std::unordered_set<ID>& allowed_indices);
 
@@ -74,6 +84,16 @@ void next(const Configuration& config, std::vector<Configuration>& res, unsigned
  * Only rotations with angle + \p step and - \p step are allowed.
  */
 void simpleNext(const Configuration& config, std::vector<Configuration>& res, unsigned step);
+
+/**
+ * \brief Generates all possible configurations that \p config can become using one recconect action or 
+ * up to two simple rotations.
+ * 
+ * Fills \p res with all possible configurations that \p config can change into using one recconect 
+ * action or up to two simple rotations. 
+ * Only rotations with angle + \p step and - \p step are allowed.
+ */
+void bisimpleNext(const Configuration& config, std::vector<Configuration>& res, unsigned step);
 
 /**
  * \brief Generates all possible configurations that \p config can become using one simple action that
