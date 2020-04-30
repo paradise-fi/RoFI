@@ -21,4 +21,4 @@ deploy:
   local-dir: doc/build/html
   keep_history: false
   on:
-    branch: doc
+    branch: master
