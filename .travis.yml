@@ -15,12 +15,12 @@ script:
   - $SH "make all.clang"
   - $SH "make test.gcc"
   - $SH "make test.clang"
-  - $SH "cd doc; make -j3"
-  # Fetch all git branches before building dev documentation
+  # Fetch all git branches before building documentation
   - git branch -r | grep -v '\->' | while read remote; do git branch --track "${remote#origin/}" "$remote"; done
-  - git checkout $TRAVIS_BRANCH
+  - git checkout master # Build the master documentation
   - git fetch --all
   - git pull --all
+  - $SH "cd doc; make -j3"
   - $SH "releng/doc/buildDevDoc.sh"
   - sudo cp -r _build.doc/branch doc/build/html # Sudo is there because of the docker privileges
 
@@ -30,5 +30,3 @@ deploy:
   github_token: $GITHUB_TOKEN
   local-dir: doc/build/html
   keep_history: false
-  on:
-    branch: master
