@@ -19,6 +19,9 @@ This document provides the technical documentation for the `RoFI Platform
 .. |RoFI Library| image:: _static/code.jpg
 .. _RoFI Library: rofilib/index.html
 
+Note that you can preview the development version of the documentation on
+``https://paradise-fi.github.io/RoFI/branch/<git_branch_name>``.
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
