@@ -29,7 +29,7 @@ BODY='
         echo "============= Building doc for branch $NAME ================="
         cd $SRC_DIR/doc
         pwd
-        make
+        make -j3
         mkdir -p $BUILD_DIR/branch/$NAME
         mv $SRC_DIR/doc/build/html/* $BUILD_DIR/branch/$NAME/
         echo "============= Done doc for branch $NAME ====================="

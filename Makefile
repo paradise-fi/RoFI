@@ -15,13 +15,13 @@ rofilib.gcc:
 	mkdir -p _build.gcc/rofilib
 	cd _build.gcc/rofilib; \
 	cmake ../../RoFILib/; \
-	make
+	make -j20
 
 rofilib.clang:
 	mkdir -p _build.clang/rofilib
 	cd _build.clang/rofilib; \
 	CXX=clang++ CC=clang cmake ../../RoFILib/; \
-	make
+	make -j20
 
 rofilib_test.gcc: rofilib.gcc
 	cd _build.gcc/rofilib/visualizer; ./rofi-vis-test
