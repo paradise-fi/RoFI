@@ -30,3 +30,5 @@ deploy:
   github_token: $GITHUB_TOKEN
   local-dir: doc/build/html
   keep_history: false
+  on:
+    all_branches: true
