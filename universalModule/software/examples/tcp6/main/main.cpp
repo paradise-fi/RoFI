@@ -57,7 +57,7 @@ const char* buildAddress ( int id ) {
 }
 
 std::vector< gpio_num_t > docks( int id ) {
-    if ( id == 1 )
+    if ( id == 1 || id == 3 )
         return { GPIO_NUM_27, GPIO_NUM_14 };
     return { GPIO_NUM_14 };
 }
