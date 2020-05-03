@@ -8,7 +8,7 @@ Atoms provide the following containers:
 
 
 Classes reference
-=================
+-----------------
 
 .. doxygenclass:: atoms::IdSet
     :project: lib

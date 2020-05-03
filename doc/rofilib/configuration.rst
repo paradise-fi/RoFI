@@ -9,7 +9,7 @@ Feel free to add code examples.
 
 
 Types and Constants
-===================
+-------------------
 
 .. doxygentypedef:: ID
     :project: lib
@@ -27,7 +27,7 @@ Types and Constants
     :project: lib
 
 Classes
-=======
+-------
 
 .. doxygenclass:: Module
     :project: lib

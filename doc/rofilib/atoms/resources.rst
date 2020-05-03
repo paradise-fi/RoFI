@@ -11,7 +11,7 @@ temporary file from a resource embedded in the binary, and therefore, provide a
 file name for such resource.
 
 Usage
-=====
+-----
 
 To use an embedded resource you have to:
 
@@ -41,7 +41,7 @@ Then you can use the resource in your code:
 
 
 Classes reference
-=================
+-----------------
 
 .. doxygenclass:: ResourceManager
     :project: lib
@@ -50,7 +50,7 @@ Classes reference
     :project: lib
 
 Macro reference
-===============
+---------------
 
 .. doxygendefine:: LOAD_RESOURCE_FILE
     :project: lib

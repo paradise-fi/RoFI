@@ -5,7 +5,7 @@ Patterns aim for removing unnecessary boilerplate code from your project for
 commonly used programming patterns.
 
 Visitor Pattern
-===============
+---------------
 
 Visitors allow you to separate algorithms from your data structures in object
 hierarchy. It allows you to implement new functionality for existing classes
