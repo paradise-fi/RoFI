@@ -2,6 +2,8 @@
 #include <patterns.hpp>
 #include <string>
 
+using namespace std::string_literals;
+
 class Cat; // Forward declaration
 class Dog; // Forward declaration
 
@@ -19,11 +21,11 @@ class Dog: public atoms::Visitable< Animal, Dog > {};
 class TypeVisitor: public AnimalVisitor {
 public:
     void operator()( Cat& a ) override {
-        result = "cat";
+        result = "cat"s;
     }
 
     void operator()( Dog& b ) override {
-        result = "dog";
+        result = "dog"s;
     }
 
     using ReturnType = std::string; // Necessary for compatibility with atoms::visit
@@ -38,23 +40,23 @@ TEST_CASE( "Traditional visiting" ) {
     Animal *hiddenDog = &dog;
 
     cat.accept( visitor );
-    REQUIRE( visitor.result == "cat" );
+    REQUIRE( visitor.result == "cat"s );
 
     dog.accept( visitor );
-    REQUIRE( visitor.result == "dog" );
+    REQUIRE( visitor.result == "dog"s );
 
     hiddenCat->accept( visitor );
-    REQUIRE( visitor.result == "cat" );
+    REQUIRE( visitor.result == "cat"s );
 
     hiddenDog->accept( visitor );
-    REQUIRE( visitor.result == "dog" );
+    REQUIRE( visitor.result == "dog"s );
 }
 
 void catFoo( Cat& ) {}
 void dogFoo( Dog& ) {}
 
-std::string catType( Cat& ) { return "cat"; }
-std::string dogType( Dog& ) { return "dog"; }
+std::string catType( Cat& ) { return "cat"s; }
+std::string dogType( Dog& ) { return "dog"s; }
 
 TEST_CASE( "In-place visitors" ) {
     Cat cat;
@@ -83,16 +85,16 @@ TEST_CASE( "In-place visitors" ) {
     SECTION( "Plain functions, return value" ) {
         auto visitor = AnimalVisitor::make( catType, dogType );
         cat.accept( visitor );
-        REQUIRE( visitor.result == "cat" );
+        REQUIRE( visitor.result == "cat"s );
 
         dog.accept( visitor );
-        REQUIRE( visitor.result == "dog" );
+        REQUIRE( visitor.result == "dog"s );
 
         hiddenCat->accept( visitor );
-        REQUIRE( visitor.result == "cat" );
+        REQUIRE( visitor.result == "cat"s );
 
         hiddenDog->accept( visitor );
-        REQUIRE( visitor.result == "dog" );
+        REQUIRE( visitor.result == "dog"s );
     }
 
     SECTION( "Lambdas functions, return value" ) {
@@ -100,16 +102,16 @@ TEST_CASE( "In-place visitors" ) {
             []( Cat& cat ) { return "cat"; },
             []( Dog& dog ) { return "dog"; } );
         cat.accept( visitor );
-        REQUIRE( visitor.result == "cat" );
+        REQUIRE( visitor.result == "cat"s );
 
         dog.accept( visitor );
-        REQUIRE( visitor.result == "dog" );
+        REQUIRE( visitor.result == "dog"s );
 
         hiddenCat->accept( visitor );
-        REQUIRE( visitor.result == "cat" );
+        REQUIRE( visitor.result == "cat"s );
 
         hiddenDog->accept( visitor );
-        REQUIRE( visitor.result == "dog" );
+        REQUIRE( visitor.result == "dog"s );
     }
 }
 
@@ -121,34 +123,34 @@ TEST_CASE( "Mimic std::visit" ) {
 
     SECTION( "Use with hand-crafted visitor" ) {
         auto visitor = TypeVisitor();
-        REQUIRE( atoms::visit( cat, visitor ) == "cat" );
-        REQUIRE( atoms::visit( dog, visitor ) == "dog" );
-        REQUIRE( atoms::visit( *hiddenCat, visitor ) == "cat" );
-        REQUIRE( atoms::visit( *hiddenDog, visitor ) == "dog" );
+        REQUIRE( atoms::visit( cat, visitor ) == "cat"s );
+        REQUIRE( atoms::visit( dog, visitor ) == "dog"s );
+        REQUIRE( atoms::visit( *hiddenCat, visitor ) == "cat"s );
+        REQUIRE( atoms::visit( *hiddenDog, visitor ) == "dog"s );
     }
 
     SECTION( "Use with generated visitor" ) {
         auto visitor =  AnimalVisitor::make(
             []( Cat& cat ) { return "cat"; },
             []( Dog& dog ) { return "dog"; } );
-        REQUIRE( atoms::visit( cat, visitor ) == "cat" );
-        REQUIRE( atoms::visit( dog, visitor ) == "dog" );
-        REQUIRE( atoms::visit( *hiddenCat, visitor ) == "cat" );
-        REQUIRE( atoms::visit( *hiddenDog, visitor ) == "dog" );
+        REQUIRE( atoms::visit( cat, visitor ) == "cat"s );
+        REQUIRE( atoms::visit( dog, visitor ) == "dog"s );
+        REQUIRE( atoms::visit( *hiddenCat, visitor ) == "cat"s );
+        REQUIRE( atoms::visit( *hiddenDog, visitor ) == "dog"s );
     }
 
     SECTION( "Use with in-place visitor" ) {
         REQUIRE( atoms::visit( cat,
             []( Cat& cat ) { return "cat"; },
-            []( Dog& dog ) { return "dog"; } ) == "cat" );
+            []( Dog& dog ) { return "dog"; } ) == "cat"s );
         REQUIRE( atoms::visit( dog,
             []( Cat& cat ) { return "cat"; },
-            []( Dog& dog ) { return "dog"; } ) == "dog" );
+            []( Dog& dog ) { return "dog"; } ) == "dog"s );
         REQUIRE( atoms::visit( *hiddenCat,
             []( Cat& cat ) { return "cat"; },
-            []( Dog& dog ) { return "dog"; } ) == "cat" );
+            []( Dog& dog ) { return "dog"; } ) == "cat"s );
         REQUIRE( atoms::visit( *hiddenDog,
             []( Cat& cat ) { return "cat"; },
-            []( Dog& dog ) { return "dog"; } ) == "dog" );
+            []( Dog& dog ) { return "dog"; } ) == "dog"s );
     }
 }
