@@ -23,7 +23,7 @@ Note that you can preview the development version of the documentation on
 ``https://paradise-fi.github.io/RoFI/branch/<git_branch_name>``.
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 4
    :caption: Contents:
 
    roficom/index

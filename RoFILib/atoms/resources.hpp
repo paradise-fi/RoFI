@@ -13,13 +13,28 @@
 // https://beesbuzz.biz/code/4399-Embedding-binary-resources-with-CMake-and-C-11
 
 
+/**
+ * \brief Manager of embedded resources
+ *
+ * ResourceManager allows the user to register a resource and obtain a file name
+ * for it. The class is a singleton, obtain instance by calling
+ * ResourceManager::inst().
+ *
+ * This class is usually not needed when working with resources specified via
+ * CMake macro. Look at ResourceFile and LOAD_RESOURCE_FILE instead.
+ */
 class ResourceManager {
 public:
     ~ResourceManager() {
         std::filesystem::remove_all( _tmpDir );
     }
 
-
+    /**
+     * \brief Add a resource and obtain a valid file path for it
+     *
+     * If the resource on given address was already added, existing file is
+     * returned. The resource is specified by address and its size in bytes.
+     */
     std::filesystem::path add( const char *data, int count ) {
         auto entry = _resources.find( data );
         if ( entry != _resources.end() )
@@ -29,6 +44,9 @@ public:
         return path;
     }
 
+    /**
+     * \brief Get an instance of the manager
+     */
     static ResourceManager& inst() {
         static ResourceManager man;
         return man;
@@ -54,6 +72,12 @@ private:
     std::map< const char *, std::filesystem::path > _resources;
 };
 
+/**
+ * \brief Represents a single resource with na associated filename.
+ *
+ * If you are using resources specified by the CMake macro, do not create
+ * instances of the class directly, but use macro LOAD_RESOURCE_FILE.
+ */
 class ResourceFile {
 public:
     ResourceFile( const char *start, const char *end )
@@ -64,6 +88,9 @@ public:
         _path( ResourceManager::inst().add( data, count ) )
     {}
 
+    /**
+     * \brief Get filename associated with given resource
+     */
     std::filesystem::path name() const {
         return _path;
     }
@@ -71,6 +98,14 @@ private:
     std::filesystem::path _path;
 };
 
+/**
+ * \brief Obtain an instance of ResourceFile for given resource specified by the
+ * CMake macro.
+ *
+ * Specify the resource name directly, without string quotes, and replace
+ * special symbols by and underscore. E.g., for resource `test/file.bmp` use
+ * `test_file_bmp`.
+ */
 #define LOAD_RESOURCE_FILE(x) ([]() {                                       \
         extern const char _binary_##x##_start, _binary_##x##_end;           \
         return ResourceFile(&_binary_##x##_start, &_binary_##x##_end);      \
