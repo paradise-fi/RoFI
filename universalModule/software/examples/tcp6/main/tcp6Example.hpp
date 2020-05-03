@@ -73,10 +73,11 @@ err_t slaveReceive( void *arg, struct tcp_pcb *pcb, struct pbuf *p, err_t err ) 
     }
 
     auto data = _rofi::PBuf::own( p );
-    if ( err == ERR_OK )
+    if ( err == ERR_OK ) {
         std::cout << "Received: " << data.asString() << "\n";
-    else
+	} else {
         std::cout << "Connection error: " << lwip_strerr( err ) << "\n";
+	}
 
     return ERR_OK;
 }
@@ -98,7 +99,7 @@ err_t connect( void *arg, struct tcp_pcb* pcb, err_t err ) {
 
 void runSlave( const char* masterAddr ) {
     std::cout << "Starting TCP client\n";
-    vTaskDelay( 4000 / portTICK_PERIOD_MS );
+    vTaskDelay( 7000 / portTICK_PERIOD_MS );
     tcp_pcb* pcb = tcp_new();
     tcp_recv( pcb, slaveReceive );
     tcp_sent( pcb, send );

@@ -14,3 +14,5 @@ There should be one RoFI dock connected on each bus with CS 14. The two docks
 should be connected. The ESP32 should run the same firmware.
 
 Note that the detection of server/client is based on MAC address and it might be needed to modify the decision procedure according to your modules.
+
+**Note:** Modified version of lwip needed. https://github.com/jajik/rofi-lwip

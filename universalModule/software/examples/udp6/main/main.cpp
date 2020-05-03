@@ -64,7 +64,7 @@ _rofi::PhysAddr mac() {
 }
 
 std::vector< gpio_num_t > docks( int id ) {
-	if ( id == 1 )
+	if ( id == 1 || id == 3 )
 		return { GPIO_NUM_14, GPIO_NUM_27 };
 	return { GPIO_NUM_14 };
 }
@@ -83,6 +83,7 @@ extern "C" void app_main() {
 
 	_rofi::RoIF6 roif(
 		_rofi::Ip6Addr( buildAddress( getId() ) ),
+		128,
 		mac(),
 		docks( getId() ) );
 
