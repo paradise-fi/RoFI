@@ -58,7 +58,7 @@ const char* buildAddress ( int id ) {
 
 std::vector< gpio_num_t > docks( int id ) {
     if ( id == 1 )
-        return { GPIO_NUM_14, GPIO_NUM_27 };
+        return { GPIO_NUM_27, GPIO_NUM_14 };
     return { GPIO_NUM_14 };
 }
 
@@ -75,17 +75,20 @@ extern "C" void app_main() {
     ESP_ERROR_CHECK( r );
 
     _rofi::RoIF6 roif(
-		_rofi::Ip6Addr( buildAddress( getId() ) ),
+		getId(), // same as <IP6Addr( buildAddress( getId() ) ), 128>
 		mac(),
 		docks( getId() ) );
 
-	roif.setUp();
-	roif.printAddresses();
 
-	if ( getId() == 11 )
+	if ( getId() == 1 )
+		roif.addAddress( _rofi::Ip6Addr( "fc07::a" ), 128 );
+
+	roif.setUp();
+
+	if ( getId() == 1 )
         tcp6Ex::runMaster();
     else
-        tcp6Ex::runSlave( "fc07::11" );
+        tcp6Ex::runSlave( "fc07::a" );
 
     while ( true ) vTaskDelay( 2000 / portTICK_PERIOD_MS );
 }
