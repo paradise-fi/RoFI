@@ -10,14 +10,14 @@ comments). In is written in
 
 There are:
 
-- Python dependencies: `sphinx`, `breathe`, and `sphinx-rtd-theme`
-- system dependencies: `doxygen`
+- Python dependencies: `sphinx`, `breathe`, `sphinx-rtd-theme`, and `recommonmark`
+- system dependencies: `doxygen`, `graphviz`, `inotify-tools`, and `xdg-utils`
 
 You can install them on Debian/Ubuntu by:
 
 ```
-pip3 install sphinx breathe sphinx-rtd-theme
-apt install doxygen
+apt install python3-pip doxygen graphviz inotify-tools xdg-utils
+pip3 install sphinx breathe sphinx-rtd-theme recommonmark
 ```
 
 # Building
