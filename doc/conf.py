@@ -37,7 +37,7 @@ breathe_sources = {
     "driver": "../universalModule/software/RoFIDriver/",
     "roficom": "../RoFICoM/software/control_board/",
     "lib": "../RoFILib/",
-    "gazebosim": "../simulator/",
+    "gzsim": "../simulator/",
 }
 breathe_projects = { name: "build/doxygen/" + name + "/xml" \
     for name in breathe_sources.keys() }
