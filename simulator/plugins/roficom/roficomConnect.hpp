@@ -23,11 +23,11 @@ std::optional< rofi::messages::ConnectorState::Orientation > getMutualOrientatio
 /**
  * @brief Check if two roficoms are in a position to be connected
  * and returns the connection orientation
+ *      vector (0, 0, 1) is the mating side direction
+ *      vector (1, 0, 0) is the North direction
  *
- * @params
- *      lhs, rhs - poses of the roficoms
- *                 vector (0, 0, 1) is the mating side direction
- *                 vector (1, 0, 0) is the North direction
+ * @param lhs pose of the first roficom
+ * @param rhs pose of the second roficom
  * @returns
  *      nullptr - if the connection cannot be established
  *      otherwise - returns the connection orientation

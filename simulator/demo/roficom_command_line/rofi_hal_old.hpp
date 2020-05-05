@@ -4,7 +4,7 @@
 #include <functional>
 #include <memory>
 
-namespace rofi::hal
+namespace roficom
 {
 namespace detail
 {
@@ -136,4 +136,4 @@ public:
     static void wait( int ms, std::function< void() > callback );
 };
 
-} // namespace rofi::hal
+} // namespace roficom

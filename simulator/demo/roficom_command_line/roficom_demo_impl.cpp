@@ -54,7 +54,7 @@ void connectImpl( int connectorNumber, bool connect )
     pubs.at( connectorNumber )->Publish( std::move( msg ) );
 }
 
-namespace rofi::hal
+namespace roficom
 {
 namespace detail
 {
@@ -172,4 +172,4 @@ void Connector::disconnect()
 {
     connectImpl( connectorData->connectorNumber, false );
 }
-} // namespace rofi::hal
+} // namespace roficom

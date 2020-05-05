@@ -98,7 +98,7 @@ void printHelp()
               << "\tc 2 d\n";
 }
 
-void processConnectorCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_view > & tokens )
+void processConnectorCmd( roficom::RoFI & rofi, const std::vector< std::string_view > & tokens )
 {
     if ( tokens.size() < 3 )
         throw std::runtime_error( "Wrong number of arguments" );
@@ -146,7 +146,7 @@ int main( int argc, char ** argv )
 
     try
     {
-        auto & rofi = rofi::hal::RoFI::getLocalRoFI();
+        auto & rofi = roficom::RoFI::getLocalRoFI();
 
         for ( std::string line; std::getline( std::cin, line ); )
         {
