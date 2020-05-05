@@ -765,13 +765,13 @@ void RoFISim::onDescriptionResp( const RoFISim::RofiRespPtr & resp )
     }
 
     size_t jointCount = static_cast< size_t >( description.jointcount() );
-    while ( static_cast< long >( _joints.size() ) < jointCount )
+    while ( _joints.size() < jointCount )
     {
         _joints.push_back( std::make_shared< JointSim >( shared_from_this(), _joints.size() ) );
     }
 
     size_t connectorCount = static_cast< size_t >( description.connectorcount() );
-    while ( static_cast< long >( _connectors.size() ) < connectorCount )
+    while ( _connectors.size() < connectorCount )
     {
         _connectors.push_back(
                 std::make_shared< ConnectorSim >( shared_from_this(), _connectors.size() ) );
