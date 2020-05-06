@@ -8,7 +8,7 @@ namespace gazebo
 std::recursive_mutex RoFICoMPlugin::positionMutex;
 std::map< const physics::Model *, RoFICoMPlugin::Position > RoFICoMPlugin::positionsMap;
 
-void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
+void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
 {
     _model = std::move( model );
     assert( _model );
@@ -20,7 +20,7 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
               << "Connecting roficoms will probably not work properly.\n";
     }
 
-    loadJoint();
+    loadJoint( sdf );
     assert( extendJoint && *extendJoint );
 
     updatePosition( Position::Retracted );
@@ -53,15 +53,33 @@ void RoFICoMPlugin::jointPositionReachedCallback( double desiredPosition )
     }
 }
 
-void RoFICoMPlugin::loadJoint()
+void RoFICoMPlugin::loadJoint( sdf::ElementPtr pluginSdf )
 {
-    auto pluginSdf = getPluginSdf( _model->GetSDF(), "libroficomPlugin.so" );
-    auto pidValuesVector = PIDLoader::loadControllerValues( pluginSdf );
-    assert( pidValuesVector.size() == 1 && "expected 1 controlled joint" );
-    auto & pidValue = pidValuesVector.at( 0 );
+    if ( !pluginSdf )
+    {
+        gzerr << "No plugin sdf found in roficom\n";
+        throw std::runtime_error( "no plugin sdf found in roficom" );
+    }
 
+    auto pidValuesVector = PIDLoader::loadControllerValues( pluginSdf );
+    if ( pidValuesVector.size() != 1 )
+    {
+        gzerr << "Expected 1 controller joint in roficom\n";
+        throw std::runtime_error( "expected 1 controller joint in roficom" );
+    }
+
+    auto pidValue = std::move( pidValuesVector.at( 0 ) );
     auto joint = _model->GetJoint( pidValue.jointName );
-    assert( joint && "no joint with specified name found" );
+    if ( !joint )
+    {
+        gzerr << "No joint with specified name found in roficom\n";
+        throw std::runtime_error( "no joint with specified name found in roficom" );
+    }
+    if ( joint->GetMsgType() != msgs::Joint::PRISMATIC )
+    {
+        gzerr << "Controlled joint in roficom has to be prismatic\n";
+        throw std::runtime_error( "controlled joint in roficom has to be prismatic" );
+    }
 
     extendJoint = std::make_unique< JointData< PIDController > >(
             std::move( joint ),

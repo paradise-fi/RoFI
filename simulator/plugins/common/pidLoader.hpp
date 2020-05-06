@@ -52,47 +52,20 @@ public:
         }
     };
 
-    static PIDValues loadPIDValues( sdf::ElementPtr pidSdf )
+    static std::optional< double > loadInitTargetValue( sdf::ElementPtr pidSdf )
     {
-        PIDValues pidValues;
+        assert( pidSdf );
+
+        std::optional< double > initForce;
         for ( auto child = pidSdf->GetFirstElement(); child; child = child->GetNextElement() )
         {
-            if ( child->GetName() == "pid_gains" )
+            if ( child->GetName() == "init_target" )
             {
-                if ( pidSdf->GetName() == "force" )
-                {
-                    gzwarn << "Force controller does not use \"pid_gains\".\n";
-                    continue;
-                }
-                if ( pidValues.pidGains )
-                {
-                    gzerr << "Multiple occurencies of element \"pid_gains\".\n";
-                    continue;
-                }
-                pidValues.pidGains = child->Get< ignition::math::Vector3d >();
-            }
-            else if ( child->GetName() == "i_max" )
-            {
-                if ( pidSdf->GetName() == "force" )
-                {
-                    gzwarn << "Force controller does not use \"i_max\".\n";
-                    continue;
-                }
-                if ( pidValues.iMax )
-                {
-                    gzerr << "Multiple occurencies of element \"i_max\".\n";
-                    continue;
-                }
-                pidValues.iMax = child->Get< double >();
-            }
-            else if ( child->GetName() == "init_target" )
-            {
-                if ( pidValues.initTarget )
+                if ( initForce )
                 {
                     gzerr << "Multiple occurencies of element \"init_target\".\n";
-                    continue;
                 }
-                pidValues.initTarget = child->Get< double >();
+                initForce = child->Get< double >();
             }
             else
             {
@@ -101,13 +74,49 @@ public:
             }
         }
 
-        if ( pidSdf->GetName() == "force" )
+        if ( !initForce )
         {
-            if ( !pidValues.initTarget )
+            gzwarn << "No element \"init_force\" found in \"" << pidSdf->GetName() << "\".\n";
+        }
+        return initForce;
+    }
+
+    static PIDValues loadPIDValues( sdf::ElementPtr pidSdf )
+    {
+        assert( pidSdf );
+
+        PIDValues pidValues;
+        for ( auto child = pidSdf->GetFirstElement(); child; child = child->GetNextElement() )
+        {
+            if ( child->GetName() == "pid_gains" )
             {
-                gzwarn << "No element \"init_force\" found in \"" << pidSdf->GetName() << "\".\n";
+                if ( pidValues.pidGains )
+                {
+                    gzerr << "Multiple occurencies of element \"pid_gains\".\n";
+                }
+                pidValues.pidGains = child->Get< ignition::math::Vector3d >();
             }
-            return pidValues;
+            else if ( child->GetName() == "i_max" )
+            {
+                if ( pidValues.iMax )
+                {
+                    gzerr << "Multiple occurencies of element \"i_max\".\n";
+                }
+                pidValues.iMax = child->Get< double >();
+            }
+            else if ( child->GetName() == "init_target" )
+            {
+                if ( pidValues.initTarget )
+                {
+                    gzerr << "Multiple occurencies of element \"init_target\".\n";
+                }
+                pidValues.initTarget = child->Get< double >();
+            }
+            else
+            {
+                gzerr << "Unrecognized element \"" << child->GetName() << "\".\n";
+                continue;
+            }
         }
 
         if ( !pidValues.pidGains )
@@ -123,7 +132,11 @@ public:
 
     static std::vector< ControllerValues > loadControllerValues( sdf::ElementPtr pluginSdf )
     {
-        assert( pluginSdf );
+        if ( !pluginSdf )
+        {
+            return {};
+        }
+
         std::vector< ControllerValues > loadedValues;
 
         for ( auto elem = pluginSdf->GetFirstElement(); elem; elem = elem->GetNextElement() )
@@ -147,16 +160,14 @@ public:
                     if ( controllerValues.forceTarget )
                     {
                         gzerr << "Multiple occurencies of element \"force\".\n";
-                        continue;
                     }
-                    controllerValues.forceTarget = loadPIDValues( child ).initTarget;
+                    controllerValues.forceTarget = loadInitTargetValue( child );
                 }
                 else if ( child->GetName() == "velocity" )
                 {
                     if ( controllerValues.velocity )
                     {
                         gzerr << "Multiple occurencies of element \"velocity\".\n";
-                        continue;
                     }
                     controllerValues.velocity = loadPIDValues( child );
                 }
@@ -165,7 +176,6 @@ public:
                     if ( controllerValues.position )
                     {
                         gzerr << "Multiple occurencies of element \"position\".\n";
-                        continue;
                     }
                     controllerValues.position = loadPIDValues( child );
                 }
@@ -198,7 +208,7 @@ public:
                 }
             }
 
-            for ( auto & name : jointNames )
+            for ( auto name : jointNames )
             {
                 loadedValues.push_back( controllerValues );
                 loadedValues.back().jointName = std::move( name );

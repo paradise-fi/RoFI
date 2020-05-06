@@ -49,7 +49,7 @@ private:
     // Ideally these are nested models of RoFICoM
     void addConnector( gazebo::physics::ModelPtr connectorModel );
     void clearConnectors();
-    void findAndInitJoints();
+    void findAndInitJoints( sdf::ElementPtr pluginSdf );
     void findAndInitConnectors();
 
     rofi::messages::RofiResp getJointRofiResp( rofi::messages::JointCmd::Type cmdtype,

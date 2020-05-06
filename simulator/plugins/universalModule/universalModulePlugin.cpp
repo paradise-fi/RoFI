@@ -8,14 +8,14 @@ namespace gazebo
 {
 using UMP = UniversalModulePlugin;
 
-void UMP::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
+void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
 {
     _model = model;
     gzmsg << "The UM plugin is attached to model [" << _model->GetScopedName() << "]\n";
 
     initCommunication();
 
-    findAndInitJoints();
+    findAndInitJoints( sdf );
     findAndInitConnectors();
 
     onUpdateConnection =
@@ -108,11 +108,19 @@ void UMP::clearConnectors()
     connectors.clear();
 }
 
-void UMP::findAndInitJoints()
+void UMP::findAndInitJoints( sdf::ElementPtr pluginSdf )
 {
     if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Init communication before adding joints\n";
+        return;
+    }
+
+    joints.clear();
+
+    if ( !pluginSdf )
+    {
+        gzwarn << "No plugin sdf found in module. Assuming no controllers.\n";
         return;
     }
 
@@ -124,11 +132,7 @@ void UMP::findAndInitJoints()
                                          desiredPosition ) );
     };
 
-    auto pidValuesVector = PIDLoader::loadControllerValues(
-            getPluginSdf( _model->GetSDF(), "libuniversalModulePlugin.so" ) );
-
-    joints.clear();
-
+    auto pidValuesVector = PIDLoader::loadControllerValues( pluginSdf );
     for ( auto & pidValues : pidValuesVector )
     {
         if ( auto joint = _model->GetJoint( pidValues.jointName ) )

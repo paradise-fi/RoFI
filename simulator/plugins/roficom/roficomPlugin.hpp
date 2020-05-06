@@ -42,7 +42,7 @@ public:
     }
 
     void Load( physics::ModelPtr model, sdf::ElementPtr sdf ) override;
-    void loadJoint();
+    void loadJoint( sdf::ElementPtr pluginSdf );
 
     void connect();
     void disconnect();
