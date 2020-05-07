@@ -104,20 +104,24 @@
                 <use_parent_model_frame>1</use_parent_model_frame>
             </axis>
         </joint>
-        <plugin name="roficom" filename="libroficomPlugin.so">
+        <joint name="fixJoint" type="fixed">
+            <parent>outer</parent>
+            <child>inner</child>
+        </joint>
+        <!-- <plugin name="roficom" filename="libroficomPlugin.so">
             <controller>
                 <joint>extendJoint</joint>
                 <velocity>
-                    <pid_gains>0.8 200 0.006</pid_gains>
+                    <pid_gains>0 0 0</pid_gains>
                     <i_max>1</i_max>
                     <init_target>24e-3</init_target>
                 </velocity>
                 <position>
-                    <pid_gains>50 0 0</pid_gains>
+                    <pid_gains>0 0 0</pid_gains>
                     <i_max>1</i_max>
                     <init_target>0</init_target>
                 </position>
             </controller>
-        </plugin>
+        </plugin> -->
     </model>
 </sdf>

@@ -12,7 +12,7 @@
 #include "pidLoader.hpp"
 
 
-constexpr size_t BufferSize = 10;
+constexpr size_t BufferSize = 5;
 
 namespace gazebo
 {
