@@ -29,7 +29,6 @@ void RoficomConnection::load( RoFICoMPlugin & roficomPlugin,
     auto attachEventPath = "/gazebo/" + _model->GetWorld()->Name() + "/attach_event";
     _pubAttachEvent = _node->Advertise< rofi::messages::ConnectorAttachInfo >( attachEventPath );
     assert( _pubAttachEvent );
-    gzmsg << "Advertising on topic: " << _pubAttachEvent->GetTopic() << "\n";
 
     _subAttachEvent = _node->Subscribe( "~/attach_event", &RoficomConnection::onAttachEvent, this );
     assert( _subAttachEvent );

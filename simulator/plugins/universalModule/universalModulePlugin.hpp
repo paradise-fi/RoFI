@@ -44,6 +44,7 @@ private:
     using ConnectorRespPtr = boost::shared_ptr< const rofi::messages::ConnectorResp >;
 
     void initCommunication();
+    void startListening();
 
     // Connectors have to be models, that have attached plugin "libroficomPlugin.so"
     // Ideally these are nested models of RoFICoM

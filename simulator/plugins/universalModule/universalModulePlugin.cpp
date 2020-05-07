@@ -23,7 +23,9 @@ void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
 
     gzmsg << "Number of joints is " << joints.size() << "\n";
     gzmsg << "Number of connectors is " << connectors.size() << "\n";
-    gzmsg << "Listening...\n";
+
+    startListening();
+    gzmsg << "Ready...\n";
 }
 
 void UMP::initCommunication()
@@ -47,12 +49,27 @@ void UMP::initCommunication()
     }
     _node->Init( getElemPath( _model ) );
 
-    _sub = _node->Subscribe( "~/control", &UMP::onRofiCmd, this );
     _pub = _node->Advertise< rofi::messages::RofiResp >( "~/response" );
-    if ( !_sub || !_pub )
+    if ( !_pub )
     {
-        gzerr << "Subcriber or Publisher not created\n";
-        throw std::runtime_error( "Subcriber or Publisher not created" );
+        gzerr << "Publisher could not be created\n";
+        throw std::runtime_error( "Publisher could not be created" );
+    }
+}
+
+void UMP::startListening()
+{
+    if ( !_node || !_node->IsInitialized() )
+    {
+        gzerr << "Init communication before starting listening\n";
+        return;
+    }
+
+    _sub = _node->Subscribe( "~/control", &UMP::onRofiCmd, this );
+    if ( !_sub )
+    {
+        gzerr << "Subcriber could not be created\n";
+        throw std::runtime_error( "Subcriber could not be created" );
     }
 
     gzmsg << "Model is listening on topic '" << _sub->GetTopic() << "'\n";

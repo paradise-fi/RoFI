@@ -29,6 +29,8 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
     assert( _node );
     roficomConnection.load( *this, _model, _node );
 
+    startListening();
+
     gzmsg << "RoFICoM plugin ready\n";
 }
 
@@ -173,8 +175,15 @@ void RoFICoMPlugin::initCommunication()
     _node->Init( getElemPath( _model ) );
 
     _pubRofi = _node->Advertise< rofi::messages::ConnectorResp >( "~/response" );
-    _subRofi = _node->Subscribe( "~/control", &RoFICoMPlugin::onConnectorCmd, this );
     assert( _pubRofi );
+}
+
+void RoFICoMPlugin::startListening()
+{
+    assert( _node );
+    assert( _node->IsInitialized() );
+
+    _subRofi = _node->Subscribe( "~/control", &RoFICoMPlugin::onConnectorCmd, this );
     assert( _subRofi );
 }
 

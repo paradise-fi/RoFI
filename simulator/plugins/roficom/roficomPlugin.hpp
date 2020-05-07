@@ -61,6 +61,7 @@ private:
     using ContactsMsgPtr = boost::shared_ptr< const msgs::Contacts >;
 
     void initCommunication();
+    void startListening();
 
     void extend();
     void retract();
