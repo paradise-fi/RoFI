@@ -30,5 +30,5 @@ int main()
         endCycleFuture.get();
     }
 
-    std::cout << "Basic force example ended\n";
+    std::cout << "Basic velocity example ended\n";
 }
