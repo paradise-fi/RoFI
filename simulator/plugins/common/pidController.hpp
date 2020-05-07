@@ -11,6 +11,9 @@
 #include "lorrisConnector.hpp"
 #include "pidLoader.hpp"
 
+
+constexpr size_t BufferSize = 10;
+
 namespace gazebo
 {
 namespace detail
@@ -25,10 +28,13 @@ class Buffer
 public:
     void update( double value )
     {
+        assert( _pos >= 0 );
+        assert( static_cast< size_t >( _pos ) < _buffer.size() );
+
         auto old = _buffer[ _pos ];
         _buffer[ _pos ] = value;
-        _sum += ( value - old ) / N;
-        _pos = ( _pos + 1 ) % N;
+        _sum += ( value - old ) / _buffer.size();
+        _pos = ( _pos + 1 ) % _buffer.size();
     }
 
     double getAverage() const
@@ -110,7 +116,7 @@ class VelocityPIDController : public ForceController
     common::PID _velController;
     common::Time _velPrevUpdateTime;
 
-    detail::Buffer< 10 > _velBuffer;
+    detail::Buffer< BufferSize > _velBuffer;
     double _targetVelocity = 0;
 
     bool velocityAtPositionBoundary() const
@@ -227,7 +233,7 @@ class PositionPIDController : public VelocityPIDController
     common::PID _posController;
     common::Time _posPrevUpdateTime;
 
-    detail::Buffer< 10 > _posBuffer;
+    detail::Buffer< BufferSize > _posBuffer;
     double _desiredPosition = 0;
     double _targetPosition = 0;
     double _maxSpeed = 0;
