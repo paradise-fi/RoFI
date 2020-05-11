@@ -4,7 +4,6 @@ default: build-all
 WORLD ?=
 GAZEBO_ARGS ?= --verbose
 
-EXAMPLE ?= basic_joint_force
 EXAMPLE_ARGS ?=
 
 .PHONY: build-all clean run tests-roficom format-all example-server example-client help
@@ -15,6 +14,7 @@ build:
 
 build-all: build
 	cd build && make -j8
+	@echo "\nBuild completed\n\n"
 
 clean:
 	rm -rf build
@@ -29,9 +29,13 @@ format-all:
 	find ./ ! \( -path "./build/*" \) -a \( -type f -iname *.hpp -o -type f -iname *.cpp \) | xargs clang-format --style=file -i
 
 example-server: build-all
+	@test -f ./examples/${EXAMPLE}/${EXAMPLE}.world || \
+		( echo "ERROR: No example world for '${EXAMPLE}' found\nCall 'make help' for more info\n" ; exit 1 )
 	./runGazebo.sh ./examples/${EXAMPLE}/${EXAMPLE}.world ${GAZEBO_ARGS}
 
 example-client: build-all
+	@test -f ./build/examples/${EXAMPLE}/${EXAMPLE} || \
+		( echo "ERROR: No example '${EXAMPLE}' found\nCall 'make help' for more info\n" ; exit 1 )
 	./build/examples/${EXAMPLE}/${EXAMPLE} ${EXAMPLE_ARGS}
 
 help:
