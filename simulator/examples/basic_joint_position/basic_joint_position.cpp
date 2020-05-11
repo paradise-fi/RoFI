@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 #include <future>
 #include <iostream>
@@ -9,38 +10,53 @@
 int main()
 {
     using namespace rofi::hal;
-    using Callback = std::function< void() >;
     constexpr float pi = 3.141592741f;
 
     std::cout << "Starting basic position example\n";
 
     RoFI localRofi = RoFI::getLocalRoFI();
-    Joint joint = localRofi.getJoint( 0 );
+    int jointCount = localRofi.getDescriptor().jointCount;
+    assert( jointCount > 0 );
+    std::cout << "Using joint number " << ( jointCount >= 2 ? 1 : 0 ) << "\n";
+    Joint joint = localRofi.getJoint( jointCount >= 2 ? 1 : 0 );
 
-    auto minPos = std::clamp( joint.minPosition(), -pi, 0.f );
-    auto maxPos = std::clamp( joint.maxPosition(), 0.f, pi );
+    const auto minPos = std::clamp( joint.minPosition(), -pi, 0.f );
+    const auto maxPos = std::clamp( joint.maxPosition(), 0.f, pi );
 
-    auto setPosAndWait = [ &joint,
-                           speed = joint.maxSpeed() / 2,
-                           delay = 500 ]( float position, Callback callback ) {
-        std::cout << "Set position to " << position << std::endl;
-        joint.setPosition( position, speed, [ & ]( Joint ) {
-            RoFI::wait( delay, std::move( callback ) );
-        } );
-    };
-
+    const int delayMs = 500;
+    const int speed = joint.maxSpeed() / 2;
 
     while ( true )
     {
         std::promise< void > endCyclePromise;
         auto endCycleFuture = endCyclePromise.get_future();
-        setPosAndWait( 0, [ & ] {
-            setPosAndWait( minPos / 2, [ & ] {
-                setPosAndWait( minPos, [ & ] {
-                    setPosAndWait( maxPos / 2, [ & ] {
-                        setPosAndWait( maxPos, [ & ] {
-                            setPosAndWait( minPos, [ & ] {
-                                setPosAndWait( maxPos, [ & ] { endCyclePromise.set_value(); } );
+
+        joint.setPosition( 0, speed, [ & ]( Joint ) {
+            RoFI::wait( delayMs, [ & ] {
+                joint.setPosition( minPos / 2, speed, [ & ]( Joint ) {
+                    RoFI::wait( delayMs, [ & ] {
+                        joint.setPosition( minPos, speed, [ & ]( Joint ) {
+                            RoFI::wait( delayMs, [ & ] {
+                                joint.setPosition( maxPos / 2, speed, [ & ]( Joint ) {
+                                    RoFI::wait( delayMs, [ & ] {
+                                        joint.setPosition( maxPos, speed, [ & ]( Joint ) {
+                                            RoFI::wait( delayMs, [ & ] {
+                                                joint.setPosition( minPos, speed, [ & ]( Joint ) {
+                                                    RoFI::wait( delayMs, [ & ] {
+                                                        joint.setPosition(
+                                                                maxPos,
+                                                                speed,
+                                                                [ & ]( Joint ) {
+                                                                    RoFI::wait( delayMs, [ & ] {
+                                                                        endCyclePromise.set_value();
+                                                                    } );
+                                                                } );
+                                                    } );
+                                                } );
+                                            } );
+                                        } );
+                                    } );
+                                } );
                             } );
                         } );
                     } );

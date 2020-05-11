@@ -11,17 +11,18 @@
 
     <!-- RoFI module -->
     <include>
+      <pose>0 0 0.093 1.5708 0 0</pose>
       <uri>model://universalModule</uri>
     </include>
 
+    <model name="fixModuleModel">
+      <joint name="fixModuleJoint" type="fixed">
+        <parent>world</parent>
+        <child>universalModule::shoeA</child>
+      </joint>
+    </model>
+
     <!-- Attacher plugin -->
     <plugin name="attacher" filename="libattacherPlugin.so" />
-
-    <!-- World state -->
-    <state world_name='default'>
-      <model name='universalModule'>
-        <pose>0 0 0.043 0 0 0</pose>
-      </model>
-    </state>
   </world>
 </sdf>

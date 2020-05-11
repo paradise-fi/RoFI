@@ -345,7 +345,7 @@
                     <init_target>0</init_target>
                 </velocity>
                 <position>
-                    <pid_gains>0 0 0</pid_gains>
+                    <pid_gains>10 0 0</pid_gains>
                     <i_max>6</i_max>
                 </position>
             </controller>
