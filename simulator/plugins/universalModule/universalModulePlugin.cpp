@@ -266,7 +266,7 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
             }
 
             gzmsg << "Starting waiting (" << msg->waitcmd().waitms()
-                  << " s, ID: " << msg->waitcmd().waitid() << ")\n";
+                  << " ms, ID: " << msg->waitcmd().waitid() << ")\n";
             auto afterWaited = _model->GetWorld()->SimTime()
                                + common::Time( 0, msg->waitcmd().waitms() * 1000000 );
 
