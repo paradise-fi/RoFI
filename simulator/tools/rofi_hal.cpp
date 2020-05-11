@@ -152,6 +152,13 @@ public:
 
     Joint getJoint( int index ) override;
     Connector getConnector( int index ) override;
+    RoFI::Descriptor getDescriptor() const override
+    {
+        RoFI::Descriptor descriptor;
+        descriptor.jointCount = _joints.size();
+        descriptor.connectorCount = _connectors.size();
+        return descriptor;
+    }
 
     void onJointResp( const RofiRespPtr & resp );
     void onConnectorResp( const RofiRespPtr & resp );
@@ -411,7 +418,7 @@ public:
         return packet;
     }
 
-    static ConnectorEvent readEvent( RoFISim::RofiRespPtr resp )
+    static ConnectorEvent readEvent( RoFISim::RofiRespPtr /* resp */ )
     {
         // TODO: implement
         return {};

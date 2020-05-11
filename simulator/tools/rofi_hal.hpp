@@ -181,7 +181,7 @@ private:
 enum class ConnectorPosition : bool
 {
     Retracted = false,
-    Expanded = true
+    Expanded = true,
 };
 
 enum class ConnectorOrientation : signed char
@@ -189,26 +189,31 @@ enum class ConnectorOrientation : signed char
     North = 0,
     East = 1,
     South = 2,
-    West = 3
+    West = 3,
 };
 
 enum class ConnectorLine : bool
 {
     Internal = 0,
-    External = 1
+    External = 1,
 };
 
+/**
+ * \brief Connector state descriptor
+ */
 struct ConnectorState
 {
     ConnectorPosition position = ConnectorPosition::Retracted;
-    bool internal = false;
-    bool external = false;
-    bool connected = false;
+    bool internal = false;  ///< Is internal power bus connected to the connector?
+    bool external = false;  ///< Is the external power bus connected to the connector?
+    bool connected = false; ///< Is there a mating side connected?
     ConnectorOrientation orientation = ConnectorOrientation::North;
 };
 
-struct ConnectorEvent
+enum class ConnectorEvent : signed char
 {
+    Connected = 0,
+    Disconnected = 1,
 };
 
 using Packet = std::vector< std::byte >;
@@ -252,7 +257,7 @@ public:
     /**
      * \brief Get connector state
      */
-    ConnectorState getState()
+    ConnectorState getState() const
     {
         return _impl->getState();
     }
@@ -289,6 +294,8 @@ public:
 
     /**
      * \brief Register callback for incoming packets.
+     *
+     * The callback takes connector which received the packet and the packet.
      */
     void onPacket( std::function< void( Connector, Packet ) > callback )
     {
@@ -337,6 +344,15 @@ public:
     using Id = int;
 
     /**
+     * \brief Module shape & capabilities description
+     */
+    struct Descriptor
+    {
+        int jointCount = 0;
+        int connectorCount = 0;
+    };
+
+    /**
      *  \brief Interface of the actual implementation - either physical local,
      *  physical remote or a simulation one.
      *
@@ -355,6 +371,7 @@ public:
         virtual Id getId() const = 0;
         virtual Joint getJoint( int index ) = 0;
         virtual Connector getConnector( int index ) = 0;
+        virtual Descriptor getDescriptor() const = 0;
     };
 
     /**
@@ -380,6 +397,11 @@ public:
     Connector getConnector( int index )
     {
         return _impl->getConnector( index );
+    }
+
+    Descriptor getDescriptor() const
+    {
+        return _impl->getDescriptor();
     }
 
     /**
