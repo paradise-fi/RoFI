@@ -29,7 +29,6 @@ void RoficomConnection::load( RoFICoMPlugin & roficomPlugin,
     auto attachEventPath = "/gazebo/" + _model->GetWorld()->Name() + "/attach_event";
     _pubAttachEvent = _node->Advertise< rofi::messages::ConnectorAttachInfo >( attachEventPath );
     assert( _pubAttachEvent );
-    gzmsg << "Advertising on topic: " << _pubAttachEvent->GetTopic() << "\n";
 
     _subAttachEvent = _node->Subscribe( "~/attach_event", &RoficomConnection::onAttachEvent, this );
     assert( _subAttachEvent );
@@ -63,8 +62,6 @@ void RoficomConnection::connectRequest( physics::ModelPtr other,
     msg.set_attach( true );
     msg.set_orientation( orientation );
 
-    gzmsg << "Publishing to " << _pubAttachEvent->GetTopic() << "\n"; // TODO remove
-    gzmsg << "Message\n" << msg.DebugString() << "\n";                // TODO remove
     _pubAttachEvent->Publish( msg, true );
 }
 
@@ -82,7 +79,7 @@ void RoficomConnection::disconnectRequest()
 
     rofi::messages::ConnectorAttachInfo msg;
     msg.set_modelname1( _model->GetScopedName() );
-    msg.set_modelname1( _connectedTo->GetScopedName() );
+    msg.set_modelname2( _connectedTo->GetScopedName() );
     msg.set_attach( false );
 
     _pubAttachEvent->Publish( msg, true );
@@ -128,10 +125,12 @@ void RoficomConnection::onAttachEvent( const RoficomConnection::AttachInfoPtr & 
     if ( attachInfo->attach() )
     {
         onConnectEvent( otherRoficomName, attachInfo->orientation() );
+        _roficomPlugin->onConnectorEvent( rofi::messages::ConnectorCmd::CONNECT );
     }
     else
     {
         onDisconnectEvent( otherRoficomName );
+        _roficomPlugin->onConnectorEvent( rofi::messages::ConnectorCmd::DISCONNECT );
     }
 }
 
@@ -148,8 +147,8 @@ void RoficomConnection::onConnectEvent( const std::string & otherRoficomName,
     }
     if ( !isRoFICoM( otherRoficom ) )
     {
-        gzerr << "Model " << otherRoficom->GetScopedName() << " (got name: " << otherRoficomName
-              << ") is not RoFICoM\n";
+        gzerr << "Model " << otherRoficom->GetScopedName() << " (got '" << otherRoficomName
+              << "') is not a RoFICoM\n";
         return;
     }
 
@@ -174,7 +173,7 @@ void RoficomConnection::onDisconnectEvent( const std::string & otherRoficomName 
 {
     if ( !isConnected() )
     {
-        gzerr << "Disconnecting, but wasn't connected\n";
+        gzwarn << "Disconnecting, but wasn't connected\n";
         return;
     }
 
@@ -230,6 +229,7 @@ void RoficomConnection::connectToNearbyRequest()
     // TODO search only nearby roficoms and remove const_cast
     physics::ModelPtr otherRoficom;
     std::optional< Orientation > orientation;
+    assert( !orientation );
 
     {
         std::lock_guard< std::recursive_mutex > lock( RoFICoMPlugin::positionMutex );

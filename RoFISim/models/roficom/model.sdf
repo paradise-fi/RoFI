@@ -4,7 +4,7 @@
         <self_collide>false</self_collide>
         <link name='outer'>
             <inertial>
-                <pose>0 0 -8e-3 0 0 0</pose>
+                <pose>0 0 -8.5e-3 0 0 0</pose>
                 <mass>10e-3</mass> <!-- TODO check -->
                 <inertia>
                     <!-- ixx = iyy = 1/12 * mass * (3 * radius^2 + length^2) -->
@@ -19,7 +19,7 @@
                 </inertia>
             </inertial>
             <collision name='outer-collision'>
-                <pose>0 0 -8e-3 0 0 0</pose>
+                <pose>0 0 -8.5e-3 0 0 0</pose>
                 <geometry>
                     <cylinder>
                         <radius>25e-3</radius>
@@ -28,7 +28,7 @@
                 </geometry>
             </collision>
             <visual name='visual'>
-                <pose>0 0 -8e-3 0 0 0</pose>
+                <pose>0 0 -8.5e-3 0 0 0</pose>
                 <geometry>
                     <cylinder>
                         <radius>25e-3</radius>
@@ -105,19 +105,8 @@
             </axis>
         </joint>
         <plugin name='roficom' filename='libroficomPlugin.so'>
-            <controller>
-                <joint>extendJoint</joint>
-                <velocity>
-                    <pid_gains>0.8 200 0.006</pid_gains>
-                    <i_max>1</i_max>
-                    <init_target>24e-3</init_target>
-                </velocity>
-                <position>
-                    <pid_gains>50 0 0</pid_gains>
-                    <i_max>1</i_max>
-                    <init_target>0</init_target>
-                </position>
-            </controller>
+            <joint>extendJoint</joint>
+            <extend>false</extend>
         </plugin>
     </model>
 </sdf>

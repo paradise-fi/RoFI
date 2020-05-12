@@ -1,4 +1,4 @@
-#include "universalModulePlugin.hpp"
+#include "rofiModulePlugin.hpp"
 
 #include <cmath>
 #include <functional>
@@ -6,32 +6,35 @@
 
 namespace gazebo
 {
-using UMP = UniversalModulePlugin;
+using RMP = RoFIModulePlugin;
 
-void UMP::Load( physics::ModelPtr model, sdf::ElementPtr /*sdf*/ )
+void RMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
 {
     _model = model;
     gzmsg << "The UM plugin is attached to model [" << _model->GetScopedName() << "]\n";
 
     initCommunication();
 
-    findAndInitJoints();
+    findAndInitJoints( sdf );
     findAndInitConnectors();
 
     onUpdateConnection =
-            event::Events::ConnectWorldUpdateBegin( std::bind( &UMP::onUpdate, this ) );
+            event::Events::ConnectWorldUpdateBegin( std::bind( &RMP::onUpdate, this ) );
 
     gzmsg << "Number of joints is " << joints.size() << "\n";
     gzmsg << "Number of connectors is " << connectors.size() << "\n";
-    gzmsg << "Listening...\n";
+
+    startListening();
+    gzmsg << "UM plugin ready (" << _model->GetScopedName() << ")\n";
 }
 
-void UMP::initCommunication()
+void RMP::initCommunication()
 {
     if ( !_model )
     {
         gzerr << "Model has to be set before initializing communication\n";
-        return;
+        throw std::runtime_error( "Model has to be set before initializing communication" );
+        ;
     }
 
     if ( _node )
@@ -47,35 +50,56 @@ void UMP::initCommunication()
     }
     _node->Init( getElemPath( _model ) );
 
-    _sub = _node->Subscribe( "~/control", &UMP::onRofiCmd, this );
     _pub = _node->Advertise< rofi::messages::RofiResp >( "~/response" );
-    if ( !_sub || !_pub )
+    if ( !_pub )
     {
-        gzerr << "Subcriber or Publisher not created\n";
-        throw std::runtime_error( "Subcriber or Publisher not created" );
+        gzerr << "Publisher could not be created\n";
+        throw std::runtime_error( "Publisher could not be created" );
+    }
+}
+
+void RMP::startListening()
+{
+    if ( !_node || !_node->IsInitialized() )
+    {
+        gzerr << "Init communication before starting to listen\n";
+        throw std::runtime_error( "Init communication before starting to listen" );
+    }
+
+    _sub = _node->Subscribe( "~/control", &RMP::onRofiCmd, this );
+    if ( !_sub )
+    {
+        gzerr << "Subcriber could not be created\n";
+        throw std::runtime_error( "Subcriber could not be created" );
     }
 
     gzmsg << "Model is listening on topic '" << _sub->GetTopic() << "'\n";
 }
 
-void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )
+void RMP::addConnector( gazebo::physics::ModelPtr connectorModel )
 {
     assert( connectorModel );
 
     if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Init communication before adding connectors\n";
-        return;
+        throw std::runtime_error( "Init communication before adding connectors" );
     }
 
     std::string topicName = "/gazebo/" + getElemPath( connectorModel );
 
     auto pub = _node->Advertise< rofi::messages::ConnectorCmd >( topicName + "/control" );
-    auto sub = _node->Subscribe( topicName + "/response", &UMP::onConnectorResp, this );
+    auto sub = _node->Subscribe( topicName + "/response", &RMP::onConnectorResp, this );
 
-    if ( !sub || !pub )
+    if ( !sub )
     {
-        gzerr << "Connector Subcriber or Publisher not created\n";
+        gzerr << "Connector subcriber could not be created\n";
+        return;
+    }
+
+    if ( !pub )
+    {
+        gzerr << "Connector publisher could not be created\n";
         return;
     }
 
@@ -96,7 +120,7 @@ void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )
     connectors.back().first->Publish( std::move( emptyCmd ) );
 }
 
-void UMP::clearConnectors()
+void RMP::clearConnectors()
 {
     for ( auto & pair : connectors )
     {
@@ -108,11 +132,19 @@ void UMP::clearConnectors()
     connectors.clear();
 }
 
-void UMP::findAndInitJoints()
+void RMP::findAndInitJoints( sdf::ElementPtr pluginSdf )
 {
     if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Init communication before adding joints\n";
+        throw std::runtime_error( "Init communication before adding joints" );
+    }
+
+    joints.clear();
+
+    if ( !pluginSdf )
+    {
+        gzwarn << "No plugin sdf found in module. Assuming no controllers...\n";
         return;
     }
 
@@ -124,31 +156,29 @@ void UMP::findAndInitJoints()
                                          desiredPosition ) );
     };
 
-    auto pidValuesVector = PIDLoader::loadControllerValues(
-            getPluginSdf( _model->GetSDF(), "libuniversalModulePlugin.so" ) );
-
-    joints.clear();
-
+    auto pidValuesVector = PIDLoader::loadControllerValues( pluginSdf );
     for ( auto & pidValues : pidValuesVector )
     {
         if ( auto joint = _model->GetJoint( pidValues.jointName ) )
         {
             assert( joint );
+
             joints.emplace_back( std::move( joint ),
-                                 std::move( pidValues ),
-                                 std::bind( callback, joints.size(), std::placeholders::_1 ) );
+                                 pidValues,
+                                 std::bind( callback, joints.size(), std::placeholders::_1 ),
+                                 joints.size() );
             assert( joints.back() );
             assert( joints.back().joint->GetMsgType() == msgs::Joint::REVOLUTE );
         }
     }
 }
 
-void UMP::findAndInitConnectors()
+void RMP::findAndInitConnectors()
 {
     if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Init communication before adding connectors\n";
-        return;
+        throw std::runtime_error( "Init communication before adding connectors" );
     }
 
     clearConnectors();
@@ -162,7 +192,7 @@ void UMP::findAndInitConnectors()
     }
 }
 
-rofi::messages::RofiResp UMP::getJointRofiResp( rofi::messages::JointCmd::Type cmdtype,
+rofi::messages::RofiResp RMP::getJointRofiResp( rofi::messages::JointCmd::Type resptype,
                                                 int joint,
                                                 float value ) const
 {
@@ -172,14 +202,14 @@ rofi::messages::RofiResp UMP::getJointRofiResp( rofi::messages::JointCmd::Type c
 
     auto & jointResp = *resp.mutable_jointresp();
     jointResp.set_joint( joint );
-    jointResp.set_cmdtype( cmdtype );
+    jointResp.set_resptype( resptype );
 
-    jointResp.add_values( value );
+    jointResp.set_value( value );
 
     return resp;
 }
 
-rofi::messages::RofiResp UMP::getConnectorRofiResp(
+rofi::messages::RofiResp RMP::getConnectorRofiResp(
         const rofi::messages::ConnectorResp & connectorResp ) const
 {
     rofi::messages::RofiResp resp;
@@ -189,44 +219,37 @@ rofi::messages::RofiResp UMP::getConnectorRofiResp(
     return resp;
 }
 
-void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
+void RMP::onRofiCmd( const RMP::RofiCmdPtr & msg )
 {
     using rofi::messages::RofiCmd;
 
+    if ( rofiId && *rofiId != msg->rofiid() )
+    {
+        gzwarn << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid() << "\n";
+    }
     switch ( msg->cmdtype() )
     {
         case RofiCmd::NO_CMD:
             break;
         case RofiCmd::JOINT_CMD:
-            if ( rofiId && *rofiId != msg->rofiid() )
-            {
-                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid()
-                      << "\n";
-            }
             onJointCmd( msg->jointcmd() );
             break;
         case RofiCmd::CONNECTOR_CMD:
-            if ( rofiId && *rofiId != msg->rofiid() )
-            {
-                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid()
-                      << "\n";
-            }
             onConnectorCmd( msg->connectorcmd() );
             break;
         case RofiCmd::DESCRIPTION:
         {
-            if ( rofiId && *rofiId != msg->rofiid() )
-            {
-                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid()
-                      << "\n";
-            }
             if ( !rofiId )
             {
                 rofiId = msg->rofiid();
+                for ( auto & joint : joints )
+                {
+                    joint.controller.setRofiId( rofiId.value() );
+                }
             }
 
             rofi::messages::RofiResp resp;
-            resp.set_rofiid( rofiId.value_or( 0 ) );
+            resp.set_rofiid( rofiId.value() );
             resp.set_resptype( rofi::messages::RofiCmd::DESCRIPTION );
             auto description = resp.mutable_rofidescription();
             description->set_jointcount( joints.size() );
@@ -238,26 +261,25 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
         }
         case RofiCmd::WAIT_CMD:
         {
-            if ( rofiId && *rofiId != msg->rofiid() )
-            {
-                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid()
-                      << "\n";
-            }
-
             gzmsg << "Starting waiting (" << msg->waitcmd().waitms()
-                  << " s, ID: " << msg->waitcmd().waitid() << ")\n";
-            auto afterWaited = _model->GetWorld()->SimTime()
-                               + common::Time( 0, msg->waitcmd().waitms() * 1000000 );
+                  << " ms, ID: " << msg->waitcmd().waitid() << ")\n";
+            int32_t sec = msg->waitcmd().waitms() / 1000;
+            int32_t nsec = ( msg->waitcmd().waitms() % 1000 ) * 1000000;
+            auto afterWaited = _model->GetWorld()->SimTime() + common::Time( sec, nsec );
 
-            std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
-            waitCallbacksMap.emplace( afterWaited, [ this, waitId = msg->waitcmd().waitid() ]() {
-                rofi::messages::RofiResp resp;
-                resp.set_rofiid( rofiId.value_or( 0 ) );
-                resp.set_resptype( rofi::messages::RofiCmd::WAIT_CMD );
-                resp.set_waitid( waitId );
-                gzmsg << "Returning waiting ended (ID: " << waitId << ")\n";
-                _pub->Publish( std::move( resp ) );
-            } );
+            {
+                std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
+                waitCallbacksMap.emplace(
+                        afterWaited,
+                        [ this, waitId = msg->waitcmd().waitid() ]() {
+                            rofi::messages::RofiResp resp;
+                            resp.set_rofiid( rofiId.value_or( 0 ) );
+                            resp.set_resptype( rofi::messages::RofiCmd::WAIT_CMD );
+                            resp.set_waitid( waitId );
+                            gzmsg << "Returning waiting ended (ID: " << waitId << ")\n";
+                            _pub->Publish( std::move( resp ) );
+                        } );
+            }
 
             break;
         }
@@ -266,7 +288,7 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
     }
 }
 
-void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
+void RMP::onJointCmd( const rofi::messages::JointCmd & msg )
 {
     using rofi::messages::JointCmd;
 
@@ -280,43 +302,29 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
     switch ( msg.cmdtype() )
     {
         case JointCmd::NO_CMD:
-        {
-            _pub->Publish( getJointRofiResp( JointCmd::NO_CMD, joint, 0 ) );
             break;
-        }
-        case JointCmd::GET_MAX_POSITION:
+        case JointCmd::GET_CAPABILITIES:
         {
-            double maxPosition = joints.at( joint ).getMaxPosition();
-            gzmsg << "Returning max position of joint " << joint << ": " << maxPosition << "\n";
-            _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_POSITION, joint, maxPosition ) );
-            break;
-        }
-        case JointCmd::GET_MIN_POSITION:
-        {
-            double minPosition = joints.at( joint ).getMinPosition();
-            gzmsg << "Returning min position of joint " << joint << ": " << minPosition << "\n";
-            _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_POSITION, joint, minPosition ) );
-            break;
-        }
-        case JointCmd::GET_MAX_SPEED:
-        {
-            double maxSpeed = joints.at( joint ).getMaxVelocity();
-            gzmsg << "Returning max speed of joint " << joint << ": " << maxSpeed << "\n";
-            _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_SPEED, joint, maxSpeed ) );
-            break;
-        }
-        case JointCmd::GET_MIN_SPEED:
-        {
-            double minSpeed = joints.at( joint ).getMinVelocity();
-            gzmsg << "Returning min speed of joint " << joint << ": " << minSpeed << "\n";
-            _pub->Publish( getJointRofiResp( JointCmd::GET_MIN_SPEED, joint, minSpeed ) );
-            break;
-        }
-        case JointCmd::GET_MAX_TORQUE:
-        {
-            double maxTorque = joints.at( joint ).getMaxEffort();
-            gzmsg << "Returning max torque of joint " << joint << ": " << maxTorque << "\n";
-            _pub->Publish( getJointRofiResp( JointCmd::GET_MAX_TORQUE, joint, maxTorque ) );
+            auto & jointData = joints.at( joint );
+
+            rofi::messages::RofiResp resp;
+            resp.set_rofiid( rofiId.value_or( 0 ) );
+            resp.set_resptype( rofi::messages::RofiCmd::JOINT_CMD );
+
+            auto & jointResp = *resp.mutable_jointresp();
+            jointResp.set_joint( joint );
+            jointResp.set_resptype( JointCmd::GET_CAPABILITIES );
+
+            auto & capabilities = *jointResp.mutable_capabilities();
+            capabilities.set_maxposition( jointData.getMaxPosition() );
+            capabilities.set_minposition( jointData.getMinPosition() );
+            capabilities.set_maxspeed( jointData.getMaxVelocity() );
+            capabilities.set_minspeed( jointData.getMinVelocity() );
+            capabilities.set_maxtorque( jointData.getMaxEffort() );
+
+            gzmsg << "Returning capabilities of joint (" << joint << ")\n";
+
+            _pub->Publish( resp );
             break;
         }
         case JointCmd::GET_VELOCITY:
@@ -369,12 +377,12 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
             break;
         }
         default:
-            gzwarn << "Unknown command type: " << msg.cmdtype() << " of joint " << joint << "\n";
+            gzwarn << "Unknown command type " << msg.cmdtype() << " of joint " << joint << "\n";
             break;
     }
 }
 
-void UMP::onConnectorCmd( const rofi::messages::ConnectorCmd & msg )
+void RMP::onConnectorCmd( const rofi::messages::ConnectorCmd & msg )
 {
     using rofi::messages::ConnectorCmd;
 
@@ -388,45 +396,53 @@ void UMP::onConnectorCmd( const rofi::messages::ConnectorCmd & msg )
     connectors[ connector ].first->Publish( msg );
 }
 
-void UMP::onConnectorResp( const UMP::ConnectorRespPtr & msg )
+void RMP::onConnectorResp( const RMP::ConnectorRespPtr & msg )
 {
     _pub->Publish( getConnectorRofiResp( *msg ) );
 }
 
-void UMP::onUpdate()
+void RMP::onUpdate()
 {
-    std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
-
     assert( _model );
     auto actualTime = _model->GetWorld()->SimTime();
 
-    auto it = waitCallbacksMap.begin();
-    for ( ; it != waitCallbacksMap.end(); it++ )
+    std::multimap< common::Time, std::function< void() > > tmpMap;
+
     {
-        if ( it->first > actualTime )
+        std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
+
+        auto it = waitCallbacksMap.begin();
+        while ( it != waitCallbacksMap.end() )
         {
-            break;
+            if ( it->first > actualTime )
+            {
+                break;
+            }
+            tmpMap.insert( tmpMap.end(), waitCallbacksMap.extract( it++ ) );
         }
-        ( it->second )();
     }
-    waitCallbacksMap.erase( waitCallbacksMap.begin(), it );
+
+    for ( auto & elem : tmpMap )
+    {
+        elem.second();
+    }
 }
 
-void UMP::setVelocity( int joint, double velocity )
+void RMP::setVelocity( int joint, double velocity )
 {
-    joints.at( joint ).pid.setTargetVelocity( velocity );
+    joints.at( joint ).controller.setTargetVelocity( velocity );
 }
 
-void UMP::setTorque( int joint, double torque )
+void RMP::setTorque( int joint, double torque )
 {
-    joints.at( joint ).pid.setTargetForce( torque );
+    joints.at( joint ).controller.setTargetForce( torque );
 }
 
-void UMP::setPositionWithSpeed( int joint, double desiredPosition, double speed )
+void RMP::setPositionWithSpeed( int joint, double desiredPosition, double speed )
 {
-    joints.at( joint ).pid.setTargetPositionWithSpeed( desiredPosition, speed );
+    joints.at( joint ).controller.setTargetPositionWithSpeed( desiredPosition, speed );
 }
 
-GZ_REGISTER_MODEL_PLUGIN( UniversalModulePlugin )
+GZ_REGISTER_MODEL_PLUGIN( RoFIModulePlugin )
 
 } // namespace gazebo

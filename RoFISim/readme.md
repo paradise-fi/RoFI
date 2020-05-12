@@ -24,19 +24,17 @@ directory.
 
 The simulation consists of two parts. The server and the client (or clients.)
 
+For usage help, run `make help`.
+
 ### Server
 
 To use RoFI models and plugins, correct Gazebo paths have to be set up.
 To ease this step, you can run `make run` which will set them
 and runs gazebo server (with world defaulting to `empty.world`).
-Alternatively you can run `./runGazebo.sh [GAZEBO_ARGS] <world_file>`.
+Alternatively you can run
+`./setGazeboVariables.sh gazebo [GAZEBO_ARGS] <world_file>`.
 If you want to see messages from gazebo, make sure to use `--verbose`.
-For more details about arguments for gazebo run `gazebo -h`,
-or `./runGazebo.sh -h`.
-
-_Note:_ When running gazebo server with a world file with RoFI modules,
-I get a lot of error from `World.cc:190`,
-but the simulation seems to load everything and seems to work properly.
+For more details about arguments for gazebo run `gazebo -h`.
 
 In Gazebo you can add models and control the simulation. Read more about the
 Gazebo GUI in [the official
@@ -64,7 +62,6 @@ in an example's directory).
 ### Examples and demos
 
 To try an example, you have to run the server and the client.
-Take a look at section **How to use it** for more info.
 
 To run the client of an example, run:
 

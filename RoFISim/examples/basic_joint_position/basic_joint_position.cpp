@@ -14,7 +14,9 @@ int main()
 
     std::cout << "Starting basic position example\n";
 
-    RoFI & localRofi = RoFI::getLocalRoFI();
+    RoFI localRofi = RoFI::getLocalRoFI();
+    int jointCount = localRofi.getDescriptor().jointCount;
+    assert( jointCount > 0 );
     Joint joint = localRofi.getJoint( 0 );
 
     const auto minPos = std::clamp( joint.minPosition(), -pi, 0.f );
