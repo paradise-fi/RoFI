@@ -23,7 +23,7 @@ int main()
     const auto minPos = std::clamp( joint.minPosition(), -pi, 0.f );
     const auto maxPos = std::clamp( joint.maxPosition(), 0.f, pi );
 
-    const int delayMs = 500;
+    const int delayMs = 1000;
     const int speed = joint.maxSpeed() / 2;
 
     while ( true )
@@ -35,26 +35,17 @@ int main()
             RoFI::wait( delayMs, [ & ] {
                 joint.setPosition( minPos / 2, speed, [ & ]( Joint ) {
                     RoFI::wait( delayMs, [ & ] {
-                        joint.setPosition( minPos, speed, [ & ]( Joint ) {
+                        joint.setPosition( minPos * 9.f / 10, speed, [ & ]( Joint ) {
                             RoFI::wait( delayMs, [ & ] {
                                 joint.setPosition( maxPos / 2, speed, [ & ]( Joint ) {
                                     RoFI::wait( delayMs, [ & ] {
-                                        joint.setPosition( maxPos, speed, [ & ]( Joint ) {
-                                            RoFI::wait( delayMs, [ & ] {
-                                                joint.setPosition( minPos, speed, [ & ]( Joint ) {
-                                                    RoFI::wait( delayMs, [ & ] {
-                                                        joint.setPosition(
-                                                                maxPos,
-                                                                speed,
-                                                                [ & ]( Joint ) {
-                                                                    RoFI::wait( delayMs, [ & ] {
-                                                                        endCyclePromise.set_value();
-                                                                    } );
-                                                                } );
-                                                    } );
-                                                } );
-                                            } );
-                                        } );
+                                        joint.setPosition( maxPos * 9.f / 10,
+                                                           speed,
+                                                           [ & ]( Joint ) {
+                                                               RoFI::wait( delayMs, [ & ] {
+                                                                   endCyclePromise.set_value();
+                                                               } );
+                                                           } );
                                     } );
                                 } );
                             } );

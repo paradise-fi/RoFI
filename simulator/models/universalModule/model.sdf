@@ -341,12 +341,11 @@
                 <joint>shoeBRev</joint>
                 <velocity>
                     <pid_gains>0.05 1 0</pid_gains>
-                    <i_max>1.5</i_max>
-                    <init_target>0</init_target>
+                    <init_target>1e-3</init_target>
                 </velocity>
                 <position>
-                    <pid_gains>10 0 0</pid_gains>
-                    <i_max>6</i_max>
+                    <pid_gains>15 30 1</pid_gains>
+                    <init_target>0</init_target>
                 </position>
             </controller>
         </plugin>

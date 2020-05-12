@@ -214,33 +214,22 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
 {
     using rofi::messages::RofiCmd;
 
+    if ( rofiId && *rofiId != msg->rofiid() )
+    {
+        gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid() << "\n";
+    }
     switch ( msg->cmdtype() )
     {
         case RofiCmd::NO_CMD:
             break;
         case RofiCmd::JOINT_CMD:
-            if ( rofiId && *rofiId != msg->rofiid() )
-            {
-                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid()
-                      << "\n";
-            }
             onJointCmd( msg->jointcmd() );
             break;
         case RofiCmd::CONNECTOR_CMD:
-            if ( rofiId && *rofiId != msg->rofiid() )
-            {
-                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid()
-                      << "\n";
-            }
             onConnectorCmd( msg->connectorcmd() );
             break;
         case RofiCmd::DESCRIPTION:
         {
-            if ( rofiId && *rofiId != msg->rofiid() )
-            {
-                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid()
-                      << "\n";
-            }
             if ( !rofiId )
             {
                 rofiId = msg->rofiid();
@@ -259,16 +248,11 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
         }
         case RofiCmd::WAIT_CMD:
         {
-            if ( rofiId && *rofiId != msg->rofiid() )
-            {
-                gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid()
-                      << "\n";
-            }
-
             gzmsg << "Starting waiting (" << msg->waitcmd().waitms()
                   << " ms, ID: " << msg->waitcmd().waitid() << ")\n";
-            auto afterWaited = _model->GetWorld()->SimTime()
-                               + common::Time( 0, msg->waitcmd().waitms() * 1000000 );
+            int32_t sec = msg->waitcmd().waitms() / 1000;
+            int32_t nsec = ( msg->waitcmd().waitms() % 1000 ) * 1000000;
+            auto afterWaited = _model->GetWorld()->SimTime() + common::Time( sec, nsec );
 
             std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
             waitCallbacksMap.emplace( afterWaited, [ this, waitId = msg->waitcmd().waitid() ]() {

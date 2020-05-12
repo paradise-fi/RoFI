@@ -17,19 +17,19 @@ struct JointDataBase
     // Used for position set callback and for boundaries
     // Prismatic joints: [m]
     // Revolute joints: [rad]
-    static constexpr double positionPrecision = 1e-4;
+    static constexpr double positionPrecision = 10e-3;
     static_assert( positionPrecision > 0 );
 
     // Used for position set callback and for boundaries
     // Prismatic joints: [m/s]
     // Revolute joints: [rad/s]
-    static constexpr double velocityPrecision = 1e-4;
+    static constexpr double velocityPrecision = 10e-3;
     static_assert( velocityPrecision > 0 );
 
     // Used for position set callback and for boundaries
     // Prismatic joints: [N]
     // Revolute joints: [Nm]
-    static constexpr double forcePrecision = 1e-4;
+    static constexpr double forcePrecision = 10e-3;
     static_assert( forcePrecision > 0 );
 
     // Prismatic joints: [m]

@@ -12,8 +12,6 @@
 #include "pidLoader.hpp"
 
 
-constexpr size_t BufferSize = 5;
-
 namespace gazebo
 {
 namespace detail
@@ -116,7 +114,7 @@ class VelocityPIDController : public ForceController
     common::PID _velController;
     common::Time _velPrevUpdateTime;
 
-    detail::Buffer< BufferSize > _velBuffer;
+    detail::Buffer< 5 > _velBuffer;
     double _targetVelocity = 0;
 
     bool velocityAtPositionBoundary() const
@@ -139,8 +137,8 @@ public:
     VelocityPIDController( JointDataBase & jointData,
                            const PIDLoader::ControllerValues & pidValues )
             : ForceController( jointData )
-            , _velController( pidValues.getVelocity().getPID( _jointData.getMaxEffort(),
-                                                              _jointData.getLowestEffort() ) )
+            , _velController( pidValues.getVelocity().getPID( _jointData.getLowestEffort(),
+                                                              _jointData.getMaxEffort() ) )
     {
         assert( _jointData );
         _velPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
@@ -233,7 +231,6 @@ class PositionPIDController : public VelocityPIDController
     common::PID _posController;
     common::Time _posPrevUpdateTime;
 
-    detail::Buffer< BufferSize > _posBuffer;
     double _desiredPosition = 0;
     double _targetPosition = 0;
     double _maxSpeed = 0;
@@ -269,6 +266,9 @@ class PositionPIDController : public VelocityPIDController
                                   "maxSpeed" );
         _posController.SetCmdMin( -_maxSpeed );
         _posController.SetCmdMax( _maxSpeed );
+
+        _posController.SetIMin( -_maxSpeed );
+        _posController.SetIMax( _maxSpeed );
     }
 
 public:
@@ -297,8 +297,7 @@ public:
         _posPrevUpdateTime = currTime;
         assert( stepTime >= 0 && "time went backwards" );
 
-        _posBuffer.update( _jointData.joint->Position( 0 ) );
-        double position = _posBuffer.getAverage();
+        double position = _jointData.joint->Position( 0 );
         double linearError = position - _targetPosition;
 
         if ( !_positionReached && std::abs( linearError ) <= _jointData.positionPrecision )
@@ -368,6 +367,11 @@ public:
                                      double maxSpeed,
                                      std::optional< PidControlType > lastControlType )
     {
+        if ( lastControlType )
+        {
+            resetPositionPID( *lastControlType );
+        }
+
         if ( maxSpeed > 0 )
         {
             setTargetPosition( targetPosition );
@@ -381,12 +385,8 @@ public:
             setTargetPosition< false >( _jointData.joint->Position( 0 ) );
             _positionReached = true;
         }
-        setMaxSpeed( maxSpeed );
 
-        if ( lastControlType )
-        {
-            resetPositionPID( *lastControlType );
-        }
+        setMaxSpeed( maxSpeed );
     }
 };
 

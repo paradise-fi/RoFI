@@ -18,19 +18,17 @@ public:
     struct PIDValues
     {
         std::optional< ignition::math::Vector3d > pidGains;
-        std::optional< double > iMax = {};
         std::optional< double > initTarget = {};
 
-        common::PID getPID( double maxCmd, double minCmd ) const
+        common::PID getPID( double minCmd, double maxCmd ) const
         {
             auto tmpPidGains = pidGains.value_or( ignition::math::Vector3d() );
-            auto tmpIMax = iMax.value_or( std::numeric_limits< double >::max() );
 
             return common::PID( tmpPidGains.X(),
                                 tmpPidGains.Y(),
                                 tmpPidGains.Z(),
-                                tmpIMax,
-                                -tmpIMax,
+                                maxCmd,
+                                minCmd,
                                 maxCmd,
                                 minCmd );
         }
@@ -96,14 +94,6 @@ public:
                 }
                 pidValues.pidGains = child->Get< ignition::math::Vector3d >();
             }
-            else if ( child->GetName() == "i_max" )
-            {
-                if ( pidValues.iMax )
-                {
-                    gzerr << "Multiple occurencies of element \"i_max\".\n";
-                }
-                pidValues.iMax = child->Get< double >();
-            }
             else if ( child->GetName() == "init_target" )
             {
                 if ( pidValues.initTarget )
@@ -122,10 +112,6 @@ public:
         if ( !pidValues.pidGains )
         {
             gzwarn << "No element \"pid_gains\" found in \"" << pidSdf->GetName() << "\".\n";
-        }
-        if ( !pidValues.iMax )
-        {
-            gzwarn << "No element \"i_max\" found in \"" << pidSdf->GetName() << "\".\n";
         }
         return pidValues;
     }
