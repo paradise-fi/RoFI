@@ -409,17 +409,17 @@ void UMP::onUpdate()
 
 void UMP::setVelocity( int joint, double velocity )
 {
-    joints.at( joint ).pid.setTargetVelocity( velocity );
+    joints.at( joint ).controller.setTargetVelocity( velocity );
 }
 
 void UMP::setTorque( int joint, double torque )
 {
-    joints.at( joint ).pid.setTargetForce( torque );
+    joints.at( joint ).controller.setTargetForce( torque );
 }
 
 void UMP::setPositionWithSpeed( int joint, double desiredPosition, double speed )
 {
-    joints.at( joint ).pid.setTargetPositionWithSpeed( desiredPosition, speed );
+    joints.at( joint ).controller.setTargetPositionWithSpeed( desiredPosition, speed );
 }
 
 GZ_REGISTER_MODEL_PLUGIN( UniversalModulePlugin )

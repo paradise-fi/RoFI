@@ -146,15 +146,15 @@ protected:
     }
 };
 
-template < typename _PID >
+template < typename Controller >
 struct JointData : public JointDataBase
 {
-    _PID pid;
+    Controller controller;
 
     template < typename... Args >
     explicit JointData( physics::JointPtr joint, Args &&... args )
             : JointDataBase( std::move( joint ) )
-            , pid( *this, std::forward< Args >( args )... )
+            , controller( *this, std::forward< Args >( args )... )
     {
     }
 
@@ -235,6 +235,66 @@ inline sdf::ElementPtr getPluginSdf( sdf::ElementPtr modelSdf, const std::string
         }
     }
     return {};
+}
+
+inline std::vector< sdf::ElementPtr > getChildren( sdf::ElementPtr sdf, const std::string & name )
+{
+    assert( sdf );
+
+    if ( !sdf->HasElement( name ) )
+    {
+        return {};
+    }
+
+    std::vector< sdf::ElementPtr > children;
+    for ( auto child = sdf->GetElement( name ); child; child = child->GetNextElement( name ) )
+    {
+        children.push_back( child );
+    }
+    return children;
+}
+
+template < bool Required >
+sdf::ElementPtr getOnlyChild( sdf::ElementPtr sdf, const std::string & name )
+{
+    assert( sdf );
+
+    if ( !sdf->HasElement( name ) )
+    {
+        if constexpr ( Required )
+        {
+            gzerr << "Expected element '" << name << "' in '" << sdf->GetName() << "'\n";
+            throw std::runtime_error( "Expected element '" + name + "' in '" + sdf->GetName()
+                                      + "'" );
+        }
+        else
+        {
+            return {};
+        }
+    }
+
+    sdf::ElementPtr child = sdf->GetElement( name );
+    if ( child->GetNextElement( name ) )
+    {
+        gzerr << "Expected only one element '" << name << "' in '" << sdf->GetName() << "'\n";
+        throw std::runtime_error( "Expected only one element '" + name + "' in '" + sdf->GetName()
+                                  + "'" );
+    }
+    return child;
+}
+
+inline void checkChildrenNames( sdf::ElementPtr sdf, const std::vector< std::string > & names )
+{
+    assert( sdf );
+
+    for ( auto child = sdf->GetFirstElement(); child; child = child->GetNextElement() )
+    {
+        if ( std::find( names.begin(), names.end(), child->GetName() ) == names.end() )
+        {
+            gzwarn << "Unknown element '" << child->GetName() << "' in '" << sdf->GetName()
+                   << "'\n";
+        }
+    }
 }
 
 inline bool isRoFICoM( physics::ModelPtr model )

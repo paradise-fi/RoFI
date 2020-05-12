@@ -34,24 +34,16 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
     gzmsg << "RoFICoM plugin ready\n";
 }
 
-void RoFICoMPlugin::jointPositionReachedCallback( double desiredPosition )
+void RoFICoMPlugin::jointPositionReachedCallback( Position newPosition )
 {
-    assert( extendJoint );
-    assert( *extendJoint );
+    assert( newPosition == Position::Retracted || newPosition == Position::Extended );
 
-    if ( desiredPosition <= extendJoint->getMinPosition() + extendJoint->positionPrecision )
+    std::lock_guard< std::recursive_mutex > lock( positionMutex );
+    updatePosition( newPosition );
+
+    if ( newPosition == Position::Extended )
     {
-        updatePosition( Position::Retracted );
-    }
-    else if ( desiredPosition >= extendJoint->getMaxPosition() - extendJoint->positionPrecision )
-    {
-        std::lock_guard< std::recursive_mutex > lock( positionMutex );
-        updatePosition( Position::Extended );
         roficomConnection.connectToNearbyRequest();
-    }
-    else
-    {
-        gzerr << "Position of extend joint reached, but is not a limit\n";
     }
 }
 
@@ -83,10 +75,9 @@ void RoFICoMPlugin::loadJoint( sdf::ElementPtr pluginSdf )
         throw std::runtime_error( "controlled joint in roficom has to be prismatic" );
     }
 
-    extendJoint = std::make_unique< JointData< PIDController > >(
+    extendJoint = std::make_unique< JointData< RoficomController > >(
             std::move( joint ),
-            std::move( pidValue ),
-            [ this ]( double pos ) { this->jointPositionReachedCallback( pos ); } );
+            [ this ]( Position pos ) { this->jointPositionReachedCallback( pos ); } );
 
     assert( extendJoint );
     assert( extendJoint->joint );
@@ -112,11 +103,12 @@ void RoFICoMPlugin::connect()
     }
 
     updatePosition( Position::Extending );
-    extend();
+    extendJoint->controller.extend();
 }
 
 void RoFICoMPlugin::disconnect()
 {
+    assert( extendJoint );
     gzmsg << "Retracting connector " << connectorNumber << " (" << _model->GetScopedName() << ")\n";
 
     std::lock_guard< std::recursive_mutex > lock( positionMutex );
@@ -135,7 +127,7 @@ void RoFICoMPlugin::disconnect()
 
     updatePosition( Position::Retracting );
     roficomConnection.disconnectRequest();
-    retract();
+    extendJoint->controller.retract();
 }
 
 void RoFICoMPlugin::sendPacket( const rofi::messages::Packet & packet )
@@ -187,19 +179,6 @@ void RoFICoMPlugin::startListening()
     assert( _subRofi );
 }
 
-void RoFICoMPlugin::extend()
-{
-    assert( extendJoint );
-    extendJoint->pid.setTargetPositionWithSpeed( extendJoint->getMaxPosition(),
-                                                 extendJoint->getMaxVelocity() );
-}
-
-void RoFICoMPlugin::retract()
-{
-    assert( extendJoint );
-    extendJoint->pid.setTargetPositionWithSpeed( extendJoint->getMinPosition(),
-                                                 extendJoint->getMaxVelocity() );
-}
 std::optional< RoFICoMPlugin::Orientation > RoFICoMPlugin::getOrientation() const
 {
     auto orientation = roficomConnection.getOrientation();

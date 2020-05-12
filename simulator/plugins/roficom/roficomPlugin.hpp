@@ -63,15 +63,12 @@ private:
     void initCommunication();
     void startListening();
 
-    void extend();
-    void retract();
-
     void onConnectorCmd( const ConnectorCmdPtr & msg );
 
     rofi::messages::ConnectorResp getConnectorResp(
             rofi::messages::ConnectorCmd::Type cmdtype ) const;
 
-    void jointPositionReachedCallback( double desiredPosition );
+    void jointPositionReachedCallback( Position newPosition );
 
     void removePosition();
 
@@ -81,7 +78,7 @@ private:
     transport::PublisherPtr _pubRofi;
     transport::SubscriberPtr _subRofi;
 
-    std::unique_ptr< JointData< PIDController > > extendJoint;
+    std::unique_ptr< JointData< RoficomController > > extendJoint;
     RoficomConnection roficomConnection;
 
     int connectorNumber = 0;

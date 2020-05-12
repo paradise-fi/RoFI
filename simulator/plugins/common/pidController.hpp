@@ -68,9 +68,9 @@ private:
         }
         if ( _targetForce < 0 )
         {
-            return _jointData.joint->Position( 0 ) <= _jointData.getMinPosition();
+            return _jointData.joint->Position() <= _jointData.getMinPosition();
         }
-        return _jointData.joint->Position( 0 ) >= _jointData.getMaxPosition();
+        return _jointData.joint->Position() >= _jointData.getMaxPosition();
     }
 
 public:
@@ -128,17 +128,17 @@ class VelocityPIDController : public ForceController
         }
         if ( _targetVelocity < 0 )
         {
-            return _jointData.joint->Position( 0 ) <= _jointData.getMinPosition();
+            return _jointData.joint->Position() <= _jointData.getMinPosition();
         }
-        return _jointData.joint->Position( 0 ) >= _jointData.getMaxPosition();
+        return _jointData.joint->Position() >= _jointData.getMaxPosition();
     }
 
 public:
     VelocityPIDController( JointDataBase & jointData,
                            const PIDLoader::ControllerValues & pidValues )
             : ForceController( jointData )
-            , _velController( pidValues.getVelocity().getPID( _jointData.getLowestEffort(),
-                                                              _jointData.getMaxEffort() ) )
+            , _velController( pidValues.velocity.getPID( _jointData.getLowestEffort(),
+                                                         _jointData.getMaxEffort() ) )
     {
         assert( _jointData );
         _velPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
@@ -199,13 +199,13 @@ public:
 
     void resetVelocityPID( PidControlType lastControlType )
     {
-        if ( lastControlType == PidControlType::Velocity )
+        switch ( lastControlType )
         {
-            return;
-        }
-        if ( lastControlType == PidControlType::Position )
-        {
-            return;
+            case PidControlType::Position:
+            case PidControlType::Velocity:
+                return;
+            case PidControlType::Force:
+                break;
         }
 
         _velPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
@@ -272,14 +272,14 @@ class PositionPIDController : public VelocityPIDController
     }
 
 public:
-    template < typename Callback >
+    template < typename PositionCallback >
     PositionPIDController( JointDataBase & jointData,
                            const PIDLoader::ControllerValues & pidValues,
-                           Callback && positionReachedCallback )
+                           PositionCallback && positionReached )
             : VelocityPIDController( jointData, pidValues )
-            , _posController( pidValues.getPosition().getPID( _jointData.getLowestVelocity(),
-                                                              _jointData.getMaxVelocity() ) )
-            , _positionReachedCallback( std::forward< Callback >( positionReachedCallback ) )
+            , _posController( pidValues.position.getPID( _jointData.getLowestVelocity(),
+                                                         _jointData.getMaxVelocity() ) )
+            , _positionReachedCallback( std::forward< PositionCallback >( positionReached ) )
     {
         assert( _jointData );
         assert( _jointData.getLowestVelocity() == -_jointData.getMaxVelocity() );
@@ -297,7 +297,7 @@ public:
         _posPrevUpdateTime = currTime;
         assert( stepTime >= 0 && "time went backwards" );
 
-        double position = _jointData.joint->Position( 0 );
+        double position = _jointData.joint->Position();
         double linearError = position - _targetPosition;
 
         if ( !_positionReached && std::abs( linearError ) <= _jointData.positionPrecision )
@@ -367,79 +367,85 @@ public:
                                      double maxSpeed,
                                      std::optional< PidControlType > lastControlType )
     {
+        if ( maxSpeed <= 0 )
+        {
+            gzwarn << "Speed non-positive for setting position, setting desired position to current position\n";
+            setCurrentPosition( lastControlType );
+            return;
+        }
+
         if ( lastControlType )
         {
             resetPositionPID( *lastControlType );
         }
 
-        if ( maxSpeed > 0 )
+        setMaxSpeed( maxSpeed );
+        setTargetPosition( targetPosition );
+        _positionReached = false;
+    }
+
+    void setCurrentPosition( std::optional< PidControlType > lastControlType )
+    {
+        if ( lastControlType )
         {
-            setTargetPosition( targetPosition );
-            _positionReached = false;
-        }
-        else
-        {
-            maxSpeed = _jointData.getMinVelocity();
-            gzwarn << "Speed non-positive for setting position, setting desired position to current position with speed "
-                   << maxSpeed << "\n";
-            setTargetPosition< false >( _jointData.joint->Position( 0 ) );
-            _positionReached = true;
+            resetPositionPID( *lastControlType );
         }
 
-        setMaxSpeed( maxSpeed );
+        setMaxSpeed( _jointData.getMinVelocity() );
+        setTargetPosition< false >( _jointData.joint->Position() );
+        _positionReached = true;
     }
 };
 
 class PIDController
 {
-    event::ConnectionPtr _connection;
-
     JointDataBase & _jointData;
-    PositionPIDController controller;
+    PositionPIDController _controller;
 
     PidControlType activeController = PidControlType::Force;
+
+    event::ConnectionPtr _connection;
 
     void onPhysicsUpdate()
     {
         switch ( activeController )
         {
             case PidControlType::Force:
-                controller.forcePhysicsUpdate();
+                _controller.forcePhysicsUpdate();
                 return;
             case PidControlType::Position:
-                controller.posPhysicsUpdate();
+                _controller.posPhysicsUpdate();
                 return;
             case PidControlType::Velocity:
-                controller.velPhysicsUpdate();
+                _controller.velPhysicsUpdate();
                 return;
         }
         assert( false && "unrecognized pid control type value" );
     }
 
-
 public:
-    template < typename Callback,
-               typename = std::enable_if_t< std::is_invocable_v< Callback, double > > >
+    template < typename PositionCallback,
+               typename = std::enable_if_t< std::is_invocable_v< PositionCallback, double > > >
     PIDController( JointDataBase & jointData,
                    const PIDLoader::ControllerValues & pidValues,
-                   Callback && positionReachedCallback )
+                   PositionCallback && positionReached )
             : _jointData( jointData )
-            , controller( jointData,
-                          pidValues,
-                          std::forward< Callback >( positionReachedCallback ) )
+            , _controller( jointData,
+                           pidValues,
+                           std::forward< PositionCallback >( positionReached ) )
     {
         _connection = event::Events::ConnectBeforePhysicsUpdate(
                 std::bind( &PIDController::onPhysicsUpdate, this ) );
 
-        if ( pidValues.getPosition().initTarget )
+        if ( pidValues.position.initTarget )
         {
-            auto position = *pidValues.getPosition().initTarget;
-            auto speed = pidValues.getVelocity().initTarget.value_or( _jointData.getMaxVelocity() );
+            auto position = *pidValues.position.initTarget;
+            auto speed = pidValues.velocity.initTarget.value_or( _jointData.getMaxVelocity() );
             setTargetPositionWithSpeed( position, speed );
         }
-        else if ( pidValues.getVelocity().initTarget )
+        else if ( pidValues.velocity.initTarget )
         {
-            setTargetVelocity( *pidValues.getVelocity().initTarget );
+            setTargetVelocity( *pidValues.velocity.initTarget );
         }
         else if ( pidValues.forceTarget )
         {
@@ -447,27 +453,27 @@ public:
         }
         else
         {
-            setTargetPositionWithSpeed( _jointData.joint->Position( 0 ),
-                                        _jointData.getMaxVelocity() );
+            _controller.setCurrentPosition( PidControlType::Force );
+            activeController = PidControlType::Position;
         }
     }
 
     void setTargetForce( double force )
     {
-        controller.setTargetForce( force );
+        _controller.setTargetForce( force );
         activeController = PidControlType::Force;
-    }
-
-    void setTargetPositionWithSpeed( double position, double speed )
-    {
-        controller.setTargetPositionWithSpeed( position, speed, activeController );
-        activeController = PidControlType::Position;
     }
 
     void setTargetVelocity( double velocity )
     {
-        controller.setTargetVelocity( velocity, activeController );
+        _controller.setTargetVelocity( velocity, activeController );
         activeController = PidControlType::Velocity;
+    }
+
+    void setTargetPositionWithSpeed( double position, double speed )
+    {
+        _controller.setTargetPositionWithSpeed( position, speed, activeController );
+        activeController = PidControlType::Position;
     }
 };
 
