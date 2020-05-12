@@ -16,22 +16,6 @@
 
 namespace gazebo
 {
-class RoficomConnectionJoint
-{
-public:
-    using Orientation = rofi::messages::ConnectorState::Orientation;
-
-    void load( physics::ModelPtr model );
-
-    void connectToOther( physics::ModelPtr otherRoficom, Orientation orientation );
-    void disconnect();
-
-private:
-    physics::ModelPtr _model;
-    physics::JointPtr _joint;
-};
-
-
 class RoFICoMPlugin;
 
 class RoficomConnection

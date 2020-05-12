@@ -18,17 +18,17 @@
 
 namespace gazebo
 {
-class UniversalModulePlugin : public ModelPlugin
+class RoFIModulePlugin : public ModelPlugin
 {
 public:
     static constexpr double doublePrecision = 0.001;
 
-    UniversalModulePlugin() = default;
+    RoFIModulePlugin() = default;
 
-    UniversalModulePlugin( const UniversalModulePlugin & ) = delete;
-    UniversalModulePlugin & operator=( const UniversalModulePlugin & ) = delete;
+    RoFIModulePlugin( const RoFIModulePlugin & ) = delete;
+    RoFIModulePlugin & operator=( const RoFIModulePlugin & ) = delete;
 
-    ~UniversalModulePlugin()
+    ~RoFIModulePlugin()
     {
         clearConnectors();
         if ( _node )
@@ -44,12 +44,13 @@ private:
     using ConnectorRespPtr = boost::shared_ptr< const rofi::messages::ConnectorResp >;
 
     void initCommunication();
+    void startListening();
 
     // Connectors have to be models, that have attached plugin "libroficomPlugin.so"
     // Ideally these are nested models of RoFICoM
     void addConnector( gazebo::physics::ModelPtr connectorModel );
     void clearConnectors();
-    void findAndInitJoints();
+    void findAndInitJoints( sdf::ElementPtr pluginSdf );
     void findAndInitConnectors();
 
     rofi::messages::RofiResp getJointRofiResp( rofi::messages::JointCmd::Type cmdtype,
@@ -83,7 +84,7 @@ private:
     std::deque< JointData< PIDController > > joints;
     std::vector< std::pair< transport::PublisherPtr, transport::SubscriberPtr > > connectors;
 
-    std::map< common::Time, std::function< void() > > waitCallbacksMap;
+    std::multimap< common::Time, std::function< void() > > waitCallbacksMap;
     std::mutex waitCallbacksMapMutex;
 };
 

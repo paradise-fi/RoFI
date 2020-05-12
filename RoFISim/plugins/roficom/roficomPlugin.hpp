@@ -8,8 +8,6 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
-#include "pidController.hpp"
-#include "pidLoader.hpp"
 #include "roficomConnection.hpp"
 #include "roficomUtils.hpp"
 #include "utils.hpp"
@@ -42,12 +40,13 @@ public:
     }
 
     void Load( physics::ModelPtr model, sdf::ElementPtr sdf ) override;
-    void loadJoint();
+    void loadJoint( sdf::ElementPtr pluginSdf );
 
     void connect();
     void disconnect();
     void sendPacket( const rofi::messages::Packet & packet );
     void onPacket( const rofi::messages::Packet & packet );
+    void onConnectorEvent( rofi::messages::ConnectorCmd::Type eventType );
 
     bool isConnected() const;
     std::optional< Orientation > getOrientation() const;
@@ -61,16 +60,14 @@ private:
     using ContactsMsgPtr = boost::shared_ptr< const msgs::Contacts >;
 
     void initCommunication();
-
-    void extend();
-    void retract();
+    void startListening();
 
     void onConnectorCmd( const ConnectorCmdPtr & msg );
 
     rofi::messages::ConnectorResp getConnectorResp(
             rofi::messages::ConnectorCmd::Type cmdtype ) const;
 
-    void jointPositionReachedCallback( double desiredPosition );
+    void jointPositionReachedCallback( Position newPosition );
 
     void removePosition();
 
@@ -80,7 +77,7 @@ private:
     transport::PublisherPtr _pubRofi;
     transport::SubscriberPtr _subRofi;
 
-    std::unique_ptr< JointData< PIDController > > extendJoint;
+    std::unique_ptr< JointData< RoficomController > > extendJoint;
     RoficomConnection roficomConnection;
 
     int connectorNumber = 0;

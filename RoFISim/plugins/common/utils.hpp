@@ -12,25 +12,60 @@
 
 namespace gazebo
 {
+template < msgs::Joint::Type >
+struct Precision
+{
+};
+
+template <>
+struct Precision< msgs::Joint::REVOLUTE >
+{
+    // Used for position set callback and for boundaries
+    // Revolute joints: [rad]
+    static constexpr double position = 1e-2;
+
+    // Used for position set callback and for boundaries
+    // Revolute joints: [rad/s]
+    static constexpr double velocity = 1e-2;
+};
+
+template <>
+struct Precision< msgs::Joint::PRISMATIC >
+{
+    // Used for position set callback and for boundaries
+    // Prismatic joints: [m]
+    static constexpr double position = 1e-4;
+
+    // Used for position set callback and for boundaries
+    // Prismatic joints: [m/s]
+    static constexpr double velocity = 1e-4;
+};
+
 struct JointDataBase
 {
     // Used for position set callback and for boundaries
     // Prismatic joints: [m]
     // Revolute joints: [rad]
-    static constexpr double positionPrecision = 1e-4;
-    static_assert( positionPrecision > 0 );
+    double getPositionPrecision() const
+    {
+        if ( joint->GetMsgType() == msgs::Joint::PRISMATIC )
+        {
+            return Precision< msgs::Joint::PRISMATIC >::position;
+        }
+        return Precision< msgs::Joint::REVOLUTE >::position;
+    }
 
     // Used for position set callback and for boundaries
     // Prismatic joints: [m/s]
     // Revolute joints: [rad/s]
-    static constexpr double velocityPrecision = 1e-4;
-    static_assert( velocityPrecision > 0 );
-
-    // Used for position set callback and for boundaries
-    // Prismatic joints: [N]
-    // Revolute joints: [Nm]
-    static constexpr double forcePrecision = 1e-4;
-    static_assert( forcePrecision > 0 );
+    double getVelocityPrecision() const
+    {
+        if ( joint->GetMsgType() == msgs::Joint::PRISMATIC )
+        {
+            return Precision< msgs::Joint::PRISMATIC >::velocity;
+        }
+        return Precision< msgs::Joint::REVOLUTE >::velocity;
+    }
 
     // Prismatic joints: [m]
     // Revolute joints: [rad]
@@ -52,21 +87,21 @@ struct JointDataBase
     // Revolute joints: [rad]
     double getMaxPosition() const
     {
-        return maxPosition - positionPrecision;
+        return maxPosition - getPositionPrecision();
     }
 
     // Prismatic joints: [m]
     // Revolute joints: [rad]
     double getMinPosition() const
     {
-        return minPosition + positionPrecision;
+        return minPosition + getPositionPrecision();
     }
 
     // Prismatic joints: [m/s]
     // Revolute joints: [rad/s]
     double getMaxVelocity() const
     {
-        return maxSpeed - velocityPrecision;
+        return maxSpeed - getVelocityPrecision();
     }
 
     // Prismatic joints: [m/s]
@@ -80,14 +115,14 @@ struct JointDataBase
     // Revolute joints: [rad/s]
     double getMinVelocity() const
     {
-        return minSpeed + velocityPrecision;
+        return minSpeed + getVelocityPrecision();
     }
 
     // Prismatic joints: [N]
     // Revolute joints: [Nm]
     double getMaxEffort() const
     {
-        return maxEffort - forcePrecision;
+        return maxEffort;
     }
 
     // Prismatic joints: [N]
@@ -123,7 +158,7 @@ protected:
         limits->GetElement( "velocity" )->GetValue()->Get( maxSpeed );
         limits->GetElement( "effort" )->GetValue()->Get( maxEffort );
 
-        if ( minPosition >= maxPosition )
+        if ( minPosition > maxPosition )
         {
             gzerr << "Maximal position is not larger than minimal\n";
             throw std::runtime_error( "Maximal position is not larger than minimal" );
@@ -140,21 +175,21 @@ protected:
             maxEffort = std::numeric_limits< double >::max();
         }
 
-        assert( maxPosition - minPosition > 2 * positionPrecision );
-        assert( maxSpeed > velocityPrecision );
-        assert( maxEffort > forcePrecision );
+        assert( maxPosition >= minPosition );
+        assert( maxSpeed > getVelocityPrecision() );
+        assert( maxEffort > 0 );
     }
 };
 
-template < typename _PID >
+template < typename Controller >
 struct JointData : public JointDataBase
 {
-    _PID pid;
+    Controller controller;
 
     template < typename... Args >
     explicit JointData( physics::JointPtr joint, Args &&... args )
             : JointDataBase( std::move( joint ) )
-            , pid( *this, std::forward< Args >( args )... )
+            , controller( *this, std::forward< Args >( args )... )
     {
     }
 
@@ -235,6 +270,92 @@ inline sdf::ElementPtr getPluginSdf( sdf::ElementPtr modelSdf, const std::string
         }
     }
     return {};
+}
+
+inline sdf::ElementPtr newElement( const std::string & name )
+{
+    auto elem = std::make_shared< sdf::Element >();
+    elem->SetName( name );
+    return elem;
+}
+
+template < typename T >
+void setValue( sdf::ElementPtr elem, T value )
+{
+    if ( !elem->GetValue() )
+    {
+        elem->AddValue( "string", "", false );
+    }
+    elem->Set( value );
+}
+
+template < typename T >
+sdf::ElementPtr newElemWithValue( const std::string & name, T value )
+{
+    auto elem = newElement( name );
+    elem->AddValue( "string", "", false );
+    elem->Set( value );
+    return elem;
+}
+
+inline sdf::ElementPtr_V getChildren( sdf::ElementPtr sdf, const std::string & name )
+{
+    assert( sdf );
+
+    if ( !sdf->HasElement( name ) )
+    {
+        return {};
+    }
+
+    sdf::ElementPtr_V children;
+    for ( auto child = sdf->GetElement( name ); child; child = child->GetNextElement( name ) )
+    {
+        children.push_back( child );
+    }
+    return children;
+}
+
+template < bool Required >
+sdf::ElementPtr getOnlyChild( sdf::ElementPtr sdf, const std::string & name )
+{
+    assert( sdf );
+
+    if ( !sdf->HasElement( name ) )
+    {
+        if constexpr ( Required )
+        {
+            gzerr << "Expected element '" << name << "' in '" << sdf->GetName() << "'\n";
+            throw std::runtime_error( "Expected element '" + name + "' in '" + sdf->GetName()
+                                      + "'" );
+        }
+        else
+        {
+            return {};
+        }
+    }
+
+    sdf::ElementPtr child = sdf->GetElement( name );
+    if ( child->GetNextElement( name ) )
+    {
+        gzerr << "Expected only one element '" << name << "' in '" << sdf->GetName() << "'\n";
+        throw std::runtime_error( "Expected only one element '" + name + "' in '" + sdf->GetName()
+                                  + "'" );
+    }
+    return child;
+}
+
+inline void checkChildrenNames( sdf::ElementPtr sdf, const std::vector< std::string > & names )
+{
+    assert( sdf );
+
+    for ( auto child = sdf->GetFirstElement(); child; child = child->GetNextElement() )
+    {
+        if ( std::find( names.begin(), names.end(), child->GetName() ) == names.end() )
+        {
+            gzwarn << "Unknown element '" << child->GetName() << "' in '" << sdf->GetName()
+                   << "'\n";
+        }
+    }
 }
 
 inline bool isRoFICoM( physics::ModelPtr model )

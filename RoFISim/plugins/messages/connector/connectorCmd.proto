@@ -9,15 +9,14 @@ message ConnectorCmd {
         GET_STATE = 1;
         CONNECT = 2;
         DISCONNECT = 3;
-        CONNECTOR_EVENT = 4;
-        PACKET = 5;
-        CONNECT_POWER = 6;
-        DISCONNECT_POWER = 7;
+        PACKET = 4;
+        CONNECT_POWER = 5;
+        DISCONNECT_POWER = 6;
     }
 
     enum Line {
         INT_LINE = 0;
-        OUT_LINE = 1;
+        EXT_LINE = 1;
     }
 
     int32 connector = 1;

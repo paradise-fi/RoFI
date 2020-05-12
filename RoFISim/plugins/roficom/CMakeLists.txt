@@ -6,6 +6,5 @@ target_include_directories(roficomPlugin INTERFACE ${CMAKE_CURRENT_LIST_DIR})
 
 add_library(attacherPlugin SHARED attacherPlugin.cpp)
 target_link_libraries(attacherPlugin rofiPluginCommon)
-target_include_directories(attacherPlugin INTERFACE ${CMAKE_CURRENT_LIST_DIR})
 
 add_subdirectory(tests)
