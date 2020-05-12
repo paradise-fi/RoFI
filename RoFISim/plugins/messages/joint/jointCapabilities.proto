@@ -1,0 +1,10 @@
+syntax = "proto3";
+package rofi.messages;
+
+message JointCapabilities {
+    float maxPosition = 1;
+    float minPosition = 2;
+    float maxSpeed = 3;
+    float minSpeed = 4;
+    float maxTorque = 5;
+}

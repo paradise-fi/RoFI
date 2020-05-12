@@ -8,23 +8,20 @@ import "jointSetTorqueCmd.proto";
 message JointCmd {
     enum Type {
         NO_CMD = 0;
-        GET_MAX_POSITION = 1;
-        GET_MIN_POSITION = 2;
-        GET_MAX_SPEED = 3;
-        GET_MIN_SPEED = 4;
-        GET_MAX_TORQUE = 5;
-        GET_POSITION = 6;
-        GET_VELOCITY = 7;
-        GET_TORQUE = 8;
-        SET_POS_WITH_SPEED = 9;
-        SET_VELOCITY = 10;
-        SET_TORQUE = 11;
+        GET_CAPABILITIES = 1;
+        GET_POSITION = 2;
+        GET_VELOCITY = 3;
+        GET_TORQUE = 4;
+        SET_POS_WITH_SPEED = 5;
+        SET_VELOCITY = 6;
+        SET_TORQUE = 7;
+        ERROR = 8;
     }
 
     int32 joint = 1;
     Type cmdType = 2;
 
-    JointSetPosWithSpeedCmd setPosWithSpeed = 4;
-    JointSetVelocityCmd setVelocity = 3;
+    JointSetPosWithSpeedCmd setPosWithSpeed = 3;
+    JointSetVelocityCmd setVelocity = 4;
     JointSetTorqueCmd setTorque = 5;
 }

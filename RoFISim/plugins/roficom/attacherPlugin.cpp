@@ -1,9 +1,10 @@
 #include "attacherPlugin.hpp"
 
-#include <gazebo/common/Plugin.hh>
-#include <ignition/math/Pose3.hh>
+#include <algorithm>
+#include <array>
 
 #include "roficomUtils.hpp"
+
 
 namespace gazebo
 {
@@ -17,12 +18,46 @@ std::pair< std::string, std::string > sortNames( std::pair< std::string, std::st
     return names;
 }
 
+ignition::math::Quaterniond rotation( rofi::messages::ConnectorState::Orientation orientation )
+{
+    using rofi::messages::ConnectorState;
+    using namespace ignition::math;
+
+    switch ( orientation )
+    {
+        case ConnectorState::NORTH:
+        {
+            return Quaterniond::EulerToQuaternion( 0, 0, 0 );
+        }
+        case ConnectorState::EAST:
+        {
+            return Quaterniond::EulerToQuaternion( 0, 0, -Angle::HalfPi() );
+        }
+        case ConnectorState::SOUTH:
+        {
+            return Quaterniond::EulerToQuaternion( 0, 0, Angle::Pi() );
+        }
+        case ConnectorState::WEST:
+        {
+            return Quaterniond::EulerToQuaternion( 0, 0, Angle::HalfPi() );
+        }
+        default:
+        {
+            gzerr << "Unknown orientation for rotation\n";
+            return {};
+        }
+    }
+}
+
 void AttacherPlugin::Load( physics::WorldPtr world, sdf::ElementPtr /*sdf*/ )
 {
     _world = std::move( world );
     assert( _world );
     _physics = _world->Physics();
     assert( _physics );
+
+    _onUpdate = event::Events::ConnectBeforePhysicsUpdate(
+            std::bind( &AttacherPlugin::onPhysicsUpdate, this ) );
 
     _node = boost::make_shared< transport::Node >();
     assert( _node );
@@ -37,43 +72,35 @@ void AttacherPlugin::Load( physics::WorldPtr world, sdf::ElementPtr /*sdf*/ )
     gzmsg << "Link attacher node initialized.\n";
 }
 
-bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames )
+bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames,
+                             Orientation orientation )
 {
     modelNames = sortNames( std::move( modelNames ) );
-
     if ( modelNames.first == modelNames.second )
     {
-        gzerr << "Same model name " << modelNames.first << "\n";
+        gzwarn << "Same model name " << modelNames.first << "\n";
         return false;
     }
-
     assert( modelNames.first < modelNames.second );
 
-    gzmsg << "Creating new joint.\n";
-
-    auto it = _joints.find( modelNames );
-    if ( it != _joints.end() )
-    {
-        gzwarn << "Already connected (" << modelNames.first << ", " << modelNames.second << ")\n";
-        return false;
-    }
+    gzmsg << "Attaching roficoms\n";
 
     auto model1 = _world->ModelByName( modelNames.first );
     auto model2 = _world->ModelByName( modelNames.second );
 
     if ( !model1 )
     {
-        gzerr << modelNames.first << " model was not found\n";
+        gzwarn << modelNames.first << " model was not found\n";
         return false;
     }
     if ( !model2 )
     {
-        gzerr << modelNames.second << " model was not found\n";
+        gzwarn << modelNames.second << " model was not found\n";
         return false;
     }
     if ( model1 == model2 )
     {
-        gzerr << "Found the same model\n";
+        gzwarn << "Found the same model\n";
         return false;
     }
 
@@ -82,126 +109,66 @@ bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames )
 
     if ( !link1 )
     {
-        gzerr << "inner link of " << model1->GetScopedName() << " was not found\n";
+        gzwarn << "inner link of " << model1->GetScopedName() << " was not found\n";
         return false;
     }
     if ( !link2 )
     {
-        gzerr << "inner link of " << model2->GetScopedName() << " was not found\n";
+        gzwarn << "inner link of " << model2->GetScopedName() << " was not found\n";
         return false;
     }
-
-    assert( model1 );
-    assert( model2 );
-    assert( link1 );
-    assert( link2 );
-    assert( model1 != model2 );
     assert( link1 != link2 );
 
-    auto joint = _physics->CreateJoint( "revolute", model1 );
-    _joints.emplace( modelNames, joint );
 
-    joint->Attach( link1, link2 );
-    joint->Load( link1, link2, ignition::math::Pose3d() );
-    joint->SetModel( model1 );
-    joint->SetUpperLimit( 0, 0 );
-    joint->SetLowerLimit( 0, 0 );
-    joint->Init();
+    std::lock_guard< std::mutex > lock( _connectedMutex );
 
-    gzmsg << "Joint created.\n";
+    auto inserted = _connected.emplace( modelNames,
+                                        ConnectedInfo( orientation, LinkPair( link1, link2 ) ) );
+
+    if ( !inserted.second )
+    {
+        gzwarn << "Already connected (" << modelNames.first << ", " << modelNames.second << ")\n";
+        return false;
+    }
 
     return true;
 }
 
-bool AttacherPlugin::detach( std::pair< std::string, std::string > modelNames )
+std::optional< AttacherPlugin::Orientation > AttacherPlugin::detach(
+        std::pair< std::string, std::string > modelNames )
 {
     modelNames = sortNames( std::move( modelNames ) );
 
     if ( modelNames.first == modelNames.second )
     {
-        return false;
+        return {};
     }
     assert( modelNames.first < modelNames.second );
 
-    auto it = _joints.find( modelNames );
-    if ( it != _joints.end() )
+    std::lock_guard< std::mutex > lock( _connectedMutex );
+
+    auto it = _connected.find( modelNames );
+    if ( it == _connected.end() )
     {
-        it->second->Detach();
-        _joints.erase( it );
-        return true;
+        return {};
     }
 
-    return false;
-}
-
-void AttacherPlugin::moveToOther( std::string thisRoficomName,
-                                  std::string otherRoficomName,
-                                  rofi::messages::ConnectorState::Orientation orientation )
-{
-    using rofi::messages::ConnectorState;
-
-    if ( thisRoficomName == otherRoficomName )
+    auto jointPtr = std::get_if< physics::JointPtr >( &it->second.info );
+    if ( jointPtr && *jointPtr )
     {
-        return;
+        auto joint = *jointPtr;
+        joint->Detach();
     }
 
-    auto thisRoficom = _world->ModelByName( thisRoficomName );
-    auto otherRoficom = _world->ModelByName( otherRoficomName );
-
-    if ( !thisRoficom || !otherRoficom )
-    {
-        return;
-    }
-
-    auto thisRoficomLink = getLinkByName( thisRoficom, "inner" );
-    auto otherRoficomLink = getLinkByName( otherRoficom, "inner" );
-
-    if ( !thisRoficomLink || !otherRoficomLink )
-    {
-        return;
-    }
-
-    auto rotation = otherRoficom->WorldPose().Rot();
-    switch ( orientation )
-    {
-        case ConnectorState::NORTH:
-        {
-            rotation = rotation * ignition::math::Quaterniond( 0, 1, 0, 0 );
-            break;
-        }
-        case ConnectorState::EAST:
-        {
-            rotation = rotation * ignition::math::Quaterniond( 0, 0.707, 0.707, 0 );
-            break;
-        }
-        case ConnectorState::SOUTH:
-        {
-            rotation = rotation * ignition::math::Quaterniond( 0, 0, 1, 0 );
-            break;
-        }
-        case ConnectorState::WEST:
-        {
-            rotation = rotation * ignition::math::Quaterniond( 0, 0.707, -0.707, 0 );
-            break;
-        }
-        default:
-        {
-            gzerr << "Unknown orientation\n";
-            return;
-        }
-    }
-
-    auto linkExtendedPos = thisRoficomLink->RelativePose().Pos();
-    auto position = otherRoficomLink->WorldPose().Pos()
-                    + otherRoficomLink->WorldPose().Rot().RotateVector( linkExtendedPos );
-
-    thisRoficom->SetWorldPose( { position, rotation } );
+    std::optional< Orientation > orientation = it->second.orientation;
+    _connected.erase( it );
+    return orientation;
 }
 
 void AttacherPlugin::sendAttachInfo( std::string modelname1,
                                      std::string modelname2,
                                      bool attach,
-                                     rofi::messages::ConnectorState::Orientation orientation )
+                                     Orientation orientation )
 {
     sendAttachInfoToOne( modelname1, modelname2, attach, orientation );
     sendAttachInfoToOne( modelname2, modelname1, attach, orientation );
@@ -210,7 +177,7 @@ void AttacherPlugin::sendAttachInfo( std::string modelname1,
 void AttacherPlugin::sendAttachInfoToOne( std::string modelname1,
                                           std::string modelname2,
                                           bool attach,
-                                          rofi::messages::ConnectorState::Orientation orientation )
+                                          Orientation orientation )
 {
     rofi::messages::ConnectorAttachInfo msg;
     msg.set_modelname1( std::move( modelname1 ) );
@@ -222,7 +189,6 @@ void AttacherPlugin::sendAttachInfoToOne( std::string modelname1,
     assert( model1 );
 
     auto path = "/gazebo/" + getElemPath( model1 ) + "/attach_event";
-    gzmsg << "Publishing attach info on path '" << path << "'\n";
     _node->Publish< rofi::messages::ConnectorAttachInfo >( path, msg );
 }
 
@@ -233,40 +199,151 @@ void AttacherPlugin::attach_event_callback( const AttacherPlugin::ConnectorAttac
 
     if ( msg->modelname1().empty() || msg->modelname2().empty() )
     {
-        gzerr << "One of models to attach/detach is empty\n";
+        gzwarn << "One of models to attach/detach is empty\n";
         return;
     }
     if ( msg->modelname1() == msg->modelname2() )
     {
-        gzerr << "Both models are the same\n";
+        gzwarn << "Both models are the same\n";
+        return;
+    }
+
+    if ( !rofi::messages::ConnectorState::Orientation_IsValid( msg->orientation() ) )
+    {
+        std::cerr << "Attacher got message with invalid orientation (" << msg->orientation()
+                  << ")\n";
         return;
     }
 
     if ( msg->attach() )
     {
-        moveToOther( msg->modelname1(), msg->modelname2(), msg->orientation() );
-        if ( attach( { msg->modelname1(), msg->modelname2() } ) )
+        if ( attach( { msg->modelname1(), msg->modelname2() }, msg->orientation() ) )
         {
             gzmsg << "Attach was succesful\n";
-            sendAttachInfo( msg->modelname1(), msg->modelname2(), true, msg->orientation() );
         }
         else
         {
-            gzerr << "Could not make the attach.\n";
+            gzwarn << "Could not make the attach.\n";
         }
     }
     else
     {
-        if ( !detach( { msg->modelname1(), msg->modelname2() } ) )
+        auto orientation = detach( { msg->modelname1(), msg->modelname2() } );
+        if ( orientation )
         {
-            gzerr << "Could not make the detach.\n";
+            gzmsg << "Detach was succesful\n";
+            sendAttachInfo( msg->modelname1(), msg->modelname2(), false, *orientation );
         }
         else
         {
-            gzmsg << "Detach was succesful\n";
-            sendAttachInfo( msg->modelname1(), msg->modelname2(), false, msg->orientation() );
+            gzwarn << "Could not make the detach.\n";
         }
     }
+}
+
+void AttacherPlugin::onPhysicsUpdate()
+{
+    using rofi::messages::ConnectorState;
+
+    std::lock_guard< std::mutex > lock( _connectedMutex );
+
+    for ( auto it = _connected.begin(); it != _connected.end(); it++ )
+    {
+        auto linksPtr = std::get_if< LinkPair >( &it->second.info );
+        if ( !linksPtr )
+        {
+            continue;
+        }
+        auto & links = *linksPtr;
+
+        bool connected = applyAttractForce( links, it->second.orientation );
+        if ( connected )
+        {
+            gzmsg << "Creating joint\n";
+            auto joint = createFixedJoint( _physics, links );
+            assert( joint );
+            it->second.info = std::move( joint );
+            auto & names = it->first;
+            sendAttachInfo( names.first, names.second, true, it->second.orientation );
+        }
+    }
+}
+
+bool AttacherPlugin::applyAttractForce( LinkPair links, Orientation orientation )
+{
+    using rofi::messages::ConnectorState;
+    using namespace ignition::math;
+
+    assert( links.first );
+    assert( links.second );
+    assert( links.first != links.second );
+
+    auto pose1 = links.first->WorldPose();
+    auto pose2 = Pose3d( {}, { Angle::Pi(), 0, 0 } )
+                 + Pose3d( {}, rotation( orientation ).Inverse() ) + links.second->WorldPose();
+
+    auto firstToSecond = pose1.CoordPoseSolve( pose2 );
+
+
+    static_assert( ConnectorState::NORTH == static_cast< Orientation >( 0 ) );
+    static_assert( ConnectorState::EAST == static_cast< Orientation >( 1 ) );
+    static_assert( ConnectorState::SOUTH == static_cast< Orientation >( 2 ) );
+    static_assert( ConnectorState::WEST == static_cast< Orientation >( 3 ) );
+
+    constexpr int pointsCount = 4;
+
+    std::array< Vector3d, pointsCount > firstPoints;
+    std::array< Vector3d, pointsCount > secondPoints;
+    std::array< Vector3d, pointsCount > diffs;
+
+    for ( size_t i = 0; i < pointsCount; i++ )
+    {
+        auto side = static_cast< Orientation >( i );
+
+        firstPoints.at( i ) = rotation( side ).RotateVector( { 10e-3, 0, 0 } );
+        secondPoints.at( i ) = firstToSecond.CoordPositionAdd( firstPoints.at( i ) );
+
+        diffs.at( i ) = secondPoints.at( i ) - firstPoints.at( i );
+    }
+
+    if ( std::all_of( diffs.begin(), diffs.end(), []( auto diff ) {
+             return diff.Length() <= distancePrecision;
+         } ) )
+    {
+        return true;
+    }
+
+    for ( size_t i = 0; i < pointsCount; i++ )
+    {
+        auto force = connectionForce / 8 * diffs.at( i ).Normalized();
+        links.first->AddForceAtRelativePosition( force, firstPoints.at( i ) );
+        links.second->AddForceAtRelativePosition( -force, secondPoints.at( i ) );
+    }
+    return false;
+}
+
+
+physics::JointPtr AttacherPlugin::createFixedJoint( physics::PhysicsEnginePtr physics,
+                                                    LinkPair links )
+{
+    assert( links.first );
+    assert( links.second );
+    assert( links.first != links.second );
+    assert( links.first->GetModel() != links.second->GetModel() );
+
+    auto joint = physics->CreateJoint( "revolute", links.first->GetModel() );
+
+    joint->Attach( links.first, links.second );
+    joint->Load( links.first, links.second, ignition::math::Pose3d() );
+    joint->SetModel( links.first->GetModel() );
+    joint->SetUpperLimit( 0, 0 );
+    joint->SetLowerLimit( 0, 0 );
+    joint->Init();
+
+    gzmsg << "Joint created (" << links.first->GetName() << ", " << links.second->GetName()
+          << ")\n";
+
+    return joint;
 }
 
 GZ_REGISTER_WORLD_PLUGIN( AttacherPlugin )
