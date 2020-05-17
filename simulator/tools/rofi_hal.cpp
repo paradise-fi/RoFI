@@ -442,7 +442,7 @@ class JointSim : public Joint::Implementation
 {
 public:
     using Callback = std::function< void( Joint, RoFISim::RofiRespPtr ) >;
-    static constexpr float positionPrecision = 0.01;
+    static constexpr float positionPrecision = 1e-3;
     static_assert( positionPrecision > 0 );
 
     JointSim( std::weak_ptr< RoFISim > rofi, int jointNumber )

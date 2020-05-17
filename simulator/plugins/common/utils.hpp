@@ -12,25 +12,58 @@
 
 namespace gazebo
 {
+template < msgs::Joint::Type >
+struct Precision {};
+
+template <>
+struct Precision< msgs::Joint::REVOLUTE >
+{
+    // Used for position set callback and for boundaries
+    // Revolute joints: [rad]
+    static constexpr double position = 1e-2;
+
+    // Used for position set callback and for boundaries
+    // Revolute joints: [rad/s]
+    static constexpr double velocity = 1e-2;
+};
+
+template <>
+struct Precision< msgs::Joint::PRISMATIC >
+{
+    // Used for position set callback and for boundaries
+    // Prismatic joints: [m]
+    static constexpr double position = 1e-4;
+
+    // Used for position set callback and for boundaries
+    // Prismatic joints: [m/s]
+    static constexpr double velocity = 1e-4;
+};
+
 struct JointDataBase
 {
     // Used for position set callback and for boundaries
     // Prismatic joints: [m]
     // Revolute joints: [rad]
-    static constexpr double positionPrecision = 10e-3;
-    static_assert( positionPrecision > 0 );
+    double getPositionPrecision() const
+    {
+        if ( joint->GetMsgType() == msgs::Joint::PRISMATIC )
+        {
+                return Precision< msgs::Joint::PRISMATIC >::position;
+        }
+        return Precision< msgs::Joint::REVOLUTE >::position;
+    }
 
     // Used for position set callback and for boundaries
     // Prismatic joints: [m/s]
     // Revolute joints: [rad/s]
-    static constexpr double velocityPrecision = 10e-3;
-    static_assert( velocityPrecision > 0 );
-
-    // Used for position set callback and for boundaries
-    // Prismatic joints: [N]
-    // Revolute joints: [Nm]
-    static constexpr double forcePrecision = 10e-3;
-    static_assert( forcePrecision > 0 );
+    double getVelocityPrecision() const
+    {
+        if ( joint->GetMsgType() == msgs::Joint::PRISMATIC )
+        {
+                return Precision< msgs::Joint::PRISMATIC >::velocity;
+        }
+        return Precision< msgs::Joint::REVOLUTE >::velocity;
+    }
 
     // Prismatic joints: [m]
     // Revolute joints: [rad]
@@ -52,21 +85,21 @@ struct JointDataBase
     // Revolute joints: [rad]
     double getMaxPosition() const
     {
-        return maxPosition - positionPrecision;
+        return maxPosition - getPositionPrecision();
     }
 
     // Prismatic joints: [m]
     // Revolute joints: [rad]
     double getMinPosition() const
     {
-        return minPosition + positionPrecision;
+        return minPosition + getPositionPrecision();
     }
 
     // Prismatic joints: [m/s]
     // Revolute joints: [rad/s]
     double getMaxVelocity() const
     {
-        return maxSpeed - velocityPrecision;
+        return maxSpeed - getVelocityPrecision();
     }
 
     // Prismatic joints: [m/s]
@@ -80,14 +113,14 @@ struct JointDataBase
     // Revolute joints: [rad/s]
     double getMinVelocity() const
     {
-        return minSpeed + velocityPrecision;
+        return minSpeed + getVelocityPrecision();
     }
 
     // Prismatic joints: [N]
     // Revolute joints: [Nm]
     double getMaxEffort() const
     {
-        return maxEffort - forcePrecision;
+        return maxEffort;
     }
 
     // Prismatic joints: [N]
@@ -140,9 +173,8 @@ protected:
             maxEffort = std::numeric_limits< double >::max();
         }
 
-        assert( maxPosition - minPosition > 2 * positionPrecision );
-        assert( maxSpeed > velocityPrecision );
-        assert( maxEffort > forcePrecision );
+        assert( maxPosition - minPosition > 2 * getPositionPrecision() );
+        assert( maxSpeed > getVelocityPrecision() );
     }
 };
 

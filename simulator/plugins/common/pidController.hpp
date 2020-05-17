@@ -258,7 +258,7 @@ class PositionPIDController : public VelocityPIDController
 
     void setMaxSpeed( double maxSpeed )
     {
-        assert( _jointData.getMinVelocity() >= _jointData.velocityPrecision );
+        assert( _jointData.getMinVelocity() >= _jointData.getVelocityPrecision() );
 
         _maxSpeed = verboseClamp( maxSpeed,
                                   _jointData.getMinVelocity(),
@@ -300,7 +300,7 @@ public:
         double position = _jointData.joint->Position();
         double linearError = position - _targetPosition;
 
-        if ( !_positionReached && std::abs( linearError ) <= _jointData.positionPrecision )
+        if ( !_positionReached && std::abs( linearError ) <= _jointData.getPositionPrecision() )
         {
             _positionReached = true;
 
@@ -322,7 +322,7 @@ public:
         assert( _maxSpeed >= _jointData.getMinVelocity() );
         assert( _maxSpeed <= _jointData.getMaxVelocity() );
 
-        assert( std::abs( velocity ) <= _maxSpeed + _jointData.positionPrecision );
+        assert( std::abs( velocity ) <= _maxSpeed + _jointData.getPositionPrecision() );
 
         VelocityPIDController::setTargetVelocity( velocity, std::nullopt );
         VelocityPIDController::velPhysicsUpdate< false >();
