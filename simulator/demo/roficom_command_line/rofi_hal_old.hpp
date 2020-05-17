@@ -44,7 +44,7 @@ public:
 enum class ConnectorPosition : bool
 {
     Retracted = false,
-    Expanded = true
+    Extended = true
 };
 
 enum class ConnectorOrientation : signed char

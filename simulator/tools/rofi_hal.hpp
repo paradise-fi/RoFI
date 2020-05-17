@@ -181,7 +181,7 @@ private:
 enum class ConnectorPosition : bool
 {
     Retracted = false,
-    Expanded = true,
+    Extended = true,
 };
 
 enum class ConnectorOrientation : signed char
@@ -263,7 +263,7 @@ public:
     }
 
     /**
-     * \brief Expand the connector to be ready to accept connection.
+     * \brief Extend the connector to be ready to accept connection.
      *
      * This action does not establishes connection, register a callback via
      * Connector::onConnectorEvent().

@@ -64,7 +64,7 @@ class RoficomController
                     positionReached( RoFICoMPosition::Retracted );
                     return;
                 }
-                _jointData.joint->SetForce( 0, _jointData.getMaxEffort() );
+                _jointData.joint->SetForce( 0, _jointData.getLowestEffort() );
                 break;
             }
             case RoFICoMPosition::Extending:
@@ -74,7 +74,7 @@ class RoficomController
                     positionReached( RoFICoMPosition::Extended );
                     return;
                 }
-                _jointData.joint->SetForce( 0, _jointData.getLowestEffort() );
+                _jointData.joint->SetForce( 0, _jointData.getMaxEffort() );
                 break;
             }
         }
@@ -111,7 +111,7 @@ class RoficomController
 
 public:
     template < typename OnPositionReachedCallback >
-    RoficomController( JointDataBase & jointData, OnPositionReachedCallback && onPositionReached )
+    RoficomController( JointDataBase & jointData, bool extended, OnPositionReachedCallback && onPositionReached )
             : _jointData( jointData )
             , _onPositionReached( std::forward< OnPositionReachedCallback >( onPositionReached ) )
     {
@@ -121,6 +121,15 @@ public:
 
         _connection = event::Events::ConnectBeforePhysicsUpdate(
                 std::bind( &RoficomController::onPhysicsUpdate, this ) );
+
+        if ( extended )
+        {
+            extend();
+        }
+        else
+        {
+            retract();
+        }
     }
 
     void extend()
@@ -138,7 +147,7 @@ public:
 
     struct ControllerValues
     {
-        std::string joint;
+        std::string jointName;
         std::optional< bool > extend;
     };
 
@@ -146,15 +155,11 @@ public:
     {
         assert( pluginSdf );
 
-        checkChildrenNames( pluginSdf, { "controller" } );
-        auto controller = getOnlyChild< true >( pluginSdf, "controller" );
-        assert( controller );
-
         ControllerValues controllerValues;
 
         checkChildrenNames( pluginSdf, { "joint", "extend" } );
-        controllerValues.joint = getOnlyChild< true >( controller, "joint" )->Get< std::string >();
-        auto extendElem = getOnlyChild< false >( controller, "extend" );
+        controllerValues.jointName = getOnlyChild< true >( pluginSdf, "joint" )->Get< std::string >();
+        auto extendElem = getOnlyChild< false >( pluginSdf, "extend" );
         if ( extendElem )
         {
             controllerValues.extend = extendElem->Get< bool >();

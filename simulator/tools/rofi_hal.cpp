@@ -380,7 +380,7 @@ public:
 
     static ConnectorState readConnectorState( RoFISim::RofiRespPtr resp )
     {
-        static_assert( static_cast< ConnectorPosition >( true ) == ConnectorPosition::Expanded );
+        static_assert( static_cast< ConnectorPosition >( true ) == ConnectorPosition::Extended );
         static_assert( static_cast< ConnectorPosition >( false ) == ConnectorPosition::Retracted );
 
         static_assert( static_cast< ConnectorOrientation >( msgs::ConnectorState::NORTH )

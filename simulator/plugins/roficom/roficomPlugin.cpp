@@ -55,28 +55,23 @@ void RoFICoMPlugin::loadJoint( sdf::ElementPtr pluginSdf )
         throw std::runtime_error( "no plugin sdf found in roficom" );
     }
 
-    auto pidValuesVector = PIDLoader::loadControllerValues( pluginSdf );
-    if ( pidValuesVector.size() != 1 )
-    {
-        gzerr << "Expected 1 controller joint in roficom\n";
-        throw std::runtime_error( "expected 1 controller joint in roficom" );
-    }
+    auto controllerValues = RoficomController::loadControllerValues( pluginSdf );
 
-    auto pidValue = std::move( pidValuesVector.at( 0 ) );
-    auto joint = _model->GetJoint( pidValue.jointName );
+    auto joint = _model->GetJoint( controllerValues.jointName );
     if ( !joint )
     {
-        gzerr << "No joint with specified name found in roficom\n";
-        throw std::runtime_error( "no joint with specified name found in roficom" );
+        gzerr << "No joint with name '" << controllerValues.jointName << "' found in roficom\n";
+        throw std::runtime_error( "No joint with name '" + controllerValues.jointName + "' found in roficom" );
     }
     if ( joint->GetMsgType() != msgs::Joint::PRISMATIC )
     {
         gzerr << "Controlled joint in roficom has to be prismatic\n";
-        throw std::runtime_error( "controlled joint in roficom has to be prismatic" );
+        throw std::runtime_error( "Controlled joint in roficom has to be prismatic" );
     }
 
     extendJoint = std::make_unique< JointData< RoficomController > >(
             std::move( joint ),
+            controllerValues.extend.value_or( false ),
             [ this ]( Position pos ) { this->jointPositionReachedCallback( pos ); } );
 
     assert( extendJoint );

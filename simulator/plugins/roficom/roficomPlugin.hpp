@@ -8,8 +8,6 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
-#include "pidController.hpp"
-#include "pidLoader.hpp"
 #include "roficomConnection.hpp"
 #include "roficomUtils.hpp"
 #include "utils.hpp"
