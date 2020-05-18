@@ -140,10 +140,10 @@ struct Record {
 	 * \return bool - true if the first (cheapest) record has been changed, false otherwise
      */
 	bool merge( const Record& rec ) {
-		Gateway firstRecord = gws[0];
+		Gateway best = gws.front();
 		bool changed = false;
 
-		for ( auto r : rec.gws ) {
+		for ( const auto& r : rec.gws ) {
 			auto found = std::find( gws.begin(), gws.end(), r);
 			if ( found != gws.end() ) {
 				found->merge( r ); // what if it changes the first? -> won't happen, min is used
@@ -159,7 +159,47 @@ struct Record {
 			});
 		}
 
-		return firstRecord != gws[0];
+		return best != gws.front();
+	}
+
+	bool disjoin( const Record& rec ) {
+		Gateway best = gws.front();
+
+		for ( const auto& g : rec.gws ) {
+			auto found = std::find( gws.begin(), gws.end(), g );
+			if ( found != gws.end() ) {
+				gws.erase( found );
+			}
+		}
+
+		return best != gws.front();
+	}
+
+	bool valid() const {
+		return gws.size() > 0;
+	}
+
+	bool remove( const std::string& str ) {
+		int size = gws.size();
+		gws.erase( std::remove_if( gws.begin(), gws.end(), [ &str ]( const Gateway& g ) {
+			return strcmp( str.c_str(), g.gw_name ) == 0;
+		} ), gws.end() );
+
+		return size != gws.size();
+	}
+
+	bool contains( const Record& r ) const {
+		if ( ip == r.ip && r.mask == mask ) {
+			for ( int i = 0; i < gws.size(); i++ ) {
+				for ( int j = 0; j < r.gws.size(); j++ ) {
+					if ( strcmp( gws[ i ].gw_name, r.gws[ j ].gw_name ) == 0 ) {
+						return true;
+					}
+				}
+			}
+		}
+
+		return false;
 	}
 
 	Record operator=( const Record& r ) {
@@ -228,7 +268,7 @@ inline std::ostream& operator<<( std::ostream& o, const Record& r ) {
  * \brief Actual routing table. Takes care of populating lwIP's table.
  */
 class RoutingTable {
-	std::vector< Record > _records;
+	std::list< Record > _records;
 
 	/**
      * \brief Counts records with given netif as the first (cheapest) gateway.
@@ -247,6 +287,16 @@ class RoutingTable {
 				size++;
 		}
 		return size;
+	}
+
+	void addRec( const Record& r ) {
+		for ( auto it = _records.begin(); it != _records.end(); it++ ) {
+			if ( r.mask > it->mask ) {
+				_records.insert( it, r );
+				return;
+			}
+		}
+		_records.push_back( r );
 	}
 
 public:
@@ -268,7 +318,7 @@ public:
 				}
 			}
 		} else {
-			_records.push_back( rec );
+			addRec( rec );
 			ip_add_route( &rec.ip, rec.mask, rec.getGateway() );
 		}
 	}
@@ -279,11 +329,35 @@ public:
 	 * \return true when a record is erased
      */
 	bool removeRecord( const Ip6Addr& addr, uint8_t mask, struct netif* n ) {
-		// TODO
-		return false; /*
 		std::ostringstream s;
 		s << n->name[0] << n->name[1] << static_cast< int >( n->num );
-		return ip_rm_route( &addr, mask, s.str().c_str() ); */
+		Record rec( addr, mask, 0, s.str().c_str() ); // is this cost the one we want?
+		auto found = std::find_if( _records.begin(), _records.end(), [&rec]( const Record& r ) { return rec.hasSameNetwork( r ); } );
+
+		if ( found != _records.end() ) {
+			if ( *found != rec ) {
+				if ( found->disjoin( rec ) ) {
+					ip_rm_route( &addr, mask, s.str().c_str() );
+					ip_add_route( &addr, mask, found->getGateway() );
+				}
+			} else {
+				_records.erase( found );
+			}
+			return true;
+		}
+
+		return false;
+	}
+
+	bool removeRecordForIf( struct netif* n ) {
+		std::string ifstr = netifToString( n );
+		int size = _records.size();
+
+		_records.erase( std::remove_if( _records.begin(), _records.end(), [ &ifstr ]( Record& r ) {
+			return r.remove( ifstr ) && !r.valid();
+		} ), _records.end() );
+
+		return size != _records.size();
 	}
 
 	/**
