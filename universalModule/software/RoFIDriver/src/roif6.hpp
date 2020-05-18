@@ -70,9 +70,7 @@ public:
 	}
 
 	void addAddress( Ip6Addr addr, s8_t i ) {
-		netif_add_ip6_address( &_netif, ( ip6_addr_t* ) addr.addr, &i );
-		if ( i < LWIP_IPV6_NUM_ADDRESSES && i > 0 )
-			netif_ip6_addr_set_state( &_netif, i, IP6_ADDR_TENTATIVE );
+		netif_add_ip6_address( &_netif, &addr, &i );
 	}
 
 	void setUp() {
@@ -173,9 +171,8 @@ public:
 	{
 		netif_set_default( &_netif );
 		netif_add( &_netif, NULL, NULL, NULL, this, init, tcpip_input );
-		netif_add_ip6_address( &_netif, &addr, nullptr );
 		dhcp_stop( &_netif );
-		_rtable.addRecord( addr, mask, 0, &_netif );
+		addAddress( addr, mask );
 
 		_netifs.reserve( dockCs.size() );
 		for ( auto cs : dockCs ) {
