@@ -41,8 +41,12 @@ class RoficomController
     event::ConnectionPtr _connection;
 
     RoFICoMPosition _position;
+    double _lastForce = 0;
 
     std::function< void( RoFICoMPosition ) > _onPositionReached;
+
+    static constexpr double minForce = 1e-4;
+    static constexpr double forceMultiplier = 1.01;
 
 
     void onPhysicsUpdate()
@@ -64,7 +68,10 @@ class RoficomController
                     positionReached( RoFICoMPosition::Retracted );
                     return;
                 }
-                _jointData.joint->SetForce( 0, _jointData.getLowestEffort() );
+
+                assert( _jointData.getLowestEffort() <= -minForce );
+                _lastForce = std::clamp( _lastForce * forceMultiplier, _jointData.getLowestEffort(), -minForce );
+                _jointData.joint->SetForce( 0, _lastForce );
                 break;
             }
             case RoFICoMPosition::Extending:
@@ -74,7 +81,10 @@ class RoficomController
                     positionReached( RoFICoMPosition::Extended );
                     return;
                 }
-                _jointData.joint->SetForce( 0, _jointData.getMaxEffort() );
+
+                assert( minForce <= _jointData.getMaxEffort() );
+                _lastForce = std::clamp( _lastForce * forceMultiplier, minForce, _jointData.getMaxEffort() );
+                _jointData.joint->SetForce( 0, _lastForce );
                 break;
             }
         }
