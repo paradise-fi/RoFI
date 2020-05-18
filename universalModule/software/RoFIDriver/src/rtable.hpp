@@ -4,8 +4,19 @@
 #include "networking.hpp"
 
 #include <algorithm>
+#include <iostream>
+#include <vector>
+#include <list>
+#include <cstring>
+#include <string>
 
 namespace _rofi {
+
+inline std::string netifToString( struct netif* n ) {
+	std::ostringstream s;
+	s << n->name[ 0 ] << n->name[ 1 ] << static_cast< int >( n->num );
+	return s.str();
+}
 
 struct PhysAddr;
 using Cost = uint16_t;
@@ -26,9 +37,19 @@ struct Ip6Addr : ip6_addr_t {
 	Ip6Addr( ip6_addr&& other ) {
 		std::swap( addr, other.addr );
 	}
+	Ip6Addr( uint8_t mask ) {
+		mask_to_address( mask, this );
+	}
 
     bool operator==( const Ip6Addr& o ) const {
 		return addr[0] == o.addr[0] && addr[1] == o.addr[1] && addr[2] == o.addr[2] && addr[3] == o.addr[3];
+	}
+
+	struct Ip6Addr operator&( const Ip6Addr& mask ) const {
+		Ip6Addr res( *this );
+		for ( int i = 0; i < 4; i++ )
+			res.addr[ i ] = addr[ i ] & mask.addr[ i ];
+		return res;
 	}
 
     static int size() { return 16; }
@@ -88,7 +109,7 @@ struct Gateway {
 	}
 };
 
-std::ostream& operator<<( std::ostream& o, const Gateway& g ) {
+inline std::ostream& operator<<( std::ostream& o, const Gateway& g ) {
 	o << g.gw_name << "/" << g.cost;
 	return o;
 }
@@ -167,7 +188,7 @@ struct Record {
 	}
 
 	bool hasSameNetwork( const Record& r ) const {
-		return r.ip == ip && r.mask == mask;
+		return (r.ip & Ip6Addr( r.mask ) ) == ( ip & Ip6Addr( mask ) );
 	}
 
 	const char* getGateway() const {
@@ -195,7 +216,7 @@ struct Record {
 	}
 };
 
-std::ostream& operator<<( std::ostream& o, const Record& r ) {
+inline std::ostream& operator<<( std::ostream& o, const Record& r ) {
 	o << "ip " << r.ip << " " << static_cast< int >( r.mask ) << "\n";
 	for ( auto g : r.gws ) {
 		o << "\tgateway " << g << "\n";
