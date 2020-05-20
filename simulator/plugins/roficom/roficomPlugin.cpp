@@ -61,7 +61,8 @@ void RoFICoMPlugin::loadJoint( sdf::ElementPtr pluginSdf )
     if ( !joint )
     {
         gzerr << "No joint with name '" << controllerValues.jointName << "' found in roficom\n";
-        throw std::runtime_error( "No joint with name '" + controllerValues.jointName + "' found in roficom" );
+        throw std::runtime_error( "No joint with name '" + controllerValues.jointName
+                                  + "' found in roficom" );
     }
     if ( joint->GetMsgType() != msgs::Joint::PRISMATIC )
     {

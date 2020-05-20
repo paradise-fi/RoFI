@@ -8,6 +8,8 @@
 
 #include <iostream>
 #include <map>
+#include <utility>
+#include <variant>
 
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
@@ -22,13 +24,18 @@ std::pair< std::string, std::string > sortNames( std::pair< std::string, std::st
 
 class AttacherPlugin : public WorldPlugin
 {
+    static constexpr double distancePrecision = 1e-4; // [m]
+    static constexpr double connectionForce = 2;      // [N]
+
 public:
     using ConnectorAttachInfoPtr = boost::shared_ptr< const rofi::messages::ConnectorAttachInfo >;
+    using StringPair = std::pair< std::string, std::string >;
+    using LinkPair = std::pair< physics::LinkPtr, physics::LinkPtr >;
 
     void Load( physics::WorldPtr world, sdf::ElementPtr /*sdf*/ ) override;
 
-    bool attach( std::pair< std::string, std::string > modelNames );
-    bool detach( std::pair< std::string, std::string > modelNames );
+    bool attach( StringPair modelNames );
+    bool detach( StringPair modelNames );
 
     // TODO deprecated in the future
     void moveToOther( std::string thisRoficomName,
@@ -42,6 +49,10 @@ public:
 
     void attach_event_callback( const ConnectorAttachInfoPtr & msg );
 
+    void onPhysicsUpdate();
+
+    static physics::JointPtr createFixedJoint( physics::PhysicsEnginePtr physics, LinkPair links );
+
 private:
     void sendAttachInfoToOne( std::string roficomName,
                               std::string connectedToName,
@@ -49,10 +60,13 @@ private:
                               rofi::messages::ConnectorState::Orientation orientation );
 
 
+    event::ConnectionPtr _onUpdate;
+
     transport::NodePtr _node;
     transport::SubscriberPtr _subAttachEvent;
 
-    std::map< std::pair< std::string, std::string >, physics::JointPtr > _joints;
+    std::map< StringPair, std::variant< LinkPair, physics::JointPtr > > _connected;
+    std::mutex _connectedMutex;
 
     physics::PhysicsEnginePtr _physics;
     physics::WorldPtr _world;

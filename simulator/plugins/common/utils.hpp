@@ -13,7 +13,9 @@
 namespace gazebo
 {
 template < msgs::Joint::Type >
-struct Precision {};
+struct Precision
+{
+};
 
 template <>
 struct Precision< msgs::Joint::REVOLUTE >
@@ -48,7 +50,7 @@ struct JointDataBase
     {
         if ( joint->GetMsgType() == msgs::Joint::PRISMATIC )
         {
-                return Precision< msgs::Joint::PRISMATIC >::position;
+            return Precision< msgs::Joint::PRISMATIC >::position;
         }
         return Precision< msgs::Joint::REVOLUTE >::position;
     }
@@ -60,7 +62,7 @@ struct JointDataBase
     {
         if ( joint->GetMsgType() == msgs::Joint::PRISMATIC )
         {
-                return Precision< msgs::Joint::PRISMATIC >::velocity;
+            return Precision< msgs::Joint::PRISMATIC >::velocity;
         }
         return Precision< msgs::Joint::REVOLUTE >::velocity;
     }

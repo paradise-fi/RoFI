@@ -24,6 +24,9 @@ void AttacherPlugin::Load( physics::WorldPtr world, sdf::ElementPtr /*sdf*/ )
     _physics = _world->Physics();
     assert( _physics );
 
+    _onUpdate = event::Events::ConnectBeforePhysicsUpdate(
+            std::bind( &AttacherPlugin::onPhysicsUpdate, this ) );
+
     _node = boost::make_shared< transport::Node >();
     assert( _node );
     _node->Init( _world->Name() );
@@ -40,23 +43,14 @@ void AttacherPlugin::Load( physics::WorldPtr world, sdf::ElementPtr /*sdf*/ )
 bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames )
 {
     modelNames = sortNames( std::move( modelNames ) );
-
     if ( modelNames.first == modelNames.second )
     {
         gzerr << "Same model name " << modelNames.first << "\n";
         return false;
     }
-
     assert( modelNames.first < modelNames.second );
 
     gzmsg << "Creating new joint.\n";
-
-    auto it = _joints.find( modelNames );
-    if ( it != _joints.end() )
-    {
-        gzwarn << "Already connected (" << modelNames.first << ", " << modelNames.second << ")\n";
-        return false;
-    }
 
     auto model1 = _world->ModelByName( modelNames.first );
     auto model2 = _world->ModelByName( modelNames.second );
@@ -90,25 +84,20 @@ bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames )
         gzerr << "inner link of " << model2->GetScopedName() << " was not found\n";
         return false;
     }
-
-    assert( model1 );
-    assert( model2 );
-    assert( link1 );
-    assert( link2 );
-    assert( model1 != model2 );
     assert( link1 != link2 );
 
-    auto joint = _physics->CreateJoint( "revolute", model1 );
-    _joints.emplace( modelNames, joint );
 
-    joint->Attach( link1, link2 );
-    joint->Load( link1, link2, ignition::math::Pose3d() );
-    joint->SetModel( model1 );
-    joint->SetUpperLimit( 0, 0 );
-    joint->SetLowerLimit( 0, 0 );
-    joint->Init();
+    std::lock_guard< std::mutex > lock( _connectedMutex );
 
-    gzmsg << "Joint created.\n";
+    auto inserted = _connected.emplace( modelNames, LinkPair( link1, link2 ) );
+
+    if ( !inserted.second )
+    {
+        gzwarn << "Already connected (" << modelNames.first << ", " << modelNames.second << ")\n";
+        return false;
+    }
+
+    gzmsg << "Roficoms connected\n";
 
     return true;
 }
@@ -123,15 +112,23 @@ bool AttacherPlugin::detach( std::pair< std::string, std::string > modelNames )
     }
     assert( modelNames.first < modelNames.second );
 
-    auto it = _joints.find( modelNames );
-    if ( it != _joints.end() )
+    std::lock_guard< std::mutex > lock( _connectedMutex );
+
+    auto it = _connected.find( modelNames );
+    if ( it == _connected.end() )
     {
-        it->second->Detach();
-        _joints.erase( it );
-        return true;
+        return false;
     }
 
-    return false;
+    auto jointPtr = std::get_if< physics::JointPtr >( &it->second );
+    if ( jointPtr && *jointPtr )
+    {
+        auto joint = *jointPtr;
+        joint->Detach();
+    }
+
+    _connected.erase( it );
+    return true;
 }
 
 void AttacherPlugin::moveToOther( std::string thisRoficomName,
@@ -267,6 +264,74 @@ void AttacherPlugin::attach_event_callback( const AttacherPlugin::ConnectorAttac
             sendAttachInfo( msg->modelname1(), msg->modelname2(), false, msg->orientation() );
         }
     }
+}
+
+void AttacherPlugin::onPhysicsUpdate()
+{
+    std::lock_guard< std::mutex > lock( _connectedMutex );
+
+    for ( auto it = _connected.begin(); it != _connected.end(); it++ )
+    {
+        auto linksPtr = std::get_if< LinkPair >( &it->second );
+        if ( !linksPtr )
+        {
+            continue;
+        }
+
+        auto & [ link1, link2 ] = *linksPtr;
+
+        // apply force
+        auto model1 = link1->GetModel();
+        auto model2 = link2->GetModel();
+        assert( model1 );
+        assert( model2 );
+        assert( model1 != model2 );
+
+        auto pose1 = link1->WorldPose();
+        auto pose2 = link2->WorldPose();
+
+        auto diff = pose1 - pose2;
+        double distance = diff.Pos().Length();
+
+        if ( distance <= distancePrecision )
+        {
+            auto joint = createFixedJoint( _physics, { link1, link2 } );
+            assert( joint );
+            it->second = std::move( joint );
+            continue;
+        }
+
+        // link2->SetLinearVel( link1->WorldLinearVel() );
+        // link2->SetAngularVel( link1->WorldAngularVel() );
+
+        ignition::math::Vector3d force = connectionForce / 2 * diff.Pos().Normalize();
+        link1->AddForce( -force );
+        link2->AddForce( force );
+    }
+}
+
+
+physics::JointPtr AttacherPlugin::createFixedJoint( physics::PhysicsEnginePtr physics,
+                                                    LinkPair links )
+{
+    assert( links.first );
+    assert( links.second );
+    assert( links.first != links.second );
+    assert( links.first->GetModel() != links.second->GetModel() );
+
+    auto joint = physics->CreateJoint( "revolute", links.first->GetModel() );
+
+    joint->Attach( links.first, links.second );
+    joint->Load( links.first, links.second, ignition::math::Pose3d() );
+    joint->SetModel( links.first->GetModel() );
+    joint->SetUpperLimit( 0, 0 );
+    joint->SetLowerLimit( 0, 0 );
+    joint->Init();
+
+    gzmsg << "Joint created (" << links.first->GetName() << ", " << links.second->GetName()
+          << ")\n";
+
+    return joint;
 }
 
 GZ_REGISTER_WORLD_PLUGIN( AttacherPlugin )

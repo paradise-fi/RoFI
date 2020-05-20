@@ -70,7 +70,9 @@ class RoficomController
                 }
 
                 assert( _jointData.getLowestEffort() <= -minForce );
-                _lastForce = std::clamp( _lastForce * forceMultiplier, _jointData.getLowestEffort(), -minForce );
+                _lastForce = std::clamp( _lastForce * forceMultiplier,
+                                         _jointData.getLowestEffort(),
+                                         -minForce );
                 _jointData.joint->SetForce( 0, _lastForce );
                 break;
             }
@@ -83,7 +85,9 @@ class RoficomController
                 }
 
                 assert( minForce <= _jointData.getMaxEffort() );
-                _lastForce = std::clamp( _lastForce * forceMultiplier, minForce, _jointData.getMaxEffort() );
+                _lastForce = std::clamp( _lastForce * forceMultiplier,
+                                         minForce,
+                                         _jointData.getMaxEffort() );
                 _jointData.joint->SetForce( 0, _lastForce );
                 break;
             }
@@ -121,7 +125,9 @@ class RoficomController
 
 public:
     template < typename OnPositionReachedCallback >
-    RoficomController( JointDataBase & jointData, bool extended, OnPositionReachedCallback && onPositionReached )
+    RoficomController( JointDataBase & jointData,
+                       bool extended,
+                       OnPositionReachedCallback && onPositionReached )
             : _jointData( jointData )
             , _onPositionReached( std::forward< OnPositionReachedCallback >( onPositionReached ) )
     {
@@ -168,7 +174,8 @@ public:
         ControllerValues controllerValues;
 
         checkChildrenNames( pluginSdf, { "joint", "extend" } );
-        controllerValues.jointName = getOnlyChild< true >( pluginSdf, "joint" )->Get< std::string >();
+        controllerValues.jointName =
+                getOnlyChild< true >( pluginSdf, "joint" )->Get< std::string >();
         auto extendElem = getOnlyChild< false >( pluginSdf, "extend" );
         if ( extendElem )
         {
