@@ -46,6 +46,7 @@ public:
     void disconnect();
     void sendPacket( const rofi::messages::Packet & packet );
     void onPacket( const rofi::messages::Packet & packet );
+    void onConnectorEvent( rofi::messages::ConnectorCmd::Type eventType );
 
     bool isConnected() const;
     std::optional< Orientation > getOrientation() const;

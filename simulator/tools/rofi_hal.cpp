@@ -7,6 +7,7 @@
 #include <iostream>
 #include <map>
 #include <mutex>
+#include <optional>
 #include <thread>
 #include <utility>
 
@@ -213,7 +214,8 @@ private:
 class ConnectorSim : public Connector::Implementation
 {
 public:
-    using Callback = std::function< void( Connector, RoFISim::RofiRespPtr ) >;
+    using EventCallback = std::function< void( Connector, ConnectorEvent ) >;
+    using PacketCallback = std::function< void( Connector, Packet ) >;
 
     ConnectorSim( std::weak_ptr< RoFISim > rofi, int connectorNumber )
             : _connectorNumber( connectorNumber )
@@ -246,30 +248,22 @@ public:
         rofi->pub->Publish( getCmdMsg( msgs::ConnectorCmd::DISCONNECT ), true );
     }
 
-    void onConnectorEvent( std::function< void( Connector, ConnectorEvent ) > callback ) override
+    void onConnectorEvent( EventCallback callback ) override
     {
         if ( !callback )
         {
             throw std::invalid_argument( "empty callback" );
         }
-        registerCallback( msgs::ConnectorCmd::CONNECTOR_EVENT,
-                          [ callback = std::move( callback ) ]( Connector connector,
-                                                                RoFISim::RofiRespPtr resp ) {
-                              callback( connector, ConnectorSim::readEvent( std::move( resp ) ) );
-                          } );
+        registerEventCallback( std::move( callback ) );
     }
 
-    void onPacket( std::function< void( Connector, Packet ) > callback ) override
+    void onPacket( PacketCallback callback ) override
     {
         if ( !callback )
         {
             throw std::invalid_argument( "empty callback" );
         }
-        registerCallback( msgs::ConnectorCmd::PACKET,
-                          [ callback = std::move( callback ) ]( Connector connector,
-                                                                RoFISim::RofiRespPtr resp ) {
-                              callback( connector, ConnectorSim::readPacket( std::move( resp ) ) );
-                          } );
+        registerPacketCallback( std::move( callback ) );
     }
 
     void send( Packet packet ) override
@@ -317,18 +311,26 @@ public:
                 ->second.get_future();
     }
 
-    void registerCallback( msgs::ConnectorCmd::Type type, Callback && callback )
+    void registerEventCallback( EventCallback && callback )
     {
         assert( callback );
 
-        std::lock_guard< std::mutex > lock( respCallbacksMutex );
-        respCallbacks.emplace( type, std::move( callback ) );
+        std::lock_guard< std::mutex > lock( eventCallbacksMutex );
+        eventCallbacks.push_back( std::move( callback ) );
+    }
+
+    void registerPacketCallback( PacketCallback && callback )
+    {
+        assert( callback );
+
+        std::lock_guard< std::mutex > lock( packetCallbacksMutex );
+        packetCallbacks.push_back( std::move( callback ) );
     }
 
     void setPromises( const RoFISim::RofiRespPtr & resp )
     {
         std::lock_guard< std::mutex > lock( respPromisesMutex );
-        auto range = respPromises.equal_range( resp->connectorresp().cmdtype() );
+        auto range = respPromises.equal_range( resp->connectorresp().resptype() );
         for ( auto it = range.first; it != range.second; it++ )
         {
             it->second.set_value( resp );
@@ -336,14 +338,23 @@ public:
         respPromises.erase( range.first, range.second );
     }
 
-    void callCallbacks( const RoFISim::RofiRespPtr & resp )
+    void callEventCallbacks( ConnectorEvent event )
     {
-        std::lock_guard< std::mutex > lock( respCallbacksMutex );
-        auto range = respCallbacks.equal_range( resp->connectorresp().cmdtype() );
-        for ( auto it = range.first; it != range.second; it++ )
+        std::lock_guard< std::mutex > lock( eventCallbacksMutex );
+        for ( const auto & callback : eventCallbacks )
         {
-            assert( it->second );
-            std::thread( it->second, Connector( shared_from_this() ), resp ).detach();
+            assert( callback );
+            std::thread( callback, Connector( shared_from_this() ), event ).detach();
+        }
+    }
+
+    void callPacketCallbacks( const Packet & packet )
+    {
+        std::lock_guard< std::mutex > lock( packetCallbacksMutex );
+        for ( const auto & callback : packetCallbacks )
+        {
+            assert( callback );
+            std::thread( callback, Connector( shared_from_this() ), packet ).detach();
         }
     }
 
@@ -353,7 +364,18 @@ public:
         assert( resp->connectorresp().connector() == _connectorNumber );
 
         setPromises( resp );
-        callCallbacks( resp );
+
+        auto event = ConnectorSim::readEvent( resp );
+        if ( event )
+        {
+            callEventCallbacks( *event );
+        }
+
+        auto packet = ConnectorSim::readPacket( resp );
+        if ( packet )
+        {
+            callPacketCallbacks( *packet );
+        }
     }
 
 
@@ -404,9 +426,14 @@ public:
         return result;
     }
 
-    static Packet readPacket( RoFISim::RofiRespPtr resp )
+    static std::optional< Packet > readPacket( RoFISim::RofiRespPtr resp )
     {
         static_assert( sizeof( Packet::value_type ) == sizeof( char ) );
+
+        if ( resp->connectorresp().resptype() != msgs::ConnectorCmd::PACKET )
+        {
+            return {};
+        }
 
         const auto & message = resp->connectorresp().packet().message();
         Packet packet;
@@ -418,10 +445,17 @@ public:
         return packet;
     }
 
-    static ConnectorEvent readEvent( RoFISim::RofiRespPtr /* resp */ )
+    static std::optional< ConnectorEvent > readEvent( RoFISim::RofiRespPtr resp )
     {
-        // TODO: implement
-        return {};
+        switch ( resp->connectorresp().resptype() )
+        {
+            case msgs::ConnectorCmd::CONNECT:
+                return ConnectorEvent::Connected;
+            case msgs::ConnectorCmd::DISCONNECT:
+                return ConnectorEvent::Disconnected;
+            default:
+                return {};
+        }
     }
 
 private:
@@ -431,8 +465,10 @@ private:
     std::mutex respPromisesMutex;
     std::multimap< msgs::ConnectorCmd::Type, std::promise< RoFISim::RofiRespPtr > > respPromises;
 
-    std::mutex respCallbacksMutex;
-    std::multimap< msgs::ConnectorCmd::Type, Callback > respCallbacks;
+    std::mutex eventCallbacksMutex;
+    std::vector< EventCallback > eventCallbacks;
+    std::mutex packetCallbacksMutex;
+    std::vector< PacketCallback > packetCallbacks;
 };
 
 /**
@@ -584,7 +620,7 @@ public:
     void setPromises( const RoFISim::RofiRespPtr & resp )
     {
         std::lock_guard< std::mutex > lock( respPromisesMutex );
-        auto range = respPromises.equal_range( resp->jointresp().cmdtype() );
+        auto range = respPromises.equal_range( resp->jointresp().resptype() );
         for ( auto it = range.first; it != range.second; it++ )
         {
             it->second.set_value( resp );
@@ -595,7 +631,7 @@ public:
     void callCallbacks( const RoFISim::RofiRespPtr & resp )
     {
         std::lock_guard< std::mutex > lock( respCallbacksMutex );
-        auto range = respCallbacks.equal_range( resp->jointresp().cmdtype() );
+        auto range = respCallbacks.equal_range( resp->jointresp().resptype() );
         for ( auto it = range.first; it != range.second; it++ )
         {
             assert( it->second );
@@ -622,7 +658,7 @@ public:
         setPromises( resp );
         callCallbacks( resp );
 
-        if ( resp->jointresp().cmdtype() == msgs::JointCmd::SET_POS_WITH_SPEED )
+        if ( resp->jointresp().resptype() == msgs::JointCmd::SET_POS_WITH_SPEED )
         {
             checkPositionReachedCallback( resp->jointresp().value() );
         }

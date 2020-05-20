@@ -127,10 +127,12 @@ void RoficomConnection::onAttachEvent( const RoficomConnection::AttachInfoPtr & 
     if ( attachInfo->attach() )
     {
         onConnectEvent( otherRoficomName, attachInfo->orientation() );
+        _roficomPlugin->onConnectorEvent( rofi::messages::ConnectorCmd::CONNECT );
     }
     else
     {
         onDisconnectEvent( otherRoficomName );
+        _roficomPlugin->onConnectorEvent( rofi::messages::ConnectorCmd::DISCONNECT );
     }
 }
 

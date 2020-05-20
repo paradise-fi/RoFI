@@ -6,7 +6,7 @@ import "jointCapabilities.proto";
 
 message JointResp {
     int32 joint = 1;
-    JointCmd.Type cmdType = 2;
+    JointCmd.Type respType = 2;
 
     JointCapabilities capabilities = 3;
     float value = 4;

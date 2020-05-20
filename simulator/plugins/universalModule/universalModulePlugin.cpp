@@ -183,7 +183,7 @@ void UMP::findAndInitConnectors()
     }
 }
 
-rofi::messages::RofiResp UMP::getJointRofiResp( rofi::messages::JointCmd::Type cmdtype,
+rofi::messages::RofiResp UMP::getJointRofiResp( rofi::messages::JointCmd::Type resptype,
                                                 int joint,
                                                 float value ) const
 {
@@ -193,7 +193,7 @@ rofi::messages::RofiResp UMP::getJointRofiResp( rofi::messages::JointCmd::Type c
 
     auto & jointResp = *resp.mutable_jointresp();
     jointResp.set_joint( joint );
-    jointResp.set_cmdtype( cmdtype );
+    jointResp.set_resptype( resptype );
 
     jointResp.set_value( value );
 
@@ -299,7 +299,7 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
 
             auto & jointResp = *resp.mutable_jointresp();
             jointResp.set_joint( joint );
-            jointResp.set_cmdtype( JointCmd::GET_CAPABILITIES );
+            jointResp.set_resptype( JointCmd::GET_CAPABILITIES );
 
             auto & capabilities = *jointResp.mutable_capabilities();
             capabilities.set_maxposition( jointData.getMaxPosition() );

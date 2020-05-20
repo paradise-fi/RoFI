@@ -142,6 +142,17 @@ void RoFICoMPlugin::onPacket( const rofi::messages::Packet & packet )
     _pubRofi->Publish( std::move( msg ), true );
 }
 
+void RoFICoMPlugin::onConnectorEvent( rofi::messages::ConnectorCmd::Type eventType )
+{
+    using rofi::messages::ConnectorCmd;
+    using rofi::messages::ConnectorState;
+
+    assert( eventType != ConnectorCmd::GET_STATE );
+    assert( eventType != ConnectorCmd::PACKET );
+
+    _pubRofi->Publish( getConnectorResp( eventType ), true );
+}
+
 bool RoFICoMPlugin::isConnected() const
 {
     bool connected = roficomConnection.isConnected();
@@ -305,11 +316,11 @@ void RoFICoMPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
 }
 
 rofi::messages::ConnectorResp RoFICoMPlugin::getConnectorResp(
-        rofi::messages::ConnectorCmd::Type cmdtype ) const
+        rofi::messages::ConnectorCmd::Type resptype ) const
 {
     rofi::messages::ConnectorResp resp;
     resp.set_connector( connectorNumber );
-    resp.set_cmdtype( cmdtype );
+    resp.set_resptype( resptype );
     return resp;
 }
 
