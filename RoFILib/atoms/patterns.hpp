@@ -1,7 +1,24 @@
 #pragma once
 
 #include <utility>
+#include <memory>
 #include <traits.hpp>
+
+/**
+ * \brief Declare base class as cloneable.
+ *
+ * Typical usage: `class Animal { public: ATOMS_CLONEABLE_BASE( Animal ); }
+ */
+#define ATOMS_CLONEABLE_BASE( Type ) \
+    virtual Type *clone() const = 0;
+
+/**
+ * \brief Declare derived class as cloneable.
+ *
+ * Typical usage: `class Dog: public Animal { public: ATOMS_CLONEABLE( Dog ); }
+ */
+#define ATOMS_CLONEABLE( Type ) \
+    virtual Type *clone() const override { return new Type( *this ); }
 
 namespace atoms::detail {
 
@@ -195,7 +212,9 @@ struct VisitableBase {
     using VisitorType = Visitor;
 
     virtual ~VisitableBase() = default;
-    virtual void accept( VisitorType& visitor ) = 0;
+    virtual void accept( VisitorType& visitor ) {
+        throw std::logic_error( "accept not implemented" );
+    };
 };
 
 /**
@@ -248,5 +267,45 @@ template < typename T, typename... Fs >
 auto visit( T& object, Fs... fs ) {
     return visit( object, T::VisitorType::make( fs... ) );
 }
+
+
+/**
+ * \brief Store object on a heap (to provide stable address or to allow virtual
+ * function calls) and provide deep copies
+ *
+ * It requires that T provides `T *clone() const`.
+ */
+template < typename T >
+class ValuePtr {
+private:
+    std::unique_ptr< T > _ptr;
+public:
+    ValuePtr( std::unique_ptr< T > ptr ): _ptr( std::move( ptr ) ) {}
+    ValuePtr( const T& t ): _ptr( std::make_unique< T >( t ) ) {}
+    ValuePtr( const ValuePtr< T >& other ): _ptr( other._ptr->clone() ) {}
+    ValuePtr< T >& operator=( const ValuePtr< T >& other ) {
+        if ( this == &other )
+            return *this;
+        this->_ptr = std::unique_ptr< T >( other._ptr->clone() );
+        return *this;
+    }
+
+    ValuePtr( ValuePtr< T >&& other ): _ptr( std::move( other._ptr) ) {}
+
+    ValuePtr< T >& operator=( ValuePtr< T >&& other ) {
+        this->_ptr = std::move( other._ptr );
+        return *this;
+    }
+
+    auto operator *() const {
+        return *_ptr;
+    }
+    auto operator->() const {
+        return _ptr.operator->();
+    }
+    auto get() const {
+        return _ptr.get();
+    }
+};
 
 } // namespace atoms

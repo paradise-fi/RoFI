@@ -127,3 +127,65 @@ Bellow, you can find the references of the provided classes and functions:
 
 .. doxygenfunction:: atoms::visit(T &object, Visitor visitor) -> std::enable_if_t<std::is_base_of_v<typename T::VisitorType, Visitor>, typename Visitor::ReturnType>
     :project: lib
+
+
+Cloneable Object Hiearchy & ValuePtr
+------------------------------------
+
+Atoms provide means to simply implement cloneable virtual hiearchies. Consider
+the following code:
+
+.. code-block:: cpp
+
+    class Animal {
+    public:
+        virtual ~Animal() = default;
+    };
+
+    class Dog: public Animal {};
+    class Cat: public Animal {};
+
+    // Our code:
+    std::unique_ptr< Animal > ptr( new Dog() );
+    // Let's make a copy - how to do so? We don't know what is behind Animal.
+    // The following attempt won't work:
+    std::unique_ptr< Animal > ptrCopy( new Animal( *ptr.get() ) ); // Does not compile
+
+To make the it work we can add a virtual ``clone`` method. This process can be
+tedious, so Atoms provide several macros to easy the task. By the way, we use
+macro-based approach over CRTP-based approach as we consider it more readable
+and easier to maintain.
+
+.. code-block:: cpp
+
+    class Animal {
+    public:
+        virtual ~Animal() = default;
+        ATOMS_CLONEABLE_BASE( Animal );
+    };
+
+    class Dog: public Animal {
+    public:
+        ATOMS_CLONEABLE( Dog );
+    };
+
+    class Cat: public Animal {
+    public:
+        ATOMS_CLONEABLE( Cat );
+    };
+
+    // Our code:
+    std::unique_ptr< Animal > ptr( new Dog() );
+    // Let's make a copy:
+    std::unique_ptr< Animal > ptrCopy( ptr->clone() );
+
+Sometimes, you need to store a such hierarchy in class which you want to make
+copyable. With ``unique_ptr`` you have to manually define all the copy and move
+constructors. This can be tedious, therefore, atoms provide
+:cpp:class:`atoms::valuePtr` which stores objects on heap, but provides copy
+semantics for them. It is somewhat similar to proposed ``std::polymorphic_value``,
+however, it does not feature small-buffer optimization to provide stable
+references.
+
+.. doxygenclass:: atoms::valuePtr
+    :project: lib
