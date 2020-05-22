@@ -1,9 +1,21 @@
 cmake_minimum_required(VERSION 3.6)
 project(rofi)
 
-add_library(configuration STATIC Configuration.cpp Configuration.h joints.cpp)
+FetchContent_Declare(
+  span
+  GIT_REPOSITORY https://github.com/tcbrindle/span
+)
+FetchContent_GetProperties(catch)
+if(NOT span_POPULATED)
+  FetchContent_Populate(span)
+  add_subdirectory(${span_SOURCE_DIR} ${span_BINARY_DIR})
+  set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${span_SOURCE_DIR}/contrib")
+endif()
+
+add_library(configuration STATIC Configuration.cpp joints.cpp
+  universalModule.cpp rofibot.cpp)
 target_include_directories(configuration PUBLIC .)
-target_link_libraries(configuration PUBLIC ${ARMADILLO_LIBRARIES} PUBLIC atoms)
+target_link_libraries(configuration PUBLIC ${ARMADILLO_LIBRARIES} PUBLIC atoms span fmt)
 
 add_library(generators STATIC Generators.cpp Generators.h)
 target_include_directories(generators PUBLIC .)

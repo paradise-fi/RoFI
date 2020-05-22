@@ -31,22 +31,28 @@ using JointVisitor = atoms::Visits<
 struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
     virtual ~Joint() = default;
 
+    using Positions = std::vector< double >;
+
     virtual int paramCount() const = 0;
     virtual Matrix sourceToDest() const = 0;
-    virtual Matrix destToSource() const = 0;
-    virtual std::pair< double, double > joinLimits( int paramIdx ) const = 0;
+    virtual std::pair< double, double > jointLimits( int paramIdx ) const = 0;
+    ATOMS_CLONEABLE_BASE( Joint );
 
-    Matrix sourceToDest( const std::vector< double >& pos ) {
+    virtual Matrix destToSource() const {
+        return arma::inv( sourceToDest() );
+    };
+
+    Matrix sourceToDest( const Positions& pos ) {
         positions = pos;
         return sourceToDest();
     }
 
-    Matrix destToSource( const std::vector< double >& pos ) {
+    Matrix destToSource( const Positions& pos ) {
         positions = pos;
         return destToSource();
     }
 
-    std::vector< double > positions;
+    Positions positions;
 };
 
 struct RigidJoint: public atoms::Visitable< Joint, RigidJoint > {
@@ -74,9 +80,11 @@ struct RigidJoint: public atoms::Visitable< Joint, RigidJoint > {
         return _destToSource; // ToDo: Find out if the precomputing is effective or not
     }
 
-    std::pair< double, double > joinLimits( int /*paramIdx*/ ) const override {
+    std::pair< double, double > jointLimits( int /*paramIdx*/ ) const override {
         throw std::logic_error( "Rigid joint has no parameters" );
     }
+
+    ATOMS_CLONEABLE( RigidJoint );
 
     Matrix _sourceToDest;
     Matrix _destToSource;
@@ -120,11 +128,13 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
         return arma::inv( sourceToDest() ); // ToDo: Find out if this is effective enough
     }
 
-    std::pair< double, double > joinLimits( int paramIdx ) const override {
+    std::pair< double, double > jointLimits( int paramIdx ) const override {
         if ( paramIdx != 0 )
             throw std::logic_error( "RotationJoint joint has only parameter 0" );
         return _limits;
     }
+
+    ATOMS_CLONEABLE( RotationJoint );
 
     std::pair< double, double > _limits; ///< minimal and maximal parameter limit
     Vector _axis; ///< axis of rotation around with origin in point (0, 0, 0)
