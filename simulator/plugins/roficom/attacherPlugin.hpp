@@ -18,40 +18,39 @@ std::pair< std::string, std::string > sortNames( std::pair< std::string, std::st
 
 class AttacherPlugin : public WorldPlugin
 {
-    static constexpr double distancePrecision = 1e-4; // [m]
-    static constexpr double connectionForce = 2;      // [N]
-
 public:
     using ConnectorAttachInfoPtr = boost::shared_ptr< const rofi::messages::ConnectorAttachInfo >;
+    using Orientation = rofi::messages::ConnectorState::Orientation;
     using StringPair = std::pair< std::string, std::string >;
     using LinkPair = std::pair< physics::LinkPtr, physics::LinkPtr >;
 
+    static constexpr double distancePrecision = 2e-3; // [m]
+    static constexpr double connectionForce = 4;      // [N]
+
     void Load( physics::WorldPtr world, sdf::ElementPtr /*sdf*/ ) override;
 
-    bool attach( StringPair modelNames );
+    bool attach( StringPair modelNames, Orientation orientation );
     bool detach( StringPair modelNames );
-
-    // TODO deprecated in the future
-    void moveToOther( std::string thisRoficomName,
-                      std::string otherRoficomName,
-                      rofi::messages::ConnectorState::Orientation orientation );
 
     void sendAttachInfo( std::string modelName1,
                          std::string modelName2,
                          bool attach,
-                         rofi::messages::ConnectorState::Orientation orientation );
+                         Orientation orientation );
 
     void attach_event_callback( const ConnectorAttachInfoPtr & msg );
 
     void onPhysicsUpdate();
 
+    static bool applyAttractForce( LinkPair links, Orientation orientation );
     static physics::JointPtr createFixedJoint( physics::PhysicsEnginePtr physics, LinkPair links );
 
 private:
+    using ConnectedInfo = std::pair< Orientation, std::variant< LinkPair, physics::JointPtr > >;
+
     void sendAttachInfoToOne( std::string roficomName,
                               std::string connectedToName,
                               bool attach,
-                              rofi::messages::ConnectorState::Orientation orientation );
+                              Orientation orientation );
 
 
     event::ConnectionPtr _onUpdate;
@@ -59,7 +58,7 @@ private:
     transport::NodePtr _node;
     transport::SubscriberPtr _subAttachEvent;
 
-    std::map< StringPair, std::variant< LinkPair, physics::JointPtr > > _connected;
+    std::map< StringPair, ConnectedInfo > _connected;
     std::mutex _connectedMutex;
 
     physics::PhysicsEnginePtr _physics;

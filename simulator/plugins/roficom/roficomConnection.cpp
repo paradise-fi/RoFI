@@ -79,7 +79,7 @@ void RoficomConnection::disconnectRequest()
 
     rofi::messages::ConnectorAttachInfo msg;
     msg.set_modelname1( _model->GetScopedName() );
-    msg.set_modelname1( _connectedTo->GetScopedName() );
+    msg.set_modelname2( _connectedTo->GetScopedName() );
     msg.set_attach( false );
 
     _pubAttachEvent->Publish( msg, true );

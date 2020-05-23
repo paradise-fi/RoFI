@@ -1,9 +1,10 @@
 #include "attacherPlugin.hpp"
 
-#include <gazebo/common/Plugin.hh>
-#include <ignition/math/Pose3.hh>
+#include <algorithm>
+#include <array>
 
 #include "roficomUtils.hpp"
+
 
 namespace gazebo
 {
@@ -15,6 +16,37 @@ std::pair< std::string, std::string > sortNames( std::pair< std::string, std::st
     }
     assert( names.first <= names.second );
     return names;
+}
+
+ignition::math::Quaterniond rotation( rofi::messages::ConnectorState::Orientation orientation )
+{
+    using rofi::messages::ConnectorState;
+    using namespace ignition::math;
+
+    switch ( orientation )
+    {
+        case ConnectorState::NORTH:
+        {
+            return Quaterniond::EulerToQuaternion( 0, 0, 0 );
+        }
+        case ConnectorState::EAST:
+        {
+            return Quaterniond::EulerToQuaternion( 0, 0, -Angle::HalfPi() );
+        }
+        case ConnectorState::SOUTH:
+        {
+            return Quaterniond::EulerToQuaternion( 0, 0, Angle::Pi() );
+        }
+        case ConnectorState::WEST:
+        {
+            return Quaterniond::EulerToQuaternion( 0, 0, Angle::HalfPi() );
+        }
+        default:
+        {
+            gzerr << "Unknown orientation for rotation\n";
+            return {};
+        }
+    }
 }
 
 void AttacherPlugin::Load( physics::WorldPtr world, sdf::ElementPtr /*sdf*/ )
@@ -40,7 +72,8 @@ void AttacherPlugin::Load( physics::WorldPtr world, sdf::ElementPtr /*sdf*/ )
     gzmsg << "Link attacher node initialized.\n";
 }
 
-bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames )
+bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames,
+                             Orientation orientation )
 {
     modelNames = sortNames( std::move( modelNames ) );
     if ( modelNames.first == modelNames.second )
@@ -89,7 +122,8 @@ bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames )
 
     std::lock_guard< std::mutex > lock( _connectedMutex );
 
-    auto inserted = _connected.emplace( modelNames, LinkPair( link1, link2 ) );
+    auto inserted = _connected.emplace( modelNames,
+                                        ConnectedInfo( orientation, LinkPair( link1, link2 ) ) );
 
     if ( !inserted.second )
     {
@@ -118,7 +152,7 @@ bool AttacherPlugin::detach( std::pair< std::string, std::string > modelNames )
         return false;
     }
 
-    auto jointPtr = std::get_if< physics::JointPtr >( &it->second );
+    auto jointPtr = std::get_if< physics::JointPtr >( &it->second.second );
     if ( jointPtr && *jointPtr )
     {
         auto joint = *jointPtr;
@@ -129,74 +163,10 @@ bool AttacherPlugin::detach( std::pair< std::string, std::string > modelNames )
     return true;
 }
 
-void AttacherPlugin::moveToOther( std::string thisRoficomName,
-                                  std::string otherRoficomName,
-                                  rofi::messages::ConnectorState::Orientation orientation )
-{
-    using rofi::messages::ConnectorState;
-
-    if ( thisRoficomName == otherRoficomName )
-    {
-        return;
-    }
-
-    auto thisRoficom = _world->ModelByName( thisRoficomName );
-    auto otherRoficom = _world->ModelByName( otherRoficomName );
-
-    if ( !thisRoficom || !otherRoficom )
-    {
-        return;
-    }
-
-    auto thisRoficomLink = getLinkByName( thisRoficom, "inner" );
-    auto otherRoficomLink = getLinkByName( otherRoficom, "inner" );
-
-    if ( !thisRoficomLink || !otherRoficomLink )
-    {
-        return;
-    }
-
-    auto rotation = otherRoficom->WorldPose().Rot();
-    switch ( orientation )
-    {
-        case ConnectorState::NORTH:
-        {
-            rotation = rotation * ignition::math::Quaterniond( 0, 1, 0, 0 );
-            break;
-        }
-        case ConnectorState::EAST:
-        {
-            rotation = rotation * ignition::math::Quaterniond( 0, 0.707, 0.707, 0 );
-            break;
-        }
-        case ConnectorState::SOUTH:
-        {
-            rotation = rotation * ignition::math::Quaterniond( 0, 0, 1, 0 );
-            break;
-        }
-        case ConnectorState::WEST:
-        {
-            rotation = rotation * ignition::math::Quaterniond( 0, 0.707, -0.707, 0 );
-            break;
-        }
-        default:
-        {
-            gzerr << "Unknown orientation\n";
-            return;
-        }
-    }
-
-    auto linkExtendedPos = thisRoficomLink->RelativePose().Pos();
-    auto position = otherRoficomLink->WorldPose().Pos()
-                    + otherRoficomLink->WorldPose().Rot().RotateVector( linkExtendedPos );
-
-    thisRoficom->SetWorldPose( { position, rotation } );
-}
-
 void AttacherPlugin::sendAttachInfo( std::string modelname1,
                                      std::string modelname2,
                                      bool attach,
-                                     rofi::messages::ConnectorState::Orientation orientation )
+                                     Orientation orientation )
 {
     sendAttachInfoToOne( modelname1, modelname2, attach, orientation );
     sendAttachInfoToOne( modelname2, modelname1, attach, orientation );
@@ -205,7 +175,7 @@ void AttacherPlugin::sendAttachInfo( std::string modelname1,
 void AttacherPlugin::sendAttachInfoToOne( std::string modelname1,
                                           std::string modelname2,
                                           bool attach,
-                                          rofi::messages::ConnectorState::Orientation orientation )
+                                          Orientation orientation )
 {
     rofi::messages::ConnectorAttachInfo msg;
     msg.set_modelname1( std::move( modelname1 ) );
@@ -238,11 +208,9 @@ void AttacherPlugin::attach_event_callback( const AttacherPlugin::ConnectorAttac
 
     if ( msg->attach() )
     {
-        moveToOther( msg->modelname1(), msg->modelname2(), msg->orientation() );
-        if ( attach( { msg->modelname1(), msg->modelname2() } ) )
+        if ( attach( { msg->modelname1(), msg->modelname2() }, msg->orientation() ) )
         {
             gzmsg << "Attach was succesful\n";
-            sendAttachInfo( msg->modelname1(), msg->modelname2(), true, msg->orientation() );
         }
         else
         {
@@ -265,46 +233,82 @@ void AttacherPlugin::attach_event_callback( const AttacherPlugin::ConnectorAttac
 
 void AttacherPlugin::onPhysicsUpdate()
 {
+    using rofi::messages::ConnectorState;
+
     std::lock_guard< std::mutex > lock( _connectedMutex );
 
     for ( auto it = _connected.begin(); it != _connected.end(); it++ )
     {
-        auto linksPtr = std::get_if< LinkPair >( &it->second );
+        auto linksPtr = std::get_if< LinkPair >( &it->second.second );
         if ( !linksPtr )
         {
             continue;
         }
+        auto & links = *linksPtr;
 
-        auto & [ link1, link2 ] = *linksPtr;
-
-        // apply force
-        auto model1 = link1->GetModel();
-        auto model2 = link2->GetModel();
-        assert( model1 );
-        assert( model2 );
-        assert( model1 != model2 );
-
-        auto pose1 = link1->WorldPose();
-        auto pose2 = link2->WorldPose();
-
-        auto diff = pose1 - pose2;
-        double distance = diff.Pos().Length();
-
-        if ( distance <= distancePrecision )
+        bool connected = applyAttractForce( links, it->second.first );
+        if ( connected )
         {
-            auto joint = createFixedJoint( _physics, { link1, link2 } );
+            gzmsg << "Creating joint\n";
+            auto joint = createFixedJoint( _physics, links );
             assert( joint );
-            it->second = std::move( joint );
-            continue;
+            it->second.second = std::move( joint );
+            sendAttachInfo( it->first.first, it->first.second, true, it->second.first );
         }
-
-        // link2->SetLinearVel( link1->WorldLinearVel() );
-        // link2->SetAngularVel( link1->WorldAngularVel() );
-
-        ignition::math::Vector3d force = connectionForce / 2 * diff.Pos().Normalize();
-        link1->AddForce( -force );
-        link2->AddForce( force );
     }
+}
+
+bool AttacherPlugin::applyAttractForce( LinkPair links, Orientation orientation )
+{
+    using rofi::messages::ConnectorState;
+    using namespace ignition::math;
+
+    assert( links.first );
+    assert( links.second );
+    assert( links.first != links.second );
+
+    auto pose1 = links.first->WorldPose();
+    auto pose2 = Pose3d( {}, { Angle::Pi(), 0, 0 } )
+                 + Pose3d( {}, rotation( orientation ).Inverse() ) + links.second->WorldPose();
+
+    auto firstToSecond = pose1.CoordPoseSolve( pose2 );
+
+
+    static_assert( ConnectorState::NORTH == static_cast< Orientation >( 0 ) );
+    static_assert( ConnectorState::EAST == static_cast< Orientation >( 1 ) );
+    static_assert( ConnectorState::SOUTH == static_cast< Orientation >( 2 ) );
+    static_assert( ConnectorState::WEST == static_cast< Orientation >( 3 ) );
+
+    constexpr int pointsCount = 4;
+
+    std::array< Vector3d, pointsCount > firstPoints;
+    std::array< Vector3d, pointsCount > secondPoints;
+    std::array< Vector3d, pointsCount > diffs;
+
+    for ( size_t i = 0; i < pointsCount; i++ )
+    {
+        auto side = static_cast< Orientation >( i );
+
+        firstPoints.at( i ) = rotation( side ).RotateVector( { 10e-3, 0, 0 } );
+        secondPoints.at( i ) = firstToSecond.CoordPositionAdd( firstPoints.at( i ) );
+
+        diffs.at( i ) = secondPoints.at( i ) - firstPoints.at( i );
+    }
+
+    if ( std::all_of( diffs.begin(), diffs.end(), []( auto diff ) {
+             return diff.Length() <= distancePrecision;
+         } ) )
+    {
+        return true;
+    }
+
+    for ( size_t i = 0; i < pointsCount; i++ )
+    {
+        auto force = connectionForce / 8 * diffs.at( i ).Normalized();
+        links.first->AddForceAtRelativePosition( force, firstPoints.at( i ) );
+        links.second->AddForceAtRelativePosition( -force, secondPoints.at( i ) );
+    }
+    return false;
 }
 
 
