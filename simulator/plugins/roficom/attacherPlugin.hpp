@@ -1,9 +1,3 @@
-/*
- * Desc: Gazebo link attacher plugin.
- * Author: Sammy Pfeiffer (sam.pfeiffer@pal-robotics.com)
- * Date: 05/04/2016
- */
-
 #pragma once
 
 #include <iostream>

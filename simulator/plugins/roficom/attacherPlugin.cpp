@@ -45,29 +45,29 @@ bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames )
     modelNames = sortNames( std::move( modelNames ) );
     if ( modelNames.first == modelNames.second )
     {
-        gzerr << "Same model name " << modelNames.first << "\n";
+        gzwarn << "Same model name " << modelNames.first << "\n";
         return false;
     }
     assert( modelNames.first < modelNames.second );
 
-    gzmsg << "Creating new joint.\n";
+    gzmsg << "Attaching roficoms\n";
 
     auto model1 = _world->ModelByName( modelNames.first );
     auto model2 = _world->ModelByName( modelNames.second );
 
     if ( !model1 )
     {
-        gzerr << modelNames.first << " model was not found\n";
+        gzwarn << modelNames.first << " model was not found\n";
         return false;
     }
     if ( !model2 )
     {
-        gzerr << modelNames.second << " model was not found\n";
+        gzwarn << modelNames.second << " model was not found\n";
         return false;
     }
     if ( model1 == model2 )
     {
-        gzerr << "Found the same model\n";
+        gzwarn << "Found the same model\n";
         return false;
     }
 
@@ -76,12 +76,12 @@ bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames )
 
     if ( !link1 )
     {
-        gzerr << "inner link of " << model1->GetScopedName() << " was not found\n";
+        gzwarn << "inner link of " << model1->GetScopedName() << " was not found\n";
         return false;
     }
     if ( !link2 )
     {
-        gzerr << "inner link of " << model2->GetScopedName() << " was not found\n";
+        gzwarn << "inner link of " << model2->GetScopedName() << " was not found\n";
         return false;
     }
     assert( link1 != link2 );
@@ -96,8 +96,6 @@ bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames )
         gzwarn << "Already connected (" << modelNames.first << ", " << modelNames.second << ")\n";
         return false;
     }
-
-    gzmsg << "Roficoms connected\n";
 
     return true;
 }
@@ -219,7 +217,6 @@ void AttacherPlugin::sendAttachInfoToOne( std::string modelname1,
     assert( model1 );
 
     auto path = "/gazebo/" + getElemPath( model1 ) + "/attach_event";
-    gzmsg << "Publishing attach info on path '" << path << "'\n";
     _node->Publish< rofi::messages::ConnectorAttachInfo >( path, msg );
 }
 
@@ -230,12 +227,12 @@ void AttacherPlugin::attach_event_callback( const AttacherPlugin::ConnectorAttac
 
     if ( msg->modelname1().empty() || msg->modelname2().empty() )
     {
-        gzerr << "One of models to attach/detach is empty\n";
+        gzwarn << "One of models to attach/detach is empty\n";
         return;
     }
     if ( msg->modelname1() == msg->modelname2() )
     {
-        gzerr << "Both models are the same\n";
+        gzwarn << "Both models are the same\n";
         return;
     }
 
@@ -249,19 +246,19 @@ void AttacherPlugin::attach_event_callback( const AttacherPlugin::ConnectorAttac
         }
         else
         {
-            gzerr << "Could not make the attach.\n";
+            gzwarn << "Could not make the attach.\n";
         }
     }
     else
     {
-        if ( !detach( { msg->modelname1(), msg->modelname2() } ) )
-        {
-            gzerr << "Could not make the detach.\n";
-        }
-        else
+        if ( detach( { msg->modelname1(), msg->modelname2() } ) )
         {
             gzmsg << "Detach was succesful\n";
             sendAttachInfo( msg->modelname1(), msg->modelname2(), false, msg->orientation() );
+        }
+        else
+        {
+            gzwarn << "Could not make the detach.\n";
         }
     }
 }

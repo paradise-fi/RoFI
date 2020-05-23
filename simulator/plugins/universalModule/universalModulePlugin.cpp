@@ -25,7 +25,7 @@ void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
     gzmsg << "Number of connectors is " << connectors.size() << "\n";
 
     startListening();
-    gzmsg << "Ready...\n";
+    gzmsg << "UM plugin ready (" << _model->GetScopedName() << ")\n";
 }
 
 void UMP::initCommunication()
@@ -33,7 +33,8 @@ void UMP::initCommunication()
     if ( !_model )
     {
         gzerr << "Model has to be set before initializing communication\n";
-        return;
+        throw std::runtime_error( "Model has to be set before initializing communication" );
+        ;
     }
 
     if ( _node )
@@ -61,8 +62,8 @@ void UMP::startListening()
 {
     if ( !_node || !_node->IsInitialized() )
     {
-        gzerr << "Init communication before starting listening\n";
-        return;
+        gzerr << "Init communication before starting to listen\n";
+        throw std::runtime_error( "Init communication before starting to listen" );
     }
 
     _sub = _node->Subscribe( "~/control", &UMP::onRofiCmd, this );
@@ -82,7 +83,7 @@ void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )
     if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Init communication before adding connectors\n";
-        return;
+        throw std::runtime_error( "Init communication before adding connectors" );
     }
 
     std::string topicName = "/gazebo/" + getElemPath( connectorModel );
@@ -90,9 +91,15 @@ void UMP::addConnector( gazebo::physics::ModelPtr connectorModel )
     auto pub = _node->Advertise< rofi::messages::ConnectorCmd >( topicName + "/control" );
     auto sub = _node->Subscribe( topicName + "/response", &UMP::onConnectorResp, this );
 
-    if ( !sub || !pub )
+    if ( !sub )
     {
-        gzerr << "Connector Subcriber or Publisher not created\n";
+        gzerr << "Connector subcriber could not be created\n";
+        return;
+    }
+
+    if ( !pub )
+    {
+        gzerr << "Connector publisher could not be created\n";
         return;
     }
 
@@ -130,14 +137,14 @@ void UMP::findAndInitJoints( sdf::ElementPtr pluginSdf )
     if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Init communication before adding joints\n";
-        return;
+        throw std::runtime_error( "Init communication before adding joints" );
     }
 
     joints.clear();
 
     if ( !pluginSdf )
     {
-        gzwarn << "No plugin sdf found in module. Assuming no controllers.\n";
+        gzwarn << "No plugin sdf found in module. Assuming no controllers...\n";
         return;
     }
 
@@ -169,7 +176,7 @@ void UMP::findAndInitConnectors()
     if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Init communication before adding connectors\n";
-        return;
+        throw std::runtime_error( "Init communication before adding connectors" );
     }
 
     clearConnectors();
@@ -216,11 +223,12 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
 
     if ( rofiId && *rofiId != msg->rofiid() )
     {
-        gzerr << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid() << "\n";
+        gzwarn << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid() << "\n";
     }
     switch ( msg->cmdtype() )
     {
         case RofiCmd::NO_CMD:
+            gzmsg << "Rofi no_cmd\n";
             break;
         case RofiCmd::JOINT_CMD:
             onJointCmd( msg->jointcmd() );
@@ -287,6 +295,7 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
         case JointCmd::NO_CMD:
         {
             _pub->Publish( getJointRofiResp( JointCmd::NO_CMD, joint, 0 ) );
+            gzmsg << "Joint no_cmd\n";
             break;
         }
         case JointCmd::GET_CAPABILITIES:
@@ -308,8 +317,7 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
             capabilities.set_minspeed( jointData.getMinVelocity() );
             capabilities.set_maxtorque( jointData.getMaxEffort() );
 
-            gzmsg << "Returning capabilities of joint " << joint << ":\n"
-                  << capabilities.DebugString();
+            gzmsg << "Returning capabilities of joint (" << joint << ")\n";
 
             _pub->Publish( resp );
             break;
@@ -364,7 +372,7 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
             break;
         }
         default:
-            gzwarn << "Unknown command type: " << msg.cmdtype() << " of joint " << joint << "\n";
+            gzwarn << "Unknown command type " << msg.cmdtype() << " of joint " << joint << "\n";
             break;
     }
 }

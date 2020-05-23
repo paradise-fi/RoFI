@@ -17,7 +17,7 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
     if ( !hasAttacherPlugin( _model->GetWorld() ) )
     {
         gzerr << "Could not find the attacher world plugin. "
-              << "Connecting roficoms will probably not work properly.\n";
+              << "Connecting roficoms will not work.\n";
     }
 
     loadJoint( sdf );
@@ -31,7 +31,7 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
 
     startListening();
 
-    gzmsg << "RoFICoM plugin ready\n";
+    gzmsg << "RoFICoM plugin ready (" << _model->GetScopedName() << ")\n";
 }
 
 void RoFICoMPlugin::jointPositionReachedCallback( Position newPosition )
@@ -52,7 +52,7 @@ void RoFICoMPlugin::loadJoint( sdf::ElementPtr pluginSdf )
     if ( !pluginSdf )
     {
         gzerr << "No plugin sdf found in roficom\n";
-        throw std::runtime_error( "no plugin sdf found in roficom" );
+        throw std::runtime_error( "No plugin sdf found in roficom" );
     }
 
     auto controllerValues = RoficomController::loadControllerValues( pluginSdf );
@@ -300,17 +300,17 @@ void RoFICoMPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
         }
         case ConnectorCmd::CONNECT_POWER:
         {
-            gzerr << "Connecting power line is not implemented\n";
+            gzwarn << "Connecting power line is not implemented\n";
             break;
         }
         case ConnectorCmd::DISCONNECT_POWER:
         {
-            gzerr << "Disconnecting power line is not implemented\n";
+            gzwarn << "Disconnecting power line is not implemented\n";
             break;
         }
         default:
-            gzerr << "Unknown command type: " << msg->cmdtype() << " (" << _model->GetScopedName()
-                  << ")\n";
+            gzwarn << "Unknown command type: " << msg->cmdtype() << " (" << _model->GetScopedName()
+                   << ")\n";
             break;
     }
 }
