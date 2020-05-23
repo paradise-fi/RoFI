@@ -262,15 +262,19 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
             int32_t nsec = ( msg->waitcmd().waitms() % 1000 ) * 1000000;
             auto afterWaited = _model->GetWorld()->SimTime() + common::Time( sec, nsec );
 
-            std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
-            waitCallbacksMap.emplace( afterWaited, [ this, waitId = msg->waitcmd().waitid() ]() {
-                rofi::messages::RofiResp resp;
-                resp.set_rofiid( rofiId.value_or( 0 ) );
-                resp.set_resptype( rofi::messages::RofiCmd::WAIT_CMD );
-                resp.set_waitid( waitId );
-                gzmsg << "Returning waiting ended (ID: " << waitId << ")\n";
-                _pub->Publish( std::move( resp ) );
-            } );
+            {
+                std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
+                waitCallbacksMap.emplace(
+                        afterWaited,
+                        [ this, waitId = msg->waitcmd().waitid() ]() {
+                            rofi::messages::RofiResp resp;
+                            resp.set_rofiid( rofiId.value_or( 0 ) );
+                            resp.set_resptype( rofi::messages::RofiCmd::WAIT_CMD );
+                            resp.set_waitid( waitId );
+                            gzmsg << "Returning waiting ended (ID: " << waitId << ")\n";
+                            _pub->Publish( std::move( resp ) );
+                        } );
+            }
 
             break;
         }
@@ -398,21 +402,29 @@ void UMP::onConnectorResp( const UMP::ConnectorRespPtr & msg )
 
 void UMP::onUpdate()
 {
-    std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
-
     assert( _model );
     auto actualTime = _model->GetWorld()->SimTime();
 
-    auto it = waitCallbacksMap.begin();
-    for ( ; it != waitCallbacksMap.end(); it++ )
+    std::multimap< common::Time, std::function< void() > > tmpMap;
+
     {
-        if ( it->first > actualTime )
+        std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
+
+        auto it = waitCallbacksMap.begin();
+        while ( it != waitCallbacksMap.end() )
         {
-            break;
+            if ( it->first > actualTime )
+            {
+                break;
+            }
+            tmpMap.insert( tmpMap.end(), waitCallbacksMap.extract( it++ ) );
         }
-        ( it->second )();
     }
-    waitCallbacksMap.erase( waitCallbacksMap.begin(), it );
+
+    for ( auto & elem : tmpMap )
+    {
+        elem.second();
+    }
 }
 
 void UMP::setVelocity( int joint, double velocity )

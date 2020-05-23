@@ -172,17 +172,19 @@ public:
         assert( callback );
         assert( ms > 0 );
 
+        int tmpWaitId = 0;
+
         {
             std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
-            waitId++;
-            assert( waitCallbacksMap.find( waitId ) == waitCallbacksMap.end() );
-            waitCallbacksMap.emplace( waitId, std::move( callback ) );
+            tmpWaitId = ++waitId;
+            assert( waitCallbacksMap.find( tmpWaitId ) == waitCallbacksMap.end() );
+            waitCallbacksMap.emplace( tmpWaitId, std::move( callback ) );
         }
 
         msgs::RofiCmd rofiCmd;
         rofiCmd.set_rofiid( getId() );
         rofiCmd.set_cmdtype( msgs::RofiCmd::WAIT_CMD );
-        rofiCmd.mutable_waitcmd()->set_waitid( waitId );
+        rofiCmd.mutable_waitcmd()->set_waitid( tmpWaitId );
         rofiCmd.mutable_waitcmd()->set_waitms( ms );
         pub->Publish( std::move( rofiCmd ), true );
     }

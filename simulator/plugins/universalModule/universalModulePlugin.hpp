@@ -84,7 +84,7 @@ private:
     std::deque< JointData< PIDController > > joints;
     std::vector< std::pair< transport::PublisherPtr, transport::SubscriberPtr > > connectors;
 
-    std::map< common::Time, std::function< void() > > waitCallbacksMap;
+    std::multimap< common::Time, std::function< void() > > waitCallbacksMap;
     std::mutex waitCallbacksMapMutex;
 };
 
