@@ -33,6 +33,29 @@ void setToLimitPos( rofi::hal::Joint joint, bool max, Callback && callback )
     }
 }
 
+void checkConnected( rofi::hal::Connector connector )
+{
+    using namespace rofi::hal;
+
+    RoFI::wait( 1000, [ connectorConst = std::move( connector ) ] {
+        Connector connector = connectorConst;
+        auto state = connector.getState();
+        if ( state.position != ConnectorPosition::Extended || state.connected )
+        {
+            // Already retracted or successfully connected
+            return;
+        }
+
+        connector.disconnect();
+        RoFI::wait( 500, [ connectorConst = std::move( connector ) ] {
+            Connector connector = connectorConst;
+            connector.connect();
+
+            checkConnected( connector );
+        } );
+    } );
+}
+
 void oneMove( int connector )
 {
     using namespace rofi::hal;
@@ -88,6 +111,8 @@ void oneMove( int connector )
     // Connect new connections
     localRofi.getConnector( otherConnector ).connect();
     remoteRofi.getConnector( otherConnector ).connect();
+
+    checkConnected( localRofi.getConnector( otherConnector ) );
 }
 
 int main()

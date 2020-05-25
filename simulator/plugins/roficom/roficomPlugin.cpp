@@ -252,7 +252,6 @@ void RoFICoMPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
                 switch ( getPosition() )
                 {
                     case Position::Extended:
-                    case Position::Extending:
                     {
                         state.set_position( true );
 
@@ -268,6 +267,12 @@ void RoFICoMPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
                         {
                             state.set_connected( false );
                         }
+                        break;
+                    }
+                    case Position::Extending:
+                    {
+                        state.set_position( true );
+                        state.set_connected( false );
                         break;
                     }
                     case Position::Retracting:
