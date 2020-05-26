@@ -86,11 +86,6 @@ public:
     using RofiRespPtr = boost::shared_ptr< const msgs::RofiResp >;
 
 
-    static std::shared_ptr< RoFISim > create()
-    {
-        return create( localRoFIId );
-    }
-
     static std::shared_ptr< RoFISim > create( RoFI::Id id )
     {
         auto newRoFI = std::shared_ptr< RoFISim >( new RoFISim( id ) );
@@ -114,14 +109,14 @@ public:
             moduleName += "_" + std::to_string( static_cast< int >( _id ) - 1 );
         }
 
-        pub = _node->Advertise< msgs::RofiCmd >( "~/" + moduleName + "/control" );
-        sub = _node->Subscribe( "~/" + moduleName + "/response", &RoFISim::onResponse, this );
-        assert( pub );
-        assert( sub );
+        _pub = _node->Advertise< msgs::RofiCmd >( "~/" + moduleName + "/control" );
+        _sub = _node->Subscribe( "~/" + moduleName + "/response", &RoFISim::onResponse, this );
+        assert( _pub );
+        assert( _sub );
+        _pub->WaitForConnection();
 
         std::cerr << "Waiting for description from RoFI " << _id << "...\n";
 
-        pub->WaitForConnection();
         initDescription();
         initJoints();
 
@@ -137,10 +132,15 @@ public:
             msgs::RofiCmd rofiCmd;
             rofiCmd.set_rofiid( _id );
             rofiCmd.set_cmdtype( msgs::RofiCmd::DESCRIPTION );
-            pub->WaitForConnection();
-            pub->Publish( std::move( rofiCmd ), true );
+            publish( rofiCmd );
             std::this_thread::sleep_for( std::chrono::milliseconds( 200 ) );
         }
+    }
+
+    void publish( const rofi::messages::RofiCmd & msg )
+    {
+        assert( _pub );
+        _pub->Publish( msg, true );
     }
 
     void initJoints();
@@ -186,7 +186,7 @@ public:
         rofiCmd.set_cmdtype( msgs::RofiCmd::WAIT_CMD );
         rofiCmd.mutable_waitcmd()->set_waitid( tmpWaitId );
         rofiCmd.mutable_waitcmd()->set_waitms( ms );
-        pub->Publish( std::move( rofiCmd ), true );
+        publish( rofiCmd );
     }
 
 private:
@@ -196,12 +196,9 @@ private:
 
     const std::shared_ptr< GazeboClientHolder > _clientHolder;
     gazebo::transport::NodePtr _node;
+    gazebo::transport::SubscriberPtr _sub;
+    gazebo::transport::PublisherPtr _pub;
 
-public:
-    gazebo::transport::PublisherPtr pub;
-    gazebo::transport::SubscriberPtr sub;
-
-private:
     std::vector< std::shared_ptr< JointSim > > _joints;
     std::vector< std::shared_ptr< ConnectorSim > > _connectors;
 
@@ -231,7 +228,7 @@ public:
         auto rofi = getRoFI();
 
         auto result = registerPromise( msgs::ConnectorCmd::GET_STATE );
-        rofi->pub->Publish( getCmdMsg( msgs::ConnectorCmd::GET_STATE ), true );
+        rofi->publish( getCmdMsg( msgs::ConnectorCmd::GET_STATE ) );
 
         auto resp = result.get();
         assert( resp );
@@ -241,13 +238,13 @@ public:
     void connect() override
     {
         auto rofi = getRoFI();
-        rofi->pub->Publish( getCmdMsg( msgs::ConnectorCmd::CONNECT ), true );
+        rofi->publish( getCmdMsg( msgs::ConnectorCmd::CONNECT ) );
     }
 
     void disconnect() override
     {
         auto rofi = getRoFI();
-        rofi->pub->Publish( getCmdMsg( msgs::ConnectorCmd::DISCONNECT ), true );
+        rofi->publish( getCmdMsg( msgs::ConnectorCmd::DISCONNECT ) );
     }
 
     void onConnectorEvent( EventCallback callback ) override
@@ -276,7 +273,7 @@ public:
 
         auto msg = getCmdMsg( msgs::ConnectorCmd::PACKET );
         msg.mutable_connectorcmd()->mutable_packet()->set_message( packet.data(), packet.size() );
-        rofi->pub->Publish( std::move( msg ), true );
+        rofi->publish( msg );
     }
 
     void connectPower( ConnectorLine line ) override
@@ -289,7 +286,7 @@ public:
         auto rofi = getRoFI();
         auto msg = getCmdMsg( msgs::ConnectorCmd::CONNECT_POWER );
         msg.mutable_connectorcmd()->set_line( static_cast< msgs::ConnectorCmd::Line >( line ) );
-        rofi->pub->Publish( std::move( msg ), true );
+        rofi->publish( msg );
     }
 
     void disconnectPower( ConnectorLine line ) override
@@ -302,7 +299,7 @@ public:
         auto rofi = getRoFI();
         auto msg = getCmdMsg( msgs::ConnectorCmd::DISCONNECT_POWER );
         msg.mutable_connectorcmd()->set_line( static_cast< msgs::ConnectorCmd::Line >( line ) );
-        rofi->pub->Publish( std::move( msg ), true );
+        rofi->publish( msg );
     }
 
 
@@ -494,7 +491,7 @@ public:
         auto rofi = getRoFI();
 
         auto result = registerPromise( msgs::JointCmd::GET_CAPABILITIES );
-        rofi->pub->Publish( getCmdMsg( msgs::JointCmd::GET_CAPABILITIES ), true );
+        rofi->publish( getCmdMsg( msgs::JointCmd::GET_CAPABILITIES ) );
 
         auto resp = result.get();
         assert( resp );
@@ -512,7 +509,7 @@ public:
         auto rofi = getRoFI();
 
         auto result = registerPromise( msgs::JointCmd::GET_VELOCITY );
-        rofi->pub->Publish( getCmdMsg( msgs::JointCmd::GET_VELOCITY ), true );
+        rofi->publish( getCmdMsg( msgs::JointCmd::GET_VELOCITY ) );
 
         auto resp = result.get();
         assert( resp );
@@ -525,7 +522,7 @@ public:
 
         auto msg = getCmdMsg( msgs::JointCmd::SET_VELOCITY );
         msg.mutable_jointcmd()->mutable_setvelocity()->set_velocity( velocity );
-        rofi->pub->Publish( std::move( msg ), true );
+        rofi->publish( msg );
     }
 
     float getPosition() override
@@ -533,7 +530,7 @@ public:
         auto rofi = getRoFI();
 
         auto result = registerPromise( msgs::JointCmd::GET_POSITION );
-        rofi->pub->Publish( getCmdMsg( msgs::JointCmd::GET_POSITION ), true );
+        rofi->publish( getCmdMsg( msgs::JointCmd::GET_POSITION ) );
 
         auto resp = result.get();
         assert( resp );
@@ -549,7 +546,7 @@ public:
         auto msg = getCmdMsg( msgs::JointCmd::SET_POS_WITH_SPEED );
         msg.mutable_jointcmd()->mutable_setposwithspeed()->set_position( pos );
         msg.mutable_jointcmd()->mutable_setposwithspeed()->set_speed( velocity );
-        rofi->pub->Publish( std::move( msg ), true );
+        rofi->publish( msg );
     }
 
     float getTorque() override
@@ -557,7 +554,7 @@ public:
         auto rofi = getRoFI();
 
         auto result = registerPromise( msgs::JointCmd::GET_TORQUE );
-        rofi->pub->Publish( getCmdMsg( msgs::JointCmd::GET_TORQUE ), true );
+        rofi->publish( getCmdMsg( msgs::JointCmd::GET_TORQUE ) );
 
         auto resp = result.get();
         assert( resp );
@@ -570,7 +567,7 @@ public:
 
         auto msg = getCmdMsg( msgs::JointCmd::SET_TORQUE );
         msg.mutable_jointcmd()->mutable_settorque()->set_torque( torque );
-        rofi->pub->Publish( std::move( msg ), true );
+        rofi->publish( msg );
     }
 
     void onError( std::function< void( Joint, Joint::Error, const std::string & msg ) > callback )
@@ -883,7 +880,7 @@ namespace rofi::hal
 {
 RoFI RoFI::getLocalRoFI()
 {
-    static auto localRoFI = RoFISim::create();
+    static auto localRoFI = RoFISim::create( localRoFIId );
     return RoFI( localRoFI );
 }
 
@@ -893,23 +890,16 @@ RoFI RoFI::getRemoteRoFI( RoFI::Id id )
     std::lock_guard< std::mutex > lock( remotesMutex );
     static std::map< Id, std::weak_ptr< RoFISim > > remotes;
 
-    std::shared_ptr< RoFISim > remoteRoFI;
-
-    auto it = remotes.find( id );
-    if ( it != remotes.end() )
-    {
-        remoteRoFI = it->second.lock();
-    }
+    auto remoteRoFI = remotes[ id ].lock();
 
     if ( !remoteRoFI )
     {
         remoteRoFI = RoFISim::create( id );
-        remotes.insert_or_assign( id, remoteRoFI );
+        remotes[ id ] = remoteRoFI;
     }
 
     assert( remoteRoFI );
-    assert( remotes.find( id ) != remotes.end() );
-    assert( !remotes.find( id )->second.expired() );
+    assert( remotes[ id ].lock() != nullptr );
     return RoFI( remoteRoFI );
 }
 
