@@ -67,11 +67,13 @@ void oneMove( int connector )
     RoFI remoteRofi = RoFI::getRemoteRoFI( 1 );
 
     // Disconnect old connections
+    std::cout << "Disconnect old\n";
     localRofi.getConnector( otherConnector ).disconnect();
     remoteRofi.getConnector( otherConnector ).disconnect();
 
     // Wait 1 second
     {
+        std::cout << "Wait for 1s\n";
         std::promise< void > waitPromise;
         auto waitFuture = waitPromise.get_future();
 
@@ -81,6 +83,7 @@ void oneMove( int connector )
 
     // Move joints
     {
+        std::cout << "Move joints\n";
         std::promise< void > localPromise1, localPromise2, remotePromise1, remotePromise2;
         auto localFuture1 = localPromise1.get_future();
         auto localFuture2 = localPromise2.get_future();
@@ -109,9 +112,11 @@ void oneMove( int connector )
     }
 
     // Connect new connections
+    std::cout << "Connect new\n";
     localRofi.getConnector( otherConnector ).connect();
     remoteRofi.getConnector( otherConnector ).connect();
 
+    std::cout << "Check connection\n";
     checkConnected( localRofi.getConnector( otherConnector ) );
 }
 
