@@ -829,23 +829,20 @@ void RoFISim::onWaitResp( const RoFISim::RofiRespPtr & resp )
 {
     assert( resp->resptype() == msgs::RofiCmd::WAIT_CMD );
 
-    std::function< void() > callback;
+    std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
 
+    auto it = waitCallbacksMap.find( resp->waitid() );
+    if ( it == waitCallbacksMap.end() )
     {
-        std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
-        auto it = waitCallbacksMap.find( resp->waitid() );
-        if ( it == waitCallbacksMap.end() )
-        {
-            std::cerr << "Got wait response without a callback waiting (ID: " << resp->waitid()
-                      << "). Ignoring...\n";
-            return;
-        }
-        callback = std::move( it->second );
-        waitCallbacksMap.erase( it );
+        std::cerr << "Got wait response without a callback waiting (ID: " << resp->waitid()
+                  << "). Ignoring...\n";
+        return;
     }
 
-    assert( callback );
-    callback();
+    assert( it->second );
+    std::thread( it->second ).detach();
+
+    waitCallbacksMap.erase( it );
 }
 
 void RoFISim::onResponse( const RoFISim::RofiRespPtr & resp )
