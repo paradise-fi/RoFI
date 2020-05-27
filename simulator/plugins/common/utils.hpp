@@ -331,6 +331,11 @@ inline void checkChildrenNames( sdf::ElementPtr sdf, const std::vector< std::str
     }
 }
 
+inline bool isRoFIModule( physics::ModelPtr model )
+{
+    return model && getPluginSdf( model->GetSDF(), "libuniversalModulePlugin.so" ) != nullptr;
+}
+
 inline bool isRoFICoM( physics::ModelPtr model )
 {
     return model && getPluginSdf( model->GetSDF(), "libroficomPlugin.so" ) != nullptr;

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package rofi.messages;
+
+import "distributorReq.proto";
+
+message DistributorResp {
+    DistributorReq.Type respType = 1;
+
+    repeated int32 rofiIds = 2;
+    bool lockSuccessful = 3;
+}

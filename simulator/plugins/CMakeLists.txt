@@ -5,3 +5,5 @@ add_subdirectory(common)
 
 add_subdirectory(universalModule)
 add_subdirectory(roficom)
+
+add_subdirectory(distributor)
