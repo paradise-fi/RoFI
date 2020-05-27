@@ -10,6 +10,6 @@
     </include>
 
     <!-- Attacher plugin -->
-    <plugin name="attacher" filename="libattacherPlugin.so" />
+    <plugin name="attacher" filename="libattacherPlugin.so"/>
   </world>
 </sdf>

@@ -11,6 +11,7 @@
 
     <!-- RoFI module -->
     <include>
+      <name>universalModule</name>
       <pose>0 -0.1 0.043 0 -1.5708 3.1416</pose>
       <uri>model://universalModule</uri>
     </include>
@@ -23,7 +24,7 @@
       </include>
 
     <!-- Attacher plugin -->
-    <plugin name="attacher" filename="libattacherPlugin.so" />
+    <plugin name="attacher" filename="libattacherPlugin.so"/>
 
     <!-- World state -->
     <state world_name='default'>

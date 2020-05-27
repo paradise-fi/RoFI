@@ -846,6 +846,10 @@ void RoFISim::onResponse( const RoFISim::RofiRespPtr & resp )
 {
     switch ( resp->resptype() )
     {
+        case msgs::RofiCmd::NO_CMD:
+        {
+            break;
+        }
         case msgs::RofiCmd::JOINT_CMD:
         {
             onJointResp( resp );

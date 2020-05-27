@@ -15,7 +15,7 @@
     </include>
 
     <!-- Attacher plugin -->
-    <plugin name="attacher" filename="libattacherPlugin.so" />
+    <plugin name="attacher" filename="libattacherPlugin.so"/>
 
     <!-- World state -->
     <state world_name='default'>
