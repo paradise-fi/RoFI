@@ -3,9 +3,14 @@ package rofi.messages;
 
 import "distributorReq.proto";
 
-message DistributorResp {
-    DistributorReq.Type respType = 1;
+message RofiInfo {
+    int32 rofiId = 1;
+    string topic = 2;
+    bool lock = 3;
+}
 
-    repeated int32 rofiIds = 2;
-    bool lockSuccessful = 3;
+message DistributorResp {
+    int32 sessionId = 1;
+    DistributorReq.Type respType = 2;
+    repeated RofiInfo rofiInfos = 3;
 }

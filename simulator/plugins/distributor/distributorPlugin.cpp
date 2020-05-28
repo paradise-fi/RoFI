@@ -1,6 +1,5 @@
 #include "distributorPlugin.hpp"
 
-#include <distributorResp.pb.h>
 #include <rofiCmd.pb.h>
 #include <rofiResp.pb.h>
 
@@ -25,15 +24,15 @@ void RDP::Load( physics::WorldPtr world, sdf::ElementPtr sdf )
 
     loadRofis( sdf );
 
-    _pubOut = _node->Advertise< rofi::messages::DistributorResp >( "~/response" );
-    if ( !_pubOut )
+    _pub = _node->Advertise< rofi::messages::DistributorResp >( "~/response" );
+    if ( !_pub )
     {
         gzerr << "Publisher could not be created\n";
         throw std::runtime_error( "Publisher could not be created" );
     }
 
-    _subOut = _node->Subscribe( "~/request", &RDP::onRequest, this );
-    if ( !_subOut )
+    _sub = _node->Subscribe( "~/request", &RDP::onRequest, this );
+    if ( !_sub )
     {
         gzerr << "Subcriber could not be created\n";
         throw std::runtime_error( "Subcriber could not be created" );
@@ -60,7 +59,7 @@ void RDP::loadRofis( sdf::ElementPtr pluginSdf )
         }
     }
 
-    std::lock_guard< std::mutex > lock( _rofiTopicsMutex );
+    std::lock_guard< std::mutex > lock( _rofiInfoMutex );
 
     for ( auto model : _world->Models() )
     {
@@ -89,6 +88,7 @@ void RDP::loadRofis( sdf::ElementPtr pluginSdf )
 
         [[maybe_unused]] bool inserted = _rofiTopics.insert( { id, topic } ).second;
         assert( inserted );
+        _freeRofiIds.insert( id );
 
         gzmsg << "Loaded RoFI '" << model->GetName() << "' with ID: " << id << "\n";
     }
@@ -123,6 +123,106 @@ std::map< std::string, RDP::RofiId > RDP::loadRofisFromSdf( sdf::ElementPtr plug
     return config;
 }
 
+
+rofi::messages::DistributorResp RDP::onGetInfoReq()
+{
+    std::lock_guard< std::mutex > lock( _rofiInfoMutex );
+
+    rofi::messages::DistributorResp resp;
+    resp.set_resptype( rofi::messages::DistributorReq::GET_INFO );
+
+    for ( const auto & [ id, topic ] : _rofiTopics )
+    {
+        auto & info = *resp.add_rofiinfos();
+        info.set_rofiid( id );
+        info.set_topic( topic );
+        info.set_lock( _freeRofiIds.find( id ) == _freeRofiIds.end() );
+    }
+
+    return resp;
+}
+
+rofi::messages::DistributorResp RDP::onLockOneReq()
+{
+    std::lock_guard< std::mutex > lock( _rofiInfoMutex );
+
+    rofi::messages::DistributorResp resp;
+    resp.set_resptype( rofi::messages::DistributorReq::LOCK_ONE );
+
+    if ( _freeRofiIds.empty() )
+    {
+        return resp;
+    }
+    RofiId id = *_freeRofiIds.begin();
+    _freeRofiIds.erase( _freeRofiIds.begin() );
+
+    assert( _rofiTopics.find( id ) != _rofiTopics.end() );
+
+    auto & info = *resp.add_rofiinfos();
+    info.set_rofiid( id );
+    info.set_topic( _rofiTopics[ id ] );
+    info.set_lock( true );
+
+    return resp;
+}
+
+rofi::messages::DistributorResp RDP::onTryLockReq( RDP::RofiId rofiId )
+{
+    std::lock_guard< std::mutex > lock( _rofiInfoMutex );
+
+    rofi::messages::DistributorResp resp;
+    resp.set_resptype( rofi::messages::DistributorReq::TRY_LOCK );
+
+    auto & info = *resp.add_rofiinfos();
+    info.set_rofiid( rofiId );
+    auto topicIt = _rofiTopics.find( rofiId );
+    if ( topicIt != _rofiTopics.end() )
+    {
+        info.set_topic( topicIt->second );
+    }
+    auto freeRofiIt = _freeRofiIds.find( rofiId );
+    if ( freeRofiIt != _freeRofiIds.end() )
+    {
+        _freeRofiIds.erase( freeRofiIt );
+        info.set_lock( true );
+    }
+    else
+    {
+        info.set_lock( false );
+    }
+
+    return resp;
+}
+
+rofi::messages::DistributorResp RDP::onUnlockReq( RDP::RofiId rofiId )
+{
+    std::lock_guard< std::mutex > lock( _rofiInfoMutex );
+
+    rofi::messages::DistributorResp resp;
+    resp.set_resptype( rofi::messages::DistributorReq::UNLOCK );
+
+    auto & info = *resp.add_rofiinfos();
+    info.set_rofiid( rofiId );
+
+    if ( _rofiTopics.find( rofiId ) == _rofiTopics.end() )
+    {
+        gzwarn << "Got UNLOCK distributor request without id belonging to rofi\n";
+        return resp;
+    }
+
+    if ( _freeRofiIds.find( rofiId ) != _freeRofiIds.end() )
+    {
+        gzwarn << "Got UNLOCK distributor request with already free id\n";
+        return resp;
+    }
+
+    info.set_topic( _rofiTopics[ rofiId ] );
+    info.set_lock( false );
+    _freeRofiIds.insert( rofiId );
+
+    return resp;
+}
+
 void RDP::onRequest( const RequestPtr & req )
 {
     using rofi::messages::DistributorReq;
@@ -131,17 +231,39 @@ void RDP::onRequest( const RequestPtr & req )
     {
         case DistributorReq::GET_INFO:
         {
-            gzmsg << "GET_INFO\n";
+            if ( req->rofiid() != 0 )
+            {
+                gzwarn << "Got GET_INFO distributor request with non-zero id\n";
+            }
+            auto resp = onGetInfoReq();
+            resp.set_sessionid( req->sessionid() );
+            _pub->Publish( resp, true );
+            break;
+        }
+        case DistributorReq::LOCK_ONE:
+        {
+            if ( req->rofiid() != 0 )
+            {
+                gzwarn << "Got LOCK_ONE distributor request with non-zero id\n";
+            }
+
+            auto resp = onLockOneReq();
+            resp.set_sessionid( req->sessionid() );
+            _pub->Publish( resp, true );
             break;
         }
         case DistributorReq::TRY_LOCK:
         {
-            gzmsg << "TRY_LOCK\n";
+            auto resp = onTryLockReq( req->rofiid() );
+            resp.set_sessionid( req->sessionid() );
+            _pub->Publish( resp, true );
             break;
         }
         case DistributorReq::UNLOCK:
         {
-            gzmsg << "UNLOCK\n";
+            auto resp = onUnlockReq( req->rofiid() );
+            resp.set_sessionid( req->sessionid() );
+            _pub->Publish( resp, true );
             break;
         }
         default:
@@ -163,7 +285,7 @@ void RDP::onAddEntity( std::string added )
         return;
     }
 
-    std::lock_guard< std::mutex > lock( _rofiTopicsMutex );
+    std::lock_guard< std::mutex > lock( _rofiInfoMutex );
 
     while ( _rofiTopics.find( _nextRofiId ) != _rofiTopics.end() )
     {
@@ -175,6 +297,7 @@ void RDP::onAddEntity( std::string added )
 
     [[maybe_unused]] bool inserted = _rofiTopics.insert( { id, topic } ).second;
     assert( inserted );
+    _freeRofiIds.insert( id );
 
     gzmsg << "Added new RoFI '" << model->GetName() << "' with ID: " << id << "\n";
 }

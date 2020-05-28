@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <set>
 
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
@@ -8,6 +9,7 @@
 #include "utils.hpp"
 
 #include <distributorReq.pb.h>
+#include <distributorResp.pb.h>
 
 
 namespace gazebo
@@ -32,17 +34,23 @@ public:
     void onAddEntity( std::string added );
 
 private:
+    rofi::messages::DistributorResp onGetInfoReq();
+    rofi::messages::DistributorResp onLockOneReq();
+    rofi::messages::DistributorResp onTryLockReq( RofiId rofiId );
+    rofi::messages::DistributorResp onUnlockReq( RofiId rofiId );
+
     physics::WorldPtr _world;
 
     transport::NodePtr _node;
-    transport::PublisherPtr _pubOut;
-    transport::SubscriberPtr _subOut;
+    transport::PublisherPtr _pub;
+    transport::SubscriberPtr _sub;
 
     event::ConnectionPtr _onAddEntityConnection;
 
     std::map< RofiId, std::string > _rofiTopics;
+    std::set< RofiId > _freeRofiIds;
     int _nextRofiId = 1;
-    std::mutex _rofiTopicsMutex;
+    std::mutex _rofiInfoMutex;
 };
 
 } // namespace gazebo
