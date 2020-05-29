@@ -3,6 +3,7 @@
 #include <cassert>
 #include <chrono>
 #include <cstdlib>
+#include <exception>
 #include <future>
 #include <iostream>
 #include <map>
@@ -14,15 +15,18 @@
 #include <gazebo/gazebo_client.hh>
 #include <gazebo/transport/transport.hh>
 
+#include "subscriberWrapper.hpp"
+
+#include <distributorReq.pb.h>
+#include <distributorResp.pb.h>
 #include <rofiCmd.pb.h>
 #include <rofiResp.pb.h>
 
-#ifndef LOCAL_ROFI_ID
-#define LOCAL_ROFI_ID 0
+#ifndef SESSION_ID
+#define SESSION_ID std::chrono::duration_cast<std::chrono::microseconds>( std::chrono::system_clock::now().time_since_epoch() ).count()
 #endif
 
-
-constexpr rofi::hal::RoFI::Id localRoFIId = LOCAL_ROFI_ID;
+const int sessionId = ( SESSION_ID );
 
 namespace
 {
@@ -33,7 +37,6 @@ class GazeboClientHolder
 {
     GazeboClientHolder()
     {
-        std::cerr << "Local RoFI has id: " << localRoFIId << "\n";
         std::cerr << "Starting gazebo client" << std::endl;
         gazebo::client::setup();
     }
@@ -85,32 +88,109 @@ class RoFISim
 public:
     using RofiRespPtr = boost::shared_ptr< const msgs::RofiResp >;
 
+    static rofi::messages::RofiInfo getLocalInfo()
+    {
+        using namespace rofi::messages;
+
+        auto node = boost::make_shared< gazebo::transport::Node >();
+        node->Init();
+
+        auto topicPromise = std::promise< rofi::messages::RofiInfo >();
+        auto topicFuture = topicPromise.get_future();
+        auto sub = SubscriberWrapper< DistributorResp >(
+                node,
+                "~/distributor/response",
+                [ & ]( auto resp ) {
+                    if ( resp.sessionid() != sessionId
+                         || resp.resptype() != DistributorReq::LOCK_ONE )
+                    {
+                        return;
+                    }
+                    // TODO call only once
+                    if ( resp.rofiinfos_size() != 1 || !resp.rofiinfos( 0 ).lock() )
+                    {
+                        topicPromise.set_exception( std::make_exception_ptr(
+                                std::runtime_error( "Could not lock local RoFI" ) ) );
+                        return;
+                    }
+                    topicPromise.set_value( resp.rofiinfos( 0 ) );
+                } );
+
+        DistributorReq req;
+        req.set_sessionid( sessionId );
+        req.set_reqtype( DistributorReq::LOCK_ONE );
+        node->Publish< DistributorReq >( "~/distributor/request", req );
+
+        return topicFuture.get();
+    }
+
+    static std::string getTopic( RoFI::Id id )
+    {
+        using namespace rofi::messages;
+
+        auto node = boost::make_shared< gazebo::transport::Node >();
+        node->Init();
+
+        auto topicPromise = std::promise< std::string >();
+        auto topicFuture = topicPromise.get_future();
+        auto sub = SubscriberWrapper< DistributorResp >(
+                node,
+                "~/distributor/response",
+                [ & ]( auto resp ) {
+                    if ( resp.sessionid() != sessionId
+                         || resp.resptype() != DistributorReq::TRY_LOCK )
+                    {
+                        return;
+                    }
+                    if ( resp.rofiinfos_size() != 1 || resp.rofiinfos( 0 ).rofiid() != id )
+                    {
+                        return;
+                    }
+                    // TODO call only once
+                    if ( !resp.rofiinfos( 0 ).lock() )
+                    {
+                        topicPromise.set_exception( std::make_exception_ptr(
+                                std::runtime_error( "Could not lock remote RoFI" ) ) );
+                        return;
+                    }
+                    topicPromise.set_value( resp.rofiinfos( 0 ).topic() );
+                } );
+
+        DistributorReq req;
+        req.set_sessionid( sessionId );
+        req.set_reqtype( DistributorReq::TRY_LOCK );
+        req.set_rofiid( id );
+        node->Publish< DistributorReq >( "~/distributor/request", req );
+
+        return topicFuture.get();
+    }
+
+    static std::shared_ptr< RoFISim > create()
+    {
+#ifdef LOCAL_ROFI_ID
+        return create( LOCAL_ROFI_ID );
+#else
+        auto info = getLocalInfo();
+        auto newRoFI = std::shared_ptr< RoFISim >( new RoFISim( info.rofiid() ) );
+        newRoFI->init( info.topic() );
+        return newRoFI;
+#endif
+    }
 
     static std::shared_ptr< RoFISim > create( RoFI::Id id )
     {
         auto newRoFI = std::shared_ptr< RoFISim >( new RoFISim( id ) );
-        newRoFI->init();
+        newRoFI->init( getTopic( id ) );
         return newRoFI;
     }
 
-    void init()
+    void init( std::string topic )
     {
         _node = boost::make_shared< gazebo::transport::Node >();
-        _node->Init();
+        _node->Init( topic );
 
-        if ( _id < 0 )
-        {
-            throw std::runtime_error( "Unknown id" );
-        }
-
-        std::string moduleName = "universalModule";
-        if ( _id > 0 )
-        {
-            moduleName += "_" + std::to_string( static_cast< int >( _id ) - 1 );
-        }
-
-        _pub = _node->Advertise< msgs::RofiCmd >( "~/" + moduleName + "/control" );
-        _sub = _node->Subscribe( "~/" + moduleName + "/response", &RoFISim::onResponse, this );
+        _pub = _node->Advertise< msgs::RofiCmd >( "~/control" );
+        _sub = _node->Subscribe( "~/response", &RoFISim::onResponse, this );
         assert( _pub );
         assert( _sub );
         _pub->WaitForConnection();
@@ -884,7 +964,7 @@ namespace rofi::hal
 {
 RoFI RoFI::getLocalRoFI()
 {
-    static auto localRoFI = RoFISim::create( localRoFIId );
+    static auto localRoFI = RoFISim::create();
     return RoFI( localRoFI );
 }
 
