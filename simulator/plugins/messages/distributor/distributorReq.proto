@@ -9,7 +9,7 @@ message DistributorReq {
         UNLOCK = 3;
     }
 
-    int32 sessionId = 1;
+    bytes sessionId = 1;
     Type reqType = 2;
     int32 rofiId = 3;
 }

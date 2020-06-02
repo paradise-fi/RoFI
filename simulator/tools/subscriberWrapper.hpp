@@ -8,9 +8,11 @@ template < typename Message >
 class SubscriberWrapper
 {
 public:
+    using MessagePtr = boost::shared_ptr< const Message >;
+
     SubscriberWrapper( gazebo::transport::NodePtr node,
                        const std::string & topic,
-                       std::function< void( const Message & ) > callback )
+                       std::function< void( MessagePtr ) > callback )
             : _callback( std::move( callback ) )
     {
         if ( !node )
@@ -34,13 +36,13 @@ public:
     }
 
 private:
-    void onMsg( const boost::shared_ptr< const Message > & msg )
+    void onMsg( const MessagePtr & msg )
     {
         assert( _callback );
         assert( msg );
-        _callback( *msg );
+        _callback( msg );
     }
 
-    std::function< void( const Message & ) > _callback;
+    std::function< void( MessagePtr ) > _callback;
     gazebo::transport::SubscriberPtr _sub;
 };

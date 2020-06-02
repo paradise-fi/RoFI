@@ -59,7 +59,23 @@ void RDP::loadRofis( sdf::ElementPtr pluginSdf )
         }
     }
 
-    std::lock_guard< std::mutex > lock( _rofiInfoMutex );
+    std::lock_guard< std::mutex > lock( _rofisMutex );
+
+    auto getNextId = [ & ]( physics::ModelPtr model ) {
+        auto it = config.find( model->GetName() );
+        if ( it != config.end() )
+        {
+            auto result = it->second;
+            config.erase( it );
+            return result;
+        }
+
+        while ( usedIds.find( _nextRofiId ) != usedIds.end() )
+        {
+            _nextRofiId++;
+        }
+        return _nextRofiId++;
+    };
 
     for ( auto model : _world->Models() )
     {
@@ -68,27 +84,10 @@ void RDP::loadRofis( sdf::ElementPtr pluginSdf )
             continue;
         }
 
-        RofiId id = {};
-        auto it = config.find( model->GetName() );
-        if ( it != config.end() )
-        {
-            id = it->second;
-            config.erase( it );
-        }
-        else
-        {
-            while ( usedIds.find( _nextRofiId ) != usedIds.end() )
-            {
-                _nextRofiId++;
-            }
-            id = _nextRofiId++;
-        }
-
+        RofiId id = getNextId( model );
         auto topic = getElemPath( model );
 
-        [[maybe_unused]] bool inserted = _rofiTopics.insert( { id, topic } ).second;
-        assert( inserted );
-        _freeRofiIds.insert( id );
+        _rofis.registerNewRofiId( id, topic );
 
         gzmsg << "Loaded RoFI '" << model->GetName() << "' with ID: " << id << "\n";
     }
@@ -126,99 +125,83 @@ std::map< std::string, RDP::RofiId > RDP::loadRofisFromSdf( sdf::ElementPtr plug
 
 rofi::messages::DistributorResp RDP::onGetInfoReq()
 {
-    std::lock_guard< std::mutex > lock( _rofiInfoMutex );
-
     rofi::messages::DistributorResp resp;
     resp.set_resptype( rofi::messages::DistributorReq::GET_INFO );
 
-    for ( const auto & [ id, topic ] : _rofiTopics )
+    std::lock_guard< std::mutex > lock( _rofisMutex );
+
+    for ( auto & [ id, topic ] : _rofis.getTopics() )
     {
         auto & info = *resp.add_rofiinfos();
         info.set_rofiid( id );
         info.set_topic( topic );
-        info.set_lock( _freeRofiIds.find( id ) == _freeRofiIds.end() );
+        info.set_lock( _rofis.isLocked( id ) );
     }
 
     return resp;
 }
 
-rofi::messages::DistributorResp RDP::onLockOneReq()
+rofi::messages::DistributorResp RDP::onLockOneReq( RDP::SessionId sessionId )
 {
-    std::lock_guard< std::mutex > lock( _rofiInfoMutex );
-
     rofi::messages::DistributorResp resp;
     resp.set_resptype( rofi::messages::DistributorReq::LOCK_ONE );
 
-    if ( _freeRofiIds.empty() )
+    std::lock_guard< std::mutex > lock( _rofisMutex );
+
+    auto freeId = _rofis.lockFreeRofi( sessionId );
+    if ( !freeId )
     {
         return resp;
     }
-    RofiId id = *_freeRofiIds.begin();
-    _freeRofiIds.erase( _freeRofiIds.begin() );
-
-    assert( _rofiTopics.find( id ) != _rofiTopics.end() );
 
     auto & info = *resp.add_rofiinfos();
-    info.set_rofiid( id );
-    info.set_topic( _rofiTopics[ id ] );
+    info.set_rofiid( *freeId );
+    info.set_topic( _rofis.getTopic( *freeId ) );
     info.set_lock( true );
 
     return resp;
 }
 
-rofi::messages::DistributorResp RDP::onTryLockReq( RDP::RofiId rofiId )
+rofi::messages::DistributorResp RDP::onTryLockReq( RDP::RofiId rofiId, RDP::SessionId sessionId )
 {
-    std::lock_guard< std::mutex > lock( _rofiInfoMutex );
-
     rofi::messages::DistributorResp resp;
     resp.set_resptype( rofi::messages::DistributorReq::TRY_LOCK );
+    resp.set_sessionid( sessionId );
+
+    std::lock_guard< std::mutex > lock( _rofisMutex );
 
     auto & info = *resp.add_rofiinfos();
     info.set_rofiid( rofiId );
-    auto topicIt = _rofiTopics.find( rofiId );
-    if ( topicIt != _rofiTopics.end() )
-    {
-        info.set_topic( topicIt->second );
-    }
-    auto freeRofiIt = _freeRofiIds.find( rofiId );
-    if ( freeRofiIt != _freeRofiIds.end() )
-    {
-        _freeRofiIds.erase( freeRofiIt );
-        info.set_lock( true );
-    }
-    else
-    {
-        info.set_lock( false );
-    }
+    info.set_topic( _rofis.getTopic( rofiId ) );
+    info.set_lock( _rofis.tryLockRofi( rofiId, sessionId ) );
 
     return resp;
 }
 
-rofi::messages::DistributorResp RDP::onUnlockReq( RDP::RofiId rofiId )
+rofi::messages::DistributorResp RDP::onUnlockReq( RDP::RofiId rofiId, RDP::SessionId sessionId )
 {
-    std::lock_guard< std::mutex > lock( _rofiInfoMutex );
-
     rofi::messages::DistributorResp resp;
     resp.set_resptype( rofi::messages::DistributorReq::UNLOCK );
+
+    std::lock_guard< std::mutex > lock( _rofisMutex );
 
     auto & info = *resp.add_rofiinfos();
     info.set_rofiid( rofiId );
 
-    if ( _rofiTopics.find( rofiId ) == _rofiTopics.end() )
+    if ( !_rofis.isRegistered( rofiId ) )
     {
         gzwarn << "Got UNLOCK distributor request without id belonging to rofi\n";
         return resp;
     }
 
-    if ( _freeRofiIds.find( rofiId ) != _freeRofiIds.end() )
+    if ( !_rofis.isLocked( rofiId ) )
     {
-        gzwarn << "Got UNLOCK distributor request with already free id\n";
+        gzwarn << "Got UNLOCK distributor request without id locked\n";
         return resp;
     }
 
-    info.set_topic( _rofiTopics[ rofiId ] );
-    info.set_lock( false );
-    _freeRofiIds.insert( rofiId );
+    info.set_topic( _rofis.getTopic( rofiId ) );
+    info.set_lock( !_rofis.unlockRofi( rofiId, sessionId ) );
 
     return resp;
 }
@@ -235,9 +218,7 @@ void RDP::onRequest( const RequestPtr & req )
             {
                 gzwarn << "Got GET_INFO distributor request with non-zero id\n";
             }
-            auto resp = onGetInfoReq();
-            resp.set_sessionid( req->sessionid() );
-            _pub->Publish( resp, true );
+            _pub->Publish( onGetInfoReq(), true );
             break;
         }
         case DistributorReq::LOCK_ONE:
@@ -247,23 +228,17 @@ void RDP::onRequest( const RequestPtr & req )
                 gzwarn << "Got LOCK_ONE distributor request with non-zero id\n";
             }
 
-            auto resp = onLockOneReq();
-            resp.set_sessionid( req->sessionid() );
-            _pub->Publish( resp, true );
+            _pub->Publish( onLockOneReq( req->sessionid() ), true );
             break;
         }
         case DistributorReq::TRY_LOCK:
         {
-            auto resp = onTryLockReq( req->rofiid() );
-            resp.set_sessionid( req->sessionid() );
-            _pub->Publish( resp, true );
+            _pub->Publish( onTryLockReq( req->rofiid(), req->sessionid() ), true );
             break;
         }
         case DistributorReq::UNLOCK:
         {
-            auto resp = onUnlockReq( req->rofiid() );
-            resp.set_sessionid( req->sessionid() );
-            _pub->Publish( resp, true );
+            _pub->Publish( onUnlockReq( req->rofiid(), req->sessionid() ), true );
             break;
         }
         default:
@@ -285,9 +260,9 @@ void RDP::onAddEntity( std::string added )
         return;
     }
 
-    std::lock_guard< std::mutex > lock( _rofiInfoMutex );
+    std::lock_guard< std::mutex > lock( _rofisMutex );
 
-    while ( _rofiTopics.find( _nextRofiId ) != _rofiTopics.end() )
+    while ( _rofis.isRegistered( _nextRofiId ) )
     {
         _nextRofiId++;
     }
@@ -295,9 +270,7 @@ void RDP::onAddEntity( std::string added )
 
     auto topic = getElemPath( model );
 
-    [[maybe_unused]] bool inserted = _rofiTopics.insert( { id, topic } ).second;
-    assert( inserted );
-    _freeRofiIds.insert( id );
+    _rofis.registerNewRofiId( id, topic );
 
     gzmsg << "Added new RoFI '" << model->GetName() << "' with ID: " << id << "\n";
 }
