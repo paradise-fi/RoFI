@@ -1,0 +1,19 @@
+cmake_minimum_required(VERSION 3.11)
+
+FetchContent_Declare(
+  lwip
+  GIT_REPOSITORY git@github.com:lwip-tcpip/lwip.git
+  GIT_TAG        159e31b
+)
+FetchContent_GetProperties(lwip)
+if(NOT lwip_POPULATED)
+  FetchContent_Populate(lwip)
+  set(LWIP_INCLUDE_DIRS ${lwip_SOURCE_DIR}/src/include)
+  add_subdirectory(${lwip_SOURCE_DIR} ${lwip_BINARY_DIR})
+  target_include_directories(lwipcore PUBLIC ${LWIP_INCLUDE_DIRS})
+  target_include_directories(lwipcore PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/lwip/include)
+  target_sources(lwipcore PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/lwip/sys_arch.c)
+endif()
+
+add_executable(communicationDemo communication_demo.cpp)
+target_link_libraries(communicationDemo rofiHal lwipcore)
