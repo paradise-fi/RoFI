@@ -9,10 +9,11 @@
 #include <list>
 #include <cstring>
 #include <string>
+#include <numeric>
 
 namespace _rofi {
 
-inline std::string netifToString( struct netif* n ) {
+inline std::string netifToString( const struct netif* n ) {
 	std::ostringstream s;
 	s << n->name[ 0 ] << n->name[ 1 ] << static_cast< int >( n->num );
 	return s.str();
@@ -60,21 +61,6 @@ inline std::ostream& operator<<( std::ostream& o, const Ip6Addr& a ) {
 	return o;
 }
 
-
-/**
- * \brief Entry for one record within packet carying network information.
- * 
- * Provides usefull operators << included.
- *
- */
-struct Entry {
-	Ip6Addr addr;
-	uint8_t mask;
-	Cost    cost;
-
-	static int size() { return Ip6Addr::size() + 1 + sizeof( Cost ); }
-};
-
 /**
  * \brief Represents network gateway with its cost.
  */
@@ -82,12 +68,11 @@ struct Gateway {
 	char gw_name[5];
 	Cost cost;
 
+	Gateway() = delete;
 	Gateway( const char* n, Cost c ) {
 		memcpy( gw_name, n, 5 );
 		cost = c;
 	}
-
-	~Gateway() = default;
 
 	Gateway& operator=( const Gateway& g ) {
 		memcpy( gw_name, g.gw_name, 5 );
@@ -100,8 +85,11 @@ struct Gateway {
 	}
 
 	bool operator==( const Gateway& g ) const {
-		bool nameCheck = strcmp( g.gw_name, gw_name ) == 0;
-		return cost == g.cost && nameCheck;
+		return cost == g.cost && hasSameName( g );
+	}
+
+	bool hasSameName( const Gateway& g ) const {
+		return strcmp( g.gw_name, gw_name ) == 0;
 	}
 
 	bool operator!=( const Gateway& g ) const {
@@ -269,6 +257,10 @@ inline std::ostream& operator<<( std::ostream& o, const Record& r ) {
  */
 class RoutingTable {
 	std::list< Record > _records;
+	std::vector< Gateway > _stubbies;
+	bool _stub = false;
+	volatile int _counter = 0;
+	std::list< Gateway > _defaultGW;
 
 	/**
      * \brief Counts records with given netif as the first (cheapest) gateway.
@@ -299,16 +291,120 @@ class RoutingTable {
 		_records.push_back( r );
 	}
 
+	bool hasOneOutput() const {
+		bool onlyLoopbacks = std::all_of( _records.begin(), _records.end(), []( const Record& r ) {
+			return r.isLoopback();
+		} );
+		if ( onlyLoopbacks )
+			return false;
+		
+		Gateway g = _records.back().gws.front();
+		return std::all_of( _records.begin(), _records.end(), [ &g ]( const Record& r ) {
+			return r.isLoopback() || g.hasSameName( r.gws.front() ); // loopback records are ignored
+		} );
+	}
+
+	bool isStubby( const struct netif* n  ) const {
+		Gateway g( netifToString( n ).c_str(), 0 );
+		auto found = std::find_if( _stubbies.begin(), _stubbies.end(), [ &g ]( const Gateway& gw ) {
+			return g.hasSameName( gw );
+		} );
+
+		return found != _stubbies.end(); 
+	}
+
+	void setDefaultGW( struct netif* out ) {
+		if ( _defaultGW.size() > 0 )
+			return;
+
+		_defaultGW.emplace_front( netifToString( out ).c_str(), 1 );
+		Ip6Addr ip("fe80::1"); // link-local address, never used -- should not be empty
+		set_default_gw( &ip, 0, _defaultGW.front().gw_name );
+	}
+
+	void makeStubby() {
+		if ( _stub )
+			assert( false && "Stub is already set!");
+
+		struct netif* out = netif_find( _records.back().gws.front().gw_name );
+		_stub = true;
+		removeRecordForIf( out );
+		setDefaultGW( out );
+	}
+
+	void destroyStub() {
+		_stub = false;
+		remove_default_gw();
+		_defaultGW.clear();
+	}
+
+	bool onUpdate( const PBuf& packet, struct netif* n ) {
+        if ( packet.size() < 3 ) {
+            return false;
+		}
+		Command cmd = as< Command >( packet.payload() );
+		if ( cmd == Command::Stubby ) {
+			_stubbies.push_back( { netifToString( n ).c_str(), 0 } ); // should have an input control?
+		}
+
+		if ( !isCall( cmd ) ) {
+			_counter--;
+		}
+
+        if ( as< uint8_t >( packet.payload() + 1 ) != Ip6Addr::size() ) {
+            return false;
+		}
+        int count = as< uint8_t >( packet.payload() + 2 );
+        if ( packet.size() != 3 + count * Entry::size() ) {
+            return false;
+		}
+
+        for ( int i = 0; i != count; i++ ) {
+            const uint8_t *entry = packet.payload() + 3 + i * Entry::size();
+            Ip6Addr addr = as< Ip6Addr >( entry );
+            uint8_t mask = as< uint8_t >( entry + Ip6Addr::size() );
+		    Cost cost    = as< Cost >( entry + Ip6Addr::size() + 1 );
+		    addRecord( addr, mask, cost, n ); // a new cost is calculated within toSend() - increased by one => every link is equal, so shortest path is what we want
+        }
+
+		return isCall( cmd );
+    }
+
 public:
-	enum class Command : uint8_t { Call = 0, Response = 1 };
+	enum class Command : uint8_t { Call = 0, Response = 1, Stubby = 2 };
+
+	bool isCall( Command cmd ) const {
+		return cmd == Command::Call;
+	}
+
+	bool isStub() const {
+		return hasOneOutput() && isSync(); // second case should be added
+	}
+
+	bool isSync() const {
+		return _counter == 0;
+	}
+
+	/**
+	 * \brief Entry for one record within packet carying network information.
+	 * 
+	 * Provides usefull operators << included.
+	 *
+	 */
+	struct Entry {
+		Ip6Addr addr;
+		uint8_t mask;
+		Cost    cost;
+
+		static int size() { return Ip6Addr::size() + 1 + sizeof( Cost ); }
+	};
 
 	/**
      * \brief Adds record into the table, or updates an existing one. Updates lwIP's table if necessary.
+	 * \return true if the table was changed, false otherwise
      */
-	void addRecord( const Ip6Addr& addr, uint8_t mask, Cost cost, struct netif* n ) {
-		std::ostringstream s;
-		s << n->name[0] << n->name[1] << static_cast< int >( n->num );
-		Record rec( addr, mask, cost, s.str().c_str() );
+	bool addRecord( const Ip6Addr& addr, uint8_t mask, Cost cost, struct netif* n ) {
+		Record rec( addr, mask, cost, netifToString( n ).c_str() );
 		auto found = std::find_if( _records.begin(), _records.end(), [&rec]( const Record& r ) { return rec.hasSameNetwork( r ); } );
 
 		if ( found != _records.end() ) {
@@ -316,11 +412,15 @@ public:
 				if ( found->merge( rec ) ) { // order changed -> there is a better way => update lwip table
 					ip_update_route( &rec.ip, rec.mask, rec.getGateway() );
 				}
+			} else {
+				return false;
 			}
 		} else {
 			addRec( rec );
 			ip_add_route( &rec.ip, rec.mask, rec.getGateway() );
 		}
+
+		return true;
 	}
 
 	/**
@@ -329,15 +429,13 @@ public:
 	 * \return true when a record is erased
      */
 	bool removeRecord( const Ip6Addr& addr, uint8_t mask, struct netif* n ) {
-		std::ostringstream s;
-		s << n->name[0] << n->name[1] << static_cast< int >( n->num );
-		Record rec( addr, mask, 0, s.str().c_str() ); // is this cost the one we want?
+		Record rec( addr, mask, 0, netifToString( n ).c_str() ); // is this cost the one we want?
 		auto found = std::find_if( _records.begin(), _records.end(), [&rec]( const Record& r ) { return rec.hasSameNetwork( r ); } );
 
 		if ( found != _records.end() ) {
 			if ( *found != rec ) {
 				if ( found->disjoin( rec ) ) {
-					ip_rm_route( &addr, mask, s.str().c_str() );
+					ip_rm_route( &addr, mask, netifToString( n ).c_str() );
 					ip_add_route( &addr, mask, found->getGateway() );
 				}
 			} else {
@@ -349,13 +447,22 @@ public:
 		return false;
 	}
 
+	bool removeRecordForIf( const Gateway& gw ) {
+		return removeRecordForIf( netif_find( gw.gw_name ) );
+	}
+
 	bool removeRecordForIf( struct netif* n ) {
+		if ( n == nullptr )
+			return false;
+
 		std::string ifstr = netifToString( n );
 		int size = _records.size();
 
 		_records.erase( std::remove_if( _records.begin(), _records.end(), [ &ifstr ]( Record& r ) {
 			return r.remove( ifstr ) && !r.valid();
 		} ), _records.end() );
+
+		ip_rm_route_if( ifstr.c_str() );
 
 		return size != _records.size();
 	}
@@ -366,16 +473,21 @@ public:
 	 * \param n netif which is supposed to be source one -> skip records obtained on n
 	 * \return PBuf which can be directly sent
      */
-	PBuf toSendWithoutIf( const struct netif* n ) const {
+	PBuf toSendWithoutIf( const struct netif* n, Command cmd = Command::Call ) {
 		int records_size = _records.size() - recordsForIf( n );
 		auto p = PBuf::allocate( 3 +  Entry::size() * records_size );
-        as< Command >( p.payload() + 0 ) = Command::Response;
+        as< Command >( p.payload() + 0 ) = cmd;
+
+		if ( isCall( cmd ) ) {
+			_counter++;
+		}
+		
         as< uint8_t >( p.payload() + 1 ) = Ip6Addr::size();
         as< uint8_t >( p.payload() + 2 ) = static_cast< uint8_t >( records_size );
 		auto dataField = p.payload() + 3;
 		for ( const auto& rec : _records ) {
 			if ( n == netif_find( rec.getGateway() ) ) {
-				continue; // skip routing information from netif to which should be this sent
+				continue; // skip routing information from netif to which should be this sent AND skip stubs
 			}
 			as< Ip6Addr >( dataField ) = rec.ip;
 			as< uint8_t >( dataField + Ip6Addr::size() ) = rec.mask;
@@ -388,7 +500,7 @@ public:
 	/**
      * \brief Same as toSendWithoutIf but does not skip any record.
      */
-	PBuf toSend() const {
+	PBuf toSend() {
 		return toSendWithoutIf( nullptr );
 	}
 
@@ -397,25 +509,18 @@ public:
 	 * 
 	 * \param packet packet with network information
 	 * \param n netif which got the packet
+	 * \return bool if the response should be sent
      */
-	void update( const PBuf& packet, struct netif* n ) {
-        if ( packet.size() < 3 ) {
-            return;
+	bool update( const PBuf& packet, struct netif* n ) {
+		bool res = onUpdate( packet, n );
+
+		if ( isStub() ) {
+			makeStubby();			
+		} else if ( _stub && !isStub() ) {
+			destroyStub();
 		}
-        if ( as< uint8_t >( packet.payload() + 1 ) != Ip6Addr::size() ) {
-            return;
-		}
-        int count = as< uint8_t >( packet.payload() + 2 );
-        if ( packet.size() != 3 + count * Entry::size() ) {
-            return;
-		}
-        for ( int i = 0; i != count; i++ ) {
-            const uint8_t *entry = packet.payload() + 3 + i * Entry::size();
-            Ip6Addr addr = as< Ip6Addr >( entry );
-            uint8_t mask = as< uint8_t >( entry + Ip6Addr::size() );
-			Cost cost    = as< Cost >( entry + Ip6Addr::size() + 1 );
-			addRecord( addr, mask, cost, n ); // a new cost is calculated within toSend() - increased by one => every link is equal, so shortest path is what we want
-        }
+
+		return res;
     }
 
 	/**
@@ -423,6 +528,13 @@ public:
      */
 	void print() const {
 		int i = 0;
+		std::cout << "default gateway ";
+		if ( _defaultGW.size() > 0 ) {
+			std::cout << _defaultGW.front().gw_name;
+		} else { 
+			std::cout << "not set";
+		}
+		std::cout << "   isStub = " << ( _stub ? "1" : "0" ) << " counter " << _counter << "\n";
 		for ( auto r : _records ) {
 			std::cout << "record " << i++ << ":\n\t" << r;
 		}
