@@ -280,6 +280,7 @@ public:
 
     static std::shared_ptr< RoFISim > createLocal()
     {
+        auto gazeboHolder = GazeboClientHolder::get();
 #ifdef LOCAL_ROFI_ID
         auto info = tryLockLocal( LOCAL_ROFI_ID );
 #else
@@ -292,6 +293,7 @@ public:
 
     static std::shared_ptr< RoFISim > createRemote( RoFI::Id id )
     {
+        auto gazeboHolder = GazeboClientHolder::get();
         auto newRoFI = std::shared_ptr< RoFISim >( new RoFISim( id ) );
         newRoFI->init( getTopic( id ) );
         return newRoFI;

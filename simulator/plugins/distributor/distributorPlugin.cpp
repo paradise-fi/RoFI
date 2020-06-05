@@ -145,6 +145,7 @@ rofi::messages::DistributorResp RDP::onLockOneReq( RDP::SessionId sessionId )
 {
     rofi::messages::DistributorResp resp;
     resp.set_resptype( rofi::messages::DistributorReq::LOCK_ONE );
+    resp.set_sessionid( sessionId );
 
     std::lock_guard< std::mutex > lock( _rofisMutex );
 
@@ -182,6 +183,7 @@ rofi::messages::DistributorResp RDP::onUnlockReq( RDP::RofiId rofiId, RDP::Sessi
 {
     rofi::messages::DistributorResp resp;
     resp.set_resptype( rofi::messages::DistributorReq::UNLOCK );
+    resp.set_sessionid( sessionId );
 
     std::lock_guard< std::mutex > lock( _rofisMutex );
 
