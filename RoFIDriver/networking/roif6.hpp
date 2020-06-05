@@ -130,16 +130,17 @@ private:
 		auto self = reinterpret_cast< Netif* >( arg );
 		if ( self ) {
 			p = pbuf_free_header( p, IP6_HLEN );
-			self->_rtable.update( PBuf::own( p ), &self->_netif );
+			if ( self->_rtable.update( PBuf::own( p ), &self->_netif ) )
+				self->sendRRP( self->_rtable.isStub() ? RoutingTable::Command::Stubby : RoutingTable::Command::Response );
 			return 1;
 		}
 		return 0;
 	}
 
-	void sendRRP() {
+	void sendRRP( RoutingTable::Command cmd = RoutingTable::Command::Call ) {
 		ip_addr_t ip;
 	    ipaddr_aton( "ff02::1f", &ip );
-		auto rrp = _rtable.toSendWithoutIf( &_netif );
+		auto rrp = _rtable.toSendWithoutIf( &_netif, cmd );
 		raw_sendto_if_src( pcb, rrp.get(), &ip, &_netif, &_netif.ip6_addr[0] ); // use link-local address as source
 	}
 
@@ -208,7 +209,7 @@ public:
 			n.setUp();
 		}
 
-		_mappingTimer = rtos::Timer( 5000 / portTICK_PERIOD_MS, rtos::Timer::Type::Periodic,
+		_mappingTimer = rtos::Timer( 6000 / portTICK_PERIOD_MS, rtos::Timer::Type::Periodic,
             [ this ]() {
                 _broadcastRTable();
             } );
