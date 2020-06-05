@@ -358,9 +358,24 @@ inline void checkChildrenNames( sdf::ElementPtr sdf, const std::vector< std::str
     }
 }
 
+inline bool isRoFIModule( sdf::ElementPtr modelSdf )
+{
+    return modelSdf && getPluginSdf( modelSdf, "librofiModulePlugin.so" ) != nullptr;
+}
+
+inline bool isRoFIModule( physics::ModelPtr model )
+{
+    return model && isRoFIModule( model->GetSDF() );
+}
+
+inline bool isRoFICoM( sdf::ElementPtr modelSdf )
+{
+    return modelSdf && getPluginSdf( modelSdf, "libroficomPlugin.so" ) != nullptr;
+}
+
 inline bool isRoFICoM( physics::ModelPtr model )
 {
-    return model && getPluginSdf( model->GetSDF(), "libroficomPlugin.so" ) != nullptr;
+    return model && isRoFICoM( model->GetSDF() );
 }
 
 inline bool hasAttacherPlugin( physics::WorldPtr world )

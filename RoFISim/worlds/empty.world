@@ -9,6 +9,9 @@
       <uri>model://ground_plane</uri>
     </include>
 
+    <!-- Distributor plugin -->
+    <plugin name='distributor' filename='libdistributorPlugin.so'/>
+
     <!-- Attacher plugin -->
     <plugin name='attacher' filename='libattacherPlugin.so'/>
   </world>

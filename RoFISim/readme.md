@@ -47,10 +47,6 @@ compiled with provided library.
 
 The aim is to use one client for each module in the simulation.
 
-**However** this is _not yet supported_, so you can use static method
-`rofi::hal::RoFI::getRemoteRoFI` to get control of other modules from
-the simulation. Note, that `getRemoteRoFI( 0 )` now calls `getLocalRoFI`.
-
 #### To compile a program
 
 You should link library `rofiHal` to your program and include the header

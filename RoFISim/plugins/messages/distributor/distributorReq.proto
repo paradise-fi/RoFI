@@ -1,0 +1,16 @@
+syntax = "proto3";
+package rofi.messages;
+
+message DistributorReq {
+    enum Type {
+        NO_REQ = 0;
+        GET_INFO = 1;
+        LOCK_ONE = 2;
+        TRY_LOCK = 3;
+        UNLOCK = 4;
+    }
+
+    bytes sessionId = 1;
+    Type reqType = 2;
+    int32 rofiId = 3;
+}
