@@ -11,6 +11,7 @@
 #include <driver/spi_master.h>
 #include <driver/gpio.h>
 #include <esp_log.h>
+#include <esp_heap_caps.h>
 
 #include <espDriver/gpio.hpp>
 #include <espDriver/spi.hpp>
@@ -39,13 +40,12 @@ public:
     SpiTransactionGuard( gpio_num_t p, gpio_config_t cfg ):
         _pin( p ), _cfg( cfg ), _rel( false )
     {
-        std::cout << "Starting transaction\n";
         esp_log_level_set( "gpio", ESP_LOG_ERROR ); // Silence messages
-
         cfg.intr_type = GPIO_INTR_DISABLE;
         gpio_config( &cfg );
         gpio_set_level( _pin, 0 );
     }
+
     ~SpiTransactionGuard() {
         if ( !_rel )
             end();
@@ -57,9 +57,8 @@ public:
      * Return GPIO back to its original state, set it to high.
      */
     void end() {
-        std::cout << "Ending transaction\n";
-        gpio_config( &_cfg );
         gpio_set_level( _pin, 1 );
+        gpio_config( &_cfg );
 
         esp_log_level_set( "gpio", ESP_LOG_INFO ); // return messages messages
         _rel = true;
@@ -151,6 +150,7 @@ public:
     struct InterruptCommand {
         ConnectorLocal *conn;
         uint16_t interruptMask;
+        int counter;
     };
     struct StatusCommand {
         ConnectorLocal *conn;
@@ -176,6 +176,8 @@ public:
      * optionally pass execution context (norma/interrupt)
      */
     void schedule( Command cmd, rtos::ExContext c = rtos::ExContext::Normal ) {
+        // if ( std::holds_alternative< VersionCommand >( cmd ) )
+        //     abort();
         _commandQueue.push( std::move( cmd ), c );
     }
 
@@ -189,7 +191,8 @@ public:
      */
     ConnectorBus( spi_host_device_t bus, gpio_num_t dataPin, gpio_num_t clkPin,
         int clkFrequency)
-        : _commandQueue( 64 )
+        : _commandQueue( 64 ),
+          _dmaBuffer( static_cast< uint8_t* >( heap_caps_malloc( 12 , MALLOC_CAP_DMA ) ) )
     {
         using namespace rofi::esp32;
 
@@ -203,7 +206,7 @@ public:
             .queueSize( 1 )
             .clockSpeedHz( clkFrequency );
         std::cout << busConfig << "\n";
-        auto ret = spi_bus_initialize( bus, &busConfig, 0 );
+        auto ret = spi_bus_initialize( bus, &busConfig, 1 );
         ESP_ERROR_CHECK( ret );
         ret = spi_bus_add_device( bus, &devConfig, &_spiDev );
         ESP_ERROR_CHECK( ret );
@@ -212,6 +215,10 @@ public:
         ESP_ERROR_CHECK( ret );
 
         std::thread( [&]{ _run(); } ).detach();
+    }
+
+    ~ConnectorBus() {
+        free( _dmaBuffer );
     }
 
 private:
@@ -223,7 +230,11 @@ private:
     }
 
     void slaveDelay() {
-        vTaskDelay( 1 );
+        const uint32_t delayUs = 200;
+        uint32_t target = esp_timer_get_time() + delayUs;
+        while( esp_timer_get_time() < target ) {
+            asm volatile ("nop");
+        }
     }
 
     enum ProtocolCommand {
@@ -242,6 +253,7 @@ private:
 
     spi_device_handle_t _spiDev;
     rtos::Queue< Command > _commandQueue;
+    uint8_t *_dmaBuffer; // Avoid repeated allocation of DMA-capable memory for short transactions
 };
 
 /**
@@ -300,7 +312,7 @@ public:
     }
 
     ConnectorLocal( ConnectorBus *bus, gpio_num_t cs )
-        : _bus( bus ), _cs( cs )
+        : _bus( bus ), _cs( cs ), _receiveCmdCounter( 0 ), _interruptCounter( 0 )
     {
         _setupCs();
     }
@@ -325,14 +337,18 @@ private:
     void _issueInterruptCmd( rtos::ExContext exCtx = rtos::ExContext::Normal,
         uint16_t interruptMask = ConnectorInterruptFlags::Connect | ConnectorInterruptFlags::NewBlob )
     {
+        static int counter = 0;
+        _interruptCounter++;
         ConnectorBus::InterruptCommand c;
         c.conn = this;
         c.interruptMask = interruptMask;
+        c.counter = counter++;
         _bus->schedule( c, exCtx );
     }
 
     void _issueReceiveCmd( rtos::ExContext exCtx = rtos::ExContext::Normal ) {
         _receiveCmdCounter++;
+        ets_printf( "Currently scheduled: %d\n", _receiveCmdCounter.load() );
         ConnectorBus::ReceiveCommand c;
         c.conn = this;
         _bus->schedule( c, exCtx );
@@ -351,6 +367,7 @@ private:
         // We ignore the interrupt flags and issue status request - the
         // notification will propagate from them. If we find this producing
         // delays, optimize it in the future.
+        _interruptCounter--;
         _issueStatusCmd( 0, 0 );
     }
 
@@ -361,6 +378,7 @@ private:
             _eventCallback( rofi::hal::Connector( this->shared_from_this() ),
                 event );
         }
+        std::cout << "Pending to receive: " << status.pendingReceive << "\n";
         while ( _receiveCmdCounter < status.pendingReceive )
             _issueReceiveCmd();
         _status = status;
@@ -385,14 +403,17 @@ private:
         auto ret = gpio_config( &cfg );
         ESP_ERROR_CHECK( ret );
         ret = gpio_isr_handler_add( _cs, _csInterruptHandler, this );
+        gpio_set_level( _cs, 1 );
         ESP_ERROR_CHECK( ret );
     }
 
     static void _csInterruptHandler( void * arg ) {
         auto *self = reinterpret_cast< ConnectorLocal* >( arg );
         // Probably a packet, so try to read it, then check the true reason
-        self->_issueReceiveCmd( rtos::ExContext::ISR );
-        self->_issueInterruptCmd( rtos::ExContext::ISR );
+        // self->_issueReceiveCmd( rtos::ExContext::ISR );
+        // ets_printf( "Interrupted\n" );
+        // if ( self->_interruptCounter == 0 )
+        //     self->_issueInterruptCmd( rtos::ExContext::ISR );
     }
 
     friend class ConnectorBus;
@@ -402,7 +423,7 @@ private:
     ConnectorStateImpl _status;
     std::function< void ( Connector, ConnectorEvent ) > _eventCallback;
     std::function< void( Connector, uint16_t, PBuf ) > _packetCallback;
-    std::atomic< int > _receiveCmdCounter;
+    std::atomic< int > _receiveCmdCounter, _interruptCounter;
 };
 
 // Implementation of bus commands
@@ -412,35 +433,35 @@ void ConnectorBus::run( VersionCommand c ) {
     rofi::log::info( "Version command" );
 
     auto transaction = c.conn->startTransaction();
-    uint8_t header[ 1 ];
-    as< ProtocolCommand >( header + 0 ) = ProtocolCommand::Version;
-    spiWrite( _spiDev, header );
+    const int headerSize = 1;
+    as< ProtocolCommand >( _dmaBuffer + 0 ) = ProtocolCommand::Version;
+    spiWrite( _spiDev, _dmaBuffer, headerSize );
 
     slaveDelay();
-    uint8_t payload[ 4 ];
-    spiRead( _spiDev, payload );
+    const int payloadSize = 4;
+    spiRead( _spiDev, _dmaBuffer, payloadSize );
     transaction.end();
 
-    c.conn->finish( c, ConnectorVersion::from( payload ) );
+    c.conn->finish( c, ConnectorVersion::from( _dmaBuffer ) );
 }
 
 void ConnectorBus::run( InterruptCommand c ) {
     using namespace rofi::esp32;
-    rofi::log::info( "Interrupt command" );
+    ets_printf( "Interrupt command %d\n", c.counter );
 
     auto transaction = c.conn->startTransaction();
-    uint8_t header[ 3 ];
-    as< ProtocolCommand >( header + 0 ) = ProtocolCommand::Interrupt;
-    as< uint16_t >( header + 1 ) = c.interruptMask;
-    spiWrite( _spiDev, header );
+    const int headerSize = 3;
+    as< ProtocolCommand >( _dmaBuffer + 0 ) = ProtocolCommand::Interrupt;
+    as< uint16_t >( _dmaBuffer + 1 ) = c.interruptMask;
+    spiWrite( _spiDev, _dmaBuffer, headerSize );
 
     slaveDelay();
 
-    uint8_t interrupts[ 2 ];
-    spiRead( _spiDev, interrupts );
+    const int interruptsSize = 2;
+    spiRead( _spiDev, _dmaBuffer, interruptsSize );
     transaction.end();
 
-    c.conn->finish( c, as< uint16_t >( interrupts ) );
+    c.conn->finish( c, as< uint16_t >( _dmaBuffer ) );
 }
 
 void ConnectorBus::run( StatusCommand c ) {
@@ -448,19 +469,19 @@ void ConnectorBus::run( StatusCommand c ) {
     rofi::log::info( "Status command" );
 
     auto transaction = c.conn->startTransaction();
-    uint8_t header[ 5 ];
-    as< ProtocolCommand >( header + 0 ) = ProtocolCommand::Status;
-    as< uint16_t >( header + 1 ) = c.flags;
-    as< uint16_t >( header + 3 ) = c.writeMask;
-    spiWrite( _spiDev, header );
+    const int headerSize = 5;
+    as< ProtocolCommand >( _dmaBuffer + 0 ) = ProtocolCommand::Status;
+    as< uint16_t >( _dmaBuffer + 1 ) = c.flags;
+    as< uint16_t >( _dmaBuffer + 3 ) = c.writeMask;
+    spiWrite( _spiDev, _dmaBuffer, headerSize );
 
     slaveDelay();
 
-    uint8_t payload[ 12 ];
-    spiRead( _spiDev, payload );
+    const int payloadSize = 12;
+    spiRead( _spiDev, _dmaBuffer, payloadSize );
     transaction.end();
 
-    c.conn->finish( c, ConnectorStateImpl::from( payload ) );
+    c.conn->finish( c, ConnectorStateImpl::from( _dmaBuffer ) );
 }
 
 void ConnectorBus::run( SendCommand c ) {
@@ -473,16 +494,16 @@ void ConnectorBus::run( SendCommand c ) {
         return;
     }
     auto transaction = c.conn->startTransaction();
-    uint8_t header[ 1 ];
-    as< ProtocolCommand >( header ) = ProtocolCommand::Send;
-    spiWrite( _spiDev, header );
+    const int headerSize = 1;
+    as< ProtocolCommand >( _dmaBuffer ) = ProtocolCommand::Send;
+    spiWrite( _spiDev, _dmaBuffer, headerSize );
 
     slaveDelay();
 
-    uint8_t packetHeader[ 4 ];
-    as< uint16_t >( packetHeader ) = c.contentType;
-    as< uint16_t >( packetHeader + 2 ) = c.packet.size();
-    spiWrite( _spiDev, packetHeader );
+    const int packetHeaderSize = 4;
+    as< uint16_t >( _dmaBuffer ) = c.contentType;
+    as< uint16_t >( _dmaBuffer + 2 ) = c.packet.size();
+    spiWrite( _spiDev, _dmaBuffer, packetHeaderSize );
 
     for ( auto it = c.packet.chunksBegin(); it != c.packet.chunksEnd(); ++it ) {
         spiWrite( _spiDev, it->mem(), it->size() );
@@ -497,18 +518,19 @@ void ConnectorBus::run( ReceiveCommand c ) {
     using namespace rofi::esp32;
     auto transaction = c.conn->startTransaction();
 
-    uint8_t header[ 1 ];
-    as< ProtocolCommand >( header ) = ProtocolCommand::Receive;
-    spiWrite( _spiDev, header );
+    const int headerSize = 1;
+    as< ProtocolCommand >( _dmaBuffer ) = ProtocolCommand::Receive;
+    spiWrite( _spiDev, _dmaBuffer, headerSize );
 
     slaveDelay();
 
-    uint8_t payloadHeader[ 4 ];
-    spiRead( _spiDev, payloadHeader );
+    const int payloadHeaderSize = 4;
+    spiRead( _spiDev, _dmaBuffer, payloadHeaderSize );
 
-    auto contentType = as< uint16_t >( payloadHeader );
-    auto size = as< uint16_t >( payloadHeader + 2 );
+    auto contentType = as< uint16_t >( _dmaBuffer );
+    auto size = as< uint16_t >( _dmaBuffer + 2 );
     if ( size == 0 || size > 2048 ) {
+        std::cout << "    Nothing received: " << size << "\n";
         c.conn->finish( c );
         return;
     }
@@ -669,7 +691,7 @@ public:
             std::make_shared< JointLocal >( _servoBus.getServo( 2 ), shoeJointCapability() ),
             std::make_shared< JointLocal >( _servoBus.getServo( 3 ), bodyJointCapability() )
         } ),
-        _connectorBus( HSPI_HOST, GPIO_NUM_18, GPIO_NUM_5, 50000 ),
+        _connectorBus( HSPI_HOST, GPIO_NUM_18, GPIO_NUM_5, 1000000 ),
         _connectors( {
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_27 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_25 ),
