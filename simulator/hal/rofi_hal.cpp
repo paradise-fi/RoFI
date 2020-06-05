@@ -558,7 +558,11 @@ public:
 
             assert( pos == packet.message().size() );
             assert( callback );
-            std::thread( callback, Connector( shared_from_this() ), packet.contenttype(), pbufPacket ).detach();
+            std::thread( callback,
+                         Connector( shared_from_this() ),
+                         packet.contenttype(),
+                         pbufPacket )
+                    .detach();
         }
     }
 
