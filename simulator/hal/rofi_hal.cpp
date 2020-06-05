@@ -1,5 +1,6 @@
 #include "rofi_hal.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <chrono>
 #include <cstdlib>
@@ -406,7 +407,7 @@ class ConnectorSim : public Connector::Implementation
 {
 public:
     using EventCallback = std::function< void( Connector, ConnectorEvent ) >;
-    using PacketCallback = std::function< void( Connector, Packet ) >;
+    using PacketCallback = std::function< void( Connector, uint16_t contentType, PBuf ) >;
 
     ConnectorSim( std::weak_ptr< RoFISim > rofi, int connectorNumber )
             : _connectorNumber( connectorNumber )
@@ -457,14 +458,17 @@ public:
         registerPacketCallback( std::move( callback ) );
     }
 
-    void send( Packet packet ) override
+    void send( uint16_t contentType, PBuf packet ) override
     {
-        static_assert( sizeof( Packet::value_type ) == sizeof( char ) );
-
         auto rofi = getRoFI();
 
         auto msg = getCmdMsg( msgs::ConnectorCmd::PACKET );
-        msg.mutable_connectorcmd()->mutable_packet()->set_message( packet.data(), packet.size() );
+        msg.mutable_connectorcmd()->mutable_packet()->set_contenttype( contentType );
+        auto & bytes = *msg.mutable_connectorcmd()->mutable_packet()->mutable_message();
+        for ( auto it = packet.chunksBegin(); it != packet.chunksEnd(); ++it )
+        {
+            bytes.append( reinterpret_cast< char * >( it->mem() ), it->size() );
+        }
         rofi->publish( msg );
     }
 
@@ -539,13 +543,22 @@ public:
         }
     }
 
-    void callPacketCallbacks( const Packet & packet )
+    void callPacketCallbacks( const msgs::Packet & packet )
     {
         std::lock_guard< std::mutex > lock( packetCallbacksMutex );
         for ( const auto & callback : packetCallbacks )
         {
+            PBuf pbufPacket = PBuf::allocate( packet.message().size() );
+            size_t pos = 0;
+            for ( auto it = pbufPacket.chunksBegin(); it != pbufPacket.chunksEnd(); ++it )
+            {
+                std::copy_n( packet.message().begin() + pos, it->size(), it->mem() );
+                pos += it->size();
+            }
+
+            assert( pos == packet.message().size() );
             assert( callback );
-            std::thread( callback, Connector( shared_from_this() ), packet ).detach();
+            std::thread( callback, Connector( shared_from_this() ), packet.contenttype(), pbufPacket ).detach();
         }
     }
 
@@ -562,10 +575,9 @@ public:
             callEventCallbacks( *event );
         }
 
-        auto packet = ConnectorSim::readPacket( resp );
-        if ( packet )
+        if ( resp->connectorresp().resptype() == msgs::ConnectorCmd::PACKET )
         {
-            callPacketCallbacks( *packet );
+            callPacketCallbacks( resp->connectorresp().packet() );
         }
     }
 
@@ -615,25 +627,6 @@ public:
         result.connected = msg.connected();
         result.orientation = static_cast< ConnectorOrientation >( msg.orientation() );
         return result;
-    }
-
-    static std::optional< Packet > readPacket( RoFISim::RofiRespPtr resp )
-    {
-        static_assert( sizeof( Packet::value_type ) == sizeof( char ) );
-
-        if ( resp->connectorresp().resptype() != msgs::ConnectorCmd::PACKET )
-        {
-            return {};
-        }
-
-        const auto & message = resp->connectorresp().packet().message();
-        Packet packet;
-        packet.reserve( message.size() );
-        for ( auto byte : message )
-        {
-            packet.push_back( static_cast< Packet::value_type >( byte ) );
-        }
-        return packet;
     }
 
     static std::optional< ConnectorEvent > readEvent( RoFISim::RofiRespPtr resp )

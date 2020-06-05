@@ -1,7 +1,8 @@
 #pragma once
-#include <cstddef>
 #include <functional>
 #include <memory>
+
+#include "networking.hpp"
 
 namespace rofi::hal
 {
@@ -216,8 +217,6 @@ enum class ConnectorEvent : signed char
     Disconnected = 1,
 };
 
-using Packet = std::vector< std::byte >;
-
 /**
  * \brief Proxy for controlling a single connector of RoFI
  *
@@ -248,8 +247,9 @@ public:
         virtual void disconnect() = 0;
         virtual void onConnectorEvent(
                 std::function< void( Connector, ConnectorEvent ) > callback ) = 0;
-        virtual void onPacket( std::function< void( Connector, Packet ) > callback ) = 0;
-        virtual void send( Packet packet ) = 0;
+        virtual void onPacket(
+                std::function< void( Connector, uint16_t contentType, PBuf ) > callback ) = 0;
+        virtual void send( uint16_t contentType, PBuf packet ) = 0;
         virtual void connectPower( ConnectorLine ) = 0;
         virtual void disconnectPower( ConnectorLine ) = 0;
     };
@@ -257,7 +257,7 @@ public:
     /**
      * \brief Get connector state
      */
-    ConnectorState getState() const
+    ConnectorState getState()
     {
         return _impl->getState();
     }
@@ -295,9 +295,10 @@ public:
     /**
      * \brief Register callback for incoming packets.
      *
-     * The callback takes connector which received the packet and the packet.
+     * The callback takes connector which received the packet, contentType and
+     * the packet.
      */
-    void onPacket( std::function< void( Connector, Packet ) > callback )
+    void onPacket( std::function< void( Connector, uint16_t, PBuf ) > callback )
     {
         _impl->onPacket( callback );
     }
@@ -307,9 +308,9 @@ public:
      *
      * If no mating side present, packet is discarder.
      */
-    void send( Packet packet )
+    void send( uint16_t contentType, PBuf packet )
     {
-        _impl->send( std::move( packet ) );
+        _impl->send( contentType, std::move( packet ) );
     }
 
     /**
