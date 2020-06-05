@@ -1,6 +1,9 @@
 #pragma once
 
 #include <iostream>
+#include <sstream>
+#include <iomanip>
+
 #include <driver/spi_master.h>
 #include <cstring>
 
@@ -58,23 +61,50 @@ namespace detail {
     }
 }
 
+inline std::string hexDump(uint8_t *where, int count ) {
+    std::stringstream stream;
+    std::string separator;
+    for ( int i = 0; i != count; i++ ) {
+        stream << separator << "0x"
+            << std::setfill ('0') << std::setw(2)
+            << std::hex << int(where[i]);
+        separator = ", ";
+    }
+    return stream.str();
+}
+
+inline std::string charDump(uint8_t *where, int count ) {
+    std::stringstream stream;
+    std::string separator;
+    for ( int i = 0; i != count; i++ ) {
+        stream << where[ i ];
+    }
+    return stream.str();
+}
+
 inline void spiRead( spi_device_handle_t dev, uint8_t* where, int count ) {
-    spi_transaction_t t{};
+    spi_transaction_t t = {};
     t.rx_buffer = where;
-    t.length = 8 * count;
+    memset( where, 0xAA, count );
+    t.length = t.rxlength = 8 * count;
     spi_device_transmit( dev, &t );
+    std::cout << "Spi READ: " << hexDump( where, count ) << "\n";
+    std::cout << "Spi READ: " << charDump( where, count ) << "\n";
 }
 
 template < size_t size >
 void spiRead( spi_device_handle_t dev, uint8_t ( &where )[ size ] ) {
-    spi_transaction_t t{};
+    spi_transaction_t t = {};
     t.rx_buffer = where;
-    t.length = 8 * size;
+    memset( where, 0xAA, size );
+    t.length = t.rxlength = 8 * size;
     spi_device_transmit( dev, &t );
+    std::cout << "Spi READ: " << hexDump( where, size ) << "\n";
+    std::cout << "Spi READ: " << charDump( where, size ) << "\n";
 }
 
 inline void spiWrite( spi_device_handle_t dev, uint8_t* what, int count ) {
-    spi_transaction_t t{};
+    spi_transaction_t t = {};
     t.tx_buffer = what;
     t.length = 8 * count;
     spi_device_transmit( dev, &t );
@@ -82,7 +112,7 @@ inline void spiWrite( spi_device_handle_t dev, uint8_t* what, int count ) {
 
 template < size_t size >
 void spiWrite( spi_device_handle_t dev, uint8_t ( &what )[ size ] ) {
-    spi_transaction_t t{};
+    spi_transaction_t t = {};
     t.tx_buffer = what;
     t.length = 8 * size;
     spi_device_transmit( dev, &t );

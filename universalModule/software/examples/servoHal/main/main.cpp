@@ -6,47 +6,29 @@
 #include <peripherals/herculex.hpp>
 #include <rofi_hal.hpp>
 
-void printPacket( rofi::hal::Connector, uint16_t contentType, rofi::hal::PBuf packet ) {
-    std::cout << "Content type: " << contentType << ": ";
-    for ( auto it = packet.chunksBegin(); it != packet.chunksEnd(); ++it ) {
-        for ( int i = 0; i != it->size(); i++ )
-            std::cout << it->mem()[ i ];
-    }
-}
-
 extern "C" void app_main() {
-    std::cout << "Program starts\n";
-    auto localRoFI = rofi::hal::RoFI::getLocalRoFI();
-    std::cout << "Got local RoFI\n";
-    auto conn1 = localRoFI.getConnector( 0 );
-    auto conn2 = localRoFI.getConnector( 1 );
-
-    conn1.onPacket( printPacket );
-    conn2.onPacket( printPacket );
-
-    char counter = 0;
-    while( true ) {
-        std::cout << "Send\n";
-        counter++;
-        const char* msg = "Hello from 1! ";
-        const int len = strlen( msg );
-        auto buf = rofi::hal::PBuf::allocate( len );
-        for ( int i = 0; i != len; i++ )
-            buf[ i ] = msg[ i ];
-        buf[ len - 1 ] = 'a' + ( counter ) % 26;
-        conn1.send( 0, std::move( buf ) );
-
-        const char* msg2 = "Hello form 2! ";
-        const int len2 = strlen( msg2 );
-        auto buf2 = rofi::hal::PBuf::allocate( len2 );
-        for ( int i = 0; i != len2; i++ )
-            buf2[ i ] = msg2[ i ];
-        buf2[ len - 1 ] = 'a' + ( counter ) % 26;
-        conn2.send( 1, std::move( buf2 ) );
-
-        vTaskDelay( 1000 / portTICK_PERIOD_MS );
+    using namespace std::chrono_literals;
+    try {
+        auto rof = rofi::hal::RoFI::getLocalRoFI();
+        auto joint = rof.getJoint( 0 );
+        joint.onError( []( auto, auto, std::string msg ) { std::cout << msg << "\n"; } );
+        while ( true ) {
+            std::cout << "Moving! 3\n";
+            joint.setVelocity( 60 );
+            vTaskDelay( 3000 / portTICK_PERIOD_MS );
+            std::cout << "Moving! -3\n";
+            joint.setVelocity( -60 );
+            vTaskDelay( 3000 / portTICK_PERIOD_MS );
+        }
+        while ( true ) {
+            joint.setPosition( -1.5, 1.5, []( rofi::hal::Joint ){ std::cout << "\tDone1\n"; } );
+            vTaskDelay( 2000 / portTICK_PERIOD_MS );
+            joint.setPosition( 1.5, 1.5, []( rofi::hal::Joint ){ std::cout << "\tDone2\n"; } );
+            vTaskDelay( 2000 / portTICK_PERIOD_MS );
+        }
+    } catch ( const std::runtime_error& e ) {
+        std::cout << e.what() << "\n";
     }
-
     while ( true ) {
         vTaskDelay( 1000 / portTICK_PERIOD_MS );
     }

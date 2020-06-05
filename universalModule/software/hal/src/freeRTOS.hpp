@@ -8,6 +8,7 @@
 #include <freertos/semphr.h>
 #include <freertos/timers.h>
 #include <typeinfo>
+#include <utility>
 
 namespace rtos {
 
@@ -42,7 +43,8 @@ public:
     void release() { _o = nullptr; }
 
 private:
-    ObjectView( void* p): _o( reinterpret_cast< T* >( p ) ) { }
+    ObjectView( void* p): _o(
+        std::launder( reinterpret_cast< T* >( p ) ) ) { }
 
     T* _o;
 };
@@ -83,7 +85,7 @@ public:
     T pop( ExContext c = ExContext::Normal ) {
         T t;
         if ( c == ExContext::ISR )
-            return xQueueReceiveFromISR( _q, &t, nullptr );
+            xQueueReceiveFromISR( _q, &t, nullptr );
         else
             xQueueReceive( _q, &t, portMAX_DELAY );
         return t;
@@ -95,11 +97,13 @@ private:
 
 template < typename T >
 class Queue {
+private:
+    using ObjectStorage = typename std::aligned_storage< sizeof( T ), alignof( T ) >::type;
 public:
     using IndexType = int;
     Queue( int size )
         : _q( size ), _idxs( size ),
-          _objs( new uint8_t[ sizeof( T ) * size ] )
+          _objs( new ObjectStorage[ size ] )
     {
         for ( IndexType i = 0; i != size; i++ )
             _idxs.push( i );
@@ -116,6 +120,7 @@ public:
     Queue& operator=( Queue&& o ) { swap( o ); return *this; }
 
     ~Queue() {
+        // The Queue does not properly clean all its members!
         if ( _objs )
             delete _objs;
     }
@@ -132,26 +137,35 @@ public:
     void push( const T& t, ExContext c = ExContext::Normal ) {
         IndexType idx = _idxs.pop( c );
         auto o = ObjectView< T >::create( object( idx ), t );
-        o.release();
-        if ( !_q.push( idx, c ) )
-            std::cout << "Cannot push to queue! 1\n";
+        if ( !_q.push( idx, c ) ) {
+            ets_printf( "Cannot push to queue! 1\n" );
+            _idxs.push( idx, c );
+        } else {
+            o.release();
+        }
     }
 
     void push( T&& t, ExContext c = ExContext::Normal ) {
         IndexType idx = _idxs.pop( c );
         auto o = ObjectView< T >::create( object( idx ), std::move( t ) );
-        o.release();
-        if ( !_q.push( idx, c ) )
-            std::cout << "Cannot push to queue! 2\n";
+        if ( !_q.push( idx, c ) ) {
+            ets_printf( "Cannot push to queue! 2\n" );
+            _idxs.push( idx, c );
+        } else {
+            o.release();
+        }
     }
 
     template < typename... Args >
     void emplace( Args&&... args ) {
         IndexType idx = _idxs.pop();
         auto o = ObjectView< T >::create( object( idx ), std::forward< Args >( args )... );
-        o.release();
-        if ( !_q.push( idx ) )
-            std::cout << "Cannot push to queue! 3\n";
+        if ( !_q.push( idx ) ) {
+            ets_printf( "Cannot push to queue! 3\n" );
+            _idxs.push( idx );
+        } else {
+            o.release();
+        }
     }
 
     T pop( ExContext c = ExContext::Normal ) {
@@ -159,15 +173,15 @@ public:
         T t( std::move( ObjectView< T >::from( object( idx ) ).get() ) );
         memset( object( idx ), 0, sizeof( T ) );
         if ( !_idxs.push( idx, c ) )
-            std::cout << "Cannot push to queue! 4\n";
+            ets_printf( "Cannot push to queue! This should never happen.\n" );
         return t;
     }
 
 private:
-    void* object( IndexType i ) { return _objs + sizeof( T ) * i; }
+    void* object( IndexType i ) { return &_objs[ i ]; }
 
     PrimitiveQueue< IndexType > _q, _idxs;
-    uint8_t* _objs;
+    ObjectStorage* _objs;
 };
 
 class Semaphore {
