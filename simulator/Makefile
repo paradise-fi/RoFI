@@ -1,10 +1,13 @@
-
 default: build-all
 
-WORLD ?=
+GAZEBO ?= gazebo
 GAZEBO_ARGS ?= --verbose
+WORLD ?=
 
+EXAMPLE ?=
 EXAMPLE_ARGS ?=
+
+SUBFOLDERS = demo examples hal plugins tools
 
 .PHONY: build-all clean run tests-roficom format-all example-server example-client help
 
@@ -16,26 +19,37 @@ build-all: build
 	cd build && make -j8
 	@echo "\nBuild completed\n\n"
 
+${SUBFOLDERS} : build
+	cd build/$@ && make -j8
+	@echo "\nBuild $@ completed\n\n"
+
 clean:
 	rm -rf build
 
-run: build-all
-	./runGazebo.sh ${GAZEBO_ARGS} ${WORLD}
+run: plugins
+	./setGazeboVariables.sh ${GAZEBO} ${GAZEBO_ARGS} ${WORLD}
 
-tests-roficom: build-all
+tests-roficom: plugins
 	./build/plugins/roficom/tests/tests_roficom
 
 format-all:
 	find ./ ! \( -path "./build/*" \) -a \( -type f -iname *.hpp -o -type f -iname *.cpp \) | xargs clang-format --style=file -i
 
-example-server: build-all
+example-server: plugins
+ifndef EXAMPLE
+	$(error EXAMPLE is not set. Call 'make help' for more info)
+endif
 	@test -f ./examples/${EXAMPLE}/${EXAMPLE}.world || \
 		( echo "ERROR: No example world for '${EXAMPLE}' found\nCall 'make help' for more info\n" ; exit 1 )
-	./runGazebo.sh ./examples/${EXAMPLE}/${EXAMPLE}.world ${GAZEBO_ARGS}
+	./setGazeboVariables.sh ${GAZEBO} ./examples/${EXAMPLE}/${EXAMPLE}.world ${GAZEBO_ARGS}
 
-example-client: build-all
+example-client: build
+ifndef EXAMPLE
+	$(error EXAMPLE is not set. Call 'make help' for more info)
+endif
+	cd build && make -j8 ${EXAMPLE}
 	@test -f ./build/examples/${EXAMPLE}/${EXAMPLE} || \
-		( echo "ERROR: No example '${EXAMPLE}' found\nCall 'make help' for more info\n" ; exit 1 )
+		( echo "\nERROR: No example '${EXAMPLE}' found\nCall 'make help' for more info\n" ; exit 1 )
 	./build/examples/${EXAMPLE}/${EXAMPLE} ${EXAMPLE_ARGS}
 
 help:
@@ -44,13 +58,13 @@ help:
 	@echo "\t\tBuilds the project."
 	@echo "\n\tclean"
 	@echo "\t\tRemoves the build directory."
-	@echo "\n\trun [GAZEBO_ARGS=<gazebo_args>] [WORLD=<path_to_world>]"
+	@echo "\n\trun [GAZEBO=<gazebo_program>] [GAZEBO_ARGS=<gazebo_args>] [WORLD=<path_to_world>]"
 	@echo "\t\tRuns gazebo, args default to '--verbose'."
 	@echo "\n\ttests-roficom"
 	@echo "\t\tRuns tests for roficom."
 	@echo "\n\tformat-all"
 	@echo "\t\tFormats all '.hpp' and '.cpp' files."
-	@echo "\n\texample-server EXAMPLE=<example_name> [GAZEBO_ARGS=<gazebo_args>]"
+	@echo "\n\texample-server EXAMPLE=<example_name> [GAZEBO=<gazebo_program>] [GAZEBO_ARGS=<gazebo_args>]"
 	@echo "\t\tRuns gazebo for the example, args default to '--verbose'."
 	@echo "\n\texample-client EXAMPLE=<example_name> [EXAMPLE_ARGS=<example_args>]"
 	@echo "\t\tRuns the RoFISim client for the example."
