@@ -26,6 +26,9 @@ set (msgs
     connector/connectorResp.proto
     connector/connectorPacket.proto
     connector/connectorState.proto
+
+    distributor/distributorReq.proto
+    distributor/distributorResp.proto
 )
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${msgs})
