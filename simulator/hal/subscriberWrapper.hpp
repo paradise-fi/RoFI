@@ -19,7 +19,7 @@ public:
         {
             throw std::runtime_error( "empty node" );
         }
-        if ( !callback )
+        if ( !_callback )
         {
             throw std::runtime_error( "empty callback" );
         }
