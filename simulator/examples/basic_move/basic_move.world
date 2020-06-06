@@ -26,11 +26,11 @@
     <!-- Distributor plugin -->
     <plugin name="distributor" filename="libdistributorPlugin.so">
       <rofi>
-        <id>0</id>
+        <id>1</id>
         <name>universalModule</name>
       </rofi>
       <rofi>
-        <id>1</id>
+        <id>2</id>
         <name>universalModule_0</name>
       </rofi>
     </plugin>

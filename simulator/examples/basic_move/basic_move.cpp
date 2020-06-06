@@ -127,7 +127,9 @@ int main()
     std::cout << "Starting basic move example\n";
 
     RoFI localRofi = RoFI::getLocalRoFI();
-    RoFI remoteRofi = RoFI::getRemoteRoFI( 1 );
+    RoFI remoteRofi = RoFI::getRemoteRoFI( 2 );
+
+    assert( localRofi.getId() != 2 );
 
     assert( localRofi.getDescriptor().connectorCount > connectorA );
     assert( localRofi.getDescriptor().connectorCount > connectorB );
