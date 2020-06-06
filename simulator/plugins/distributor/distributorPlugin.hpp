@@ -140,11 +140,13 @@ public:
 
     void Load( physics::WorldPtr world, sdf::ElementPtr sdf ) override;
 
-    void loadRofis( sdf::ElementPtr pluginSdf );
-    std::map< std::string, RofiId > loadRofisFromSdf( sdf::ElementPtr pluginSdf );
+    void loadRofis();
+    std::map< std::string, RofiId > getRofisFromSdf();
 
     void onRequest( const RequestPtr & req );
     void onAddEntity( std::string added );
+
+    static sdf::ElementPtr createRofiElem( RofiId id, const std::string & name );
 
 private:
     rofi::messages::DistributorResp onGetInfoReq();
@@ -153,6 +155,7 @@ private:
     rofi::messages::DistributorResp onUnlockReq( RofiId rofiId, SessionId sessionId );
 
     physics::WorldPtr _world;
+    sdf::ElementPtr _sdf;
 
     transport::NodePtr _node;
     transport::PublisherPtr _pub;
