@@ -38,6 +38,37 @@ public:
         PIDValues velocity = {};
         PIDValues position = {};
     };
+    struct InitTargets
+    {
+        std::string jointName;
+        std::optional< double > force;
+        std::optional< double > velocity;
+        std::optional< double > position;
+
+        InitTargets( std::string jointName,
+                     std::optional< double > force,
+                     std::optional< double > velocity,
+                     std::optional< double > position )
+                : jointName( std::move( jointName ) )
+                , force( force )
+                , velocity( velocity )
+                , position( position )
+        {
+        }
+
+        static InitTargets newForce( std::string jointName, double force )
+        {
+            return InitTargets( std::move( jointName ), force, {}, {} );
+        }
+        static InitTargets newVelocity( std::string jointName, double velocity )
+        {
+            return InitTargets( std::move( jointName ), {}, velocity, {} );
+        }
+        static InitTargets newPosition( std::string jointName, double position, double velocity )
+        {
+            return InitTargets( std::move( jointName ), {}, velocity, position );
+        }
+    };
 
     static PIDValues loadPIDValues( sdf::ElementPtr pidSdf )
     {
@@ -56,6 +87,80 @@ public:
         }
 
         return pidValues;
+    }
+
+    static sdf::ElementPtr createPIDValues( const std::string & name, const PIDValues & values )
+    {
+        sdf::ElementPtr elem = newElement( name );
+        assert( elem );
+
+        insertElement( elem, newElemWithValue( "pid_gains", values.pidGains ) );
+        if ( values.initTarget )
+        {
+            insertElement( elem, newElemWithValue( "init_target", *values.initTarget ) );
+        }
+
+        return elem;
+    }
+
+    static sdf::ElementPtr createController( const ControllerValues & values )
+    {
+        sdf::ElementPtr controller = newElement( "controller" );
+        assert( controller );
+
+        insertElement( controller, newElemWithValue( "joint", values.jointName ) );
+
+        auto force = newElement( "force" );
+        if ( values.forceTarget )
+        {
+            insertElement( force, newElemWithValue( "init_target", *values.forceTarget ) );
+        }
+        insertElement( controller, force );
+
+        insertElement( controller, createPIDValues( "velocity", values.velocity ) );
+        insertElement( controller, createPIDValues( "position", values.position ) );
+
+        return controller;
+    }
+
+    template < typename T >
+    static void updateOptionalValue( sdf::ElementPtr parentSdf,
+                                     const std::string & name,
+                                     const std::optional< T > & value )
+    {
+        if ( value )
+        {
+            setValue( getOnlyChildOrCreate( parentSdf, name ), *value );
+        }
+        else
+        {
+            auto child = getOnlyChild< false >( parentSdf, name );
+            if ( child )
+            {
+                child->RemoveFromParent();
+            }
+        }
+    }
+
+    static void updateInitTargetsSdf( sdf::ElementPtr pluginSdf, const InitTargets & targets )
+    {
+        for ( auto controller : getChildren( pluginSdf, "controller" ) )
+        {
+            if ( getOnlyChild< true >( controller, "joint" )->Get< std::string >()
+                 != targets.jointName )
+            {
+                continue;
+            }
+
+            auto force = getOnlyChild< true >( controller, "force" );
+            updateOptionalValue( force, "init_target", targets.force );
+
+            auto velocity = getOnlyChild< true >( controller, "velocity" );
+            updateOptionalValue( velocity, "init_target", targets.velocity );
+
+            auto position = getOnlyChild< true >( controller, "position" );
+            updateOptionalValue( position, "init_target", targets.position );
+        }
     }
 
     static std::vector< ControllerValues > loadControllerValues( sdf::ElementPtr pluginSdf )
@@ -103,6 +208,15 @@ public:
                 loadedValues.push_back( controllerValues );
                 loadedValues.back().jointName = joint->Get< std::string >();
             }
+        }
+
+        for ( auto elem : getChildren( pluginSdf, "controller" ) )
+        {
+            elem->RemoveFromParent();
+        }
+        for ( const auto & values : loadedValues )
+        {
+            insertElement( pluginSdf, createController( values ) );
         }
 
         return loadedValues;

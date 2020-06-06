@@ -11,7 +11,9 @@ using RDP = RofiDistributorPlugin;
 void RDP::Load( physics::WorldPtr world, sdf::ElementPtr sdf )
 {
     _world = std::move( world );
+    _sdf = std::move( sdf );
     assert( _world );
+    assert( _sdf );
 
     _node = boost::make_shared< transport::Node >();
     if ( !_node )
@@ -22,7 +24,7 @@ void RDP::Load( physics::WorldPtr world, sdf::ElementPtr sdf )
     _node->Init( _world->Name() + "/distributor" );
     assert( _node->IsInitialized() );
 
-    loadRofis( sdf );
+    loadRofis();
 
     _pub = _node->Advertise< rofi::messages::DistributorResp >( "~/response" );
     if ( !_pub )
@@ -44,9 +46,11 @@ void RDP::Load( physics::WorldPtr world, sdf::ElementPtr sdf )
     gzmsg << "RoFI distributor running\n";
 }
 
-void RDP::loadRofis( sdf::ElementPtr pluginSdf )
+void RDP::loadRofis()
 {
-    auto config = loadRofisFromSdf( pluginSdf );
+    assert( _sdf );
+
+    auto config = getRofisFromSdf();
 
     std::set< RofiId > usedIds;
     for ( auto & elem : config )
@@ -55,7 +59,6 @@ void RDP::loadRofis( sdf::ElementPtr pluginSdf )
         if ( !inserted )
         {
             gzerr << "Two rofis with same ID: " << elem.second << "\n";
-            std::runtime_error( "Two rofis with same ID: " + std::to_string( elem.second ) );
         }
     }
 
@@ -77,6 +80,11 @@ void RDP::loadRofis( sdf::ElementPtr pluginSdf )
         return _nextRofiId++;
     };
 
+    for ( auto & child : getChildren( _sdf, "rofi" ) )
+    {
+        child->RemoveFromParent();
+    }
+
     for ( auto model : _world->Models() )
     {
         if ( !isRoFIModule( model ) )
@@ -87,6 +95,7 @@ void RDP::loadRofis( sdf::ElementPtr pluginSdf )
         RofiId id = getNextId( model );
         auto topic = "/gazebo/" + getElemPath( model );
 
+        insertElement( _sdf, createRofiElem( id, model->GetName() ) );
         _rofis.registerNewRofiId( id, topic );
 
         gzmsg << "Loaded RoFI '" << model->GetName() << "' with ID: " << id << "\n";
@@ -94,18 +103,18 @@ void RDP::loadRofis( sdf::ElementPtr pluginSdf )
 
     for ( auto elem : config )
     {
-        gzerr << "Could not find RoFI module '" << elem.first << "'\n";
+        gzerr << "Could not find RoFI module '" + elem.first + "'\n";
     }
 }
 
-std::map< std::string, RDP::RofiId > RDP::loadRofisFromSdf( sdf::ElementPtr pluginSdf )
+std::map< std::string, RDP::RofiId > RDP::getRofisFromSdf()
 {
-    assert( pluginSdf );
+    assert( _sdf );
 
     std::map< std::string, RofiId > config;
 
-    checkChildrenNames( pluginSdf, { "rofi" } );
-    for ( auto rofiSdf : getChildren( pluginSdf, "rofi" ) )
+    checkChildrenNames( _sdf, { "rofi" } );
+    for ( auto rofiSdf : getChildren( _sdf, "rofi" ) )
     {
         checkChildrenNames( rofiSdf, { "id", "name" } );
         RofiId id = getOnlyChild< true >( rofiSdf, "id" )->Get< int >();
@@ -115,7 +124,6 @@ std::map< std::string, RDP::RofiId > RDP::loadRofisFromSdf( sdf::ElementPtr plug
         if ( !inserted )
         {
             gzerr << "Two rofis with same name: '" << name << "'\n";
-            std::runtime_error( "Two rofis with same name: '" + name + "'" );
         }
     }
 
@@ -172,6 +180,7 @@ void RDP::onRequest( const RequestPtr & req )
 void RDP::onAddEntity( std::string added )
 {
     assert( _world );
+    assert( _sdf );
 
     // World::ModelByName freezes the simulation
     auto model = boost::dynamic_pointer_cast< physics::Model >( _world->EntityByName( added ) );
@@ -190,9 +199,18 @@ void RDP::onAddEntity( std::string added )
 
     auto topic = "/gazebo/" + getElemPath( model );
 
+    insertElement( _sdf, createRofiElem( id, model->GetName() ) );
     _rofis.registerNewRofiId( id, topic );
 
     gzmsg << "Added new RoFI '" << model->GetName() << "' with ID: " << id << "\n";
+}
+
+sdf::ElementPtr RDP::createRofiElem( RofiId id, const std::string & name )
+{
+    auto rofiElem = newElement( "rofi" );
+    insertElement( rofiElem, newElemWithValue( "name", name ) );
+    insertElement( rofiElem, newElemWithValue( "id", id ) );
+    return rofiElem;
 }
 
 
