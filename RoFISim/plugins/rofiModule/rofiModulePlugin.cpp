@@ -10,12 +10,16 @@ using RMP = RoFIModulePlugin;
 
 void RMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
 {
-    _model = model;
+    _model = std::move( model );
+    _sdf = std::move( sdf );
+    assert( _model );
+    assert( _sdf );
+
     gzmsg << "The UM plugin is attached to model [" << _model->GetScopedName() << "]\n";
 
     initCommunication();
 
-    findAndInitJoints( sdf );
+    findAndInitJoints();
     findAndInitConnectors();
 
     onUpdateConnection =
@@ -132,8 +136,10 @@ void RMP::clearConnectors()
     connectors.clear();
 }
 
-void RMP::findAndInitJoints( sdf::ElementPtr pluginSdf )
+void RMP::findAndInitJoints()
 {
+    assert( _sdf );
+
     if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Init communication before adding joints\n";
@@ -141,12 +147,6 @@ void RMP::findAndInitJoints( sdf::ElementPtr pluginSdf )
     }
 
     joints.clear();
-
-    if ( !pluginSdf )
-    {
-        gzwarn << "No plugin sdf found in module. Assuming no controllers...\n";
-        return;
-    }
 
     const auto callback = [ this ]( int joint, double desiredPosition ) {
         gzmsg << "Returning position reached of joint " << joint << ": " << desiredPosition << "\n";
@@ -156,20 +156,24 @@ void RMP::findAndInitJoints( sdf::ElementPtr pluginSdf )
                                          desiredPosition ) );
     };
 
-    auto pidValuesVector = PIDLoader::loadControllerValues( pluginSdf );
+    checkChildrenNames( _sdf, { "controller" } );
+    auto pidValuesVector = PIDLoader::loadControllerValues( _sdf );
     for ( auto & pidValues : pidValuesVector )
     {
-        if ( auto joint = _model->GetJoint( pidValues.jointName ) )
+        auto joint = _model->GetJoint( pidValues.jointName );
+        if ( !joint )
         {
-            assert( joint );
-
-            joints.emplace_back( std::move( joint ),
-                                 pidValues,
-                                 std::bind( callback, joints.size(), std::placeholders::_1 ),
-                                 joints.size() );
-            assert( joints.back() );
-            assert( joints.back().joint->GetMsgType() == msgs::Joint::REVOLUTE );
+            gzerr << "No joint '" + pidValues.jointName + "' found in module\n";
+            continue;
         }
+
+        joints.emplace_back( std::move( joint ),
+                             nullptr,
+                             pidValues,
+                             std::bind( callback, joints.size(), std::placeholders::_1 ),
+                             joints.size() );
+        assert( joints.back() );
+        assert( joints.back().joint->GetMsgType() == msgs::Joint::REVOLUTE );
     }
 }
 
@@ -430,17 +434,31 @@ void RMP::onUpdate()
 
 void RMP::setVelocity( int joint, double velocity )
 {
-    joints.at( joint ).controller.setTargetVelocity( velocity );
+    auto & jointData = joints.at( joint );
+    auto targets = PIDLoader::InitTargets::newVelocity( jointData.joint->GetName(), velocity );
+
+    PIDLoader::updateInitTargetsSdf( _sdf, targets );
+    jointData.controller.setTargetVelocity( velocity );
 }
 
 void RMP::setTorque( int joint, double torque )
 {
-    joints.at( joint ).controller.setTargetForce( torque );
+    auto & jointData = joints.at( joint );
+    auto targets = PIDLoader::InitTargets::newForce( jointData.joint->GetName(), torque );
+
+    PIDLoader::updateInitTargetsSdf( _sdf, targets );
+    jointData.controller.setTargetForce( torque );
 }
 
 void RMP::setPositionWithSpeed( int joint, double desiredPosition, double speed )
 {
-    joints.at( joint ).controller.setTargetPositionWithSpeed( desiredPosition, speed );
+    using InitTargets = PIDLoader::InitTargets;
+
+    auto & jointData = joints.at( joint );
+    auto targets = InitTargets::newPosition( jointData.joint->GetName(), desiredPosition, speed );
+
+    PIDLoader::updateInitTargetsSdf( _sdf, targets );
+    jointData.controller.setTargetPositionWithSpeed( desiredPosition, speed );
 }
 
 GZ_REGISTER_MODEL_PLUGIN( RoFIModulePlugin )

@@ -9,6 +9,7 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
+#include "jointData.hpp"
 #include "utils.hpp"
 
 #include <connectorCmd.pb.h>
@@ -127,12 +128,12 @@ public:
     RoficomController( const RoficomController & ) = delete;
     RoficomController & operator=( const RoficomController & ) = delete;
 
-    template < typename OnPositionReachedCallback >
     RoficomController( JointDataBase & jointData,
-                       bool extended,
-                       OnPositionReachedCallback && onPositionReached )
+                       RoFICoMPosition initPosition,
+                       std::function< void( RoFICoMPosition ) > onPositionReached )
             : _jointData( jointData )
-            , _onPositionReached( std::forward< OnPositionReachedCallback >( onPositionReached ) )
+            , _position( initPosition )
+            , _onPositionReached( std::move( onPositionReached ) )
     {
         assert( _jointData );
         assert( _jointData.joint );
@@ -141,13 +142,26 @@ public:
         _connection = event::Events::ConnectBeforePhysicsUpdate(
                 std::bind( &RoficomController::onPhysicsUpdate, this ) );
 
-        if ( extended )
+        switch ( _position )
         {
-            extend();
-        }
-        else
-        {
-            retract();
+            case RoFICoMPosition::Extending:
+            case RoFICoMPosition::Retracting:
+            {
+                looseJoint();
+                break;
+            }
+            case RoFICoMPosition::Extended:
+            {
+                assert( _jointData.joint->Position() >= _jointData.getMaxPosition() );
+                fixJoint();
+                break;
+            }
+            case RoFICoMPosition::Retracted:
+            {
+                assert( _jointData.joint->Position() <= _jointData.getMinPosition() );
+                fixJoint();
+                break;
+            }
         }
     }
 
@@ -167,7 +181,13 @@ public:
     struct ControllerValues
     {
         std::string jointName;
-        std::optional< bool > extend;
+        sdf::ElementPtr limitSdf;
+        bool extend = false;
+
+        RoFICoMPosition position() const
+        {
+            return extend ? RoFICoMPosition::Extending : RoFICoMPosition::Retracting;
+        }
     };
 
     static ControllerValues loadControllerValues( sdf::ElementPtr pluginSdf )
@@ -176,14 +196,17 @@ public:
 
         ControllerValues controllerValues;
 
-        checkChildrenNames( pluginSdf, { "joint", "extend" } );
+        checkChildrenNames( pluginSdf, { "joint", "extend", "limit" } );
         controllerValues.jointName =
                 getOnlyChild< true >( pluginSdf, "joint" )->Get< std::string >();
-        auto extendElem = getOnlyChild< false >( pluginSdf, "extend" );
-        if ( extendElem )
+
+        if ( !pluginSdf->HasElement( "extend" ) )
         {
-            controllerValues.extend = extendElem->Get< bool >();
+            insertElement( pluginSdf, newElemWithValue( "extend", false ) );
         }
+
+        controllerValues.limitSdf = getOnlyChildOrCreate( pluginSdf, "limit" );
+        controllerValues.extend = getOnlyChild< true >( pluginSdf, "extend" )->Get< bool >();
 
         return controllerValues;
     }
