@@ -12,190 +12,6 @@
 
 namespace gazebo
 {
-template < msgs::Joint::Type >
-struct Precision
-{
-};
-
-template <>
-struct Precision< msgs::Joint::REVOLUTE >
-{
-    // Used for position set callback and for boundaries
-    // Revolute joints: [rad]
-    static constexpr double position = 1e-2;
-
-    // Used for position set callback and for boundaries
-    // Revolute joints: [rad/s]
-    static constexpr double velocity = 1e-2;
-};
-
-template <>
-struct Precision< msgs::Joint::PRISMATIC >
-{
-    // Used for position set callback and for boundaries
-    // Prismatic joints: [m]
-    static constexpr double position = 1e-4;
-
-    // Used for position set callback and for boundaries
-    // Prismatic joints: [m/s]
-    static constexpr double velocity = 1e-4;
-};
-
-struct JointDataBase
-{
-    // Used for position set callback and for boundaries
-    // Prismatic joints: [m]
-    // Revolute joints: [rad]
-    double getPositionPrecision() const
-    {
-        if ( joint->GetMsgType() == msgs::Joint::PRISMATIC )
-        {
-            return Precision< msgs::Joint::PRISMATIC >::position;
-        }
-        return Precision< msgs::Joint::REVOLUTE >::position;
-    }
-
-    // Used for position set callback and for boundaries
-    // Prismatic joints: [m/s]
-    // Revolute joints: [rad/s]
-    double getVelocityPrecision() const
-    {
-        if ( joint->GetMsgType() == msgs::Joint::PRISMATIC )
-        {
-            return Precision< msgs::Joint::PRISMATIC >::velocity;
-        }
-        return Precision< msgs::Joint::REVOLUTE >::velocity;
-    }
-
-    // Prismatic joints: [m]
-    // Revolute joints: [rad]
-    double minPosition = std::numeric_limits< double >::lowest();
-    // Prismatic joints: [m]
-    // Revolute joints: [rad]
-    double maxPosition = std::numeric_limits< double >::max();
-    // Prismatic joints: [m/s]
-    // Revolute joints: [rad/s]
-    double minSpeed = std::numeric_limits< double >::min();
-    // Prismatic joints: [m/s]
-    // Revolute joints: [rad/s]
-    double maxSpeed = std::numeric_limits< double >::max();
-    // Prismatic joints: [N]
-    // Revolute joints: [Nm]
-    double maxEffort = std::numeric_limits< double >::max();
-
-    // Prismatic joints: [m]
-    // Revolute joints: [rad]
-    double getMaxPosition() const
-    {
-        return maxPosition - getPositionPrecision();
-    }
-
-    // Prismatic joints: [m]
-    // Revolute joints: [rad]
-    double getMinPosition() const
-    {
-        return minPosition + getPositionPrecision();
-    }
-
-    // Prismatic joints: [m/s]
-    // Revolute joints: [rad/s]
-    double getMaxVelocity() const
-    {
-        return maxSpeed - getVelocityPrecision();
-    }
-
-    // Prismatic joints: [m/s]
-    // Revolute joints: [rad/s]
-    double getLowestVelocity() const
-    {
-        return -getMaxVelocity();
-    }
-
-    // Prismatic joints: [m/s]
-    // Revolute joints: [rad/s]
-    double getMinVelocity() const
-    {
-        return minSpeed + getVelocityPrecision();
-    }
-
-    // Prismatic joints: [N]
-    // Revolute joints: [Nm]
-    double getMaxEffort() const
-    {
-        return maxEffort;
-    }
-
-    // Prismatic joints: [N]
-    // Revolute joints: [Nm]
-    double getLowestEffort() const
-    {
-        return -getMaxEffort();
-    }
-
-    physics::JointPtr joint;
-
-    operator bool() const
-    {
-        return bool( joint );
-    }
-
-protected:
-    ~JointDataBase() = default;
-
-    JointDataBase( const JointDataBase & ) = default;
-    JointDataBase & operator=( const JointDataBase & ) = default;
-
-    explicit JointDataBase( physics::JointPtr jointPtr ) : joint( std::move( jointPtr ) )
-    {
-        if ( !joint )
-        {
-            return;
-        }
-
-        auto limits = joint->GetSDF()->GetElement( "axis" )->GetElement( "limit" );
-        limits->GetElement( "lower" )->GetValue()->Get( minPosition );
-        limits->GetElement( "upper" )->GetValue()->Get( maxPosition );
-        limits->GetElement( "velocity" )->GetValue()->Get( maxSpeed );
-        limits->GetElement( "effort" )->GetValue()->Get( maxEffort );
-
-        if ( minPosition > maxPosition )
-        {
-            gzerr << "Maximal position is not larger than minimal\n";
-            throw std::runtime_error( "Maximal position is not larger than minimal" );
-        }
-
-        if ( maxSpeed < 0 )
-        {
-            gzmsg << "No max speed in " << joint->GetScopedName() << "\n";
-            maxSpeed = std::numeric_limits< double >::max();
-        }
-        if ( maxEffort < 0 )
-        {
-            gzmsg << "No max effort in " << joint->GetScopedName() << "\n";
-            maxEffort = std::numeric_limits< double >::max();
-        }
-
-        assert( maxPosition >= minPosition );
-        assert( maxSpeed > getVelocityPrecision() );
-        assert( maxEffort > 0 );
-    }
-};
-
-template < typename Controller >
-struct JointData : public JointDataBase
-{
-    Controller controller;
-
-    template < typename... Args >
-    explicit JointData( physics::JointPtr joint, Args &&... args )
-            : JointDataBase( std::move( joint ) )
-            , controller( *this, std::forward< Args >( args )... )
-    {
-    }
-
-    ~JointData() = default;
-};
-
 inline double verboseClamp( double value, double min, double max, std::string debugName )
 {
     assert( min <= max );
@@ -223,7 +39,9 @@ inline bool equal( double first, double second, double precision )
     return std::abs( first - second ) <= precision;
 }
 
-inline std::string getElemPath( gazebo::physics::BasePtr elem, const std::string & delim = "/" )
+inline std::string getElemPath( gazebo::physics::BasePtr elem,
+                                const std::string & delim = "/",
+                                bool prependWorldName = true )
 {
     assert( elem );
 
@@ -231,6 +49,10 @@ inline std::string getElemPath( gazebo::physics::BasePtr elem, const std::string
 
     while ( elem )
     {
+        if ( !prependWorldName && !elem->GetParent() )
+        {
+            break;
+        }
         names.push_back( elem->GetName() );
         elem = elem->GetParent();
     }
@@ -272,6 +94,15 @@ inline sdf::ElementPtr getPluginSdf( sdf::ElementPtr modelSdf, const std::string
     return {};
 }
 
+inline void insertElement( sdf::ElementPtr parent, sdf::ElementPtr child )
+{
+    assert( parent );
+    assert( child );
+
+    parent->InsertElement( child );
+    child->SetParent( parent );
+}
+
 inline sdf::ElementPtr newElement( const std::string & name )
 {
     auto elem = std::make_shared< sdf::Element >();
@@ -280,8 +111,19 @@ inline sdf::ElementPtr newElement( const std::string & name )
 }
 
 template < typename T >
-void setValue( sdf::ElementPtr elem, T value )
+sdf::ElementPtr newElemWithValue( const std::string & name, const T & value )
 {
+    auto elem = newElement( name );
+    elem->AddValue( "string", "", false );
+    elem->Set( value );
+    return elem;
+}
+
+template < typename T >
+void setValue( sdf::ElementPtr elem, const T & value )
+{
+    assert( elem );
+
     if ( !elem->GetValue() )
     {
         elem->AddValue( "string", "", false );
@@ -290,12 +132,94 @@ void setValue( sdf::ElementPtr elem, T value )
 }
 
 template < typename T >
-sdf::ElementPtr newElemWithValue( const std::string & name, T value )
+void setAttribute( sdf::ElementPtr elem, const std::string & key, const T & value )
 {
-    auto elem = newElement( name );
-    elem->AddValue( "string", "", false );
-    elem->Set( value );
-    return elem;
+    assert( elem );
+
+    if ( !elem->HasAttribute( key ) )
+    {
+        elem->AddAttribute( key, "string", "", false );
+    }
+
+    assert( elem->GetAttribute( key ) );
+    elem->GetAttribute( key )->Set( value );
+}
+
+template < typename T >
+T getAttribute( sdf::ElementPtr elem, const std::string & key )
+{
+    assert( elem );
+
+    auto attribute = elem->GetAttribute( key );
+    if ( !attribute )
+    {
+        throw std::runtime_error( "No attribute with key '" + key + "'" );
+    }
+
+    T value;
+    if ( !attribute->Get( value ) )
+    {
+        throw std::runtime_error( "Could not get attribute with key '" + key + "'" );
+    }
+    return value;
+}
+
+
+template < typename T >
+T getAttribute( sdf::ElementPtr elem, const std::string & key, const T & defaultValue )
+{
+    assert( elem );
+
+    auto attribute = elem->GetAttribute( key );
+    if ( !attribute )
+    {
+        return defaultValue;
+    }
+
+    T value = defaultValue;
+    if ( !attribute->Get( value ) )
+    {
+        return defaultValue;
+    }
+    return value;
+}
+
+inline std::string getElemPath( sdf::ElementPtr elem,
+                                const std::string & delim = "/",
+                                bool prependWorldName = true )
+{
+    assert( elem );
+
+    std::vector< std::string > names;
+
+    while ( elem )
+    {
+        if ( !prependWorldName && elem->GetName() == "world" )
+        {
+            break;
+        }
+        names.push_back( getAttribute< std::string >( elem, "name" ) );
+        if ( elem->GetName() == "world" )
+        {
+            break;
+        }
+        elem = elem->GetParent();
+    }
+
+    assert( !names.empty() );
+    auto it = names.rbegin();
+    std::string elemPath = *it++;
+    while ( it != names.rend() )
+    {
+        elemPath += delim + *it++;
+    }
+
+    return elemPath;
+}
+
+inline std::string GetScopedName( sdf::ElementPtr elem, bool prependWorldName = false )
+{
+    return getElemPath( elem, "::", prependWorldName );
 }
 
 inline sdf::ElementPtr_V getChildren( sdf::ElementPtr sdf, const std::string & name )
@@ -344,6 +268,18 @@ sdf::ElementPtr getOnlyChild( sdf::ElementPtr sdf, const std::string & name )
     return child;
 }
 
+inline sdf::ElementPtr getOnlyChildOrCreate( sdf::ElementPtr sdf, const std::string & name )
+{
+    assert( sdf );
+
+    if ( !sdf->HasElement( name ) )
+    {
+        insertElement( sdf, newElement( name ) );
+    }
+
+    return getOnlyChild< true >( sdf, name );
+}
+
 inline void checkChildrenNames( sdf::ElementPtr sdf, const std::vector< std::string > & names )
 {
     assert( sdf );
@@ -358,9 +294,29 @@ inline void checkChildrenNames( sdf::ElementPtr sdf, const std::vector< std::str
     }
 }
 
+inline sdf::ElementPtr getRoFICoMPluginSdf( sdf::ElementPtr modelSdf )
+{
+    return getPluginSdf( modelSdf, "libroficomPlugin.so" );
+}
+
+inline sdf::ElementPtr getRoFIModulePluginSdf( sdf::ElementPtr modelSdf )
+{
+    return getPluginSdf( modelSdf, "librofiModulePlugin.so" );
+}
+
+inline sdf::ElementPtr getAttacherPluginSdf( sdf::ElementPtr worldSdf )
+{
+    return getPluginSdf( worldSdf, "libattacherPlugin.so" );
+}
+
+inline sdf::ElementPtr getDistributorPluginSdf( sdf::ElementPtr worldSdf )
+{
+    return getPluginSdf( worldSdf, "libdistributorPlugin.so" );
+}
+
 inline bool isRoFIModule( sdf::ElementPtr modelSdf )
 {
-    return modelSdf && getPluginSdf( modelSdf, "librofiModulePlugin.so" ) != nullptr;
+    return modelSdf && getRoFIModulePluginSdf( modelSdf ) != nullptr;
 }
 
 inline bool isRoFIModule( physics::ModelPtr model )
@@ -370,7 +326,7 @@ inline bool isRoFIModule( physics::ModelPtr model )
 
 inline bool isRoFICoM( sdf::ElementPtr modelSdf )
 {
-    return modelSdf && getPluginSdf( modelSdf, "libroficomPlugin.so" ) != nullptr;
+    return modelSdf && getRoFICoMPluginSdf( modelSdf ) != nullptr;
 }
 
 inline bool isRoFICoM( physics::ModelPtr model )
@@ -380,7 +336,7 @@ inline bool isRoFICoM( physics::ModelPtr model )
 
 inline bool hasAttacherPlugin( physics::WorldPtr world )
 {
-    return world && getPluginSdf( world->SDF(), "libattacherPlugin.so" ) != nullptr;
+    return world && getAttacherPluginSdf( world->SDF() ) != nullptr;
 }
 
 } // namespace gazebo

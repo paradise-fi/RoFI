@@ -16,6 +16,8 @@
 namespace gazebo
 {
 std::pair< std::string, std::string > sortNames( std::pair< std::string, std::string > names );
+rofi::messages::ConnectorState::Orientation readOrientation( const std::string & str );
+ignition::math::Quaterniond rotation( rofi::messages::ConnectorState::Orientation orientation );
 
 class AttacherPlugin : public WorldPlugin
 {
@@ -34,9 +36,13 @@ public:
     AttacherPlugin( const AttacherPlugin & ) = delete;
     AttacherPlugin & operator=( const AttacherPlugin & ) = delete;
 
-    void Load( physics::WorldPtr world, sdf::ElementPtr /*sdf*/ ) override;
+    void Load( physics::WorldPtr world, sdf::ElementPtr sdf ) override;
 
-    bool attach( StringPair modelNames, Orientation orientation );
+    void loadConnectionsFromSdf();
+    void addConnectionToSdf( StringPair modelNames, std::optional< Orientation > orientation );
+    void removeConnectionFromSdf( StringPair modelNames );
+
+    bool attach( StringPair modelNames, std::optional< Orientation > orientation );
     std::optional< Orientation > detach( StringPair modelNames );
 
     void sendAttachInfo( std::string modelName1,
@@ -80,6 +86,7 @@ private:
 
     physics::PhysicsEnginePtr _physics;
     physics::WorldPtr _world;
+    sdf::ElementPtr _sdf;
 };
 
 } // namespace gazebo
