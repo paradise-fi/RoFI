@@ -158,7 +158,7 @@ protected:
         limits->GetElement( "velocity" )->GetValue()->Get( maxSpeed );
         limits->GetElement( "effort" )->GetValue()->Get( maxEffort );
 
-        if ( minPosition >= maxPosition )
+        if ( minPosition > maxPosition )
         {
             gzerr << "Maximal position is not larger than minimal\n";
             throw std::runtime_error( "Maximal position is not larger than minimal" );
@@ -175,8 +175,9 @@ protected:
             maxEffort = std::numeric_limits< double >::max();
         }
 
-        assert( maxPosition - minPosition > 2 * getPositionPrecision() );
+        assert( maxPosition >= minPosition );
         assert( maxSpeed > getVelocityPrecision() );
+        assert( maxEffort > 0 );
     }
 };
 
