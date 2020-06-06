@@ -10,7 +10,7 @@ using UMP = UniversalModulePlugin;
 
 void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
 {
-    _model = model;
+    _model = std::move( model );
     gzmsg << "The UM plugin is attached to model [" << _model->GetScopedName() << "]\n";
 
     initCommunication();
@@ -156,18 +156,23 @@ void UMP::findAndInitJoints( sdf::ElementPtr pluginSdf )
                                          desiredPosition ) );
     };
 
+    checkChildrenNames( pluginSdf, { "controller" } );
     auto pidValuesVector = PIDLoader::loadControllerValues( pluginSdf );
     for ( auto & pidValues : pidValuesVector )
     {
-        if ( auto joint = _model->GetJoint( pidValues.jointName ) )
+        auto joint = _model->GetJoint( pidValues.jointName );
+        if ( !joint )
         {
-            assert( joint );
-            joints.emplace_back( std::move( joint ),
-                                 std::move( pidValues ),
-                                 std::bind( callback, joints.size(), std::placeholders::_1 ) );
-            assert( joints.back() );
-            assert( joints.back().joint->GetMsgType() == msgs::Joint::REVOLUTE );
+            gzerr << "No joint '" + pidValues.jointName + "' found in module\n";
+            continue;
         }
+
+        joints.emplace_back( std::move( joint ),
+                             nullptr,
+                             pidValues,
+                             std::bind( callback, joints.size(), std::placeholders::_1 ) );
+        assert( joints.back() );
+        assert( joints.back().joint->GetMsgType() == msgs::Joint::REVOLUTE );
     }
 }
 

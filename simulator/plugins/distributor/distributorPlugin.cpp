@@ -203,21 +203,9 @@ void RDP::onAddEntity( std::string added )
 
 sdf::ElementPtr RDP::createRofiElem( RofiId id, const std::string & name )
 {
-    auto rofiElem = std::make_shared< sdf::Element >();
-    rofiElem->SetName( "rofi" );
-
-    auto nameElem = std::make_shared< sdf::Element >();
-    nameElem->SetName( "name" );
-    nameElem->AddValue( "string", "", false );
-    nameElem->Set( name );
-    rofiElem->InsertElement( std::move( nameElem ) );
-
-    auto idElem = std::make_shared< sdf::Element >();
-    idElem->SetName( "id" );
-    idElem->AddValue( "string", "", false );
-    idElem->Set( id );
-    rofiElem->InsertElement( std::move( idElem ) );
-
+    auto rofiElem = newElement( "rofi" );
+    rofiElem->InsertElement( newElemWithValue( "name", name ) );
+    rofiElem->InsertElement( newElemWithValue( "id", id ) );
     return rofiElem;
 }
 

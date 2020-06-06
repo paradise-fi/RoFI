@@ -9,6 +9,7 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
+#include "jointData.hpp"
 #include "utils.hpp"
 
 #include <connectorCmd.pb.h>
@@ -164,7 +165,8 @@ public:
     struct ControllerValues
     {
         std::string jointName;
-        std::optional< bool > extend;
+        sdf::ElementPtr limitSdf;
+        bool extend = false;
     };
 
     static ControllerValues loadControllerValues( sdf::ElementPtr pluginSdf )
@@ -173,14 +175,16 @@ public:
 
         ControllerValues controllerValues;
 
-        checkChildrenNames( pluginSdf, { "joint", "extend" } );
+        checkChildrenNames( pluginSdf, { "joint", "extend", "limit" } );
         controllerValues.jointName =
                 getOnlyChild< true >( pluginSdf, "joint" )->Get< std::string >();
-        auto extendElem = getOnlyChild< false >( pluginSdf, "extend" );
-        if ( extendElem )
+
+        if ( !pluginSdf->HasElement( "extend" ) )
         {
-            controllerValues.extend = extendElem->Get< bool >();
+            pluginSdf->InsertElement( newElemWithValue( "extend", false ) );
         }
+        controllerValues.limitSdf = getOnlyChildOrCreate( pluginSdf, "limit" );
+        controllerValues.extend = getOnlyChild< true >( pluginSdf, "extend" )->Get< bool >();
 
         return controllerValues;
     }

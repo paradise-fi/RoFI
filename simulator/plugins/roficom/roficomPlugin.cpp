@@ -60,7 +60,7 @@ void RoFICoMPlugin::loadJoint( sdf::ElementPtr pluginSdf )
     auto joint = _model->GetJoint( controllerValues.jointName );
     if ( !joint )
     {
-        gzerr << "No joint with name '" << controllerValues.jointName << "' found in roficom\n";
+        gzerr << "No joint with name '" + controllerValues.jointName + "' found in roficom\n";
         throw std::runtime_error( "No joint with name '" + controllerValues.jointName
                                   + "' found in roficom" );
     }
@@ -72,7 +72,8 @@ void RoFICoMPlugin::loadJoint( sdf::ElementPtr pluginSdf )
 
     extendJoint = std::make_unique< JointData< RoficomController > >(
             std::move( joint ),
-            controllerValues.extend.value_or( false ),
+            controllerValues.limitSdf,
+            controllerValues.extend,
             [ this ]( Position pos ) { this->jointPositionReachedCallback( pos ); } );
 
     assert( extendJoint );

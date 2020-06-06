@@ -8,6 +8,7 @@
 #include <gazebo/gazebo.hh>
 #include <gazebo/physics/physics.hh>
 
+#include "jointData.hpp"
 #include "lorrisConnector.hpp"
 #include "pidLoader.hpp"
 
