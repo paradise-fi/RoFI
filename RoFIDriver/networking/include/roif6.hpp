@@ -1,5 +1,8 @@
 #pragma once
 
+#include "rofi_hal.hpp"
+#include "rtable.hpp"
+
 #include <lwip/def.h>
 #include <lwip/err.h>
 #include <lwip/netif.h>
@@ -20,15 +23,12 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <cassert>
 
-#include "dock.hpp"
-#include "rtable.hpp"
 
 
 namespace _rofi {
 	class RoIF6;
-
-static void ncb(netif* n, u8_t s) {}
 
 struct PhysAddr {
     PhysAddr( uint8_t *a ) {
@@ -53,20 +53,21 @@ static int _seqNum() {
 
 class Netif {
 public:
-	Netif( PhysAddr pAddr, gpio_num_t dockCs, spi_host_device_t spiHost, RoutingTable& rt )
-	: _pAddr( pAddr ), _dock( spiHost, dockCs ), _rtable( rt ) {
-		_dock.onReceive( [ this ]( Dock& dock, int contentType, PBuf&& data ) {
-			_onPacket( dock, contentType, std::move( data ) );
-		} );
-
+	Netif( PhysAddr pAddr, rofi::hal::Connector connector, RoutingTable& rt )
+	: _pAddr( pAddr ), _connector( connector ), _rtable( rt ) {
 		netif_add( &_netif, NULL, NULL, NULL, this, init, tcpip_input );
 
-		ip6_addr_t ip;
-		ip6addr_aton( "ff02::1f", &ip );
-		auto res = mld6_joingroup_netif( &_netif , &ip );
-		if ( res != ERR_OK )
-			std::cout << "Error - failed to join mld6 group: " << lwip_strerr( res ) << std::endl;
-		create_rrp_listener();
+        _connector.onPacket( [ this ]( rofi::hal::Connector c, uint16_t contentType, rofi::hal::PBuf pb ) {
+			_onPacket( c, contentType, std::move( pb ) );
+		} );
+
+		_connector.onConnectorEvent( [ this ]( rofi::hal::Connector, rofi::hal::ConnectorEvent e) {
+			if ( e == rofi::hal::ConnectorEvent::Connected )
+				sendRRP();
+		} );
+
+        create_rrp_listener();
+		setRRP();
 	}
 
 	void addAddress( Ip6Addr addr, s8_t i ) {
@@ -89,18 +90,17 @@ public:
 		n->input = netif_input;
 		n->linkoutput = linkOutput;
 		n->flags |= NETIF_FLAG_LINK_UP | NETIF_FLAG_IGMP | NETIF_FLAG_UP | NETIF_FLAG_MLD6;
-		nd6_set_cb( n, ncb );
 		return ERR_OK;
 	}
 
-	static err_t output( struct netif* n, struct pbuf *p, const ip6_addr_t *ipaddr) {
+	static err_t output( struct netif* n, struct pbuf *p, const ip6_addr_t* ) {
 		auto self = reinterpret_cast< Netif* >( n->state );
-		self->_send( PBuf::reference( p ) );
+		self->_send( rofi::hal::PBuf::reference( p ) );
 
 		return ERR_OK;
 	}
 
-	static err_t linkOutput( struct netif* n, struct pbuf *p ) {
+	static err_t linkOutput( struct netif*, struct pbuf* ) {
 		assert( false && "Link output should not be directly used" );
 		return ERR_OK;
 	}
@@ -112,8 +112,17 @@ public:
 		}
 	}
 
+	void sendRRP( RoutingTable::Command cmd = RoutingTable::Command::Call ) {
+		std::cout << "sending RRP\n";
+		ip_addr_t ip;
+	    ipaddr_aton( "ff02::1f", &ip );
+		auto rrp = _rtable.toSendWithoutIf( &_netif, cmd );
+		err_t res = raw_sendto_if_src( pcb, rrp.get(), &ip, &_netif, &_netif.ip6_addr[0] ); // use link-local address as source
+		std::cout << "RRP sent, result: " << lwip_strerr( res ) << "\n";
+	}
+
 private:
-    void _onPacket( Dock& dock, int contentType, PBuf&& packet ) {
+    void _onPacket( rofi::hal::Connector, uint16_t contentType, rofi::hal::PBuf&& packet ) {
         if ( contentType == 0 ) {
             if ( netif_is_up( &_netif ) ) {
                 _netif.input( packet.get(), &_netif );
@@ -122,31 +131,36 @@ private:
         }
     }
 
-    void _send( PBuf&& packet, int contentType = 0 ) {
-		_dock.sendBlob( contentType, std::move( packet ) );
+    void _send( rofi::hal::PBuf&& packet, int contentType = 0 ) {
+		_connector.send( contentType, std::move( packet ) );
     }
 
-	u8_t static onRRP(void *arg, struct raw_pcb *pcb, struct pbuf *p, const ip_addr_t *addr) {
+	u8_t static onRRP( void *arg, struct raw_pcb*, struct pbuf *p, const ip_addr_t* ) {
+		std::cout << "onRRP\n";
 		auto self = reinterpret_cast< Netif* >( arg );
 		if ( self ) {
 			p = pbuf_free_header( p, IP6_HLEN );
-			if ( self->_rtable.update( PBuf::own( p ), &self->_netif ) )
+			if ( self->_rtable.update( rofi::hal::PBuf::own( p ), &self->_netif ) )
 				self->sendRRP( self->_rtable.isStub() ? RoutingTable::Command::Stubby : RoutingTable::Command::Response );
+			self->_rtable.print();
 			return 1;
 		}
 		return 0;
 	}
 
-	void sendRRP( RoutingTable::Command cmd = RoutingTable::Command::Call ) {
-		ip_addr_t ip;
-	    ipaddr_aton( "ff02::1f", &ip );
-		auto rrp = _rtable.toSendWithoutIf( &_netif, cmd );
-		raw_sendto_if_src( pcb, rrp.get(), &ip, &_netif, &_netif.ip6_addr[0] ); // use link-local address as source
+
+	void setRRP() {
+		ip6_addr_t ip;
+		ip6addr_aton( "ff02::1f", &ip );
+        std::cout << "setting RRP\n";
+		auto res = mld6_joingroup_netif( &_netif , &ip );
+		if ( res != ERR_OK )
+			std::cout << "Error - failed to join mld6 group: " << lwip_strerr( res ) << std::endl;
 	}
 
 	void create_rrp_listener() {
 		pcb = raw_new_ip6( IP6_NEXTH_ICMP6 );
-		if ( !pcb ) 
+		if ( pcb == nullptr ) 
 			assert( false && "raw_new_ip6 failed, pcb is null!");
 		raw_bind_netif( pcb, &_netif );
 		raw_recv( pcb, onRRP, this );
@@ -154,7 +168,7 @@ private:
 
 	struct raw_pcb* pcb;
 	PhysAddr _pAddr;
-	Dock _dock;
+	rofi::hal::Connector _connector;
 	struct netif _netif;
 	RoutingTable& _rtable;
 
@@ -165,21 +179,19 @@ private:
 // RoFi Network Interface for IPv6
 class RoIF6 {
 public:
-	RoIF6( int id, PhysAddr pAddr, std::vector< gpio_num_t > dockCs, spi_host_device_t spiHost = HSPI_HOST )
-	: RoIF6( Ip6Addr( _createAddress( id ) ), 128, pAddr, dockCs, spiHost ) {}
-
-	RoIF6( Ip6Addr addr, uint8_t mask, PhysAddr pAddr, std::vector< gpio_num_t > dockCs, spi_host_device_t spiHost = HSPI_HOST )
-	{
-		netif_set_default( &_netif );
+	RoIF6( rofi::hal::RoFI rofi ) {
+		int id = rofi.getId();
 		netif_add( &_netif, NULL, NULL, NULL, this, init, tcpip_input );
-		dhcp_stop( &_netif );
-		addAddress( addr, mask );
+		addAddress( _createAddress( id ), 128 );
+		netif_set_default( &_netif );
+		// dhcp_stop( &_netif );
+		
+		int connectors = 2; //rofi.getDescriptor().connectorCount;
+		PhysAddr pAddr( id, id, id, id, id, id ); // ugly, I know
 
-		_netifs.reserve( dockCs.size() );
-		for ( auto cs : dockCs ) {
-			_netifs.emplace_back( pAddr, cs, spiHost, _rtable );
+		for ( int i = 1; i < connectors; i++ ) {
+			_netifs.emplace_back( pAddr, rofi.getConnector( i ), _rtable );
 		}
-
 	}
 
 	bool addAddress( const Ip6Addr& addr, uint8_t mask ) {
@@ -204,16 +216,24 @@ public:
 		}
 	}
 
+	void printTable() const {
+		_rtable.print();
+	}
+
 	void setUp() {
+        netif_set_up( &_netif );
 		for ( auto& n : _netifs ) {
 			n.setUp();
 		}
 
+		// CHECK THIS
+		/*
 		_mappingTimer = rtos::Timer( 6000 / portTICK_PERIOD_MS, rtos::Timer::Type::Periodic,
             [ this ]() {
                 _broadcastRTable();
             } );
         _mappingTimer.start();
+		*/
 	}
 
 	static err_t init( struct netif* roif ) {
@@ -223,33 +243,33 @@ public:
         roif->output_ip6 = output;
         roif->linkoutput = linkOutput;
         roif->flags |= NETIF_FLAG_LINK_UP | NETIF_FLAG_IGMP | NETIF_FLAG_UP | NETIF_FLAG_MLD6;
-		nd6_set_cb( roif, ncb );
+		// nd6_set_cb( roif, ncb );
         return ERR_OK;
     }
 
     static err_t output( struct netif* roif, struct pbuf *p, const ip6_addr_t *ipaddr ) {
         auto self = reinterpret_cast< RoIF6* >( roif->state );
-        self->_send( Ip6Addr( *ipaddr ), PBuf::reference( p ) );
+        self->_send( Ip6Addr( *ipaddr ), rofi::hal::PBuf::reference( p ) );
         return ERR_OK;
     }
 
-    static err_t linkOutput( struct netif* roif, struct pbuf *p ) {
+    static err_t linkOutput( struct netif*, struct pbuf* ) {
         assert( false && "Link output should not be directly used" );
         return ERR_OK;
     }
 
-private:
-	void _send( Ip6Addr addr, PBuf&& packet ) {
-		auto gw = ip_find_route( &addr );
-		if ( gw ) {
-			gw->output_ip6( gw, packet.get(), &addr );
-		}
-	}
-
-	void _broadcastRTable() {
+	void broadcastRTable() {
 		for ( auto& n : _netifs ) {
 			n.sendRRP();
 		}
+	}
+
+private:
+	void _send( Ip6Addr addr, rofi::hal::PBuf&& packet ) { /*
+		auto gw = ip_find_route( &addr );
+		if ( gw ) {
+			gw->output_ip6( gw, packet.get(), &addr );
+		} */
 	}
 
 	const char* _createAddress ( int id ) {
@@ -261,7 +281,7 @@ private:
 	RoutingTable _rtable;
 	netif _netif;
 	std::vector< Netif > _netifs;
-	rtos::Timer _mappingTimer;
+	//rtos::Timer _mappingTimer;
 };
 
 } // namespace _rofi

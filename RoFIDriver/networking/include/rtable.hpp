@@ -1,7 +1,7 @@
 #pragma once
 
 #include <lwip/netif.h>
-#include "networking.hpp"
+#include "from_routing.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -11,7 +11,20 @@
 #include <string>
 #include <numeric>
 
+#include <stdint.h>
+#include <cassert>
+
 namespace _rofi {
+
+template < typename T >
+T& as( void* p ) {
+    return *reinterpret_cast< T * >( p );
+}
+
+template < typename T >
+const T& as( const void* p ) {
+    return *reinterpret_cast< const T * >( p );
+}
 
 inline std::string netifToString( const struct netif* n ) {
 	std::ostringstream s;
@@ -38,6 +51,7 @@ struct Ip6Addr : ip6_addr_t {
 	Ip6Addr( ip6_addr&& other ) {
 		std::swap( addr, other.addr );
 	}
+
 	Ip6Addr( uint8_t mask ) {
 		mask_to_address( mask, this );
 	}
@@ -168,7 +182,7 @@ struct Record {
 	}
 
 	bool remove( const std::string& str ) {
-		int size = gws.size();
+		unsigned size = gws.size();
 		gws.erase( std::remove_if( gws.begin(), gws.end(), [ &str ]( const Gateway& g ) {
 			return strcmp( str.c_str(), g.gw_name ) == 0;
 		} ), gws.end() );
@@ -178,8 +192,8 @@ struct Record {
 
 	bool contains( const Record& r ) const {
 		if ( ip == r.ip && r.mask == mask ) {
-			for ( int i = 0; i < gws.size(); i++ ) {
-				for ( int j = 0; j < r.gws.size(); j++ ) {
+			for ( unsigned i = 0; i < gws.size(); i++ ) {
+				for ( unsigned j = 0; j < r.gws.size(); j++ ) {
 					if ( strcmp( gws[ i ].gw_name, r.gws[ j ].gw_name ) == 0 ) {
 						return true;
 					}
@@ -200,7 +214,7 @@ struct Record {
 
 	bool operator==( const Record& r ) const {
 		if ( ip == r.ip && r.mask == mask && gws.size() == r.gws.size() ) {
-			for ( int i = 0; i < gws.size(); i++ ) {
+			for ( unsigned i = 0; i < gws.size(); i++ ) {
 				if ( gws[i] != r.gws[i] ) {
 					return false;
 				}
@@ -216,7 +230,7 @@ struct Record {
 	}
 
 	bool hasSameNetwork( const Record& r ) const {
-		return (r.ip & Ip6Addr( r.mask ) ) == ( ip & Ip6Addr( mask ) );
+		return ( r.ip & Ip6Addr( r.mask ) ) == ( ip & Ip6Addr( mask ) );
 	}
 
 	const char* getGateway() const {
@@ -319,7 +333,7 @@ class RoutingTable {
 
 		_defaultGW.emplace_front( netifToString( out ).c_str(), 1 );
 		Ip6Addr ip("fe80::1"); // link-local address, never used -- should not be empty
-		set_default_gw( &ip, 0, _defaultGW.front().gw_name );
+		// set_default_gw( &ip, 0, _defaultGW.front().gw_name );
 	}
 
 	void makeStubby() {
@@ -334,11 +348,11 @@ class RoutingTable {
 
 	void destroyStub() {
 		_stub = false;
-		remove_default_gw();
+		// remove_default_gw();
 		_defaultGW.clear();
 	}
 
-	bool onUpdate( const PBuf& packet, struct netif* n ) {
+	bool onUpdate( const rofi::hal::PBuf& packet, struct netif* n ) {
         if ( packet.size() < 3 ) {
             return false;
 		}
@@ -410,14 +424,14 @@ public:
 		if ( found != _records.end() ) {
 			if ( *found != rec && !found->isLoopback() ) { // if it's loopback record, we don't care about other paths
 				if ( found->merge( rec ) ) { // order changed -> there is a better way => update lwip table
-					ip_update_route( &rec.ip, rec.mask, rec.getGateway() );
+					// ip_update_route( &rec.ip, rec.mask, rec.getGateway() );
 				}
 			} else {
 				return false;
 			}
 		} else {
 			addRec( rec );
-			ip_add_route( &rec.ip, rec.mask, rec.getGateway() );
+			// ip_add_route( &rec.ip, rec.mask, rec.getGateway() );
 		}
 
 		return true;
@@ -435,8 +449,8 @@ public:
 		if ( found != _records.end() ) {
 			if ( *found != rec ) {
 				if ( found->disjoin( rec ) ) {
-					ip_rm_route( &addr, mask, netifToString( n ).c_str() );
-					ip_add_route( &addr, mask, found->getGateway() );
+					// ip_rm_route( &addr, mask, netifToString( n ).c_str() );
+					// ip_add_route( &addr, mask, found->getGateway() );
 				}
 			} else {
 				_records.erase( found );
@@ -456,13 +470,13 @@ public:
 			return false;
 
 		std::string ifstr = netifToString( n );
-		int size = _records.size();
+		unsigned size = _records.size();
 
 		_records.erase( std::remove_if( _records.begin(), _records.end(), [ &ifstr ]( Record& r ) {
 			return r.remove( ifstr ) && !r.valid();
 		} ), _records.end() );
 
-		ip_rm_route_if( ifstr.c_str() );
+		// ip_rm_route_if( ifstr.c_str() );
 
 		return size != _records.size();
 	}
@@ -473,9 +487,9 @@ public:
 	 * \param n netif which is supposed to be source one -> skip records obtained on n
 	 * \return PBuf which can be directly sent
      */
-	PBuf toSendWithoutIf( const struct netif* n, Command cmd = Command::Call ) {
+	rofi::hal::PBuf toSendWithoutIf( const struct netif* n, Command cmd = Command::Call ) {
 		int records_size = _records.size() - recordsForIf( n );
-		auto p = PBuf::allocate( 3 +  Entry::size() * records_size );
+		auto p = rofi::hal::PBuf::allocate( 3 +  Entry::size() * records_size );
         as< Command >( p.payload() + 0 ) = cmd;
 
 		if ( isCall( cmd ) ) {
@@ -500,7 +514,7 @@ public:
 	/**
      * \brief Same as toSendWithoutIf but does not skip any record.
      */
-	PBuf toSend() {
+	rofi::hal::PBuf toSend() {
 		return toSendWithoutIf( nullptr );
 	}
 
@@ -511,15 +525,15 @@ public:
 	 * \param n netif which got the packet
 	 * \return bool if the response should be sent
      */
-	bool update( const PBuf& packet, struct netif* n ) {
+	bool update( const rofi::hal::PBuf& packet, struct netif* n ) {
 		bool res = onUpdate( packet, n );
-
+	/* Disable stub 
 		if ( isStub() ) {
 			makeStubby();			
 		} else if ( _stub && !isStub() ) {
 			destroyStub();
 		}
-
+	*/
 		return res;
     }
 
