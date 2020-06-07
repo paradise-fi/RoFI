@@ -3,3 +3,5 @@ cmake_minimum_required(VERSION 3.11)
 add_subdirectory(basic_joint_force)
 add_subdirectory(basic_joint_velocity)
 add_subdirectory(basic_joint_position)
+
+add_subdirectory(communication)
