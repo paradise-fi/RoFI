@@ -7,11 +7,13 @@ The development is currently in gazebo9. To install it, see
 Be sure to install both `gazebo9` and `libgazebo9-dev` if you want to be able to
 compile the project.
 
+The used LwIP library requires `doxygen` for compilation.
+
 ### Ubuntu/Debian
 For `gazebo9` on APT-based systems you can run:
 
 ```
-apt install apt install gazebo9 libgazebo9-dev
+apt install apt install gazebo9 libgazebo9-dev doxygen
 ```
 
 ## Compilation
