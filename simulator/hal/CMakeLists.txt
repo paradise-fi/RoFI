@@ -21,10 +21,11 @@ endif()
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../RoFIDriver/atoms ${CMAKE_CURRENT_BINARY_DIR}/atoms)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../RoFIDriver/lwip++ ${CMAKE_CURRENT_BINARY_DIR}/lwip++)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../RoFIDriver/networking ${CMAKE_CURRENT_BINARY_DIR}/networking)
 
 add_library(rofiHal SHARED rofi_hal.cpp)
 target_link_libraries(rofiHal PUBLIC rofiMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES} lwipcore)
-target_link_libraries(rofiHal PUBLIC atoms lwip++)
+target_link_libraries(rofiHal PUBLIC atoms lwip++ networking)
 target_include_directories(rofiHal INTERFACE ${CMAKE_CURRENT_LIST_DIR})
 
 

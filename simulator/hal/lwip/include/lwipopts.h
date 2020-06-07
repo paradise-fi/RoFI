@@ -45,6 +45,25 @@
 #include "lwipopts.h"
 #include "lwip/debug.h"
 
+#define LWIP_IPV6                 1
+#define LWIP_IPV6_FORWARD         0
+#define LWIP_IPV6_MLD             1
+#define LWIP_RAW                  1
+
+#define MEM_LIBC_MALLOC           1
+#define MEMP_MEM_MALLOC           1
+
+#define IPV6_FRAG_COPYHEADER      1
+
+#define LWIP_MULTICAST_TX_OPTIONS 1
+
+#define MEMP_NUM_MLD6_GROUP       16
+#define MEMP_NUM_IGMP_GROUP       16
+
+#define LWIP_DEBUG                LWIP_DBG_ON
+#define IP6_DEBUG                 LWIP_DBG_ON
+#define RAW_DEBUG                 LWIP_DBG_ON
+
 /*
    -----------------------------------------------
    ---------- Platform specific locking ----------
@@ -99,26 +118,26 @@
  * MEMP_NUM_RAW_PCB: Number of raw connection PCBs
  * (requires the LWIP_RAW option)
  */
-#define MEMP_NUM_RAW_PCB                4
+#define MEMP_NUM_RAW_PCB                16
 
 /**
  * MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One
  * per active UDP "connection".
  * (requires the LWIP_UDP option)
  */
-#define MEMP_NUM_UDP_PCB                4
+#define MEMP_NUM_UDP_PCB                16
 
 /**
  * MEMP_NUM_TCP_PCB: the number of simulatenously active TCP connections.
  * (requires the LWIP_TCP option)
  */
-#define MEMP_NUM_TCP_PCB                4
+#define MEMP_NUM_TCP_PCB                16
 
 /**
  * MEMP_NUM_TCP_PCB_LISTEN: the number of listening TCP connections.
  * (requires the LWIP_TCP option)
  */
-#define MEMP_NUM_TCP_PCB_LISTEN         4
+#define MEMP_NUM_TCP_PCB_LISTEN         16
 
 /**
  * MEMP_NUM_TCP_SEG: the number of simultaneously queued TCP segments.
@@ -185,7 +204,7 @@
 /**
  * LWIP_ARP==1: Enable ARP functionality.
  */
-#define LWIP_ARP                        1
+#define LWIP_ARP                        0
 
 /*
    --------------------------------
