@@ -23,4 +23,3 @@ template < typename T >
 const T& as( const void* p ) {
     return *reinterpret_cast< const T * >( p );
 }
-
