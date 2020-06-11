@@ -136,6 +136,10 @@ void RDP::onRequest( const RequestPtr & req )
 
     switch ( req->reqtype() )
     {
+        case DistributorReq::NO_REQ:
+        {
+            break;
+        }
         case DistributorReq::GET_INFO:
         {
             if ( req->rofiid() != 0 )

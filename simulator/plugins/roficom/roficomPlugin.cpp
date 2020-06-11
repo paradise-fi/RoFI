@@ -239,11 +239,7 @@ void RoFICoMPlugin::onConnectorCmd( const ConnectorCmdPtr & msg )
     switch ( msg->cmdtype() )
     {
         case ConnectorCmd::NO_CMD:
-        {
-            _pubRofi->Publish( getConnectorResp( ConnectorCmd::NO_CMD ), true );
-            gzmsg << "Sending response to NO_CMD message (" << _model->GetScopedName() << ")\n";
             break;
-        }
         case ConnectorCmd::GET_STATE:
         {
             auto msg = getConnectorResp( ConnectorCmd::GET_STATE );

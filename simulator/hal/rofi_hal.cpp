@@ -1038,34 +1038,22 @@ void RoFISim::onResponse( const RoFISim::RofiRespPtr & resp )
     switch ( resp->resptype() )
     {
         case msgs::RofiCmd::NO_CMD:
-        {
             break;
-        }
         case msgs::RofiCmd::JOINT_CMD:
-        {
             onJointResp( resp );
             break;
-        }
         case msgs::RofiCmd::CONNECTOR_CMD:
-        {
             onConnectorResp( resp );
             break;
-        }
         case msgs::RofiCmd::DESCRIPTION:
-        {
             onDescriptionResp( resp );
             break;
-        }
         case msgs::RofiCmd::WAIT_CMD:
-        {
             onWaitResp( resp );
             break;
-        }
         default:
-        {
             std::cerr << "Not recognized rofi cmd type. Ignoring...\n";
             break;
-        }
     }
 }
 

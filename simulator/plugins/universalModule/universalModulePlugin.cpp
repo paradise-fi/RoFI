@@ -233,7 +233,6 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
     switch ( msg->cmdtype() )
     {
         case RofiCmd::NO_CMD:
-            gzmsg << "Rofi no_cmd\n";
             break;
         case RofiCmd::JOINT_CMD:
             onJointCmd( msg->jointcmd() );
@@ -302,11 +301,7 @@ void UMP::onJointCmd( const rofi::messages::JointCmd & msg )
     switch ( msg.cmdtype() )
     {
         case JointCmd::NO_CMD:
-        {
-            _pub->Publish( getJointRofiResp( JointCmd::NO_CMD, joint, 0 ) );
-            gzmsg << "Joint no_cmd\n";
             break;
-        }
         case JointCmd::GET_CAPABILITIES:
         {
             auto & jointData = joints.at( joint );
