@@ -4,6 +4,11 @@
 
 #include "rofi_hal.hpp"
 
+
+using namespace rofi::hal;
+
+constexpr RoFI::Id remoteRofiId = 2;
+
 constexpr int connectorA = 1;
 constexpr int connectorB = 4;
 
@@ -11,10 +16,8 @@ constexpr bool useSetPosition = true;
 
 
 template < typename Callback >
-void setToLimitPos( rofi::hal::Joint joint, bool max, Callback && callback )
+void setToLimitPos( Joint joint, bool max, Callback && callback )
 {
-    using rofi::hal::Joint;
-
     double speed = joint.maxSpeed() / 4;
 
     if constexpr ( useSetPosition )
@@ -29,14 +32,12 @@ void setToLimitPos( rofi::hal::Joint joint, bool max, Callback && callback )
     else
     {
         joint.setVelocity( ( max ? 1 : -1 ) * speed );
-        rofi::hal::RoFI::wait( 4000, std::forward< Callback >( callback ) );
+        RoFI::wait( 4000, std::forward< Callback >( callback ) );
     }
 }
 
-void checkConnected( rofi::hal::Connector connector )
+void checkConnected( Connector connector )
 {
-    using namespace rofi::hal;
-
     RoFI::wait( 1000, [ connectorConst = std::move( connector ) ] {
         Connector connector = connectorConst;
         auto state = connector.getState();
@@ -58,13 +59,12 @@ void checkConnected( rofi::hal::Connector connector )
 
 void oneMove( int connector )
 {
-    using namespace rofi::hal;
     assert( connector == connectorA || connector == connectorB );
 
     int otherConnector = connector == connectorA ? connectorB : connectorA;
 
     RoFI localRofi = RoFI::getLocalRoFI();
-    RoFI remoteRofi = RoFI::getRemoteRoFI( 1 );
+    RoFI remoteRofi = RoFI::getRemoteRoFI( remoteRofiId );
 
     // Disconnect old connections
     std::cout << "Disconnect old\n";
@@ -122,14 +122,12 @@ void oneMove( int connector )
 
 int main()
 {
-    using namespace rofi::hal;
-
     std::cout << "Starting basic move example\n";
 
     RoFI localRofi = RoFI::getLocalRoFI();
-    RoFI remoteRofi = RoFI::getRemoteRoFI( 2 );
+    RoFI remoteRofi = RoFI::getRemoteRoFI( remoteRofiId );
 
-    assert( localRofi.getId() != 2 );
+    assert( localRofi.getId() != remoteRofiId );
 
     assert( localRofi.getDescriptor().connectorCount > connectorA );
     assert( localRofi.getDescriptor().connectorCount > connectorB );
