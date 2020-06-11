@@ -93,7 +93,7 @@ void RDP::loadRofis()
         }
 
         RofiId id = getNextId( model );
-        auto topic = getElemPath( model );
+        auto topic = "/gazebo/" + getElemPath( model );
 
         _sdf->InsertElement( createRofiElem( id, model->GetName() ) );
         _rofis.registerNewRofiId( id, topic );
@@ -197,7 +197,7 @@ void RDP::onAddEntity( std::string added )
     }
     RofiId id = _nextRofiId++;
 
-    auto topic = getElemPath( model );
+    auto topic = "/gazebo/" + getElemPath( model );
 
     _sdf->InsertElement( createRofiElem( id, model->GetName() ) );
     _rofis.registerNewRofiId( id, topic );

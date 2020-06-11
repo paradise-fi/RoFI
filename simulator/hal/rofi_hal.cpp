@@ -14,10 +14,8 @@
 #include <utility>
 
 #include <boost/uuid/random_generator.hpp>
-#include <gazebo/gazebo_client.hh>
-#include <gazebo/transport/transport.hh>
 
-#include "subscriberWrapper.hpp"
+#include "worker.hpp"
 
 #include <distributorReq.pb.h>
 #include <distributorResp.pb.h>
@@ -79,44 +77,6 @@ private:
     std::string _bytes;
 };
 
-class GazeboClientHolder
-{
-    GazeboClientHolder()
-    {
-        std::cerr << "Starting gazebo client" << std::endl;
-        gazebo::client::setup();
-    }
-
-public:
-    GazeboClientHolder( const GazeboClientHolder & ) = delete;
-    GazeboClientHolder & operator=( const GazeboClientHolder & ) = delete;
-
-    ~GazeboClientHolder()
-    {
-        gazebo::client::shutdown();
-        std::cerr << "Ending gazebo client" << std::endl;
-    }
-
-    static std::shared_ptr< GazeboClientHolder > get()
-    {
-        static std::mutex instanceMutex;
-        std::lock_guard< std::mutex > lock( instanceMutex );
-
-        static std::weak_ptr< GazeboClientHolder > weakInstance;
-        auto instance = weakInstance.lock();
-
-        if ( !instance )
-        {
-            instance = std::shared_ptr< GazeboClientHolder >( new GazeboClientHolder() );
-            weakInstance = instance;
-        }
-
-        assert( weakInstance.lock() == instance );
-        assert( instance );
-        return instance;
-    }
-};
-
 class ConnectorSim;
 class JointSim;
 
@@ -127,7 +87,7 @@ class RoFISim
         : public RoFI::Implementation
         , public std::enable_shared_from_this< RoFISim >
 {
-    explicit RoFISim( RoFI::Id id ) : _id( id ), _clientHolder( GazeboClientHolder::get() )
+    explicit RoFISim( RoFI::Id id ) : _id( id )
     {
     }
 
@@ -207,15 +167,13 @@ public:
         auto infoFuture = infoPromise.get_future();
         std::once_flag onceFlag;
 
-        auto sub = SubscriberWrapper< msgs::DistributorResp >(
-                node,
-                "~/distributor/response",
+        auto sub = GazeboWorker::get().subscribe(
                 [ & ]( auto resp ) { distributorRespLockOneCb( onceFlag, resp, infoPromise ); } );
 
         msgs::DistributorReq req;
         req.set_sessionid( SessionId::get().bytes() );
         req.set_reqtype( msgs::DistributorReq::LOCK_ONE );
-        node->Publish< msgs::DistributorReq >( "~/distributor/request", req );
+        GazeboWorker::get().publish( req );
 
         return infoFuture.get();
     }
@@ -229,18 +187,15 @@ public:
         auto infoFuture = infoPromise.get_future();
         std::once_flag onceFlag;
 
-        auto sub = SubscriberWrapper< msgs::DistributorResp >(
-                node,
-                "~/distributor/response",
-                [ & ]( auto resp ) {
-                    distributorRespTryLockCb( onceFlag, resp, infoPromise, rofiId );
-                } );
+        auto sub = GazeboWorker::get().subscribe( [ & ]( auto resp ) {
+            distributorRespTryLockCb( onceFlag, resp, infoPromise, rofiId );
+        } );
 
         msgs::DistributorReq req;
         req.set_sessionid( SessionId::get().bytes() );
         req.set_reqtype( msgs::DistributorReq::TRY_LOCK );
         req.set_rofiid( rofiId );
-        node->Publish< msgs::DistributorReq >( "~/distributor/request", req );
+        GazeboWorker::get().publish( req );
 
         return infoFuture.get();
     }
@@ -254,15 +209,13 @@ public:
         auto respFuture = respPromise.get_future();
         std::once_flag onceFlag;
 
-        auto sub = SubscriberWrapper< msgs::DistributorResp >(
-                node,
-                "~/distributor/response",
+        auto sub = GazeboWorker::get().subscribe(
                 [ & ]( auto resp ) { distributorRespGetInfoCb( onceFlag, resp, respPromise ); } );
 
         msgs::DistributorReq req;
         req.set_sessionid( SessionId::get().bytes() );
         req.set_reqtype( msgs::DistributorReq::GET_INFO );
-        node->Publish< msgs::DistributorReq >( "~/distributor/request", req );
+        GazeboWorker::get().publish( req );
 
         auto resp = respFuture.get();
 
@@ -282,12 +235,12 @@ public:
     {
         auto gazeboHolder = GazeboClientHolder::get();
 #ifdef LOCAL_ROFI_ID
-        auto info = tryLockLocal( LOCAL_ROFI_ID );
+        auto rofiId = tryLockLocal( LOCAL_ROFI_ID ).rofiid();
 #else
-        auto info = getNewLocalInfo();
+        auto rofiId = getNewLocalInfo().rofiid();
 #endif
-        auto newRoFI = std::shared_ptr< RoFISim >( new RoFISim( info.rofiid() ) );
-        newRoFI->init( info.topic() );
+        auto newRoFI = std::shared_ptr< RoFISim >( new RoFISim( rofiId ) );
+        newRoFI->init();
         return newRoFI;
     }
 
@@ -295,20 +248,14 @@ public:
     {
         auto gazeboHolder = GazeboClientHolder::get();
         auto newRoFI = std::shared_ptr< RoFISim >( new RoFISim( id ) );
-        newRoFI->init( getTopic( id ) );
+        newRoFI->init();
         return newRoFI;
     }
 
-    void init( std::string topic )
+    void init()
     {
-        _node = boost::make_shared< gazebo::transport::Node >();
-        _node->Init( topic );
-
-        _pub = _node->Advertise< msgs::RofiCmd >( "~/control" );
-        _sub = _node->Subscribe( "~/response", &RoFISim::onResponse, this );
-        assert( _pub );
+        _sub = GazeboWorker::get().subscribe( _id, [ this ]( auto resp ) { onResponse( resp ); } );
         assert( _sub );
-        _pub->WaitForConnection();
 
         std::cerr << "Waiting for description from RoFI " << _id << "...\n";
 
@@ -322,20 +269,22 @@ public:
 
     void initDescription()
     {
+        msgs::RofiCmd rofiCmd;
+        rofiCmd.set_rofiid( _id );
+        rofiCmd.set_cmdtype( msgs::RofiCmd::DESCRIPTION );
+        publish( rofiCmd );
+
         while ( !hasDescription )
         {
-            msgs::RofiCmd rofiCmd;
-            rofiCmd.set_rofiid( _id );
-            rofiCmd.set_cmdtype( msgs::RofiCmd::DESCRIPTION );
-            publish( rofiCmd );
-            std::this_thread::sleep_for( std::chrono::milliseconds( 200 ) );
+            std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
         }
     }
 
     void publish( const msgs::RofiCmd & msg )
     {
-        assert( _pub );
-        _pub->Publish( msg, true );
+        assert( msg.rofiid() == getId() );
+
+        GazeboWorker::get().publish( msg );
     }
 
     void initJoints();
@@ -389,10 +338,7 @@ private:
     std::mutex descriptionMutex;
     std::atomic_bool hasDescription = false;
 
-    const std::shared_ptr< GazeboClientHolder > _clientHolder;
-    gazebo::transport::NodePtr _node;
-    gazebo::transport::SubscriberPtr _sub;
-    gazebo::transport::PublisherPtr _pub;
+    SubscriberWrapperPtr< rofi::messages::RofiResp > _sub;
 
     std::vector< std::shared_ptr< JointSim > > _joints;
     std::vector< std::shared_ptr< ConnectorSim > > _connectors;

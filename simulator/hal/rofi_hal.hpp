@@ -171,7 +171,7 @@ public:
         _impl->onError( callback );
     }
 
-    Joint( std::shared_ptr< Implementation > impl ) : _impl( impl )
+    Joint( std::shared_ptr< Implementation > impl ) : _impl( std::move( impl ) )
     {
     }
 
@@ -323,7 +323,7 @@ public:
      */
     void disconnectPower( ConnectorLine line );
 
-    Connector( std::shared_ptr< Implementation > impl ) : _impl( impl )
+    Connector( std::shared_ptr< Implementation > impl ) : _impl( std::move( impl ) )
     {
     }
 
@@ -413,7 +413,7 @@ public:
     static void wait( int ms, std::function< void() > callback );
 
 private:
-    RoFI( std::shared_ptr< Implementation > impl ) : _impl( impl )
+    RoFI( std::shared_ptr< Implementation > impl ) : _impl( std::move( impl ) )
     {
     }
     std::shared_ptr< Implementation > _impl;

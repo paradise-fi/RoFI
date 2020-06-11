@@ -1,7 +1,11 @@
+#pragma once
+
 #include <cassert>
 #include <functional>
 
 #include <gazebo/transport/transport.hh>
+
+#include "gazeboClientHolder.hpp"
 
 
 template < typename Message >
@@ -13,18 +17,20 @@ public:
     SubscriberWrapper( gazebo::transport::NodePtr node,
                        const std::string & topic,
                        std::function< void( MessagePtr ) > callback )
-            : _callback( std::move( callback ) )
+            : _clientHolder( GazeboClientHolder::get() )
+            , _callback( std::move( callback ) )
+            , _node( std::move( node ) )
     {
-        if ( !node )
-        {
-            throw std::runtime_error( "empty node" );
-        }
         if ( !_callback )
         {
             throw std::runtime_error( "empty callback" );
         }
+        if ( !_node || !_node->IsInitialized() )
+        {
+            throw std::runtime_error( "node not initialized" );
+        }
 
-        _sub = node->Subscribe( topic, &SubscriberWrapper::onMsg, this );
+        _sub = _node->Subscribe( topic, &SubscriberWrapper::onMsg, this );
     }
 
     ~SubscriberWrapper()
@@ -43,6 +49,12 @@ private:
         _callback( msg );
     }
 
+    std::shared_ptr< GazeboClientHolder > _clientHolder;
+
     std::function< void( MessagePtr ) > _callback;
+    gazebo::transport::NodePtr _node;
     gazebo::transport::SubscriberPtr _sub;
 };
+
+template < typename Message >
+using SubscriberWrapperPtr = std::unique_ptr< SubscriberWrapper< Message > >;
