@@ -153,6 +153,7 @@ public:
             case RoFICoMPosition::Extended:
             {
                 assert( _jointData.joint->Position() >= _jointData.getMaxPosition() );
+                fixJoint();
                 break;
             }
             case RoFICoMPosition::Retracted:

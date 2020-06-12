@@ -114,7 +114,7 @@ sdf::ElementPtr newElemWithValue( const std::string & name, const T & value )
     return elem;
 }
 
-inline std::vector< sdf::ElementPtr > getChildren( sdf::ElementPtr sdf, const std::string & name )
+inline sdf::ElementPtr_V getChildren( sdf::ElementPtr sdf, const std::string & name )
 {
     assert( sdf );
 
@@ -123,7 +123,7 @@ inline std::vector< sdf::ElementPtr > getChildren( sdf::ElementPtr sdf, const st
         return {};
     }
 
-    std::vector< sdf::ElementPtr > children;
+    sdf::ElementPtr_V children;
     for ( auto child = sdf->GetElement( name ); child; child = child->GetNextElement( name ) )
     {
         children.push_back( child );
@@ -186,14 +186,24 @@ inline void checkChildrenNames( sdf::ElementPtr sdf, const std::vector< std::str
     }
 }
 
+inline bool isRoFIModule( sdf::ElementPtr modelSdf )
+{
+    return modelSdf && getPluginSdf( modelSdf, "libuniversalModulePlugin.so" ) != nullptr;
+}
+
 inline bool isRoFIModule( physics::ModelPtr model )
 {
-    return model && getPluginSdf( model->GetSDF(), "libuniversalModulePlugin.so" ) != nullptr;
+    return model && isRoFIModule( model->GetSDF() );
 }
 
 inline bool isRoFICoM( physics::ModelPtr model )
 {
     return model && getPluginSdf( model->GetSDF(), "libroficomPlugin.so" ) != nullptr;
+}
+
+inline bool isRoFICoM( sdf::ElementPtr modelSdf )
+{
+    return modelSdf && isRoFICoM( modelSdf );
 }
 
 inline bool hasAttacherPlugin( physics::WorldPtr world )
