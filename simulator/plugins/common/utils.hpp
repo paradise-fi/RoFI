@@ -96,7 +96,7 @@ inline sdf::ElementPtr newElement( const std::string & name )
 }
 
 template < typename T >
-void setValue( sdf::ElementPtr elem, T value )
+void setValue( sdf::ElementPtr elem, const T & value )
 {
     if ( !elem->GetValue() )
     {
@@ -106,7 +106,7 @@ void setValue( sdf::ElementPtr elem, T value )
 }
 
 template < typename T >
-sdf::ElementPtr newElemWithValue( const std::string & name, T value )
+sdf::ElementPtr newElemWithValue( const std::string & name, const T & value )
 {
     auto elem = newElement( name );
     elem->AddValue( "string", "", false );

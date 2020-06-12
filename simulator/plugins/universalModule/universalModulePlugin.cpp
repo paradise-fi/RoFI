@@ -11,11 +11,15 @@ using UMP = UniversalModulePlugin;
 void UMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
 {
     _model = std::move( model );
+    _sdf = std::move( sdf );
+    assert( _model );
+    assert( _sdf );
+
     gzmsg << "The UM plugin is attached to model [" << _model->GetScopedName() << "]\n";
 
     initCommunication();
 
-    findAndInitJoints( sdf );
+    findAndInitJoints();
     findAndInitConnectors();
 
     onUpdateConnection =
@@ -132,8 +136,10 @@ void UMP::clearConnectors()
     connectors.clear();
 }
 
-void UMP::findAndInitJoints( sdf::ElementPtr pluginSdf )
+void UMP::findAndInitJoints()
 {
+    assert( _sdf );
+
     if ( !_node || !_node->IsInitialized() )
     {
         gzerr << "Init communication before adding joints\n";
@@ -141,12 +147,6 @@ void UMP::findAndInitJoints( sdf::ElementPtr pluginSdf )
     }
 
     joints.clear();
-
-    if ( !pluginSdf )
-    {
-        gzwarn << "No plugin sdf found in module. Assuming no controllers...\n";
-        return;
-    }
 
     const auto callback = [ this ]( int joint, double desiredPosition ) {
         gzmsg << "Returning position reached of joint " << joint << ": " << desiredPosition << "\n";
@@ -156,8 +156,8 @@ void UMP::findAndInitJoints( sdf::ElementPtr pluginSdf )
                                          desiredPosition ) );
     };
 
-    checkChildrenNames( pluginSdf, { "controller" } );
-    auto pidValuesVector = PIDLoader::loadControllerValues( pluginSdf );
+    checkChildrenNames( _sdf, { "controller" } );
+    auto pidValuesVector = PIDLoader::loadControllerValues( _sdf );
     for ( auto & pidValues : pidValuesVector )
     {
         auto joint = _model->GetJoint( pidValues.jointName );
@@ -429,17 +429,31 @@ void UMP::onUpdate()
 
 void UMP::setVelocity( int joint, double velocity )
 {
-    joints.at( joint ).controller.setTargetVelocity( velocity );
+    auto jointData = joints.at( joint );
+    auto targets = PIDLoader::InitTargets::newVelocity( jointData.joint->GetName(), velocity );
+
+    PIDLoader::updateInitTargetsSdf( _sdf, targets );
+    jointData.controller.setTargetVelocity( velocity );
 }
 
 void UMP::setTorque( int joint, double torque )
 {
-    joints.at( joint ).controller.setTargetForce( torque );
+    auto jointData = joints.at( joint );
+    auto targets = PIDLoader::InitTargets::newForce( jointData.joint->GetName(), torque );
+
+    PIDLoader::updateInitTargetsSdf( _sdf, targets );
+    jointData.controller.setTargetForce( torque );
 }
 
 void UMP::setPositionWithSpeed( int joint, double desiredPosition, double speed )
 {
-    joints.at( joint ).controller.setTargetPositionWithSpeed( desiredPosition, speed );
+    using InitTargets = PIDLoader::InitTargets;
+
+    auto jointData = joints.at( joint );
+    auto targets = InitTargets::newPosition( jointData.joint->GetName(), desiredPosition, speed );
+
+    PIDLoader::updateInitTargetsSdf( _sdf, targets );
+    jointData.controller.setTargetPositionWithSpeed( desiredPosition, speed );
 }
 
 GZ_REGISTER_MODEL_PLUGIN( UniversalModulePlugin )

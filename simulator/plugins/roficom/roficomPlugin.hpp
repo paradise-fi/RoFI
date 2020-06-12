@@ -40,7 +40,7 @@ public:
     }
 
     void Load( physics::ModelPtr model, sdf::ElementPtr sdf ) override;
-    void loadJoint( sdf::ElementPtr pluginSdf );
+    void loadJoint();
 
     void connect();
     void disconnect();
@@ -72,6 +72,7 @@ private:
     void removePosition();
 
     physics::ModelPtr _model;
+    sdf::ElementPtr _sdf;
 
     transport::NodePtr _node;
     transport::PublisherPtr _pubRofi;

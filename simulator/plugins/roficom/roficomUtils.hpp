@@ -125,12 +125,12 @@ class RoficomController
     }
 
 public:
-    template < typename OnPositionReachedCallback >
     RoficomController( JointDataBase & jointData,
-                       bool extended,
-                       OnPositionReachedCallback && onPositionReached )
+                       RoFICoMPosition initPosition,
+                       std::function< void( RoFICoMPosition ) > onPositionReached )
             : _jointData( jointData )
-            , _onPositionReached( std::forward< OnPositionReachedCallback >( onPositionReached ) )
+            , _position( initPosition )
+            , _onPositionReached( std::move( onPositionReached ) )
     {
         assert( _jointData );
         assert( _jointData.joint );
@@ -139,13 +139,25 @@ public:
         _connection = event::Events::ConnectBeforePhysicsUpdate(
                 std::bind( &RoficomController::onPhysicsUpdate, this ) );
 
-        if ( extended )
+        switch ( _position )
         {
-            extend();
-        }
-        else
-        {
-            retract();
+            case RoFICoMPosition::Extending:
+            case RoFICoMPosition::Retracting:
+            {
+                looseJoint();
+                break;
+            }
+            case RoFICoMPosition::Extended:
+            {
+                assert( _jointData.joint->Position() >= _jointData.getMaxPosition() );
+                break;
+            }
+            case RoFICoMPosition::Retracted:
+            {
+                assert( _jointData.joint->Position() <= _jointData.getMinPosition() );
+                fixJoint();
+                break;
+            }
         }
     }
 
@@ -167,6 +179,27 @@ public:
         std::string jointName;
         sdf::ElementPtr limitSdf;
         bool extend = false;
+        bool positionReached = false;
+
+        RoFICoMPosition position() const
+        {
+            if ( positionReached )
+            {
+                if ( extend )
+                {
+                    return RoFICoMPosition::Extended;
+                }
+                return RoFICoMPosition::Retracted;
+            }
+            else
+            {
+                if ( extend )
+                {
+                    return RoFICoMPosition::Extending;
+                }
+                return RoFICoMPosition::Retracting;
+            }
+        }
     };
 
     static ControllerValues loadControllerValues( sdf::ElementPtr pluginSdf )
@@ -175,7 +208,7 @@ public:
 
         ControllerValues controllerValues;
 
-        checkChildrenNames( pluginSdf, { "joint", "extend", "limit" } );
+        checkChildrenNames( pluginSdf, { "joint", "extend", "position_reached", "limit" } );
         controllerValues.jointName =
                 getOnlyChild< true >( pluginSdf, "joint" )->Get< std::string >();
 
@@ -183,8 +216,15 @@ public:
         {
             pluginSdf->InsertElement( newElemWithValue( "extend", false ) );
         }
+        if ( !pluginSdf->HasElement( "position_reached" ) )
+        {
+            pluginSdf->InsertElement( newElemWithValue( "position_reached", false ) );
+        }
+
         controllerValues.limitSdf = getOnlyChildOrCreate( pluginSdf, "limit" );
         controllerValues.extend = getOnlyChild< true >( pluginSdf, "extend" )->Get< bool >();
+        controllerValues.positionReached =
+                getOnlyChild< true >( pluginSdf, "position_reached" )->Get< bool >();
 
         return controllerValues;
     }

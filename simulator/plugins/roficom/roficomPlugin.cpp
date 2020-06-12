@@ -11,7 +11,10 @@ std::map< const physics::Model *, RoFICoMPlugin::Position > RoFICoMPlugin::posit
 void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
 {
     _model = std::move( model );
+    _sdf = std::move( sdf );
     assert( _model );
+    assert( _sdf );
+
     gzmsg << "The RoFICoM plugin is attached to model [" << _model->GetScopedName() << "]\n";
 
     if ( !hasAttacherPlugin( _model->GetWorld() ) )
@@ -20,10 +23,8 @@ void RoFICoMPlugin::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
               << "Connecting roficoms will not work.\n";
     }
 
-    loadJoint( sdf );
+    loadJoint();
     assert( extendJoint && *extendJoint );
-
-    updatePosition( Position::Retracted );
 
     initCommunication();
     assert( _node );
@@ -47,15 +48,11 @@ void RoFICoMPlugin::jointPositionReachedCallback( Position newPosition )
     }
 }
 
-void RoFICoMPlugin::loadJoint( sdf::ElementPtr pluginSdf )
+void RoFICoMPlugin::loadJoint()
 {
-    if ( !pluginSdf )
-    {
-        gzerr << "No plugin sdf found in roficom\n";
-        throw std::runtime_error( "No plugin sdf found in roficom" );
-    }
+    assert( _sdf );
 
-    auto controllerValues = RoficomController::loadControllerValues( pluginSdf );
+    auto controllerValues = RoficomController::loadControllerValues( _sdf );
 
     auto joint = _model->GetJoint( controllerValues.jointName );
     if ( !joint )
@@ -70,10 +67,11 @@ void RoFICoMPlugin::loadJoint( sdf::ElementPtr pluginSdf )
         throw std::runtime_error( "Controlled joint in roficom has to be prismatic" );
     }
 
+    updatePosition( controllerValues.position() );
     extendJoint = std::make_unique< JointData< RoficomController > >(
             std::move( joint ),
             controllerValues.limitSdf,
-            controllerValues.extend,
+            controllerValues.position(),
             [ this ]( Position pos ) { this->jointPositionReachedCallback( pos ); } );
 
     assert( extendJoint );
@@ -197,8 +195,15 @@ std::optional< RoFICoMPlugin::Orientation > RoFICoMPlugin::getOrientation() cons
 void RoFICoMPlugin::updatePosition( Position newPosition )
 {
     assert( _model );
+    assert( _sdf );
+
+    bool extend = newPosition == Position::Extending || newPosition == Position::Extended;
+    bool positionReached = newPosition == Position::Retracted || newPosition == Position::Extended;
 
     std::lock_guard< std::recursive_mutex > lock( positionMutex );
+
+    getOnlyChild< true >( _sdf, "extend" )->Set( extend );
+    getOnlyChild< true >( _sdf, "position_reached" )->Set( positionReached );
 
     positionsMap[ _model.get() ] = newPosition;
 }

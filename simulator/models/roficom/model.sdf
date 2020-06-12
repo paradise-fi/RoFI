@@ -107,6 +107,7 @@
         <plugin name="roficom" filename="libroficomPlugin.so">
             <joint>extendJoint</joint>
             <extend>false</extend>
+            <position_reached>false</position_reached>
         </plugin>
     </model>
 </sdf>
