@@ -9,10 +9,10 @@
 #include <gazebo/gazebo_client.hh>
 #include <gazebo/transport/transport.hh>
 
-#include "concurrentQueue.hpp"
-#include "gazeboClientHolder.hpp"
+#include "concurrent_queue.hpp"
+#include "gazebo_client_holder.hpp"
 #include "rofi_hal.hpp"
-#include "subscriberWrapper.hpp"
+#include "subscriber_wrapper.hpp"
 
 #include <distributorReq.pb.h>
 #include <distributorResp.pb.h>

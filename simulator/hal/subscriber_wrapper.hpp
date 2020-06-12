@@ -5,7 +5,7 @@
 
 #include <gazebo/transport/transport.hh>
 
-#include "gazeboClientHolder.hpp"
+#include "gazebo_client_holder.hpp"
 
 
 template < typename Message >
