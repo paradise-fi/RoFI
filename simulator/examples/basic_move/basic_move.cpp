@@ -9,8 +9,8 @@ using namespace rofi::hal;
 
 constexpr RoFI::Id remoteRofiId = 2;
 
-constexpr int connectorA = 1;
-constexpr int connectorB = 4;
+constexpr int connectorA = 2;
+constexpr int connectorB = 5;
 
 constexpr bool useSetPosition = true;
 
@@ -92,16 +92,16 @@ void oneMove( int connector )
 
         bool toMax = connector == connectorA;
 
-        setToLimitPos( localRofi.getJoint( 1 ), toMax, [ &localPromise1 ] {
+        setToLimitPos( localRofi.getJoint( 0 ), toMax, [ &localPromise1 ] {
             localPromise1.set_value();
         } );
-        setToLimitPos( localRofi.getJoint( 2 ), toMax, [ &localPromise2 ] {
+        setToLimitPos( localRofi.getJoint( 1 ), toMax, [ &localPromise2 ] {
             localPromise2.set_value();
         } );
-        setToLimitPos( remoteRofi.getJoint( 1 ), toMax, [ &remotePromise1 ] {
+        setToLimitPos( remoteRofi.getJoint( 0 ), toMax, [ &remotePromise1 ] {
             remotePromise1.set_value();
         } );
-        setToLimitPos( remoteRofi.getJoint( 2 ), toMax, [ &remotePromise2 ] {
+        setToLimitPos( remoteRofi.getJoint( 1 ), toMax, [ &remotePromise2 ] {
             remotePromise2.set_value();
         } );
 

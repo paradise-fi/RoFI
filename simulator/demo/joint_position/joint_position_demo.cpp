@@ -67,12 +67,12 @@ int main()
         using std::to_string;
         const std::string rofiName = "RoFI " + to_string( rofi.getId() ) + ": ";
         auto moveSequence =
-                printStr( rofiName + "1\n" ) >> setPosition( rofi.getJoint( 0 ), 3.14 )
-                >> printStr( rofiName + "2\n" ) >> setPosition( rofi.getJoint( 1 ), deg90 )
-                >> printStr( rofiName + "3\n" ) >> setPosition( rofi.getJoint( 2 ), deg90 )
-                >> printStr( rofiName + "4\n" ) >> setPosition( rofi.getJoint( 0 ), 0 )
-                >> printStr( rofiName + "5\n" ) >> setPosition( rofi.getJoint( 1 ), -deg90 )
-                >> printStr( rofiName + "6\n" ) >> setPosition( rofi.getJoint( 2 ), -deg90 );
+                printStr( rofiName + "1\n" ) >> setPosition( rofi.getJoint( 2 ), 3.14 )
+                >> printStr( rofiName + "2\n" ) >> setPosition( rofi.getJoint( 0 ), deg90 )
+                >> printStr( rofiName + "3\n" ) >> setPosition( rofi.getJoint( 1 ), deg90 )
+                >> printStr( rofiName + "4\n" ) >> setPosition( rofi.getJoint( 2 ), 0 )
+                >> printStr( rofiName + "5\n" ) >> setPosition( rofi.getJoint( 0 ), -deg90 )
+                >> printStr( rofiName + "6\n" ) >> setPosition( rofi.getJoint( 1 ), -deg90 );
         std::thread( loop( moveSequence ) ).detach();
     };
 

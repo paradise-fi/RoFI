@@ -17,8 +17,7 @@ int main()
     RoFI localRofi = RoFI::getLocalRoFI();
     int jointCount = localRofi.getDescriptor().jointCount;
     assert( jointCount > 0 );
-    std::cout << "Using joint number " << ( jointCount >= 2 ? 1 : 0 ) << "\n";
-    Joint joint = localRofi.getJoint( jointCount >= 2 ? 1 : 0 );
+    Joint joint = localRofi.getJoint( 0 );
 
     const auto minPos = std::clamp( joint.minPosition(), -pi, 0.f );
     const auto maxPos = std::clamp( joint.maxPosition(), 0.f, pi );

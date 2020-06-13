@@ -11,18 +11,18 @@ int main()
     std::cout << "Starting basic force example\n";
 
     RoFI localRofi = RoFI::getLocalRoFI();
-    auto torque = 0.5 * localRofi.getJoint( 0 ).maxTorque();
+    auto torque = 0.5 * localRofi.getJoint( 2 ).maxTorque();
 
     while ( true )
     {
         std::promise< void > endCyclePromise;
         auto endCycleFuture = endCyclePromise.get_future();
 
-        localRofi.getJoint( 0 ).setTorque( torque );
+        localRofi.getJoint( 2 ).setTorque( torque );
         RoFI::wait( 1000, [ & ] {
-            localRofi.getJoint( 0 ).setTorque( -torque );
+            localRofi.getJoint( 2 ).setTorque( -torque );
             RoFI::wait( 1000, [ & ] {
-                localRofi.getJoint( 0 ).setTorque( 0 );
+                localRofi.getJoint( 2 ).setTorque( 0 );
                 RoFI::wait( 1000, [ & ] { endCyclePromise.set_value(); } );
             } );
         } );

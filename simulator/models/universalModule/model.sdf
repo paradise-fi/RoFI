@@ -210,15 +210,15 @@
             </include>
         </model>
 
-        <model name="connectorAminusZ">
-            <pose>0 -0.092 0 1.57 -0 0</pose>
+        <model name="connectorAminusX">
+            <pose>-0.042 -0.05 0 0 -1.57 0</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
         </model>
 
-        <model name="connectorAminusX">
-            <pose>-0.042 -0.05 0 0 -1.57 0</pose>
+        <model name="connectorAminusZ">
+            <pose>0 -0.092 0 1.57 -0 0</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
@@ -231,15 +231,15 @@
             </include>
         </model>
 
-        <model name="connectorBminusZ">
-            <pose>0 0.092 0.0015 -1.57 -0 0</pose>
+        <model name="connectorBminusX">
+            <pose>0.042 0.050 0.0015 0 1.57 0</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
         </model>
 
-        <model name="connectorBminusX">
-            <pose>0.042 0.050 0.0015 0 1.57 0</pose>
+        <model name="connectorBminusZ">
+            <pose>0 0.092 0.0015 -1.57 -0 0</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
@@ -309,13 +309,13 @@
             <parent>shoeA</parent>
         </joint>
 
-        <joint name="connectorAminusZ" type="fixed">
-            <child>connectorAminusZ::RoFICoM::outer</child>
+        <joint name="connectorAminusX" type="fixed">
+            <child>connectorAminusX::RoFICoM::outer</child>
             <parent>shoeA</parent>
         </joint>
 
-        <joint name="connectorAminusX" type="fixed">
-            <child>connectorAminusX::RoFICoM::outer</child>
+        <joint name="connectorAminusZ" type="fixed">
+            <child>connectorAminusZ::RoFICoM::outer</child>
             <parent>shoeA</parent>
         </joint>
 
@@ -324,28 +324,26 @@
             <parent>shoeB</parent>
         </joint>
 
-        <joint name="connectorBminusZ" type="fixed">
-            <child>connectorBminusZ::RoFICoM::outer</child>
-            <parent>shoeB</parent>
-        </joint>
-
         <joint name="connectorBminusX" type="fixed">
             <child>connectorBminusX::RoFICoM::outer</child>
             <parent>shoeB</parent>
         </joint>
 
+        <joint name="connectorBminusZ" type="fixed">
+            <child>connectorBminusZ::RoFICoM::outer</child>
+            <parent>shoeB</parent>
+        </joint>
+
         <plugin name="control" filename="libuniversalModulePlugin.so">
             <controller>
-                <joint>bodyRev</joint>
                 <joint>shoeARev</joint>
                 <joint>shoeBRev</joint>
+                <joint>bodyRev</joint>
                 <velocity>
                     <pid_gains>0.05 1 0</pid_gains>
-                    <init_target>1</init_target>
                 </velocity>
                 <position>
                     <pid_gains>15 30 1</pid_gains>
-                    <init_target>0</init_target>
                 </position>
             </controller>
         </plugin>
