@@ -55,7 +55,6 @@ class Netif {
 public:
 	Netif( PhysAddr pAddr, rofi::hal::Connector connector, RoutingTable& rt )
 	: _pAddr( pAddr ), _connector( connector ), _rtable( rt ) {
-		netif_add( &_netif, NULL, NULL, NULL, this, init, tcpip_input );
 
         _connector.onPacket( [ this ]( rofi::hal::Connector c, uint16_t contentType, rofi::hal::PBuf pb ) {
 			_onPacket( c, contentType, std::move( pb ) );
@@ -66,8 +65,8 @@ public:
 				sendRRP();
 		} );
 
-        create_rrp_listener();
-		setRRP();
+        netif_add( &_netif, NULL, NULL, NULL, this, init, tcpip_input );
+        setRRP();
 	}
 
 	void addAddress( Ip6Addr addr, s8_t i ) {
@@ -89,7 +88,7 @@ public:
 		n->output_ip6 = output;
 		n->input = netif_input;
 		n->linkoutput = linkOutput;
-		n->flags |= NETIF_FLAG_LINK_UP | NETIF_FLAG_IGMP | NETIF_FLAG_UP | NETIF_FLAG_MLD6;
+		n->flags |= NETIF_FLAG_IGMP | NETIF_FLAG_MLD6;
 		return ERR_OK;
 	}
 
@@ -113,12 +112,10 @@ public:
 	}
 
 	void sendRRP( RoutingTable::Command cmd = RoutingTable::Command::Call ) {
-		std::cout << "sending RRP\n";
 		ip_addr_t ip;
 	    ipaddr_aton( "ff02::1f", &ip );
 		auto rrp = _rtable.toSendWithoutIf( &_netif, cmd );
-		err_t res = raw_sendto_if_src( pcb, rrp.get(), &ip, &_netif, &_netif.ip6_addr[0] ); // use link-local address as source
-		std::cout << "RRP sent, result: " << lwip_strerr( res ) << "\n";
+		raw_sendto_if_src( pcb, rrp.get(), &ip, &_netif, &_netif.ip6_addr[0] ); // use link-local address as source
 	}
 
 private:
@@ -150,9 +147,9 @@ private:
 
 
 	void setRRP() {
+        create_rrp_listener();
 		ip6_addr_t ip;
 		ip6addr_aton( "ff02::1f", &ip );
-        std::cout << "setting RRP\n";
 		auto res = mld6_joingroup_netif( &_netif , &ip );
 		if ( res != ERR_OK )
 			std::cout << "Error - failed to join mld6 group: " << lwip_strerr( res ) << std::endl;
@@ -166,7 +163,7 @@ private:
 		raw_recv( pcb, onRRP, this );
 	}
 
-	struct raw_pcb* pcb;
+	struct raw_pcb* pcb = nullptr;
 	PhysAddr _pAddr;
 	rofi::hal::Connector _connector;
 	struct netif _netif;
@@ -186,11 +183,12 @@ public:
 		netif_set_default( &_netif );
 		// dhcp_stop( &_netif );
 		
-		int connectors = 2; //rofi.getDescriptor().connectorCount;
+		int connectors = rofi.getDescriptor().connectorCount;
 		PhysAddr pAddr( id, id, id, id, id, id ); // ugly, I know
 
-		for ( int i = 1; i < connectors; i++ ) {
-			_netifs.emplace_back( pAddr, rofi.getConnector( i ), _rtable );
+        _netifs.reserve( connectors );
+		for ( int i = 0; i < connectors; i++ ) {
+		    _netifs.emplace_back( pAddr, rofi.getConnector( i ), _rtable );
 		}
 	}
 
@@ -225,15 +223,6 @@ public:
 		for ( auto& n : _netifs ) {
 			n.setUp();
 		}
-
-		// CHECK THIS
-		/*
-		_mappingTimer = rtos::Timer( 6000 / portTICK_PERIOD_MS, rtos::Timer::Type::Periodic,
-            [ this ]() {
-                _broadcastRTable();
-            } );
-        _mappingTimer.start();
-		*/
 	}
 
 	static err_t init( struct netif* roif ) {
@@ -281,7 +270,6 @@ private:
 	RoutingTable _rtable;
 	netif _netif;
 	std::vector< Netif > _netifs;
-	//rtos::Timer _mappingTimer;
 };
 
 } // namespace _rofi
