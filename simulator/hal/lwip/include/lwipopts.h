@@ -46,23 +46,20 @@
 #include "lwip/debug.h"
 
 #define LWIP_IPV6                 1
-#define LWIP_IPV6_FORWARD         0
+#define LWIP_IPV6_FORWARD         1
 #define LWIP_IPV6_MLD             1
 #define LWIP_RAW                  1
 
-#define MEM_LIBC_MALLOC           1
-#define MEMP_MEM_MALLOC           1
+// change if needed
+#define MEM_LIBC_MALLOC           0
+#define MEMP_MEM_MALLOC           0
 
 #define IPV6_FRAG_COPYHEADER      1
-
 #define LWIP_MULTICAST_TX_OPTIONS 1
 
 #define MEMP_NUM_MLD6_GROUP       16
 #define MEMP_NUM_IGMP_GROUP       16
 
-#define LWIP_DEBUG                LWIP_DBG_ON
-#define IP6_DEBUG                 LWIP_DBG_ON
-#define RAW_DEBUG                 LWIP_DBG_ON
 
 /*
    -----------------------------------------------
@@ -327,7 +324,7 @@
 /**
  * LWIP_IGMP==1: Turn on IGMP module.
  */
-#define LWIP_IGMP                       0
+#define LWIP_IGMP                       1
 
 /*
    ----------------------------------
