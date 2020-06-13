@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.11)
 
 FetchContent_Declare(
   lwip
-  GIT_REPOSITORY git@github.com:lwip-tcpip/lwip.git
-  GIT_TAG        159e31b
+  GIT_REPOSITORY git@github.com:jajik/lwip.git
+  GIT_TAG        3286f1f
 )
 FetchContent_GetProperties(lwip)
 if(NOT lwip_POPULATED)

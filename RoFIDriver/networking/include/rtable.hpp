@@ -1,7 +1,6 @@
 #pragma once
 
 #include <lwip/netif.h>
-#include "from_routing.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -10,6 +9,7 @@
 #include <cstring>
 #include <string>
 #include <numeric>
+#include <sstream>
 
 #include <stdint.h>
 #include <cassert>
@@ -86,12 +86,6 @@ struct Gateway {
 	Gateway( const char* n, Cost c ) {
 		memcpy( gw_name, n, 5 );
 		cost = c;
-	}
-
-	Gateway& operator=( const Gateway& g ) {
-		memcpy( gw_name, g.gw_name, 5 );
-		cost = g.cost;
-		return *this;
 	}
 
 	void merge( const Gateway& g ) {
@@ -202,14 +196,6 @@ struct Record {
 		}
 
 		return false;
-	}
-
-	Record operator=( const Record& r ) {
-		ip = r.ip; mask = r.mask;
-		for ( auto g : r.gws ) {
-			gws.push_back( g );
-		}
-		return *this;
 	}
 
 	bool operator==( const Record& r ) const {
@@ -333,7 +319,7 @@ class RoutingTable {
 
 		_defaultGW.emplace_front( netifToString( out ).c_str(), 1 );
 		Ip6Addr ip("fe80::1"); // link-local address, never used -- should not be empty
-		// set_default_gw( &ip, 0, _defaultGW.front().gw_name );
+		set_default_gw( &ip, 0, _defaultGW.front().gw_name );
 	}
 
 	void makeStubby() {
@@ -348,7 +334,7 @@ class RoutingTable {
 
 	void destroyStub() {
 		_stub = false;
-		// remove_default_gw();
+		remove_default_gw();
 		_defaultGW.clear();
 	}
 
@@ -424,14 +410,14 @@ public:
 		if ( found != _records.end() ) {
 			if ( *found != rec && !found->isLoopback() ) { // if it's loopback record, we don't care about other paths
 				if ( found->merge( rec ) ) { // order changed -> there is a better way => update lwip table
-					// ip_update_route( &rec.ip, rec.mask, rec.getGateway() );
+					ip_update_route( &rec.ip, rec.mask, rec.getGateway() );
 				}
 			} else {
 				return false;
 			}
 		} else {
 			addRec( rec );
-			// ip_add_route( &rec.ip, rec.mask, rec.getGateway() );
+			ip_add_route( &rec.ip, rec.mask, rec.getGateway() );
 		}
 
 		return true;
@@ -449,8 +435,8 @@ public:
 		if ( found != _records.end() ) {
 			if ( *found != rec ) {
 				if ( found->disjoin( rec ) ) {
-					// ip_rm_route( &addr, mask, netifToString( n ).c_str() );
-					// ip_add_route( &addr, mask, found->getGateway() );
+					ip_rm_route( &addr, mask, netifToString( n ).c_str() );
+					ip_add_route( &addr, mask, found->getGateway() );
 				}
 			} else {
 				_records.erase( found );
@@ -476,7 +462,7 @@ public:
 			return r.remove( ifstr ) && !r.valid();
 		} ), _records.end() );
 
-		// ip_rm_route_if( ifstr.c_str() );
+		ip_rm_route_if( ifstr.c_str() );
 
 		return size != _records.size();
 	}

@@ -133,7 +133,6 @@ private:
     }
 
 	u8_t static onRRP( void *arg, struct raw_pcb*, struct pbuf *p, const ip_addr_t* ) {
-		std::cout << "onRRP\n";
 		auto self = reinterpret_cast< Netif* >( arg );
 		if ( self ) {
 			p = pbuf_free_header( p, IP6_HLEN );
@@ -254,11 +253,11 @@ public:
 	}
 
 private:
-	void _send( Ip6Addr addr, rofi::hal::PBuf&& packet ) { /*
+	void _send( Ip6Addr addr, rofi::hal::PBuf&& packet ) {
 		auto gw = ip_find_route( &addr );
 		if ( gw ) {
 			gw->output_ip6( gw, packet.get(), &addr );
-		} */
+		}
 	}
 
 	const char* _createAddress ( int id ) {
