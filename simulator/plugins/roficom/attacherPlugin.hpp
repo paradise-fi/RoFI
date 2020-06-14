@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <map>
+#include <optional>
 #include <utility>
 #include <variant>
 
@@ -36,7 +37,7 @@ public:
     void Load( physics::WorldPtr world, sdf::ElementPtr /*sdf*/ ) override;
 
     bool attach( StringPair modelNames, Orientation orientation );
-    bool detach( StringPair modelNames );
+    std::optional< Orientation > detach( StringPair modelNames );
 
     void sendAttachInfo( std::string modelName1,
                          std::string modelName2,
@@ -51,7 +52,17 @@ public:
     static physics::JointPtr createFixedJoint( physics::PhysicsEnginePtr physics, LinkPair links );
 
 private:
-    using ConnectedInfo = std::pair< Orientation, std::variant< LinkPair, physics::JointPtr > >;
+    struct ConnectedInfo
+    {
+        Orientation orientation;
+        std::variant< LinkPair, physics::JointPtr > info;
+
+        ConnectedInfo( Orientation orientation, std::variant< LinkPair, physics::JointPtr > info )
+                : orientation( orientation )
+                , info( info )
+        {
+        }
+    };
 
     void sendAttachInfoToOne( std::string roficomName,
                               std::string connectedToName,

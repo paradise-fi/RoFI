@@ -229,6 +229,7 @@ void RoficomConnection::connectToNearbyRequest()
     // TODO search only nearby roficoms and remove const_cast
     physics::ModelPtr otherRoficom;
     std::optional< Orientation > orientation;
+    assert( !orientation );
 
     {
         std::lock_guard< std::recursive_mutex > lock( RoFICoMPlugin::positionMutex );

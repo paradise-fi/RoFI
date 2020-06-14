@@ -134,13 +134,14 @@ bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames,
     return true;
 }
 
-bool AttacherPlugin::detach( std::pair< std::string, std::string > modelNames )
+std::optional< AttacherPlugin::Orientation > AttacherPlugin::detach(
+        std::pair< std::string, std::string > modelNames )
 {
     modelNames = sortNames( std::move( modelNames ) );
 
     if ( modelNames.first == modelNames.second )
     {
-        return false;
+        return {};
     }
     assert( modelNames.first < modelNames.second );
 
@@ -149,18 +150,19 @@ bool AttacherPlugin::detach( std::pair< std::string, std::string > modelNames )
     auto it = _connected.find( modelNames );
     if ( it == _connected.end() )
     {
-        return false;
+        return {};
     }
 
-    auto jointPtr = std::get_if< physics::JointPtr >( &it->second.second );
+    auto jointPtr = std::get_if< physics::JointPtr >( &it->second.info );
     if ( jointPtr && *jointPtr )
     {
         auto joint = *jointPtr;
         joint->Detach();
     }
 
+    std::optional< Orientation > orientation = it->second.orientation;
     _connected.erase( it );
-    return true;
+    return orientation;
 }
 
 void AttacherPlugin::sendAttachInfo( std::string modelname1,
@@ -206,6 +208,13 @@ void AttacherPlugin::attach_event_callback( const AttacherPlugin::ConnectorAttac
         return;
     }
 
+    if ( !rofi::messages::ConnectorState::Orientation_IsValid( msg->orientation() ) )
+    {
+        std::cerr << "Attacher got message with invalid orientation (" << msg->orientation()
+                  << ")\n";
+        return;
+    }
+
     if ( msg->attach() )
     {
         if ( attach( { msg->modelname1(), msg->modelname2() }, msg->orientation() ) )
@@ -219,10 +228,11 @@ void AttacherPlugin::attach_event_callback( const AttacherPlugin::ConnectorAttac
     }
     else
     {
-        if ( detach( { msg->modelname1(), msg->modelname2() } ) )
+        auto orientation = detach( { msg->modelname1(), msg->modelname2() } );
+        if ( orientation )
         {
             gzmsg << "Detach was succesful\n";
-            sendAttachInfo( msg->modelname1(), msg->modelname2(), false, msg->orientation() );
+            sendAttachInfo( msg->modelname1(), msg->modelname2(), false, *orientation );
         }
         else
         {
@@ -239,21 +249,22 @@ void AttacherPlugin::onPhysicsUpdate()
 
     for ( auto it = _connected.begin(); it != _connected.end(); it++ )
     {
-        auto linksPtr = std::get_if< LinkPair >( &it->second.second );
+        auto linksPtr = std::get_if< LinkPair >( &it->second.info );
         if ( !linksPtr )
         {
             continue;
         }
         auto & links = *linksPtr;
 
-        bool connected = applyAttractForce( links, it->second.first );
+        bool connected = applyAttractForce( links, it->second.orientation );
         if ( connected )
         {
             gzmsg << "Creating joint\n";
             auto joint = createFixedJoint( _physics, links );
             assert( joint );
-            it->second.second = std::move( joint );
-            sendAttachInfo( it->first.first, it->first.second, true, it->second.first );
+            it->second.info = std::move( joint );
+            auto & names = it->first;
+            sendAttachInfo( names.first, names.second, true, it->second.orientation );
         }
     }
 }
