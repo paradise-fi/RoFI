@@ -148,14 +148,14 @@ void AttacherPlugin::addConnectionToSdf( StringPair modelNames,
     assert( _sdf );
 
     auto connectionSdf = newElement( "connection" );
-    _sdf->InsertElement( connectionSdf );
+    insertElement( _sdf, connectionSdf );
 
-    connectionSdf->InsertElement( newElemWithValue( "roficom", modelNames.first ) );
-    connectionSdf->InsertElement( newElemWithValue( "roficom", modelNames.second ) );
+    insertElement( connectionSdf, newElemWithValue( "roficom", modelNames.first ) );
+    insertElement( connectionSdf, newElemWithValue( "roficom", modelNames.second ) );
 
     if ( orientation )
     {
-        connectionSdf->InsertElement( newElemWithValue( "orientation", *orientation ) );
+        insertElement( connectionSdf, newElemWithValue( "orientation", *orientation ) );
     }
 }
 

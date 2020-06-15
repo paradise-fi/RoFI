@@ -218,11 +218,11 @@ public:
 
         if ( !pluginSdf->HasElement( "extend" ) )
         {
-            pluginSdf->InsertElement( newElemWithValue( "extend", false ) );
+            insertElement( pluginSdf, newElemWithValue( "extend", false ) );
         }
         if ( !pluginSdf->HasElement( "position_reached" ) )
         {
-            pluginSdf->InsertElement( newElemWithValue( "position_reached", false ) );
+            insertElement( pluginSdf, newElemWithValue( "position_reached", false ) );
         }
 
         controllerValues.limitSdf = getOnlyChildOrCreate( pluginSdf, "limit" );

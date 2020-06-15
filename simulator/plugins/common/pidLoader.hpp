@@ -94,10 +94,10 @@ public:
         sdf::ElementPtr elem = newElement( name );
         assert( elem );
 
-        elem->InsertElement( newElemWithValue( "pid_gains", values.pidGains ) );
+        insertElement( elem, newElemWithValue( "pid_gains", values.pidGains ) );
         if ( values.initTarget )
         {
-            elem->InsertElement( newElemWithValue( "init_target", *values.initTarget ) );
+            insertElement( elem, newElemWithValue( "init_target", *values.initTarget ) );
         }
 
         return elem;
@@ -108,17 +108,17 @@ public:
         sdf::ElementPtr controller = newElement( "controller" );
         assert( controller );
 
-        controller->InsertElement( newElemWithValue( "joint", values.jointName ) );
+        insertElement( controller, newElemWithValue( "joint", values.jointName ) );
 
         auto force = newElement( "force" );
         if ( values.forceTarget )
         {
-            force->InsertElement( newElemWithValue( "init_target", *values.forceTarget ) );
+            insertElement( force, newElemWithValue( "init_target", *values.forceTarget ) );
         }
-        controller->InsertElement( force );
+        insertElement( controller, force );
 
-        controller->InsertElement( createPIDValues( "velocity", values.velocity ) );
-        controller->InsertElement( createPIDValues( "position", values.position ) );
+        insertElement( controller, createPIDValues( "velocity", values.velocity ) );
+        insertElement( controller, createPIDValues( "position", values.position ) );
 
         return controller;
     }
@@ -216,7 +216,7 @@ public:
         }
         for ( const auto & values : loadedValues )
         {
-            pluginSdf->InsertElement( createController( values ) );
+            insertElement( pluginSdf, createController( values ) );
         }
 
         return loadedValues;

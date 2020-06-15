@@ -39,7 +39,9 @@ inline bool equal( double first, double second, double precision )
     return std::abs( first - second ) <= precision;
 }
 
-inline std::string getElemPath( gazebo::physics::BasePtr elem, const std::string & delim = "/" )
+inline std::string getElemPath( gazebo::physics::BasePtr elem,
+                                const std::string & delim = "/",
+                                bool prependWorldName = true )
 {
     assert( elem );
 
@@ -47,6 +49,10 @@ inline std::string getElemPath( gazebo::physics::BasePtr elem, const std::string
 
     while ( elem )
     {
+        if ( !prependWorldName && !elem->GetParent() )
+        {
+            break;
+        }
         names.push_back( elem->GetName() );
         elem = elem->GetParent();
     }
@@ -88,21 +94,20 @@ inline sdf::ElementPtr getPluginSdf( sdf::ElementPtr modelSdf, const std::string
     return {};
 }
 
+inline void insertElement( sdf::ElementPtr parent, sdf::ElementPtr child )
+{
+    assert( parent );
+    assert( child );
+
+    parent->InsertElement( child );
+    child->SetParent( parent );
+}
+
 inline sdf::ElementPtr newElement( const std::string & name )
 {
     auto elem = std::make_shared< sdf::Element >();
     elem->SetName( name );
     return elem;
-}
-
-template < typename T >
-void setValue( sdf::ElementPtr elem, const T & value )
-{
-    if ( !elem->GetValue() )
-    {
-        elem->AddValue( "string", "", false );
-    }
-    elem->Set( value );
 }
 
 template < typename T >
@@ -112,6 +117,109 @@ sdf::ElementPtr newElemWithValue( const std::string & name, const T & value )
     elem->AddValue( "string", "", false );
     elem->Set( value );
     return elem;
+}
+
+template < typename T >
+void setValue( sdf::ElementPtr elem, const T & value )
+{
+    assert( elem );
+
+    if ( !elem->GetValue() )
+    {
+        elem->AddValue( "string", "", false );
+    }
+    elem->Set( value );
+}
+
+template < typename T >
+void setAttribute( sdf::ElementPtr elem, const std::string & key, const T & value )
+{
+    assert( elem );
+
+    if ( !elem->HasAttribute( key ) )
+    {
+        elem->AddAttribute( key, "string", "", false );
+    }
+
+    assert( elem->GetAttribute( key ) );
+    elem->GetAttribute( key )->Set( value );
+}
+
+template < typename T >
+T getAttribute( sdf::ElementPtr elem, const std::string & key )
+{
+    assert( elem );
+
+    auto attribute = elem->GetAttribute( key );
+    if ( !attribute )
+    {
+        throw std::runtime_error( "No attribute with key '" + key + "'" );
+    }
+
+    T value;
+    if ( !attribute->Get( value ) )
+    {
+        throw std::runtime_error( "Could not get attribute with key '" + key + "'" );
+    }
+    return value;
+}
+
+
+template < typename T >
+T getAttribute( sdf::ElementPtr elem, const std::string & key, const T & defaultValue )
+{
+    assert( elem );
+
+    auto attribute = elem->GetAttribute( key );
+    if ( !attribute )
+    {
+        return defaultValue;
+    }
+
+    T value = defaultValue;
+    if ( !attribute->Get( value ) )
+    {
+        return defaultValue;
+    }
+    return value;
+}
+
+inline std::string getElemPath( sdf::ElementPtr elem,
+                                const std::string & delim = "/",
+                                bool prependWorldName = true )
+{
+    assert( elem );
+
+    std::vector< std::string > names;
+
+    while ( elem )
+    {
+        if ( !prependWorldName && elem->GetName() == "world" )
+        {
+            break;
+        }
+        names.push_back( getAttribute< std::string >( elem, "name" ) );
+        if ( elem->GetName() == "world" )
+        {
+            break;
+        }
+        elem = elem->GetParent();
+    }
+
+    assert( !names.empty() );
+    auto it = names.rbegin();
+    std::string elemPath = *it++;
+    while ( it != names.rend() )
+    {
+        elemPath += delim + *it++;
+    }
+
+    return elemPath;
+}
+
+inline std::string GetScopedName( sdf::ElementPtr elem, bool prependWorldName = false )
+{
+    return getElemPath( elem, "::", prependWorldName );
 }
 
 inline sdf::ElementPtr_V getChildren( sdf::ElementPtr sdf, const std::string & name )
@@ -166,7 +274,7 @@ inline sdf::ElementPtr getOnlyChildOrCreate( sdf::ElementPtr sdf, const std::str
 
     if ( !sdf->HasElement( name ) )
     {
-        sdf->InsertElement( newElement( name ) );
+        insertElement( sdf, newElement( name ) );
     }
 
     return getOnlyChild< true >( sdf, name );
@@ -186,9 +294,29 @@ inline void checkChildrenNames( sdf::ElementPtr sdf, const std::vector< std::str
     }
 }
 
+inline sdf::ElementPtr getRoFICoMPluginSdf( sdf::ElementPtr modelSdf )
+{
+    return getPluginSdf( modelSdf, "libroficomPlugin.so" );
+}
+
+inline sdf::ElementPtr getRoFIModulePluginSdf( sdf::ElementPtr modelSdf )
+{
+    return getPluginSdf( modelSdf, "libuniversalModulePlugin.so" );
+}
+
+inline sdf::ElementPtr getAttacherPluginSdf( sdf::ElementPtr worldSdf )
+{
+    return getPluginSdf( worldSdf, "libattacherPlugin.so" );
+}
+
+inline sdf::ElementPtr getDistributorPluginSdf( sdf::ElementPtr worldSdf )
+{
+    return getPluginSdf( worldSdf, "libdistributorPlugin.so" );
+}
+
 inline bool isRoFIModule( sdf::ElementPtr modelSdf )
 {
-    return modelSdf && getPluginSdf( modelSdf, "libuniversalModulePlugin.so" ) != nullptr;
+    return modelSdf && getRoFIModulePluginSdf( modelSdf ) != nullptr;
 }
 
 inline bool isRoFIModule( physics::ModelPtr model )
@@ -196,19 +324,19 @@ inline bool isRoFIModule( physics::ModelPtr model )
     return model && isRoFIModule( model->GetSDF() );
 }
 
-inline bool isRoFICoM( physics::ModelPtr model )
-{
-    return model && getPluginSdf( model->GetSDF(), "libroficomPlugin.so" ) != nullptr;
-}
-
 inline bool isRoFICoM( sdf::ElementPtr modelSdf )
 {
-    return modelSdf && isRoFICoM( modelSdf );
+    return modelSdf && getRoFICoMPluginSdf( modelSdf ) != nullptr;
+}
+
+inline bool isRoFICoM( physics::ModelPtr model )
+{
+    return model && isRoFICoM( model->GetSDF() );
 }
 
 inline bool hasAttacherPlugin( physics::WorldPtr world )
 {
-    return world && getPluginSdf( world->SDF(), "libattacherPlugin.so" ) != nullptr;
+    return world && getAttacherPluginSdf( world->SDF() ) != nullptr;
 }
 
 } // namespace gazebo

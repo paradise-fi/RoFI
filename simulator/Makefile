@@ -5,7 +5,7 @@ GAZEBO_ARGS ?= --verbose
 WORLD ?=
 
 EXAMPLE ?=
-EXAMPLE_ARGS ?=
+ARGS ?=
 
 SUBFOLDERS = demo examples hal plugins tools
 
@@ -50,7 +50,12 @@ endif
 	cd build && make -j8 ${EXAMPLE}
 	@test -f ./build/examples/${EXAMPLE}/${EXAMPLE} || \
 		( echo "\nERROR: No example '${EXAMPLE}' found\nCall 'make help' for more info\n" ; exit 1 )
-	./build/examples/${EXAMPLE}/${EXAMPLE} ${EXAMPLE_ARGS}
+	./build/examples/${EXAMPLE}/${EXAMPLE} ${ARGS}
+
+world-creator: build
+	cd build && make worldCreator -j8
+	@echo "\nBuild worldCreator completed\n\n"
+	./setGazeboVariables.sh ./build/tools/worldCreator/worldCreator ${ARGS}
 
 help:
 	@echo "Available targets:"
@@ -66,7 +71,9 @@ help:
 	@echo "\t\tFormats all '.hpp' and '.cpp' files."
 	@echo "\n\texample-server EXAMPLE=<example_name> [GAZEBO=<gazebo_program>] [GAZEBO_ARGS=<gazebo_args>]"
 	@echo "\t\tRuns gazebo for the example, args default to '--verbose'."
-	@echo "\n\texample-client EXAMPLE=<example_name> [EXAMPLE_ARGS=<example_args>]"
+	@echo "\n\texample-client EXAMPLE=<example_name> [ARGS=<example_args>]"
 	@echo "\t\tRuns the RoFISim client for the example."
+	@echo "\n\tworld-creator ARGS=(<input_file>|<input_file> > <output_file>)"
+	@echo "\t\tRuns the World creator tool."
 	@echo "\n\thelp"
 	@echo "\t\tPrints this help."
