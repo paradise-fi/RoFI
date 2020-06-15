@@ -2,7 +2,11 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
+#include <cctype>
+#include <optional>
 
+#include "roficomConnect.hpp"
 #include "roficomUtils.hpp"
 
 
@@ -16,6 +20,37 @@ std::pair< std::string, std::string > sortNames( std::pair< std::string, std::st
     }
     assert( names.first <= names.second );
     return names;
+}
+
+rofi::messages::ConnectorState::Orientation readOrientation( const std::string & str )
+{
+    using rofi::messages::ConnectorState;
+
+    std::string lower;
+    for ( char c : str )
+    {
+        lower.push_back( std::tolower( static_cast< unsigned char >( c ) ) );
+    }
+
+    if ( lower == "0" || lower == "n" || lower == "north" )
+    {
+        return ConnectorState::NORTH;
+    }
+    if ( lower == "1" || lower == "e" || lower == "east" )
+    {
+        return ConnectorState::NORTH;
+    }
+    if ( lower == "2" || lower == "s" || lower == "south" )
+    {
+        return ConnectorState::NORTH;
+    }
+    if ( lower == "3" || lower == "w" || lower == "west" )
+    {
+        return ConnectorState::NORTH;
+    }
+
+    gzerr << "Unknown orientation '" + str + "'\n";
+    throw std::runtime_error( "Unknown orientation '" + str + "'" );
 }
 
 ignition::math::Quaterniond rotation( rofi::messages::ConnectorState::Orientation orientation )
@@ -49,12 +84,16 @@ ignition::math::Quaterniond rotation( rofi::messages::ConnectorState::Orientatio
     }
 }
 
-void AttacherPlugin::Load( physics::WorldPtr world, sdf::ElementPtr /*sdf*/ )
+void AttacherPlugin::Load( physics::WorldPtr world, sdf::ElementPtr sdf )
 {
     _world = std::move( world );
     assert( _world );
     _physics = _world->Physics();
     assert( _physics );
+    _sdf = std::move( sdf );
+    assert( _sdf );
+
+    loadConnectionsFromSdf();
 
     _onUpdate = event::Events::ConnectBeforePhysicsUpdate(
             std::bind( &AttacherPlugin::onPhysicsUpdate, this ) );
@@ -70,12 +109,86 @@ void AttacherPlugin::Load( physics::WorldPtr world, sdf::ElementPtr /*sdf*/ )
     gzmsg << "Attach event service at: " << _subAttachEvent->GetTopic() << "\n";
 
     gzmsg << "Link attacher node initialized.\n";
+
+    onPhysicsUpdate();
 }
 
-bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames,
-                             Orientation orientation )
+void AttacherPlugin::loadConnectionsFromSdf()
+{
+    assert( _sdf );
+
+    checkChildrenNames( _sdf, { "connection" } );
+    for ( auto connectionSdf : getChildren( _sdf, "connection" ) )
+    {
+        checkChildrenNames( connectionSdf, { "roficom", "orientation" } );
+
+        auto roficoms = getChildren( connectionSdf, "roficom" );
+        if ( roficoms.size() != 2 )
+        {
+            std::cerr << "Expected exactly two roficoms in connection\n";
+            continue;
+        }
+        auto roficomNames = sortNames(
+                { roficoms[ 0 ]->Get< std::string >(), roficoms[ 1 ]->Get< std::string >() } );
+
+        auto orientationSdf = getOnlyChild< false >( connectionSdf, "orientation" );
+        std::optional< Orientation > orientation;
+        if ( orientationSdf )
+        {
+            orientation = readOrientation( orientationSdf->Get< std::string >() );
+        }
+
+        attach( roficomNames, orientation );
+    }
+}
+
+void AttacherPlugin::addConnectionToSdf( StringPair modelNames,
+                                         std::optional< Orientation > orientation )
+{
+    assert( _sdf );
+
+    auto connectionSdf = newElement( "connection" );
+    _sdf->InsertElement( connectionSdf );
+
+    connectionSdf->InsertElement( newElemWithValue( "roficom", modelNames.first ) );
+    connectionSdf->InsertElement( newElemWithValue( "roficom", modelNames.second ) );
+
+    if ( orientation )
+    {
+        connectionSdf->InsertElement( newElemWithValue( "orientation", *orientation ) );
+    }
+}
+
+void AttacherPlugin::removeConnectionFromSdf( StringPair modelNames )
+{
+    assert( _sdf );
+    modelNames = sortNames( std::move( modelNames ) );
+
+    for ( auto connectionSdf : getChildren( _sdf, "connection" ) )
+    {
+        auto roficoms = getChildren( connectionSdf, "roficom" );
+        if ( roficoms.size() != 2 )
+        {
+            continue;
+        }
+
+        if ( sortNames(
+                     { roficoms[ 0 ]->Get< std::string >(), roficoms[ 1 ]->Get< std::string >() } )
+             == modelNames )
+        {
+            connectionSdf->RemoveFromParent();
+        }
+    }
+}
+
+bool AttacherPlugin::attach( StringPair modelNames, std::optional< Orientation > orientation )
 {
     modelNames = sortNames( std::move( modelNames ) );
+    if ( modelNames.first.empty() || modelNames.second.empty() )
+    {
+        gzwarn << "Got empty model name\n";
+        return false;
+    }
     if ( modelNames.first == modelNames.second )
     {
         gzwarn << "Same model name " << modelNames.first << "\n";
@@ -90,12 +203,12 @@ bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames,
 
     if ( !model1 )
     {
-        gzwarn << modelNames.first << " model was not found\n";
+        gzwarn << "Model '" << modelNames.first << "' was not found\n";
         return false;
     }
     if ( !model2 )
     {
-        gzwarn << modelNames.second << " model was not found\n";
+        gzwarn << "Model '" << modelNames.second << "' was not found\n";
         return false;
     }
     if ( model1 == model2 )
@@ -109,21 +222,35 @@ bool AttacherPlugin::attach( std::pair< std::string, std::string > modelNames,
 
     if ( !link1 )
     {
-        gzwarn << "inner link of " << model1->GetScopedName() << " was not found\n";
+        gzwarn << "Link 'inner' of " << model1->GetScopedName() << " was not found\n";
         return false;
     }
     if ( !link2 )
     {
-        gzwarn << "inner link of " << model2->GetScopedName() << " was not found\n";
+        gzwarn << "Link 'inner' of " << model2->GetScopedName() << " was not found\n";
         return false;
     }
     assert( link1 != link2 );
 
 
+    auto connected = canRoficomBeConnected( link1->WorldPose(), link2->WorldPose() );
+
+    if ( !connected )
+    {
+        gzwarn << "Could not get connection orientation\n";
+        return false;
+    }
+
+    assert( connected );
+    if ( orientation && connected != orientation )
+    {
+        gzwarn << "Got message with different orientation\n";
+    }
+
     std::lock_guard< std::mutex > lock( _connectedMutex );
 
-    auto inserted = _connected.emplace( modelNames,
-                                        ConnectedInfo( orientation, LinkPair( link1, link2 ) ) );
+    auto inserted =
+            _connected.emplace( modelNames, ConnectedInfo( *connected, LinkPair( link1, link2 ) ) );
 
     if ( !inserted.second )
     {
@@ -219,6 +346,7 @@ void AttacherPlugin::attach_event_callback( const AttacherPlugin::ConnectorAttac
     {
         if ( attach( { msg->modelname1(), msg->modelname2() }, msg->orientation() ) )
         {
+            addConnectionToSdf( { msg->modelname1(), msg->modelname2() }, msg->orientation() );
             gzmsg << "Attach was succesful\n";
         }
         else
@@ -232,6 +360,7 @@ void AttacherPlugin::attach_event_callback( const AttacherPlugin::ConnectorAttac
         if ( orientation )
         {
             gzmsg << "Detach was succesful\n";
+            removeConnectionFromSdf( { msg->modelname1(), msg->modelname2() } );
             sendAttachInfo( msg->modelname1(), msg->modelname2(), false, *orientation );
         }
         else
