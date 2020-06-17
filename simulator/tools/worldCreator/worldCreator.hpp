@@ -46,7 +46,8 @@ struct ConfigWithPose
 };
 
 
-sdf::SDFPtr createWorld( const std::vector< ConfigWithPose > & configs );
+sdf::SDFPtr createWorld( const std::string & worldPath,
+                         const std::vector< ConfigWithPose > & configs );
 
 void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & config );
 

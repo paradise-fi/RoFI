@@ -7,10 +7,6 @@
 #include "IO.h"
 
 
-#ifndef WORLD_PATH
-#define WORLD_PATH "worlds/empty.world"
-#endif
-
 constexpr std::array< const char *, 2 > shoeNames = { "shoeA", "shoeB" };
 
 using namespace gazebo;
@@ -98,11 +94,12 @@ std::optional< ConfigWithPose > ConfigWithPose::tryReadConfiguration( std::istre
     return config;
 }
 
-sdf::SDFPtr createWorld( const std::vector< ConfigWithPose > & configs )
+sdf::SDFPtr createWorld( const std::string & worldPath,
+                         const std::vector< ConfigWithPose > & configs )
 {
     using namespace ignition::math;
 
-    auto sdf = loadFromFile( WORLD_PATH );
+    auto sdf = loadFromFile( worldPath );
     assert( sdf );
     assert( sdf->Root() );
     auto world = getOnlyChild< true >( sdf->Root(), "world" );
