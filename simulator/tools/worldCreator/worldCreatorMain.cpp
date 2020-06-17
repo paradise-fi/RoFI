@@ -5,7 +5,7 @@
 #define TOSTRING( x ) STRINGIFY( x )
 
 #ifndef WORLD_FILE
-#define WORLD_FILE "worlds/empty.world"
+static_assert( false, "world file is not defined" );
 #endif
 
 struct CmdArguments
