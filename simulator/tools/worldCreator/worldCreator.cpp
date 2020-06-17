@@ -121,6 +121,12 @@ void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & conf
     auto state = getOnlyChildOrCreate( world, "state" );
     setAttribute( state, "world_name", getAttribute< std::string >( world, "name" ) );
 
+    auto distributorSdf = getDistributorPluginSdf( world );
+    if ( !distributorSdf )
+    {
+        throw std::runtime_error( "Could not get distributor plugin" );
+    }
+
     assert( config.config.getMatrices().size() == config.config.getModules().size() );
     for ( auto & [ id, module ] : config.config.getModules() )
     {
@@ -129,12 +135,15 @@ void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & conf
         auto moduleSdf = newRoFIModule( id );
         insertElement( world, moduleSdf );
 
+
         auto moduleStateSdf = newElement( "model" );
         setAttribute( moduleStateSdf, "name", getAttribute< std::string >( moduleSdf, "name" ) );
         insertElement( state, moduleStateSdf );
 
         auto & matrices = config.config.getMatrices().at( id );
         setModulePosition( moduleStateSdf, module, matrices, config.pose );
+
+        addModuleToDistributor( distributorSdf, id );
 
         const EdgeList & edges = config.config.getEdges().at( id );
         int i = 0;
@@ -172,8 +181,15 @@ sdf::SDFPtr loadFromFile( const std::string & filename )
         throw std::runtime_error( "Unable to initialize sdf" );
     }
 
+    auto fullPath = sdf::findFile( filename );
+    if ( fullPath.empty() )
+    {
+        std::cerr << "Could not find file '" + filename + "'. Did you set path variables?\n";
+        throw std::runtime_error( "Could not find file " + filename );
+    }
+
     sdf::Errors errors;
-    if ( !sdf::readFile( sdf::findFile( filename ), sdf, errors ) )
+    if ( !sdf::readFile( fullPath, sdf, errors ) )
     {
         std::stringstream errorString;
         errorString << "Unable to load file[" << filename << "]\n";
@@ -186,6 +202,15 @@ sdf::SDFPtr loadFromFile( const std::string & filename )
     }
 
     return sdf;
+}
+
+void addModuleToDistributor( sdf::ElementPtr distributorSdf, ID rofiId )
+{
+    auto rofiSdf = newElement( "rofi" );
+    insertElement( distributorSdf, rofiSdf );
+
+    insertElement( rofiSdf, newElemWithValue( "id", rofiId ) );
+    insertElement( rofiSdf, newElemWithValue( "name", rofiName( rofiId ) ) );
 }
 
 void setModulePosition( sdf::ElementPtr moduleStateSdf,
@@ -231,12 +256,11 @@ void setModulePosition( sdf::ElementPtr moduleStateSdf,
              origShoePoses[ B ] + shoePoses[ B ] + beginPose );
 }
 
-void setRoficomExtendedPlugin( sdf::ElementPtr pluginSdf, bool extended, bool posReached )
+void setRoficomExtendedPlugin( sdf::ElementPtr pluginSdf, bool extended )
 {
     assert( pluginSdf );
 
     setValue( getOnlyChildOrCreate( pluginSdf, "extend" ), extended );
-    setValue( getOnlyChildOrCreate( pluginSdf, "position_reached" ), posReached );
 }
 
 sdf::ElementPtr createRoficomState( sdf::ElementPtr roficomSdf,
@@ -277,7 +301,10 @@ void setAttached( sdf::ElementPtr worldSdf, const Configuration & config )
     assert( worldSdf->GetName() == "world" );
 
     auto attacherSdf = getAttacherPluginSdf( worldSdf );
-    assert( attacherSdf );
+    if ( !attacherSdf )
+    {
+        throw std::runtime_error( "Could not get attacher plugin" );
+    }
 
     for ( const auto & [ id, edgeList ] : config.getEdges() )
     {

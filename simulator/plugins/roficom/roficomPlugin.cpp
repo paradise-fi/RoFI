@@ -198,13 +198,10 @@ void RoFICoMPlugin::updatePosition( Position newPosition )
     assert( _sdf );
 
     bool extend = newPosition == Position::Extending || newPosition == Position::Extended;
-    bool positionReached = newPosition == Position::Retracted || newPosition == Position::Extended;
 
     std::lock_guard< std::recursive_mutex > lock( positionMutex );
 
     getOnlyChild< true >( _sdf, "extend" )->Set( extend );
-    getOnlyChild< true >( _sdf, "position_reached" )->Set( positionReached );
-
     positionsMap[ _model.get() ] = newPosition;
 }
 

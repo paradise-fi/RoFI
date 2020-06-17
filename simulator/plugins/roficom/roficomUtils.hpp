@@ -183,26 +183,10 @@ public:
         std::string jointName;
         sdf::ElementPtr limitSdf;
         bool extend = false;
-        bool positionReached = false;
 
         RoFICoMPosition position() const
         {
-            if ( positionReached )
-            {
-                if ( extend )
-                {
-                    return RoFICoMPosition::Extended;
-                }
-                return RoFICoMPosition::Retracted;
-            }
-            else
-            {
-                if ( extend )
-                {
-                    return RoFICoMPosition::Extending;
-                }
-                return RoFICoMPosition::Retracting;
-            }
+            return extend ? RoFICoMPosition::Extending : RoFICoMPosition::Retracting;
         }
     };
 
@@ -212,7 +196,7 @@ public:
 
         ControllerValues controllerValues;
 
-        checkChildrenNames( pluginSdf, { "joint", "extend", "position_reached", "limit" } );
+        checkChildrenNames( pluginSdf, { "joint", "extend", "limit" } );
         controllerValues.jointName =
                 getOnlyChild< true >( pluginSdf, "joint" )->Get< std::string >();
 
@@ -220,15 +204,9 @@ public:
         {
             insertElement( pluginSdf, newElemWithValue( "extend", false ) );
         }
-        if ( !pluginSdf->HasElement( "position_reached" ) )
-        {
-            insertElement( pluginSdf, newElemWithValue( "position_reached", false ) );
-        }
 
         controllerValues.limitSdf = getOnlyChildOrCreate( pluginSdf, "limit" );
         controllerValues.extend = getOnlyChild< true >( pluginSdf, "extend" )->Get< bool >();
-        controllerValues.positionReached =
-                getOnlyChild< true >( pluginSdf, "position_reached" )->Get< bool >();
 
         return controllerValues;
     }

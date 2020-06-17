@@ -52,11 +52,12 @@ void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & conf
 
 sdf::SDFPtr loadFromFile( const std::string & filename );
 
+void addModuleToDistributor( sdf::ElementPtr distributorSdf, ID rofiId );
 void setModulePosition( sdf::ElementPtr moduleStateSdf,
                         const Module & module,
                         const std::array< Matrix, 2 > & matrices,
                         const ignition::math::Pose3d & beginPose );
-void setRoficomExtendedPlugin( sdf::ElementPtr pluginSdf, bool extended, bool posReached = false );
+void setRoficomExtendedPlugin( sdf::ElementPtr pluginSdf, bool extended );
 sdf::ElementPtr createRoficomState( sdf::ElementPtr roficomSdf,
                                     bool extended,
                                     const ignition::math::Pose3d & parentPose );
@@ -161,10 +162,7 @@ inline std::string roficomInnerName( sdf::ElementPtr moduleSdf, ShoeId shoeId, C
             i++;
             continue;
         }
-        // TODO solve bug
-        std::cerr << "P1\n" << roficomSdf->ToString( " " ) << std::endl;
         auto result = GetScopedName( roficomSdf );
-        std::cerr << "P2\n";
         return result;
     }
     throw std::runtime_error( "Could not find roficom" );
