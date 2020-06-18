@@ -9,7 +9,7 @@ ARGS ?=
 
 SUBFOLDERS = examples hal plugins tools
 
-.PHONY: build-all clean run format-all example help ${SUBFOLDERS}
+.PHONY: build-all clean run format-all example world-creator help ${SUBFOLDERS}
 
 build:
 	mkdir -p build
@@ -41,6 +41,11 @@ endif
 		( echo "\nERROR: No example '${NAME}' found\nCall 'make help' for more info\n" ; exit 1 )
 	./build/examples/${NAME}/${NAME} ${ARGS}
 
+world-creator: build
+	cd build && make worldCreator -j8
+	@echo "\nBuild worldCreator completed\n\n"
+	./setGazeboVariables.sh ./build/tools/worldCreator/worldCreator ${ARGS}
+
 help:
 	@echo "Available targets:"
 	@echo "\n\t[build-all]"
@@ -56,5 +61,8 @@ help:
 	@echo "\t\tFormats all '.hpp' and '.cpp' files."
 	@echo "\n\texample NAME=<example_name> [ARGS=<example_args>]"
 	@echo "\t\tRuns the RoFISim client for the example."
+	@echo "\n\tworld-creator ARGS=\"[-i <input_file>] [-o <output_file>] [-w <empty_world_file>]\""
+	@echo "\t\tRuns the World creator tool. (Note the quotation marks around ARGS value.)"
+	@echo "\t\tIf not set, uses the standard input/output."
 	@echo "\n\thelp"
 	@echo "\t\tPrints this help."
