@@ -4,7 +4,7 @@
         <self_collide>false</self_collide>
         <link name="outer">
             <inertial>
-                <pose>0 0 -8e-3 0 0 0</pose>
+                <pose>0 0 -8.5e-3 0 0 0</pose>
                 <mass>10e-3</mass> <!-- TODO check -->
                 <inertia>
                     <!-- ixx = iyy = 1/12 * mass * (3 * radius^2 + length^2) -->
@@ -19,7 +19,7 @@
                 </inertia>
             </inertial>
             <collision name="outer-collision">
-                <pose>0 0 -8e-3 0 0 0</pose>
+                <pose>0 0 -8.5e-3 0 0 0</pose>
                 <geometry>
                     <cylinder>
                         <radius>25e-3</radius>
@@ -28,7 +28,7 @@
                 </geometry>
             </collision>
             <visual name="visual">
-                <pose>0 0 -8e-3 0 0 0</pose>
+                <pose>0 0 -8.5e-3 0 0 0</pose>
                 <geometry>
                     <cylinder>
                         <radius>25e-3</radius>
