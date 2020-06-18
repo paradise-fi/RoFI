@@ -7,9 +7,9 @@ WORLD ?=
 EXAMPLE ?=
 ARGS ?=
 
-SUBFOLDERS = demo examples hal plugins tools
+SUBFOLDERS = demo examples hal plugins tools worlds
 
-.PHONY: build-all clean run tests-roficom format-all example help
+.PHONY: build-all clean run tests-roficom format-all example help worlds-all ${SUBFOLDERS}
 
 build:
 	mkdir -p build
@@ -19,6 +19,10 @@ build-all: build
 	cd build && make -j8
 	@echo "\nBuild completed\n\n"
 
+worlds-all: build
+	cd build && make worlds-all -j8
+	@echo "\nBuild $@ completed\n\n"
+
 ${SUBFOLDERS} : build
 	cd build/$@ && make -j8
 	@echo "\nBuild $@ completed\n\n"
@@ -26,7 +30,7 @@ ${SUBFOLDERS} : build
 clean:
 	rm -rf build
 
-run: plugins
+run: plugins worlds-all
 	./setGazeboVariables.sh ${GAZEBO} ${GAZEBO_ARGS} ${WORLD}
 
 tests-roficom: plugins
@@ -57,6 +61,8 @@ help:
 	@echo "\t\tBuilds the given folder in project."
 	@echo "\n\tclean"
 	@echo "\t\tRemoves the build directory."
+	@echo "\n\tworlds-all"
+	@echo "\t\tCreates all worlds in the project."
 	@echo "\n\trun [GAZEBO=<gazebo_program>] [GAZEBO_ARGS=<gazebo_args>] [WORLD=<path_to_world>]"
 	@echo "\t\tRuns gazebo, gazebo_args default to '--verbose'."
 	@echo "\n\ttests-roficom"

@@ -13,6 +13,7 @@ add_executable(worldCreator worldCreatorMain.cpp)
 target_link_libraries(worldCreator worldCreatorLib)
 target_compile_definitions(worldCreator PUBLIC WORLD_FILE=${EMPTY_WORLD_FILE})
 
+
 function(create_world world_file input_file)
     add_custom_command(
         OUTPUT
@@ -26,6 +27,7 @@ function(create_world world_file input_file)
         DEPENDS
             worldCreator
             ${CMAKE_CURRENT_SOURCE_DIR}/${input_file}
+            ${EMPTY_WORLD_FILE}
     )
 
     add_custom_target(
@@ -34,4 +36,5 @@ function(create_world world_file input_file)
         DEPENDS
             ${CMAKE_CURRENT_BINARY_DIR}/${world_file}
     )
+    add_dependencies(worlds-all ${world_file})
 endfunction()

@@ -43,5 +43,7 @@ add_subdirectory(plugins)
 add_subdirectory(hal)
 add_subdirectory(tools)
 
+add_subdirectory(worlds)
+
 add_subdirectory(examples)
 add_subdirectory(demo)
