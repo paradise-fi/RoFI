@@ -1,6 +1,6 @@
 #include "Configuration.h"
 #include <stdexcept>
-
+#include <queue>
 
 static const double threshold = 0.0001;
 
@@ -45,7 +45,7 @@ double clampGamma(double val) {
 
     if (val <= -180)
         return 360 + val;
-    
+
     return val;
 }
 
@@ -244,8 +244,22 @@ void Configuration::addModule(double alpha, double beta, double gamma, ID id) {
     edges.emplace(std::piecewise_construct,
                     std::forward_as_tuple(id),  // args for key
                     std::forward_as_tuple());
-    if ((modules.size() == 1) || (id < fixedId))
+    if ((modules.size() == 1) || (id < fixedId)) {
         fixedId = id;
+        matricesVal = Value::False;
+    } else {
+        matricesVal = Value::Unknown;
+    }
+    if (modules.size() > 1) {
+        connectedVal = Value::False;
+    }
+    spanningTreeComputed = false;
+    static const std::array<std::optional<Edge>, 6> emptyArray =
+        {std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt, std::nullopt};
+    spanningSucc.emplace(id, emptyArray);
+    spanningSuccCount.emplace(id, 0);
+    spanningPred.emplace(id, std::nullopt);
+    isMatrixComputed.emplace(id, std::array<bool,2>{false, false});
 }
 
 bool Configuration::addEdge(const Edge& edge) {
@@ -260,6 +274,8 @@ bool Configuration::addEdge(const Edge& edge) {
 
     set1[index1] = edge;
     set2[index2] = reverse(edge);
+    if (connectedVal == Value::False)
+        connectedVal = Value::Unknown;
     return true;
 }
 
@@ -278,7 +294,55 @@ bool Configuration::removeEdge(const Edge& edge) {
 
     set1[index1] = {};
     set2[index2] = {};
+
+    if (!spanningTreeComputed) {
+        if (connectedVal == Value::True)
+            connectedVal = Value::Unknown;
+        return true;
+    }
+
+    if (spanningPred[index1].has_value() && spanningPred[index1].value().first == index2) {
+        removeSpanningEdge(index2, index1);
+    } else if (spanningPred[index2].has_value() && spanningPred[index2].value().first == index1) {
+        removeSpanningEdge(index1, index2);
+    }
+
     return true;
+}
+
+bool Configuration::removeSpanningEdge(ID parent, ID child) {
+    for (int i = 0; i < 6; ++i) {
+        auto& succOpt = spanningSucc[parent][i];
+        if (!succOpt.has_value())
+            continue;
+        if (succOpt.value().id2() != child)
+            continue;
+        succOpt = {};
+        spanningSuccCount[parent] -= 1;
+        break;
+    }
+
+    for (const auto& edgeOpt : edges.at(child)) {
+        if (!edgeOpt.has_value())
+            continue;
+        ID nextId = edgeOpt.value().id2();
+        if (spanningPred[nextId].has_value() && spanningPred[nextId].value().first == child)
+            continue;
+        for (int i = 0; i < 6; ++i) {
+            auto& succOpt = spanningSucc[nextId][i];
+            if (succOpt.has_value())
+                continue;
+            succOpt = {reverse(edgeOpt.value())};
+            spanningSuccCount[nextId] += 1;
+            spanningPred[child] = {std::make_pair(nextId, edgeOpt.value().side1())};
+            return true;
+        }
+    }
+
+    if (connectedVal == Value::True)
+        connectedVal = Value::Unknown;
+    spanningTreeComputed = false;
+    return false;
 }
 
 bool Configuration::findEdge(const Edge& edge) const {
@@ -296,6 +360,8 @@ void Configuration::setFixed(ID initID, ShoeId initSide, const Matrix& initRotat
     fixedId = initID;
     fixedSide = initSide;
     fixedMatrix = initRotation;
+    spanningTreeComputed = false;
+    matricesVal = Value::False;
 }
 
 bool Configuration::isValid() {
@@ -308,43 +374,54 @@ bool Configuration::isValid() {
 bool Configuration::computeMatrices() {
     if (empty())
         return true;
+    if (matricesVal == Value::True)
+        return true;
 
-    matrices = {};
-    matrices[fixedId][fixedSide] = fixedMatrix;
+    if (!spanningTreeComputed && !computeSpanningTree())
+        return false;
 
-    return computeMatricesRec(fixedId, fixedSide);
-}
+    bool recomputeAll = false;
+    if (matricesVal == Value::False || !isMatrixComputed[fixedId][fixedSide]) {
+        matrices = {};
+        matrices[fixedId][fixedSide] = fixedMatrix;
+        recomputeAll = true;
+        isMatrixComputed[fixedId][fixedSide] = true;
+    }
+    std::queue<std::tuple<ID, ShoeId, bool>> bag;
+    bag.emplace(fixedId, fixedSide, recomputeAll);
 
-bool Configuration::computeMatricesRec(ID id, ShoeId side) {
-    bool result = true;
+    ID currId;
+    ShoeId currShoe;
+    bool recompute;
+    while (!bag.empty()) {
+        std::tie(currId, currShoe, recompute) = bag.front();
+        bag.pop();
+        auto& matrixCurr = matrices.at(currId);
+        ShoeId otherShoe = currShoe == A ? B : A;
+        if (recompute || !isMatrixComputed[currId][otherShoe]) {
+            matrixCurr[otherShoe] = computeOtherSideMatrix(currId, currShoe);
+            isMatrixComputed[currId][otherShoe] = true;
+        }
 
-    // At first, fix other side of the module.
-    ShoeId side2 = side == A ? B : A;
-    auto& matrixCurr = matrices.at(id);
-    matrixCurr[side2] = computeOtherSideMatrix(id, side);
+        for (const auto& edgeOpt : spanningSucc.at(currId)) {
+            if (!edgeOpt.has_value())
+                continue;
 
-    for (const std::optional<Edge>& edgeOpt : edges.at(id)) {
-        if (!edgeOpt.has_value() || edgeOpt.value().onCoeff() < 1)
-            continue;
-        
-        const Edge& edge = edgeOpt.value();
+            const Edge& edge = edgeOpt.value();
+            ID nextId = edge.id2();
+            ShoeId nextShoe = edge.side2();
 
-        ID idNext = edge.id2();
-        ShoeId sideNext = edge.side2();
+            bool currRecompute = recompute || !isMatrixComputed[nextId][nextShoe];
+            if (currRecompute) {
+                matrices[nextId][nextShoe] = computeConnectedMatrix(edge);
+                isMatrixComputed[nextId][nextShoe] = true;
+            }
 
-        // Compute, where next module should be.
-        Matrix matrixCmp = computeConnectedMatrix(edge);
-
-        if (matrices.find(idNext) == matrices.end()) {
-            matrices[idNext][sideNext] = matrixCmp;
-            result &= computeMatricesRec(idNext, sideNext);
-        } else {
-            const auto& matrixNext = matrices.at(idNext)[sideNext];
-            if (!equals(matrixNext, matrixCmp))
-                return false;
+            bag.emplace(nextId, nextShoe, currRecompute);
         }
     }
-    return result;
+    matricesVal = Value::True;
+    return true;
 }
 
 Matrix Configuration::computeOtherSideMatrix(ID id, ShoeId side) const {
@@ -365,7 +442,18 @@ Matrix Configuration::computeConnectedMatrix(Edge edge) const {
     return matrix * transformConnection(edge.dock1(), edge.ori(), edge.dock2());
 }
 
+bool Configuration::connected() {
+    if (spanningTreeComputed) {
+        connectedVal = Value::True;
+        return true;
+    }
+    return computeSpanningTree();
+}
+
 bool Configuration::connected() const {
+    if (spanningTreeComputed) {
+        return true;
+    }
     std::unordered_set<ID> seen;
     seen.insert(fixedId);
     dfsID(fixedId, seen);
@@ -393,7 +481,7 @@ bool Configuration::collisionFree() const {
                 if (centerSqDistance(ms1[A], ms1[B]) < 1)
                     return false;
                 continue;
-            } 
+            }
             if (centerSqDistance(ms1[A], ms2[A]) < 1 ||
                 centerSqDistance(ms1[B], ms2[B]) < 1 ||
                 centerSqDistance(ms1[B], ms2[A]) < 1 ||
@@ -487,34 +575,73 @@ void Configuration::clearEdges() {
         for (auto& opt : el)
             opt = std::nullopt;
     }
-}
-
-bool Configuration::eraseEdge(const Edge& edge) {
-    EdgeList& set1 = edges.at(edge.id1());
-    int index1 = edge.side1() * 3 + edge.dock1();
-
-    EdgeList& set2 = edges.at(edge.id2());
-    int index2 = edge.side2() * 3 + edge.dock2();
-
-    if (!set1[index1].has_value() || !set2[index2].has_value())
-        return false;
-
-    set1[index1] = std::nullopt;
-    set2[index2] = std::nullopt;
-    connectedVal = Value::Unknown;
-    return true;
+    spanningTreeComputed = false;
+    if (modules.size() > 1) {
+        connectedVal = Value::False;
+        matricesVal = Value::False;
+    }
 }
 
 bool Configuration::execute(const Action::Rotate& action) {
+    if (!spanningTreeComputed && !computeSpanningTree())
+        return false;
     bool res = modules.at(action.id()).rotateJoint(action.joint(), action.angle());
-    if (res)
+    if (res) {
         matricesVal = Value::Unknown;
+        const auto& spannPred = spanningPred.at(action.id());
+        if (!spannPred.has_value()) {
+            auto otherSide = fixedSide == A ? B : A;
+            isMatrixComputed[action.id()][otherSide] = false;
+        } else {
+            auto otherSide = spannPred.value().second == A ? B : A;
+            isMatrixComputed[action.id()][otherSide] = false;
+        }
+    }
     return res;
 }
 
 bool Configuration::execute(const Action::Reconnect& action) {
     if (action.add())
         return addEdge(action.edge());
+    return removeEdge(action.edge());
+}
 
-    return eraseEdge(action.edge());
+void Configuration::spanningClearId(ID id) {
+    spanningPred.at(id) = std::nullopt;
+    for (auto& succOpt : spanningSucc.at(id)) {
+        succOpt = {};
+    }
+    spanningSuccCount.at(fixedId) = 0;
+}
+
+bool Configuration::computeSpanningTree() {
+    std::unordered_set<ID> seen;
+    std::queue<ID> bag;
+
+    bag.push(fixedId);
+    seen.insert(fixedId);
+    spanningClearId(fixedId);
+
+    while (!bag.empty()) {
+        auto currId = bag.front();
+        bag.pop();
+        for (const auto& edgeOpt : edges.at(currId)) {
+            if (!edgeOpt.has_value())
+                continue;
+            ID nextId = edgeOpt.value().id2();
+            if (seen.find(nextId) != seen.end())
+                continue;
+
+            bag.push(nextId);
+            seen.insert(nextId);
+            spanningClearId(nextId);
+            spanningPred.at(nextId) = {std::make_pair(currId, edgeOpt.value().side2())};
+            spanningSucc[currId][spanningSuccCount[currId]] = edgeOpt;
+            spanningSuccCount[currId] += 1;
+        }
+    }
+
+    spanningTreeComputed = seen.size() == modules.size();
+    connectedVal = spanningTreeComputed ? Value::True : Value::False;
+    return spanningTreeComputed;
 }

@@ -38,22 +38,22 @@ public:
 
     /**
      * \brief Rotates joint
-     * 
+     *
      * Failure (returning `false`) in this method leaves the joint unchanged.
-     * 
+     *
      * \return `false` if adding \p val makes value of \p joint 
      * overflow out of accepted range.
-     * 
+     *
      * Throws error if \p joint is not in enum
      */
     bool rotateJoint(Joint joint, double val);
 
     /**
      * \brief Sets joint
-     * 
+     *
      * \return `false` if \p val wasn't in accepted range and thus
      * value of joint wasn't changed
-     * 
+     *
      * Throws error if \p joint is not in enum
      */
     bool setJoint(Joint joint, double val);
@@ -83,9 +83,9 @@ enum Orientation { North = 0, East = 1, South = 2, West = 3 };
 
 class Edge {
 public:
-    Edge(ID id1, ShoeId side1, ConnectorId dock1, unsigned int ori, 
+    Edge(ID id1, ShoeId side1, ConnectorId dock1, unsigned int ori,
         ConnectorId dock2, ShoeId side2, ID id2, double onCoeff = 1) :
-            id1_(id1), id2_(id2), side1_(side1), side2_(side2), 
+            id1_(id1), id2_(id2), side1_(side1), side2_(side2),
             dock1_(dock1), dock2_(dock2), ori_(ori), onCoeff_(onCoeff) {}
 
     ID id1() const { return id1_; }
@@ -111,19 +111,19 @@ private:
 };
 
 inline Edge reverse(const Edge& edge) {
-    return {edge.id2(), edge.side2(), edge.dock2(), edge.ori(), 
+    return {edge.id2(), edge.side2(), edge.dock2(), edge.ori(),
         edge.dock1(), edge.side1(), edge.id1(), edge.onCoeff()};
 }
 
 /**
- * \brief Given \p edge returns next possible connection of \p edge.id1 
+ * \brief Given \p edge returns next possible connection of \p edge.id1
  * and \p edge.id2
- * 
+ *
  * Calling this function until it returns std::nullopt will generate all
  * possible edges between \p edge.id1 and \p edge.id2 -- all possible
  * combinations of shoes, docks and orientations.
- * 
- * \return Edge according to thenext possible connection of \p edge.id1 
+ *
+ * \return Edge according to thenext possible connection of \p edge.id1
  * and \p edge.id2
  */
 std::optional<Edge> nextEdge(const Edge& edge);
@@ -204,8 +204,8 @@ private:
 /**
  * \brief Checks if given vector of rotations rotates every joint
  * at most once.
- * 
- * \return `false` if there are at least two rotations in \p rotations 
+ *
+ * \return `false` if there are at least two rotations in \p rotations
  * that rotate same joint of the same module
  */
 bool unique(const std::vector<Action::Rotate>& rotations);
@@ -243,7 +243,6 @@ using ModuleMap = std::unordered_map<ID, Module>;
 using EdgeList = std::array<std::optional<Edge>, 6>;
 using EdgeMap = std::unordered_map<ID, EdgeList>;
 using MatrixMap = std::unordered_map<ID, std::array<Matrix, 2>>;
-
 enum Value { True, False, Unknown };
 
 class Configuration
@@ -279,41 +278,42 @@ public:
 
     /**
      * \brief Computes matrices for all shoes.
-     * 
+     *
      * This method is called in method isValid.
-     * 
-     * User should call this if they create new configuration or they change 
+     *
+     * User should call this if they create new configuration or they change
      * some angles and they don't call method isValid.
-     * 
+     *
      * \return `false` if there is inconsistency in computing matrices,
-     * i.e. matrix for one shoe was computed two different ways and 
+     * i.e. matrix for one shoe was computed two different ways and
      * the results aren't equal
      */
     bool computeMatrices();
-    
+
     /**
      * \brief Computes matrix for shoe at the end of \p edge from shoe at the
      * begining of \p edge.
-     * 
-     * For example, module with id = 1 is connected from shoe A to shoe B of 
+     *
+     * For example, module with id = 1 is connected from shoe A to shoe B of
      * module with id = 2. It takes matrix of shoe A of module 1 and computes
      * matrix of shoe B of module 2 from that.
-     * 
+     *
      * If neither matrix of shoes of the first module is computed, error is
      * thrown.
-     * 
+     *
      * \return Matrix of the shoe connected to the end of \p edge
      */
     Matrix computeConnectedMatrix(Edge edge) const;
 
     /**
-     * \brief Given \p id and \p side computes matrix for the other shoe 
+     * \brief Given \p id and \p side computes matrix for the other shoe
      * of the given module.
-     * 
+     *
      * \return Matrix of the other shoe of the given module
      */
     Matrix computeOtherSideMatrix(ID id, ShoeId side) const;
 
+    bool connected();
     bool connected() const;
 
     bool collisionFree() const;
@@ -322,13 +322,14 @@ public:
 
     /**
      * \brief Tries to execute given \p action.
-     * 
+     *
      * `False` is returned if either you try to add edge to already occupied
-     * dock, erase non-existent edge or perform invalid rotation.
-     * 
+     * dock, erase non-existent edge, perform invalid rotation or configuration
+     * wasn't connected before executing.
+     *
      * This function does NOT check if two modules collide during rotations.
      * For this functionality use `executeIfValid` from `Generators.h`
-     * 
+     *
      * \return `True` if \p action was executed without problems.
      */
     bool execute(const Action& action);
@@ -348,6 +349,13 @@ public:
 
     void clearEdges();
 
+    /**
+     * \brief Computes spanning tree of configuration.
+     *
+     * \returns `True` if configuration is connected, `False` if not.
+     */
+    bool computeSpanningTree();
+
 private:
     // Maps module ID to data about the module.
     ModuleMap modules;
@@ -361,20 +369,36 @@ private:
     ShoeId fixedSide = A;
     Matrix fixedMatrix = identity;
 
-    Value connectedVal = Value::Unknown;
-    Value matricesVal = Value::Unknown;
+    Value connectedVal = Value::True;
+    Value matricesVal = Value::False;
 
-    // If the given edge is in the configuration, delete it from both modules.
-    bool eraseEdge(const Edge& edge);
+    std::unordered_map<ID, std::array<std::optional<Edge>, 6>> spanningSucc;
+    std::unordered_map<ID, unsigned int> spanningSuccCount;
+    std::unordered_map<ID, std::optional<std::pair<ID, ShoeId>>> spanningPred;
+    std::unordered_map<ID, std::array<bool,2>> isMatrixComputed;
+    bool spanningTreeComputed = false;
+
+
+    /**
+     * \brief Removes edge \p parent -> \p child from spanning tree.
+     *
+     * We assume that the edge from \p parent to \p child is in the spanning tree.
+     * After that it tries to locally fix the spanning tree.
+     *
+     * \returns `True` if it succeeded fixing, `False` if not.
+     */
+    bool removeSpanningEdge(ID parent, ID child);
+
+    void spanningClearId(ID id);
 
     /**
      * \brief Computes differences between all joints of module with ID \p id
      * and \p otherModule
-     * 
-     * Given \p id and \p otherModule , `jointDiff` emplaces into \p rotations 
+     *
+     * Given \p id and \p otherModule , `jointDiff` emplaces into \p rotations
      * rotation for each joint whose value in module with ID \p id and \p otherModule
-     * differs. 
-     * 
+     * differs.
+     *
      * If you would execute emplaced rotations on module with ID \p id, all joints
      * would have the same values as the joints of \p otherModule
      */
@@ -383,16 +407,14 @@ private:
     /**
      * \brief Computes differences between all edges connected to module with ID \p id
      * in \p self and in \p other Configuration.
-     * 
-     * Given \p id and \p otherModule , `edgeDiff` emplaces into \p reconnections 
+     *
+     * Given \p id and \p otherModule , `edgeDiff` emplaces into \p reconnections
      * reconnection and disconnection for each dock so that if you would (and could)
      * execute emplaced actions, module with ID \p id would have same connections in
      * \p self and \p other -- with same IDs, same orientations and from same docks.
      */
     void edgeDiff(std::vector<Action::Reconnect>& reconnections, ID id, const Configuration &other) const;
 
-    // Fix given module: one side is fixed. Fix all connected.
-    bool computeMatricesRec(ID id, ShoeId side);
     void dfsID(ID id, std::unordered_set<ID>& seen) const;
 
     bool execute(const Action::Rotate& action);
