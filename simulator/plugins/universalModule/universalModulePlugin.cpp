@@ -429,7 +429,7 @@ void UMP::onUpdate()
 
 void UMP::setVelocity( int joint, double velocity )
 {
-    auto jointData = joints.at( joint );
+    auto & jointData = joints.at( joint );
     auto targets = PIDLoader::InitTargets::newVelocity( jointData.joint->GetName(), velocity );
 
     PIDLoader::updateInitTargetsSdf( _sdf, targets );
@@ -438,7 +438,7 @@ void UMP::setVelocity( int joint, double velocity )
 
 void UMP::setTorque( int joint, double torque )
 {
-    auto jointData = joints.at( joint );
+    auto & jointData = joints.at( joint );
     auto targets = PIDLoader::InitTargets::newForce( jointData.joint->GetName(), torque );
 
     PIDLoader::updateInitTargetsSdf( _sdf, targets );
@@ -449,7 +449,7 @@ void UMP::setPositionWithSpeed( int joint, double desiredPosition, double speed 
 {
     using InitTargets = PIDLoader::InitTargets;
 
-    auto jointData = joints.at( joint );
+    auto & jointData = joints.at( joint );
     auto targets = InitTargets::newPosition( jointData.joint->GetName(), desiredPosition, speed );
 
     PIDLoader::updateInitTargetsSdf( _sdf, targets );

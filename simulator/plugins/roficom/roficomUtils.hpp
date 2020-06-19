@@ -125,6 +125,9 @@ class RoficomController
     }
 
 public:
+    RoficomController( const RoficomController & ) = delete;
+    RoficomController & operator=( const RoficomController & ) = delete;
+
     RoficomController( JointDataBase & jointData,
                        RoFICoMPosition initPosition,
                        std::function< void( RoFICoMPosition ) > onPositionReached )

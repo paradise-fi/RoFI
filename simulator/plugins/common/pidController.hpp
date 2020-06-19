@@ -425,6 +425,9 @@ class PIDController
     }
 
 public:
+    PIDController( const PIDController & ) = delete;
+    PIDController & operator=( const PIDController & ) = delete;
+
     template < typename PositionCallback,
                typename = std::enable_if_t< std::is_invocable_v< PositionCallback, double > > >
     PIDController( JointDataBase & jointData,

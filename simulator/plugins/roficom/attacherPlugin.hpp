@@ -27,6 +27,12 @@ public:
     static constexpr double distancePrecision = 2e-3; // [m]
     static constexpr double connectionForce = 4;      // [N]
 
+
+    AttacherPlugin() = default;
+
+    AttacherPlugin( const AttacherPlugin & ) = delete;
+    AttacherPlugin & operator=( const AttacherPlugin & ) = delete;
+
     void Load( physics::WorldPtr world, sdf::ElementPtr /*sdf*/ ) override;
 
     bool attach( StringPair modelNames, Orientation orientation );
