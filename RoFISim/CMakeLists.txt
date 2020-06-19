@@ -44,3 +44,4 @@ add_subdirectory(hal)
 add_subdirectory(tools)
 
 add_subdirectory(examples)
+add_subdirectory(demos)

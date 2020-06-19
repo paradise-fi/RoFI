@@ -7,9 +7,9 @@ WORLD ?=
 NAME ?=
 ARGS ?=
 
-SUBFOLDERS = examples hal plugins tools
+SUBFOLDERS = demos examples hal plugins tools
 
-.PHONY: build-all clean run format-all example world-creator help ${SUBFOLDERS}
+.PHONY: build-all clean run format-all demo example world-creator help ${SUBFOLDERS}
 
 build:
 	mkdir -p build
@@ -32,14 +32,14 @@ run: plugins
 format-all:
 	find ./ ! \( -path "./build/*" \) -a \( -type f -iname *.hpp -o -type f -iname *.cpp \) | xargs clang-format --style=file -i
 
-example: build
+demo example: build
 ifndef NAME
 	$(error NAME is not set. Call 'make help' for more info)
 endif
 	cd build && make -j8 ${NAME}
-	@test -f ./build/examples/${NAME}/${NAME} || \
-		( echo "\nERROR: No example '${NAME}' found\nCall 'make help' for more info\n" ; exit 1 )
-	./build/examples/${NAME}/${NAME} ${ARGS}
+	@test -f ./build/$@s/${NAME}/${NAME} || \
+		( echo "\nERROR: No $@ '${NAME}' found\nCall 'make help' for more info\n" ; exit 1 )
+	./build/$@s/${NAME}/${NAME} ${ARGS}
 
 world-creator: build
 	cd build && make worldCreator -j8
@@ -59,6 +59,8 @@ help:
 	@echo "\t\tRuns gazebo, gazebo_args default to '--verbose'."
 	@echo "\n\tformat-all"
 	@echo "\t\tFormats all '.hpp' and '.cpp' files."
+	@echo "\n\tdemo NAME=<demo_name> [ARGS=<demo_args>]"
+	@echo "\t\tRuns the RoFISim client for the demo."
 	@echo "\n\texample NAME=<example_name> [ARGS=<example_args>]"
 	@echo "\t\tRuns the RoFISim client for the example."
 	@echo "\n\tworld-creator ARGS=\"[-i <input_file>] [-o <output_file>] [-w <empty_world_file>]\""
