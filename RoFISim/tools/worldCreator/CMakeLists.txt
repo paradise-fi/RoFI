@@ -53,4 +53,5 @@ function(create_world world_file input_file)
         DEPENDS
             ${CMAKE_CURRENT_BINARY_DIR}/${world_file}
     )
+    add_dependencies(worlds-all ${world_file})
 endfunction()
