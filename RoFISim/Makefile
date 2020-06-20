@@ -7,7 +7,7 @@ WORLD ?=
 NAME ?=
 ARGS ?=
 
-SUBFOLDERS = demos examples hal plugins tools
+SUBFOLDERS = demos examples hal plugins tools worlds
 
 .PHONY: build-all clean run format-all demo example world-creator help ${SUBFOLDERS}
 
@@ -26,7 +26,7 @@ ${SUBFOLDERS} : build
 clean:
 	rm -rf build
 
-run: plugins
+run: plugins worlds
 	./setGazeboVariables.sh ${GAZEBO} ${GZ_ARGS} ${WORLD}
 
 format-all:
