@@ -178,7 +178,7 @@ sdf::SDFPtr loadFromFile( const std::string & filename )
         throw std::runtime_error( "Unable to initialize sdf" );
     }
 
-    auto fullPath = sdf::findFile( filename );
+    auto fullPath = common::find_file( filename );
     if ( fullPath.empty() )
     {
         std::cerr << "Could not find file '" + filename + "'. Did you set path variables?\n";
