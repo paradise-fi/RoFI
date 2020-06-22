@@ -286,7 +286,7 @@ public:
      *
      * \return `false` if there is inconsistency in computing matrices,
      * i.e. matrix for one shoe was computed two different ways and
-     * the results aren't equal
+     * the results aren't equal (rotated module, that couldn't be rotated)
      */
     bool computeMatrices();
 
@@ -316,6 +316,7 @@ public:
     bool connected();
     bool connected() const;
 
+    bool collisionFree();
     bool collisionFree() const;
 
     Vector massCenter() const;
@@ -375,7 +376,10 @@ private:
     std::unordered_map<ID, std::array<std::optional<Edge>, 6>> spanningSucc;
     std::unordered_map<ID, unsigned int> spanningSuccCount;
     std::unordered_map<ID, std::optional<std::pair<ID, ShoeId>>> spanningPred;
+    std::unordered_map<ID, std::array<std::optional<Edge>, 6>> spanningCross;
     std::unordered_map<ID, std::array<bool,2>> isMatrixComputed;
+    std::unordered_map<ID, std::array<bool,2>> isMatrixUpdated;
+    std::unordered_map<ID, bool> isChecked;
     bool spanningTreeComputed = false;
 
 
@@ -390,6 +394,8 @@ private:
     bool removeSpanningEdge(ID parent, ID child);
 
     void spanningClearId(ID id);
+
+    bool checkConsistency();
 
     /**
      * \brief Computes differences between all joints of module with ID \p id

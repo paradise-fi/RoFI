@@ -62,6 +62,112 @@ TEST_CASE("Edge generation")
     }
 }
 
+TEST_CASE("More complex use")
+{
+    // This will create 6 roller with one module to side
+    Configuration config;
+    config.addModule(0, 90, 0, 0);
+    config.addModule(0, 0, 0, 1);
+    config.addModule(90, 0, 0, 2);
+    config.addModule(0, -90, 0, 3);
+    config.addModule(0, 0, 0, 4);
+    config.addModule(-90, 0, 0, 5);
+    config.addModule(0, 0, 0, 6);
+
+    REQUIRE(config.addEdge({0, B, ZMinus, 0, ZMinus, A, 1}));
+    REQUIRE(config.addEdge({1, B, ZMinus, 0, ZMinus, A, 2}));
+    REQUIRE(config.addEdge({2, B, ZMinus, 0, ZMinus, A, 3}));
+    REQUIRE(config.addEdge({3, B, ZMinus, 0, ZMinus, A, 4}));
+    REQUIRE(config.addEdge({4, B, ZMinus, 0, ZMinus, A, 5}));
+    REQUIRE(config.addEdge({5, B, ZMinus, 0, ZMinus, A, 0}));
+    REQUIRE(config.addEdge({1, B, XPlus, 0, ZMinus, A, 6}));
+
+    REQUIRE(config.computeSpanningTree());
+    REQUIRE(config.isValid());
+
+    Action dis01(Action::Reconnect{false, Edge{0, B, ZMinus, 0, ZMinus, A, 1}});
+    REQUIRE(config.execute(dis01));
+    REQUIRE(config.isValid());
+
+    std::vector<Action::Rotate> rotations = {
+        {0, Beta, -90}, {2, Alpha, -90},
+        {3, Beta, 90}, {5, Alpha, 90}};
+    Action rot(rotations, {});
+    REQUIRE(config.execute(rot));
+    REQUIRE(config.isValid());
+
+    Action dis16(Action::Reconnect{false, Edge{1, B, XPlus, 0, ZMinus, A, 6}});
+    REQUIRE(config.execute(dis16));
+    REQUIRE(!config.isValid());
+}
+
+TEST_CASE("Invalid alpha rotation of fixed module")
+{
+    Configuration config;
+    config.addModule(0, 90, 0, 0);
+    config.addModule(0, 0, 0, 1);
+    config.addModule(90, 0, 0, 2);
+    config.addModule(0, -90, 0, 3);
+    config.addModule(0, 0, 0, 4);
+    config.addModule(-90, 0, 0, 5);
+
+    REQUIRE(config.addEdge({0, B, ZMinus, 0, ZMinus, A, 1}));
+    REQUIRE(config.addEdge({1, B, ZMinus, 0, ZMinus, A, 2}));
+    REQUIRE(config.addEdge({2, B, ZMinus, 0, ZMinus, A, 3}));
+    REQUIRE(config.addEdge({3, B, ZMinus, 0, ZMinus, A, 4}));
+    REQUIRE(config.addEdge({4, B, ZMinus, 0, ZMinus, A, 5}));
+    REQUIRE(config.addEdge({5, B, ZMinus, 0, ZMinus, A, 0}));
+
+    REQUIRE(config.isValid());
+    Action rot(Action::Rotate{0, Alpha, 90});
+    REQUIRE(config.execute(rot));
+    REQUIRE(!config.isValid());
+}
+
+TEST_CASE("Invalid gamma rotation of fixed module")
+{
+    Configuration config;
+    config.addModule(0, 90, 0, 0);
+    config.addModule(0, 0, 0, 1);
+    config.addModule(90, 0, 0, 2);
+    config.addModule(0, -90, 0, 3);
+    config.addModule(0, 0, 0, 4);
+    config.addModule(-90, 0, 0, 5);
+
+    REQUIRE(config.addEdge({0, B, ZMinus, 0, ZMinus, A, 1}));
+    REQUIRE(config.addEdge({1, B, ZMinus, 0, ZMinus, A, 2}));
+    REQUIRE(config.addEdge({2, B, ZMinus, 0, ZMinus, A, 3}));
+    REQUIRE(config.addEdge({3, B, ZMinus, 0, ZMinus, A, 4}));
+    REQUIRE(config.addEdge({4, B, ZMinus, 0, ZMinus, A, 5}));
+    REQUIRE(config.addEdge({5, B, ZMinus, 0, ZMinus, A, 0}));
+
+    REQUIRE(config.isValid());
+    Action rot(Action::Rotate{0, Gamma, 90});
+    REQUIRE(config.execute(rot));
+    REQUIRE(!config.isValid());
+}
+
+TEST_CASE("Rotation into overlapping modules")
+{
+    Configuration config;
+    config.addModule(0, 90, 0, 0);
+    config.addModule(0, 0, 0, 1);
+    config.addModule(90, 0, 0, 2);
+    config.addModule(0, -90, 0, 3);
+    config.addModule(0, 0, 0, 4);
+    config.addModule(-90, 0, 0, 5);
+
+    REQUIRE(config.addEdge({0, B, ZMinus, 0, ZMinus, A, 1}));
+    REQUIRE(config.addEdge({1, B, ZMinus, 0, ZMinus, A, 2}));
+    REQUIRE(config.addEdge({2, B, ZMinus, 0, ZMinus, A, 3}));
+    REQUIRE(config.addEdge({3, B, ZMinus, 0, ZMinus, A, 4}));
+    REQUIRE(config.addEdge({4, B, ZMinus, 0, ZMinus, A, 5}));
+
+    Action rot(Action::Rotate{1, Beta, -90});
+    REQUIRE(config.execute(rot));
+    REQUIRE(!config.isValid());
+}
+
 TEST_CASE("Generate all edges")
 {
     Edge edge(0, A, XPlus, 0, XPlus, A, 1);
@@ -264,6 +370,3 @@ TEST_CASE("Diff reconnections and rotations") {
     REQUIRE((action.reconnections().at(1) == reconnect1 || action.reconnections().at(1) == reconnect2));
     REQUIRE(action.reconnections().at(0) != action.reconnections().at(1));
 }
-
-
-
