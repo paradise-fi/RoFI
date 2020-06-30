@@ -54,4 +54,13 @@ int main(int argc, char* argv[])
     path.push_back(treefy<MakeStar>(path[path.size()-1]));
     std::cout << IO::toString(path[path.size()-1]);
 */
+/*  Testing makeSpace */
+    std::unordered_set<ID> isolate;
+    if (!init.computeSpanningTree())
+        std::cout << "Compute failed" << std::endl;
+
+    addSubtree(91, isolate, init.getSpanningSucc());
+    std::cout << "Isolate size: " << isolate.size() << std::endl;
+    path = makeSpace(init, isolate, &stat);
+    std::cout << IO::toString(path[path.size()-1]) << std::endl;
 }

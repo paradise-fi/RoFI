@@ -407,7 +407,114 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
     return {};
 }
 
-void addSubtree(ID subRoot, std::unordered_set<ID> allowed, const std::unordered_map<ID, std::array<std::optional<Edge>, 6>>& spannSucc) {
+double spaceEval(const Configuration& config, const std::unordered_set<ID>& isolate) {
+    double dist = 0;
+    const auto& matrixMap = config.getMatrices();
+    for (const auto& [id, mArray] : matrixMap) {
+        if (isolate.find(id) != isolate.end())
+            continue;
+        for (auto isolatedId : isolate) {
+            const auto& isolatedMArray = matrixMap.at(isolatedId);
+            for (const auto& m1 : mArray) {
+                for (const auto& m2 : isolatedMArray) {
+                    dist += 1 / centerSqDistance(m1, m2);
+                }
+            }
+        }
+    }
+    return dist;
+}
+
+std::vector<Configuration> makeSpace(const Configuration& init, const std::unordered_set<ID>& isolate, AlgorithmStat* stat = nullptr) {
+    unsigned step = 90;
+    unsigned limit = 10 * init.getModules().size();
+    double path_pref = 0.1;
+    double free_pref = 1 - path_pref;
+    ConfigPred pred;
+    ConfigPool pool;
+
+    // Already computed shortest distance from init to configuration.
+    ConfigValue initDist;
+
+    // Shortest distance from init through this configuration to goal.
+    ConfigValue goalDist;
+
+    double startDist = spaceEval(init, isolate);
+
+    MinMaxHeap<EvalPair, SnakeEvalCompare> queue(limit);
+
+    const Configuration* pointer = pool.insert(init);
+    const Configuration* bestConfig = pointer;
+    double bestScore = startDist;
+    double worstDist = startDist;
+
+    initDist[pointer] = 0;
+    goalDist[pointer] = startDist;
+    pred[pointer] = pointer;
+    int maxQSize = 0;
+    int i = 0;
+    queue.push( {goalDist[pointer], pointer} );
+
+
+    while (!queue.empty() && i++ < limit) {
+        maxQSize = std::max(maxQSize, queue.size());
+        const auto [d, current] = queue.popMin();
+        double currDist = initDist[current];
+
+        std::vector<Configuration> nextCfgs;
+        bisimpleNext(*current, nextCfgs, step);
+
+        for (const auto& next : nextCfgs) {
+            const Configuration* pointerNext;
+            double newEval = spaceEval(next, isolate);
+            double newDist = path_pref * (currDist + 1) + free_pref * newEval;
+            bool update = false;
+
+            if (limit <= queue.size() + i) {
+                if (newDist > worstDist)
+                    continue;
+                if (!queue.empty()) {
+                    queue.popMax();
+                    const auto [newWorstD, _worstConfig] = queue.max();
+                    worstDist = newWorstD;
+                }
+            }
+
+            if (newDist > worstDist)
+                worstDist = newDist;
+
+            if (!pool.has(next)) {
+                pointerNext = pool.insert(next);
+                initDist[pointerNext] = currDist + 1;
+                update = true;
+            } else {
+                pointerNext = pool.get(next);
+            }
+
+            if (newEval < bestScore) {
+                bestScore = newEval;
+                bestConfig = pointerNext;
+            }
+
+            if ((currDist + 1 < initDist[pointerNext]) || update) {
+                initDist[pointerNext] = currDist + 1;
+                goalDist[pointerNext] = newDist;
+                pred[pointerNext] = current;
+                queue.push({newDist, pointerNext});
+            }
+        }
+    }
+    auto path = createPath(pred, bestConfig);
+    if (stat != nullptr) {
+        stat->pathLength = path.size();
+        stat->queueSize = maxQSize;
+        stat->seenCfgs = pool.size();
+    }
+
+    return path;
+}
+
+void addSubtree(ID subRoot, std::unordered_set<ID>& allowed, const std::unordered_map<ID, std::array<std::optional<Edge>, 6>>& spannSucc) {
     std::queue<ID> toAdd;
     toAdd.push(subRoot);
     while (!toAdd.empty()) {
@@ -422,7 +529,7 @@ void addSubtree(ID subRoot, std::unordered_set<ID> allowed, const std::unordered
     }
 }
 
-std::vector<Configuration> leafStar(const Configuration& init, std::unordered_set<ID> allowed, AlgorithmStat* stat = nullptr) {
+std::vector<Configuration> leafStar(const Configuration& init, const std::unordered_set<ID>& allowed, AlgorithmStat* stat = nullptr) {
     // tu ještě makeSpace na allowed (astar co maximalizuje dist všech
     // (projety třeba logem) od allowed)
     // potřeba vymyslet heuristiku, která by to nutila "znudlovat" allowed moduly
