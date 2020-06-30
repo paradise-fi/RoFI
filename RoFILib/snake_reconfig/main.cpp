@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     std::vector<Configuration> path;
     AlgorithmStat stat;
     int moduleCount = init.getIDs().size();
-    
+
     double path_pref = 0.5;
     int limit = 10000/moduleCount;
 
@@ -36,8 +36,12 @@ int main(int argc, char* argv[])
         path_pref = std::atof(argv[2]);
         limit = std::atoi(argv[3]);
     }
-    path = SnakeStar(init, &stat, limit, path_pref);
 
+    Edge connection(4, A, ConnectorId::ZMinus, Orientation::North, ConnectorId::ZMinus, B, 7);
+    path = connectArm(init, connection, &stat);
+    std::cout << stat.toString() << std::endl;
+    std::cout << IO::toString(path[path.size()-1]);
+/*
     SpaceGrid debug(path[path.size()-1]);
     std::cout << debug.getFreeness() << std::endl;
 
@@ -45,5 +49,5 @@ int main(int argc, char* argv[])
 
     std::cout << IO::toString(path[path.size()-1]);
     path.push_back(treefy<MakeStar>(path[path.size()-1]));
-    std::cout << IO::toString(path[path.size()-1]);
+    std::cout << IO::toString(path[path.size()-1]);*/
 }

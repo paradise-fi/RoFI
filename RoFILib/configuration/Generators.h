@@ -39,7 +39,7 @@ void generateBisimpleActions(const Configuration& config, std::vector<Action>& r
 void generateParalyzedActions(const Configuration& config, std::vector<Action>& res, unsigned step, 
     const std::unordered_set<ID>& allowed_indices);
 
-void generateBiParalyzedAction(const Configuration& config, std::vector<Action>& res, unsigned step, 
+void generateBiParalyzedOnlyRotAction(const Configuration& config, std::vector<Action>& res, unsigned step, 
     const std::unordered_set<ID>& allowed_indices);
 
 void generateRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step);
@@ -110,7 +110,7 @@ void bisimpleNext(const Configuration& config, std::vector<Configuration>& res, 
 void paralyzedNext(const Configuration& config, std::vector<Configuration>& res, unsigned step, 
     const std::unordered_set<ID>& allowed_indices);
 
-void biParalyzedNext(const Configuration& config, std::vector<Configuration>& res, unsigned step, 
+void biParalyzedOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step, 
     const std::unordered_set<ID>& allowed_indices);
 
 
