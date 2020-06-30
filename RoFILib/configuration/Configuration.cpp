@@ -245,6 +245,15 @@ std::vector<Edge> Configuration::getEdges(ID id, const std::unordered_set<ID>& e
     return res;
 }
 
+const std::unordered_map<ID, unsigned int>& Configuration::getSpanningSuccCount() const {
+    return spanningSuccCount;
+}
+
+const std::unordered_map<ID, std::optional<std::pair<ID, ShoeId>>>& Configuration::getSpanningPred() const {
+    return spanningPred;
+}
+
+
 void Configuration::addModule(double alpha, double beta, double gamma, ID id) {
     modules.emplace(std::piecewise_construct,
                     std::forward_as_tuple(id),  // args for key

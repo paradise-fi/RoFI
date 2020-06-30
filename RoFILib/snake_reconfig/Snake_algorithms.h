@@ -25,7 +25,7 @@ inline double eval(const Configuration& configuration, SpaceGrid& sg) {
     return sg.getDist();
 }
 
-inline std::vector<Configuration> SnakeStar(const Configuration& init, AlgorithmStat* stat = nullptr, 
+inline std::vector<Configuration> SnakeStar(const Configuration& init, AlgorithmStat* stat = nullptr,
     int limit = 5000, double path_pref = 0.1)
 {
     unsigned step = 90;
@@ -183,7 +183,8 @@ inline Configuration treefy(const Configuration& init, chooseRootFunc chooseRoot
     ID root = chooseRoot(init);
     Configuration treed = init;
     treed.clearEdges();
-    
+    treed.setFixed(root, A, identity); // maybe change the choose root to return shoe as well
+
     std::unordered_set<ID> seen{};
     std::stack<ID> dfs_stack{};
 
@@ -206,8 +207,8 @@ inline Configuration treefy(const Configuration& init, chooseRootFunc chooseRoot
     return treed;
 }
 
-inline std::vector<Configuration> paralyzedAStar(const Configuration& init, const Configuration& goal, 
-    EvalFunction& eval = Eval::trivial, AlgorithmStat* stat = nullptr, std::unordered_set<unsigned> allowed_indices = {})
+inline std::vector<Configuration> paralyzedAStar(const Configuration& init, const Configuration& goal,
+    EvalFunction& eval = Eval::trivial, AlgorithmStat* stat = nullptr, std::unordered_set<ID> allowed_indices = {})
 {
     ConfigPred pred;
     ConfigPool pool;
@@ -277,4 +278,136 @@ inline std::vector<Configuration> paralyzedAStar(const Configuration& init, cons
         stat->seenCfgs = pool.size();
     }
     return {};
+}
+
+bool isSnake(const Configuration& config) {
+    return false;
+}
+
+double distFromConn(const Configuration& config, const Edge& connection) {
+    if (config.findEdge(connection))
+        return 0;
+    const auto& realPos = config.getMatrices().at(connection.id2()).at(connection.side2());
+    auto wantedPos = config.computeConnectedMatrix(connection);
+    return sqDistance(realPos, wantedPos);
+}
+
+std::unordered_set<ID> makeAllowed(const Configuration& init, const Edge& connection) {
+    std::unordered_set<ID> allowed;
+    const auto& spannSuccCount = init.getSpanningSuccCount();
+    const auto& spannPred = init.getSpanningPred();
+    for (ID currId : {connection.id1(), connection.id2()}) {
+        while (spannSuccCount.at(currId) < 2) {
+            allowed.insert(currId);
+            const auto& currPred = spannPred.at(currId);
+            if (!currPred.has_value())
+                break;
+            currId = currPred.value().first;
+        }
+    }
+    return allowed;
+}
+
+std::vector<Configuration> connectArm(const Configuration& init, const Edge& connection, AlgorithmStat* stat = nullptr) {
+    // Edge connection is from end of arm to end of arm
+    unsigned step = 90;
+    double path_pref = 0.5;
+    double free_pref = 1 - path_pref;
+    ConfigPred pred;
+    ConfigPool pool;
+
+    // Already computed shortest distance from init to configuration.
+    ConfigValue initDist;
+
+    // Shortest distance from init through this configuration to goal.
+    ConfigValue goalDist;
+
+    double startDist = distFromConn(init, connection);
+
+    if (startDist == 0)
+        return {init};
+
+    std::priority_queue<EvalPair, std::vector<EvalPair>, SnakeEvalCompare> queue;
+
+    const Configuration* pointer = pool.insert(init);
+    initDist[pointer] = 0;
+    goalDist[pointer] = startDist;
+    pred[pointer] = pointer;
+    unsigned long maxQSize = 0;
+
+    queue.push( {goalDist[pointer], pointer} );
+
+    std::unordered_set<ID> allowed = makeAllowed(init, connection);
+
+    while (!queue.empty()) {
+        maxQSize = std::max(maxQSize, queue.size());
+        const auto [d, current] = queue.top();
+        double currDist = initDist[current];
+        queue.pop();
+
+        std::vector<Configuration> nextCfgs;
+        biParalyzedNext(*current, nextCfgs, step, allowed);
+
+        for (const auto& next : nextCfgs) {
+            const Configuration* pointerNext;
+            double newEval = distFromConn(next, connection);
+            double newDist = path_pref * (currDist + 1) + free_pref * newEval;
+            bool update = false;
+
+            if (!pool.has(next)) {
+                pointerNext = pool.insert(next);
+                initDist[pointerNext] = currDist + 1;
+                update = true;
+            } else {
+                pointerNext = pool.get(next);
+            }
+
+            if ((currDist + 1 < initDist[pointerNext]) || update) {
+                initDist[pointerNext] = currDist + 1;
+                goalDist[pointerNext] = newDist;
+                pred[pointerNext] = current;
+                queue.push({newDist, pointerNext});
+            }
+
+            if (newEval == 0) {
+                auto path = createPath(pred, pointerNext);
+                if (stat != nullptr) {
+                    stat->pathLength = path.size();
+                    stat->queueSize = maxQSize;
+                    stat->seenCfgs = pool.size();
+                }
+                return path;
+            }
+        }
+    }
+    if (stat != nullptr) {
+        stat->pathLength = 0;
+        stat->queueSize = maxQSize;
+        stat->seenCfgs = pool.size();
+    }
+    return {};
+}
+
+std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat* stat = nullptr) {
+    // držet si konce v prioritní frontě, když to neuspěje, tak popni
+    //      podívej se na top fronty + najdi nejbližší jiný konec s opačnou polaritou (který je dostatečně blízko)
+    //          vytvoř prostor na zavolání crippled-astar
+    //          zavolej vytvoření prostoru
+    //          zavolej crippled-astar s magnetem mezi konci
+    //          pokud selže, najdi vyzkoušej najít jiný konec
+    // jsi had, tak ok. Jinak jsme smutní.
+    return {};
+}
+
+std::vector<Configuration> reconfigToSnake(const Configuration& init, AlgorithmStat* stat = nullptr) {
+    std::vector<Configuration> path = SnakeStar(init, stat);
+    if (path.empty())
+        return path;
+    path.push_back(treefy<MakeStar>(path.back()));
+    auto toSnake = treeToSnake(path.back(), stat);
+    path.reserve(path.size() + toSnake.size());
+    for (const auto& config : toSnake) {
+        path.push_back(config);
+    }
+    return path;
 }

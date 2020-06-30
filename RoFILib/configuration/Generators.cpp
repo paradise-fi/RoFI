@@ -80,7 +80,7 @@ void generateBisimpleActions(const Configuration& config, std::vector<Action>& r
         res.emplace_back(reconnection);
 }
 
-void generateParalyzedActions(const Configuration& config, std::vector<Action>& res, unsigned step, 
+void generateParalyzedActions(const Configuration& config, std::vector<Action>& res, unsigned step,
     const std::unordered_set<ID>& allowed_indices)
 {
     std::vector<Action::Rotate> rotations;
@@ -91,6 +91,23 @@ void generateParalyzedActions(const Configuration& config, std::vector<Action>& 
     for (auto& rotation : rotations)
         res.emplace_back(rotation);
 
+    for (auto& reconnection : reconnections)
+        res.emplace_back(reconnection);
+}
+
+void generateBiParalyzedActions(const Configuration& config, std::vector<Action>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices)
+{
+    std::vector<Action::Rotate> rotations;
+    generateParalyzedRotations(config, rotations, step, allowed_indices);
+    std::vector<Action::Reconnect> reconnections;
+    generateParalyzedReconnect(config, reconnections, allowed_indices);
+
+    for (auto it1 = rotations.begin(); it1 != rotations.end(); ++it1) {
+        res.emplace_back(*it1);
+        for (auto it2 = it1; it2 != rotations.end(); ++it2)
+            res.emplace_back(std::vector<Action::Rotate>{*it1, *it2}, std::vector<Action::Reconnect>{});
+    }
     for (auto& reconnection : reconnections)
         res.emplace_back(reconnection);
 }
@@ -106,8 +123,8 @@ void generateRotations(const Configuration& config, std::vector<Action::Rotate>&
     }
 }
 
-void generateParalyzedRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step, 
-    const std::unordered_set<ID>& allowed_indices) 
+void generateParalyzedRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices)
 {
     for (auto [id, mod] : config.getModules()) {
         if (allowed_indices.find(id) == allowed_indices.end())
@@ -152,7 +169,7 @@ void generateConnections(const Configuration& config, std::vector<Action::Reconn
 }
 
 void generateParalyzedConnections(const Configuration& config, std::vector<Action::Reconnect>& res,
-    const std::unordered_set<ID>& allowed_indices) 
+    const std::unordered_set<ID>& allowed_indices)
 {
     for (const auto& [id1, ms1] : config.getMatrices()) {
         if (allowed_indices.find(id1) == allowed_indices.end())
@@ -198,8 +215,8 @@ void generateDisconnections(const Configuration& config, std::vector<Action::Rec
     }
 }
 
-void generateParalyzedDisconnections(const Configuration& config, std::vector<Action::Reconnect>& res, 
-    const std::unordered_set<ID>& allowed_indices) 
+void generateParalyzedDisconnections(const Configuration& config, std::vector<Action::Reconnect>& res,
+    const std::unordered_set<ID>& allowed_indices)
 {
     for (auto& [id, set] : config.getEdges()) {
         if (allowed_indices.find(id) == allowed_indices.end())
@@ -253,11 +270,23 @@ void bisimpleNext(const Configuration& config, std::vector<Configuration>& res, 
 }
 
 
-void paralyzedNext(const Configuration& config, std::vector<Configuration>& res, unsigned step, 
-    const std::unordered_set<ID>& allowed_indices) 
+void paralyzedNext(const Configuration& config, std::vector<Configuration>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices)
 {
     std::vector<Action> actions;
     generateParalyzedActions(config, actions, step, allowed_indices);
+    for (auto& action : actions) {
+        auto cfgOpt = executeIfValid(config, action);
+        if (cfgOpt.has_value())
+            res.push_back(cfgOpt.value());
+    }
+}
+
+void biParalyzedNext(const Configuration& config, std::vector<Configuration>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices)
+{
+    std::vector<Action> actions;
+    generateBiParalyzedActions(config, actions, step, allowed_indices);
     for (auto& action : actions) {
         auto cfgOpt = executeIfValid(config, action);
         if (cfgOpt.has_value())
