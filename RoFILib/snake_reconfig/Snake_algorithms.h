@@ -77,10 +77,11 @@ inline std::vector<Configuration> SnakeStar(const Configuration& init, Algorithm
             if (newEval != 0 && limit <= queue.size() + i) {
                 if (newDist > worstDist)
                     continue;
-
-                worstDist = newDist;
-                if (!queue.empty())
+                if (!queue.empty()) {
                     queue.popMax();
+                    const auto [newWorstD, _worstConfig] = queue.max();
+                    worstDist = newWorstD;
+                }
             }
 
             if (newDist > worstDist)
@@ -311,7 +312,7 @@ std::unordered_set<ID> makeAllowed(const Configuration& init, const Edge& connec
 std::vector<Configuration> connectArm(const Configuration& init, const Edge& connection, AlgorithmStat* stat = nullptr) {
     // Edge connection is from end of arm to end of arm
     unsigned step = 90;
-    double path_pref = 0.5;
+    double path_pref = 0.1;
     double free_pref = 1 - path_pref;
     ConfigPred pred;
     ConfigPool pool;
@@ -323,36 +324,54 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
     ConfigValue goalDist;
 
     double startDist = distFromConn(init, connection);
+    double worstDist = startDist;
 
     if (startDist == 0)
         return {init};
 
-    std::priority_queue<EvalPair, std::vector<EvalPair>, SnakeEvalCompare> queue;
+    auto limit = init.getModules().size() * 100;
+    MinMaxHeap<EvalPair, SnakeEvalCompare> queue(limit);
 
     const Configuration* pointer = pool.insert(init);
     initDist[pointer] = 0;
     goalDist[pointer] = startDist;
     pred[pointer] = pointer;
-    unsigned long maxQSize = 0;
+    int maxQSize = 0;
 
     queue.push( {goalDist[pointer], pointer} );
 
     std::unordered_set<ID> allowed = makeAllowed(init, connection);
-
+    int i = 0;
     while (!queue.empty()) {
         maxQSize = std::max(maxQSize, queue.size());
-        const auto [d, current] = queue.top();
+        const auto [d, current] = queue.popMin();
         double currDist = initDist[current];
-        queue.pop();
+        if (++i > 100) {
+            std::cout << IO::toString(*current) << std::endl;
+            i = 0;
+        }
 
         std::vector<Configuration> nextCfgs;
-        biParalyzedNext(*current, nextCfgs, step, allowed);
+        biParalyzedOnlyRotNext(*current, nextCfgs, step, allowed);
 
         for (const auto& next : nextCfgs) {
             const Configuration* pointerNext;
             double newEval = distFromConn(next, connection);
             double newDist = path_pref * (currDist + 1) + free_pref * newEval;
             bool update = false;
+
+            if (newEval != 0 && queue.full()) {
+                if (newDist > worstDist)
+                    continue;
+                if (!queue.empty()) {
+                    queue.popMax();
+                    const auto [newWorstD, _worstConfig] = queue.max();
+                    worstDist = newWorstD;
+                }
+            }
+
+            if (newDist > worstDist)
+                worstDist = newDist;
 
             if (!pool.has(next)) {
                 pointerNext = pool.insert(next);
