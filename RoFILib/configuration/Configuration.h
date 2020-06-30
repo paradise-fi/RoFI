@@ -265,6 +265,9 @@ public:
     std::vector<Edge> getEdges(ID id) const;
     std::vector<Edge> getEdges(ID id, const std::unordered_set<ID>& exclude) const;
 
+    const std::unordered_map<ID, unsigned int>& getSpanningSuccCount() const;
+    const std::unordered_map<ID, std::optional<std::pair<ID, ShoeId>>>& getSpanningPred() const;
+
     // Creates new module with given ID and angles. Creates an empty set of edges corresponding to the module.
     void addModule(double alpha, double beta, double gamma, ID id);
 

@@ -69,6 +69,16 @@ inline double distance(const Matrix& a, const Matrix& b)
     return res;
 }
 
+inline double sqDistance(const Matrix& a, const Matrix& b)
+{
+    double res = 0;
+    for (int r = 0; r < 4; ++r)
+    {
+        res += sqDistance(column(a, r), column(b, r));
+    }
+    return res;
+}
+
 inline double centerSqDistance(const Matrix& a, const Matrix& b)
 {
     double res = 0;

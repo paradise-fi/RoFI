@@ -39,6 +39,9 @@ void generateBisimpleActions(const Configuration& config, std::vector<Action>& r
 void generateParalyzedActions(const Configuration& config, std::vector<Action>& res, unsigned step, 
     const std::unordered_set<ID>& allowed_indices);
 
+void generateBiParalyzedAction(const Configuration& config, std::vector<Action>& res, unsigned step, 
+    const std::unordered_set<ID>& allowed_indices);
+
 void generateRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step);
 
 void generateParalyzedRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step, 
@@ -105,7 +108,11 @@ void bisimpleNext(const Configuration& config, std::vector<Configuration>& res, 
  * Only rotations with angle + \p step and - \p step are allowed.
  */
 void paralyzedNext(const Configuration& config, std::vector<Configuration>& res, unsigned step, 
-    const std::unordered_set<unsigned>& allowed_indices);
+    const std::unordered_set<ID>& allowed_indices);
+
+void biParalyzedNext(const Configuration& config, std::vector<Configuration>& res, unsigned step, 
+    const std::unordered_set<ID>& allowed_indices);
+
 
 template<typename T>
 inline void getAllSubsetsRec(const std::vector<T>& set, std::vector<std::vector<T>>& res, 
