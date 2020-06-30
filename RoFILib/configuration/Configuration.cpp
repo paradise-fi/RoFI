@@ -245,6 +245,11 @@ std::vector<Edge> Configuration::getEdges(ID id, const std::unordered_set<ID>& e
     return res;
 }
 
+
+const std::unordered_map<ID, std::array<std::optional<Edge>, 6>> Configuration::getSpanningSucc() const {
+    return spanningSucc;
+}
+
 const std::unordered_map<ID, unsigned int>& Configuration::getSpanningSuccCount() const {
     return spanningSuccCount;
 }

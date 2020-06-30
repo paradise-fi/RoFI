@@ -265,6 +265,7 @@ public:
     std::vector<Edge> getEdges(ID id) const;
     std::vector<Edge> getEdges(ID id, const std::unordered_set<ID>& exclude) const;
 
+    const std::unordered_map<ID, std::array<std::optional<Edge>, 6>> getSpanningSucc() const;
     const std::unordered_map<ID, unsigned int>& getSpanningSuccCount() const;
     const std::unordered_map<ID, std::optional<std::pair<ID, ShoeId>>>& getSpanningPred() const;
 

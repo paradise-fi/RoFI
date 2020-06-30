@@ -407,6 +407,51 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
     return {};
 }
 
+void addSubtree(ID subRoot, std::unordered_set<ID> allowed, const std::unordered_map<ID, std::array<std::optional<Edge>, 6>>& spannSucc) {
+    std::queue<ID> toAdd;
+    toAdd.push(subRoot);
+    while (!toAdd.empty()) {
+        auto currId = toAdd.front();
+        toAdd.pop();
+        allowed.insert(currId);
+        for (const auto& optEdge : spannSucc.at(currId)) {
+            if (!optEdge.has_value())
+                continue;
+            toAdd.push(optEdge.value().id2());
+        }
+    }
+}
+
+std::vector<Configuration> leafStar(const Configuration& init, std::unordered_set<ID> allowed, AlgorithmStat* stat = nullptr) {
+    // tu ještě makeSpace na allowed (astar co maximalizuje dist všech
+    // (projety třeba logem) od allowed)
+    // potřeba vymyslet heuristiku, která by to nutila "znudlovat" allowed moduly
+    return {};
+}
+
+std::vector<Configuration> fixLeaf(const Configuration& init, ID toFix, AlgorithmStat* stat = nullptr) {
+    const auto& spannSuccCount = init.getSpanningSuccCount();
+    const auto& spannSucc = init.getSpanningSucc();
+    const auto& spannPred = init.getSpanningPred();
+    if (spannSuccCount.at(toFix) != 0)
+        return {};
+
+    if (!spannPred.at(toFix).has_value())
+        return {};
+
+    auto pred = spannPred.at(toFix).value().first;
+    std::unordered_set<ID> allowed;
+    if (spannSuccCount.at(pred) > 1) {
+        addSubtree(pred, allowed, spannSucc);
+    } else if (spannPred.at(pred).has_value()) {
+        addSubtree(spannPred.at(pred).value().first, allowed, spannSucc);
+    } else {
+        return {};
+    }
+
+    return leafStar(init, allowed, stat);
+}
+
 std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat* stat = nullptr) {
     // držet si konce v prioritní frontě, když to neuspěje, tak popni
     //      podívej se na top fronty + najdi nejbližší jiný konec s opačnou polaritou (který je dostatečně blízko)
