@@ -45,14 +45,16 @@
 #include "lwipopts.h"
 #include "lwip/debug.h"
 
+#define LWIP_DEBUG 1
+
 #define LWIP_IPV6                 1
 #define LWIP_IPV6_FORWARD         1
 #define LWIP_IPV6_MLD             1
 #define LWIP_RAW                  1
 
 // change if needed
-#define MEM_LIBC_MALLOC           0
-#define MEMP_MEM_MALLOC           0
+#define MEM_LIBC_MALLOC           1
+#define MEMP_MEM_MALLOC           1
 
 #define IPV6_FRAG_COPYHEADER      1
 #define LWIP_MULTICAST_TX_OPTIONS 1
@@ -60,6 +62,8 @@
 #define MEMP_NUM_MLD6_GROUP       16
 #define MEMP_NUM_IGMP_GROUP       16
 
+//#define LWIP_PBUF_REF_T           uint16_t
+#define LWIP_DONT_PROVIDE_BYTEORDER_FUNCTIONS 1
 
 /*
    -----------------------------------------------
@@ -109,26 +113,26 @@
  * If the application sends a lot of data out of ROM (or other static memory),
  * this should be set high.
  */
-#define MEMP_NUM_PBUF                   16
+#define MEMP_NUM_PBUF                   128
 
 /**
  * MEMP_NUM_RAW_PCB: Number of raw connection PCBs
  * (requires the LWIP_RAW option)
  */
-#define MEMP_NUM_RAW_PCB                16
+#define MEMP_NUM_RAW_PCB                64
 
 /**
  * MEMP_NUM_UDP_PCB: the number of UDP protocol control blocks. One
  * per active UDP "connection".
  * (requires the LWIP_UDP option)
  */
-#define MEMP_NUM_UDP_PCB                16
+#define MEMP_NUM_UDP_PCB                64
 
 /**
  * MEMP_NUM_TCP_PCB: the number of simulatenously active TCP connections.
  * (requires the LWIP_TCP option)
  */
-#define MEMP_NUM_TCP_PCB                16
+#define MEMP_NUM_TCP_PCB                64
 
 /**
  * MEMP_NUM_TCP_PCB_LISTEN: the number of listening TCP connections.
@@ -146,7 +150,7 @@
  * MEMP_NUM_REASSDATA: the number of simultaneously IP packets queued for
  * reassembly (whole packets, not fragments!)
  */
-#define MEMP_NUM_REASSDATA              1
+#define MEMP_NUM_REASSDATA              8
 
 /**
  * MEMP_NUM_ARP_QUEUE: the number of simulateously queued outgoing
@@ -191,7 +195,7 @@
 /**
  * PBUF_POOL_SIZE: the number of buffers in the pbuf pool.
  */
-#define PBUF_POOL_SIZE                  8
+#define PBUF_POOL_SIZE                  400 /* same as on ESP32 */
 
 /*
    ---------------------------------
@@ -249,7 +253,7 @@
  * PBUF_POOL_SIZE > IP_REASS_MAX_PBUFS so that the stack is still able to receive
  * packets even if the maximum amount of fragments is enqueued for reassembly!
  */
-#define IP_REASS_MAX_PBUFS              4
+#define IP_REASS_MAX_PBUFS              16
 
 /**
  * IP_FRAG_USES_STATIC_BUF==1: Use a static MTU-sized buffer for IP
