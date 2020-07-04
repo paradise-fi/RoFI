@@ -1,7 +1,78 @@
 #include <lwip/pbuf.h>
+#include <lwip/netif.h>
+#include <lwip/ip.h>
+
 #include <type_traits>
+#include <sstream>
 
 namespace rofi::hal {
+
+/**
+ * \brief Wrapper over LwIP ip6_addr_t.
+ * 
+ * Provides a few useful methods and C++ operators.
+ */
+struct Ip6Addr : ip6_addr_t {
+	Ip6Addr( const char* str ) {
+		ip6addr_aton( str, this );
+    }
+    Ip6Addr( ip6_addr addr ) : ip6_addr( addr ) {}
+	Ip6Addr( ip6_addr&& o ) {
+		std::swap( addr, o.addr );
+	}
+
+	Ip6Addr( uint8_t mask ) {
+		mask_to_address( mask, this );
+	}
+
+    bool operator==( const Ip6Addr& o ) const {
+		return addr[0] == o.addr[0] && addr[1] == o.addr[1] && addr[2] == o.addr[2]
+					&& addr[3] == o.addr[3];
+	}
+
+	bool operator!=( const Ip6Addr& o ) const {
+		return !( o == *this );
+	}
+
+	struct Ip6Addr operator&( const Ip6Addr& mask ) const {
+		Ip6Addr res( *this );
+		for ( int i = 0; i < 4; i++ )
+			res.addr[ i ] = addr[ i ] & mask.addr[ i ];
+		return res;
+	}
+
+    static int size() { return 16; }
+};
+
+inline std::ostream& operator<<( std::ostream& o, const Ip6Addr& a ) {
+	o << ip6addr_ntoa( &a );
+	return o;
+}
+
+typedef struct netif netif_t;
+
+/**
+ * \brief Wrapper over LwIP netif.
+ * 
+ * Provides few useful methods.
+ */
+struct Netif : netif_t {
+	std::string getName() const {
+		std::ostringstream s;
+		s << name[ 0 ] << name[ 1 ] << static_cast< int >( num );
+		return s.str();
+	}
+
+	bool isStub() const {
+		return stub;
+	}
+
+	bool setStub( bool b ) {
+		return stub = b;
+	}
+private:
+	bool stub = false;
+};
 
 /**
  * \brief RAII wrapper over LwIP pbuff.
