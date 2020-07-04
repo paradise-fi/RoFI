@@ -4,11 +4,11 @@
 
 #include <lwip/udp.h>
 
-#include "roif6.hpp"
+#include "roif.hpp"
 
 namespace udpEx6
 {
-using namespace _rofi;
+using namespace rofinet;
 
 inline void onMasterPacket( void *,
                             struct udp_pcb * pcb,
@@ -23,7 +23,9 @@ inline void onMasterPacket( void *,
     std::cout << Ip6Addr( addr->u_addr.ip6 ) << "; port: " << port << " sent: " << packet.asString()
               << std::endl;
 
-    udp_sendto( pcb, packet.get(), addr, port );
+    auto res = udp_sendto( pcb, packet.release(), addr, port );
+	if ( res != ERR_OK )
+		std::cout << "udp_sendto returned " << lwip_strerr( res ) << "\n";
 }
 
 inline void onSlavePacket( void *,
@@ -82,7 +84,9 @@ inline void runSlave( const char * masterAddr )
         buffer[ len - 1 ] = 'a' + ( counter++ ) % 26;
         std::cout << "Sending message: " << buffer.asString() << " to "
                   << Ip6Addr( addr.u_addr.ip6 ) << std::endl;
-        res = udp_sendto( pcb, buffer.get(), &addr, 7777 );
+        res = udp_sendto( pcb, buffer.release(), &addr, 7777 );
+		if ( res != ERR_OK )
+			std::cout << "udp_sendto returned " << lwip_strerr( res ) << "\n";
         sleep( 2 );
     }
 }
