@@ -16,7 +16,7 @@ public:
 		int id = rofi.getId();
 		netif_add( &netif, nullptr, nullptr, nullptr, this, init, tcpip_input );
 		addAddress( ip, mask );
-		netif_set_default( this );
+		netif_set_default( &netif );
 
 		int connectors = rofi.getDescriptor().connectorCount;
 		PhysAddr pAddr( id, id, id, id, id, id );
@@ -32,7 +32,7 @@ public:
 	bool addAddress( const Ip6Addr& ip, uint8_t mask ) {
 		s8_t index = -1;
 		netif_add_ip6_address( &netif, &ip, &index );
-		return index >= 0 && rtable.add( ip, mask, 0, this );
+		return index >= 0 && rtable.add( ip, mask, 0, &netif );
 	}
 
 	bool removeAddress( const Ip6Addr& ip, uint8_t mask ) {
@@ -48,7 +48,7 @@ public:
 	}
 
 	void setUp() {
-        netif_set_up( this );
+        netif_set_up( &netif );
 		for ( auto& n : netifs ) {
 			n.setUp();
 		}
