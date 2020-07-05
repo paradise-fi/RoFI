@@ -10,7 +10,6 @@
 #include <cstring>
 #include <optional>
 #include <numeric>
-#include <iostream>
 
 #define STUB 1
 
@@ -342,14 +341,16 @@ private:
 
 		n->setStub( cmd == Command::Stubby );
 
+		int size = records.size();
 		removeForIf( n );
 		for ( int i = 0; i < count; i++ ) {
 			Ip6Addr ip   = as< Ip6Addr >( data );
 			uint8_t mask = as< uint8_t >( data + Ip6Addr::size() );
 			Cost cost    = as< Cost >( data + Ip6Addr::size() + 1 );
 			changed |= add( Record( ip, mask, Gateway( n->getName().c_str(), cost ) ) );
-			data += Entry::size();
+			data += Entry::size(); // changed is used with PA
 		}
+		changed = size != records.size();
 
 		if ( !isCall( cmd ) )
 			counter--;
