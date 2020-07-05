@@ -153,9 +153,9 @@ private:
 class RTable {
 public:
 	enum class Command : uint8_t { Call = 0, Response = 1, Stubby = 2 };
+	enum class Action  : int     { BroadcastRespond = 0, BroadcastCall = 1, Respond = 2, Nothing = 3 };
 
 	RTable() = default;
-	RTable( const std::function< void( Command ) >& f ) : broadcast( f ) {};
 
     bool add( const Ip6Addr& ip, uint8_t mask, Cost cost, Netif* n ) {
 		return add( Record( ip, mask, Gateway( n ? n->getName().c_str() : "null", cost ) ) );
@@ -242,10 +242,6 @@ public:
 		return stub != nullptr;
 	}
 
-	bool isModified() const {
-		return modified;
-	}
-
 	bool isCall( Command cmd ) const {
 		return cmd == Command::Call;
 	}
@@ -291,30 +287,27 @@ public:
 	}
 
 
-	bool update( PBuf packet, Netif* n ) {
-		bool gotCall = onRRPmsg( packet, n );
+	Action update( PBuf packet, Netif* n ) {
+		Action action = onRRPmsg( packet, n );
+		bool changed = false;
 
 		#if STUB
 		if ( !isStub() && shouldBeStub() ) {
+			changed = true;
 			makeStub();
 		} else if ( isStub() && !shouldBeStub() ) {
+			changed = true;
 			destroyStub();
 		}
 		#endif
 
-		return gotCall;
-	}
-
-	void setBroadcast( const std::function< void( Command ) >& f ) {
-		broadcast = f;
+		return !changed ? action : ( isStub() ? Action::BroadcastRespond : Action::BroadcastCall );
 	}
 
 private:
 	std::list< Record > records;
 	Netif* stub = nullptr;
-	volatile bool modified = false;
 	volatile unsigned counter = 0;
-	std::function< void( Command ) > broadcast;
 
 	bool addRecord( const Record& rec ) {
 		bool changed = false;
@@ -341,7 +334,7 @@ private:
 		} );
 	}
 	
-	bool onRRPmsg( rofi::hal::PBuf packet, Netif* n ) {
+	Action onRRPmsg( rofi::hal::PBuf packet, Netif* n ) {
 		bool changed = false;
 		Command cmd = as< Command >( packet.payload() );
 		int count = static_cast< int >( as< uint8_t >( packet.payload() + 1) );
@@ -361,7 +354,8 @@ private:
 		if ( !isCall( cmd ) )
 			counter--;
 
-		return isCall( cmd );
+		return ( changed && isSynced() ) ? ( isCall( cmd ) ? Action::BroadcastRespond : Action::BroadcastCall )
+		                                 : ( isCall( cmd ) ? Action::Respond : Action::Nothing );
 	}
 
 	bool hasOneOutOrStub() const {
@@ -402,18 +396,12 @@ private:
 
 	void makeStub() {
 		stub = getStubbyIf();
-		if ( broadcast )
-			broadcast( Command::Stubby );
-		
 		removeForIf( stub );
 		setDefaultGW( stub );
 	}
 
 	void destroyStub() {
 		stub = nullptr;
-		if ( broadcast )
-			broadcast( Command::Call );
-
 		removeDefaultGW( stub );
 	}
 

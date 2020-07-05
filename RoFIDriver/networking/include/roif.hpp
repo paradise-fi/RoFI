@@ -23,7 +23,9 @@ public:
 
 		netifs.reserve( connectors );
 		for ( int i = 0; i < connectors; i++ ) {
-			netifs.emplace_back( pAddr, rofi.getConnector( i ), rtable );
+			netifs.emplace_back( pAddr, rofi.getConnector( i ), rtable, [ this ]( const Netif* n ) {
+				broadcastRTableIfless( n );
+			} );
 		}
 	}
 
@@ -47,7 +49,6 @@ public:
 
 	void setUp() {
         netif_set_up( this );
-		rtable.setBroadcast( [ this ]( RTable::Command cmd ) { broadcastRTable( cmd ); } );
 		for ( auto& n : netifs ) {
 			n.setUp();
 		}
@@ -81,10 +82,7 @@ public:
     }
 
 	void broadcastRTable( RTable::Command cmd = RTable::Command::Call ) {
-		for ( auto& n : netifs ) {
-			if ( n.isConnected() )
-				n.sendRRP( cmd );
-		}
+		broadcastRTableIfless( nullptr, cmd );
 	}
 
 	const RTable& getRTable() const {
@@ -96,6 +94,13 @@ private:
 		std::ostringstream s;
 		s << "fc07::" << id;
 		return Ip6Addr( s.str().c_str() );
+	}
+
+	void broadcastRTableIfless( const Netif* netif, RTable::Command cmd = RTable::Command::Call ) {
+		for ( auto& n : netifs ) {
+			if ( n.isConnected() && netif != n.getNetif() )
+				n.sendRRP( cmd );
+		}
 	}
 
 	Netif netif;

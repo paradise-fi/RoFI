@@ -42,8 +42,8 @@ struct PhysAddr {
 
 class PhysNetif {
 public:
-	PhysNetif( PhysAddr pAddr, Connector connector, RTable& rt )
-	: pAddr( pAddr ), connector( connector ), rtable( rt ) {
+	PhysNetif( PhysAddr pAddr, Connector connector, RTable& rt, const std::function< void( const Netif* n ) >& f )
+	: pAddr( pAddr ), connector( connector ), rtable( rt ), _broadcast( f ) {
 		connector.onPacket( [ this ]( Connector c, uint16_t contentType, PBuf&& pb ) {
 			onPacket( c, contentType, std::move( pb ) );
 		} );
@@ -117,6 +117,10 @@ public:
 		connector.send( contentType, std::move( packet) );
 	}
 
+	const Netif* getNetif() const {
+		return &netif;
+	}
+
 private:
 	void onPacket( Connector c, uint16_t contentType, PBuf&& packet ) {
 		if ( contentType == 0 ) {
@@ -124,12 +128,29 @@ private:
 		}
 	}
 
+	void handleUpdate( RTable::Action act ) {
+		switch( act ) {
+			case RTable::Action::BroadcastRespond:
+				broadcast( &netif );
+				// fall through
+			case RTable::Action::Respond:
+				sendRRP( rtable.isStub() ? RTable::Command::Stubby : RTable::Command::Response );
+				std::cout << rtable << "\n";
+				break;
+			case RTable::Action::BroadcastCall:
+				broadcast();
+			default:
+				std::cout << rtable << "\n";
+				// Nothing
+				return;
+		};
+	}
+
 	u8_t static onRRP( void *arg, struct raw_pcb*, struct pbuf *p, const ip_addr_t* ) {
 		auto self = reinterpret_cast< PhysNetif* >( arg );
 		if ( self ) {
 			p = pbuf_free_header( p, IP6_HLEN );
-			if ( self->rtable.update( PBuf::reference( p ), &self->netif ) )
-				self->sendRRP( self->rtable.isStub() ? RTable::Command::Stubby : RTable::Command::Response );
+			self->handleUpdate( self->rtable.update( PBuf::reference( p ), &self->netif ) );
 			return 1;
 		}
 		return 0;
@@ -152,12 +173,18 @@ private:
 		raw_recv( pcb, onRRP, this );
 	}
 
+	void broadcast( const Netif* without = nullptr ) {
+		if ( _broadcast )
+			_broadcast( without );
+	}
+
 	Netif netif;
 	struct raw_pcb* pcb = nullptr;
 	PhysAddr pAddr;
 	Connector connector;
 	bool stub = false;
 	RTable& rtable;
+	std::function< void( const Netif* n ) > _broadcast;
 };
 	
 
