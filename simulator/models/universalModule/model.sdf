@@ -334,7 +334,7 @@
             <parent>shoeB</parent>
         </joint>
 
-        <plugin name="control" filename="libuniversalModulePlugin.so">
+        <plugin name="rofiModule" filename="librofiModulePlugin.so">
             <controller>
                 <joint>shoeARev</joint>
                 <joint>shoeBRev</joint>

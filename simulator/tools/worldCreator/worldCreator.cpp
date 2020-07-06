@@ -129,7 +129,7 @@ void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & conf
     {
         assert( id == module.getId() );
 
-        auto moduleSdf = newRoFIModule( id );
+        auto moduleSdf = newRoFIUniversalModule( id );
         insertElement( world, moduleSdf );
 
 
@@ -341,7 +341,7 @@ sdf::ElementPtr_V getModules( sdf::ElementPtr worldSdf )
     return children;
 }
 
-sdf::ElementPtr newRoFIModule( ID rofiId )
+sdf::ElementPtr newRoFIUniversalModule( ID rofiId )
 {
     auto sdf = loadFromFile( "model://universalModule/model.sdf" );
     assert( sdf );

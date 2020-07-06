@@ -66,7 +66,7 @@ void setAttached( sdf::ElementPtr worldSdf, const Configuration & config );
 
 sdf::ElementPtr_V getModules( sdf::ElementPtr worldSdf );
 
-sdf::ElementPtr newRoFIModule( ID rofiId );
+sdf::ElementPtr newRoFIUniversalModule( ID rofiId );
 
 std::string getRoFICoMInnerName( sdf::ElementPtr roficomSdf );
 

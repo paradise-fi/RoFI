@@ -301,7 +301,7 @@ inline sdf::ElementPtr getRoFICoMPluginSdf( sdf::ElementPtr modelSdf )
 
 inline sdf::ElementPtr getRoFIModulePluginSdf( sdf::ElementPtr modelSdf )
 {
-    return getPluginSdf( modelSdf, "libuniversalModulePlugin.so" );
+    return getPluginSdf( modelSdf, "librofiModulePlugin.so" );
 }
 
 inline sdf::ElementPtr getAttacherPluginSdf( sdf::ElementPtr worldSdf )

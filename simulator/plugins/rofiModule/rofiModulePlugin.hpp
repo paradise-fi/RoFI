@@ -18,17 +18,17 @@
 
 namespace gazebo
 {
-class UniversalModulePlugin : public ModelPlugin
+class RoFIModulePlugin : public ModelPlugin
 {
 public:
     static constexpr double doublePrecision = 0.001;
 
-    UniversalModulePlugin() = default;
+    RoFIModulePlugin() = default;
 
-    UniversalModulePlugin( const UniversalModulePlugin & ) = delete;
-    UniversalModulePlugin & operator=( const UniversalModulePlugin & ) = delete;
+    RoFIModulePlugin( const RoFIModulePlugin & ) = delete;
+    RoFIModulePlugin & operator=( const RoFIModulePlugin & ) = delete;
 
-    ~UniversalModulePlugin()
+    ~RoFIModulePlugin()
     {
         clearConnectors();
         if ( _node )
