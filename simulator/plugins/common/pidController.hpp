@@ -433,7 +433,7 @@ public:
             resetPositionPID( *lastControlType );
         }
 
-        setMaxSpeed( _jointData.getMinVelocity() );
+        setMaxSpeed( _jointData.getMaxVelocity() );
         setTargetPosition< false >( _jointData.joint->Position() );
         _positionReached = true;
     }

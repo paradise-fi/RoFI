@@ -2,7 +2,7 @@
 
 
 // Implementation of function to_array (since C++20)
-// Implementation taken from cppreference.com ( https://en.cppreference.com/w/cpp/container/array/to_array )
+// Implementation taken from https://en.cppreference.com/w/cpp/container/array/to_array
 
 namespace detail
 {
