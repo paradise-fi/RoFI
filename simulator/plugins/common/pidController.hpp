@@ -134,15 +134,74 @@ class VelocityPIDController : public ForceController
         return _jointData.joint->Position() >= _jointData.getMaxPosition();
     }
 
+    unsigned char _jointId = 0;
+    std::optional< unsigned char > _rofiId;
+    static constexpr int numOfJointBitsInId = 2;
+    static_assert( numOfJointBitsInId > 0 && numOfJointBitsInId < 8 );
+
+protected:
+    std::optional< unsigned char > getCombinedId() const
+    {
+        if ( !_rofiId )
+        {
+            return {};
+        }
+
+        [[maybe_unused]] constexpr auto jointBitsMask = ( 1 << numOfJointBitsInId ) - 1;
+        assert( ( *_rofiId & jointBitsMask ) == 0 );
+        assert( ( _jointId & ~jointBitsMask ) == 0 );
+
+        return *_rofiId | _jointId;
+    }
+
 public:
     VelocityPIDController( JointDataBase & jointData,
-                           const PIDLoader::ControllerValues & pidValues )
+                           const PIDLoader::ControllerValues & pidValues,
+                           int jointId )
             : ForceController( jointData )
             , _velController( pidValues.velocity.getPID( _jointData.getLowestEffort(),
                                                          _jointData.getMaxEffort() ) )
+            , _jointId( jointId % ( 1 << numOfJointBitsInId ) )
     {
         assert( _jointData );
         _velPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
+
+        if ( static_cast< int >( _jointId ) != jointId )
+        {
+            gzwarn << "Lorris will use joint id '" << _jointId << "' instead of '" << jointId
+                   << "'\n";
+        }
+    }
+
+    void setRofiId( int rofiId )
+    {
+        gzwarn << "Setting RoFI Id to '" << rofiId << "'\n";
+        if ( _rofiId )
+        {
+            gzwarn << "RoFI Id in controller already set\n";
+        }
+
+        static_assert( numOfJointBitsInId > 0 && numOfJointBitsInId < 8 );
+
+        if ( rofiId < 0 || rofiId >= ( 1 << ( 8 - numOfJointBitsInId ) ) )
+        {
+            int newRofiId = rofiId % ( 1 << ( 8 - numOfJointBitsInId ) );
+            assert( newRofiId >= 0 );
+
+            gzwarn << "For lorris, RoFI Id '" << rofiId << "' is changed to '" << newRofiId
+                   << "'\n";
+            rofiId = newRofiId;
+        }
+
+        {
+            using IdLimits = std::numeric_limits< decltype( _rofiId )::value_type >;
+            assert( rofiId >= IdLimits::min() );
+            assert( rofiId <= IdLimits::max() );
+            assert( rofiId << numOfJointBitsInId >= IdLimits::min() );
+            assert( rofiId << numOfJointBitsInId <= IdLimits::max() );
+        }
+
+        _rofiId = rofiId << numOfJointBitsInId;
     }
 
     template < bool Verbose = true >
@@ -176,26 +235,17 @@ public:
 
         _jointData.joint->SetForce( 0, force );
 
-        char id = 'C';
-        if ( _jointData.joint->GetName() == "shoeARev" )
+        auto combinedId = getCombinedId();
+        if ( combinedId )
         {
-            id = 'A';
+            lorris::Packet packet;
+            packet.devId() = *combinedId;
+            packet.command() = 0;
+            packet.push< float >( _targetVelocity ); // Target
+            packet.push< float >( velocity );        // Current
+            packet.push< float >( force );           // Output
+            packet.send();
         }
-        else if ( _jointData.joint->GetName() == "shoeBRev" )
-        {
-            id = 'B';
-        }
-        else if ( _jointData.joint->GetName() == "bodyRev" )
-        {
-            id = 'R';
-        }
-        lorris::Packet packet;
-        packet.devId() = id;
-        packet.command() = 0;
-        packet.push< float >( _targetVelocity ); // Target
-        packet.push< float >( velocity );        // Current
-        packet.push< float >( force );           // Output
-        packet.send();
     }
 
     void resetVelocityPID( PidControlType lastControlType )
@@ -276,8 +326,9 @@ public:
     template < typename PositionCallback >
     PositionPIDController( JointDataBase & jointData,
                            const PIDLoader::ControllerValues & pidValues,
-                           PositionCallback && positionReached )
-            : VelocityPIDController( jointData, pidValues )
+                           PositionCallback && positionReached,
+                           int jointId )
+            : VelocityPIDController( jointData, pidValues, jointId )
             , _posController( pidValues.position.getPID( _jointData.getLowestVelocity(),
                                                          _jointData.getMaxVelocity() ) )
             , _positionReachedCallback( std::forward< PositionCallback >( positionReached ) )
@@ -328,27 +379,17 @@ public:
         VelocityPIDController::setTargetVelocity( velocity, std::nullopt );
         VelocityPIDController::velPhysicsUpdate< false >();
 
-
-        char id = 'C';
-        if ( _jointData.joint->GetName() == "shoeARev" )
+        auto combinedId = getCombinedId();
+        if ( combinedId )
         {
-            id = 'A';
+            lorris::Packet packet;
+            packet.devId() = *combinedId;
+            packet.command() = 1;
+            packet.push< float >( _targetPosition ); // Target
+            packet.push< float >( position );        // Current
+            packet.push< float >( velocity );        // Output
+            packet.send();
         }
-        else if ( _jointData.joint->GetName() == "shoeBRev" )
-        {
-            id = 'B';
-        }
-        else if ( _jointData.joint->GetName() == "bodyRev" )
-        {
-            id = 'R';
-        }
-        lorris::Packet packet;
-        packet.devId() = id;
-        packet.command() = 1;
-        packet.push< float >( _targetPosition ); // Target
-        packet.push< float >( position );        // Current
-        packet.push< float >( velocity );        // Output
-        packet.send();
     }
 
     void resetPositionPID( PidControlType lastControlType )
@@ -432,11 +473,13 @@ public:
                typename = std::enable_if_t< std::is_invocable_v< PositionCallback, double > > >
     PIDController( JointDataBase & jointData,
                    const PIDLoader::ControllerValues & pidValues,
-                   PositionCallback && positionReached )
+                   PositionCallback && positionReached,
+                   int jointId )
             : _jointData( jointData )
             , _controller( jointData,
                            pidValues,
-                           std::forward< PositionCallback >( positionReached ) )
+                           std::forward< PositionCallback >( positionReached ),
+                           jointId )
     {
         _connection = event::Events::ConnectBeforePhysicsUpdate(
                 std::bind( &PIDController::onPhysicsUpdate, this ) );
@@ -478,6 +521,11 @@ public:
     {
         _controller.setTargetPositionWithSpeed( position, speed, activeController );
         activeController = PidControlType::Position;
+    }
+
+    void setRofiId( int rofiId )
+    {
+        _controller.setRofiId( rofiId );
     }
 };
 

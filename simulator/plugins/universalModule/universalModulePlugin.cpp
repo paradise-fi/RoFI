@@ -170,7 +170,8 @@ void UMP::findAndInitJoints()
         joints.emplace_back( std::move( joint ),
                              nullptr,
                              pidValues,
-                             std::bind( callback, joints.size(), std::placeholders::_1 ) );
+                             std::bind( callback, joints.size(), std::placeholders::_1 ),
+                             joints.size() );
         assert( joints.back() );
         assert( joints.back().joint->GetMsgType() == msgs::Joint::REVOLUTE );
     }
@@ -245,10 +246,14 @@ void UMP::onRofiCmd( const UMP::RofiCmdPtr & msg )
             if ( !rofiId )
             {
                 rofiId = msg->rofiid();
+                for ( auto & joint : joints )
+                {
+                    joint.controller.setRofiId( rofiId.value() );
+                }
             }
 
             rofi::messages::RofiResp resp;
-            resp.set_rofiid( rofiId.value_or( 0 ) );
+            resp.set_rofiid( rofiId.value() );
             resp.set_resptype( rofi::messages::RofiCmd::DESCRIPTION );
             auto description = resp.mutable_rofidescription();
             description->set_jointcount( joints.size() );
