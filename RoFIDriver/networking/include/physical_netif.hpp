@@ -12,8 +12,6 @@
 #include <cassert>
 #include <sstream>
 
-#include <iostream>
-
 namespace rofinet {
 	using namespace rofi::hal;
 
@@ -135,12 +133,10 @@ private:
 				// fall through
 			case RTable::Action::Respond:
 				sendRRP( rtable.isStub() ? RTable::Command::Stubby : RTable::Command::Response );
-				std::cout << rtable << "\n";
 				break;
 			case RTable::Action::BroadcastCall:
 				broadcast();
 			default:
-				std::cout << rtable << "\n";
 				// Nothing
 				return;
 		};
