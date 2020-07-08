@@ -34,7 +34,11 @@ public:
 	bool addAddress( const Ip6Addr& ip, uint8_t mask ) {
 		s8_t index = -1;
 		netif_add_ip6_address( &netif, &ip, &index );
-		return index >= 0 && rtable.add( ip, mask, 0, &netif );
+		if ( index >= 0 && rtable.add( ip, mask, 0, &netif ) ) {
+			broadcastRTable();
+			return true;
+		}
+		return false;
 	}
 
 	bool removeAddress( const Ip6Addr& ip, uint8_t mask ) {
@@ -42,7 +46,11 @@ public:
 		for ( ; index < LWIP_IPV6_NUM_ADDRESSES; index++ ) {
 			if ( ip == Ip6Addr( *ip_2_ip6( &ip6_addr[ index ] ) ) ) {
 				ip_addr_set_zero( &ip6_addr[ index ] );
-				return rtable.remove( ip, mask, this );
+				if ( rtable.remove( ip, mask, this ) ) {
+					broadcastRTable();
+					return true;
+				}
+				return false;
 			}
 		}
 
@@ -99,10 +107,15 @@ private:
 	}
 
 	void broadcastRTableIfless( const Netif* netif, RTable::Command cmd = RTable::Command::Call ) {
+		int counter = 0;
 		for ( auto& n : netifs ) {
 			if ( n.isConnected() && netif != n.getNetif() )
 				n.sendRRP( cmd );
+			counter++;
+			if ( counter == 5 )
+				break;
 		}
+		rtable.clearChanges();
 	}
 
 	Netif netif;

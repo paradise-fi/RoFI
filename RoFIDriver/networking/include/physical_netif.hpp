@@ -48,9 +48,10 @@ public:
 
 		connector.onConnectorEvent( [ this ]( Connector, ConnectorEvent e) {
 			if ( e == ConnectorEvent::Connected ) {
-				sendRRP();
+				sendRRP( RTable::Command::Hello );
 			} else {
 				rtable.removeForIf( &netif );
+				broadcast();
 			}
 		} );
 
@@ -66,7 +67,7 @@ public:
 		netif_create_ip6_linklocal_address( &netif, 0 );
 		netif_set_up( &netif );
 		if ( isConnected() )
-			sendRRP();
+			sendRRP( RTable::Command::Hello );
 	}
 
 	static err_t init( struct netif* n ) {
@@ -98,7 +99,7 @@ public:
 	bool sendRRP( RTable::Command cmd = RTable::Command::Call ) {
 		ip_addr_t ip;
 	    ipaddr_aton( "ff02::1f", &ip );
-		auto rrp = rtable.createRRPmsgIfless( &netif, cmd );
+		auto rrp = cmd == RTable::Command::Hello ? rtable.createRRPhello() : rtable.createRRPmsgIfless( &netif, cmd );
 		err_t res = raw_sendto_if_src( pcb, rrp.release(), &ip, &netif, &netif.ip6_addr[ 0 ] ); // use link-local address as source
 		return res == ERR_OK;
 	}
