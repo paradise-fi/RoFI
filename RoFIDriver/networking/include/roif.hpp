@@ -2,6 +2,8 @@
 
 #include "physical_netif.hpp"
 
+#include <lwip/netif.h>
+
 #include <cassert>
 #include <vector>
 #include <sstream>
@@ -11,7 +13,7 @@ namespace rofinet {
 
 class RoIF : public Netif {
 public:
-	RoIF( RoFI rofi ) : RoIF( rofi, createAddress( rofi.getId() ), 128 ) {}
+	RoIF( RoFI rofi ) : RoIF( rofi, createAddress( rofi.getId() ), 80 ) {}
 	RoIF( RoFI rofi, const Ip6Addr& ip, uint8_t mask ) {
 		int id = rofi.getId();
 		netif_add( &netif, nullptr, nullptr, nullptr, this, init, tcpip_input );
@@ -92,7 +94,7 @@ public:
 private:
 	Ip6Addr createAddress ( int id ) {
 		std::ostringstream s;
-		s << "fc07::" << id;
+		s << "fc07::" << id << ":0:0:1";
 		return Ip6Addr( s.str().c_str() );
 	}
 
