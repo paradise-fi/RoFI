@@ -145,9 +145,24 @@ struct Record {
 	}
 private:
 	bool active = false;
-	std::function< void() > cb;
+	bool finishedSumarizing = false;
+	Record* sumarized = nullptr;
+	std::vector< Record* > sumarizing;
+
+	friend std::ostream& operator<<( std::ostream& o, const Record& r );
 };
 
+std::ostream& operator<<( std::ostream& o, const Record& r ) {
+	char flag = '*';
+	o << r.ip << "/" << static_cast< int >( r.mask );
+	if ( r.isSumarized() )
+		o << " sumarized by " << r.sumarized->ip << "/" << static_cast< int >( r.sumarized->mask );
+	o << "\n";
+	for ( auto& g : r.gws ) {
+		o << "\t" << flag << g.name << " [" << g.cost << "]\n";
+	}
+	return o;
+}
 
 class RTable {
 public:
@@ -411,12 +426,7 @@ private:
 
 std::ostream& operator<<( std::ostream& o, const RTable& rt ) {
 	for ( const auto& r : rt.records ) {
-		o << r.ip << "/" << static_cast< int >( r.mask ) << "\n";
-		char sym = '*';
-		for ( const auto& g : r.gws ) {
-			o << "\t" << sym << g.name << " [" << g.cost << "]\n";
-			sym = ' ';
-		}
+		o << r;
 	}
 
 	if ( rt.isStub() )
