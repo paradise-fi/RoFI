@@ -423,7 +423,7 @@ private:
 			minimalPrefix = prefix;
 		}
 
-		return ( count > 0 ) && sumarize( last, minimalPrefix );
+		return ( count > 1 ) && sumarize( last, minimalPrefix );
 	}
 
 	void checkSumarizing() {
