@@ -204,8 +204,8 @@ std::ostream& operator<<( std::ostream& o, const Record& r ) {
 
 class RTable {
 public:
-	enum class Command : uint8_t { Call = 0, Response = 1, Stubby = 2, Hello = 3 };
-	enum class Action  : int     { BroadcastRespond = 0, BroadcastCall = 1, Respond = 2, Nothing = 3 };
+	enum class Command : uint8_t { Call = 0, Response = 1, Stubby = 2, Hello = 3, HelloResponse = 4, Sync = 5 };
+	enum class Action  : int     { BroadcastRespond = 0, BroadcastCall = 1, Respond = 2, Nothing = 3, OnHello = 4 };
 
 	RTable() = default;
 
@@ -287,7 +287,15 @@ public:
 	}
 
 	bool isCall( Command cmd ) const {
-		return cmd == Command::Call || cmd == Command::Hello;
+		return cmd == Command::Call;
+	}
+
+	bool isHello( Command cmd ) const {
+		return cmd == Command::Hello || cmd == Command::HelloResponse;
+	}
+
+	bool isResponse( Command cmd ) const {
+		return cmd == Command::Response || cmd == Command::Stubby;
 	}
 
 	bool isBroadcast( Action act ) const {
