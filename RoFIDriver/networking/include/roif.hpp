@@ -25,8 +25,8 @@ public:
 
 		netifs.reserve( connectors );
 		for ( int i = 0; i < connectors; i++ ) {
-			netifs.emplace_back( pAddr, rofi.getConnector( i ), rtable, [ this ]( const Netif* n ) {
-				broadcastRTableIfless( n );
+			netifs.emplace_back( pAddr, rofi.getConnector( i ), rtable, [ this ]( const Netif* n, RTable::Command cmd ) {
+				broadcastRTableIfless( n, cmd );
 			} );
 		}
 	}
@@ -64,10 +64,8 @@ public:
 		}
 	}
 
-	void send( const Ip6Addr& ip, PBuf&& packet, int contentType = 0 ) {
-		auto n = ip_find_route( &ip );
-		if ( n )
-			n->output_ip6( n, packet.release(), &ip );
+	void broadcastRTable( RTable::Command cmd = RTable::Command::Call ) {
+		broadcastRTableIfless( nullptr, cmd );
 	}
 
 	static err_t init( struct netif* roif ) {
@@ -107,13 +105,10 @@ private:
 	}
 
 	void broadcastRTableIfless( const Netif* netif, RTable::Command cmd = RTable::Command::Call ) {
-		int counter = 0;
 		for ( auto& n : netifs ) {
-			if ( n.isConnected() && netif != n.getNetif() )
+			const Netif* out = n.getNetif();
+			if ( n.isConnected() && netif != out && ( out && out->isActive() ) )
 				n.sendRRP( cmd );
-			counter++;
-			if ( counter == 5 )
-				break;
 		}
 		rtable.clearChanges();
 	}

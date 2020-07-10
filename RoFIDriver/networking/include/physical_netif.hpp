@@ -40,7 +40,7 @@ struct PhysAddr {
 
 class PhysNetif {
 public:
-	PhysNetif( PhysAddr pAddr, Connector connector, RTable& rt, const std::function< void( const Netif* n ) >& f )
+	PhysNetif( PhysAddr pAddr, Connector connector, RTable& rt, const std::function< void( const Netif*, RTable::Command ) >& f )
 	: pAddr( pAddr ), connector( connector ), rtable( rt ), _broadcast( f ) {
 		connector.onPacket( [ this ]( Connector c, uint16_t contentType, PBuf&& pb ) {
 			onPacket( c, contentType, std::move( pb ) );
@@ -170,9 +170,9 @@ private:
 		raw_recv( pcb, onRRP, this );
 	}
 
-	void broadcast( const Netif* without = nullptr ) {
+	void broadcast( const Netif* without = nullptr, RTable::Command cmd = RTable::Command::Call ) {
 		if ( _broadcast )
-			_broadcast( without );
+			_broadcast( without, cmd );
 	}
 
 	Netif netif;
@@ -181,7 +181,7 @@ private:
 	Connector connector;
 	bool stub = false;
 	RTable& rtable;
-	std::function< void( const Netif* n ) > _broadcast;
+	std::function< void( const Netif*, RTable::Command ) > _broadcast;
 };
 	
 
