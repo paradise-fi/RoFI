@@ -69,6 +69,11 @@ public:
 		broadcastRTableIfless( nullptr, cmd );
 	}
 
+	const RTable& getRTable() const {
+		return rtable;
+	}
+
+private:
 	static err_t init( struct netif* roif ) {
         roif->mtu = 120;
         roif->name[ 0 ] = 'r'; roif->name[ 1 ] = 'l';
@@ -90,8 +95,10 @@ public:
         return ERR_OK;
     }
 
-	void broadcastRTable( RTable::Command cmd = RTable::Command::Call ) {
-		broadcastRTableIfless( nullptr, cmd );
+	void send( const Ip6Addr& ip, PBuf&& packet, int contentType = 0 ) {
+		auto n = ip_find_route( &ip );
+		if ( n )
+			n->output_ip6( n, packet.release(), &ip );
 	}
 
 	void syncStub() {
@@ -108,7 +115,6 @@ public:
 		}
 	}
 
-private:
 	Ip6Addr createAddress ( int id ) {
 		std::ostringstream s;
 		s << "fc07::" << id << ":0:0:1";
