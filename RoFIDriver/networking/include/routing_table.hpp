@@ -443,7 +443,7 @@ private:
 			it--;
 		}
 
-		if ( toBeSumarized.size() > 0 ) {
+		if ( toBeSumarized.size() > 1 ) {
 			if ( !search( Record( ip, oldmask - prefix, Gateway( "null", cost ) ) ) ) {
 				it = records.insert( ++last, Record( ip, oldmask - prefix, Gateway( "null", cost ), toBeSumarized ) );
 				it->activate();
