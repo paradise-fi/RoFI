@@ -28,6 +28,7 @@ public:
 			netifs.emplace_back( pAddr, rofi.getConnector( i ), rtable, [ this ]( const Netif* n, RTable::Command cmd ) {
 				broadcastRTableIfless( n, cmd );
 			} );
+			netifs.back().setStubOut( [ this ]() { syncStub(); } );
 		}
 	}
 
@@ -93,8 +94,18 @@ public:
 		broadcastRTableIfless( nullptr, cmd );
 	}
 
-	const RTable& getRTable() const {
-		return rtable;
+	void syncStub() {
+		Netif* net = rtable.getStubOut();
+		if ( !net )
+			return;
+
+		for ( auto& n : netifs ) {
+			if ( n.getNetif() == net ) {
+				n.sendRRP( RTable::Command::Sync );
+				rtable.clearChanges();
+				break;
+			}
+		}
 	}
 
 private:

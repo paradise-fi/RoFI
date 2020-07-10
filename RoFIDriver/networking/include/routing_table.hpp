@@ -167,8 +167,7 @@ struct Record {
 	}
 
 	bool isStub() const {
-		auto ptr = netif_find( getGwName().c_str() );
-		Netif* n = static_cast< Netif* >( ptr ? ptr->state : nullptr ); 
+		Netif* n = static_cast< Netif* >( netif_find( getGwName().c_str() ) );
 		return n && n->isStub();
 	}
 
@@ -367,18 +366,19 @@ public:
 		return packet;
 	}
 
-
 	Action update( PBuf packet, Netif* n ) {
 		Action action = onRRPmsg( packet, n );
 		bool changed = false;
 
 		#if STUB
-		if ( !isStub() && shouldBeStub() ) {
-			changed = true;
-			makeStub();
-		} else if ( isStub() && !shouldBeStub() ) {
-			changed = true;
-			destroyStub();
+		if ( isSynced() ) {
+			if ( !isStub() && shouldBeStub() ) {
+				changed = true;
+				makeStub();
+			} else if ( isStub() && !shouldBeStub() ) {
+				changed = true;
+				destroyStub();
+			}
 		}
 		#endif
 
@@ -398,6 +398,10 @@ public:
 		#endif
 
 		return !changed ? action : ( isStub() ? Action::BroadcastRespond : Action::BroadcastCall );
+	}
+
+	Netif* getStubOut() const {
+		return stub;
 	}
 
 private:
@@ -615,22 +619,30 @@ private:
 			data += Entry::size();
 		}
 
-		if ( !isCall( cmd ) )
+		if ( isResponse( cmd ) )
 			counter--;
 
-		return ( changed && isSynced() ) ? ( isCall( cmd ) ? Action::BroadcastRespond : Action::BroadcastCall )
-		                                 : ( isCall( cmd ) ? Action::Respond : Action::Nothing );
+		if ( cmd == Command::Hello )
+			return Action::OnHello;
+
+		if ( cmd == Command::Sync ) // I'm gateway to some stub -> do nothing or resend to my
+			return Action::Nothing; // output interface in case I'm stub too
+
+		return ( changed && cmd != Command::Sync ) ? ( isCall( cmd ) ? Action::BroadcastRespond : Action::BroadcastCall )
+		                                           : ( isCall( cmd ) ? Action::Respond          : Action::Nothing       );
 	}
 
 	bool hasOneOutOrStub() const {
 		std::string name = "";
 		bool sameNames = true;
 		for ( const auto& rec : records ) {
-			if ( rec.getCost() == 0 && rec.mask != 0 ) // it's loopback -> skip it
+			if ( rec.getCost() == 0 && rec.mask != 0 )        // it's loopback -> skip it
 				continue;
-			if ( rec.isStub() )                        // it's stub -> skip it
+			if ( rec.isStub() )                               // it's stub -> skip it
 				continue;
-			if ( rec.getGwName() == "null" )           // it's sumarized -> skip it
+			if ( rec.getGwName() == "null" )                  // it's sumarized -> skip it
+				continue;
+			if ( stub && rec.getGwName() == stub->getName() ) // it's to stub out -> skip it
 				continue;
 			if ( name == "" )
 				name = rec.getGwName();
@@ -661,6 +673,9 @@ private:
 		return n;
 	}
 
+	bool isSynced() const {
+		return counter == 0;
+	}
 
 	void makeStub() {
 		stub = getStubbyIf();

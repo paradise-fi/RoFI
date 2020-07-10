@@ -179,9 +179,9 @@ private:
 	struct raw_pcb* pcb = nullptr;
 	PhysAddr pAddr;
 	Connector connector;
-	bool stub = false;
 	RTable& rtable;
 	std::function< void( const Netif*, RTable::Command ) > _broadcast;
+	std::function< void() > toStubOut;
 };
 	
 
