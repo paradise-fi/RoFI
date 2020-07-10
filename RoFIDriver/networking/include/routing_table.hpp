@@ -190,7 +190,8 @@ std::ostream& operator<<( std::ostream& o, const Record& r ) {
 		o << " sumarized by " << r.sumarized->ip << "/" << static_cast< int >( r.sumarized->mask );
 	o << "\n";
 	for ( auto& g : r.gws ) {
-		o << "\t" << flag << g.name << " [" << g.cost << "]\n";
+		o << "\t" << flag << g.name << " [" << g.cost << "]" << ( r.isStub() ? " stubby" : "      " ) << "\n";
+		flag = ' ';
 	}
 	return o;
 }
@@ -668,7 +669,8 @@ std::ostream& operator<<( std::ostream& o, const RTable& rt ) {
 	}
 
 	if ( rt.isStub() )
-		o << "stub node\n";
+		o << "stub node (output interface: " << rt.stub->getName() << ")\n";
+
 	return o;
 }
 
