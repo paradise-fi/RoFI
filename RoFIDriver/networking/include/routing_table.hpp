@@ -318,15 +318,16 @@ public:
 		enum class Act : bool { Add = true, Remove = false };
 	};
 
-	PBuf createRRPhello() {
-		int count   = records.size() - recForIfOrSummarized( nullptr );
+	PBuf createRRPhello( Netif* n, Command cmd = Command::Hello ) {
+		int count   = records.size() - recForIfOrSummarized( n );
 		auto packet = PBuf::allocate( 2 + count * Entry::size() );
-		as< Command >( packet.payload() )     = Command::Hello;
+		as< Command >( packet.payload() )     = cmd;
 		as< uint8_t >( packet.payload() + 1 ) = static_cast< uint8_t >( count );
 
-		counter++;
 		auto data = packet.payload() + 2;
 		for ( const auto& rec : records ) {
+			if ( n && rec.getGwName() == n->getName() )
+				continue;
 			if ( rec.isSumarized() )
 				continue; // skip sumarized records
 			addEntry( data, rec );
@@ -341,7 +342,7 @@ public:
 	}
 
 	PBuf createRRPmsgIfless( Netif* n, Command cmd = Command::Call ) {
-		int count   = n && n->isStub() ? 0 : ( changes.size() - changesIfless( n ) );
+		int count   = ( n && n->isStub() ) ? 0 : ( changes.size() - changesIfless( n ) );
 		auto packet = PBuf::allocate( 2 + count * Entry::size() );
 		as< Command >( packet.payload() )     = cmd;
 		as< uint8_t >( packet.payload() + 1 ) = static_cast< uint8_t >( count );
@@ -358,6 +359,8 @@ public:
 				continue; // do not propagate to ignored netif or stubby netif
 			if ( rec.isSumarized() )
 				continue; // do not propagate routes, which are sumarized
+			if ( rec.getCost() == 0 && rec.mask == 0 )
+				continue; // do not propagate default gw
 			
 			addEntry( data, rec, act );
 			data += Entry::size();
@@ -407,7 +410,7 @@ public:
 private:
 	std::list< Record > records;
 	Netif* stub = nullptr;
-	volatile unsigned counter = 0;
+	volatile int counter = 0;
 	std::vector< std::pair< Entry::Act, Record > > changes;
 
 	void addEntry( uint8_t* data, const Record& rec, Entry::Act act = Entry::Act::Add ) {
@@ -575,12 +578,9 @@ private:
 	}
 
 	int changesIfless( Netif* n ) const {
-		if ( !n )
-			return 0;
-
 		int count = 0;
 		for ( const auto& [ act, rec ] : changes ) {
-			if ( rec.getGwName() == n->getName() )
+			if ( ( n && rec.getGwName() == n->getName() ) || ( rec.getCost() == 0 && rec.mask == 0 ) || rec.isSumarized() )
 				count++;
 		}
 
@@ -588,6 +588,8 @@ private:
 	}
 	
 	void addToChanges( const Record& rec, Entry::Act action ) {
+		if ( rec.getCost() == 0 && rec.mask == 0 )
+			return;
 		if ( action == Entry::Act::Remove ) {
 			changes.push_back( { action, Record( rec.ip, rec.mask, Gateway( rec.getGwName().c_str(), rec.getCost() ) ) } );
 			for ( auto s : rec.sumarizing )
@@ -601,9 +603,12 @@ private:
 
 	Action onRRPmsg( rofi::hal::PBuf packet, Netif* n ) {
 		bool changed = false;
-		Command cmd = as< Command >( packet.payload() );
+		Command cmd  = as< Command >( packet.payload() );
 		int count = static_cast< int >( as< uint8_t >( packet.payload() + 1) );
 		auto data = packet.payload() + 2;
+
+		if ( isHello( cmd ) && !n->isActive() )
+			n->setActive( true );
 
 		n->setStub( cmd == Command::Stubby );
 
@@ -651,10 +656,6 @@ private:
 		}
 
 		return name != "" && sameNames; 
-	}
-
-	bool isSynced() const {
-		return counter == 0;
 	}
 
 	bool shouldBeStub() const {
