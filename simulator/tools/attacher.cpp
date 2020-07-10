@@ -5,6 +5,7 @@
 
 #include <connectorAttachInfo.pb.h>
 
+
 std::string ltrim( std::string str, const std::string & chars = "\t\n\v\f\r " )
 {
     str.erase( 0, str.find_first_not_of( chars ) );
@@ -22,7 +23,7 @@ std::string trim( std::string str, const std::string & chars = "\t\n\v\f\r " )
     return ltrim( rtrim( str, chars ), chars );
 }
 
-int main( int argc, char ** argv )
+int main()
 {
     using Info = rofi::messages::ConnectorAttachInfo;
 
@@ -37,50 +38,48 @@ int main( int argc, char ** argv )
     tmpString = trim( std::move( tmpString ) );
 
     node->Init( tmpString );
-    auto pubAttach = node->Advertise< Info >( "~/attach" );
-    auto pubDetach = node->Advertise< Info >( "~/detach" );
+    auto pub = node->Advertise< Info >( "~/attach_event" );
 
-    std::cout << "Advertizing on topic: '" << pubAttach->GetTopic() << "'\n";
-    std::cout << "Advertizing on topic: '" << pubDetach->GetTopic() << "'\n";
+    std::cout << "Advertizing on topic: '" << pub->GetTopic() << "'\n";
 
-    while ( true )
+    while ( std::cin )
     {
         Info info;
         std::optional< bool > attach;
 
-        while ( !attach.has_value() )
+        std::cout << "Write if you want to attach or detach:" << std::endl;
+        std::getline( std::cin, tmpString );
+        tmpString = trim( std::move( tmpString ) );
+        if ( tmpString == "attach" || tmpString == "a" )
         {
-            std::cout << "Write if you want to attach or detach: " << std::flush;
-            std::getline( std::cin, tmpString );
-            tmpString = trim( std::move( tmpString ) );
-            if ( tmpString == "attach" || tmpString == "a" )
-            {
-                attach = true;
-            }
-            else if ( tmpString == "detach" || tmpString == "d" )
-            {
-                attach = false;
-            }
-            else
-            {
-                std::cerr << "Could not recognize '" << tmpString << "'\n"
-                          << "Write 'attach'/'detach' (or 'a'/'d' respectively)\n";
-            }
+            attach = true;
+        }
+        else if ( tmpString == "detach" || tmpString == "d" )
+        {
+            attach = false;
+        }
+        else
+        {
+            std::cerr << "Could not recognize '" << tmpString << "'\n"
+                      << "Write 'attach'/'detach' (or 'a'/'d' respectively)\n";
+            continue;
         }
 
-        std::cout << "RoFICoM model 1: " << std::flush;
+        std::cout << "Write the scoped name of RoFICoM model 1 (delimetered by '::'):" << std::endl;
         std::getline( std::cin, tmpString );
         tmpString = trim( std::move( tmpString ) );
         info.set_modelname1( tmpString );
 
-        std::cout << "RoFICoM model 2: " << std::flush;
+        std::cout << "Write the scoped name of RoFICoM model 2 (delimetered by '::'):" << std::endl;
         std::getline( std::cin, tmpString );
         tmpString = trim( std::move( tmpString ) );
         info.set_modelname2( tmpString );
 
-        while ( attach.value() )
+        info.set_attach( attach.value() );
+
+        if ( attach.value() )
         {
-            std::cout << "Orientation (north, east, south, west): " << std::flush;
+            std::cout << "(Optional) Set orientation (north, east, south, west): " << std::endl;
             std::getline( std::cin, tmpString );
             tmpString = trim( std::move( tmpString ) );
             if ( tmpString == "north" || tmpString == "n" )
@@ -103,25 +102,10 @@ int main( int argc, char ** argv )
                 std::cout << "Orientation: west\n";
                 info.set_orientation( rofi::messages::ConnectorState::WEST );
             }
-            else
-            {
-                continue;
-            }
-            break;
         }
 
-        if ( attach.value() )
-        {
-            pubAttach->Publish( info, true );
-            info.PrintDebugString();
-            std::cout << "Sent message to '" << pubAttach->GetTopic() << "'\n";
-        }
-        else
-        {
-            pubDetach->Publish( info, true );
-            info.PrintDebugString();
-            std::cout << "Sent message to '" << pubDetach->GetTopic() << "'\n";
-        }
-        std::cout << std::endl;
+        pub->Publish( info, true );
+        info.PrintDebugString();
+        std::cout << "Sent message to '" << pub->GetTopic() << "'\n" << std::endl;
     }
 }
