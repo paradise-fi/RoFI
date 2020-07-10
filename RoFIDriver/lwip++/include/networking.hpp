@@ -70,8 +70,17 @@ struct Netif : netif_t {
 	bool setStub( bool b ) {
 		return stub = b;
 	}
+
+	bool isActive() const {
+		return active;
+	}
+
+	bool setActive( bool b ) {
+		return active = b;
+	}
 private:
-	bool stub = false;
+	bool stub   = false;
+	bool active = false;
 };
 
 /**

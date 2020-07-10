@@ -48,10 +48,15 @@ public:
 
 		connector.onConnectorEvent( [ this ]( Connector, ConnectorEvent e) {
 			if ( e == ConnectorEvent::Connected ) {
+				netif.setActive( true );
 				sendRRP( RTable::Command::Hello );
 			} else {
+				netif.setActive( false );
 				rtable.removeForIf( &netif );
-				broadcast();
+				if ( rtable.isStub() )
+					syncStubbyOut(); // propagate to output interface only 
+				else
+					broadcast();     // propagate to all neighbours
 			}
 		} );
 
@@ -68,6 +73,34 @@ public:
 		netif_set_up( &netif );
 		if ( isConnected() )
 			sendRRP( RTable::Command::Hello );
+	}
+
+	bool sendRRP( RTable::Command cmd = RTable::Command::Call ) {
+		ip_addr_t ip;
+	    ipaddr_aton( "ff02::1f", &ip );
+		auto rrp = rtable.isHello( cmd )        ? rtable.createRRPhello( &netif, cmd )
+		         : cmd == RTable::Command::Sync ? rtable.createRRPhello( &netif, cmd )
+		                                        : rtable.createRRPmsgIfless( &netif, cmd );
+		err_t res = raw_sendto_if_src( pcb, rrp.release(), &ip, &netif, &netif.ip6_addr[ 0 ] ); // use link-local address as source
+		return res == ERR_OK;
+	}
+
+	const Netif* getNetif() const {
+		return &netif;
+	}
+
+	void setStubOut( const std::function< void() >& f ) {
+		toStubOut = f;
+	}
+
+	void syncStubbyOut() {
+		if ( toStubOut )
+			toStubOut();
+	}
+
+private:
+	void send( const Ip6Addr&, PBuf&& packet, int contentType = 0 ) {
+		connector.send( contentType, std::move( packet) );
 	}
 
 	static err_t init( struct netif* n ) {
@@ -96,32 +129,7 @@ public:
 		return ERR_OK;
 	}
 
-	bool sendRRP( RTable::Command cmd = RTable::Command::Call ) {
-		ip_addr_t ip;
-	    ipaddr_aton( "ff02::1f", &ip );
-		auto rrp = cmd == RTable::Command::Hello ? rtable.createRRPhello() : rtable.createRRPmsgIfless( &netif, cmd );
-		err_t res = raw_sendto_if_src( pcb, rrp.release(), &ip, &netif, &netif.ip6_addr[ 0 ] ); // use link-local address as source
-		return res == ERR_OK;
-	}
-
-	bool isStub() const {
-		return stub;
-	}
-
-	bool setStub( bool b ) {
-		return stub = b;
-	}
-	
-	void send( const Ip6Addr&, PBuf&& packet, int contentType = 0 ) {
-		connector.send( contentType, std::move( packet) );
-	}
-
-	const Netif* getNetif() const {
-		return &netif;
-	}
-
-private:
-	void onPacket( Connector c, uint16_t contentType, PBuf&& packet ) {
+	void onPacket( Connector, uint16_t contentType, PBuf&& packet ) {
 		if ( contentType == 0 ) {
 			netif.input( packet.release(), &netif );
 		}
@@ -130,15 +138,21 @@ private:
 	void handleUpdate( RTable::Action act ) {
 		switch( act ) {
 			case RTable::Action::BroadcastRespond:
+				sendRRP( rtable.isStub() ? RTable::Command::Stubby : RTable::Command::Response );
 				broadcast( &netif );
-				// fall through
+				break;
 			case RTable::Action::Respond:
 				sendRRP( rtable.isStub() ? RTable::Command::Stubby : RTable::Command::Response );
 				break;
+			case RTable::Action::OnHello:
+				sendRRP( RTable::Command::HelloResponse );
+				break;
 			case RTable::Action::BroadcastCall:
-				broadcast();
-			default:
-				// Nothing
+				broadcast( &netif );
+				break;
+			default: // Nothing
+				if ( rtable.isStub() )
+					syncStubbyOut();
 				return;
 		};
 	}
