@@ -66,7 +66,8 @@ struct Record {
 	}
 
 	Record& activate() {
-		active = static_cast< bool >( ip_add_route( &ip, mask, gws.front().name ) );
+		if ( hasGateway() )
+			active = static_cast< bool >( ip_add_route( &ip, mask, gws.front().name ) );
 		for ( auto& s : sumarizing )
 			s->setSumarized( this );
 
@@ -106,6 +107,9 @@ struct Record {
 		auto first       = gws.front();
 		std::list< Gateway > toMerge = r.gws;
 		gws.merge( toMerge, []( const Gateway& g1, const Gateway& g2 ) {
+			if ( std::string( g1.name ) == "null" )
+				return false; // null will be always last
+
 			return g1.cost <= g2.cost;
 		} );
 		gws.unique();
@@ -163,8 +167,9 @@ struct Record {
 	}
 
 	bool isStub() const {
-		auto ptr = netif_find( gws.front().name );
-		return ptr && as< Netif* >( ptr->state )->isStub();
+		auto ptr = netif_find( getGwName().c_str() );
+		Netif* n = static_cast< Netif* >( ptr ? ptr->state : nullptr ); 
+		return n && n->isStub();
 	}
 
     bool operator==( const Record& rec ) const {
