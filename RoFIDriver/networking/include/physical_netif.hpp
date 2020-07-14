@@ -150,7 +150,10 @@ private:
 			case RTable::Action::BroadcastCall:
 				broadcast( &netif );
 				break;
-			default: // Nothing
+			case RTable::Action::BroadcastHello:
+				broadcast( &netif, RTable::Command::Hello );
+				break;
+			default: // Nothing (or Hello, which is not in use here)
 				if ( rtable.isStub() )
 					syncStubbyOut();
 				return;

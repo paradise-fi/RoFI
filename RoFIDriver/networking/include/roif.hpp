@@ -36,7 +36,10 @@ public:
 		s8_t index = -1;
 		netif_add_ip6_address( &netif, &ip, &index );
 		if ( index >= 0 && rtable.add( ip, mask, 0, &netif ) ) {
-			broadcastRTable();
+			if ( rtable.isStub() )
+				syncStub();
+			else
+				broadcastRTable();
 			return true;
 		}
 		return false;
@@ -48,7 +51,10 @@ public:
 			if ( ip == Ip6Addr( *ip_2_ip6( &ip6_addr[ index ] ) ) ) {
 				ip_addr_set_zero( &ip6_addr[ index ] );
 				if ( rtable.remove( ip, mask, this ) ) {
-					broadcastRTable();
+					if ( rtable.isStub() )
+						syncStub();
+					else
+						broadcastRTable();
 					return true;
 				}
 				return false;

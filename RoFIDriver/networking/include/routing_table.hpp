@@ -40,8 +40,8 @@ struct Gateway {
 class RTable;
 
 struct Record {
-    Ip6Addr ip;
-    uint8_t mask;
+    const Ip6Addr ip;
+    const uint8_t mask;
     std::list< Gateway > gws;
 
 	Record() = delete;
@@ -112,7 +112,7 @@ struct Record {
 
 			return g1.cost <= g2.cost;
 		} );
-		gws.unique();
+		gws.unique( []( Gateway& g1, Gateway& g2 ) { return g1 == g2; } );
 
 		update( first );
 		return size != gws.size();
@@ -171,6 +171,12 @@ struct Record {
 		return n && n->isStub();
 	}
 
+	bool singlePath() const {
+		return 1 == std::accumulate( gws.begin(), gws.end(), 0, []( int acc, const Gateway& g ) {
+			return std::string( g.name ) != "null" ? ( acc + 1 ) : acc;
+		} );
+	}
+
     bool operator==( const Record& rec ) const {
 		return rec.ip == ip && rec.mask == mask && rec.gws == gws;
 	}
@@ -204,7 +210,8 @@ std::ostream& operator<<( std::ostream& o, const Record& r ) {
 class RTable {
 public:
 	enum class Command : uint8_t { Call = 0, Response = 1, Stubby = 2, Hello = 3, HelloResponse = 4, Sync = 5 };
-	enum class Action  : int     { BroadcastRespond = 0, BroadcastCall = 1, Respond = 2, Nothing = 3, OnHello = 4 };
+	enum class Action  : int     { BroadcastRespond = 0, BroadcastCall = 1, Respond = 2, Nothing = 3, OnHello = 4
+	                             , BroadcastHello = 5 };
 
 	RTable() = default;
 
@@ -324,12 +331,16 @@ public:
 		as< Command >( packet.payload() )     = cmd;
 		as< uint8_t >( packet.payload() + 1 ) = static_cast< uint8_t >( count );
 
+		n->setStub( cmd == Command::Stubby );
+
 		auto data = packet.payload() + 2;
 		for ( const auto& rec : records ) {
 			if ( n && rec.getGwName() == n->getName() )
 				continue;
 			if ( rec.isSumarized() )
 				continue; // skip sumarized records
+            if ( rec.ip == Ip6Addr( "::" ) && rec.mask == 0 )
+                continue;
 			addEntry( data, rec );
 			data += Entry::size();
 		}
@@ -381,7 +392,8 @@ public:
 			} else if ( isStub() && !shouldBeStub() ) {
 				changed = true;
 				destroyStub();
-			}
+				return Action::BroadcastHello;
+            }
 		}
 		#endif
 
@@ -573,7 +585,8 @@ private:
 			return 0;
 
 		return std::accumulate( records.begin(), records.end(), 0, [ &n ]( int acc, const Record& r ) {
-			return ( r.getGwName() == n->getName() || r.isSumarized() ) ? acc + 1 : acc;
+			return ( r.getGwName() == n->getName() || r.isSumarized() || ( r.ip == Ip6Addr( "::" ) && r.mask == 0 ) )
+                   ? acc + 1 : acc;
 		} );
 	}
 
@@ -640,6 +653,7 @@ private:
 	bool hasOneOutOrStub() const {
 		std::string name = "";
 		bool sameNames = true;
+		bool noCycles  = true;
 		for ( const auto& rec : records ) {
 			if ( rec.getCost() == 0 && rec.mask != 0 )        // it's loopback -> skip it
 				continue;
@@ -653,9 +667,10 @@ private:
 				name = rec.getGwName();
 			else
 				sameNames &= name == rec.getGwName();
+			noCycles = rec.singlePath();
 		}
 
-		return name != "" && sameNames; 
+		return name != "" && sameNames && noCycles;
 	}
 
 	bool shouldBeStub() const {
@@ -680,12 +695,19 @@ private:
 
 	void makeStub() {
 		stub = getStubbyIf();
-		removeForIf( stub );
-		setDefaultGW( stub );
+		if ( stub ) {
+			removeForIf( stub );
+			setDefaultGW( stub );
+		}
 	}
 
 	void destroyStub() {
 		stub = nullptr;
+		for ( auto& rec : records ) {
+			Netif* n = static_cast< Netif* >( netif_find( rec.getGwName().c_str() ) );
+			if ( n )
+				n->setStub( false );
+		}
 		removeDefaultGW( stub );
 	}
 
