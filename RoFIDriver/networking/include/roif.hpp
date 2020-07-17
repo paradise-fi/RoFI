@@ -25,8 +25,8 @@ public:
 
 		netifs.reserve( connectors );
 		for ( int i = 0; i < connectors; i++ ) {
-			netifs.emplace_back( pAddr, rofi.getConnector( i ), rtable, [ this ]( const Netif* n, RTable::Command cmd ) {
-				broadcastRTableIfless( n, cmd );
+			netifs.emplace_back( pAddr, rofi.getConnector( i ), rtable, [ index = i, this ]( RTable::Command cmd ) {
+				broadcastRTableIfless( netifs[ index ].getNetif(), cmd );
 			} );
 			netifs.back().setStubOut( [ this ]() { syncStub(); } );
 		}

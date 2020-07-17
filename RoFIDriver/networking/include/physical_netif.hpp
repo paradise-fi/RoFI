@@ -40,8 +40,8 @@ struct PhysAddr {
 
 class PhysNetif {
 public:
-	PhysNetif( PhysAddr pAddr, Connector connector, RTable& rt, const std::function< void( const Netif*, RTable::Command ) >& f )
-	: pAddr( pAddr ), connector( connector ), rtable( rt ), _broadcast( f ) {
+	PhysNetif( PhysAddr pAddr, Connector connector, RTable& rt, const std::function< void( RTable::Command ) >& f )
+	: pAddr( pAddr ), connector( connector ), rtable( rt ), _sendToOthers( f ) {
 		connector.onPacket( [ this ]( Connector c, uint16_t contentType, PBuf&& pb ) {
 			onPacket( c, contentType, std::move( pb ) );
 		} );
@@ -50,13 +50,20 @@ public:
 			if ( e == ConnectorEvent::Connected ) {
 				netif.setActive( true );
 				sendRRP( RTable::Command::Hello );
-			} else {
+			} else { // DISCONNECT
 				netif.setActive( false );
+				netif.setStub( false );
 				rtable.removeForIf( &netif );
-				if ( rtable.isStub() )
-					syncStubbyOut(); // propagate to output interface only 
-				else
-					broadcast();     // propagate to all neighbours
+				if ( rtable.isStub() ) {
+					if ( &netif != rtable.getStubOut() )
+						syncStubbyOut();             // propagate to output interface only
+					else {
+						rtable.destroyStub();        // the output interface was disconnected, try to find a new one
+						sendToOthers( RTable::Command::Hello );  // this makes sense only in cyclic networks
+					}
+					return;
+				}
+				sendToOthers(); // no stub -> propagate to all neighbours
 			}
 		} );
 
@@ -137,21 +144,26 @@ private:
 
 	void handleUpdate( RTable::Action act ) {
 		switch( act ) {
-			case RTable::Action::BroadcastRespond:
+			case RTable::Action::RespondToAll:
 				sendRRP( rtable.isStub() ? RTable::Command::Stubby : RTable::Command::Response );
-				broadcast( &netif );
+				sendToOthers();
 				break;
 			case RTable::Action::Respond:
 				sendRRP( rtable.isStub() ? RTable::Command::Stubby : RTable::Command::Response );
 				break;
 			case RTable::Action::OnHello:
+				if ( !rtable.isStub() )
+					sendToOthers();
+				else
+					syncStubbyOut();
 				sendRRP( RTable::Command::HelloResponse );
 				break;
-			case RTable::Action::BroadcastCall:
-				broadcast( &netif );
+			case RTable::Action::CallToAll:
+				sendToOthers();
 				break;
-			case RTable::Action::BroadcastHello:
-				broadcast( &netif, RTable::Command::Hello );
+			case RTable::Action::HelloToAll:
+				sendRRP( RTable::Command::Hello );
+				sendToOthers( RTable::Command::Hello );
 				break;
 			default: // Nothing (or Hello, which is not in use here)
 				if ( rtable.isStub() )
@@ -187,9 +199,9 @@ private:
 		raw_recv( pcb, onRRP, this );
 	}
 
-	void broadcast( const Netif* without = nullptr, RTable::Command cmd = RTable::Command::Call ) {
-		if ( _broadcast )
-			_broadcast( without, cmd );
+	void sendToOthers( RTable::Command cmd = RTable::Command::Call ) {
+		if ( _sendToOthers )
+			_sendToOthers( cmd );
 	}
 
 	Netif netif;
@@ -197,7 +209,7 @@ private:
 	PhysAddr pAddr;
 	Connector connector;
 	RTable& rtable;
-	std::function< void( const Netif*, RTable::Command ) > _broadcast;
+	std::function< void( RTable::Command ) > _sendToOthers;
 	std::function< void() > toStubOut;
 };
 	
