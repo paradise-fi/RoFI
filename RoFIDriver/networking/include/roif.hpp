@@ -130,7 +130,7 @@ private:
 	void broadcastRTableIfless( const Netif* netif, RTable::Command cmd = RTable::Command::Call ) {
 		for ( auto& n : netifs ) {
 			const Netif* out = n.getNetif();
-			if ( n.isConnected() && netif != out && ( out && out->isActive() ) )
+			if ( n.isConnected() && netif != out && ( out && out->isActive() && !out->isStub() ) )
 				n.sendRRP( cmd );
 		}
 		rtable.clearChanges();
