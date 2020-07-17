@@ -248,7 +248,7 @@ public:
 		records.remove_if( [ &n, this ]( Record& r ) {
 			bool toRemove = ( r.remove( n->getName() ) && !r.hasGateway() ) || r.toDelete();
 			if ( toRemove )
-				addToChanges( r, Entry::Act::Remove );
+				addToChanges( r, Operation::Remove );
 
 			return toRemove;
 		} );
@@ -313,17 +313,18 @@ public:
 		changes.clear();
 	}
 
+	enum class Operation : bool { Add = true, Remove = false };
+
 	struct Entry {
-		Action action;
 		Ip6Addr ip;
 		uint8_t mask;
 		Cost cost;
+		Operation action;
 
 		static int size() {
-			return sizeof( Action ) + Ip6Addr::size() + 1 + sizeof( Cost );
+			return sizeof( Operation ) + Ip6Addr::size() + 1 + sizeof( Cost );
 		}
 
-		enum class Act : bool { Add = true, Remove = false };
 	};
 
 	PBuf createRRPhello( Netif* n, Command cmd = Command::Hello ) {
@@ -342,7 +343,7 @@ public:
 				continue; // skip summarized records
             if ( rec.ip == Ip6Addr( "::" ) && rec.mask == 0 )
                 continue;
-			addEntry( data, rec );
+			addEntry( data, rec, Operation::Add );
 			data += Entry::size();
 		}
 
@@ -424,13 +425,13 @@ private:
 	std::list< Record > records;
 	Netif* stub = nullptr;
 	volatile int counter = 0;
-	std::vector< std::pair< Entry::Act, Record > > changes;
+	std::vector< std::pair< Operation, Record > > changes;
 
-	void addEntry( uint8_t* data, const Record& rec, Entry::Act act = Entry::Act::Add ) {
+	void addEntry( uint8_t* data, const Record& rec, Operation act = Operation::Add ) {
 		as< Ip6Addr >( data )                       = rec.ip;
 		as< uint8_t >( data + Ip6Addr::size() )     = rec.mask;
 		as< Cost    >( data + Ip6Addr::size() + 1 ) = rec.getCost() + 1;
-		as< Entry::Act >( data + Ip6Addr::size() + 1 + sizeof( Cost ) ) = act;
+		as< Operation >( data + Ip6Addr::size() + 1 + sizeof( Cost ) ) = act;
 	}
 
 	int wouldSummarize( std::list< Record>::iterator last, uint8_t prefix ) {
@@ -535,6 +536,8 @@ private:
 		if ( r ) {
 			if ( *r != rec ) {
 				changed = r->merge( rec );
+					addToChanges( Record( r->ip, r->mask, tmp ), Operation::Remove );
+					changed = true;
 			}
 		} else {
 			addSorted( rec );
@@ -542,7 +545,7 @@ private:
 		}
 
 		if ( changed ) {
-			addToChanges( rec, Entry::Act::Add );
+			addToChanges( rec, Operation::Add );
 		}
 
 		return changed;
@@ -557,6 +560,7 @@ private:
 			}
 			summarized = r->isSummarized();
 			auto first = r->getGwName();
+				addToChanges( *r, Operation::Remove );
 				records.remove( *r );
 				checkSummaryAndUpdate( *r, summarized, first );
 				return true;
@@ -601,17 +605,17 @@ private:
 		return count;
 	}
 	
-	void addToChanges( const Record& rec, Entry::Act action ) {
+	void addToChanges( const Record& rec, Operation action ) {
 		if ( rec.getCost() == 0 && rec.mask == 0 )
 			return;
-		if ( action == Entry::Act::Remove ) {
+		if ( action == Operation::Remove ) {
 			changes.push_back( { action, Record( rec.ip, rec.mask, Gateway( rec.getGwName().c_str(), rec.getCost() ) ) } );
 			for ( auto s : rec.sumarizing )
-				changes.push_back( { Entry::Act::Add, Record( s->ip, s->mask, s->getGateway() ) } );
+				changes.push_back( { Operation::Add, Record( s->ip, s->mask, s->getGateway() ) } );
 		} else {
 			changes.push_back( { action, Record( rec.ip, rec.mask, Gateway( rec.getGwName().c_str(), rec.getCost() ) ) } );
 			for ( auto s : rec.sumarizing )
-				changes.push_back( { Entry::Act::Remove, Record( s->ip, s->mask, s->getGateway() ) } );
+				changes.push_back( { Operation::Remove, Record( s->ip, s->mask, s->getGateway() ) } );
 		}
 	}
 
@@ -630,10 +634,10 @@ private:
 			Ip6Addr ip        = as< Ip6Addr >( data );
 			uint8_t mask      = as< uint8_t >( data + Ip6Addr::size() );
 			Cost cost         = as< Cost >( data + Ip6Addr::size() + 1 );
-			Entry::Act action = as< Entry::Act >( data + Ip6Addr::size() + 1 + sizeof( Cost ) );
-			if ( action == Entry::Act::Add )
+			Operation action  = as< Operation >( data + Ip6Addr::size() + 1 + sizeof( Cost ) );
+			if ( action == Operation::Add )
 				changed |= addRecord( Record( ip, mask, Gateway( n->getName().c_str(), cost ) ) );
-			else // action == Entry::Act::Remove
+			else // action == Operation::Remove
 				changed |= removeRecord( Record( ip, mask, Gateway( n->getName().c_str(), cost ) ) );
 			data += Entry::size();
 		}
