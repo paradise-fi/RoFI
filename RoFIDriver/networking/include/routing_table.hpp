@@ -584,11 +584,6 @@ private:
 			it = records.insert( it, rec );
 			it->activate();
 		}
-
-		#if AUTOSUMARY
-		if ( records.size() > 1 )
-			trySummarize( it );
-		#endif
 	}
 
 	bool addRecord( const Record& rec ) {
