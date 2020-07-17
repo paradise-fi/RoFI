@@ -15,7 +15,7 @@
 #define AUTOSUMARY    1
 #define SUMMARY_DEPTH 2
 
-using Cost = unsigned;
+using Cost = uint8_t;
 
 namespace rofinet {
 	using namespace rofi::hal;
@@ -248,7 +248,8 @@ std::ostream& operator<<( std::ostream& o, const Record& r ) {
 		o << " summarized by " << r.summarized->ip << "/" << static_cast< int >( r.summarized->mask );
 	o << "\n";
 	for ( auto& g : r.gws ) {
-		o << "\t" << flag << g.name << " [" << g.cost << "]" << ( r.isStub() ? " stubby" : "      " ) << "\n";
+		o << "\t" << flag << g.name << " [" << static_cast< int >( g.cost ) << "]"
+			<< ( r.isStub() ? " stubby" : "      " ) << "\n";
 		flag = ' ';
 	}
 	return o;
