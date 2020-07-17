@@ -258,8 +258,8 @@ std::ostream& operator<<( std::ostream& o, const Record& r ) {
 class RTable {
 public:
 	enum class Command : uint8_t { Call = 0, Response = 1, Stubby = 2, Hello = 3, HelloResponse = 4, Sync = 5 };
-	enum class Action  : int     { BroadcastRespond = 0, BroadcastCall = 1, Respond = 2, Nothing = 3, OnHello = 4
-	                             , BroadcastHello = 5 };
+	enum class Action  : int     { RespondToAll = 0, CallToAll = 1, Respond = 2, Nothing = 3, OnHello = 4
+	                             , HelloToAll = 5 };
 
 	RTable() = default;
 
@@ -352,8 +352,8 @@ public:
 		return cmd == Command::Response || cmd == Command::Stubby;
 	}
 
-	bool isBroadcast( Action act ) const {
-		return act == Action::BroadcastCall || act == Action::BroadcastRespond;
+	bool isToAll( Action act ) const {
+		return act == Action::CallToAll || act == Action::RespondToAll;
 	}
 
 	void clearChanges() {
@@ -434,20 +434,20 @@ public:
 		bool changed = false;
 
 		#if STUB
-		if ( isSynced() ) {
+		if ( isSynced() && action != Action::OnHello ) {
 			if ( !isStub() && shouldBeStub() ) {
 				changed = true;
 				makeStub();
 			} else if ( isStub() && !shouldBeStub() ) {
 				changed = true;
 				destroyStub();
-				return Action::BroadcastHello;
+				return Action::HelloToAll;
             }
 		}
 		#endif
 
 		#if AUTOSUMARY
-		if ( records.size() > 1 && isBroadcast( action ) ) {
+		if ( records.size() > 1 && isToAll( action ) ) {
 			uint8_t mask = records.back().mask;
 			auto it      = records.end();
 			while ( it != records.begin() ) {
@@ -461,11 +461,25 @@ public:
 		}
 		#endif
 
-		return !changed ? action : ( isStub() ? Action::BroadcastRespond : Action::BroadcastCall );
+		return !changed ? action : ( isStub() ? Action::RespondToAll : Action::CallToAll );
 	}
 
 	Netif* getStubOut() const {
 		return stub;
+	}
+
+	bool isSynced() const {
+		return counter == 0;
+	}
+
+	void destroyStub() {
+		stub = nullptr;
+		for ( auto& rec : records ) {
+			Netif* n = static_cast< Netif* >( netif_find( rec.getGwName().c_str() ) );
+			if ( n )
+				n->setStub( false );
+		}
+		removeDefaultGW( stub );
 	}
 
 private:
@@ -711,8 +725,8 @@ private:
 		if ( cmd == Command::Sync ) // I'm gateway to some stub -> do nothing or resend to my
 			return Action::Nothing; // output interface in case I'm stub too
 
-		return ( changed && cmd != Command::Sync ) ? ( isCall( cmd ) ? Action::BroadcastRespond : Action::BroadcastCall )
-		                                           : ( isCall( cmd ) ? Action::Respond          : Action::Nothing       );
+		return ( changed && cmd != Command::Sync ) ? ( isCall( cmd ) ? Action::RespondToAll : Action::CallToAll )
+		                                           : ( isCall( cmd ) ? Action::Respond      : Action::Nothing   );
 	}
 
 	bool hasOneOutOrStub() const {
@@ -733,7 +747,6 @@ private:
 				name = rec.getGwName();
 			else
 				sameNames &= name == rec.getGwName();
-			noCycles = rec.singlePath();
 		}
 
 		return name != "" && sameNames && noCycles;
@@ -755,26 +768,12 @@ private:
 		return n;
 	}
 
-	bool isSynced() const {
-		return counter == 0;
-	}
-
 	void makeStub() {
 		stub = getStubbyIf();
 		if ( stub ) {
 			removeForIf( stub );
 			setDefaultGW( stub );
 		}
-	}
-
-	void destroyStub() {
-		stub = nullptr;
-		for ( auto& rec : records ) {
-			Netif* n = static_cast< Netif* >( netif_find( rec.getGwName().c_str() ) );
-			if ( n )
-				n->setStub( false );
-		}
-		removeDefaultGW( stub );
 	}
 
 	friend std::ostream& operator<<( std::ostream& o, const RTable& rt );
