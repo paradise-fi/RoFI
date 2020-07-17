@@ -129,22 +129,17 @@ struct Record {
 		summarized->updateSummary( *this );
 		}
 
-		update( first );
-		return size != gws.size();
+	bool merge( const Record& r ) {
+		return op( &Record::_merge, r );
 	}
 
-	bool remove( const std::string& name ) {
-		if ( gws.size() == 0 ) {
-			return false;
+	bool disjoin( const Record& r ) {
+		return op( &Record::_disjoin, r );
 		}
 
-		std::size_t size = gws.size();
-		auto first       = gws.front();
-
-		gws.remove_if( [ &name ]( const Gateway& g ) { return strcmp( name.c_str(), g.name ) == 0; } );
-
-		update( first );
-		return size != gws.size();
+	bool remove( const std::string& str ) {
+		Record tmp( ip, mask, Gateway( str.c_str(), getCost() ) );
+		return op( &Record::_remove, tmp );
 	}
 
     Cost getCost() const { // should be called on valid record!
@@ -173,9 +168,13 @@ struct Record {
 	}
 
 	bool singlePath() const {
-		return 1 == std::accumulate( gws.begin(), gws.end(), 0, []( int acc, const Gateway& g ) {
-			return std::string( g.name ) != "null" ? ( acc + 1 ) : acc;
-		} );
+		int size = 0;
+		for ( const auto& g : gws ) {
+			if ( strcmp( g.name, "null" ) == 0 )
+				continue;
+			size++;
+	}
+		return size == 1;
 	}
 
     bool operator==( const Record& rec ) const {
@@ -187,8 +186,56 @@ struct Record {
 private:
 	bool active = false;
 	bool finishedSumarizing = false;
-	Record* sumarized = nullptr;
+	Record* summarized = nullptr;
 	std::vector< Record* > sumarizing;
+
+	bool op( const std::function< void( Record*, const Record& ) >& f, const Record& r ) {
+		if ( !this->hasSameNetwork( r ) )
+			return false;
+
+		std::size_t size = gws.size();
+		auto first       = gws.front();
+
+		std::bind( f, this, r )(); // invoke immediately
+
+		update( first, size );
+		return size != gws.size();
+	}
+
+	void _merge( const Record& r ) {
+		if ( getCost() == 0 ) // do not merge with loopback
+			return;
+		std::list< Gateway > toMerge = r.gws;
+		gws.merge( toMerge, []( const Gateway& g1, const Gateway& g2 ) {
+			if ( std::string( g1.name ) == "null" )
+				return false; // null will be always last
+
+			return g1.cost <= g2.cost;
+		} );
+
+		for ( auto it = gws.begin(); it != gws.end(); it++ ) {
+			auto current = it;
+			while ( current != gws.end() ) {
+				current++;
+				if ( strcmp( current->name, it->name ) == 0 )
+					current = gws.erase( current );
+			}
+		}
+	}
+
+	void _disjoin( const Record& r ) {
+		for ( auto g : r.gws ) {
+			gws.remove_if( [ &g ]( const Gateway& gw ) {
+				return strcmp( g.name, gw.name ) == 0;
+			} );
+		}
+	}
+
+	void _remove( const Record& r ) {
+		std::string name = r.getGwName();
+		std::size_t size = gws.size();
+		gws.remove_if( [ &name ]( const Gateway& g ) { return strcmp( name.c_str(), g.name ) == 0; } );
+	}
 
 	friend RTable;
 	friend std::ostream& operator<<( std::ostream& o, const Record& r );
@@ -476,7 +523,7 @@ private:
 			if ( !search( Record( ip, oldmask - prefix, Gateway( "null", cost ) ) ) ) {
 				it = records.insert( ++last, Record( ip, oldmask - prefix, Gateway( "null", cost ), toBeSummarized ) );
 				it->activate();
-				addToChanges( Record( ip, oldmask - prefix, Gateway( "null", cost ) ), Entry::Act::Add );
+				addToChanges( Record( ip, oldmask - prefix, Gateway( "null", cost ) ), Operation::Add );
 			}
 			return true;
 		}
@@ -501,10 +548,9 @@ private:
 
 	void checkSumarizing() {
 		for ( auto it = records.begin(); it != records.end(); it++ ) {
-			if ( it->toDelete() ) {
-				addToChanges( *it, Entry::Act::Remove );
-				records.erase( it );
-				break;
+			if ( it->toDelete() || it->gws.size() == 0 ) {
+				addToChanges( *it, Operation::Remove );
+				it = records.erase( it );
 			}
 		}
 	}
@@ -535,9 +581,12 @@ private:
 		auto r = search( rec );
 		if ( r ) {
 			if ( *r != rec ) {
+				Gateway tmp = r->getGateway();
 				changed = r->merge( rec );
+				if ( tmp != r->getGateway() ) {
 					addToChanges( Record( r->ip, r->mask, tmp ), Operation::Remove );
 					changed = true;
+			}
 			}
 		} else {
 			addSorted( rec );
@@ -551,6 +600,16 @@ private:
 		return changed;
 	}
 
+	void checkSummaryAndUpdate( const Record& r, bool summarized, const std::string& str ) {
+		if ( summarized )
+			checkSumarizing();
+
+		if ( r.getGwName() != str ) { // if the route was updated, remove the old and add the new one
+			addToChanges( Record( r.ip, r.mask, Gateway( str.c_str(), 0 ) ), Operation::Remove );
+			addToChanges( r, Operation::Add );
+		}
+	}
+
 	bool removeRecord( const Record& rec ) {
 		bool summarized = false;
 		if ( rec.hasGateway() && rec.getGwName() != "null" ) {
@@ -560,6 +619,7 @@ private:
 			}
 			summarized = r->isSummarized();
 			auto first = r->getGwName();
+			if ( r->disjoin( rec ) && !r->hasGateway() ) {
 				addToChanges( *r, Operation::Remove );
 				records.remove( *r );
 				checkSummaryAndUpdate( *r, summarized, first );
@@ -570,7 +630,7 @@ private:
 		}
 
 		std::size_t size = records.size();
-		records.remove_if( [ &rec, &sumarized, this ]( const Record& r ) {
+		records.remove_if( [ &rec, &summarized, this ]( const Record& r ) {
 			if ( rec.hasSameNetwork( r ) ) {
 				summarized |= r.isSummarized();
 				addToChanges( r, Operation::Remove );
@@ -660,6 +720,7 @@ private:
 		bool sameNames = true;
 		bool noCycles  = true;
 		for ( const auto& rec : records ) {
+			noCycles |= rec.singlePath();
 			if ( rec.getCost() == 0 && rec.mask != 0 )        // it's loopback -> skip it
 				continue;
 			if ( rec.isStub() )                               // it's stub -> skip it
