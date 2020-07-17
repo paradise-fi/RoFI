@@ -147,8 +147,7 @@ int main()
         }
     } );
 
-    localRofi.getConnector( connectorA ).connect();
-    remoteRofi.getConnector( connectorA ).connect();
+    oneMove( connectorA );
 
     while ( true )
     {
