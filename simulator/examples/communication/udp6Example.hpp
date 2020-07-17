@@ -17,15 +17,17 @@ inline void onMasterPacket( void *,
                             u16_t port )
 {
     if ( !p )
+    {
         return;
+    }
 
     auto packet = rofi::hal::PBuf::own( p );
     std::cout << Ip6Addr( addr->u_addr.ip6 ) << "; port: " << port << " sent: " << packet.asString()
               << std::endl;
 
     auto res = udp_sendto( pcb, packet.release(), addr, port );
-	if ( res != ERR_OK )
-		std::cout << "udp_sendto returned " << lwip_strerr( res ) << "\n";
+    if ( res != ERR_OK )
+        std::cout << "udp_sendto returned " << lwip_strerr( res ) << "\n";
 }
 
 inline void onSlavePacket( void *,
@@ -35,7 +37,9 @@ inline void onSlavePacket( void *,
                            u16_t port )
 {
     if ( !p )
+    {
         return;
+    }
 
     auto packet = rofi::hal::PBuf::own( p );
     std::cout << Ip6Addr( addr->u_addr.ip6 ) << "; port: " << port
@@ -48,13 +52,17 @@ inline void runMaster()
 
     udp_pcb * pcb = udp_new();
     if ( !pcb )
+    {
         std::cout << "pcb is null" << std::endl;
+    }
     int res = udp_bind( pcb, IP6_ADDR_ANY, 7777 );
     std::cout << "UDP binded (" << res << ")" << std::endl;
     udp_recv( pcb, onMasterPacket, nullptr );
 
     while ( true )
+    {
         sleep( 2 );
+    }
 }
 
 inline void runSlave( const char * masterAddr )
@@ -63,14 +71,18 @@ inline void runSlave( const char * masterAddr )
 
     udp_pcb * pcb = udp_new();
     if ( !pcb )
+    {
         std::cout << "pcb is null" << std::endl;
+    }
     int res = udp_bind( pcb, IP6_ADDR_ANY, 7777 );
     std::cout << "UDP binded (" << res << ")" << std::endl;
     udp_recv( pcb, onSlavePacket, nullptr );
 
     ip_addr_t addr;
     if ( !ipaddr_aton( masterAddr, &addr ) )
+    {
         std::cout << "Cannot create IP address" << std::endl;
+    }
     int counter = 0;
     while ( true )
     {
@@ -85,8 +97,10 @@ inline void runSlave( const char * masterAddr )
         std::cout << "Sending message: " << buffer.asString() << " to "
                   << Ip6Addr( addr.u_addr.ip6 ) << std::endl;
         res = udp_sendto( pcb, buffer.release(), &addr, 7777 );
-		if ( res != ERR_OK )
-			std::cout << "udp_sendto returned " << lwip_strerr( res ) << "\n";
+        if ( res != ERR_OK )
+        {
+            std::cout << "udp_sendto returned " << lwip_strerr( res ) << "\n";
+        }
         sleep( 2 );
     }
 }

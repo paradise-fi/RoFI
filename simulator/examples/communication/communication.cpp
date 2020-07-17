@@ -18,9 +18,13 @@ int main()
     roif.setUp();
 
     if ( id == 1 )
+    {
         udpEx6::runMaster();
+    }
     else
+    {
         udpEx6::runSlave( "fc07::1:0:0:1" );
+    }
 
     std::cout << "Ending communication example\n";
 }
