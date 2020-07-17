@@ -50,15 +50,15 @@ struct Record {
 	: ip( ip ), mask( mask ), gws( { gw } ), sumarizing( s ) {}
 
 	~Record() {
-		if ( sumarizing.size() > 0 ) {
+		if ( isSumarizing() ) {
 			for ( auto& r : sumarizing ) {
 				if ( r )
-					r->setSumarized( nullptr );
+					r->setSummarized( nullptr );
 			}
 		}
 
-		if ( isSumarized() )
-			sumarized->unsumary( *this );
+		if ( isSummarized() )
+			summarized->unsummary( *this );
 
 		if ( active ) {
 			ip_rm_route( &ip, mask );
@@ -69,23 +69,49 @@ struct Record {
 		if ( hasGateway() )
 			active = static_cast< bool >( ip_add_route( &ip, mask, gws.front().name ) );
 		for ( auto& s : sumarizing )
-			s->setSumarized( this );
+			s->setSummarized( this );
 
 		return *this;
 	}
 
-	bool isSumarized() const {
-		return sumarized != nullptr;
+	bool isSumarizing() const {
+		return sumarizing.size() != 0;
 	}
 
-	void setSumarized( Record* r ) {
-		sumarized = r;
+	bool isSummarized() const {
+		return summarized != nullptr;
 	}
 
-	void unsumary( const Record& r ) {
-		sumarizing.erase( std::remove_if( sumarizing.begin(), sumarizing.end(), [ &r ]( const Record* ptr ) {
+	void setSummarized( Record* r ) {
+		summarized = r;
+	}
+
+	void unsummary( const Record& r ) {
+		sumarizing.erase( std::remove_if( sumarizing.begin(), sumarizing.end(), [ &r ]( Record* ptr ) {
+			if ( *ptr == r )
+				ptr->summarized = nullptr;
 			return *ptr == r;
 		} ) );
+
+		finishedSumarizing = sumarizing.size() == 0;
+	}
+
+	void updateSummary( const Record& r ) {
+		if ( !isSumarizing() )
+			return;
+
+		Cost cost   = getCost();
+		Cost actual = 255;
+		for ( const auto& s : sumarizing ) {
+			if ( s && s->gws.size() > 0 )
+				actual = std::min( actual, s->getCost() );
+}
+
+		if ( actual != 255 && cost != actual )
+			gws.begin()->cost = actual;
+
+		if ( r.gws.size() == 0 )
+			unsummary( r );
 
 		finishedSumarizing = sumarizing.size() == 0;
 	}
@@ -94,38 +120,13 @@ struct Record {
 		return finishedSumarizing;
 	}
 
-	void update( const Gateway& r ) const {
-	if ( gws.size() == 0 || r != gws.front() )
+	void update( const Gateway& g, int size ) const {
+	if ( active && ( gws.size() != 0 && g != gws.front() ) ) {
 		ip_update_route( &ip, mask, gws.front().name );
-}
-
-	bool merge( const Record& r ) {
-		if ( !hasSameNetwork( r ) )
-			return false;
-
-		std::size_t size = gws.size();
-		auto first       = gws.front();
-		std::list< Gateway > toMerge = r.gws;
-		gws.merge( toMerge, []( const Gateway& g1, const Gateway& g2 ) {
-			if ( std::string( g1.name ) == "null" )
-				return false; // null will be always last
-
-			return g1.cost <= g2.cost;
-		} );
-		gws.unique( []( Gateway& g1, Gateway& g2 ) { return g1 == g2; } );
-
-		update( first );
-		return size != gws.size();
 	}
-
-	bool disjoin( const Record& r ) {
-		if ( !hasSameNetwork( r ) )
-			return false;
 		
-		std::size_t size = gws.size();
-		auto first       = gws.front();
-		for ( auto g : r.gws ) {
-			gws.remove( g );
+	if ( size != gws.size() && isSummarized() )
+		summarized->updateSummary( *this );
 		}
 
 		update( first );
@@ -196,8 +197,8 @@ private:
 std::ostream& operator<<( std::ostream& o, const Record& r ) {
 	char flag = '*';
 	o << r.ip << "/" << static_cast< int >( r.mask );
-	if ( r.isSumarized() )
-		o << " sumarized by " << r.sumarized->ip << "/" << static_cast< int >( r.sumarized->mask );
+	if ( r.isSummarized() )
+		o << " summarized by " << r.summarized->ip << "/" << static_cast< int >( r.summarized->mask );
 	o << "\n";
 	for ( auto& g : r.gws ) {
 		o << "\t" << flag << g.name << " [" << g.cost << "]" << ( r.isStub() ? " stubby" : "      " ) << "\n";
@@ -337,8 +338,8 @@ public:
 		for ( const auto& rec : records ) {
 			if ( n && rec.getGwName() == n->getName() )
 				continue;
-			if ( rec.isSumarized() )
-				continue; // skip sumarized records
+			if ( rec.isSummarized() )
+				continue; // skip summarized records
             if ( rec.ip == Ip6Addr( "::" ) && rec.mask == 0 )
                 continue;
 			addEntry( data, rec );
@@ -368,8 +369,8 @@ public:
 		for ( const auto& [ act, rec ] : changes ) {
 			if ( n && ( n->getName() == rec.getGwName() || n->isStub() ) )
 				continue; // do not propagate to ignored netif or stubby netif
-			if ( rec.isSumarized() )
-				continue; // do not propagate routes, which are sumarized
+			if ( rec.isSummarized() )
+				continue; // do not propagate routes, which are summarized
 			if ( rec.getCost() == 0 && rec.mask == 0 )
 				continue; // do not propagate default gw
 			
@@ -405,7 +406,7 @@ public:
 				it--;
 				if ( mask != it->mask ) {
 					mask = it->mask;
-					changed |= trySumarize( --it );
+					changed |= trySummarize( --it );
 					it++; // return it back after shift in prev. line
 				}
 			}
@@ -432,37 +433,37 @@ private:
 		as< Entry::Act >( data + Ip6Addr::size() + 1 + sizeof( Cost ) ) = act;
 	}
 
-	int wouldSumarize( std::list< Record>::iterator last, uint8_t prefix ) {
-		if ( last == records.begin() )
+	int wouldSummarize( std::list< Record>::iterator last, uint8_t prefix ) {
+		if ( last == records.begin() || prefix >= last->mask )
 			return 0;
 
-		int wouldSumarizeCount = 0;
+		int wouldSummarizeCount = 0;
 		uint8_t oldmask = last->mask;
 		Ip6Addr mask = Ip6Addr( oldmask - prefix );
 		Ip6Addr ip   = last->ip & mask;
 		while ( oldmask == ( last )->mask ) {
 			if ( ip == ( last->ip & mask ) )
-				wouldSumarizeCount++;
+				wouldSummarizeCount++;
 
 			if ( last == records.begin() )
 				break;
 			--last;
 		}
 
-		return wouldSumarizeCount;
+		return wouldSummarizeCount;
 	}
 
-	bool sumarize( std::list< Record >::iterator last, uint8_t prefix ) {
+	bool summarize( std::list< Record >::iterator last, uint8_t prefix ) {
 		uint8_t oldmask = last->mask;
 		Cost cost       = last->getCost();
 		Ip6Addr mask( oldmask - prefix );
 		Ip6Addr ip = last->ip & mask;
 		auto it    = last;
-		std::vector< Record* > toBeSumarized;
+		std::vector< Record* > toBeSummarized;
 
 		while ( it->mask == oldmask ) {
 			if ( ( it->ip & mask ) == ip ) {
-				toBeSumarized.push_back( &( *it ) );
+				toBeSummarized.push_back( &( *it ) );
 				cost = std::min( cost, it->getCost() );
 			}
 			if ( it == records.begin() )
@@ -470,9 +471,9 @@ private:
 			it--;
 		}
 
-		if ( toBeSumarized.size() > 1 ) {
+		if ( toBeSummarized.size() > 1 ) {
 			if ( !search( Record( ip, oldmask - prefix, Gateway( "null", cost ) ) ) ) {
-				it = records.insert( ++last, Record( ip, oldmask - prefix, Gateway( "null", cost ), toBeSumarized ) );
+				it = records.insert( ++last, Record( ip, oldmask - prefix, Gateway( "null", cost ), toBeSummarized ) );
 				it->activate();
 				addToChanges( Record( ip, oldmask - prefix, Gateway( "null", cost ) ), Entry::Act::Add );
 			}
@@ -482,11 +483,11 @@ private:
 		return false;
 	}
 
-	bool trySumarize( const std::list< Record >::iterator& last ) {
+	bool trySummarize( const std::list< Record >::iterator& last ) {
 		int count = 0, newCount = 0;
 		int prefix = 1, minimalPrefix = 1;
 		for ( ; prefix <= SUMMARY_DEPTH; prefix++ ) {
-			newCount = wouldSumarize( last, prefix );
+			newCount = wouldSummarize( last, prefix );
 			if ( newCount == count ) {
 				continue;
 			}
@@ -494,7 +495,7 @@ private:
 			minimalPrefix = prefix;
 		}
 
-		return ( count > 1 ) && sumarize( last, minimalPrefix );
+		return ( count > 1 ) && summarize( last, minimalPrefix );
 	}
 
 	void checkSumarizing() {
@@ -524,7 +525,7 @@ private:
 
 		#if AUTOSUMARY
 		if ( records.size() > 1 )
-			trySumarize( it );
+			trySummarize( it );
 		#endif
 	}
 
@@ -548,33 +549,33 @@ private:
 	}
 
 	bool removeRecord( const Record& rec ) {
-		bool sumarized = false;
+		bool summarized = false;
 		if ( rec.hasGateway() && rec.getGwName() != "null" ) {
 			auto r = search( rec );
 			if ( !r ) {
 				return false;
 			}
-			if ( r->remove( rec.getGwName() ) && !r->hasGateway() ) {
-				addToChanges( *r, Entry::Act::Remove );
+			summarized = r->isSummarized();
+			auto first = r->getGwName();
 				records.remove( *r );
-				if ( r->isSumarized() )
-					checkSumarizing();
+				checkSummaryAndUpdate( *r, summarized, first );
 				return true;
 			}
+			checkSummaryAndUpdate( *r, summarized, first );
 			return false;
 		}
 
 		std::size_t size = records.size();
 		records.remove_if( [ &rec, &sumarized, this ]( const Record& r ) {
 			if ( rec.hasSameNetwork( r ) ) {
-				sumarized |= r.isSumarized();
-				addToChanges( r, Entry::Act::Remove );
+				summarized |= r.isSummarized();
+				addToChanges( r, Operation::Remove );
 				return true;
 			}
 			return false;
 		} );
 
-		if ( sumarized )
+		if ( summarized )
 			checkSumarizing();
 
 		return size != records.size();
@@ -585,7 +586,7 @@ private:
 			return 0;
 
 		return std::accumulate( records.begin(), records.end(), 0, [ &n ]( int acc, const Record& r ) {
-			return ( r.getGwName() == n->getName() || r.isSumarized() || ( r.ip == Ip6Addr( "::" ) && r.mask == 0 ) )
+			return ( r.getGwName() == n->getName() || r.isSummarized() || ( r.ip == Ip6Addr( "::" ) && r.mask == 0 ) )
                    ? acc + 1 : acc;
 		} );
 	}
@@ -593,7 +594,7 @@ private:
 	int changesIfless( Netif* n ) const {
 		int count = 0;
 		for ( const auto& [ act, rec ] : changes ) {
-			if ( ( n && rec.getGwName() == n->getName() ) || ( rec.getCost() == 0 && rec.mask == 0 ) || rec.isSumarized() )
+			if ( ( n && rec.getGwName() == n->getName() ) || ( rec.getCost() == 0 && rec.mask == 0 ) || rec.isSummarized() )
 				count++;
 		}
 
@@ -659,7 +660,7 @@ private:
 				continue;
 			if ( rec.isStub() )                               // it's stub -> skip it
 				continue;
-			if ( rec.getGwName() == "null" )                  // it's sumarized -> skip it
+			if ( rec.getGwName() == "null" )                  // it's summarizing -> skip it
 				continue;
 			if ( stub && rec.getGwName() == stub->getName() ) // it's to stub out -> skip it
 				continue;
