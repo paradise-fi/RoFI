@@ -38,15 +38,15 @@ rofi::messages::ConnectorState::Orientation readOrientation( const std::string &
     }
     if ( lower == "1" || lower == "e" || lower == "east" )
     {
-        return ConnectorState::NORTH;
+        return ConnectorState::EAST;
     }
     if ( lower == "2" || lower == "s" || lower == "south" )
     {
-        return ConnectorState::NORTH;
+        return ConnectorState::SOUTH;
     }
     if ( lower == "3" || lower == "w" || lower == "west" )
     {
-        return ConnectorState::NORTH;
+        return ConnectorState::WEST;
     }
 
     gzerr << "Unknown orientation '" + str + "'\n";
