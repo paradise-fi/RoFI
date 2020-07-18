@@ -62,8 +62,8 @@
 #define MEMP_NUM_MLD6_GROUP       16
 #define MEMP_NUM_IGMP_GROUP       16
 
-//#define LWIP_PBUF_REF_T           uint16_t
-#define LWIP_DONT_PROVIDE_BYTEORDER_FUNCTIONS 1
+#define LWIP_DONT_PROVIDE_BYTEORDER_FUNCTIONS  1
+#define LWIP_IP_CHECK_PBUF_REF_COUNT_FOR_TX(p) 1 // needed in simulator
 
 /*
    -----------------------------------------------

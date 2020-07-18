@@ -145,8 +145,8 @@ private:
 	void handleUpdate( RTable::Action act ) {
 		switch( act ) {
 			case RTable::Action::RespondToAll:
-				sendRRP( rtable.isStub() ? RTable::Command::Stubby : RTable::Command::Response );
 				sendToOthers();
+				sendRRP( rtable.isStub() ? RTable::Command::Stubby : RTable::Command::Response );
 				break;
 			case RTable::Action::Respond:
 				sendRRP( rtable.isStub() ? RTable::Command::Stubby : RTable::Command::Response );
@@ -160,10 +160,11 @@ private:
 				break;
 			case RTable::Action::CallToAll:
 				sendToOthers();
+				sendRRP();
 				break;
 			case RTable::Action::HelloToAll:
-				sendRRP( RTable::Command::Hello );
 				sendToOthers( RTable::Command::Hello );
+				sendRRP( RTable::Command::Hello );
 				break;
 			default: // Nothing (or Hello, which is not in use here)
 				if ( rtable.isStub() )
