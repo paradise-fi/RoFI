@@ -54,7 +54,7 @@ std::pair< std::map< RoFI::Id, RoFI >, std::vector< Joint > > getRofisAndJoints(
 
 int main()
 {
-    std::cout << "Starting wheel example\n";
+    std::cout << "Starting double wheel example\n";
 
     auto [ rofis, joints ] = getRofisAndJoints( rofiIds );
     auto [ rofis2, joints2 ] = getRofisAndJoints( rofiIds2 );

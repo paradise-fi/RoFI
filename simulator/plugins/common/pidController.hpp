@@ -285,8 +285,8 @@ class PositionPIDController : public VelocityPIDController
     double _desiredPosition = 0;
     double _targetPosition = 0;
     double _maxSpeed = 0;
+    std::optional< bool > _targetDirection; // If _targetDirection is nullopt, position is reached
     const std::function< void( double ) > _positionReachedCallback;
-    bool _positionReached = true;
 
     template < bool Verbose = true >
     void setTargetPosition( double desiredPosition )
@@ -352,21 +352,25 @@ public:
         double position = _jointData.joint->Position();
         double linearError = position - _targetPosition;
 
-        if ( !_positionReached && std::abs( linearError ) <= _jointData.getPositionPrecision() )
+        if ( _targetDirection )
         {
-            _positionReached = true;
+            if ( ( *_targetDirection && -linearError <= _jointData.getPositionPrecision() )
+                 || ( !*_targetDirection && linearError <= _jointData.getPositionPrecision() ) )
+            {
+                _targetDirection = std::nullopt;
 
-            if ( _positionReachedCallback )
-            {
-                assert( _targetPosition
-                        == clamp( _desiredPosition,
-                                  _jointData.getMinPosition(),
-                                  _jointData.getMaxPosition() ) );
-                _positionReachedCallback( _desiredPosition );
-            }
-            else
-            {
-                gzwarn << "Position reached, but callback not set\n";
+                if ( _positionReachedCallback )
+                {
+                    assert( _targetPosition
+                            == clamp( _desiredPosition,
+                                      _jointData.getMinPosition(),
+                                      _jointData.getMaxPosition() ) );
+                    _positionReachedCallback( _desiredPosition );
+                }
+                else
+                {
+                    gzwarn << "Position reached, but callback not set\n";
+                }
             }
         }
 
@@ -423,7 +427,7 @@ public:
 
         setMaxSpeed( maxSpeed );
         setTargetPosition( targetPosition );
-        _positionReached = false;
+        _targetDirection = targetPosition > _jointData.joint->Position();
     }
 
     void setCurrentPosition( std::optional< PidControlType > lastControlType )
@@ -435,7 +439,7 @@ public:
 
         setMaxSpeed( _jointData.getMaxVelocity() );
         setTargetPosition< false >( _jointData.joint->Position() );
-        _positionReached = true;
+        _targetDirection = std::nullopt;
     }
 };
 

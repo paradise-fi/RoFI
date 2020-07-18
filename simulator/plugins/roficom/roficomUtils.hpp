@@ -167,14 +167,14 @@ public:
 
     void extend()
     {
-        _position = RoFICoMPosition::Extending;
         looseJoint();
+        _position = RoFICoMPosition::Extending;
     }
 
     void retract()
     {
-        _position = RoFICoMPosition::Retracting;
         looseJoint();
+        _position = RoFICoMPosition::Retracting;
     }
 
 

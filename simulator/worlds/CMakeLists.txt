@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.11)
 
 set(WORLDS
     spider
+    wheel
     50-init
 )
 
