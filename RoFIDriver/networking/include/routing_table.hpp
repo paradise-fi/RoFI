@@ -105,7 +105,7 @@ struct Record {
 		for ( const auto& s : sumarizing ) {
 			if ( s && s->gws.size() > 0 )
 				actual = std::min( actual, s->getCost() );
-}
+		}
 
 		if ( actual != 255 && cost != actual )
 			gws.begin()->cost = actual;
@@ -121,13 +121,13 @@ struct Record {
 	}
 
 	void update( const Gateway& g, int size ) const {
-	if ( active && ( gws.size() != 0 && g != gws.front() ) ) {
-		ip_update_route( &ip, mask, gws.front().name );
-	}
-		
-	if ( size != gws.size() && isSummarized() )
-		summarized->updateSummary( *this );
-		}
+        if ( active && ( gws.size() != 0 && g != gws.front() ) ) {
+            ip_update_route( &ip, mask, gws.front().name );
+        }
+
+        if ( size != gws.size() && isSummarized() )
+            summarized->updateSummary( *this );
+    }
 
 	bool merge( const Record& r ) {
 		return op( &Record::_merge, r );
@@ -135,7 +135,7 @@ struct Record {
 
 	bool disjoin( const Record& r ) {
 		return op( &Record::_disjoin, r );
-		}
+	}
 
 	bool remove( const std::string& str ) {
 		Record tmp( ip, mask, Gateway( str.c_str(), getCost() ) );
@@ -173,7 +173,7 @@ struct Record {
 			if ( strcmp( g.name, "null" ) == 0 )
 				continue;
 			size++;
-	}
+		}
 		return size == 1;
 	}
 
@@ -596,7 +596,7 @@ private:
 				if ( tmp != r->getGateway() ) {
 					addToChanges( Record( r->ip, r->mask, tmp ), Operation::Remove );
 					changed = true;
-			}
+				}
 			}
 		} else {
 			addSorted( rec );
