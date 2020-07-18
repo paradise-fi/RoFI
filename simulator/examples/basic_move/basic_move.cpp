@@ -38,7 +38,7 @@ void setToLimitPos( Joint joint, bool max, Callback && callback )
 
 void checkConnected( Connector connector )
 {
-    RoFI::wait( 1000, [ connectorConst = std::move( connector ) ] {
+    RoFI::wait( 2000, [ connectorConst = connector ] {
         Connector connector = connectorConst;
         auto state = connector.getState();
         if ( state.position != ConnectorPosition::Extended || state.connected )
@@ -47,9 +47,11 @@ void checkConnected( Connector connector )
             return;
         }
 
+        std::cout << "Retracting\n";
         connector.disconnect();
-        RoFI::wait( 500, [ connectorConst = std::move( connector ) ] {
+        RoFI::wait( 2000, [ connectorConst = connector ] {
             Connector connector = connectorConst;
+            std::cout << "Extending\n";
             connector.connect();
 
             checkConnected( connector );
