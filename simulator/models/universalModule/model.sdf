@@ -340,10 +340,10 @@
                 <joint>shoeBRev</joint>
                 <joint>bodyRev</joint>
                 <velocity>
-                    <pid_gains>0.05 1 0</pid_gains>
+                    <pid_gains>0.05 10 0</pid_gains>
                 </velocity>
                 <position>
-                    <pid_gains>15 30 1</pid_gains>
+                    <pid_gains>5 15 1</pid_gains>
                 </position>
             </controller>
         </plugin>
