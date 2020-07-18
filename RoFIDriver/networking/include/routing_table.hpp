@@ -174,7 +174,7 @@ struct Record {
                 continue;
             size++;
         }
-        return size == 1;
+        return size <= 1;
     }
 
     bool operator==( const Record& rec ) const {
@@ -735,7 +735,9 @@ private:
         bool sameNames = true;
         bool noCycles  = true;
         for ( const auto& rec : records ) {
-            noCycles |= rec.singlePath();
+            noCycles &= rec.singlePath();
+            if ( !noCycles )
+                return false;
             if ( rec.getCost() == 0 && rec.mask != 0 )        // it's loopback -> skip it
                 continue;
             if ( rec.isStub() )                               // it's stub -> skip it
@@ -750,7 +752,7 @@ private:
                 sameNames &= name == rec.getGwName();
         }
 
-        return name != "" && sameNames && noCycles;
+        return name != "" && sameNames;
     }
 
     bool shouldBeStub() const {
