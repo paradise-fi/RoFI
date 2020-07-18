@@ -13,7 +13,7 @@
 
 #define STUB          1
 #define AUTOSUMARY    1
-#define SUMMARY_DEPTH 2
+#define SUMMARY_DEPTH 1
 
 using Cost = uint8_t;
 
@@ -113,7 +113,7 @@ struct Record {
 		if ( r.gws.size() == 0 )
 			unsummary( r );
 
-		finishedSumarizing = sumarizing.size() == 0;
+		finishedSumarizing = sumarizing.size() <= 1;
 	}
 
 	bool toDelete() const {
@@ -447,21 +447,6 @@ public:
 		}
 		#endif
 
-		#if AUTOSUMARY
-		if ( records.size() > 1 && isToAll( action ) ) {
-			uint8_t mask = records.back().mask;
-			auto it      = records.end();
-			while ( it != records.begin() ) {
-				it--;
-				if ( mask != it->mask ) {
-					mask = it->mask;
-					changed |= trySummarize( --it );
-					it++; // return it back after shift in prev. line
-				}
-			}
-		}
-		#endif
-
 		return !changed ? action : ( isStub() ? Action::RespondToAll : Action::CallToAll );
 	}
 
@@ -538,7 +523,7 @@ private:
 			if ( !search( Record( ip, oldmask - prefix, Gateway( "null", cost ) ) ) ) {
 				it = records.insert( ++last, Record( ip, oldmask - prefix, Gateway( "null", cost ), toBeSummarized ) );
 				it->activate();
-				addToChanges( Record( ip, oldmask - prefix, Gateway( "null", cost ) ), Operation::Add );
+				addToChanges( *it, Operation::Add );
 			}
 			return true;
 		}
@@ -570,7 +555,8 @@ private:
 		}
 	}
 
-	void addSorted( const Record& rec ) {
+	bool addSorted( const Record& rec ) {
+        bool sumarized = false;
 		auto it = records.begin();
 		for ( ; it != records.end(); it++ ) {
 			if ( it->mask > rec.mask ) {
@@ -584,10 +570,24 @@ private:
 			it = records.insert( it, rec );
 			it->activate();
 		}
+
+        #if AUTOSUMARY
+		if ( records.size() > 1 ) {
+			uint8_t mask = it->mask;
+			while ( it != records.begin() && it->mask == mask ) {
+				if ( trySummarize( it ) )
+                    sumarized = true;
+				it--;
+			}
+		}
+		#endif
+
+        return sumarized;
 	}
 
 	bool addRecord( const Record& rec ) {
 		bool changed = false;
+        bool sumarized = false;
 		auto r = search( rec );
 		if ( r ) {
 			if ( *r != rec ) {
@@ -599,11 +599,11 @@ private:
 				}
 			}
 		} else {
-			addSorted( rec );
-			changed = true;
+			sumarized = addSorted( rec );
+            changed = true;
 		}
 
-		if ( changed ) {
+		if ( changed && !sumarized ) {
 			addToChanges( rec, Operation::Add );
 		}
 
@@ -616,7 +616,6 @@ private:
 
 		if ( r.getGwName() != str ) { // if the route was updated, remove the old and add the new one
 			addToChanges( Record( r.ip, r.mask, Gateway( str.c_str(), 0 ) ), Operation::Remove );
-			addToChanges( r, Operation::Add );
 		}
 	}
 
@@ -667,9 +666,13 @@ private:
 
 	int changesIfless( Netif* n ) const {
 		int count = 0;
-		for ( const auto& [ act, rec ] : changes ) {
-			if ( ( n && rec.getGwName() == n->getName() ) || ( rec.getCost() == 0 && rec.mask == 0 ) || rec.isSummarized() )
-				count++;
+		for ( const auto& [ act, rec ] : changes ) { // criterias are described in createRRPmsg
+			if ( n && ( n->getName() == rec.getGwName() || n->isStub() ) )
+                count++;
+            else if ( rec.getCost() == 0 && rec.mask == 0 )
+                count++;
+            else if ( rec.isSummarized() )
+                count++;
 		}
 
 		return count;
@@ -681,11 +684,13 @@ private:
 		if ( action == Operation::Remove ) {
 			changes.push_back( { action, Record( rec.ip, rec.mask, Gateway( rec.getGwName().c_str(), rec.getCost() ) ) } );
 			for ( auto s : rec.sumarizing )
-				changes.push_back( { Operation::Add, Record( s->ip, s->mask, s->getGateway() ) } );
+                if ( s )
+				    changes.push_back( { Operation::Add, Record( s->ip, s->mask, s->getGateway() ) } );
 		} else {
 			changes.push_back( { action, Record( rec.ip, rec.mask, Gateway( rec.getGwName().c_str(), rec.getCost() ) ) } );
 			for ( auto s : rec.sumarizing )
-				changes.push_back( { Operation::Remove, Record( s->ip, s->mask, s->getGateway() ) } );
+                if ( s )
+				    changes.push_back( { Operation::Remove, Record( s->ip, s->mask, s->getGateway() ) } );
 		}
 	}
 
