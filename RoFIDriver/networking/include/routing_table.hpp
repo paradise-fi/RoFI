@@ -11,9 +11,9 @@
 #include <optional>
 #include <numeric>
 
-#define STUB          1
-#define AUTOSUMARY    1
-#define SUMMARY_DEPTH 1
+#define STUB           1
+#define AUTOSUMMARY    1
+#define SUMMARY_DEPTH  1
 
 using Cost = uint8_t;
 
@@ -381,7 +381,7 @@ public:
         as< Command >( packet.payload() )     = cmd;
         as< uint8_t >( packet.payload() + 1 ) = static_cast< uint8_t >( count );
 
-        n->setStub( cmd == Command::Stubby );
+        n->setStub( cmd == Command::Stubby || cmd == Command::Sync );
 
         auto data = packet.payload() + 2;
         for ( const auto& rec : records ) {
@@ -570,9 +570,9 @@ private:
             it = records.insert( it, rec );
             it->activate();
         }
-
-        #if AUTOSUMARY
-        if ( records.size() > 1 ) {
+ 
+        #if AUTOSUMMARY
+         if ( records.size() > 1 ) {
             uint8_t mask = it->mask;
             while ( it != records.begin() && it->mask == mask ) {
                 if ( trySummarize( it ) )
@@ -703,7 +703,7 @@ private:
         if ( isHello( cmd ) && !n->isActive() )
             n->setActive( true );
 
-        n->setStub( cmd == Command::Stubby );
+        n->setStub( cmd == Command::Stubby || cmd == Command::Sync );
 
         for ( int i = 0; i < count; i++ ) {
             Ip6Addr ip        = as< Ip6Addr >( data );
