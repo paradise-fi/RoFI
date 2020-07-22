@@ -39,6 +39,8 @@ int main()
 
     node->Init( tmpString );
     auto pub = node->Advertise< Info >( "~/attach_event" );
+    assert( pub );
+    pub->WaitForConnection();
 
     std::cout << "Advertizing on topic: '" << pub->GetTopic() << "'\n";
 

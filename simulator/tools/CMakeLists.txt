@@ -12,6 +12,8 @@ target_link_libraries(ping rofiHal)
 add_executable(commandLine commandLine.cpp)
 target_link_libraries(commandLine rofiHal)
 
+add_executable(roficomCmd roficomCmd.cpp)
+target_link_libraries(roficomCmd rofiMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+
 
 add_subdirectory(worldCreator)
-add_subdirectory(roficomCmd)
