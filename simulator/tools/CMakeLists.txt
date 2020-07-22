@@ -9,5 +9,9 @@ target_link_libraries(listener rofiMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIE
 add_executable(ping ping.cpp)
 target_link_libraries(ping rofiHal)
 
+add_executable(commandLine commandLine.cpp)
+target_link_libraries(commandLine rofiHal)
+
 
 add_subdirectory(worldCreator)
+add_subdirectory(roficomCmd)

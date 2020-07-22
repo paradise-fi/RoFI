@@ -5,7 +5,7 @@
 
 #include <gazebo/gazebo_client.hh>
 
-#include "rofi_hal_old.hpp"
+#include "rofi_hal.hpp"
 
 enum class ConnectorCmd
 {

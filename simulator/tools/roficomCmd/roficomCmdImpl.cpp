@@ -6,7 +6,7 @@
 
 #include <gazebo/transport/transport.hh>
 
-#include "rofi_hal_old.hpp"
+#include "rofi_hal.hpp"
 
 #include <rofiCmd.pb.h>
 
