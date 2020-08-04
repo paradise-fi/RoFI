@@ -1,4 +1,4 @@
-<sdf version="1.6">
+<sdf version='1.6'>
   <world name='default'>
     <!-- A global light source -->
     <include>
@@ -15,10 +15,10 @@
     </include>
 
     <!-- Distributor plugin -->
-    <plugin name="distributor" filename="libdistributorPlugin.so"/>
+    <plugin name='distributor' filename='libdistributorPlugin.so'/>
 
     <!-- Attacher plugin -->
-    <plugin name="attacher" filename="libattacherPlugin.so"/>
+    <plugin name='attacher' filename='libattacherPlugin.so'/>
 
     <!-- World state -->
     <state world_name='default'>

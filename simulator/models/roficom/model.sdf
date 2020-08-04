@@ -1,8 +1,8 @@
-<?xml version="1.0" ?>
-<sdf version="1.6">
-    <model name="RoFICoM">
+<?xml version='1.0'?>
+<sdf version='1.6'>
+    <model name='RoFICoM'>
         <self_collide>false</self_collide>
-        <link name="outer">
+        <link name='outer'>
             <inertial>
                 <pose>0 0 -8.5e-3 0 0 0</pose>
                 <mass>10e-3</mass> <!-- TODO check -->
@@ -18,7 +18,7 @@
                     <iyz>0.0</iyz>
                 </inertia>
             </inertial>
-            <collision name="outer-collision">
+            <collision name='outer-collision'>
                 <pose>0 0 -8.5e-3 0 0 0</pose>
                 <geometry>
                     <cylinder>
@@ -27,7 +27,7 @@
                     </cylinder>
                 </geometry>
             </collision>
-            <visual name="visual">
+            <visual name='visual'>
                 <pose>0 0 -8.5e-3 0 0 0</pose>
                 <geometry>
                     <cylinder>
@@ -43,7 +43,7 @@
                 </material>
             </visual>
         </link>
-        <link name="inner">
+        <link name='inner'>
             <inertial>
                 <pose>0 0 -3.5e-3 0 0 0</pose>
                 <mass>10e-3</mass> <!-- TODO check -->
@@ -59,7 +59,7 @@
                     <iyz>0.0</iyz>
                 </inertia>
             </inertial>
-            <collision name="inner-collision">
+            <collision name='inner-collision'>
                 <pose>0 0 -3.5e-3 0 0 0</pose>
                 <geometry>
                     <cylinder>
@@ -68,7 +68,7 @@
                     </cylinder>
                 </geometry>
             </collision>
-            <visual name="visual">
+            <visual name='visual'>
                 <pose>0 0 -3.5e-3 0 0 0</pose>
                 <geometry>
                     <cylinder>
@@ -84,7 +84,7 @@
                 </material>
             </visual>
         </link>
-        <joint name="extendJoint" type="prismatic">
+        <joint name='extendJoint' type='prismatic'>
             <parent>outer</parent>
             <child>inner</child>
             <axis>
@@ -104,7 +104,7 @@
                 <use_parent_model_frame>1</use_parent_model_frame>
             </axis>
         </joint>
-        <plugin name="roficom" filename="libroficomPlugin.so">
+        <plugin name='roficom' filename='libroficomPlugin.so'>
             <joint>extendJoint</joint>
             <extend>false</extend>
         </plugin>

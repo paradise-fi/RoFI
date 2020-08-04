@@ -1,4 +1,4 @@
-<sdf version="1.6">
+<sdf version='1.6'>
   <world name='default'>
     <!-- A global light source -->
     <include>
@@ -15,17 +15,17 @@
       <uri>model://universalModule</uri>
     </include>
 
-    <model name="fixModuleModel">
-      <joint name="fixModuleJoint" type="fixed">
+    <model name='fixModuleModel'>
+      <joint name='fixModuleJoint' type='fixed'>
         <parent>world</parent>
         <child>universalModule::shoeA</child>
       </joint>
     </model>
 
     <!-- Distributor plugin -->
-    <plugin name="distributor" filename="libdistributorPlugin.so"/>
+    <plugin name='distributor' filename='libdistributorPlugin.so'/>
 
     <!-- Attacher plugin -->
-    <plugin name="attacher" filename="libattacherPlugin.so"/>
+    <plugin name='attacher' filename='libattacherPlugin.so'/>
   </world>
 </sdf>

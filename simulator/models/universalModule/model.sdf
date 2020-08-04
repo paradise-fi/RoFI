@@ -1,7 +1,7 @@
-<?xml version="1.0" ?>
-<sdf version="1.6">
-    <model name="universalModule">
-        <link name="bodyA">
+<?xml version='1.0'?>
+<sdf version='1.6'>
+    <model name='universalModule'>
+        <link name='bodyA'>
             <self_collide>true</self_collide>
             <inertial>
                 <pose>0 -0.029663 0 0 -0 0</pose>
@@ -15,7 +15,7 @@
                     <izz>0.000158</izz>
                 </inertia>
             </inertial>
-            <visual name="visual-bodyA">
+            <visual name='visual-bodyA'>
                 <pose>0 0 0 0 -0 0</pose>
                 <geometry>
                     <mesh>
@@ -32,12 +32,12 @@
                         <uri>file://media/materials/scripts/gazebo.material</uri>
                         <name>Gazebo/DarkGrey</name>
                     </script>
-                    <shader type="pixel">
+                    <shader type='pixel'>
                         <normal_map>__default__</normal_map>
                     </shader>
                 </material>
             </visual>
-            <collision name="collision-bodyA">
+            <collision name='collision-bodyA'>
                 <pose>0 0 0 0 -0 0</pose>
                 <geometry>
                     <mesh>
@@ -51,7 +51,7 @@
             </collision>
         </link>
 
-        <link name="bodyB">
+        <link name='bodyB'>
             <self_collide>true</self_collide>
             <inertial>
                 <pose>0 0.029663 0 0 -0 0</pose>
@@ -65,7 +65,7 @@
                     <izz>0.000158</izz>
                 </inertia>
             </inertial>
-            <visual name="visual-bodyB">
+            <visual name='visual-bodyB'>
                 <pose>0 0 0 0 -0 0</pose>
                 <geometry>
                     <mesh>
@@ -82,12 +82,12 @@
                         <uri>file://media/materials/scripts/gazebo.material</uri>
                         <name>Gazebo/DarkGrey</name>
                     </script>
-                    <shader type="pixel">
+                    <shader type='pixel'>
                         <normal_map>__default__</normal_map>
                     </shader>
                 </material>
             </visual>
-            <collision name="collision-bodyB">
+            <collision name='collision-bodyB'>
                 <pose>0 0 0 0 -0 0</pose>
                 <geometry>
                     <mesh>
@@ -101,7 +101,7 @@
             </collision>
         </link>
 
-        <link name="shoeA">
+        <link name='shoeA'>
             <self_collide>false</self_collide>
             <pose>-0.0265 -0.05 0 0 -0 0</pose>
             <inertial>
@@ -116,7 +116,7 @@
                     <izz>0.000117</izz>
                 </inertia>
             </inertial>
-            <collision name="shoeA-collision">
+            <collision name='shoeA-collision'>
                 <pose>0.0265 0.05 -0 0 -0 0</pose>
                 <geometry>
                     <mesh>
@@ -128,7 +128,7 @@
                     </mesh>
                 </geometry>
             </collision>
-            <visual name="shoeA-visual">
+            <visual name='shoeA-visual'>
                 <pose>0.0265 0.05 -0 0 -0 0</pose>
                 <geometry>
                     <mesh>
@@ -145,14 +145,14 @@
                         <uri>file://media/materials/scripts/gazebo.material</uri>
                         <name>Gazebo/Yellow</name>
                     </script>
-                    <shader type="pixel">
+                    <shader type='pixel'>
                         <normal_map>__default__</normal_map>
                     </shader>
                 </material>
             </visual>
         </link>
 
-        <link name="shoeB">
+        <link name='shoeB'>
             <self_collide>false</self_collide>
             <pose>-0.0265 0.05 0.0015 0 -0 0</pose>
             <inertial>
@@ -167,7 +167,7 @@
                     <izz>0.000117</izz>
                 </inertia>
             </inertial>
-            <collision name="shoeB-collision">
+            <collision name='shoeB-collision'>
                 <pose>0.0265 -0.05 -0.0015 0 -0 0</pose>
                 <geometry>
                     <mesh>
@@ -179,7 +179,7 @@
                     </mesh>
                 </geometry>
             </collision>
-            <visual name="shoeB-visual">
+            <visual name='shoeB-visual'>
                 <pose>0.0265 -0.05 -0.0015 0 -0 0</pose>
                 <geometry>
                     <mesh>
@@ -196,49 +196,49 @@
                         <uri>file://media/materials/scripts/gazebo.material</uri>
                         <name>Gazebo/Yellow</name>
                     </script>
-                    <shader type="pixel">
+                    <shader type='pixel'>
                         <normal_map>__default__</normal_map>
                     </shader>
                 </material>
             </visual>
         </link>
 
-        <model name="connectorAplusX">
+        <model name='connectorAplusX'>
             <pose>0.043 -0.05 0 -1.5708 0 -1.5708</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
         </model>
 
-        <model name="connectorAminusX">
+        <model name='connectorAminusX'>
             <pose>-0.043 -0.05 0 -1.5708 0 1.5708</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
         </model>
 
-        <model name="connectorAminusZ">
+        <model name='connectorAminusZ'>
             <pose>0 -0.093 0 1.5708 0 0</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
         </model>
 
-        <model name="connectorBplusX">
+        <model name='connectorBplusX'>
             <pose>-0.043 0.05 0 -1.5708 0 1.5708</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
         </model>
 
-        <model name="connectorBminusX">
+        <model name='connectorBminusX'>
             <pose>0.043 0.05 0 -1.5708 0 -1.5708</pose>
             <include>
                 <uri>model://roficom</uri>
             </include>
         </model>
 
-        <model name="connectorBminusZ">
+        <model name='connectorBminusZ'>
             <pose>0 0.093 0 1.5708 0 3.1416</pose>
             <include>
                 <uri>model://roficom</uri>
@@ -246,7 +246,7 @@
         </model>
 
 
-        <joint name="bodyRev" type="revolute">
+        <joint name='bodyRev' type='revolute'>
             <child>bodyB</child>
             <parent>bodyA</parent>
             <axis>
@@ -264,7 +264,7 @@
             </axis>
         </joint>
 
-        <joint name="shoeARev" type="revolute">
+        <joint name='shoeARev' type='revolute'>
             <child>shoeA</child>
             <parent>bodyA</parent>
             <axis>
@@ -284,7 +284,7 @@
             </axis>
         </joint>
 
-        <joint name="shoeBRev" type="revolute">
+        <joint name='shoeBRev' type='revolute'>
             <child>shoeB</child>
             <parent>bodyB</parent>
             <axis>
@@ -304,37 +304,37 @@
             </axis>
         </joint>
 
-        <joint name="connectorAplusX" type="fixed">
+        <joint name='connectorAplusX' type='fixed'>
             <child>connectorAplusX::RoFICoM::outer</child>
             <parent>shoeA</parent>
         </joint>
 
-        <joint name="connectorAminusX" type="fixed">
+        <joint name='connectorAminusX' type='fixed'>
             <child>connectorAminusX::RoFICoM::outer</child>
             <parent>shoeA</parent>
         </joint>
 
-        <joint name="connectorAminusZ" type="fixed">
+        <joint name='connectorAminusZ' type='fixed'>
             <child>connectorAminusZ::RoFICoM::outer</child>
             <parent>shoeA</parent>
         </joint>
 
-        <joint name="connectorBplusX" type="fixed">
+        <joint name='connectorBplusX' type='fixed'>
             <child>connectorBplusX::RoFICoM::outer</child>
             <parent>shoeB</parent>
         </joint>
 
-        <joint name="connectorBminusX" type="fixed">
+        <joint name='connectorBminusX' type='fixed'>
             <child>connectorBminusX::RoFICoM::outer</child>
             <parent>shoeB</parent>
         </joint>
 
-        <joint name="connectorBminusZ" type="fixed">
+        <joint name='connectorBminusZ' type='fixed'>
             <child>connectorBminusZ::RoFICoM::outer</child>
             <parent>shoeB</parent>
         </joint>
 
-        <plugin name="rofiModule" filename="librofiModulePlugin.so">
+        <plugin name='rofiModule' filename='librofiModulePlugin.so'>
             <controller>
                 <joint>shoeARev</joint>
                 <joint>shoeBRev</joint>
