@@ -1,4 +1,4 @@
-GazeboSim
+RoFISim
 =========
 
 .. toctree::

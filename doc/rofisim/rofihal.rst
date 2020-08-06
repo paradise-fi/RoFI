@@ -9,41 +9,41 @@ Types and Constants
 ===================
 
 .. doxygentypedef:: rofi::hal::RoFI::Id
-    :project: gzsim
+    :project: sim
 
 .. doxygenenum:: rofi::hal::Joint::Error
-    :project: gzsim
+    :project: sim
 
 
 .. doxygenenum:: rofi::hal::ConnectorPosition
-    :project: gzsim
+    :project: sim
 
 .. doxygenenum:: rofi::hal::ConnectorOrientation
-    :project: gzsim
+    :project: sim
 
 .. doxygenenum:: rofi::hal::ConnectorLine
-    :project: gzsim
+    :project: sim
 
 
 .. doxygenstruct:: rofi::hal::ConnectorState
-    :project: gzsim
+    :project: sim
 
 .. doxygenstruct:: rofi::hal::ConnectorEvent
-    :project: gzsim
+    :project: sim
 
 
 .. doxygentypedef:: rofi::hal::Packet
-    :project: gzsim
+    :project: sim
 
 
 Classes
 =======
 
 .. doxygenclass:: rofi::hal::RoFI
-    :project: gzsim
+    :project: sim
 
 .. doxygenclass:: rofi::hal::Joint
-   :project: gzsim
+   :project: sim
 
 .. doxygenclass:: rofi::hal::Connector
-    :project: gzsim
+    :project: sim
