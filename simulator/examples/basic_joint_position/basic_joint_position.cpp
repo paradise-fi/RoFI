@@ -56,6 +56,4 @@ int main()
 
         endCycleFuture.get();
     }
-
-    std::cout << "Basic velocity position ended\n";
 }

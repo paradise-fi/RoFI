@@ -29,6 +29,4 @@ int main()
 
         endCycleFuture.get();
     }
-
-    std::cout << "Basic velocity example ended\n";
 }
