@@ -9,7 +9,7 @@ ARGS ?=
 
 SUBFOLDERS = demos examples hal plugins tools worlds
 
-.PHONY: build-all clean run tests-roficom format-all demo example world-creator help ${SUBFOLDERS}
+.PHONY: build-all clean run format-all demo example world-creator help ${SUBFOLDERS}
 
 build:
 	mkdir -p build
@@ -28,9 +28,6 @@ clean:
 
 run: plugins worlds
 	./setGazeboVariables.sh ${GAZEBO} ${GZ_ARGS} ${WORLD}
-
-tests-roficom: plugins
-	./build/plugins/roficom/tests/tests_roficom
 
 format-all:
 	find ./ ! \( -path "./build/*" \) -a \( -type f -iname *.hpp -o -type f -iname *.cpp \) | xargs clang-format --style=file -i
@@ -60,8 +57,6 @@ help:
 	@echo "\t\tRemoves the build directory."
 	@echo "\n\trun [GAZEBO=<gazebo_program>] [GZ_ARGS=<gazebo_args>] [WORLD=<world_file>]"
 	@echo "\t\tRuns gazebo, gazebo_args default to '--verbose'."
-	@echo "\n\ttests-roficom"
-	@echo "\t\tRuns tests for roficom."
 	@echo "\n\tformat-all"
 	@echo "\t\tFormats all '.hpp' and '.cpp' files."
 	@echo "\n\tdemo NAME=<demo_name> [ARGS=<demo_args>]"
