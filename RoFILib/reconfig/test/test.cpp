@@ -370,3 +370,24 @@ TEST_CASE("Diff reconnections and rotations") {
     REQUIRE((action.reconnections().at(1) == reconnect1 || action.reconnections().at(1) == reconnect2));
     REQUIRE(action.reconnections().at(0) != action.reconnections().at(1));
 }
+
+
+TEST_CASE("Bugfix test -- disconnected double connected modules") {
+    Configuration cfg;
+    cfg.addModule(-90, 90, 90, 7);
+    cfg.addModule(0, -90, 90, 1);
+    cfg.addModule(90, -90, 180, 21);
+    cfg.addModule(90, -90, 0, 8);
+    cfg.addModule(90, -90, 180, 22);
+
+    cfg.addEdge({7, A, XPlus, North, ZMinus, B, 21});
+    cfg.addEdge({1, A, XMinus, West, XMinus, B, 8});
+    cfg.addEdge({1, B, XPlus, East, XPlus, B, 22});
+    cfg.addEdge({1, A, ZMinus, East, XPlus, B, 21});
+
+    REQUIRE(cfg.isValid());
+    cfg.addEdge({7, B, ZMinus, South, ZMinus, A, 21});
+    REQUIRE(cfg.isValid());
+    cfg.removeEdge({1, A, ZMinus, East, XPlus, B, 21});
+    REQUIRE(!cfg.isValid());
+}
