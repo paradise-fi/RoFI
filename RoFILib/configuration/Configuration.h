@@ -391,7 +391,7 @@ private:
      *
      * \returns `True` if it succeeded fixing, `False` if not.
      */
-    bool removeSpanningEdge(ID parent, ID child);
+    void removeSpanningEdge(ID parent, ID child);
 
     void spanningClearId(ID id);
 

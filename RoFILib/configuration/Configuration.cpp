@@ -334,7 +334,7 @@ bool Configuration::removeEdge(const Edge& edge) {
     return true;
 }
 
-bool Configuration::removeSpanningEdge(ID parent, ID child) {
+void Configuration::removeSpanningEdge(ID parent, ID child) {
     for (int i = 0; i < 6; ++i) {
         auto& succOpt = spanningSucc[parent][i];
         if (!succOpt.has_value())
@@ -347,31 +347,10 @@ bool Configuration::removeSpanningEdge(ID parent, ID child) {
     }
 
     spanningPred[child] = {};
-    for (auto& edgeOpt : spanningCross.at(child)) {
-        if (!edgeOpt.has_value())
-            continue;
-        ID nextId = edgeOpt.value().id2();
-        if (spanningPred[nextId].has_value()
-            && spanningPred[nextId].value().first == child)
-            continue;
-        for (int i = 0; i < 6; ++i) {
-            auto& succOpt = spanningSucc[nextId][i];
-            if (succOpt.has_value())
-                continue;
-            succOpt = {reverse(edgeOpt.value())};
-            spanningSuccCount[nextId] += 1;
-            spanningPred[child] = {std::make_pair(nextId, edgeOpt.value().side1())};
-            int toDeleteIndex = edgeOpt.value().side2() * 3 + edgeOpt.value().dock2();
-            spanningCross[nextId][toDeleteIndex] = {};
-            edgeOpt = {};
-            return true;
-        }
-    }
 
-    if (connectedVal == Value::True)
-        connectedVal = Value::Unknown;
+    connectedVal = Value::Unknown;
     spanningTreeComputed = false;
-    return false;
+    return;
 }
 
 bool Configuration::findEdge(const Edge& edge) const {
