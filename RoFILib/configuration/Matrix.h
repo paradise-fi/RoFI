@@ -90,7 +90,39 @@ inline double centerSqDistance(const Matrix& a, const Matrix& b)
     return std::round(res * precision) / precision;
 }
 
-inline double sqDistVM(const Matrix&a , const Vector& c) 
+inline double centerDistance(const Matrix& a, const Matrix& b)
+{
+    double res = 0;
+    for (int i = 0; i < 4; ++i)
+    {
+        double diff = a(i, 3) - b(i, 3);
+        res += diff * diff;
+    }
+    return std::round(sqrt(res) * precision) / precision;
+}
+
+inline unsigned newyorkCenterDistance(const Matrix& a, const Matrix& b)
+{
+    unsigned res = 0;
+    for (int i = 0; i < 4; ++i)
+    {
+        res += std::round(a(i, 3) - b(i, 3));
+    }
+    return res;
+}
+
+inline double moduleDistance(const Matrix& a1, const Matrix& a2, const Matrix& b1, const Matrix& b2)
+{
+    double res = 0;
+    for (int i = 0; i < 4; ++i)
+    {
+        double diff = a1(i, 3) + a2(i, 3) - b1(i, 3) - b2(i, 3);
+        res += diff * diff;
+    }
+    return std::round(sqrt(res/4) * precision) / precision;
+}
+
+inline double sqDistVM(const Matrix&a , const Vector& c)
 {
     double res = 0;
     for (int i = 0; i < 4; ++i)

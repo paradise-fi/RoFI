@@ -25,7 +25,9 @@ int main(int argc, char* argv[])
         sg.printGrid();
     }
     */
-    std::vector<Configuration> path;
+    std::vector<Configuration> path = fixLeaf(init, 3);
+    std::cout << IO::toString(path[path.size()-1]) << std::endl;
+    /*
     AlgorithmStat stat;
     int moduleCount = init.getIDs().size();
 
@@ -36,6 +38,7 @@ int main(int argc, char* argv[])
         path_pref = std::atof(argv[2]);
         limit = std::atoi(argv[3]);
     }
+*/
 /*
     Testing connectArm
     Edge connection(4, A, ConnectorId::ZMinus, Orientation::North, ConnectorId::ZMinus, B, 7);
@@ -55,6 +58,7 @@ int main(int argc, char* argv[])
     std::cout << IO::toString(path[path.size()-1]);
 */
 /*  Testing makeSpace */
+/*
     std::unordered_set<ID> isolate;
     if (!init.computeSpanningTree())
         std::cout << "Compute failed" << std::endl;
@@ -63,4 +67,5 @@ int main(int argc, char* argv[])
     std::cout << "Isolate size: " << isolate.size() << std::endl;
     path = makeSpace(init, isolate, &stat);
     std::cout << IO::toString(path[path.size()-1]) << std::endl;
+*/
 }
