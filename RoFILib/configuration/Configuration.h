@@ -259,6 +259,9 @@ public:
     const EdgeMap& getEdges() const { return edges; }
     const MatrixMap & getMatrices() const { return matrices; }
 
+    ID getFixedId() const { return fixedId; }
+    ShoeId getFixedSide() const { return fixedSide; }
+
     Module& getModule(ID id);
     const Module& getModule(ID id) const;
     std::vector<ID> getIDs() const;
