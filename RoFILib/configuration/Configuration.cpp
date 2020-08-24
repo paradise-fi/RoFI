@@ -127,6 +127,14 @@ std::optional<Edge> nextEdge(const Edge& edge) {
                 edge.id2())};
 }
 
+unsigned edgeIndex(const Edge& edge) {
+    return edge.side1() * 3 + edge.dock1();
+}
+
+unsigned edgeIndex(ShoeId shoe, ConnectorId dock) {
+    return shoe * 3 + dock;
+}
+
 /* * * * * *
  * ACTIONS *
  * * * * * */
@@ -269,8 +277,8 @@ bool Configuration::addEdge(const Edge& edge) {
     EdgeList& set1 = edges.at(edge.id1());
     EdgeList& set2 = edges.at(edge.id2());
 
-    int setIndex1 = edge.side1() * 3 + edge.dock1();
-    int setIndex2 = edge.side2() * 3 + edge.dock2();
+    unsigned setIndex1 = edgeIndex(edge);
+    unsigned setIndex2 = edgeIndex(reverse(edge));
     if (set1[setIndex1].has_value() || set2[setIndex2].has_value())
         return false;
 
@@ -283,8 +291,8 @@ bool Configuration::addEdge(const Edge& edge) {
         EdgeList& spanningSet1 = spanningCross.at(edge.id1());
         EdgeList& spanningSet2 = spanningCross.at(edge.id2());
 
-        int spanningSetIndex1 = edge.side1() * 3 + edge.dock1();
-        int spanningSetIndex2 = edge.side2() * 3 + edge.dock2();
+        unsigned spanningSetIndex1 = edgeIndex(edge);
+        unsigned spanningSetIndex2 = edgeIndex(reverse(edge));
 
         spanningSet1[spanningSetIndex1] = edge;
         spanningSet2[spanningSetIndex2] = revEdge;
@@ -297,8 +305,8 @@ bool Configuration::removeEdge(const Edge& edge) {
     EdgeList& set1 = edges.at(edge.id1());
     EdgeList& set2 = edges.at(edge.id2());
 
-    int setIndex1 = edge.side1() * 3 + edge.dock1();
-    int setIndex2 = edge.side2() * 3 + edge.dock2();
+    unsigned setIndex1 = edgeIndex(edge);
+    unsigned setIndex2 = edgeIndex(reverse(edge));
     if (!set1[setIndex1].has_value() || !set2[setIndex2].has_value())
         return false;
 
@@ -316,16 +324,16 @@ bool Configuration::removeEdge(const Edge& edge) {
 
     if (spanningPred[edge.id1()].has_value()
         && spanningPred[edge.id1()].value().first == edge.id2()) {
-        removeSpanningEdge(edge.id2(), edge.id1());
+        removeSpanningEdge(reverse(edge));
     } else if (spanningPred[edge.id2()].has_value()
         && spanningPred[edge.id2()].value().first == edge.id1()) {
-        removeSpanningEdge(edge.id1(), edge.id2());
+        removeSpanningEdge(edge);
     } else {
         EdgeList& spanningSet1 = spanningCross.at(edge.id1());
         EdgeList& spanningSet2 = spanningCross.at(edge.id2());
 
-        int spanningSetIndex1 = edge.side1() * 3 + edge.dock1();
-        int spanningSetIndex2 = edge.side2() * 3 + edge.dock2();
+        unsigned spanningSetIndex1 = edgeIndex(edge);
+        unsigned spanningSetIndex2 = edgeIndex(reverse(edge));
 
         spanningSet1[spanningSetIndex1] = {};
         spanningSet2[spanningSetIndex2] = {};
@@ -334,19 +342,12 @@ bool Configuration::removeEdge(const Edge& edge) {
     return true;
 }
 
-void Configuration::removeSpanningEdge(ID parent, ID child) {
-    for (int i = 0; i < 6; ++i) {
-        auto& succOpt = spanningSucc[parent][i];
-        if (!succOpt.has_value())
-            continue;
-        if (succOpt.value().id2() != child)
-            continue;
-        succOpt = {};
-        spanningSuccCount[parent] -= 1;
-        break;
-    }
+void Configuration::removeSpanningEdge(const Edge& edge) {
+    unsigned setIndex = edgeIndex(edge);
+    spanningSucc[edge.id1()][setIndex] = {};
+    spanningSuccCount[edge.id1()] -= 1;
 
-    spanningPred[child] = {};
+    spanningPred[edge.id2()] = {};
 
     connectedVal = Value::Unknown;
     spanningTreeComputed = false;
@@ -354,12 +355,12 @@ void Configuration::removeSpanningEdge(ID parent, ID child) {
 }
 
 bool Configuration::findEdge(const Edge& edge) const {
-    int idx = edge.side1() * 3 + edge.dock1();
+    unsigned idx = edgeIndex(edge);
     return edges.at(edge.id1())[idx].has_value();
 }
 
 bool Configuration::findConnection(const Edge& edge) const {
-    int idx = edge.side1() * 3 + edge.dock1();
+    unsigned idx = edgeIndex(edge);
     const auto& edgeCandidate = edges.at(edge.id1())[idx];
     return edgeCandidate.has_value() && edgeCandidate.value() == edge;
 }
@@ -719,7 +720,7 @@ bool Configuration::computeSpanningTree() {
             ID nextId = edge.id2();
             if (seen.find(nextId) != seen.end()) {
                 if (!spanningPred[currId].has_value() || spanningPred[currId].value().first != nextId) {
-                    int spanningSetIndex = edge.side1() * 3 + edge.dock1();
+                    unsigned spanningSetIndex = edgeIndex(edge);
                     spanningCross[currId][spanningSetIndex] = edge;
                 }
                 continue;
@@ -728,7 +729,8 @@ bool Configuration::computeSpanningTree() {
             seen.insert(nextId);
             spanningClearId(nextId);
             spanningPred.at(nextId) = {std::make_pair(currId, edge.side2())};
-            spanningSucc[currId][spanningSuccCount[currId]] = edgeOpt;
+            unsigned setIndex = edgeIndex(edge);
+            spanningSucc[currId][setIndex] = edgeOpt;
             spanningSuccCount[currId] += 1;
         }
     }
