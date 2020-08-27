@@ -128,6 +128,9 @@ inline Edge reverse(const Edge& edge) {
  */
 std::optional<Edge> nextEdge(const Edge& edge);
 
+unsigned edgeIndex(const Edge& edge);
+unsigned edgeIndex(ShoeId shoe, ConnectorId dock);
+
 /* ACTIONS
  *
  * Action is an object representing a set of atomic actions occurring in parallel.
@@ -391,7 +394,7 @@ private:
      *
      * \returns `True` if it succeeded fixing, `False` if not.
      */
-    void removeSpanningEdge(ID parent, ID child);
+    void removeSpanningEdge(const Edge& edge);
 
     void spanningClearId(ID id);
 
