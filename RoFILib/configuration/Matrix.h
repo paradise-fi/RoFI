@@ -101,6 +101,16 @@ inline double centerDistance(const Matrix& a, const Matrix& b)
     return std::round(sqrt(res) * precision) / precision;
 }
 
+inline double distFromVec(const Matrix& a, const Vector& v) {
+    double res = 0;
+    for (int i = 0; i < 4; ++i)
+    {
+        double diff = a(i, 3) - v(i);
+        res += diff * diff;
+    }
+    return std::round(sqrt(res) * precision) / precision;
+}
+
 inline unsigned newyorkCenterDistance(const Matrix& a, const Matrix& b)
 {
     unsigned res = 0;
