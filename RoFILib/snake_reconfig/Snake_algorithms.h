@@ -282,7 +282,15 @@ inline std::vector<Configuration> paralyzedAStar(const Configuration& init, cons
 }
 
 bool isSnake(const Configuration& config) {
-    return false;
+    for (const auto& [id, el] : config.getEdges()) {
+        for (const auto& optEdge : el) {
+            if (!optEdge.has_value())
+                continue;
+            if (optEdge.value().dock1() != ZMinus || optEdge.value().dock2() != ZMinus)
+                return false;
+        }
+    }
+    return true;
 }
 
 double distFromConn(const Configuration& config, const Edge& connection) {
@@ -304,9 +312,129 @@ std::unordered_set<ID> makeAllowed(const Configuration& init, ID subroot1, ID su
     return allowed;
 }
 
+Vector findSubtreeMassCenter(const Configuration& init, ID subroot) {
+    std::unordered_set<ID> subtree;
+    addSubtree(subroot, subtree, init.getSpanningSucc());
+    const auto& matrices = init.getMatrices();
+    Vector mass({0,0,0,1});
+    for (const auto& id : subtree) {
+        const auto& ms = matrices.at(id);
+        mass += center(ms[A]);
+        mass += center(ms[B]);
+    }
+    mass /= subtree.size()*2;
+    return mass;
+}
+
+double edgeSpaceEval(const Configuration& config, const Vector& mass, const std::unordered_set<ID>& subtrees) {
+    double score = 0;
+    for (const auto& [id, ms] : config.getMatrices()) {
+        if (subtrees.find(id) != subtrees.end())
+            continue;
+        for (const auto& m : ms) {
+            score += 1 / (distFromVec(m, mass));
+        }
+    }
+    return score;
+}
+
+std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1, ID subroot2) {
+    // TODO: check if we only use rotations
+    auto mass1 = findSubtreeMassCenter(init, subroot1);
+    auto mass2 = findSubtreeMassCenter(init, subroot2);
+    auto realMass = (mass1 + mass2) / 2;
+
+    std::unordered_set<ID> subtrees;
+    addSubtree(subroot1, subtrees, init.getSpanningSucc());
+    addSubtree(subroot2, subtrees, init.getSpanningSucc());
+
+    unsigned step = 90;
+    unsigned limit = 10 * init.getModules().size();
+    double path_pref = 0.1;
+    double free_pref = 1 - path_pref;
+    ConfigPred pred;
+    ConfigPool pool;
+
+    // Already computed shortest distance from init to configuration.
+    ConfigValue initDist;
+
+    // Shortest distance from init through this configuration to goal.
+    ConfigValue goalDist;
+
+    double startDist = edgeSpaceEval(init, realMass, subtrees);
+
+    MinMaxHeap<EvalPair, SnakeEvalCompare> queue(limit);
+
+    const Configuration* pointer = pool.insert(init);
+    const Configuration* bestConfig = pointer;
+    double bestScore = startDist;
+    double worstDist = startDist;
+
+    initDist[pointer] = 0;
+    goalDist[pointer] = startDist;
+    pred[pointer] = pointer;
+    int maxQSize = 0;
+    int i = 0;
+    queue.push( {goalDist[pointer], pointer} );
+
+
+    while (!queue.empty() && i++ < limit) {
+        maxQSize = std::max(maxQSize, queue.size());
+        const auto [d, current] = queue.popMin();
+        double currDist = initDist[current];
+
+        std::vector<Configuration> nextCfgs;
+        bisimpleNext(*current, nextCfgs, step);
+
+        for (const auto& next : nextCfgs) {
+            const Configuration* pointerNext;
+            double newEval = edgeSpaceEval(next, realMass, subtrees);
+            double newDist = path_pref * (currDist + 1) + free_pref * newEval;
+            bool update = false;
+
+            if (limit <= queue.size() + i) {
+                if (newDist > worstDist)
+                    continue;
+                if (!queue.empty()) {
+                    queue.popMax();
+                    const auto [newWorstD, _worstConfig] = queue.max();
+                    worstDist = newWorstD;
+                }
+            }
+
+            if (newDist > worstDist)
+                worstDist = newDist;
+
+            if (!pool.has(next)) {
+                pointerNext = pool.insert(next);
+                initDist[pointerNext] = currDist + 1;
+                update = true;
+            } else {
+                pointerNext = pool.get(next);
+            }
+
+            if (newEval < bestScore) {
+                bestScore = newEval;
+                bestConfig = pointerNext;
+            }
+
+            if ((currDist + 1 < initDist[pointerNext]) || update) {
+                initDist[pointerNext] = currDist + 1;
+                goalDist[pointerNext] = newDist;
+                pred[pointerNext] = current;
+                queue.push({newDist, pointerNext});
+            }
+        }
+    }
+    auto path = createPath(pred, bestConfig);
+
+    return path;
+
+}
+
 std::vector<Configuration> connectArm(const Configuration& init, const Edge& connection, ID subroot1, ID subroot2, AlgorithmStat* stat = nullptr) {
-    // TODO: ADD MAKESPACE!!!! 
     // Edge connection is from end of arm to end of arm
+    auto spacePath = makeEdgeSpace(init, subroot1, subroot2);
     unsigned step = 90;
     double path_pref = 0.1;
     double free_pref = 1 - path_pref;
@@ -328,7 +456,7 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
     auto limit = init.getModules().size() * 100;
     MinMaxHeap<EvalPair, SnakeEvalCompare> queue(limit);
 
-    const Configuration* pointer = pool.insert(init);
+    const Configuration* pointer = spacePath.empty() ? pool.insert(init) : pool.insert(spacePath.back());
     initDist[pointer] = 0;
     goalDist[pointer] = startDist;
     pred[pointer] = pointer;
@@ -391,7 +519,10 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
                     stat->queueSize = maxQSize;
                     stat->seenCfgs = pool.size();
                 }
-                return path;
+                for (const auto& c : path) {
+                    spacePath.emplace_back(c);
+                }
+                return spacePath;
             }
         }
     }
@@ -668,6 +799,7 @@ void findLeafs(const Configuration& config, std::unordered_map<ID, ShoeId>& leaf
     std::queue<std::tuple<ID, ShoeId, bool>> bag;
     bag.emplace(config.getFixedId(), config.getFixedSide(), true);
     const auto& spannSucc = config.getSpanningSucc();
+    const auto& spannPred = config.getSpanningPred();
     while(!bag.empty()) {
         auto [currId, currShoe, isWhite] = bag.front();
         auto otherShoe = currShoe == A ? B : A;
@@ -681,10 +813,16 @@ void findLeafs(const Configuration& config, std::unordered_map<ID, ShoeId>& leaf
         }
         if (!isLeaf)
             continue;
-        if (isWhite) {
-            leafsWhite.emplace(currId, otherShoe);
-        } else {
+        if (!spannPred.at(currId).has_value())
+            continue;
+        if (!isWhite) {
             leafsBlack.emplace(currId, otherShoe);
+        } else if (spannPred.at(currId).has_value()) {
+            // we dont want white leaf to be root, maybe change this later
+            // so that the when connecting to root white leaf, remove edge
+            // from black side
+            leafsWhite.emplace(currId, otherShoe);
+
         }
     }
 }
@@ -721,6 +859,7 @@ std::tuple<ID, ShoeId, unsigned> computeActiveRadius(const Configuration& config
     if (!spannPred.at(id).has_value())
         return {id, shoe == A ? B : A, 0};
     const auto& spannSucc = config.getSpanningSucc();
+    unsigned modRad = 1;
     unsigned radius = 2;
     unsigned currSize = 1;
     auto [currId, currShoe] = spannPred.at(id).value();
@@ -730,8 +869,8 @@ std::tuple<ID, ShoeId, unsigned> computeActiveRadius(const Configuration& config
         prevId = currId;
         prevShoe = currShoe;
         std::tie(currId, currShoe) = spannPred.at(currId).value();
-
-        if (subtreeSizes.at(currId) > 2 * currSize + 1) {
+        auto newSize = subtreeSizes.at(currId);
+        if (newSize > 2 * currSize + 1 || (modRad > 3 && newSize - currSize > 2)) {
             for (const auto& optEdge : spannSucc.at(currId)) {
                 if (!optEdge.has_value())
                     continue;
@@ -751,6 +890,7 @@ std::tuple<ID, ShoeId, unsigned> computeActiveRadius(const Configuration& config
                     continue;
                 if (optEdge.value().id2() != currId)
                     continue;
+                ++modRad;
                 if (optEdge.value().side2() == currShoe) {
                     radius += 1;
                 } else {
@@ -771,6 +911,80 @@ void computeActiveRadiuses(const Configuration& config, const std::unordered_map
     }
 }
 
+Configuration disjoinArm(const Configuration& init, const Edge& addedEdge, std::unordered_map<ID, ShoeId>& leafsBlack, std::unordered_map<ID, ShoeId>& leafsWhite) {
+    leafsBlack.erase(addedEdge.id1());
+    leafsWhite.erase(addedEdge.id2());
+    const auto& spannPred = init.getSpanningPred();
+    const auto& spannSucc = init.getSpanningSucc();
+    const auto& spannSuccCount = init.getSpanningSuccCount();
+    ID currId = addedEdge.id2();
+    ID prevId; // we can do this since white leaf cannot be root
+    ShoeId shoe = addedEdge.side2();
+    std::optional<Edge> toRemove;
+    bool isWhite = true;
+    while (!toRemove.has_value() && spannPred.at(currId).has_value()) {
+        prevId = currId;
+        currId = spannPred.at(currId).value().first;
+
+        for (const auto& optEdge : spannSucc.at(currId)) {
+            if (!optEdge.has_value())
+                continue;
+            const auto& edge = optEdge.value();
+            if (edge.id2() != prevId)
+                continue;
+
+            if (shoe == edge.side2())
+                isWhite = !isWhite;
+            shoe = edge.side1();
+
+            if (edge.dock1() == ZMinus && edge.dock2() == ZMinus && spannSuccCount.at(currId) <= 1) {
+                continue;
+            }
+            toRemove = {edge};
+            break;
+        }
+    }
+
+    if (!toRemove.has_value()) {
+        for (const auto& optEdge : spannSucc.at(currId)) {
+            if (!optEdge.has_value())
+                continue;
+            const auto& edge = optEdge.value();
+            if (edge.id2() != prevId)
+                continue;
+            toRemove = {edge};
+            break;
+        }
+    }
+
+    if (!spannPred.at(currId).has_value()) {
+        if (!isWhite)
+            leafsBlack.emplace(currId, shoe);
+    } else {
+        for (const auto& optEdge : spannSucc.at(spannPred.at(currId).value().first)) {
+            if (!optEdge.has_value())
+                continue;
+            const auto& edge = optEdge.value();
+            if (edge.id2() != currId)
+                continue;
+            if (shoe == edge.side2()) {
+                isWhite = !isWhite;
+                shoe = shoe == A ? B : A;
+            }
+            break;
+        }
+        if (!isWhite){
+            leafsBlack.emplace(currId, shoe);
+        } else {
+            leafsWhite.emplace(currId, shoe);
+        }
+    }
+
+    Action::Reconnect disc(false, toRemove.value());
+    Action act(disc);
+    return executeIfValid(init, act).value();
+}
+
 std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat* stat = nullptr) {
     // držet si konce v prioritní frontě, když to neuspěje, tak popni
     //      podívej se na top fronty + najdi nejbližší jiný konec s opačnou polaritou (který je dostatečně blízko)
@@ -779,8 +993,6 @@ std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat*
     //          zavolej crippled-astar s magnetem mezi konci
     //          pokud selže, najdi vyzkoušej najít jiný konec
     // jsi had, tak ok. Jinak jsme smutní.
-    std::unordered_set<ID> seenBlack;
-    std::unordered_set<ID> seenWhite;
     std::unordered_map<ID, ShoeId> leafsBlack;
     std::unordered_map<ID, ShoeId> leafsWhite;
     std::vector<std::pair<ID, ShoeId>> vecLeafsBlack;
@@ -800,6 +1012,8 @@ std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat*
     while (true) {
         res.clear();
         auto& config = path.back();
+        if (isSnake(config))
+            return path;
         const auto& matrices = config.getMatrices();
 
         computeSubtreeSizes(config, subtreeSizes);
@@ -835,7 +1049,7 @@ std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat*
                 Edge desiredConn(id, shoe, ConnectorId::ZMinus, Orientation::North, ConnectorId::ZMinus, w_shoe, w_id);
                 auto res = connectArm(config, desiredConn, subRoot, w_subRoot);
                 if (!res.empty()) {
-                    // TODO: ADD changing sets and removing unwanted edge
+                    res.emplace_back(disjoinArm(res.back(), desiredConn, leafsBlack, leafsWhite));
                     break;
                 }
             }
@@ -862,5 +1076,6 @@ std::vector<Configuration> reconfigToSnake(const Configuration& init, AlgorithmS
     for (const auto& config : toSnake) {
         path.push_back(config);
     }
+    // TODO: add fixSnake and changeFixedModule depending on centerOfMass
     return path;
 }
