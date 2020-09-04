@@ -34,9 +34,10 @@ extensions = [
     'recommonmark'
 ]
 breathe_sources = {
-    "driver": "../universalModule/software/RoFIDriver/",
+    "driver": "../RoFIDriver/",
     "roficom": "../RoFICoM/software/control_board/",
-    "lib": "../RoFILib/"
+    "lib": "../RoFILib/",
+    "sim": "../RoFISim/",
 }
 breathe_projects = { name: "build/doxygen/" + name + "/xml" \
     for name in breathe_sources.keys() }

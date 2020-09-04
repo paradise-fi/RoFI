@@ -7,7 +7,7 @@
 namespace rofi::hal
 {
 /**
- * \brief Proxy for controlling a single joint of RoFI
+ * \brief Proxy for controlling a single joint of RoFI.
  *
  * Joint cannot be instantiated on its own; you can obtain its instance from RoFI::getJoint().
  *
@@ -21,8 +21,8 @@ public:
      */
     enum class Error
     {
-        Communication, ///< Cannot communicate with the servo motor
-        Hardware,      ///< Servo motor responded with an error
+        Communication, ///< Cannot communicate with the servo motor.
+        Hardware,      ///< Servo motor responded with an error.
     };
 
     /**
@@ -191,12 +191,18 @@ private:
     std::shared_ptr< Implementation > _impl;
 };
 
+/**
+ * \brief Connector position.
+ */
 enum class ConnectorPosition : bool
 {
     Retracted = false,
     Extended = true,
 };
 
+/**
+ * \brief Connection orientation.
+ */
 enum class ConnectorOrientation : signed char
 {
     North = 0,
@@ -205,6 +211,9 @@ enum class ConnectorOrientation : signed char
     West = 3,
 };
 
+/**
+ * \brief Connector power line.
+ */
 enum class ConnectorLine : bool
 {
     Internal = 0,
@@ -212,25 +221,29 @@ enum class ConnectorLine : bool
 };
 
 /**
- * \brief Connector state descriptor
+ * \brief Connector state descriptor.
  */
 struct ConnectorState
 {
-    ConnectorPosition position = ConnectorPosition::Retracted;
+    ConnectorPosition position = ConnectorPosition::Retracted; ///< Position of the Connector.
     bool internal = false;  ///< Is internal power bus connected to the connector?
     bool external = false;  ///< Is the external power bus connected to the connector?
     bool connected = false; ///< Is there a mating side connected?
     ConnectorOrientation orientation = ConnectorOrientation::North;
-};
-
-enum class ConnectorEvent : signed char
-{
-    Connected = 0,
-    Disconnected = 1,
+    ///< Orientation of the connection. Applicable only when connected.
 };
 
 /**
- * \brief Proxy for controlling a single connector of RoFI
+ * \brief Connector event.
+ */
+enum class ConnectorEvent : signed char
+{
+    Connected = 0,    ///< Connection with other Connector started.
+    Disconnected = 1, ///< Connection with other Connector ended.
+};
+
+/**
+ * \brief Proxy for controlling a single connector of RoFI.
  *
  * Connector cannot be instantiated on its own; you can obtain its instance from
  * RoFI::getConnector().
@@ -360,6 +373,9 @@ private:
 class RoFI
 {
 public:
+    /**
+     * \brief Unique RoFI identifier.
+     */
     using Id = int;
 
     /**
@@ -454,7 +470,7 @@ public:
     }
 
     /**
-     * \brief Call callback after given delay
+     * \brief Call callback after given delay.
      *
      * \param ms delay in milliseconds
      * \param callback callback to be called after the delay
