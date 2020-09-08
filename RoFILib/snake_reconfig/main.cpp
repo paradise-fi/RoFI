@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     Configuration init;
     IO::readConfiguration(initInput, init);
     init.computeMatrices();
-    /*
+/*
     {
         std::cout << "Loaded: \n" << IO::toString(init);
         auto sg = SpaceGrid(init);
@@ -66,12 +66,10 @@ int main(int argc, char* argv[])
         limit = std::atoi(argv[3]);
     }
 */
+/* Testing SnakeStar */
 /*
-    Testing connectArm
-    Edge connection(4, A, ConnectorId::ZMinus, Orientation::North, ConnectorId::ZMinus, B, 7);
-    path = connectArm(init, connection, &stat);
-    std::cout << stat.toString() << std::endl;
-    std::cout << IO::toString(path[path.size()-1]);
+    auto path = SnakeStar(init);
+    std::cout << IO::toString(path.back()) << std::endl;;
 */
 /*
     Testing treefy
@@ -123,19 +121,18 @@ int main(int argc, char* argv[])
 
 /* Testing computeActiveRadiuses */
 /*
-    std::unordered_map<ID, ShoeId> leafsBlack;
-    std::unordered_map<ID, ShoeId> leafsWhite;
+    std::vector<std::pair<ID, ShoeId>> leafsBlack;
+    std::vector<std::pair<ID, ShoeId>> leafsWhite;
     std::unordered_map<ID, std::tuple<ID, ShoeId, unsigned>> activeRadiuses;
     std::unordered_map<ID, unsigned> subtreeSizes;
     findLeafs(init, leafsBlack, leafsWhite);
     for (const auto& [id, shoe] : leafsWhite) {
-        leafsBlack[id] = shoe;
+        leafsBlack.emplace_back(id, shoe);
     }
     computeSubtreeSizes(init, subtreeSizes);
     computeActiveRadiuses(init, subtreeSizes, leafsBlack, activeRadiuses);
     for (const auto& [id, rad] : activeRadiuses) {
-        std::string colour =  leafsWhite.find(id) != leafsWhite.end() ? " W" : " B";
-        std::cout << id << " " << std::get<2>(rad) << colour << std::endl;
+        std::cout << id << " " << std::get<2>(rad) << std::endl;
     }
     std::cout << "--------------\n";
 */
@@ -159,13 +156,15 @@ int main(int argc, char* argv[])
     const auto& matrices = init.getMatrices();
     computeSubtreeSizes(init, subtreeSizes);
     findLeafs(init, leafsBlack, leafsWhite);
+    ID bid = 88;
+    ID wid = 90;
 
-    auto [r, _s, rad] = computeActiveRadius(init, subtreeSizes, 78, leafsBlack[78]);
-    auto [wr, w_s, wrad] = computeActiveRadius(init, subtreeSizes, 50, leafsWhite[50]);
+    auto [r, _s, rad] = computeActiveRadius(init, subtreeSizes, bid, leafsBlack[bid]);
+    auto [wr, w_s, wrad] = computeActiveRadius(init, subtreeSizes, wid, leafsWhite[wid]);
     unsigned rootDist = newyorkCenterDistance(matrices.at(r)[_s], matrices.at(wr)[w_s]);
 
     std::cout << rad << " " << wrad << " " << rootDist << std::endl;
-    Edge dc(78, leafsBlack[78], ConnectorId::ZMinus, Orientation::North, ConnectorId::ZMinus, leafsWhite[50], 50);
+    Edge dc(bid, leafsBlack[bid], ConnectorId::ZMinus, Orientation::North, ConnectorId::ZMinus, leafsWhite[wid], wid);
     auto res = connectArm(init, dc, r, wr);
     if (res.empty())
         std::cout << "Jsme hloupí" << std::endl;
@@ -185,10 +184,12 @@ int main(int argc, char* argv[])
     /* NEED TO CHECK DISCONNECT ARM !!! */
 
 /* Testing treeToSnake */
+/**/
     auto res = treeToSnake(init);
     if (res.empty())
         std::cout << "Unsucc" << std::endl;
     else
         std::cout << IO::toString(res.back());
+/**/
     return 0;
 }
