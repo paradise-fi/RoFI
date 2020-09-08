@@ -332,7 +332,7 @@ double edgeSpaceEval(const Configuration& config, const Vector& mass, const std:
         if (subtrees.find(id) != subtrees.end())
             continue;
         for (const auto& m : ms) {
-            score += 1 / (distFromVec(m, mass));
+            score += 1 / (distFromVec(m, mass)); //maybe check for div by 0
         }
     }
     return score;
@@ -340,16 +340,16 @@ double edgeSpaceEval(const Configuration& config, const Vector& mass, const std:
 
 std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1, ID subroot2) {
     // TODO: check if we only use rotations
-    auto mass1 = findSubtreeMassCenter(init, subroot1);
-    auto mass2 = findSubtreeMassCenter(init, subroot2);
-    auto realMass = (mass1 + mass2) / 2;
+    Vector mass1 = findSubtreeMassCenter(init, subroot1);
+    Vector mass2 = findSubtreeMassCenter(init, subroot2);
+    Vector realMass = (mass1 + mass2) / 2;
 
     std::unordered_set<ID> subtrees;
     addSubtree(subroot1, subtrees, init.getSpanningSucc());
     addSubtree(subroot2, subtrees, init.getSpanningSucc());
 
     unsigned step = 90;
-    unsigned limit = 10 * init.getModules().size();
+    unsigned limit = 5 * init.getModules().size();
     double path_pref = 0.1;
     double free_pref = 1 - path_pref;
     ConfigPred pred;
@@ -434,6 +434,9 @@ std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1,
 
 std::vector<Configuration> connectArm(const Configuration& init, const Edge& connection, ID subroot1, ID subroot2, AlgorithmStat* stat = nullptr) {
     // Edge connection is from end of arm to end of arm
+    // Slowest part seems to be the makeSapce part, prolly change it a bit
+    // Need to check if we choose right sides to be the ends of arms.
+    // Maybe add check that the Z ports are both free! (just to be sure)
     auto spacePath = makeEdgeSpace(init, subroot1, subroot2);
     unsigned step = 90;
     double path_pref = 0.1;
@@ -453,7 +456,7 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
     if (startDist == 0)
         return {init};
 
-    auto limit = init.getModules().size() * 100;
+    auto limit = init.getModules().size();
     MinMaxHeap<EvalPair, SnakeEvalCompare> queue(limit);
 
     const Configuration* pointer = spacePath.empty() ? pool.insert(init) : pool.insert(spacePath.back());
@@ -466,7 +469,7 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
 
     std::unordered_set<ID> allowed = makeAllowed(init, subroot1, subroot2);
     int i = 0;
-    while (!queue.empty()) {
+    while (!queue.empty() && i < limit) {
         maxQSize = std::max(maxQSize, queue.size());
         const auto [d, current] = queue.popMin();
         double currDist = initDist[current];
@@ -522,6 +525,9 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
                 for (const auto& c : path) {
                     spacePath.emplace_back(c);
                 }
+                Action::Reconnect connnnn(true, connection);
+                Action actttt(connnnn);
+                spacePath.emplace_back(executeIfValid(spacePath.back(), actttt).value());
                 return spacePath;
             }
         }
@@ -855,22 +861,25 @@ void computeSubtreeSizes(const Configuration& config, std::unordered_map<ID, uns
 }
 
 std::tuple<ID, ShoeId, unsigned> computeActiveRadius(const Configuration& config, const std::unordered_map<ID, unsigned>& subtreeSizes, ID id, ShoeId shoe) {
+    // Computes radius of LEAF
     const auto& spannPred = config.getSpanningPred();
     if (!spannPred.at(id).has_value())
         return {id, shoe == A ? B : A, 0};
     const auto& spannSucc = config.getSpanningSucc();
     unsigned modRad = 1;
     unsigned radius = 2;
-    unsigned currSize = 1;
+    unsigned prevSize = 1;
     auto [currId, currShoe] = spannPred.at(id).value();
     auto prevId = id;
     auto prevShoe = shoe;
     while (spannPred.at(currId).has_value()) {
         prevId = currId;
         prevShoe = currShoe;
+        prevSize = subtreeSizes.at(currId);
         std::tie(currId, currShoe) = spannPred.at(currId).value();
         auto newSize = subtreeSizes.at(currId);
-        if (newSize > 2 * currSize + 1 || (modRad > 3 && newSize - currSize > 2)) {
+        if (newSize > 2 * prevSize + 1 || (modRad > 3 && newSize - prevSize > 2)) {
+            // Maybe something more like newSize/prevSize > a * (modRad + 1) / modRad
             for (const auto& optEdge : spannSucc.at(currId)) {
                 if (!optEdge.has_value())
                     continue;
@@ -898,8 +907,6 @@ std::tuple<ID, ShoeId, unsigned> computeActiveRadius(const Configuration& config
                 }
             }
         }
-
-        currSize = subtreeSizes.at(currId);
     }
 
     return {currId, spannPred.at(prevId).value().second == A ? B : A, radius};
@@ -978,11 +985,17 @@ Configuration disjoinArm(const Configuration& init, const Edge& addedEdge, std::
         } else {
             leafsWhite.emplace(currId, shoe);
         }
+        //něco tady seru, možná se na to vyseru a přepočítám to celý \O/
     }
 
     Action::Reconnect disc(false, toRemove.value());
     Action act(disc);
-    return executeIfValid(init, act).value();
+    auto a = executeIfValid(init, act);
+    if (!a.has_value()) {
+        std::cout << "HMMMMMMMM" << std::endl;
+    }
+    return a.value();
+
 }
 
 std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat* stat = nullptr) {
@@ -993,6 +1006,30 @@ std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat*
     //          zavolej crippled-astar s magnetem mezi konci
     //          pokud selže, najdi vyzkoušej najít jiný konec
     // jsi had, tak ok. Jinak jsme smutní.
+
+    // DNEŠNÍ ZJIŠTĚNÍ:
+    // * chci vyzkoušet kvalitu "makeSpace" v závislosti na limitu
+    // podobně vyzkoušet i další, vyzkoumat rychlost konvergence v závislosti na tom,
+    // kolikátá iterace to je
+    //
+    // * makeSpace je v connectArm nejpomalejší část, možná vyzkoušet s menšími
+    // limity a "po vrstvách"
+    //
+    // * disconnectArm nějak seru ty leafs, rozmyslet si, jestli má vůbec cenu to
+    // předělávat. Jestli ne, tak budu mít jen vector těch listů
+    //
+    // * zkontrolovat, jestli ve findLeafs označuju správné strany jako ty listové
+    //
+    // * možná si pamatovat i nelistové strany a nenapojovat jen z-z, ale i nejaké boční,
+    // ty pak opravit
+    //
+    // * do pool dávat jen ty, co dám do queue
+    //
+    // * úvodní algoritmus na provzdušnění -- vyzkoušet vzdálenost od centerOfMass
+    //
+    // * fixedModule
+    //
+
     std::unordered_map<ID, ShoeId> leafsBlack;
     std::unordered_map<ID, ShoeId> leafsWhite;
     std::vector<std::pair<ID, ShoeId>> vecLeafsBlack;
@@ -1010,6 +1047,8 @@ std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat*
     std::vector<Configuration> res;
 
     while (true) {
+        findLeafs(init, leafsBlack, leafsWhite);
+        std::cout << "++++++++++++++ Try while ++++++++++++++\n";
         res.clear();
         auto& config = path.back();
         if (isSnake(config))
@@ -1031,9 +1070,10 @@ std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat*
         for (const auto& [id, shoe] : vecLeafsBlack) {
             vecLeafsWhite.clear();
             vecLeafsWhite.reserve(leafsWhite.size());
+            std::cout << "%%%%%%%%%%%%%% Try black %%%%%%%%%%%%%%\n";
             for (const auto& [w_id, w_shoe] : leafsWhite) {
                 vecLeafsWhite.emplace_back(w_id, w_shoe);
-                whiteDists[id] = centerSqDistance(matrices.at(id)[shoe], matrices.at(w_id)[w_shoe]);
+                whiteDists[w_id] = centerSqDistance(matrices.at(id)[shoe], matrices.at(w_id)[w_shoe]);
             }
             std::sort(vecLeafsWhite.begin(), vecLeafsWhite.end(), [&](const std::pair<ID, ShoeId>& a, const std::pair<ID, ShoeId>& b) {
                 return whiteDists.at(a.first) < whiteDists.at(b.first);
@@ -1041,6 +1081,7 @@ std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat*
 
             const auto& [subRoot, subRootSide, radius] = activeRadiuses.at(id);
             for (const auto& [w_id, w_shoe] : vecLeafsWhite) {
+                std::cout << "============== Try White ==============\n";
                 auto [w_subRoot, w_subRootSide, w_radius] = computeActiveRadius(config, subtreeSizes, w_id, w_shoe);
                 unsigned rootDist = newyorkCenterDistance(matrices.at(subRoot)[subRootSide], matrices.at(w_subRoot)[w_subRootSide]);
                 if (rootDist > radius + w_radius) {

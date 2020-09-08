@@ -6,6 +6,31 @@
 #include "../configuration/IO.h"
 #include "Snake_algorithms.h"
 
+bool subset(const std::unordered_map<ID, ShoeId>& map1, const std::unordered_map<ID, ShoeId>& map2) {
+    bool isEq = true;
+    for (const auto& [id, shoe] : map1) {
+        if (map2.find(id) == map2.end()) {
+            std::cout << id << " not in map2" << std::endl;
+            isEq = false;
+            continue;
+        }
+        if (map1.at(id) == map2.at(id))
+            continue;
+        std::cout << id << " : " << map1.at(id) << " != " << map2.at(id) << std::endl;
+        isEq = false;
+    }
+    return isEq;
+}
+
+
+bool mapEq(const std::unordered_map<ID, ShoeId>& map1, const std::unordered_map<ID, ShoeId>& map2) {
+    std::cout << "1 is subset 2?\n";
+    auto res = subset(map1, map2);
+    std::cout << "2 is subset 1?\n";
+    auto res2 = subset(map2, map1);
+    return res && res2;
+}
+
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
@@ -25,8 +50,10 @@ int main(int argc, char* argv[])
         sg.printGrid();
     }
     */
+    /*
     std::vector<Configuration> path = fixLeaf(init, 3);
     std::cout << IO::toString(path[path.size()-1]) << std::endl;
+    */
     /*
     AlgorithmStat stat;
     int moduleCount = init.getIDs().size();
@@ -68,4 +95,100 @@ int main(int argc, char* argv[])
     path = makeSpace(init, isolate, &stat);
     std::cout << IO::toString(path[path.size()-1]) << std::endl;
 */
+
+/* Testing subTreeSize */
+/*
+    std::unordered_map<ID, unsigned> subtreeSizesT;
+    computeSubtreeSizes(init, subtreeSizesT);
+    for (const auto& [id, size] : subtreeSizesT) {
+        std::cout << id << " " << size << std::endl;
+    }
+    std::cout << "------------------------" << std::endl;
+*/
+
+/*  Testing findLeafs */
+/*
+    std::unordered_map<ID, ShoeId> leafsBlack;
+    std::unordered_map<ID, ShoeId> leafsWhite;
+    findLeafs(init, leafsBlack, leafsWhite);
+    std::cout << "Black leafs" << std::endl;
+    for (const auto& [id, shoe] : leafsBlack) {
+        std::cout << "\t" << id << " " << shoe << std::endl;
+    }
+    std::cout << "White leafs" << std::endl;
+    for (const auto& [id, shoe] : leafsWhite) {
+        std::cout << "\t" << id << " " << shoe << std::endl;
+    }
+*/
+
+/* Testing computeActiveRadiuses */
+/*
+    std::unordered_map<ID, ShoeId> leafsBlack;
+    std::unordered_map<ID, ShoeId> leafsWhite;
+    std::unordered_map<ID, std::tuple<ID, ShoeId, unsigned>> activeRadiuses;
+    std::unordered_map<ID, unsigned> subtreeSizes;
+    findLeafs(init, leafsBlack, leafsWhite);
+    for (const auto& [id, shoe] : leafsWhite) {
+        leafsBlack[id] = shoe;
+    }
+    computeSubtreeSizes(init, subtreeSizes);
+    computeActiveRadiuses(init, subtreeSizes, leafsBlack, activeRadiuses);
+    for (const auto& [id, rad] : activeRadiuses) {
+        std::string colour =  leafsWhite.find(id) != leafsWhite.end() ? " W" : " B";
+        std::cout << id << " " << std::get<2>(rad) << colour << std::endl;
+    }
+    std::cout << "--------------\n";
+*/
+
+/* Testing makeEdgeSpace */
+/*  Jakože vypadá celkem ok? Podívat se pak na ty čísla,
+    co jsem se vůbec snažil vyprostoroval */
+/*
+    auto path = makeEdgeSpace(init, 43, 104);
+    if (path.empty())
+        std::cout << "Dafuq is empty" << std::endl;
+    else
+        std::cout << IO::toString(path.back()) <<std::endl;
+*/
+
+/* Testing connectArm */
+/*
+    std::unordered_map<ID, unsigned> subtreeSizes;
+    std::unordered_map<ID, ShoeId> leafsBlack;
+    std::unordered_map<ID, ShoeId> leafsWhite;
+    const auto& matrices = init.getMatrices();
+    computeSubtreeSizes(init, subtreeSizes);
+    findLeafs(init, leafsBlack, leafsWhite);
+
+    auto [r, _s, rad] = computeActiveRadius(init, subtreeSizes, 78, leafsBlack[78]);
+    auto [wr, w_s, wrad] = computeActiveRadius(init, subtreeSizes, 50, leafsWhite[50]);
+    unsigned rootDist = newyorkCenterDistance(matrices.at(r)[_s], matrices.at(wr)[w_s]);
+
+    std::cout << rad << " " << wrad << " " << rootDist << std::endl;
+    Edge dc(78, leafsBlack[78], ConnectorId::ZMinus, Orientation::North, ConnectorId::ZMinus, leafsWhite[50], 50);
+    auto res = connectArm(init, dc, r, wr);
+    if (res.empty())
+        std::cout << "Jsme hloupí" << std::endl;
+    else {
+        std::cout << IO::toString(res.back()) << std::endl;
+        std::cout << IO::toString(disjoinArm(res.back(), dc, leafsBlack, leafsWhite)) << std::endl;
+
+        std::unordered_map<ID, ShoeId> leafsBlack2;
+        std::unordered_map<ID, ShoeId> leafsWhite2;
+        findLeafs(res.back(), leafsBlack2, leafsWhite2);
+        std::cout << "Blacks:\n";
+        mapEq(leafsBlack, leafsBlack2);
+        std::cout << "Whites:\n";
+        mapEq(leafsWhite, leafsWhite2);
+    }
+*/
+    /* NEED TO CHECK DISCONNECT ARM !!! */
+
+/* Testing treeToSnake */
+    auto res = treeToSnake(init);
+    if (res.empty())
+        std::cout << "Unsucc" << std::endl;
+    else
+        std::cout << IO::toString(res.back());
+    return 0;
 }
