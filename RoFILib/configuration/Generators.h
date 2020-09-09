@@ -36,6 +36,8 @@ void generateSimpleActions(const Configuration& config, std::vector<Action>& res
  */
 void generateBisimpleActions(const Configuration& config, std::vector<Action>& res, unsigned step);
 
+void generateBisimpleOnlyRotActions(const Configuration& config, std::vector<Action>& res, unsigned step);
+
 void generateParalyzedActions(const Configuration& config, std::vector<Action>& res, unsigned step, 
     const std::unordered_set<ID>& allowed_indices);
 
@@ -97,6 +99,8 @@ void simpleNext(const Configuration& config, std::vector<Configuration>& res, un
  * Only rotations with angle + \p step and - \p step are allowed.
  */
 void bisimpleNext(const Configuration& config, std::vector<Configuration>& res, unsigned step);
+
+void bisimpleOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step);
 
 /**
  * \brief Generates all possible configurations that \p config can become using one simple action that

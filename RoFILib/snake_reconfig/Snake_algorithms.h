@@ -25,11 +25,11 @@ inline double eval(const Configuration& configuration, SpaceGrid& sg) {
     return sg.getDist();
 }
 
-inline std::vector<Configuration> SnakeStar(const Configuration& init, AlgorithmStat* stat = nullptr,
-    int limit = 1000, double path_pref = 0.1)
-{
+std::vector<Configuration> SnakeStar(const Configuration& init) {
     unsigned step = 90;
+    double path_pref = 0.1;
     double free_pref = 1 - path_pref;
+    int limit = 1000; // <- prolly change to `a` times number of modules
     ConfigPred pred;
     ConfigPool pool;
 
@@ -55,13 +55,11 @@ inline std::vector<Configuration> SnakeStar(const Configuration& init, Algorithm
     initDist[pointer] = 0;
     goalDist[pointer] = startDist;
     pred[pointer] = pointer;
-    int maxQSize = 0;
     int i = 0;
     queue.push( {goalDist[pointer], pointer} );
 
 
     while (!queue.empty() && i++ < limit) {
-        maxQSize = std::max(maxQSize, queue.size());
         const auto [d, current] = queue.popMin();
         double currDist = initDist[current];
 
@@ -113,22 +111,11 @@ inline std::vector<Configuration> SnakeStar(const Configuration& init, Algorithm
 
             if (newEval == 0) {
                 auto path = createPath(pred, pointerNext);
-                if (stat != nullptr) {
-                    stat->pathLength = path.size();
-                    stat->queueSize = maxQSize;
-                    stat->seenCfgs = pool.size();
-                }
                 return path;
             }
         }
     }
     auto path = createPath(pred, bestConfig);
-    if (stat != nullptr) {
-        stat->pathLength = path.size();
-        stat->queueSize = maxQSize;
-        stat->seenCfgs = pool.size();
-    }
-
     return path;
 }
 
@@ -215,79 +202,6 @@ inline Configuration treefy(const Configuration& init, chooseRootFunc chooseRoot
     return treed;
 }
 
-inline std::vector<Configuration> paralyzedAStar(const Configuration& init, const Configuration& goal,
-    EvalFunction& eval = Eval::trivial, AlgorithmStat* stat = nullptr, std::unordered_set<ID> allowed_indices = {})
-{
-    ConfigPred pred;
-    ConfigPool pool;
-    unsigned step = 90;
-
-    // Already computed shortest distance from init to configuration.
-    ConfigValue initDist;
-
-    // Shortest distance from init through this configuration to goal.
-    ConfigValue goalDist;
-
-    if (init == goal)
-        return {init};
-
-    std::priority_queue<EvalPair, std::vector<EvalPair>, SnakeEvalCompare> queue;
-
-    const Configuration* pointer = pool.insert(init);
-    initDist[pointer] = 0;
-    goalDist[pointer] = eval(init, goal);
-    pred[pointer] = pointer;
-    unsigned long maxQSize = 0;
-
-    queue.push( {goalDist[pointer], pointer} );
-
-    while (!queue.empty()) {
-        maxQSize = std::max(maxQSize, queue.size());
-        const auto [d, current] = queue.top();
-        double currDist = initDist[current];
-        queue.pop();
-
-        std::vector<Configuration> nextCfgs;
-        paralyzedNext(*current, nextCfgs, step, allowed_indices);
-        for (const auto& next : nextCfgs) {
-            const Configuration* pointerNext;
-            double newDist = currDist + 1 + eval(next, goal);
-            bool update = false;
-
-            if (!pool.has(next)) {
-                pointerNext = pool.insert(next);
-                initDist[pointerNext] = currDist + 1;
-                update = true;
-            } else {
-                pointerNext = pool.get(next);
-            }
-
-            if ((currDist + 1 < initDist[pointerNext]) || update) {
-                initDist[pointerNext] = currDist + 1;
-                goalDist[pointerNext] = newDist;
-                pred[pointerNext] = current;
-                queue.push({newDist, pointerNext});
-            }
-
-            if (next == goal) {
-                auto path = createPath(pred, pointerNext);
-                if (stat != nullptr) {
-                    stat->pathLength = path.size();
-                    stat->queueSize = maxQSize;
-                    stat->seenCfgs = pool.size();
-                }
-                return path;
-            }
-        }
-    }
-    if (stat != nullptr) {
-        stat->pathLength = 0;
-        stat->queueSize = maxQSize;
-        stat->seenCfgs = pool.size();
-    }
-    return {};
-}
-
 bool isSnake(const Configuration& config) {
     for (const auto& [id, el] : config.getEdges()) {
         for (const auto& optEdge : el) {
@@ -346,7 +260,6 @@ double edgeSpaceEval(const Configuration& config, const Vector& mass, const std:
 }
 
 std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1, ID subroot2) {
-    // TODO: check if we only use rotations
     Vector mass1 = findSubtreeMassCenter(init, subroot1);
     Vector mass2 = findSubtreeMassCenter(init, subroot2);
     Vector realMass = (mass1 + mass2) / 2;
@@ -356,7 +269,7 @@ std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1,
     addSubtree(subroot2, subtrees, init.getSpanningSucc());
 
     unsigned step = 90;
-    unsigned limit = 5 * init.getModules().size();
+    unsigned limit = 2 * init.getModules().size();
     double path_pref = 0.1;
     double free_pref = 1 - path_pref;
     ConfigPred pred;
@@ -380,18 +293,16 @@ std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1,
     initDist[pointer] = 0;
     goalDist[pointer] = startDist;
     pred[pointer] = pointer;
-    int maxQSize = 0;
     int i = 0;
     queue.push( {goalDist[pointer], pointer} );
 
 
     while (!queue.empty() && i++ < limit) {
-        maxQSize = std::max(maxQSize, queue.size());
         const auto [d, current] = queue.popMin();
         double currDist = initDist[current];
 
         std::vector<Configuration> nextCfgs;
-        bisimpleNext(*current, nextCfgs, step);
+        bisimpleOnlyRotNext(*current, nextCfgs, step);
 
         for (const auto& next : nextCfgs) {
             const Configuration* pointerNext;
@@ -443,7 +354,7 @@ std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1,
 
 }
 
-std::vector<Configuration> connectArm(const Configuration& init, const Edge& connection, ID subroot1, ID subroot2, AlgorithmStat* stat = nullptr) {
+std::vector<Configuration> connectArm(const Configuration& init, const Edge& connection, ID subroot1, ID subroot2) {
     // Edge connection is from end of arm to end of arm
     // Slowest part seems to be the makeSapce part, prolly change it a bit
     // Need to check if we choose right sides to be the ends of arms.
@@ -474,14 +385,12 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
     initDist[pointer] = 0;
     goalDist[pointer] = startDist;
     pred[pointer] = pointer;
-    int maxQSize = 0;
 
     queue.push( {goalDist[pointer], pointer} );
 
     std::unordered_set<ID> allowed = makeAllowed(init, subroot1, subroot2);
     int i = 0;
     while (!queue.empty() && i < limit) {
-        maxQSize = std::max(maxQSize, queue.size());
         const auto [d, current] = queue.popMin();
         double currDist = initDist[current];
         if (++i > 100) {
@@ -532,11 +441,6 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
 
             if (newEval == 0) {
                 auto path = createPath(pred, pointerNext);
-                if (stat != nullptr) {
-                    stat->pathLength = path.size();
-                    stat->queueSize = maxQSize;
-                    stat->seenCfgs = pool.size();
-                }
                 for (const auto& c : path) {
                     spacePath.emplace_back(c);
                 }
@@ -546,11 +450,6 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
                 return spacePath;
             }
         }
-    }
-    if (stat != nullptr) {
-        stat->pathLength = 0;
-        stat->queueSize = maxQSize;
-        stat->seenCfgs = pool.size();
     }
     return {};
 }
@@ -571,99 +470,6 @@ double spaceEval(const Configuration& config, const std::unordered_set<ID>& isol
         }
     }
     return dist;
-}
-
-std::vector<Configuration> makeSpace(const Configuration& init, const std::unordered_set<ID>& isolate, AlgorithmStat* stat = nullptr) {
-    unsigned step = 90;
-    unsigned limit = 10 * init.getModules().size();
-    double path_pref = 0.1;
-    double free_pref = 1 - path_pref;
-    ConfigPred pred;
-    ConfigPool pool;
-
-    // Already computed shortest distance from init to configuration.
-    ConfigValue initDist;
-
-    // Shortest distance from init through this configuration to goal.
-    ConfigValue goalDist;
-
-    double startDist = spaceEval(init, isolate);
-
-    MinMaxHeap<EvalPair, SnakeEvalCompare> queue(limit);
-
-    const Configuration* pointer = pool.insert(init);
-    const Configuration* bestConfig = pointer;
-    double bestScore = startDist;
-    double worstDist = startDist;
-
-    initDist[pointer] = 0;
-    goalDist[pointer] = startDist;
-    pred[pointer] = pointer;
-    int maxQSize = 0;
-    int i = 0;
-    queue.push( {goalDist[pointer], pointer} );
-
-
-    while (!queue.empty() && i++ < limit) {
-        maxQSize = std::max(maxQSize, queue.size());
-        const auto [d, current] = queue.popMin();
-        double currDist = initDist[current];
-
-        std::vector<Configuration> nextCfgs;
-        bisimpleNext(*current, nextCfgs, step);
-
-        for (const auto& next : nextCfgs) {
-            const Configuration* pointerNext;
-            double newEval = spaceEval(next, isolate);
-            double newDist = path_pref * (currDist + 1) + free_pref * newEval;
-            bool update = false;
-
-            if (limit <= queue.size() + i) {
-                if (newDist > worstDist)
-                    continue;
-                if (!queue.empty()) {
-                    queue.popMax();
-                    if (!queue.empty()) {
-                        const auto [newWorstD, _worstConfig] = queue.max();
-                        worstDist = newWorstD;
-                    } else {
-                        worstDist = newDist;
-                    }
-                }
-            }
-
-            if (newDist > worstDist)
-                worstDist = newDist;
-
-            if (!pool.has(next)) {
-                pointerNext = pool.insert(next);
-                initDist[pointerNext] = currDist + 1;
-                update = true;
-            } else {
-                pointerNext = pool.get(next);
-            }
-
-            if (newEval < bestScore) {
-                bestScore = newEval;
-                bestConfig = pointerNext;
-            }
-
-            if ((currDist + 1 < initDist[pointerNext]) || update) {
-                initDist[pointerNext] = currDist + 1;
-                goalDist[pointerNext] = newDist;
-                pred[pointerNext] = current;
-                queue.push({newDist, pointerNext});
-            }
-        }
-    }
-    auto path = createPath(pred, bestConfig);
-    if (stat != nullptr) {
-        stat->pathLength = path.size();
-        stat->queueSize = maxQSize;
-        stat->seenCfgs = pool.size();
-    }
-
-    return path;
 }
 
 void addSubtree(ID subRoot, std::unordered_set<ID>& allowed, const std::unordered_map<ID, std::array<std::optional<Edge>, 6>>& spannSucc) {
@@ -1047,12 +853,13 @@ std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat*
     std::vector<Configuration> res;
 
     while (true) {
-        findLeafs(init, leafsBlack, leafsWhite);
         std::cout << "++++++++++++++ Try while ++++++++++++++\n";
         res.clear();
         auto& config = path.back();
         if (isSnake(config))
             return path;
+
+        findLeafs(config, leafsBlack, leafsWhite);
         const auto& matrices = config.getMatrices();
 
         computeSubtreeSizes(config, subtreeSizes);
@@ -1102,12 +909,12 @@ std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat*
     return path;
 }
 
-std::vector<Configuration> reconfigToSnake(const Configuration& init, AlgorithmStat* stat = nullptr) {
-    std::vector<Configuration> path = SnakeStar(init, stat);
+std::vector<Configuration> reconfigToSnake(const Configuration& init) {
+    std::vector<Configuration> path = SnakeStar(init);
     if (path.empty())
         return path;
     path.push_back(treefy<MakeStar>(path.back()));
-    auto toSnake = treeToSnake(path.back(), stat);
+    auto toSnake = treeToSnake(path.back());
     path.reserve(path.size() + toSnake.size());
     for (const auto& config : toSnake) {
         path.push_back(config);
