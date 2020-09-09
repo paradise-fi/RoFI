@@ -140,13 +140,13 @@ int main(int argc, char* argv[])
 /* Testing makeEdgeSpace */
 /*  Jakože vypadá celkem ok? Podívat se pak na ty čísla,
     co jsem se vůbec snažil vyprostoroval */
-/*
-    auto path = makeEdgeSpace(init, 43, 104);
+/**/
+    auto path = makeEdgeSpace(init, 123, 50);
     if (path.empty())
         std::cout << "Dafuq is empty" << std::endl;
     else
         std::cout << IO::toString(path.back()) <<std::endl;
-*/
+/**/
 
 /* Testing connectArm */
 /*
@@ -184,12 +184,12 @@ int main(int argc, char* argv[])
     /* NEED TO CHECK DISCONNECT ARM !!! */
 
 /* Testing treeToSnake */
-/**/
+/*
     auto res = treeToSnake(init);
     if (res.empty())
         std::cout << "Unsucc" << std::endl;
     else
         std::cout << IO::toString(res.back());
-/**/
+*/
     return 0;
 }
