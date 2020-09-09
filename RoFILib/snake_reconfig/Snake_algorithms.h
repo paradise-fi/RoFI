@@ -942,31 +942,46 @@ void computeActiveRadiuses(const Configuration& config, const std::unordered_map
 
 Configuration disjoinArm(const Configuration& init, const Edge& addedEdge) {
     // it is possible just to change the leafs bags and not recompute them, but we are not doing it now
-    const auto& spannPred = init.getSpanningPred();
-    const auto& spannSucc = init.getSpanningSucc();
-    const auto& spannSuccCount = init.getSpanningSuccCount();
+    const auto& edges = init.getEdges();
+    ID root = init.getFixedId();
     ID currId = addedEdge.id2();
-    ID prevId; // we can do this since white leaf cannot be root
+    ID prevId = addedEdge.id1();
+    ID futId;
     std::optional<Edge> toRemove;
-    while (!toRemove.has_value() && spannPred.at(currId).has_value()) {
-        prevId = currId;
-        currId = spannPred.at(currId).value().first;
-
-        for (const auto& optEdge : spannSucc.at(currId)) {
+    unsigned edgeCount;
+    if (currId == root) {
+        currId = prevId;
+        prevId = root;
+    }
+    while (!toRemove.has_value() && currId != root) {
+        edgeCount = 0;
+        for (const auto& optEdge : edges.at(currId)) {
             if (!optEdge.has_value())
                 continue;
+            ++edgeCount;
             const auto& edge = optEdge.value();
-            if (edge.id2() != prevId)
+            if (edge.id2() == prevId)
                 continue;
-            if (edge.dock1() == ZMinus && edge.dock2() == ZMinus && spannSuccCount.at(currId) <= 1)
+            futId = edge.id2();
+        }
+        if (edgeCount > 2) {
+            for (const auto& optEdge : edges.at(currId)) {
+                if (!optEdge.has_value())
+                    continue;
+                const auto& edge = optEdge.value();
+                if (edge.id2() != prevId)
+                    continue;
+                toRemove = {edge};
                 break;
-            toRemove = {edge};
+            }
             break;
         }
+        prevId = currId;
+        currId = futId;
     }
 
     if (!toRemove.has_value()) {
-        for (const auto& optEdge : spannSucc.at(currId)) {
+        for (const auto& optEdge : edges.at(currId)) {
             if (!optEdge.has_value())
                 continue;
             const auto& edge = optEdge.value();
@@ -982,6 +997,8 @@ Configuration disjoinArm(const Configuration& init, const Edge& addedEdge) {
     auto a = executeIfValid(init, act);
     if (!a.has_value()) {
         std::cout << "HMMMMMMMM" << std::endl;
+        std::cout << IO::toString(init) << std::endl << std::endl;
+        std::cout << IO::toString(addedEdge) << std::endl;
     }
     return a.value();
 
@@ -1015,6 +1032,8 @@ std::vector<Configuration> treeToSnake(const Configuration& init, AlgorithmStat*
     //
     // * jelikož máme nyní spanning tree, možná inteligentněji generovat bisimplenext -- ke každé rotaci
     // přidat jen rotace z modulů, které jsou "níže"
+    //
+    // * achjo, zdebugovat disjoinArm a zjistit, proč po odstranění to není valid ...
 
     std::vector<std::pair<ID, ShoeId>> leafsBlack;
     std::vector<std::pair<ID, ShoeId>> leafsWhite;
