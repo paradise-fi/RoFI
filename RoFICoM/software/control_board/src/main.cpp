@@ -55,7 +55,7 @@ void onCmdInterrupt( SpiInterface& interf, Block /*header*/ ) {
 
 void onCmdSendBlob( SpiInterface& spiInt, ConnComInterface& connInt ) {
     spiInt.receiveBlob([&]( Block blob, int size ) {
-        uint16_t blobLen = viewAs< uint16_t >( blob.get() + 2 );
+        int blobLen = viewAs< uint16_t >( blob.get() + 2 );
         if ( size != 4 + blobLen )
             return;
         Dbg::info( "CMD blob send received: %d, %.*s", blobLen, blobLen, blob.get() + 4 );
@@ -64,8 +64,10 @@ void onCmdSendBlob( SpiInterface& spiInt, ConnComInterface& connInt ) {
 }
 
 void onCmdReceiveBlob( SpiInterface& spiInt, ConnComInterface& connInt ) {
-    if ( connInt.available() > 0 )
-        spiInt.sendBlob( connInt.getBlob() );
+    if ( connInt.available() > 0 ) {
+        Block blob = connInt.getBlob();
+        spiInt.sendBlob( std::move( blob ) );
+    }
     else {
         auto block = memory::Pool::allocate( 4 );
         viewAs< uint16_t >( block.get() ) = 0; // content type
@@ -133,7 +135,7 @@ int main() {
                 onCmdReceiveBlob( spiInterface, connComInterface );
                 break;
             default:
-                Dbg::warning( "Unkwnown command %d", cmd );
+                Dbg::warning( "Unknown command %d", cmd );
             };
         } );
     connComInterface.onNewBlob( [&] { spiInterface.interruptMaster(); } );

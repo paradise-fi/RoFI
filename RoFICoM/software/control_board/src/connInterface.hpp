@@ -95,7 +95,7 @@ private:
 
     void _onNewBlob( Block b, int size ) {
         Defer::job([&, blob = std::move( b ), size ]() mutable {
-            uint16_t length = blobLen( blob );
+            int length = blobLen( blob );
             if ( length + CRC_SIZE != size ) {
                 Dbg::warning( "Invalid blob size" );
                 return;
@@ -105,6 +105,7 @@ private:
                 Dbg::warning( "Blob CRC mismatch" );
                 return;
             }
+            Dbg::info( "New blob received: %d, %.*s", length, length, blob.get() + 4 );
             if ( !_inQueue.push_back( std::move( blob ) ) ) {
                 Dbg::info( "Queue is full" );
             }

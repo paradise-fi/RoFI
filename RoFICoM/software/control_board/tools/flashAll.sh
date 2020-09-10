@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 FLASHED=0
-for serial in `st-info --probe | grep serial | cut -d ":" -f 2-`
+for serial in `st-info --probe | grep " serial" | cut -d ":" -f 2-`
 do
     st-flash --serial $serial "$@"
     FLASHED=1
@@ -14,3 +14,4 @@ then
 fi
 
 wait
+st-info --probe

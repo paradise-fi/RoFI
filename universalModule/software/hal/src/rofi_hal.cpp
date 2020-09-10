@@ -206,7 +206,7 @@ public:
             .queueSize( 1 )
             .clockSpeedHz( clkFrequency );
         std::cout << busConfig << "\n";
-        auto ret = spi_bus_initialize( bus, &busConfig, 1 );
+        auto ret = spi_bus_initialize( bus, &busConfig, 0 );
         ESP_ERROR_CHECK( ret );
         ret = spi_bus_add_device( bus, &devConfig, &_spiDev );
         ESP_ERROR_CHECK( ret );
@@ -281,15 +281,13 @@ public:
     virtual void onConnectorEvent(
         std::function< void ( Connector, ConnectorEvent ) > callback )
     {
-        if ( _eventCallback )
-            _eventCallback = callback;
+        _eventCallback = callback;
     }
 
     virtual void onPacket(
         std::function< void( Connector, uint16_t, PBuf ) > callback ) override
     {
-        if ( _packetCallback )
-            _packetCallback = callback;
+        _packetCallback = callback;
     }
 
     virtual void send( uint16_t contentType, PBuf packet ) override {
@@ -375,10 +373,11 @@ private:
         if ( _status.connected != status.connected ) {
             auto event = status.connected ?
                 ConnectorEvent::Connected : ConnectorEvent::Disconnected;
-            _eventCallback( rofi::hal::Connector( this->shared_from_this() ),
-                event );
+            if ( _eventCallback )
+                _eventCallback( rofi::hal::Connector( this->shared_from_this() ),
+                    event );
         }
-        std::cout << "Pending to receive: " << status.pendingReceive << "\n";
+        std::cout << "Pending to receive (" << _cs << "): " << status.pendingReceive << "\n";
         while ( _receiveCmdCounter < status.pendingReceive )
             _issueReceiveCmd();
         _status = status;
@@ -411,9 +410,9 @@ private:
         auto *self = reinterpret_cast< ConnectorLocal* >( arg );
         // Probably a packet, so try to read it, then check the true reason
         // self->_issueReceiveCmd( rtos::ExContext::ISR );
-        // ets_printf( "Interrupted\n" );
-        // if ( self->_interruptCounter == 0 )
-        //     self->_issueInterruptCmd( rtos::ExContext::ISR );
+        ets_printf( "Interrupted %d\n", self->_cs );
+        if ( self->_interruptCounter == 0 )
+            self->_issueInterruptCmd( rtos::ExContext::ISR );
     }
 
     friend class ConnectorBus;
@@ -524,11 +523,19 @@ void ConnectorBus::run( ReceiveCommand c ) {
 
     slaveDelay();
 
-    const int payloadHeaderSize = 4;
+    // Strangely, the original code did not work. No idea why...
+    // const in payloadHeaderSize = 4;
+    // spiRead( _spiDev, _dmaBuffer, payloadHeaderSize );
+    // auto contentType = as< uint16_t >( _dmaBuffer );
+    // auto size = as< uint16_t >( _dmaBuffer );
+    // But splitting into two transactions works. Some dark magic probably.
+
+    const int payloadHeaderSize = 2;
     spiRead( _spiDev, _dmaBuffer, payloadHeaderSize );
 
     auto contentType = as< uint16_t >( _dmaBuffer );
-    auto size = as< uint16_t >( _dmaBuffer + 2 );
+    spiRead( _spiDev, _dmaBuffer, payloadHeaderSize );
+    auto size = as< uint16_t >( _dmaBuffer );
     if ( size == 0 || size > 2048 ) {
         std::cout << "    Nothing received: " << size << "\n";
         c.conn->finish( c );

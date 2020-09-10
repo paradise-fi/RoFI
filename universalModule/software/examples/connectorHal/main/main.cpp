@@ -13,6 +13,7 @@ void printPacket( rofi::hal::Connector, uint16_t contentType, rofi::hal::PBuf pa
         for ( int i = 0; i != it->size(); i++ )
             std::cout << it->mem()[ i ];
     }
+    std::cout << "\n";
 }
 
 extern "C" void app_main() {
@@ -37,15 +38,15 @@ extern "C" void app_main() {
         buf[ len - 1 ] = 'a' + ( counter ) % 26;
         conn1.send( 42, std::move( buf ) );
 
-        // const char* msg2 = "Hello form 2! ";
-        // const int len2 = strlen( msg2 );
-        // auto buf2 = rofi::hal::PBuf::allocate( len2 );
-        // for ( int i = 0; i != len2; i++ )
-        //     buf2[ i ] = msg2[ i ];
-        // buf2[ len - 1 ] = 'a' + ( counter ) % 26;
-        // conn2.send( 42, std::move( buf2 ) );
+        const char* msg2 = "Hello form 2! ";
+        const int len2 = strlen( msg2 );
+        auto buf2 = rofi::hal::PBuf::allocate( len2 );
+        for ( int i = 0; i != len2; i++ )
+            buf2[ i ] = msg2[ i ];
+        buf2[ len - 1 ] = 'a' + ( counter ) % 26;
+        conn2.send( 42, std::move( buf2 ) );
 
-        vTaskDelay( 1000 / portTICK_PERIOD_MS );
+        vTaskDelay( 3000 / portTICK_PERIOD_MS );
     }
 
     while ( true ) {
