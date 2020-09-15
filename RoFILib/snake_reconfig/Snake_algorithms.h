@@ -302,7 +302,7 @@ std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1,
         double currDist = initDist[current];
 
         std::vector<Configuration> nextCfgs;
-        bisimpleOnlyRotNext(*current, nextCfgs, step);
+        smartBisimpleOnlyRotNext(*current, nextCfgs, step);
 
         for (const auto& next : nextCfgs) {
             const Configuration* pointerNext;
@@ -399,7 +399,7 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
         }
 
         std::vector<Configuration> nextCfgs;
-        biParalyzedOnlyRotNext(*current, nextCfgs, step, allowed);
+        smartBisimpleParOnlyRotNext(*current, nextCfgs, step, allowed);
 
         for (const auto& next : nextCfgs) {
             const Configuration* pointerNext;

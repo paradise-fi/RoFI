@@ -44,9 +44,15 @@ void generateParalyzedActions(const Configuration& config, std::vector<Action>& 
 void generateBiParalyzedOnlyRotAction(const Configuration& config, std::vector<Action>& res, unsigned step, 
     const std::unordered_set<ID>& allowed_indices);
 
+void generateSmartParalyzedOnlyRotActions(const Configuration& config, std::vector<Action>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices);
+
 void generateRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step);
 
 void generateParalyzedRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step, 
+    const std::unordered_set<ID>& allowed_indices);
+
+void generateMappedParalyzedRotations(const Configuration& config, std::unordered_map<ID, std::vector<Action::Rotate>>& res, unsigned step, 
     const std::unordered_set<ID>& allowed_indices);
 
 void generateConnections(const Configuration& config, std::vector<Action::Reconnect>& res);
@@ -117,6 +123,10 @@ void paralyzedNext(const Configuration& config, std::vector<Configuration>& res,
 void biParalyzedOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step, 
     const std::unordered_set<ID>& allowed_indices);
 
+void smartBisimpleOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step);
+
+void smartBisimpleParOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices);
 
 template<typename T>
 inline void getAllSubsetsRec(const std::vector<T>& set, std::vector<std::vector<T>>& res, 

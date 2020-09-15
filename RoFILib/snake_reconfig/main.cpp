@@ -66,6 +66,14 @@ int main(int argc, char* argv[])
         limit = std::atoi(argv[3]);
     }
 */
+/* Testing generator speed */
+/**/
+    auto allowed = makeAllowed(init, 88, 90);
+    std::vector<Configuration> next;
+    // smartBisimpleOnlyRotNext(init, next, 90, allowed);
+    biParalyzedOnlyRotNext(init, next, 90, allowed);
+    std::cout << next.size() << std::endl;
+/**/
 /* Testing SnakeStar */
 /*
     auto path = SnakeStar(init);
@@ -140,13 +148,13 @@ int main(int argc, char* argv[])
 /* Testing makeEdgeSpace */
 /*  Jakože vypadá celkem ok? Podívat se pak na ty čísla,
     co jsem se vůbec snažil vyprostoroval */
-/**/
+/*
     auto path = makeEdgeSpace(init, 123, 50);
     if (path.empty())
         std::cout << "Dafuq is empty" << std::endl;
     else
         std::cout << IO::toString(path.back()) <<std::endl;
-/**/
+*/
 
 /* Testing connectArm */
 /*
