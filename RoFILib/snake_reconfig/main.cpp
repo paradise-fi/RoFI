@@ -193,7 +193,8 @@ int main(int argc, char* argv[])
 
 /* Testing treeToSnake */
 /**/
-    auto res = treeToSnake(init);
+    auto config = treefy<MakeStar>(init);
+    auto res = treeToSnake(config);
     if (res.empty())
         std::cout << "Unsucc" << std::endl;
     else
