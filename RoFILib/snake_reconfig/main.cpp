@@ -67,13 +67,13 @@ int main(int argc, char* argv[])
     }
 */
 /* Testing generator speed */
-/**/
+/*
     auto allowed = makeAllowed(init, 88, 90);
     std::vector<Configuration> next;
     // smartBisimpleOnlyRotNext(init, next, 90, allowed);
     biParalyzedOnlyRotNext(init, next, 90, allowed);
     std::cout << next.size() << std::endl;
-/**/
+*/
 /* Testing SnakeStar */
 /*
     auto path = SnakeStar(init);
@@ -192,12 +192,12 @@ int main(int argc, char* argv[])
     /* NEED TO CHECK DISCONNECT ARM !!! */
 
 /* Testing treeToSnake */
-/*
+/**/
     auto res = treeToSnake(init);
     if (res.empty())
         std::cout << "Unsucc" << std::endl;
     else
         std::cout << IO::toString(res.back());
-*/
+/**/
     return 0;
 }
