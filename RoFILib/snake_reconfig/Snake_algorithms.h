@@ -974,7 +974,6 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
 
     std::vector<Configuration> res;
     std::vector<Configuration> snakeRes;
-    PriorityLeafQueue dists;
 
     while (true) {
         std::cout << "++++++++++++++ Try while ++++++++++++++\n";
@@ -995,6 +994,7 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
         computeSubtreeSizes(config, subtreeSizes);
         computeActiveRadiuses(config, subtreeSizes, leafsBlack, activeRadiuses);
         computeActiveRadiuses(config, subtreeSizes, leafsWhite, activeRadiuses);
+        PriorityLeafQueue dists;
         computeDists(config, allLeafs, dists);
         while(!dists.empty()) {
             auto [_d, id, s_id] = dists.top();
