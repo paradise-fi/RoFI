@@ -737,7 +737,8 @@ void findLeafs(const Configuration& config, std::vector<std::pair<ID, ShoeId>>& 
             if (!optEdge.has_value())
                 continue;
             isLeaf = false;
-            bag.emplace(optEdge.value().id2(), optEdge.value().side2(), !isWhite);
+            bool isNextWhite = currShoe == optEdge.value().side1() ? !isWhite : isWhite;
+            bag.emplace(optEdge.value().id2(), optEdge.value().side2(), isNextWhite); 
         }
         if (!isLeaf)
             continue;
