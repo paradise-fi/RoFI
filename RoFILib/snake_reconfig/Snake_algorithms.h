@@ -119,6 +119,100 @@ std::vector<Configuration> SnakeStar(const Configuration& init) {
     return path;
 }
 
+std::vector<Configuration> SnakeStar2(const Configuration& init) {
+    unsigned step = 90;
+    double path_pref = 0.1;
+    double free_pref = 1 - path_pref;
+    auto limit = 3 * init.getModules().size();
+    ConfigPred pred;
+    ConfigPool pool;
+
+    SpaceGrid grid(init.getIDs().size());
+    // Already computed shortest distance from init to configuration.
+    ConfigValue initDist;
+
+    // Shortest distance from init through this configuration to goal.
+    ConfigValue goalDist;
+
+    double startDist = eval(init, grid);
+
+    if (startDist == 0)
+        return {init};
+
+    MinMaxHeap<EvalPair, SnakeEvalCompare> queue(limit);
+
+    const Configuration* pointer = pool.insert(init);
+    const Configuration* bestConfig = pointer;
+    unsigned bestScore = startDist;
+    double worstDist = startDist;
+
+    initDist[pointer] = 0;
+    goalDist[pointer] = startDist;
+    pred[pointer] = pointer;
+    int i = 0;
+    queue.push( {goalDist[pointer], pointer} );
+
+
+    while (!queue.empty() && i++ < limit) {
+        const auto [d, current] = queue.popMin();
+        double currDist = initDist[current];
+
+        std::vector<Configuration> nextCfgs;
+        smartBisimpleOnlyRotNext(*current, nextCfgs, step);
+
+        for (const auto& next : nextCfgs) {
+            const Configuration* pointerNext;
+            double newEval = eval(next, grid);
+            double newDist = path_pref * (currDist + 1) + free_pref * newEval;
+            bool update = false;
+
+            if (newEval != 0 && limit <= queue.size() + i) {
+                if (newDist > worstDist)
+                    continue;
+                if (!queue.empty()) {
+                    queue.popMax();
+                    if (!queue.empty()) {
+                        const auto [newWorstD, _worstConfig] = queue.max();
+                        worstDist = newWorstD;
+                    } else {
+                        worstDist = newDist;
+                    }
+                }
+            }
+
+            if (newDist > worstDist)
+                worstDist = newDist;
+
+            if (!pool.has(next)) {
+                pointerNext = pool.insert(next);
+                initDist[pointerNext] = currDist + 1;
+                update = true;
+            } else {
+                pointerNext = pool.get(next);
+            }
+
+            if (newEval < bestScore) {
+                bestScore = newEval;
+                bestConfig = pointerNext;
+            }
+
+            if ((currDist + 1 < initDist[pointerNext]) || update) {
+                initDist[pointerNext] = currDist + 1;
+                goalDist[pointerNext] = newDist;
+                pred[pointerNext] = current;
+                queue.push({newDist, pointerNext});
+            }
+
+            if (newEval == 0) {
+                auto path = createPath(pred, pointerNext);
+                return path;
+            }
+        }
+    }
+    auto path = createPath(pred, bestConfig);
+    return path;
+}
+
 ID closestMass(const Configuration& init) {
     Vector mass = init.massCenter();
     ID bestID = 0;
@@ -878,15 +972,20 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
     std::vector<Configuration> path = {init};
 
     std::vector<Configuration> res;
-
+    std::vector<Configuration> snakeRes;
     PriorityLeafQueue dists;
 
     while (true) {
         std::cout << "++++++++++++++ Try while ++++++++++++++\n";
+
         res.clear();
-        auto& config = path.back();
-        if (isSnake(config))
+        auto& pConfig = path.back();
+        if (isSnake(pConfig))
             return path;
+
+        snakeRes = SnakeStar2(pConfig);
+        auto& config = snakeRes.back();
+        std::cout << "************** Finish snakeStar2 **************\n";
 
         findLeafs(config, leafsBlack, leafsWhite, allLeafs);
         const auto& matrices = config.getMatrices();
@@ -899,7 +998,7 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
         while(!dists.empty()) {
             auto [_d, id, s_id] = dists.top();
             dists.pop();
-            std::cout << "|||||||||||||||| Trying " << id << " -> " << s_id << "|||||||||||||||| " << std::endl;
+            std::cout << "|||||||||||||||| Trying " << id << " -> " << s_id << " ||||||||||||||||" << std::endl;
             const auto& [isWhite, shoe] = allLeafs[id];
             const auto& [s_isWhite, s_shoe] = allLeafs[s_id];
             const auto& [subRoot, subRootSide, radius] = activeRadiuses.at(id);
@@ -948,6 +1047,9 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
             return {};
         }
 
+        for (const auto& snakeConf : snakeRes) {
+            path.emplace_back(snakeConf);
+        }
         for (const auto& resConf : res)
             path.emplace_back(resConf);
     }

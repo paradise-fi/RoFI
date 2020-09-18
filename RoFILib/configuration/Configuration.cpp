@@ -370,7 +370,9 @@ void Configuration::removeSpanningEdge(const Edge& edge) {
 
 bool Configuration::findEdge(const Edge& edge) const {
     unsigned idx = edgeIndex(edge);
-    return edges.at(edge.id1())[idx].has_value();
+    if (!edges.at(edge.id1())[idx].has_value())
+        return false;
+    return edge == edges.at(edge.id1())[idx].value();
 }
 
 bool Configuration::findConnection(const Edge& edge) const {
