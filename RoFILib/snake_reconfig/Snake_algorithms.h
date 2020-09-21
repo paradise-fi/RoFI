@@ -120,6 +120,8 @@ std::vector<Configuration> SnakeStar(const Configuration& init) {
     return path;
 }
 
+double awayFromMass(const Configuration& init);
+
 std::vector<Configuration> SnakeStar2(const Configuration& init) {
     unsigned step = 90;
     double path_pref = 0.1;
@@ -128,14 +130,15 @@ std::vector<Configuration> SnakeStar2(const Configuration& init) {
     ConfigPred pred;
     ConfigPool pool;
 
-    SpaceGrid grid(init.getIDs().size());
+    //SpaceGrid grid(init.getIDs().size());
     // Already computed shortest distance from init to configuration.
     ConfigValue initDist;
 
     // Shortest distance from init through this configuration to goal.
     ConfigValue goalDist;
 
-    double startDist = eval(init, grid);
+    //double startDist = eval(init, grid);
+    double startDist = awayFromMass(init);
 
     if (startDist == 0)
         return {init};
@@ -163,7 +166,8 @@ std::vector<Configuration> SnakeStar2(const Configuration& init) {
 
         for (const auto& next : nextCfgs) {
             const Configuration* pointerNext;
-            double newEval = eval(next, grid);
+            //double newEval = eval(next, grid);
+            double newEval = awayFromMass(next);
             double newDist = path_pref * (currDist + 1) + free_pref * newEval;
             bool update = false;
 

@@ -228,6 +228,7 @@ int main(int argc, char* argv[])
     auto res = reconfigToSnake(init);
     if (!res.empty())
         std::cout << IO::toString(res.back());
+    std::cout << "Path len: " << res.size() << std::endl;
 /**/
 
     return 0;
