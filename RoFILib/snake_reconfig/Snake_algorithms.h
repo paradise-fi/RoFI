@@ -1519,6 +1519,20 @@ std::vector<Configuration> fixDocks(const Configuration& init) {
     }
 }
 
+Configuration fixRots(const Configuration& init) {
+    std::vector<Action::Rotate> rots;
+    for (const auto& [id, module] : init.getModules()) {
+        for (auto j : {Alpha, Beta, Gamma}) {
+            double angle = module.getJoint(j);
+            if (angle == 0)
+                continue;
+            rots.emplace_back(id, j, -angle);
+        }
+    }
+    Action act(rots, {});
+    return executeIfValid(init, act).value();
+}
+
 std::vector<Configuration> flattenCircle(const Configuration& init) {
     std::optional<Edge> toRemove;
     for (const auto& optEdge : init.getSpanningSucc().at(init.getFixedId())) {
@@ -1536,11 +1550,13 @@ std::vector<Configuration> flattenCircle(const Configuration& init) {
         std::cout << IO::toString(toRemove.value()) << std::endl;
     }
     auto res = SnakeStar(a.value());
+
     std::vector<Configuration> path = {a.value()};
     path.reserve(res.size());
     for (const auto& conf : res) {
         path.emplace_back(conf);
     }
+    path.emplace_back(fixRots(path.back()));
     return path;
 }
 
