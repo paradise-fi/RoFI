@@ -350,14 +350,18 @@ std::optional<Edge> getInvalidEdge(const Configuration& config) {
     return {};
 }
 
-bool getPenalty(const Configuration& config, const Matrix& conn) {
+unsigned getPenalty(const Configuration& config, const Matrix& conn) {
+    unsigned penalty = 0;
     for (const auto& [id, ms] : config.getMatrices()) {
         for (const auto& m : ms) {
-            if (centerSqDistance(m, conn) < 1)
-                return true;
+            auto dist = centerSqDistance(m, conn);
+            if (dist < 1)
+                penalty += 10;
+            else if (dist <= 3)
+                penalty += 1;
         }
     }
-    return false;
+    return penalty;
 }
 
 double distFromConn(const Configuration& config, const Edge& connection) {
@@ -365,7 +369,7 @@ double distFromConn(const Configuration& config, const Edge& connection) {
         return 0;
     const auto& realPos = config.getMatrices().at(connection.id2()).at(connection.side2());
     auto wantedPos = config.computeConnectedMatrix(connection);
-    unsigned penalty = getPenalty(config, wantedPos) ? 1 : 10; // this maybe do according to smth like sum(1/dist)
+    unsigned penalty = getPenalty(config, wantedPos); // this maybe do according to smth like sum(1/dist)
     return penalty * sqDistance(realPos, wantedPos);
 }
 
@@ -507,7 +511,7 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
     // Need to check if we choose right sides to be the ends of arms.
     // Maybe add check that the Z ports are both free! (just to be sure)
     //
-    // ADD PENALTY IF THERE IS ANOTHER MODULE IN PLACE OF THE THING
+    // ADD PENALTY IF THERE IS ANOTHER MODULE IN PLACE OF THE THING, like better.
     auto spacePath = makeEdgeSpace(init, subroot1, subroot2);
     unsigned step = 90;
     double path_pref = 0.1;
@@ -777,6 +781,7 @@ std::vector<Configuration> fixLeaf(const Configuration& init, ID toFix) {
 }
 
 void findLeafs(const Configuration& config, std::vector<std::pair<ID, ShoeId>>& leafsBlack, std::vector<std::pair<ID, ShoeId>>& leafsWhite, std::unordered_map<ID, std::pair<bool, ShoeId>>& allLeafs) {
+    // maybe add root into considaration for leaf, it may bite me in the ass if i wont
     leafsBlack.clear();
     leafsWhite.clear();
     allLeafs.clear();
@@ -794,7 +799,7 @@ void findLeafs(const Configuration& config, std::vector<std::pair<ID, ShoeId>>& 
                 continue;
             isLeaf = false;
             bool isNextWhite = currShoe == optEdge.value().side1() ? !isWhite : isWhite;
-            bag.emplace(optEdge.value().id2(), optEdge.value().side2(), isNextWhite); 
+            bag.emplace(optEdge.value().id2(), optEdge.value().side2(), isNextWhite);
         }
         if (!isLeaf)
             continue;
@@ -1430,7 +1435,7 @@ std::vector<Configuration> fixParity(const Configuration& init) {
             }
             res.emplace_back(a.value());
         } else {
-            // add logic to choose longer arm prolly
+            // add logic to choose longer arm prolly!!!
             std::cout << "We doin this" << std::endl;
             auto parityBack = getEdgeToStrictDisjoinArm(config, desiredEdge);
             ShoeId wside = parityBack.side1() == A ? B : A;
