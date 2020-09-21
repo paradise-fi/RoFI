@@ -31,6 +31,14 @@ bool mapEq(const std::unordered_map<ID, ShoeId>& map1, const std::unordered_map<
     return res && res2;
 }
 
+void printVecToFile(const std::vector<Configuration>& configs, const char* path) {
+    std::ofstream file;
+    file.open(std::string(path));
+    for (const auto& conf : configs) {
+        file << IO::toString(conf) << std::endl;
+    }
+}
+
 int main(int argc, char* argv[])
 {
     if (argc < 2) {
@@ -229,7 +237,8 @@ int main(int argc, char* argv[])
     if (!res.empty())
         std::cout << IO::toString(res.back());
     std::cout << "Path len: " << res.size() << std::endl;
+    if (argc > 2)
+        printVecToFile(res, argv[2]);
 /**/
-
     return 0;
 }
