@@ -350,12 +350,23 @@ std::optional<Edge> getInvalidEdge(const Configuration& config) {
     return {};
 }
 
+bool getPenalty(const Configuration& config, const Matrix& conn) {
+    for (const auto& [id, ms] : config.getMatrices()) {
+        for (const auto& m : ms) {
+            if (centerSqDistance(m, conn) < 1)
+                return true;
+        }
+    }
+    return false;
+}
+
 double distFromConn(const Configuration& config, const Edge& connection) {
     if (config.findEdge(connection))
         return 0;
     const auto& realPos = config.getMatrices().at(connection.id2()).at(connection.side2());
     auto wantedPos = config.computeConnectedMatrix(connection);
-    return sqDistance(realPos, wantedPos);
+    unsigned penalty = getPenalty(config, wantedPos) ? 1 : 10;
+    return penalty * sqDistance(realPos, wantedPos);
 }
 
 void addSubtree(ID subRoot, std::unordered_set<ID>& allowed, const std::unordered_map<ID, std::array<std::optional<Edge>, 6>>& spannSucc);
@@ -495,6 +506,8 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
     // Slowest part seems to be the makeSapce part, prolly change it a bit
     // Need to check if we choose right sides to be the ends of arms.
     // Maybe add check that the Z ports are both free! (just to be sure)
+    //
+    // ADD PENALTY IF THERE IS ANOTHER MODULE IN PLACE OF THE THING
     auto spacePath = makeEdgeSpace(init, subroot1, subroot2);
     unsigned step = 90;
     double path_pref = 0.1;
