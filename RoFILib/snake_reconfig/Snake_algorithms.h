@@ -365,7 +365,7 @@ double distFromConn(const Configuration& config, const Edge& connection) {
         return 0;
     const auto& realPos = config.getMatrices().at(connection.id2()).at(connection.side2());
     auto wantedPos = config.computeConnectedMatrix(connection);
-    unsigned penalty = getPenalty(config, wantedPos) ? 1 : 10;
+    unsigned penalty = getPenalty(config, wantedPos) ? 1 : 10; // this maybe do according to smth like sum(1/dist)
     return penalty * sqDistance(realPos, wantedPos);
 }
 
@@ -1250,6 +1250,14 @@ std::vector<std::pair<ID, ShoeId>> colourAndFindLeafs(const Configuration& confi
         if (!isLeaf)
             continue;
         leafs.emplace_back(currId, currShoe == A ? B : A);
+    }
+    if (config.getSpanningSuccCount().at(config.getFixedId()) == 1) {
+        for (const auto& optEdge : spannSucc.at(config.getFixedId())) {
+            if (!optEdge.has_value())
+                continue;
+            leafs.emplace_back(config.getFixedId(), optEdge.value().side1() == A ? B : A);
+            break;
+        }
     }
     return leafs;
 }
