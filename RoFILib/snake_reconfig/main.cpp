@@ -212,16 +212,23 @@ int main(int argc, char* argv[])
         std::cout << IO::toString(res.back());
 */
 /* Testing fixDocks */
-/**/
+/*
     auto res = fixDocks(init);
     if (!res.empty())
         std::cout << IO::toString(res.back());
-/**/
+*/
 /* Testing flattenCircle */
 /*
     auto res = flattenCircle(init);
     if (!res.empty())
         std::cout << IO::toString(res.back());
 */
+/* Testing ALL */
+/**/
+    auto res = reconfigToSnake(init);
+    if (!res.empty())
+        std::cout << IO::toString(res.back());
+/**/
+
     return 0;
 }
