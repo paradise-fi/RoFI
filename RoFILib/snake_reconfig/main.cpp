@@ -192,12 +192,23 @@ int main(int argc, char* argv[])
     /* NEED TO CHECK DISCONNECT ARM !!! */
 
 /* Testing treeToSnake */
-/**/
+/*
     auto config = treefy<MakeStar>(init);
     auto res = treeToSnake(config);
     if (res.empty())
         std::cout << "Unsucc" << std::endl;
     else
+        std::cout << IO::toString(res.back());
+*/
+/* Testing straightenSnake */
+/*
+    auto res = straightenSnake(init);
+    std::cout << IO::toString(res.back());
+*/
+/* Testing fixParity */
+/**/
+    auto res = fixParity(init);
+    if (!res.empty())
         std::cout << IO::toString(res.back());
 /**/
     return 0;
