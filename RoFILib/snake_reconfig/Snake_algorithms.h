@@ -1437,6 +1437,113 @@ std::vector<Configuration> fixParity(const Configuration& init) {
     return {};
 }
 
+Edge missingCircle(const Configuration& config) {
+    std::vector<std::pair<ID, ShoeId>> leafs;
+    std::queue<std::pair<ID, ShoeId>> bag;
+    bag.emplace(config.getFixedId(), config.getFixedSide());
+    const auto& spannSucc = config.getSpanningSucc();
+    while(!bag.empty()) {
+        auto [currId, currShoe] = bag.front();
+        bag.pop();
+        bool isLeaf = true;
+        for (const auto& optEdge : spannSucc.at(currId)) {
+            if (!optEdge.has_value())
+                continue;
+            isLeaf = false;
+            bag.emplace(optEdge.value().id2(), optEdge.value().side2());
+        }
+        if (!isLeaf)
+            continue;
+
+        leafs.emplace_back(currId, currShoe == A ? B : A);
+    }
+    if (leafs.size() == 1 && config.getSpanningSuccCount().at(config.getFixedId()) == 1) {
+        for (const auto& optEdge : spannSucc.at(config.getFixedId())) {
+            if (!optEdge.has_value())
+                continue;
+            leafs.emplace_back(config.getFixedId(), optEdge.value().side1() == A ? B : A);
+        }
+    }
+    if (leafs.size() != 2) {
+        std::cout << "Bruh " << leafs.size() << std::endl;
+        throw 1234;
+    }
+    return Edge(leafs[0].first, leafs[0].second, ZMinus, North, ZMinus, leafs[1].second, leafs[1].first);
+}
+
+std::vector<Configuration> fixDocks(const Configuration& init) {
+    auto path = straightenSnake(init);
+    auto missing = missingCircle(path.back());
+    auto circle = connectArm(path.back(), missing, path.back().getFixedId(), path.back().getFixedId());
+    std::vector<Configuration> res;
+    if (circle.empty()) {
+        std::cout << "We weri saad" << std::endl;
+        std::cout << IO::toString(path.back()) << std::endl;
+        std::cout << IO::toString(missing) << std::endl;
+        return {};
+    }
+    path.reserve(path.size() + circle.size());
+    for (const auto& conf : circle) {
+        path.emplace_back(conf);
+    }
+    while (true) {
+        res.clear();
+        const auto& preConfig = path.back();
+        std::optional<Edge> optInvalid = getInvalidEdge(path.back());
+        if (!optInvalid.has_value())
+            return path;
+        Edge& invalid = optInvalid.value();
+        std::cout << IO::toString(invalid) << std::endl;
+        Action::Reconnect disc(false, invalid);
+        Action act(disc);
+        auto a = executeIfValid(preConfig, act);
+        if (!a.has_value()) {
+            std::cout << "HMMMMMMMMCIRCLE" << std::endl;
+            std::cout << IO::toString(res.back()) << std::endl << std::endl;
+            std::cout << IO::toString(invalid) << std::endl;
+        }
+        const auto& config = a.value();
+        Edge replaceEdg(invalid.id1(), invalid.side1(), ZMinus, North, ZMinus, invalid.side2(), invalid.id2());
+        res = connectArm(config, replaceEdg, config.getFixedId(), config.getFixedId());
+        if (res.empty()) {
+            std::cout << "We weri saadXXX" << std::endl;
+            std::cout << IO::toString(config) << std::endl;
+            std::cout << IO::toString(replaceEdg) << std::endl;
+            return {};
+        }
+        path.reserve(path.size() + res.size() + 1);
+        path.emplace_back(config);
+        for (const auto& conf : res) {
+            path.emplace_back(conf);
+        }
+    }
+}
+
+std::vector<Configuration> flattenCircle(const Configuration& init) {
+    std::optional<Edge> toRemove;
+    for (const auto& optEdge : init.getSpanningSucc().at(init.getFixedId())) {
+        if (!optEdge.has_value())
+            continue;
+        toRemove = optEdge;
+        break;
+    }
+    Action::Reconnect disc(false, toRemove.value());
+    Action act(disc);
+    auto a = executeIfValid(init, act);
+    if (!a.has_value()) {
+        std::cout << "HMMMMMMMMFLAT" << std::endl;
+        std::cout << IO::toString(init) << std::endl << std::endl;
+        std::cout << IO::toString(toRemove.value()) << std::endl;
+    }
+    auto res = SnakeStar(a.value());
+    std::vector<Configuration> path = {a.value()};
+    path.reserve(res.size());
+    for (const auto& conf : res) {
+        path.emplace_back(conf);
+    }
+    return path;
+}
+
 std::vector<Configuration> reconfigToSnake(const Configuration& init) {
     std::vector<Configuration> path = SnakeStar(init);
     if (path.empty())
@@ -1454,6 +1561,20 @@ std::vector<Configuration> reconfigToSnake(const Configuration& init) {
         return {};
     path.reserve(path.size() + fixedSnake.size());
     for (const auto& config : fixedSnake) {
+        path.push_back(config);
+    }
+    auto dockSnake = fixDocks(path.back());
+    if (dockSnake.empty())
+        return {};
+    path.reserve(path.size() + dockSnake.size());
+    for (const auto& config : dockSnake) {
+        path.push_back(config);
+    }
+    auto flatCircle = flattenCircle(path.back());
+    if (flatCircle.empty())
+        return {};
+    path.reserve(path.size() + flatCircle.size());
+    for (const auto& config : flatCircle) {
         path.push_back(config);
     }
     return path;
