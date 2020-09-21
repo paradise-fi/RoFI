@@ -29,7 +29,8 @@ std::vector<Configuration> SnakeStar(const Configuration& init) {
     unsigned step = 90;
     double path_pref = 0.1;
     double free_pref = 1 - path_pref;
-    int limit = 1000; // <- prolly change to `a` times number of modules
+    auto nModule = init.getModules().size();
+    int limit = 2 * nModule * nModule; // <- prolly change to `a` times number of modules
     ConfigPred pred;
     ConfigPool pool;
 
@@ -1562,10 +1563,12 @@ std::vector<Configuration> flattenCircle(const Configuration& init) {
 
 std::vector<Configuration> reconfigToSnake(const Configuration& init) {
     std::vector<Configuration> path = SnakeStar(init);
+    std::cout << "Finish snakestar" << std::endl;
     if (path.empty())
         return path;
     path.push_back(treefy<MakeStar>(path.back()));
     auto toSnake = treeToSnake(path.back());
+    std::cout << "Finish treeToSnake" << std::endl;
     if (toSnake.empty())
         return {};
     path.reserve(path.size() + toSnake.size());
@@ -1573,6 +1576,7 @@ std::vector<Configuration> reconfigToSnake(const Configuration& init) {
         path.push_back(config);
     }
     auto fixedSnake = fixParity(path.back());
+    std::cout << "Finish fixParity" << std::endl;
     if (fixedSnake.empty())
         return {};
     path.reserve(path.size() + fixedSnake.size());
@@ -1580,6 +1584,7 @@ std::vector<Configuration> reconfigToSnake(const Configuration& init) {
         path.push_back(config);
     }
     auto dockSnake = fixDocks(path.back());
+    std::cout << "Finish fixDocks" << std::endl;
     if (dockSnake.empty())
         return {};
     path.reserve(path.size() + dockSnake.size());
@@ -1587,11 +1592,13 @@ std::vector<Configuration> reconfigToSnake(const Configuration& init) {
         path.push_back(config);
     }
     auto flatCircle = flattenCircle(path.back());
+    std::cout << "Finish flattenCircle" << std::endl;
     if (flatCircle.empty())
         return {};
     path.reserve(path.size() + flatCircle.size());
     for (const auto& config : flatCircle) {
         path.push_back(config);
     }
+    std::cout << "Finish ALL" << std::endl;
     return path;
 }
