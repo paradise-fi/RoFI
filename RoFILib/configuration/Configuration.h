@@ -331,6 +331,8 @@ public:
 
     Vector massCenter() const;
 
+    Vector getModuleMass(ID id) const;
+
     /**
      * \brief Tries to execute given \p action.
      *

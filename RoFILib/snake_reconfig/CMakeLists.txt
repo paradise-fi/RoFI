@@ -7,8 +7,11 @@ if(${LIBCXX})
     set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++")
 endif(${LIBCXX})
 
+add_library(snakeStructs Snake_structs.h Snake_structs.cpp)
+target_link_libraries(snakeStructs PUBLIC configuration generators)
+
 add_executable(snakeReconfig main.cpp)
-target_link_libraries(snakeReconfig PUBLIC configuration generators reconfig)
+target_link_libraries(snakeReconfig PUBLIC configuration generators reconfig snakeStructs)
 
 add_executable(snakeReconfig-test test/main.cpp test/test.cpp)
 target_link_libraries(snakeReconfig-test PUBLIC configuration generators reconfig Catch2::Catch2)

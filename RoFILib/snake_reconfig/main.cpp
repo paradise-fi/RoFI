@@ -82,9 +82,9 @@ int main(int argc, char* argv[])
     biParalyzedOnlyRotNext(init, next, 90, allowed);
     std::cout << next.size() << std::endl;
 */
-/* Testing SnakeStar */
+/* Testing aerateConfig */
 /*
-    auto path = SnakeStar(init);
+    auto path = aerateConfig(init);
     std::cout << IO::toString(path.back()) << std::endl;;
 */
 /*

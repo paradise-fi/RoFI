@@ -599,6 +599,14 @@ Vector Configuration::massCenter() const {
     return mass;
 }
 
+Vector Configuration::getModuleMass(ID id) const {
+    Vector mass({0,0,0,1});
+    for (const auto& m : getMatrices().at(id)) {
+        mass += center(m);
+    }
+    return mass/2;
+}
+
 bool Configuration::execute(const Action& action) {
     bool ok = true;
     for (const Action::Rotate rot : action.rotations())
