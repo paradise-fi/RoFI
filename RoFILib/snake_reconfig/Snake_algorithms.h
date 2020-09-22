@@ -298,7 +298,7 @@ inline Configuration treefy(const Configuration& init, chooseRootFunc chooseRoot
         for (const auto& e : edges)
             treed.addEdge(e);
     }
-
+    treed.computeMatrices();
     return treed;
 }
 
@@ -838,7 +838,7 @@ void findLeafs(const Configuration& config, std::vector<std::pair<ID, ShoeId>>& 
 
 void computeSubtreeSizes(const Configuration& config, std::unordered_map<ID, unsigned>& subtreeSizes) {
     std::vector<ID> bag;
-    auto moduleCount = config.getModules().size();
+    auto moduleCount = config.getMatrices().size();
     const auto& spannSucc = config.getSpanningSucc();
     bag.reserve(moduleCount);
     unsigned currIndex = 0;
