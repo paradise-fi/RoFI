@@ -122,43 +122,19 @@ std::vector<Configuration> limitedAstar(const Configuration& init, GenNext& genN
     return path;
 }
 
-class SimpleNextGen {
-public:
-    void operator()(const Configuration& config, std::vector<Configuration>& res, unsigned step) const {
-        simpleNext(config, res, step);
-    }
-};
-
-std::vector<Configuration> SnakeStar(const Configuration& init) {
+std::vector<Configuration> aerateConfig(const Configuration& init) {
     auto nModule = init.getModules().size();
     int limit = 2 * nModule * nModule;
 
     SimpleNextGen simpleGen{};
-    SpaceGrid grid(init.getIDs().size());
+    SpaceGridScore grid(init.getIDs().size());
 
     return limitedAstar(init, simpleGen, grid, limit, true);
 }
 
-double awayFromMass(const Configuration& init);
-double awayFromRoot(const Configuration& init);
-
-class SmartBisimpleOnlyRotGen {
-public:
-    void operator()(const Configuration& config, std::vector<Configuration>& res, unsigned step) const {
-        smartBisimpleOnlyRotNext(config, res, step);
-    }
-};
-
-class AwayFromRoot {
-public:
-    double operator()(const Configuration& config) const {
-        return awayFromRoot(config);
-    }
-};
-
-std::vector<Configuration> SnakeStar2(const Configuration& init) {
+std::vector<Configuration> aerateFromRoot(const Configuration& init) {
     SmartBisimpleOnlyRotGen smartGen{};
-    AwayFromRoot score{};
+    AwayFromRootScore score{};
 
     return limitedAstar(init, smartGen, score, 3 * init.getModules().size(), true);
 }
@@ -181,39 +157,6 @@ ID closestMass(const Configuration& init) {
     }
     return bestID;
 }
-
-class MakeStar {
-public:
-    MakeStar(const Configuration& init, ID root)
-    : mass(init.massCenter())
-    , config(init)
-    , dists() {
-        for (const auto& [id, ms] : init.getMatrices()) {
-            double currDist = 0;
-            for (unsigned side = 0; side < 2; ++side)
-                currDist += sqDistVM(ms[side], mass);
-
-            dists.emplace(id, currDist);
-        }
-    }
-
-    std::vector<Edge> operator()(std::stack<ID>& dfs_stack, std::unordered_set<ID>& seen, ID curr) {
-        std::vector<Edge> nEdges = config.getEdges(curr, seen);
-        std::sort(nEdges.begin(), nEdges.end(), [&](const Edge& a, const Edge& b){
-            return dists[a.id2()] < dists[b.id2()];
-        });
-        for (const auto& e : nEdges)
-            dfs_stack.push(e.id2());
-
-        return nEdges;
-    }
-
-private:
-    const Vector mass;
-    const Configuration& config;
-    std::unordered_map<ID, double> dists;
-};
-
 
 using chooseRootFunc = ID(const Configuration&);
 
@@ -245,6 +188,8 @@ inline Configuration treefy(const Configuration& init, chooseRootFunc chooseRoot
     treed.computeMatrices();
     return treed;
 }
+
+/* ==================== end TREEFY ==================== */
 
 bool isPseudoSnake(const Configuration& config) {
     const auto& spannSuccCount = config.getSpanningSuccCount();
@@ -295,36 +240,20 @@ std::optional<Edge> getInvalidEdge(const Configuration& config) {
     return {};
 }
 
-unsigned getPenalty(const Configuration& config, const Matrix& conn, ID ignore) {
-    unsigned penalty = 0;
-    for (const auto& [id, ms] : config.getMatrices()) {
-        if (id == ignore)
-            continue;
-        for (const auto& m : ms) {
-            auto dist = centerSqDistance(m, conn);
-            if (dist < 1)
-                penalty += 10;
-            else if (dist <= 3)
-                penalty += 1;
+void addSubtree(ID subRoot, std::unordered_set<ID>& allowed, const std::unordered_map<ID, std::array<std::optional<Edge>, 6>>& spannSucc) {
+    std::queue<ID> toAdd;
+    toAdd.push(subRoot);
+    while (!toAdd.empty()) {
+        auto currId = toAdd.front();
+        toAdd.pop();
+        allowed.insert(currId);
+        for (const auto& optEdge : spannSucc.at(currId)) {
+            if (!optEdge.has_value())
+                continue;
+            toAdd.push(optEdge.value().id2());
         }
     }
-    return penalty;
 }
-
-double distFromConn(const Configuration& config, const Edge& connection) {
-    if (config.findEdge(connection))
-        return 0;
-    const auto& realPos = config.getMatrices().at(connection.id2()).at(connection.side2());
-    auto wantedPos = config.computeConnectedMatrix(connection);
-    unsigned penalty = getPenalty(config, wantedPos, connection.id2()); // this maybe do according to smth like sum(1/dist)
-    return penalty * sqDistance(realPos, wantedPos);
-}
-
-double symmDistFromConns(const Configuration& config, const Edge& connection) {
-    return distFromConn(config, connection) + distFromConn(config, reverse(connection));
-}
-
-void addSubtree(ID subRoot, std::unordered_set<ID>& allowed, const std::unordered_map<ID, std::array<std::optional<Edge>, 6>>& spannSucc);
 
 std::unordered_set<ID> makeAllowed(const Configuration& init, ID subroot1, ID subroot2) {
     std::unordered_set<ID> allowed;
@@ -349,33 +278,6 @@ Vector findSubtreeMassCenter(const Configuration& init, ID subroot) {
     return mass;
 }
 
-double edgeSpaceEval(const Configuration& config, const Vector& mass, const std::unordered_set<ID>& subtrees) {
-    double score = 0;
-    for (const auto& [id, ms] : config.getMatrices()) {
-        if (subtrees.find(id) != subtrees.end())
-            continue;
-        for (const auto& m : ms) {
-            score += 1 / (distFromVec(m, mass)); //maybe check for div by 0
-        }
-    }
-    return score;
-}
-
-class EdgeSpaceScore {
-public:
-    EdgeSpaceScore(const Vector& mass, const std::unordered_set<ID>& subtrees)
-    : _mass(mass)
-    , _subtrees(subtrees) {}
-
-    double operator()(const Configuration& config) const {
-        return edgeSpaceEval(config, _mass, _subtrees);
-    }
-
-private:
-    const Vector& _mass;
-    const std::unordered_set<ID>& _subtrees;
-};
-
 std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1, ID subroot2) {
     Vector mass1 = findSubtreeMassCenter(init, subroot1);
     Vector mass2 = findSubtreeMassCenter(init, subroot2);
@@ -390,31 +292,6 @@ std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1,
 
     return limitedAstar(init, smartGen, edgeScore, 2 * init.getModules().size(), true);
 }
-
-class BiParalyzedGen {
-public:
-    BiParalyzedGen(const std::unordered_set<ID>& allowed)
-    : _allowed(allowed) {}
-
-    void operator()(const Configuration& config, std::vector<Configuration>& res, unsigned step) const {
-        biParalyzedOnlyRotNext(config, res, step, _allowed);
-    }
-
-private:
-    const std::unordered_set<ID>& _allowed;
-};
-
-class DistFromConnScore {
-public:
-    DistFromConnScore(const Edge& conn)
-    : _conn(conn) {}
-
-    double operator()(const Configuration& config) const {
-        return symmDistFromConns(config, _conn);
-    }
-private:
-    const Edge& _conn;
-};
 
 std::vector<Configuration> connectArm(const Configuration& init, const Edge& connection, ID subroot1, ID subroot2) {
     // Edge connection is from end of arm to end of arm
@@ -432,39 +309,6 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
 
     vectorAppend(spacePath, astarPath);
     return spacePath;
-}
-
-double spaceEval(const Configuration& config, const std::unordered_set<ID>& isolate) {
-    double dist = 0;
-    const auto& matrixMap = config.getMatrices();
-    for (const auto& [id, mArray] : matrixMap) {
-        if (isolate.find(id) != isolate.end())
-            continue;
-        for (auto isolatedId : isolate) {
-            const auto& isolatedMArray = matrixMap.at(isolatedId);
-            for (const auto& m1 : mArray) {
-                for (const auto& m2 : isolatedMArray) {
-                    dist += 1 / centerSqDistance(m1, m2);
-                }
-            }
-        }
-    }
-    return dist;
-}
-
-void addSubtree(ID subRoot, std::unordered_set<ID>& allowed, const std::unordered_map<ID, std::array<std::optional<Edge>, 6>>& spannSucc) {
-    std::queue<ID> toAdd;
-    toAdd.push(subRoot);
-    while (!toAdd.empty()) {
-        auto currId = toAdd.front();
-        toAdd.pop();
-        allowed.insert(currId);
-        for (const auto& optEdge : spannSucc.at(currId)) {
-            if (!optEdge.has_value())
-                continue;
-            toAdd.push(optEdge.value().id2());
-        }
-    }
 }
 
 double moduleDist(ID id1, ID id2, const std::unordered_map<ID, std::array<Matrix, 2>>& matrices) {
@@ -672,23 +516,15 @@ Configuration disjoinArm(const Configuration& init, const Edge& addedEdge) {
 
 using PriorityLeafQueue = std::priority_queue<std::tuple<double, ID, ID>, std::vector<std::tuple<double, ID, ID>>, std::greater<std::tuple<double, ID, ID>>>;
 
-Vector getModuleMass(const Configuration& init, ID id) {
-    Vector mass({0,0,0,1});
-    for (const auto& m : init.getMatrices().at(id)) {
-        mass += center(m);
-    }
-    return mass/2;
-}
-
-void computeDists(const Configuration& init, const std::unordered_map<ID, std::pair<bool, ShoeId>>& leafs, PriorityLeafQueue& dists) {
+void computeDists(const Configuration& config, const std::unordered_map<ID, std::pair<bool, ShoeId>>& leafs, PriorityLeafQueue& dists) {
     for (auto it1 = leafs.begin(); it1 != leafs.end(); ++it1) {
         for (auto it2 = it1; it2 != leafs.end(); ++it2) {
             if (it1 == it2)
                 continue;
             ID id1 = it1->first;
             ID id2 = it2->first;
-            Vector mass1 = getModuleMass(init, id1);
-            Vector mass2 = getModuleMass(init, id2);
+            Vector mass1 = config.getModuleMass(id1);
+            Vector mass2 = config.getModuleMass(id2);
             double dist = sqDistance(mass1, mass2);
             dists.emplace(dist, id1, id2);
         }
@@ -696,14 +532,6 @@ void computeDists(const Configuration& init, const std::unordered_map<ID, std::p
 }
 
 std::vector<Configuration> treeToSnake(const Configuration& init) {
-    // držet si konce v prioritní frontě, když to neuspěje, tak popni
-    //      podívej se na top fronty + najdi nejbližší jiný konec s opačnou polaritou (který je dostatečně blízko)
-    //          vytvoř prostor na zavolání crippled-astar
-    //          zavolej vytvoření prostoru
-    //          zavolej crippled-astar s magnetem mezi konci
-    //          pokud selže, najdi vyzkoušej najít jiný konec
-    // jsi had, tak ok. Jinak jsme smutní.
-
     // DNEŠNÍ ZJIŠTĚNÍ:
     // * chci vyzkoušet kvalitu "makeSpace" v závislosti na limitu
     // podobně vyzkoušet i další, vyzkoumat rychlost konvergence v závislosti na tom,
@@ -712,21 +540,6 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
     // * makeSpace je v connectArm nejpomalejší část, možná vyzkoušet s menšími
     // limity a "po vrstvách"
     //
-    // * zkontrolovat, jestli ve findLeafs označuju správné strany jako ty listové
-    //
-    // * možná si pamatovat i nelistové strany a nenapojovat jen z-z, ale i nejaké boční,
-    // ty pak opravit
-    //
-    // * úvodní algoritmus na provzdušnění -- vyzkoušet vzdálenost od centerOfMass
-    //
-    // * fixedModule -> řeší se v treefy #done
-    //
-    // * jelikož máme nyní spanning tree, možná inteligentněji generovat bisimplenext -- ke každé rotaci
-    // přidat jen rotace z modulů, které jsou "níže"
-    //
-    // * achjo, zdebugovat disjoinArm a zjistit, proč po odstranění to není valid ...
-
-    // * místo freeness použít vzdálenost od centra?
 
     std::vector<std::pair<ID, ShoeId>> leafsBlack;
     std::vector<std::pair<ID, ShoeId>> leafsWhite;
@@ -748,9 +561,9 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
         if (isPseudoSnake(pConfig))
             return path;
 
-        snakeRes = SnakeStar2(pConfig);
+        snakeRes = aerateFromRoot(pConfig);
         auto& config = snakeRes.back();
-        std::cout << "************** Finish snakeStar2 **************\n";
+        std::cout << "************** Finish aerateFromRoot **************\n";
 
         findLeafs(config, leafsBlack, leafsWhite, allLeafs);
         const auto& matrices = config.getMatrices();
@@ -821,55 +634,6 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
     }
     return path;
 }
-
-double furthestTwoPoints(const Configuration& init) {
-    double max = -1;
-    const auto& matrices = init.getMatrices();
-    for (auto it1 = matrices.begin(); it1 != matrices.end(); ++it1) {
-        for (auto it2 = matrices.begin(); it2 != matrices.end(); ++it2) {
-            if (it1 == it2)
-                continue;
-            Vector mass1 = getModuleMass(init, it1->first);
-            Vector mass2 = getModuleMass(init, it2->first);
-            double dist = sqDistance(mass1, mass2);
-            if (dist > max)
-                max = dist;
-        }
-    }
-    return 1/max;
-}
-
-double awayFromMass(const Configuration& init) {
-    Vector mass = init.massCenter();
-    double sum = 0;
-    for (const auto& [id, _m] : init.getMatrices()) {
-        Vector mmass = getModuleMass(init, id);
-        double dist = distance(mass, mmass);
-        sum += 1/dist;
-    }
-    return sum;
-}
-
-double awayFromRoot(const Configuration& init) {
-    ID fixedId = init.getFixedId();
-    Vector root = getModuleMass(init, fixedId);
-    double sum = 0;
-    for (const auto& [id, _m] : init.getMatrices()) {
-        if (id == fixedId)
-            continue;
-        Vector mmass = getModuleMass(init, id);
-        double dist = distance(root, mmass);
-        sum += 1/dist;
-    }
-    return sum;
-}
-
-class FurthestPointsScore {
-public:
-    double operator()(const Configuration& config) {
-        return furthestTwoPoints(config);
-    };
-};
 
 std::vector<Configuration> straightenSnake(const Configuration& init) {
     SmartBisimpleOnlyRotGen smartGen{};
@@ -1141,7 +905,7 @@ std::vector<Configuration> flattenCircle(const Configuration& init) {
         std::cout << IO::toString(init) << std::endl << std::endl;
         std::cout << IO::toString(toRemove.value()) << std::endl;
     }
-    auto res = SnakeStar(a.value());
+    auto res = aerateConfig(a.value());
 
     std::vector<Configuration> path = {a.value()};
     path.reserve(res.size());
@@ -1153,43 +917,36 @@ std::vector<Configuration> flattenCircle(const Configuration& init) {
 }
 
 std::vector<Configuration> reconfigToSnake(const Configuration& init) {
-    std::vector<Configuration> path = SnakeStar(init);
-    std::cout << "Finish snakestar" << std::endl;
+    std::vector<Configuration> path = aerateConfig(init);
+    std::cout << "Finish aerate" << std::endl;
     if (path.empty())
         return path;
     path.push_back(treefy<MakeStar>(path.back()));
+
     auto toSnake = treeToSnake(path.back());
     std::cout << "Finish treeToSnake" << std::endl;
     if (toSnake.empty())
         return {};
-    path.reserve(path.size() + toSnake.size());
-    for (const auto& config : toSnake) {
-        path.push_back(config);
-    }
+    vectorAppend(path, toSnake);
+
     auto fixedSnake = fixParity(path.back());
     std::cout << "Finish fixParity" << std::endl;
     if (fixedSnake.empty())
         return {};
-    path.reserve(path.size() + fixedSnake.size());
-    for (const auto& config : fixedSnake) {
-        path.push_back(config);
-    }
+    vectorAppend(path, fixedSnake);
+
     auto dockSnake = fixDocks(path.back());
     std::cout << "Finish fixDocks" << std::endl;
     if (dockSnake.empty())
         return {};
-    path.reserve(path.size() + dockSnake.size());
-    for (const auto& config : dockSnake) {
-        path.push_back(config);
-    }
+    vectorAppend(path, dockSnake);
+
     auto flatCircle = flattenCircle(path.back());
     std::cout << "Finish flattenCircle" << std::endl;
     if (flatCircle.empty())
         return {};
-    path.reserve(path.size() + flatCircle.size());
-    for (const auto& config : flatCircle) {
-        path.push_back(config);
-    }
+    vectorAppend(path, flatCircle);
+
     std::cout << "Finish ALL" << std::endl;
     return path;
 }
