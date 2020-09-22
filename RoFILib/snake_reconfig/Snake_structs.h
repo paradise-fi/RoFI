@@ -12,6 +12,7 @@ inline std::tuple<int, int, int> tuple_center(const Matrix &m) {
 
 class SpaceGrid {
 public:
+
     using Cell = int;
     const Cell _EMPTY = -1;
     const Cell _COUNTED = -2;
@@ -103,6 +104,11 @@ public:
 
     void loadConfig(const Configuration& config) {
         _configuration = &config;
+    }
+
+    double operator()(const Configuration& conf) {
+        loadConfig(conf);
+        return getDist();
     }
 
 private:

@@ -12,6 +12,13 @@
 #include <memory>
 #include <stack>
 
+template<typename T>
+void vectorAppend(std::vector<T>& base, const std::vector<T>& toApp) {
+    base.reserve(base.size() + toApp.size());
+    for (const auto& t : toApp) {
+        base.emplace_back(t);
+    }
+}
 
 struct SnakeEvalCompare {
 public:
@@ -20,28 +27,21 @@ public:
     }
 };
 
-inline double eval(const Configuration& configuration, SpaceGrid& sg) {
-    sg.loadConfig(configuration);
-    return sg.getDist();
-}
-
-std::vector<Configuration> SnakeStar(const Configuration& init) {
+template<typename GenNext, typename Score>
+std::vector<Configuration> limitedAstar(const Configuration& init, GenNext& genNext, Score& getScore, unsigned limit, bool returnBest) {
     unsigned step = 90;
     double path_pref = 0.1;
     double free_pref = 1 - path_pref;
-    auto nModule = init.getModules().size();
-    int limit = 2 * nModule * nModule; // <- prolly change to `a` times number of modules
     ConfigPred pred;
     ConfigPool pool;
 
-    SpaceGrid grid(init.getIDs().size());
     // Already computed shortest distance from init to configuration.
     ConfigValue initDist;
 
     // Shortest distance from init through this configuration to goal.
     ConfigValue goalDist;
 
-    double startDist = eval(init, grid);
+    double startDist = getScore(init);
 
     if (startDist == 0)
         return {init};
@@ -65,11 +65,11 @@ std::vector<Configuration> SnakeStar(const Configuration& init) {
         double currDist = initDist[current];
 
         std::vector<Configuration> nextCfgs;
-        simpleNext(*current, nextCfgs, step);
+        genNext(*current, nextCfgs, step);
 
         for (const auto& next : nextCfgs) {
             const Configuration* pointerNext;
-            double newEval = eval(next, grid);
+            double newEval = getScore(next);
             double newDist = path_pref * (currDist + 1) + free_pref * newEval;
             bool update = false;
 
@@ -116,107 +116,51 @@ std::vector<Configuration> SnakeStar(const Configuration& init) {
             }
         }
     }
+    if (!returnBest)
+        return {};
     auto path = createPath(pred, bestConfig);
     return path;
+}
+
+class SimpleNextGen {
+public:
+    void operator()(const Configuration& config, std::vector<Configuration>& res, unsigned step) const {
+        simpleNext(config, res, step);
+    }
+};
+
+std::vector<Configuration> SnakeStar(const Configuration& init) {
+    auto nModule = init.getModules().size();
+    int limit = 2 * nModule * nModule;
+
+    SimpleNextGen simpleGen{};
+    SpaceGrid grid(init.getIDs().size());
+
+    return limitedAstar(init, simpleGen, grid, limit, true);
 }
 
 double awayFromMass(const Configuration& init);
 double awayFromRoot(const Configuration& init);
 
-std::vector<Configuration> SnakeStar2(const Configuration& init) {
-    unsigned step = 90;
-    double path_pref = 0.1;
-    double free_pref = 1 - path_pref;
-    auto limit = 3 * init.getModules().size();
-    ConfigPred pred;
-    ConfigPool pool;
-
-    //SpaceGrid grid(init.getIDs().size());
-    // Already computed shortest distance from init to configuration.
-    ConfigValue initDist;
-
-    // Shortest distance from init through this configuration to goal.
-    ConfigValue goalDist;
-
-    //double startDist = eval(init, grid);
-    double startDist = awayFromRoot(init);
-
-    if (startDist == 0)
-        return {init};
-
-    MinMaxHeap<EvalPair, SnakeEvalCompare> queue(limit);
-
-    const Configuration* pointer = pool.insert(init);
-    const Configuration* bestConfig = pointer;
-    unsigned bestScore = startDist;
-    double worstDist = startDist;
-
-    initDist[pointer] = 0;
-    goalDist[pointer] = startDist;
-    pred[pointer] = pointer;
-    int i = 0;
-    queue.push( {goalDist[pointer], pointer} );
-
-
-    while (!queue.empty() && i++ < limit) {
-        const auto [d, current] = queue.popMin();
-        double currDist = initDist[current];
-
-        std::vector<Configuration> nextCfgs;
-        smartBisimpleOnlyRotNext(*current, nextCfgs, step);
-
-        for (const auto& next : nextCfgs) {
-            const Configuration* pointerNext;
-            //double newEval = eval(next, grid);
-            double newEval = awayFromRoot(next);
-            double newDist = path_pref * (currDist + 1) + free_pref * newEval;
-            bool update = false;
-
-            if (newEval != 0 && limit <= queue.size() + i) {
-                if (newDist > worstDist)
-                    continue;
-                if (!queue.empty()) {
-                    queue.popMax();
-                    if (!queue.empty()) {
-                        const auto [newWorstD, _worstConfig] = queue.max();
-                        worstDist = newWorstD;
-                    } else {
-                        worstDist = newDist;
-                    }
-                }
-            }
-
-            if (newDist > worstDist)
-                worstDist = newDist;
-
-            if (!pool.has(next)) {
-                pointerNext = pool.insert(next);
-                initDist[pointerNext] = currDist + 1;
-                update = true;
-            } else {
-                pointerNext = pool.get(next);
-            }
-
-            if (newEval < bestScore) {
-                bestScore = newEval;
-                bestConfig = pointerNext;
-            }
-
-            if ((currDist + 1 < initDist[pointerNext]) || update) {
-                initDist[pointerNext] = currDist + 1;
-                goalDist[pointerNext] = newDist;
-                pred[pointerNext] = current;
-                queue.push({newDist, pointerNext});
-            }
-
-            if (newEval == 0) {
-                auto path = createPath(pred, pointerNext);
-                return path;
-            }
-        }
+class SmartBisimpleOnlyRotGen {
+public:
+    void operator()(const Configuration& config, std::vector<Configuration>& res, unsigned step) const {
+        smartBisimpleOnlyRotNext(config, res, step);
     }
-    auto path = createPath(pred, bestConfig);
-    return path;
+};
+
+class AwayFromRoot {
+public:
+    double operator()(const Configuration& config) const {
+        return awayFromRoot(config);
+    }
+};
+
+std::vector<Configuration> SnakeStar2(const Configuration& init) {
+    SmartBisimpleOnlyRotGen smartGen{};
+    AwayFromRoot score{};
+
+    return limitedAstar(init, smartGen, score, 3 * init.getModules().size(), true);
 }
 
 ID closestMass(const Configuration& init) {
@@ -417,6 +361,21 @@ double edgeSpaceEval(const Configuration& config, const Vector& mass, const std:
     return score;
 }
 
+class EdgeSpaceScore {
+public:
+    EdgeSpaceScore(const Vector& mass, const std::unordered_set<ID>& subtrees)
+    : _mass(mass)
+    , _subtrees(subtrees) {}
+
+    double operator()(const Configuration& config) const {
+        return edgeSpaceEval(config, _mass, _subtrees);
+    }
+
+private:
+    const Vector& _mass;
+    const std::unordered_set<ID>& _subtrees;
+};
+
 std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1, ID subroot2) {
     Vector mass1 = findSubtreeMassCenter(init, subroot1);
     Vector mass2 = findSubtreeMassCenter(init, subroot2);
@@ -426,193 +385,53 @@ std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1,
     addSubtree(subroot1, subtrees, init.getSpanningSucc());
     addSubtree(subroot2, subtrees, init.getSpanningSucc());
 
-    unsigned step = 90;
-    unsigned limit = 2 * init.getModules().size();
-    double path_pref = 0.1;
-    double free_pref = 1 - path_pref;
-    ConfigPred pred;
-    ConfigPool pool;
+    SmartBisimpleOnlyRotGen smartGen{};
+    EdgeSpaceScore edgeScore(realMass, subtrees);
 
-    // Already computed shortest distance from init to configuration.
-    ConfigValue initDist;
-
-    // Shortest distance from init through this configuration to goal.
-    ConfigValue goalDist;
-
-    double startDist = edgeSpaceEval(init, realMass, subtrees);
-
-    MinMaxHeap<EvalPair, SnakeEvalCompare> queue(limit);
-
-    const Configuration* pointer = pool.insert(init);
-    const Configuration* bestConfig = pointer;
-    double bestScore = startDist;
-    double worstDist = startDist;
-
-    initDist[pointer] = 0;
-    goalDist[pointer] = startDist;
-    pred[pointer] = pointer;
-    int i = 0;
-    queue.push( {goalDist[pointer], pointer} );
-
-
-    while (!queue.empty() && i++ < limit) {
-        const auto [d, current] = queue.popMin();
-        double currDist = initDist[current];
-
-        std::vector<Configuration> nextCfgs;
-        smartBisimpleOnlyRotNext(*current, nextCfgs, step);
-
-        for (const auto& next : nextCfgs) {
-            const Configuration* pointerNext;
-            double newEval = edgeSpaceEval(next, realMass, subtrees);
-            double newDist = path_pref * (currDist + 1) + free_pref * newEval;
-            bool update = false;
-
-            if (limit <= queue.size() + i) {
-                if (newDist > worstDist)
-                    continue;
-                if (!queue.empty()) {
-                    queue.popMax();
-                    if (!queue.empty()) {
-                        const auto [newWorstD, _worstConfig] = queue.max();
-                        worstDist = newWorstD;
-                    } else {
-                        worstDist = newDist;
-                    }
-                }
-            }
-
-            if (newDist > worstDist)
-                worstDist = newDist;
-
-            if (!pool.has(next)) {
-                pointerNext = pool.insert(next);
-                initDist[pointerNext] = currDist + 1;
-                update = true;
-            } else {
-                pointerNext = pool.get(next);
-            }
-
-            if (newEval < bestScore) {
-                bestScore = newEval;
-                bestConfig = pointerNext;
-            }
-
-            if ((currDist + 1 < initDist[pointerNext]) || update) {
-                initDist[pointerNext] = currDist + 1;
-                goalDist[pointerNext] = newDist;
-                pred[pointerNext] = current;
-                queue.push({newDist, pointerNext});
-            }
-        }
-    }
-    auto path = createPath(pred, bestConfig);
-
-    return path;
-
+    return limitedAstar(init, smartGen, edgeScore, 2 * init.getModules().size(), true);
 }
+
+class BiParalyzedGen {
+public:
+    BiParalyzedGen(const std::unordered_set<ID>& allowed)
+    : _allowed(allowed) {}
+
+    void operator()(const Configuration& config, std::vector<Configuration>& res, unsigned step) const {
+        biParalyzedOnlyRotNext(config, res, step, _allowed);
+    }
+
+private:
+    const std::unordered_set<ID>& _allowed;
+};
+
+class DistFromConnScore {
+public:
+    DistFromConnScore(const Edge& conn)
+    : _conn(conn) {}
+
+    double operator()(const Configuration& config) const {
+        return symmDistFromConns(config, _conn);
+    }
+private:
+    const Edge& _conn;
+};
 
 std::vector<Configuration> connectArm(const Configuration& init, const Edge& connection, ID subroot1, ID subroot2) {
     // Edge connection is from end of arm to end of arm
-    // Slowest part seems to be the makeSapce part, prolly change it a bit
-    // Need to check if we choose right sides to be the ends of arms.
-    // Maybe add check that the Z ports are both free! (just to be sure)
-    //
-    // ADD PENALTY IF THERE IS ANOTHER MODULE IN PLACE OF THE THING, like better.
+
     auto spacePath = makeEdgeSpace(init, subroot1, subroot2);
-    unsigned step = 90;
-    double path_pref = 0.1;
-    double free_pref = 1 - path_pref;
-    ConfigPred pred;
-    ConfigPool pool;
-
-    // Already computed shortest distance from init to configuration.
-    ConfigValue initDist;
-
-    // Shortest distance from init through this configuration to goal.
-    ConfigValue goalDist;
-
-    double startDist = symmDistFromConns(init, connection);
-    double worstDist = startDist;
-
-    if (startDist == 0)
-        return {init};
-
-    auto limit = init.getModules().size();
-    MinMaxHeap<EvalPair, SnakeEvalCompare> queue(limit);
-
-    const Configuration* pointer = spacePath.empty() ? pool.insert(init) : pool.insert(spacePath.back());
-    initDist[pointer] = 0;
-    goalDist[pointer] = startDist;
-    pred[pointer] = pointer;
-
-    queue.push( {goalDist[pointer], pointer} );
-
     std::unordered_set<ID> allowed = makeAllowed(init, subroot1, subroot2);
-    int i = 0;
-    while (!queue.empty() && i < limit) {
-        const auto [d, current] = queue.popMin();
-        double currDist = initDist[current];
-        if (++i > 100) {
-            std::cout << IO::toString(*current) << std::endl;
-            i = 0;
-        }
 
-        std::vector<Configuration> nextCfgs;
-        //smartBisimpleParOnlyRotNext(*current, nextCfgs, step, allowed);
-        biParalyzedOnlyRotNext(*current, nextCfgs, step, allowed);
-        for (const auto& next : nextCfgs) {
-            const Configuration* pointerNext;
-            double newEval = symmDistFromConns(next, connection);
-            double newDist = path_pref * (currDist + 1) + free_pref * newEval;
-            bool update = false;
+    BiParalyzedGen parGen(allowed);
+    DistFromConnScore connScore(connection);
 
-            if (newEval != 0 && queue.full()) {
-                if (newDist > worstDist)
-                    continue;
-                if (!queue.empty()) {
-                    queue.popMax();
-                    if (!queue.empty()) {
-                        const auto [newWorstD, _worstConfig] = queue.max();
-                        worstDist = newWorstD;
-                    } else {
-                        worstDist = newDist;
-                    }
-                }
-            }
+    auto astarPath = limitedAstar(spacePath.back(), parGen, connScore, init.getModules().size(), false);
 
-            if (newDist > worstDist)
-                worstDist = newDist;
+    if (astarPath.empty())
+        return {};
 
-            if (!pool.has(next)) {
-                pointerNext = pool.insert(next);
-                initDist[pointerNext] = currDist + 1;
-                update = true;
-            } else {
-                pointerNext = pool.get(next);
-            }
-
-            if ((currDist + 1 < initDist[pointerNext]) || update) {
-                initDist[pointerNext] = currDist + 1;
-                goalDist[pointerNext] = newDist;
-                pred[pointerNext] = current;
-                queue.push({newDist, pointerNext});
-            }
-
-            if (newEval == 0) {
-                auto path = createPath(pred, pointerNext);
-                for (const auto& c : path) {
-                    spacePath.emplace_back(c);
-                }
-                Action::Reconnect connnnn(true, connection);
-                Action actttt(connnnn);
-                spacePath.emplace_back(executeIfValid(spacePath.back(), actttt).value());
-                return spacePath;
-            }
-        }
-    }
-    std::cout << IO::toString(*std::get<1>(queue.popMin()));
-    return {};
+    vectorAppend(spacePath, astarPath);
+    return spacePath;
 }
 
 double spaceEval(const Configuration& config, const std::unordered_set<ID>& isolate) {
@@ -648,143 +467,8 @@ void addSubtree(ID subRoot, std::unordered_set<ID>& allowed, const std::unordere
     }
 }
 
-bool isFixed(const Configuration& fixed, const std::unordered_set<ID>& toFix) {
-    const auto& spannTree = fixed.getSpanningSucc();
-    unsigned zCon = 0;
-    for (const auto& id : toFix) {
-        for (const auto& optEdge : spannTree.at(id)) {
-            if (!optEdge.has_value())
-                continue;
-            const auto& edge = optEdge.value();
-            if (toFix.find(edge.id2()) == toFix.end())
-                continue;
-            if (edge.dock1() != ZMinus || edge.dock2() != ZMinus)
-                continue;
-            ++zCon;
-        }
-    }
-    return zCon > 1;
-}
-
-std::optional<std::vector<Configuration>> boundedLeafDfs(const Configuration& curr, const std::unordered_set<ID>& allowed, std::unordered_set<Configuration, ConfigurationHash>& seen, unsigned limit) {
-    if (limit <= 0)
-        return {};
-    seen.insert(curr);
-    std::vector<Configuration> nextCfgs;
-    unsigned step = 90;
-    paralyzedNext(curr, nextCfgs, step, allowed);
-    for (const auto& next : nextCfgs) {
-        if (seen.find(next) != seen.end())
-            continue;
-        if (isFixed(next, allowed))
-            return std::vector<Configuration>{next};
-        seen.insert(next);
-        auto res = boundedLeafDfs(next, allowed, seen, limit - 1);
-        if (res.has_value()) {
-            res.value().push_back(curr);
-            return res.value();
-        }
-    }
-    return {};
-}
-
-std::vector<Configuration> leafDfs(const Configuration& init, const std::unordered_set<ID>& allowed) {
-    unsigned limit = 1;
-    std::unordered_set<Configuration, ConfigurationHash> seen;
-    while (true) {
-        std::cout << limit << std::endl;
-        auto res = boundedLeafDfs(init, allowed, seen, limit);
-        if (res.has_value())
-            return res.value();
-        ++limit;
-        seen.clear();
-    }
-    return {};
-}
-
 double moduleDist(ID id1, ID id2, const std::unordered_map<ID, std::array<Matrix, 2>>& matrices) {
     return moduleDistance(matrices.at(id1)[0], matrices.at(id1)[1], matrices.at(id2)[0], matrices.at(id2)[1]);
-}
-
-bool areLeafsFree(ID id1, ID id2, ID id3, const Configuration& config) {
-    std::unordered_set<ID> toFix = {id1, id2, id3};
-    for (auto id : toFix) {
-        for (const auto& optEdge : config.getSpanningSucc().at(id)) {
-            if (!optEdge.has_value())
-                continue;
-            const auto& edge = optEdge.value();
-            if (toFix.find(edge.id2()) != toFix.end())
-                continue;
-            return false;
-        }
-    }
-    return true;
-}
-
-
-std::unordered_set<ID> chooseLeafsToMove(const std::unordered_set<ID>& leafs, const Configuration& config) {
-    const auto& matrices = config.getMatrices();
-    if (leafs.size() < 4)
-        return leafs;
-    auto best1 = leafs.begin();
-    auto best2 = leafs.begin();
-    auto best3 = leafs.begin();
-    double bestScore = std::numeric_limits<double>::max();
-    for (auto it1 = leafs.begin(); it1 != leafs.end(); ++it1) {
-        for (auto it2 = it1; it2 != leafs.end(); ++it2) {
-            if (it1 == it2)
-                continue;
-            auto dist12 = moduleDist(*it1, *it2, matrices);
-            if (dist12 >= bestScore)
-                continue;
-            for (auto it3 = it2; it3 != leafs.end(); ++it3) {
-                if (it2 == it3)
-                    continue;
-                auto addDist = dist12 + moduleDist(*it1, *it3, matrices);
-                if (addDist >= bestScore)
-                    continue;
-                addDist += moduleDist(*it2, *it3, matrices);
-                if (addDist >= bestScore)
-                    continue;
-                if (!areLeafsFree(*it1, *it2, *it3, config))
-                    continue;
-                best1 = it1;
-                best2 = it2;
-                best3 = it3;
-                bestScore = addDist;
-            }
-        }
-    }
-    return {*best1, *best2, *best3};
-}
-
-std::vector<Configuration> fixLeaf(const Configuration& init, ID toFix) {
-    const auto& spannSuccCount = init.getSpanningSuccCount();
-    const auto& spannSucc = init.getSpanningSucc();
-    const auto& spannPred = init.getSpanningPred();
-    if (spannSuccCount.at(toFix) != 0)
-        return {};
-
-    if (!spannPred.at(toFix).has_value())
-        return {};
-
-    auto pred = spannPred.at(toFix).value().first;
-    std::unordered_set<ID> allowed;
-    if (spannSuccCount.at(pred) > 1) {
-        addSubtree(pred, allowed, spannSucc);
-    } else if (spannPred.at(pred).has_value()) {
-        addSubtree(spannPred.at(pred).value().first, allowed, spannSucc);
-    } else {
-        return {};
-    }
-
-    auto trueAllowed = chooseLeafsToMove(allowed, init);
-    auto res = leafDfs(init, trueAllowed);
-    std::vector<Configuration> revRes;
-    for (auto i = res.size(); i > 0; --i) {
-        revRes.push_back(res[i-1]);
-    }
-    return revRes;
 }
 
 void findLeafs(const Configuration& config, std::vector<std::pair<ID, ShoeId>>& leafsBlack, std::vector<std::pair<ID, ShoeId>>& leafsWhite, std::unordered_map<ID, std::pair<bool, ShoeId>>& allLeafs) {
@@ -1180,91 +864,18 @@ double awayFromRoot(const Configuration& init) {
     return sum;
 }
 
+class FurthestPointsScore {
+public:
+    double operator()(const Configuration& config) {
+        return furthestTwoPoints(config);
+    };
+};
+
 std::vector<Configuration> straightenSnake(const Configuration& init) {
-    unsigned step = 90;
-    unsigned limit = 1 * init.getModules().size();
-    double path_pref = 0.1;
-    double free_pref = 1 - path_pref;
-    ConfigPred pred;
-    ConfigPool pool;
+    SmartBisimpleOnlyRotGen smartGen{};
+    FurthestPointsScore furthestScore{};
 
-    // Already computed shortest distance from init to configuration.
-    ConfigValue initDist;
-
-    // Shortest distance from init through this configuration to goal.
-    ConfigValue goalDist;
-
-    double startDist = furthestTwoPoints(init);
-    //double startDist = awayFromMass(init);
-    MinMaxHeap<EvalPair, SnakeEvalCompare> queue(limit);
-
-    const Configuration* pointer = pool.insert(init);
-    const Configuration* bestConfig = pointer;
-    double bestScore = startDist;
-    double worstDist = startDist;
-
-    initDist[pointer] = 0;
-    goalDist[pointer] = startDist;
-    pred[pointer] = pointer;
-    int i = 0;
-    queue.push( {goalDist[pointer], pointer} );
-
-
-    while (!queue.empty() && i++ < limit) {
-        const auto [d, current] = queue.popMin();
-        double currDist = initDist[current];
-
-        std::vector<Configuration> nextCfgs;
-        smartBisimpleOnlyRotNext(*current, nextCfgs, step);
-
-        for (const auto& next : nextCfgs) {
-            const Configuration* pointerNext;
-            double newEval = furthestTwoPoints(next);
-            //double newEval = awayFromMass(next);
-            double newDist = path_pref * (currDist + 1) + free_pref * newEval;
-            bool update = false;
-
-            if (limit <= queue.size() + i) {
-                if (newDist > worstDist)
-                    continue;
-                if (!queue.empty()) {
-                    queue.popMax();
-                    if (!queue.empty()) {
-                        const auto [newWorstD, _worstConfig] = queue.max();
-                        worstDist = newWorstD;
-                    } else {
-                        worstDist = newDist;
-                    }
-                }
-            }
-
-            if (newDist > worstDist)
-                worstDist = newDist;
-
-            if (!pool.has(next)) {
-                pointerNext = pool.insert(next);
-                initDist[pointerNext] = currDist + 1;
-                update = true;
-            } else {
-                pointerNext = pool.get(next);
-            }
-
-            if (newEval < bestScore) {
-                bestScore = newEval;
-                bestConfig = pointerNext;
-            }
-
-            if ((currDist + 1 < initDist[pointerNext]) || update) {
-                initDist[pointerNext] = currDist + 1;
-                goalDist[pointerNext] = newDist;
-                pred[pointerNext] = current;
-                queue.push({newDist, pointerNext});
-            }
-        }
-    }
-    auto path = createPath(pred, bestConfig);
-
-    return path;
+    return limitedAstar(init, smartGen, furthestScore, init.getModules().size(), true);
 }
 
 std::vector<std::pair<ID, ShoeId>> colourAndFindLeafs(const Configuration& config, std::unordered_map<ID,bool>& colours) {
