@@ -123,20 +123,20 @@ std::vector<Configuration> limitedAstar(const Configuration& init, GenNext& genN
 }
 
 std::vector<Configuration> aerateConfig(const Configuration& init) {
-    auto nModule = init.getModules().size();
-    int limit = 2 * nModule * nModule;
-
     SimpleNextGen simpleGen{};
-    SpaceGridScore grid(init.getIDs().size());
+    SpaceGridScore gridScore(init.getIDs().size());
+    auto nModule = init.getModules().size();
+    unsigned limit = 2 * nModule * nModule;
 
-    return limitedAstar(init, simpleGen, grid, limit, true);
+    return limitedAstar(init, simpleGen, gridScore, limit, true);
 }
 
 std::vector<Configuration> aerateFromRoot(const Configuration& init) {
     SmartBisimpleOnlyRotGen smartGen{};
-    AwayFromRootScore score{};
+    AwayFromRootScore rootScore{};
+    unsigned limit = 3 * init.getModules().size();
 
-    return limitedAstar(init, smartGen, score, 3 * init.getModules().size(), true);
+    return limitedAstar(init, smartGen, rootScore, limit, true);
 }
 
 ID closestMass(const Configuration& init) {
@@ -165,7 +165,7 @@ inline Configuration treefy(const Configuration& init, chooseRootFunc chooseRoot
     ID root = chooseRoot(init);
     Configuration treed = init;
     treed.clearEdges();
-    treed.setFixed(root, A, identity); // maybe change the choose root to return shoe as well
+    treed.setFixed(root, A, identity);
 
     std::unordered_set<ID> seen{};
     std::stack<ID> dfs_stack{};
@@ -174,7 +174,7 @@ inline Configuration treefy(const Configuration& init, chooseRootFunc chooseRoot
 
     dfs_stack.push(root);
 
-    while(!dfs_stack.empty()) {
+    while (!dfs_stack.empty()) {
         ID curr = dfs_stack.top();
         dfs_stack.pop();
         if (seen.find(curr) != seen.end())
@@ -189,9 +189,7 @@ inline Configuration treefy(const Configuration& init, chooseRootFunc chooseRoot
     return treed;
 }
 
-/* ==================== end TREEFY ==================== */
-
-bool isPseudoSnake(const Configuration& config) {
+bool isTopologicalSnake(const Configuration& config) {
     const auto& spannSuccCount = config.getSpanningSuccCount();
     ID fixedId = config.getFixedId();
     for (const auto& [id, sc] : spannSuccCount) {
@@ -213,7 +211,7 @@ bool isParitySnake(const Configuration& config) {
             continue;
         bag.emplace(optEdge.value().id2(), optEdge.value().side2());
     }
-    while(!bag.empty()) {
+    while (!bag.empty()) {
         auto [id, side] = bag.front();
         bag.pop();
         for (const auto& optEdge : spannSucc.at(id)) {
@@ -228,7 +226,7 @@ bool isParitySnake(const Configuration& config) {
     return true;
 }
 
-std::optional<Edge> getInvalidEdge(const Configuration& config) {
+std::optional<Edge> getNonsnakeEdge(const Configuration& config) {
     for (const auto& [id, el] : config.getEdges()) {
         for (const auto& optEdge : el) {
             if (!optEdge.has_value())
@@ -289,8 +287,9 @@ std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1,
 
     SmartBisimpleOnlyRotGen smartGen{};
     EdgeSpaceScore edgeScore(realMass, subtrees);
+    unsigned limit = 2 * init.getModules().size();
 
-    return limitedAstar(init, smartGen, edgeScore, 2 * init.getModules().size(), true);
+    return limitedAstar(init, smartGen, edgeScore, limit, true);
 }
 
 std::vector<Configuration> connectArm(const Configuration& init, const Edge& connection, ID subroot1, ID subroot2) {
@@ -301,8 +300,9 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
 
     BiParalyzedGen parGen(allowed);
     DistFromConnScore connScore(connection);
+    unsigned limit = init.getModules().size();
 
-    auto astarPath = limitedAstar(spacePath.back(), parGen, connScore, init.getModules().size(), false);
+    auto astarPath = limitedAstar(spacePath.back(), parGen, connScore, limit, false);
 
     if (astarPath.empty())
         return {};
@@ -315,15 +315,13 @@ double moduleDist(ID id1, ID id2, const std::unordered_map<ID, std::array<Matrix
     return moduleDistance(matrices.at(id1)[0], matrices.at(id1)[1], matrices.at(id2)[0], matrices.at(id2)[1]);
 }
 
-void findLeafs(const Configuration& config, std::vector<std::pair<ID, ShoeId>>& leafsBlack, std::vector<std::pair<ID, ShoeId>>& leafsWhite, std::unordered_map<ID, std::pair<bool, ShoeId>>& allLeafs) {
-    leafsBlack.clear();
-    leafsWhite.clear();
+void findLeafs(const Configuration& config, std::unordered_map<ID, std::pair<bool, ShoeId>>& allLeafs) {
     allLeafs.clear();
     std::queue<std::tuple<ID, ShoeId, bool>> bag;
     bag.emplace(config.getFixedId(), config.getFixedSide(), true);
     const auto& spannSucc = config.getSpanningSucc();
     const auto& spannPred = config.getSpanningPred();
-    while(!bag.empty()) {
+    while (!bag.empty()) {
         auto [currId, currShoe, isWhite] = bag.front();
         auto otherShoe = currShoe == A ? B : A;
         bag.pop();
@@ -339,28 +337,19 @@ void findLeafs(const Configuration& config, std::vector<std::pair<ID, ShoeId>>& 
             continue;
         if (!spannPred.at(currId).has_value())
             continue;
-
         allLeafs[currId] = {isWhite, otherShoe};
-        if (!isWhite) {
-            leafsBlack.emplace_back(currId, otherShoe);
-        } else {
-            leafsWhite.emplace_back(currId, otherShoe);
-        }
     }
+
     if (config.getSpanningSuccCount().at(config.getFixedId()) == 1) {
-        ShoeId side;
+        ShoeId leafSide;
         for (const auto& optEdge : spannSucc.at(config.getFixedId())) {
             if (!optEdge.has_value())
                 continue;
-            side = optEdge.value().side1() == A ? B : A;
+            leafSide = optEdge.value().side1() == A ? B : A;
             break;
         }
-        bool isRootWhite = config.getFixedSide() == side;
-        allLeafs[config.getFixedId()] = {isRootWhite, side};
-        if (isRootWhite)
-            leafsWhite.emplace_back(config.getFixedId(), side);
-        else
-            leafsBlack.emplace_back(config.getFixedId(), side);
+        bool isRootWhite = config.getFixedSide() == leafSide;
+        allLeafs[config.getFixedId()] = {isRootWhite, leafSide};
     }
 }
 
@@ -369,16 +358,15 @@ void computeSubtreeSizes(const Configuration& config, std::unordered_map<ID, uns
     auto moduleCount = config.getMatrices().size();
     const auto& spannSucc = config.getSpanningSucc();
     bag.reserve(moduleCount);
-    unsigned currIndex = 0;
+    unsigned bagIndex = 0;
     bag.emplace_back(config.getFixedId());
-    while (bag.size() < moduleCount) {
-        auto currId = bag[currIndex];
+    for (unsigned bagIndex = 0; bagIndex < moduleCount; ++bagIndex) {
+        auto currId = bag[bagIndex];
         for (const auto& optEdge : spannSucc.at(currId)) {
             if (!optEdge.has_value())
                 continue;
             bag.emplace_back(optEdge.value().id2());
         }
-        ++currIndex;
     }
     for (int i = moduleCount - 1; i >= 0; --i) {
         auto currId = bag[i];
@@ -411,8 +399,6 @@ std::tuple<ID, ShoeId, unsigned> computeActiveRadius(const Configuration& config
         std::tie(currId, currShoe) = spannPred.at(currId).value();
         auto newSize = subtreeSizes.at(currId);
         if (3 * (modRad+1) * prevSize < 2 * modRad * newSize) {
-        //if (newSize > 2 * prevSize + 1 || (modRad > 3 && newSize - prevSize > 2)) {
-            // Maybe something more like newSize/prevSize > a * (modRad + 1) / modRad
             for (const auto& optEdge : spannSucc.at(currId)) {
                 if (!optEdge.has_value())
                     continue;
@@ -420,24 +406,24 @@ std::tuple<ID, ShoeId, unsigned> computeActiveRadius(const Configuration& config
                     continue;
                 return {prevId, optEdge.value().side2() == A ? B : A, radius};
             }
-            throw 42;
+            throw std::logic_error("Bug in computeActiveRadius!");
         }
 
         if (!spannPred.at(currId).has_value()) {
             radius += 2;
-        } else {
-            const auto& [predId, predShoe] = spannPred.at(currId).value();
-            for (const auto& optEdge : spannSucc.at(predId)) {
-                if (!optEdge.has_value())
-                    continue;
-                if (optEdge.value().id2() != currId)
-                    continue;
-                ++modRad;
-                if (optEdge.value().side2() == currShoe) {
-                    radius += 1;
-                } else {
-                    radius += 2;
-                }
+            continue;
+        }
+        const auto& [predId, predShoe] = spannPred.at(currId).value();
+        for (const auto& optEdge : spannSucc.at(predId)) {
+            if (!optEdge.has_value())
+                continue;
+            if (optEdge.value().id2() != currId)
+                continue;
+            ++modRad;
+            if (optEdge.value().side2() == currShoe) {
+                radius += 1;
+            } else {
+                radius += 2;
             }
         }
     }
@@ -445,9 +431,9 @@ std::tuple<ID, ShoeId, unsigned> computeActiveRadius(const Configuration& config
     return {currId, spannPred.at(prevId).value().second == A ? B : A, radius};
 }
 
-void computeActiveRadiuses(const Configuration& config, const std::unordered_map<ID, unsigned>& subtreeSizes, const std::vector<std::pair<ID, ShoeId>>& ids, std::unordered_map<ID, std::tuple<ID, ShoeId, unsigned>>& radiuses) {
-    for (const auto& [id, shoe] : ids) {
-        radiuses[id] = computeActiveRadius(config, subtreeSizes, id, shoe);
+void computeActiveRadiuses(const Configuration& config, const std::unordered_map<ID, unsigned>& subtreeSizes, const std::unordered_map<ID, std::pair<bool, ShoeId>>& ids, std::unordered_map<ID, std::tuple<ID, ShoeId, unsigned>>& radiuses) {
+    for (const auto& [id, colourPair] : ids) {
+        radiuses[id] = computeActiveRadius(config, subtreeSizes, id, colourPair.second);
     }
 }
 
@@ -503,15 +489,15 @@ Configuration disjoinArm(const Configuration& init, const Edge& addedEdge) {
         }
     }
 
-    Action::Reconnect disc(false, toRemove.value());
-    Action act(disc);
-    auto a = executeIfValid(init, act);
-    if (!a.has_value()) {
-        std::cout << "HMMMMMMMM" << std::endl;
+    Action::Reconnect disj(false, toRemove.value());
+    Action armDisjoin(disj);
+    auto optDisjoined = executeIfValid(init, armDisjoin);
+    if (!optDisjoined.has_value()) {
         std::cout << IO::toString(init) << std::endl << std::endl;
         std::cout << IO::toString(addedEdge) << std::endl;
+        throw std::logic_error("Bug in disjoin arm!");
     }
-    return a.value();
+    return optDisjoined.value();
 }
 
 using PriorityLeafQueue = std::priority_queue<std::tuple<double, ID, ID>, std::vector<std::tuple<double, ID, ID>>, std::greater<std::tuple<double, ID, ID>>>;
@@ -539,10 +525,7 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
     //
     // * makeSpace je v connectArm nejpomalejší část, možná vyzkoušet s menšími
     // limity a "po vrstvách"
-    //
 
-    std::vector<std::pair<ID, ShoeId>> leafsBlack;
-    std::vector<std::pair<ID, ShoeId>> leafsWhite;
     std::unordered_map<ID, std::pair<bool, ShoeId>> allLeafs; // true for white, shoeId of real leaf
 
     std::unordered_map<ID, unsigned> subtreeSizes;
@@ -554,58 +537,58 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
     std::vector<Configuration> snakeRes;
 
     while (true) {
-        std::cout << "++++++++++++++ Try while ++++++++++++++\n";
+        std::cout << "++++++++++++++ Try while ++++++++++++++" << std::endl;;
 
         res.clear();
         auto& pConfig = path.back();
-        if (isPseudoSnake(pConfig))
+        if (isTopologicalSnake(pConfig))
             return path;
 
         snakeRes = aerateFromRoot(pConfig);
         auto& config = snakeRes.back();
         std::cout << "************** Finish aerateFromRoot **************\n";
 
-        findLeafs(config, leafsBlack, leafsWhite, allLeafs);
         const auto& matrices = config.getMatrices();
         const auto& edges = config.getEdges();
-
-        computeSubtreeSizes(config, subtreeSizes);
-        computeActiveRadiuses(config, subtreeSizes, leafsBlack, activeRadiuses);
-        computeActiveRadiuses(config, subtreeSizes, leafsWhite, activeRadiuses);
         PriorityLeafQueue dists;
+
+        findLeafs(config, allLeafs);
+        computeSubtreeSizes(config, subtreeSizes);
+        computeActiveRadiuses(config, subtreeSizes, allLeafs, activeRadiuses);
         computeDists(config, allLeafs, dists);
-        while(!dists.empty()) {
-            auto [_d, id, s_id] = dists.top();
+
+        while (!dists.empty()) {
+            auto [_dist, id1, id2] = dists.top();
             dists.pop();
-            std::cout << "|||||||||||||||| Trying " << id << " -> " << s_id << " ||||||||||||||||" << std::endl;
-            const auto& [isWhite, shoe] = allLeafs[id];
-            const auto& [s_isWhite, s_shoe] = allLeafs[s_id];
-            const auto& [subRoot, subRootSide, radius] = activeRadiuses.at(id);
-            const auto& [s_subRoot, s_subRootSide, s_radius] = activeRadiuses.at(s_id);
-            unsigned rootDist = newyorkCenterDistance(matrices.at(subRoot)[subRootSide], matrices.at(s_subRoot)[s_subRootSide]);
-            if (rootDist > radius + s_radius) {
+            std::cout << "|||||||||||||||| Trying " << id1 << " -> " << id2 << " ||||||||||||||||" << std::endl;
+            const auto& [isWhite1, shoe1] = allLeafs[id1];
+            const auto& [isWhite2, shoe2] = allLeafs[id2];
+            const auto& [subRoot1, subRootSide1, radius1] = activeRadiuses.at(id1);
+            const auto& [subRoot2, subRootSide2, radius2] = activeRadiuses.at(id2);
+            unsigned rootDist = newyorkCenterDistance(matrices.at(subRoot1)[subRootSide1], matrices.at(subRoot2)[subRootSide2]);
+            if (rootDist > radius1 + radius2) {
                 continue;
             }
             std::optional<Edge> desiredConn;
-            if (!isWhite && s_isWhite)
-                desiredConn = Edge(id, shoe, ConnectorId::ZMinus, Orientation::North, ConnectorId::ZMinus, s_shoe, s_id);
-            else if (isWhite && !s_isWhite)
-                desiredConn = Edge(s_id, s_shoe, ConnectorId::ZMinus, Orientation::North, ConnectorId::ZMinus, shoe, id);
-            else if (!isWhite) {
-                auto s_otherShoe = s_shoe == A ? B : A;
-                for (const auto& s_conn : {ZMinus, XPlus, XMinus}) {
-                    if (edges.at(s_id)[edgeIndex(s_otherShoe, s_conn)].has_value())
+            if (!isWhite1 && isWhite2)
+                desiredConn = Edge(id1, shoe1, ZMinus, North, ZMinus, shoe2, id2);
+            else if (isWhite1 && !isWhite2)
+                desiredConn = Edge(id2, shoe2, ZMinus, North, ZMinus, shoe1, id1);
+            else if (!isWhite1) {
+                auto otherShoe2 = shoe2 == A ? B : A;
+                for (const auto& conn2 : {ZMinus, XPlus, XMinus}) {
+                    if (edges.at(id2)[edgeIndex(otherShoe2, conn2)].has_value())
                         continue;
-                    desiredConn = Edge(id, shoe, ConnectorId::ZMinus, Orientation::North, s_conn, s_otherShoe, s_id);
+                    desiredConn = Edge(id1, shoe1, ZMinus, North, conn2, otherShoe2, id2);
                     break;
                 }
             }
             if (!desiredConn.has_value()) {
-                auto otherShoe = shoe == A ? B : A;
-                for (const auto& conn : {ZMinus, XPlus, XMinus}) {
-                    if (edges.at(id)[edgeIndex(otherShoe, conn)].has_value())
+                auto otherShoe1 = shoe1 == A ? B : A;
+                for (const auto& conn1 : {ZMinus, XPlus, XMinus}) {
+                    if (edges.at(id1)[edgeIndex(otherShoe1, conn1)].has_value())
                         continue;
-                    desiredConn = Edge(s_id, s_shoe, ConnectorId::ZMinus, Orientation::North, conn, otherShoe, id);
+                    desiredConn = Edge(id2, shoe2, ZMinus, North, conn1, otherShoe1, id1);
                     break;
                 }
             }
@@ -613,7 +596,7 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
                 continue;
             }
 
-            res = connectArm(config, desiredConn.value(), subRoot, s_subRoot);
+            res = connectArm(config, desiredConn.value(), subRoot1, subRoot2);
             if (!res.empty()) {
                 res.emplace_back(disjoinArm(res.back(), desiredConn.value()));
                 break;
@@ -626,11 +609,8 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
             return {};
         }
 
-        for (const auto& snakeConf : snakeRes) {
-            path.emplace_back(snakeConf);
-        }
-        for (const auto& resConf : res)
-            path.emplace_back(resConf);
+        vectorAppend(path, snakeRes);
+        vectorAppend(path, res);
     }
     return path;
 }
@@ -638,8 +618,9 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
 std::vector<Configuration> straightenSnake(const Configuration& init) {
     SmartBisimpleOnlyRotGen smartGen{};
     FurthestPointsScore furthestScore{};
+    unsigned limit = init.getModules().size();
 
-    return limitedAstar(init, smartGen, furthestScore, init.getModules().size(), true);
+    return limitedAstar(init, smartGen, furthestScore, limit, true);
 }
 
 std::vector<std::pair<ID, ShoeId>> colourAndFindLeafs(const Configuration& config, std::unordered_map<ID,bool>& colours) {
@@ -648,7 +629,7 @@ std::vector<std::pair<ID, ShoeId>> colourAndFindLeafs(const Configuration& confi
     std::vector<std::pair<ID, ShoeId>> leafs;
     bag.emplace(config.getFixedId(), config.getFixedSide(), true);
     const auto& spannSucc = config.getSpanningSucc();
-    while(!bag.empty()) {
+    while (!bag.empty()) {
         auto [currId, currShoe, isWhite] = bag.front();
         auto otherShoe = currShoe == A ? B : A;
         bag.pop();
@@ -682,12 +663,12 @@ bool canConnect(ShoeId shoe1, bool aColour1, ShoeId shoe2, bool aColour2) {
 }
 
 std::pair<Edge, unsigned> getEdgeToStrictDisjoinArm(const Configuration& config, const Edge& added) {
-    unsigned len = 0;
+    unsigned moduleCount = config.getMatrices().size();
     ID currId = added.id2();
     ShoeId currShoe = added.side2();
     ID prevId = added.id1();
     const auto& edges = config.getEdges();
-    while (true) {
+    for (unsigned len = 0; len < moduleCount; ++len) {
         for (const auto& optEdge : edges.at(currId)) {
             if (!optEdge.has_value())
                 continue;
@@ -701,8 +682,8 @@ std::pair<Edge, unsigned> getEdgeToStrictDisjoinArm(const Configuration& config,
             currShoe = edge.side2();
             break;
         }
-        ++len;
     }
+    throw std::logic_error("Error in getEdgeToStrictDisjoinArm, probably passed non-topologicalSnake config or parityFixedSnake");
 }
 
 ConnectorId getEmptyConn(const Configuration& init, ID id, ShoeId shoe) {
@@ -727,13 +708,12 @@ std::vector<Configuration> fixParity(const Configuration& init) {
         auto& config = straightRes.back();
         auto leafs = colourAndFindLeafs(config, colours);
         if (leafs.size() != 2) {
-            std::cout << "Wut\n";
             std::cout << IO::toString(config) << std::endl;
-            throw 55;
+            throw std::logic_error("Bug in fixParity, config doesnt have 2 leafs");
         }
         auto [id1, side1] = leafs[0];
         auto [id2, side2] = leafs[1];
-        Edge desiredEdge(id1, side1, ConnectorId::ZMinus, Orientation::North, ConnectorId::ZMinus, side2, id2);
+        Edge desiredEdge(id1, side1, ZMinus, North, ZMinus, side2, id2);
         std::cout << "************ Another one ************" << std::endl;
 
         if (canConnect(side1, colours[id1], side2, colours[id2])) {
@@ -745,17 +725,17 @@ std::vector<Configuration> fixParity(const Configuration& init) {
                 return {};
             }
             auto toRemove = getEdgeToStrictDisjoinArm(res.back(), desiredEdge).first;
-            Action::Reconnect disc(false, toRemove);
-            Action act(disc);
-            auto a = executeIfValid(res.back(), act);
-            if (!a.has_value()) {
-                std::cout << "HMMMMMMMMXX" << std::endl;
-                std::cout << IO::toString(res.back()) << std::endl << std::endl;
+
+            Action::Reconnect disj(false, toRemove);
+            Action armDisjoin(disj);
+            auto optDisjoined = executeIfValid(res.back(), armDisjoin);
+            if (!optDisjoined.has_value()) {
+                std::cout << IO::toString(res.back()) << std::endl;
                 std::cout << IO::toString(toRemove) << std::endl;
+                throw std::logic_error("Bug in strict disjoin arm!");
             }
-            res.emplace_back(a.value());
+            res.emplace_back(optDisjoined.value());
         } else {
-            std::cout << "We doin this" << std::endl;
             auto [parityBack, len1] = getEdgeToStrictDisjoinArm(config, desiredEdge);
             auto [otherPar, len2] = getEdgeToStrictDisjoinArm(config, reverse(desiredEdge));
             if (len1 > len2) {
@@ -773,22 +753,18 @@ std::vector<Configuration> fixParity(const Configuration& init) {
                 std::cout << IO::toString(realDesire) << std::endl;
                 return {};
             }
-            Action::Reconnect disc(false, parityBack);
-            Action act(disc);
-            auto a = executeIfValid(res.back(), act);
-            if (!a.has_value()) {
-                std::cout << "HMMMMMMMM2" << std::endl;
-                std::cout << IO::toString(res.back()) << std::endl << std::endl;
+            Action::Reconnect disj(false, parityBack);
+            Action armDisjoin(disj);
+            auto optDisjoined = executeIfValid(res.back(), armDisjoin);
+            if (!optDisjoined.has_value()) {
+                std::cout << IO::toString(res.back()) << std::endl;
                 std::cout << IO::toString(parityBack) << std::endl;
+                throw std::logic_error("Bug in strict disjoin arm!");
             }
-            res.emplace_back(a.value());
+            res.emplace_back(optDisjoined.value());
         }
-        for (const auto& conf : straightRes) {
-            path.emplace_back(conf);
-        }
-        for (const auto& conf : res) {
-            path.emplace_back(conf);
-        }
+        vectorAppend(path, straightRes);
+        vectorAppend(path, res);
     }
     return {};
 }
@@ -798,7 +774,7 @@ Edge missingCircle(const Configuration& config) {
     std::queue<std::pair<ID, ShoeId>> bag;
     bag.emplace(config.getFixedId(), config.getFixedSide());
     const auto& spannSucc = config.getSpanningSucc();
-    while(!bag.empty()) {
+    while (!bag.empty()) {
         auto [currId, currShoe] = bag.front();
         bag.pop();
         bool isLeaf = true;
@@ -821,8 +797,7 @@ Edge missingCircle(const Configuration& config) {
         }
     }
     if (leafs.size() != 2) {
-        std::cout << "Bruh " << leafs.size() << std::endl;
-        throw 1234;
+        throw std::logic_error("Bug in missingCirle, config doesnt have exactly 2 leafs");
     }
     return Edge(leafs[0].first, leafs[0].second, ZMinus, North, ZMinus, leafs[1].second, leafs[1].first);
 }
@@ -838,27 +813,25 @@ std::vector<Configuration> fixDocks(const Configuration& init) {
         std::cout << IO::toString(missing) << std::endl;
         return {};
     }
-    path.reserve(path.size() + circle.size());
-    for (const auto& conf : circle) {
-        path.emplace_back(conf);
-    }
+    vectorAppend(path, circle);
     while (true) {
         res.clear();
         const auto& preConfig = path.back();
-        std::optional<Edge> optInvalid = getInvalidEdge(path.back());
+        std::optional<Edge> optInvalid = getNonsnakeEdge(path.back());
         if (!optInvalid.has_value())
             return path;
         Edge& invalid = optInvalid.value();
-        std::cout << IO::toString(invalid) << std::endl;
-        Action::Reconnect disc(false, invalid);
-        Action act(disc);
-        auto a = executeIfValid(preConfig, act);
-        if (!a.has_value()) {
-            std::cout << "HMMMMMMMMCIRCLE" << std::endl;
-            std::cout << IO::toString(res.back()) << std::endl << std::endl;
+
+        Action::Reconnect disj(false, invalid);
+        Action armDisjoin(disj);
+        auto optDisjoined = executeIfValid(preConfig, armDisjoin);
+        if (!optDisjoined.has_value()) {
+            std::cout << IO::toString(res.back()) << std::endl;
             std::cout << IO::toString(invalid) << std::endl;
+            throw std::logic_error("Bug in strict disjoin arm!");
         }
-        const auto& config = a.value();
+        const auto& config = optDisjoined.value();
+
         Edge replaceEdg(invalid.id1(), invalid.side1(), ZMinus, North, ZMinus, invalid.side2(), invalid.id2());
         res = connectArm(config, replaceEdg, config.getFixedId(), config.getFixedId());
         if (res.empty()) {
@@ -867,11 +840,8 @@ std::vector<Configuration> fixDocks(const Configuration& init) {
             std::cout << IO::toString(replaceEdg) << std::endl;
             return {};
         }
-        path.reserve(path.size() + res.size() + 1);
         path.emplace_back(config);
-        for (const auto& conf : res) {
-            path.emplace_back(conf);
-        }
+        vectorAppend(path, res);
     }
 }
 
@@ -897,21 +867,19 @@ std::vector<Configuration> flattenCircle(const Configuration& init) {
         toRemove = optEdge;
         break;
     }
-    Action::Reconnect disc(false, toRemove.value());
-    Action act(disc);
-    auto a = executeIfValid(init, act);
-    if (!a.has_value()) {
-        std::cout << "HMMMMMMMMFLAT" << std::endl;
-        std::cout << IO::toString(init) << std::endl << std::endl;
-        std::cout << IO::toString(toRemove.value()) << std::endl;
+    Action::Reconnect disj(false, toRemove.value());
+    Action armDisjoin(disj);
+    auto optDisjoined = executeIfValid(init, armDisjoin);
+    if (!optDisjoined.has_value()) {
+        std::cout << IO::toString(init) << std::endl;
+        std::cout << IO::toString(armDisjoin) << std::endl;
+        throw std::logic_error("Bug in flattenCircle!");
     }
-    auto res = aerateConfig(a.value());
 
-    std::vector<Configuration> path = {a.value()};
-    path.reserve(res.size());
-    for (const auto& conf : res) {
-        path.emplace_back(conf);
-    }
+    auto res = aerateConfig(optDisjoined.value());
+
+    std::vector<Configuration> path = {optDisjoined.value()};
+    vectorAppend(path, res);
     path.emplace_back(fixRots(path.back()));
     return path;
 }
