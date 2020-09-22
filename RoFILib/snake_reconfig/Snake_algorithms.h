@@ -121,6 +121,7 @@ std::vector<Configuration> SnakeStar(const Configuration& init) {
 }
 
 double awayFromMass(const Configuration& init);
+double awayFromRoot(const Configuration& init);
 
 std::vector<Configuration> SnakeStar2(const Configuration& init) {
     unsigned step = 90;
@@ -138,7 +139,7 @@ std::vector<Configuration> SnakeStar2(const Configuration& init) {
     ConfigValue goalDist;
 
     //double startDist = eval(init, grid);
-    double startDist = awayFromMass(init);
+    double startDist = awayFromRoot(init);
 
     if (startDist == 0)
         return {init};
@@ -167,7 +168,7 @@ std::vector<Configuration> SnakeStar2(const Configuration& init) {
         for (const auto& next : nextCfgs) {
             const Configuration* pointerNext;
             //double newEval = eval(next, grid);
-            double newEval = awayFromMass(next);
+            double newEval = awayFromRoot(next);
             double newDist = path_pref * (currDist + 1) + free_pref * newEval;
             bool update = false;
 
@@ -350,9 +351,11 @@ std::optional<Edge> getInvalidEdge(const Configuration& config) {
     return {};
 }
 
-unsigned getPenalty(const Configuration& config, const Matrix& conn) {
+unsigned getPenalty(const Configuration& config, const Matrix& conn, ID ignore) {
     unsigned penalty = 0;
     for (const auto& [id, ms] : config.getMatrices()) {
+        if (id == ignore)
+            continue;
         for (const auto& m : ms) {
             auto dist = centerSqDistance(m, conn);
             if (dist < 1)
@@ -369,8 +372,12 @@ double distFromConn(const Configuration& config, const Edge& connection) {
         return 0;
     const auto& realPos = config.getMatrices().at(connection.id2()).at(connection.side2());
     auto wantedPos = config.computeConnectedMatrix(connection);
-    unsigned penalty = getPenalty(config, wantedPos); // this maybe do according to smth like sum(1/dist)
+    unsigned penalty = getPenalty(config, wantedPos, connection.id2()); // this maybe do according to smth like sum(1/dist)
     return penalty * sqDistance(realPos, wantedPos);
+}
+
+double symmDistFromConns(const Configuration& config, const Edge& connection) {
+    return distFromConn(config, connection) + distFromConn(config, reverse(connection));
 }
 
 void addSubtree(ID subRoot, std::unordered_set<ID>& allowed, const std::unordered_map<ID, std::array<std::optional<Edge>, 6>>& spannSucc);
@@ -525,7 +532,7 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
     // Shortest distance from init through this configuration to goal.
     ConfigValue goalDist;
 
-    double startDist = distFromConn(init, connection);
+    double startDist = symmDistFromConns(init, connection);
     double worstDist = startDist;
 
     if (startDist == 0)
@@ -556,7 +563,7 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
         biParalyzedOnlyRotNext(*current, nextCfgs, step, allowed);
         for (const auto& next : nextCfgs) {
             const Configuration* pointerNext;
-            double newEval = distFromConn(next, connection);
+            double newEval = symmDistFromConns(next, connection);
             double newDist = path_pref * (currDist + 1) + free_pref * newEval;
             bool update = false;
 
@@ -781,7 +788,6 @@ std::vector<Configuration> fixLeaf(const Configuration& init, ID toFix) {
 }
 
 void findLeafs(const Configuration& config, std::vector<std::pair<ID, ShoeId>>& leafsBlack, std::vector<std::pair<ID, ShoeId>>& leafsWhite, std::unordered_map<ID, std::pair<bool, ShoeId>>& allLeafs) {
-    // maybe add root into considaration for leaf, it may bite me in the ass if i wont
     leafsBlack.clear();
     leafsWhite.clear();
     allLeafs.clear();
@@ -812,6 +818,21 @@ void findLeafs(const Configuration& config, std::vector<std::pair<ID, ShoeId>>& 
         } else {
             leafsWhite.emplace_back(currId, otherShoe);
         }
+    }
+    if (config.getSpanningSuccCount().at(config.getFixedId()) == 1) {
+        ShoeId side;
+        for (const auto& optEdge : spannSucc.at(config.getFixedId())) {
+            if (!optEdge.has_value())
+                continue;
+            side = optEdge.value().side1() == A ? B : A;
+            break;
+        }
+        bool isRootWhite = config.getFixedSide() == side;
+        allLeafs[config.getFixedId()] = {isRootWhite, side};
+        if (isRootWhite)
+            leafsWhite.emplace_back(config.getFixedId(), side);
+        else
+            leafsBlack.emplace_back(config.getFixedId(), side);
     }
 }
 
@@ -1145,6 +1166,20 @@ double awayFromMass(const Configuration& init) {
     return sum;
 }
 
+double awayFromRoot(const Configuration& init) {
+    ID fixedId = init.getFixedId();
+    Vector root = getModuleMass(init, fixedId);
+    double sum = 0;
+    for (const auto& [id, _m] : init.getMatrices()) {
+        if (id == fixedId)
+            continue;
+        Vector mmass = getModuleMass(init, id);
+        double dist = distance(root, mmass);
+        sum += 1/dist;
+    }
+    return sum;
+}
+
 std::vector<Configuration> straightenSnake(const Configuration& init) {
     unsigned step = 90;
     unsigned limit = 1 * init.getModules().size();
@@ -1271,7 +1306,8 @@ bool canConnect(ShoeId shoe1, bool aColour1, ShoeId shoe2, bool aColour2) {
     return (shoe1 == shoe2 && aColour1 != aColour2) || (shoe1 != shoe2 && aColour1 == aColour2);
 }
 
-Edge getEdgeToStrictDisjoinArm(const Configuration& config, const Edge& added) {
+std::pair<Edge, unsigned> getEdgeToStrictDisjoinArm(const Configuration& config, const Edge& added) {
+    unsigned len = 0;
     ID currId = added.id2();
     ShoeId currShoe = added.side2();
     ID prevId = added.id1();
@@ -1284,12 +1320,13 @@ Edge getEdgeToStrictDisjoinArm(const Configuration& config, const Edge& added) {
             if (edge.id2() == prevId)
                 continue;
             if (edge.side1() == currShoe)
-                return edge;
+                return {edge, len};
             prevId = currId;
             currId = edge.id2();
             currShoe = edge.side2();
             break;
         }
+        ++len;
     }
 }
 
@@ -1300,97 +1337,6 @@ ConnectorId getEmptyConn(const Configuration& init, ID id, ShoeId shoe) {
         return XPlus;
     return XMinus;
 }
-/*
-this would be nice, but the leafs can be too close
-std::vector<Configuration> fixParity(const Configuration& init) {
-    std::vector<Configuration> path = {init};
-    std::vector<Configuration> straightRes;
-    std::vector<Configuration> res;
-    std::vector<Configuration> sfr;
-    std::vector<Configuration> fixRes;
-    std::unordered_map<ID, bool> colours; // true iff A is White
-    while (true) {
-        res.clear();
-        auto& preConfig = path.back();
-        if (isParitySnake(preConfig))
-            return path;
-        straightRes = straightenSnake(preConfig);
-        auto& config = straightRes.back();
-        auto leafs = colourAndFindLeafs(config, colours);
-        if (leafs.size() != 2) {
-            std::cout << "Wut\n";
-            std::cout << IO::toString(config) << std::endl;
-            throw 55;
-        }
-        auto [id1, side1] = leafs[0];
-        auto [id2, side2] = leafs[1];
-        Edge desiredEdge(id1, side1, ConnectorId::ZMinus, Orientation::North, ConnectorId::ZMinus, side2, id2);
-
-        if (!canConnect(side1, colours[id1], side2, colours[id2])) {
-            std::cout << "We doin this" << std::endl;
-            auto parityBack = getEdgeToStrictDisjoinArm(config, desiredEdge);
-            ConnectorId rside2 = getEmptyConn(config, parityBack.id2(), parityBack.side2());
-            desiredEdge = Edge(id1, side1, ZMinus, North, rside2, parityBack.side2(), parityBack.id2());
-        }
-        std::cout << "************ Another one ************" << std::endl;
-        std::cout << IO::toString(desiredEdge) << std::endl;
-        res = connectArm(config, desiredEdge, config.getFixedId(), config.getFixedId());
-        if (res.empty()) {
-            std::cout << "We sad, but we computed last this:\n";
-            std::cout << IO::toString(path.back());
-            return {};
-        }
-        auto toRemove = getEdgeToStrictDisjoinArm(res.back(), desiredEdge);
-        auto otherEdge = getEdgeToStrictDisjoinArm(res.back(), reverse(desiredEdge));
-        Action::Reconnect disc(false, toRemove);
-        Action act(disc);
-        auto a = executeIfValid(res.back(), act);
-        if (!a.has_value()) {
-            std::cout << "HMMMMMMMMXX" << std::endl;
-            std::cout << IO::toString(res.back()) << std::endl << std::endl;
-            std::cout << IO::toString(toRemove) << std::endl;
-        }
-        res.emplace_back(a.value());
-        ShoeId wside = toRemove.side1() == A ? B : A;
-        ConnectorId wtfconn1 = getEmptyConn(res.back(), toRemove.id1(), wside);
-        ConnectorId wtfconn2 = getEmptyConn(res.back(), otherEdge.id2(), otherEdge.side2());
-        if (!canConnect(wside, colours[toRemove.id1()], otherEdge.side2(), colours[otherEdge.id2()]))
-            std::cout << "OMGggggggsdgdsgds" << std::endl;
-        Edge fixingEdge(toRemove.id1(), wside, wtfconn1, North, wtfconn2, otherEdge.side2(), otherEdge.id2());
-        sfr = straightenSnake(res.back());
-        fixRes = connectArm(sfr.back(), fixingEdge, sfr.back().getFixedId(), sfr.back().getFixedId());
-        if (fixRes.empty()) {
-            std::cout << IO::toString(fixingEdge) << std::endl;
-            std::cout << "We sad, but we computed last this (fixed is sad):\n";
-            std::cout << IO::toString(sfr.back());
-            return {};
-        }
-        Action::Reconnect disc2(false, otherEdge);
-        Action act2(disc);
-        auto b = executeIfValid(fixRes.back(), act2);
-        if (!b.has_value()) {
-            std::cout << "HMMMMMMMM2" << std::endl;
-            std::cout << IO::toString(fixRes.back()) << std::endl << std::endl;
-            std::cout << IO::toString(otherEdge) << std::endl;
-        }
-        fixRes.emplace_back(b.value());
-        for (const auto& conf : straightRes) {
-            path.emplace_back(conf);
-        }
-        for (const auto& conf : res) {
-            path.emplace_back(conf);
-        }
-        for (const auto& conf : sfr) {
-            path.emplace_back(conf);
-        }
-        for (const auto& conf : fixRes) {
-            path.emplace_back(conf);
-        }
-    }
-    return {};
-}
-*/
-
 
 std::vector<Configuration> fixParity(const Configuration& init) {
     std::vector<Configuration> path = {init};
@@ -1423,8 +1369,7 @@ std::vector<Configuration> fixParity(const Configuration& init) {
                 std::cout << IO::toString(desiredEdge) << std::endl;
                 return {};
             }
-            auto toRemove = getEdgeToStrictDisjoinArm(res.back(), desiredEdge);
-            //auto otherEdge = getEdgeToStrictDisjoinArm(res.back(), reverse(desiredEdge));
+            auto toRemove = getEdgeToStrictDisjoinArm(res.back(), desiredEdge).first;
             Action::Reconnect disc(false, toRemove);
             Action act(disc);
             auto a = executeIfValid(res.back(), act);
@@ -1435,9 +1380,14 @@ std::vector<Configuration> fixParity(const Configuration& init) {
             }
             res.emplace_back(a.value());
         } else {
-            // add logic to choose longer arm prolly!!!
             std::cout << "We doin this" << std::endl;
-            auto parityBack = getEdgeToStrictDisjoinArm(config, desiredEdge);
+            auto [parityBack, len1] = getEdgeToStrictDisjoinArm(config, desiredEdge);
+            auto [otherPar, len2] = getEdgeToStrictDisjoinArm(config, reverse(desiredEdge));
+            if (len1 > len2) {
+                parityBack = otherPar;
+                id1 = id2;
+                side1 = side2;
+            }
             ShoeId wside = parityBack.side1() == A ? B : A;
             ConnectorId wconn = getEmptyConn(config, parityBack.id1(), wside);
             auto realDesire = Edge(id1, side1, ZMinus, North, wconn, wside, parityBack.id1());
