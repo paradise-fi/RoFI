@@ -125,8 +125,8 @@ std::vector<Configuration> limitedAstar(const Configuration& init, GenNext& genN
 std::vector<Configuration> aerateConfig(const Configuration& init) {
     SimpleNextGen simpleGen{};
     SpaceGridScore gridScore(init.getIDs().size());
-    auto nModule = init.getModules().size();
-    unsigned limit = 2 * nModule * nModule;
+    auto moduleCount = init.getModules().size();
+    unsigned limit = 2 * moduleCount * moduleCount;
 
     return limitedAstar(init, simpleGen, gridScore, limit, true);
 }
@@ -308,6 +308,18 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
         return {};
 
     vectorAppend(spacePath, astarPath);
+
+    Action::Reconnect join(true, connection);
+    Action armJoin(join);
+    auto optJoined = executeIfValid(spacePath.back(), armJoin);
+    if (!optJoined.has_value()) {
+        std::cout << IO::toString(spacePath.back()) << std::endl << std::endl;
+        std::cout << IO::toString(connection) << std::endl;
+        throw std::logic_error("Bug in join arm!");
+    }
+
+    spacePath.emplace_back(optJoined.value());
+
     return spacePath;
 }
 
