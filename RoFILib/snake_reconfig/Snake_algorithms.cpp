@@ -40,6 +40,79 @@ std::vector<Configuration> reconfigToSnake(const Configuration& init) {
     return path;
 }
 
+std::pair<ID, ShoeId> findLeafOfSnake(const Configuration& config) {
+    for (const auto& [id, count] : config.getSpanningSuccCount()) {
+        if (count != 0)
+            continue;
+        const auto& optPred = config.getSpanningPred().at(id);
+        if (!optPred.has_value())
+            return {id, A};
+        for (const auto& optEdge : config.getSpanningSucc().at(optPred.value().first)) {
+            if (!optEdge.has_value())
+                continue;
+            if (optEdge.value().id2() != id)
+                continue;
+            return {id, optEdge.value().side2() == A ? B : A};
+        }
+    }
+    throw std::logic_error("Error in findLeafOfSnake, probably given config isnt snake");
+}
+
+std::unordered_map<ID, std::pair<ID, bool>> createMapping(const Configuration& snake1, const Configuration& snake2) {
+    std::unordered_map<ID, std::pair<ID, bool>> mapping;
+    const auto& edges1 = snake1.getEdges();
+    const auto& edges2 = snake2.getEdges();
+
+    auto [leaf1, side1] = findLeafOfSnake(snake1);
+    auto [leaf2, side2] = findLeafOfSnake(snake2);
+    mapping[leaf1] = {leaf2, side1 == side2};
+
+    std::queue<std::pair<ID, ID>> bag;
+    bag.emplace(leaf1, leaf2);
+
+    while (!bag.empty()) {
+        auto [id1, id2] = bag.front();
+        bag.pop();
+        for (const auto& optEdge : edges1.at(id1)) {
+            if (!optEdge.has_value())
+                continue;
+            const Edge& edge = optEdge.value();
+            if (mapping.find(edge.id2()) != mapping.end())
+                continue;
+            auto side1 = edge.side1();
+            auto edge2 = edges2.at(id2)[edgeIndex(!mapping[id1].second ? side1 : (side1 == A ? B : A), edge.dock1())].value();
+            mapping[id1] = {id2, edge.side2() == edge2.side2()};
+            bag.emplace(edge.id2(), edge2.id2());
+        }
+    }
+
+    return mapping;
+}
+
+
+std::vector<Configuration> reconfigThroughSnake(const Configuration& from, const Configuration& to) {
+    std::vector<Configuration> path1 = reconfigToSnake(from);
+    if (path1.empty()) {
+        std::cout << "Couldnt compute reconfig from `from` to snake" << std::endl;
+        return {};
+    }
+
+    std::vector<Configuration> path2 = reconfigToSnake(to);
+    if (path2.empty()) {
+        std::cout << "Couldnt compute reconfig from `to` to snake" << std::endl;
+        return {};
+    }
+
+    std::unordered_map<ID, std::pair<ID, bool>> mapping = createMapping(path1.back(), path2.back());
+
+    path1.reserve(path1.size() + path2.size());
+    for (int i = path2.size() - 1; i > 0; --i) {
+        path1.emplace_back(remappedConfig(path2[i], mapping));
+    }
+
+    return path1;
+}
+
 /* * * * * *
  * Aerate  *
  * * * * * */

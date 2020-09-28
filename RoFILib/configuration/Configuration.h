@@ -439,6 +439,8 @@ private:
     bool execute(const Action::Reconnect& action);
 };
 
+Configuration remappedConfig(const Configuration& other, const std::unordered_map<ID, std::pair<ID, bool>>& mapping);
+
 class ConfigurationHash {
 public:
     std::size_t operator()(const Configuration& config) const {
