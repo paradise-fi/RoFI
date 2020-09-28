@@ -50,7 +50,7 @@ std::vector<Configuration> limitedAstar(const Configuration& init, GenNext& genN
 
     const Configuration* pointer = pool.insert(init);
     const Configuration* bestConfig = pointer;
-    unsigned bestScore = startDist;
+    double bestScore = startDist;
     double worstDist = startDist;
 
     initDist[pointer] = 0;
