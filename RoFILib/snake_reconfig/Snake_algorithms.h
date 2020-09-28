@@ -173,3 +173,5 @@ std::vector<Configuration> fixDocks(const Configuration& init);
 std::vector<Configuration> flattenCircle(const Configuration& init);
 
 std::vector<Configuration> reconfigToSnake(const Configuration& init);
+
+std::vector<Configuration> reconfigThroughSnake(const Configuration& from, const Configuration& to);

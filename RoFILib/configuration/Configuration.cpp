@@ -763,3 +763,28 @@ bool Configuration::computeSpanningTree() {
     connectedVal = spanningTreeComputed ? Value::True : Value::False;
     return spanningTreeComputed;
 }
+
+Configuration remappedConfig(const Configuration& other, const std::unordered_map<ID, std::pair<ID, bool>>& mapping) {
+    Configuration res{};
+    for (const auto& [id, module] : other.getModules()) {
+        const auto& [newId, switchSide] = mapping.at(id);
+        if (switchSide)
+            res.addModule(module.getJoint(Beta), module.getJoint(Alpha), module.getJoint(Gamma), newId); // maybe this should be different
+        else
+            res.addModule(module.getJoint(Alpha), module.getJoint(Beta), module.getJoint(Gamma), newId);
+    }
+    for (const auto& [id, edgeList] : other.getEdges()) {
+        const auto& [newId1, switchSide1] = mapping.at(id);
+        for (const auto& optEdge : edgeList) {
+            if (!optEdge.has_value())
+                continue;
+            const Edge& edge = optEdge.value();
+            const auto& [newId2, switchSide2] = mapping.at(edge.id2());
+            auto side1 = !switchSide1 ? edge.side1() : (edge.side1() == A ? B : A);
+            auto side2 = !switchSide2 ? edge.side2() : (edge.side2() == A ? B : A);
+            Edge newEdge(newId1, side1, edge.dock1(), edge.ori(), edge.dock2(), side2, newId2);
+            res.addEdge(newEdge);
+        }
+    }
+    return res;
+}
