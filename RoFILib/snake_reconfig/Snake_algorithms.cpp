@@ -582,10 +582,17 @@ bool isParitySnake(const Configuration& config) {
     const auto& spannSucc = config.getSpanningSucc();
     std::queue<std::pair<ID, ShoeId>> bag;
     ID fixedId = config.getFixedId();
+    std::optional<ShoeId> usedFixedShoe;
     for (const auto& optEdge : spannSucc.at(fixedId)) {
         if (!optEdge.has_value())
             continue;
         bag.emplace(optEdge.value().id2(), optEdge.value().side2());
+        if (usedFixedShoe.has_value()) {
+            if (usedFixedShoe.value() == optEdge.value().side1())
+                return false;
+        } else {
+            usedFixedShoe = {optEdge.value().side1()};
+        }
     }
     while (!bag.empty()) {
         auto [id, side] = bag.front();
