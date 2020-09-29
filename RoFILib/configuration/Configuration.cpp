@@ -769,7 +769,7 @@ Configuration remappedConfig(const Configuration& other, const std::unordered_ma
     for (const auto& [id, module] : other.getModules()) {
         const auto& [newId, switchSide] = mapping.at(id);
         if (switchSide)
-            res.addModule(module.getJoint(Beta), module.getJoint(Alpha), module.getJoint(Gamma), newId); // maybe this should be different
+            res.addModule(module.getJoint(Beta), module.getJoint(Alpha), -module.getJoint(Gamma), newId);
         else
             res.addModule(module.getJoint(Alpha), module.getJoint(Beta), module.getJoint(Gamma), newId);
     }
