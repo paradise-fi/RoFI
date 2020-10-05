@@ -232,13 +232,23 @@ int main(int argc, char* argv[])
         std::cout << IO::toString(res.back());
 */
 /* Testing ALL */
-/**/
+/*
     auto res = reconfigToSnake(init);
     if (!res.empty())
         std::cout << IO::toString(res.back());
     std::cout << "Path len: " << res.size() << std::endl;
     if (argc > 2)
         printVecToFile(res, argv[2]);
+*/
+/* Testing really all */
+/**/
+    std::ifstream goalInput;
+    initInput.open(argv[2]);
+    Configuration goal;
+    IO::readConfiguration(goalInput, goal);
+    goal.computeMatrices();
+    auto res = reconfigThroughSnake(init, goal);
+    printVecToFile(res, argv[3]);
 /**/
     return 0;
 }
