@@ -241,13 +241,20 @@ int main(int argc, char* argv[])
         printVecToFile(res, argv[2]);
 */
 /* Testing really all */
-/**/
+/*
     std::ifstream goalInput;
     initInput.open(argv[2]);
     Configuration goal;
     IO::readConfiguration(goalInput, goal);
     goal.computeMatrices();
     auto res = reconfigThroughSnake(init, goal);
+    printVecToFile(res, argv[3]);
+*/
+/* Testing with path debug */
+/**/
+    std::ofstream file;
+    file.open(std::string(argv[2]), std::ios_base::app);
+    auto res = reconfigToSnake(init, &file).first;
     printVecToFile(res, argv[3]);
 /**/
     return 0;
