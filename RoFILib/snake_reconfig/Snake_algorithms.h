@@ -28,7 +28,7 @@ public:
 };
 
 template<typename GenNext, typename Score>
-std::vector<Configuration> limitedAstar(const Configuration& init, GenNext& genNext, Score& getScore, unsigned limit, bool returnBest) {
+std::pair<std::vector<Configuration>, bool> limitedAstar(const Configuration& init, GenNext& genNext, Score& getScore, unsigned limit) {
     unsigned step = 90;
     double path_pref = 0.1;
     double free_pref = 1 - path_pref;
@@ -44,7 +44,7 @@ std::vector<Configuration> limitedAstar(const Configuration& init, GenNext& genN
     double startDist = getScore(init);
 
     if (startDist == 0)
-        return {init};
+        return {std::vector<Configuration>{init}, true};
 
     MinMaxHeap<EvalPair, SnakeEvalCompare> queue(limit);
 
@@ -112,14 +112,12 @@ std::vector<Configuration> limitedAstar(const Configuration& init, GenNext& genN
 
             if (newEval == 0) {
                 auto path = createPath(pred, pointerNext);
-                return path;
+                return {path, true};
             }
         }
     }
-    if (!returnBest)
-        return {};
     auto path = createPath(pred, bestConfig);
-    return path;
+    return {path, false};
 }
 
 
@@ -162,16 +160,16 @@ inline Configuration treefy(const Configuration& init, chooseRootFunc chooseRoot
     return treed;
 }
 
-std::vector<Configuration> connectArm(const Configuration& init, const Edge& connection, ID subroot1, ID subroot2);
+std::pair<std::vector<Configuration>, bool> connectArm(const Configuration& init, const Edge& connection, ID subroot1, ID subroot2);
 
-std::vector<Configuration> treeToSnake(const Configuration& init);
+std::pair<std::vector<Configuration>, bool> treeToSnake(const Configuration& init);
 
-std::vector<Configuration> fixParity(const Configuration& init);
+std::pair<std::vector<Configuration>, bool> fixParity(const Configuration& init);
 
-std::vector<Configuration> fixDocks(const Configuration& init);
+std::pair<std::vector<Configuration>, bool> fixDocks(const Configuration& init);
 
-std::vector<Configuration> flattenCircle(const Configuration& init);
+std::pair<std::vector<Configuration>, bool> flattenCircle(const Configuration& init);
 
-std::vector<Configuration> reconfigToSnake(const Configuration& init);
+std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration& init, std::ofstream* debug_output = nullptr);
 
 std::vector<Configuration> reconfigThroughSnake(const Configuration& from, const Configuration& to);

@@ -1,43 +1,110 @@
 #include "Snake_algorithms.h"
+#include <chrono>
 
 /* * * * * * * * *
  * Top-most algo *
  * * * * * * * * */
 
-std::vector<Configuration> reconfigToSnake(const Configuration& init) {
+using moment = std::chrono::time_point<std::chrono::system_clock>;
+
+void logTime(std::ofstream* debug_output, unsigned progress, std::optional<moment> start, std::optional<moment> aerate,
+    std::optional<moment> tts, std::optional<moment> parity, std::optional<moment> docks, std::optional<moment> circle,
+    unsigned pathLen) {
+
+    *debug_output << progress << " " << std::chrono::duration_cast<std::chrono::seconds>(*aerate - *start).count();
+
+    if (progress < 1) {
+        *debug_output << " x x x x " << std::chrono::duration_cast<std::chrono::seconds>(*aerate - *start).count();
+        *debug_output << " " << pathLen << std::endl;
+        return;
+    }
+
+    *debug_output << " " << std::chrono::duration_cast<std::chrono::seconds>(*tts - *aerate).count();
+
+    if (progress < 2) {
+        *debug_output << " x x x " << std::chrono::duration_cast<std::chrono::seconds>(*tts - *start).count();
+        *debug_output << " " << pathLen << std::endl;
+        return;
+    }
+
+    *debug_output << " " << std::chrono::duration_cast<std::chrono::seconds>(*parity - *tts).count();
+
+    if (progress < 3) {
+        *debug_output << " x x " << std::chrono::duration_cast<std::chrono::seconds>(*parity - *start).count();
+        *debug_output << " " << pathLen << std::endl;
+        return;
+    }
+
+    *debug_output << " " << std::chrono::duration_cast<std::chrono::seconds>(*docks - *parity).count();
+
+    if (progress < 4) {
+        *debug_output << " x " << std::chrono::duration_cast<std::chrono::seconds>(*docks - *start).count();
+        *debug_output << " " << pathLen << std::endl;
+        return;
+    }
+
+    *debug_output << " " << std::chrono::duration_cast<std::chrono::seconds>(*circle - *docks).count();
+    *debug_output << " " << std::chrono::duration_cast<std::chrono::seconds>(*circle - *start).count();
+    *debug_output << " " << pathLen << std::endl;
+}
+
+std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration& init, std::ofstream* debug_output /*= std::nullptr_t*/) {
+    auto start = std::chrono::system_clock::now();
     std::vector<Configuration> path = aerateConfig(init);
     std::cout << "Finish aerate" << std::endl;
-    if (path.empty())
-        return path;
+    auto afterAerate = std::chrono::system_clock::now();
+    if (path.empty()) {
+        if (debug_output)
+            logTime(debug_output, 0, start, afterAerate, {}, {}, {}, {}, path.size());
+        return {path, false};
+    }
 
     path.push_back(treefy<MakeStar>(path.back()));
 
-    auto toSnake = treeToSnake(path.back());
+    auto [toSnake, finishedTTS] = treeToSnake(path.back());
     std::cout << "Finish treeToSnake" << std::endl;
-    if (toSnake.empty())
-        return {};
+    auto afterTTS = std::chrono::system_clock::now();
     vectorAppend(path, toSnake);
+    if (!finishedTTS) {
+        if (debug_output)
+            logTime(debug_output, 1, start, afterAerate, afterTTS, {}, {}, {}, path.size());
+        return {path, false};
+    }
 
-    auto fixedSnake = fixParity(path.back());
+    auto [fixedSnake, finishedFP] = fixParity(path.back());
     std::cout << "Finish fixParity" << std::endl;
-    if (fixedSnake.empty())
-        return {};
+    auto afterParity = std::chrono::system_clock::now();
     vectorAppend(path, fixedSnake);
+    if (!finishedFP) {
+        if (debug_output)
+            logTime(debug_output, 2, start, afterAerate, afterTTS, afterParity, {}, {}, path.size());
+        return {path, false};
+    }
 
-    auto dockSnake = fixDocks(path.back());
+    auto [dockSnake, finishedFD] = fixDocks(path.back());
     std::cout << "Finish fixDocks" << std::endl;
-    if (dockSnake.empty())
-        return {};
+    auto afterDocks = std::chrono::system_clock::now();
     vectorAppend(path, dockSnake);
+    if (!finishedFD) {
+        if (debug_output)
+            logTime(debug_output, 3, start, afterAerate, afterTTS, afterParity, afterDocks, {}, path.size());
+        return {path, false};
+    }
 
-    auto flatCircle = flattenCircle(path.back());
+    auto [flatCircle, finishedFC] = flattenCircle(path.back());
     std::cout << "Finish flattenCircle" << std::endl;
-    if (flatCircle.empty())
-        return {};
+    auto afterCircle = std::chrono::system_clock::now();
     vectorAppend(path, flatCircle);
+    if (!finishedFC) {
+        if (debug_output)
+            logTime(debug_output, 4, start, afterAerate, afterTTS, afterParity, afterDocks, afterCircle, path.size());
+        return {path, false};
+    }
 
     std::cout << "Finish ALL" << std::endl;
-    return path;
+    if (debug_output)
+        logTime(debug_output, 5, start, afterAerate, afterTTS, afterParity, afterDocks, afterCircle, path.size());
+    return {path, true};
 }
 
 std::pair<ID, ShoeId> findLeafOfSnake(const Configuration& config) {
@@ -59,6 +126,7 @@ std::pair<ID, ShoeId> findLeafOfSnake(const Configuration& config) {
 }
 
 std::unordered_map<ID, std::pair<ID, bool>> createMapping(const Configuration& snake1, const Configuration& snake2) {
+    // redo this with changing root and do it more easily with spannSucc
     std::unordered_map<ID, std::pair<ID, bool>> mapping;
     const auto& edges1 = snake1.getEdges();
     const auto& edges2 = snake2.getEdges();
@@ -91,14 +159,14 @@ std::unordered_map<ID, std::pair<ID, bool>> createMapping(const Configuration& s
 
 
 std::vector<Configuration> reconfigThroughSnake(const Configuration& from, const Configuration& to) {
-    std::vector<Configuration> path1 = reconfigToSnake(from);
-    if (path1.empty()) {
+    auto [path1, finished1] = reconfigToSnake(from);
+    if (!finished1) {
         std::cout << "Couldnt compute reconfig from `from` to snake" << std::endl;
         return {};
     }
 
-    std::vector<Configuration> path2 = reconfigToSnake(to);
-    if (path2.empty()) {
+    auto [path2, finished2] = reconfigToSnake(to);
+    if (!finished2) {
         std::cout << "Couldnt compute reconfig from `to` to snake" << std::endl;
         return {};
     }
@@ -123,7 +191,7 @@ std::vector<Configuration> aerateConfig(const Configuration& init) {
     auto moduleCount = init.getModules().size();
     unsigned limit = 2 * moduleCount * moduleCount;
 
-    return limitedAstar(init, simpleGen, gridScore, limit, true);
+    return limitedAstar(init, simpleGen, gridScore, limit).first;
 }
 
 std::vector<Configuration> aerateFromRoot(const Configuration& init) {
@@ -131,7 +199,7 @@ std::vector<Configuration> aerateFromRoot(const Configuration& init) {
     AwayFromRootScore rootScore{};
     unsigned limit = 3 * init.getModules().size();
 
-    return limitedAstar(init, smartGen, rootScore, limit, true);
+    return limitedAstar(init, smartGen, rootScore, limit).first;
 }
 
 std::vector<Configuration> straightenSnake(const Configuration& init) {
@@ -139,7 +207,7 @@ std::vector<Configuration> straightenSnake(const Configuration& init) {
     FurthestPointsScore furthestScore{};
     unsigned limit = init.getModules().size();
 
-    return limitedAstar(init, smartGen, furthestScore, limit, true);
+    return limitedAstar(init, smartGen, furthestScore, limit).first;
 }
 
 /* * * * * *
@@ -211,7 +279,7 @@ std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1,
     EdgeSpaceScore edgeScore(realMass, subtrees);
     unsigned limit = 2 * init.getModules().size();
 
-    return limitedAstar(init, smartGen, edgeScore, limit, true);
+    return limitedAstar(init, smartGen, edgeScore, limit).first;
 }
 
 std::unordered_set<ID> makeAllowed(const Configuration& init, ID subroot1, ID subroot2) {
@@ -223,7 +291,7 @@ std::unordered_set<ID> makeAllowed(const Configuration& init, ID subroot1, ID su
     return allowed;
 }
 
-std::vector<Configuration> connectArm(const Configuration& init, const Edge& connection, ID subroot1, ID subroot2) {
+std::pair<std::vector<Configuration>, bool> connectArm(const Configuration& init, const Edge& connection, ID subroot1, ID subroot2) {
     // Edge connection is from end of arm to end of arm
 
     auto spacePath = makeEdgeSpace(init, subroot1, subroot2);
@@ -233,12 +301,11 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
     DistFromConnScore connScore(connection);
     unsigned limit = init.getModules().size();
 
-    auto astarPath = limitedAstar(spacePath.back(), parGen, connScore, limit, false);
-
-    if (astarPath.empty())
-        return {};
+    auto [astarPath, foundGoal] = limitedAstar(spacePath.back(), parGen, connScore, limit);
 
     vectorAppend(spacePath, astarPath);
+    if (!foundGoal)
+        return {spacePath, false};
 
     Action::Reconnect join(true, connection);
     Action armJoin(join);
@@ -251,7 +318,7 @@ std::vector<Configuration> connectArm(const Configuration& init, const Edge& con
 
     spacePath.emplace_back(optJoined.value());
 
-    return spacePath;
+    return {spacePath, true};
 }
 
 /* * * * * * * * *
@@ -477,7 +544,7 @@ Configuration disjoinArm(const Configuration& init, const Edge& addedEdge) {
     return optDisjoined.value();
 }
 
-std::vector<Configuration> treeToSnake(const Configuration& init) {
+std::pair<std::vector<Configuration>, bool> treeToSnake(const Configuration& init) {
     // DNEŠNÍ ZJIŠTĚNÍ:
     // * chci vyzkoušet kvalitu "makeSpace" v závislosti na limitu
     // podobně vyzkoušet i další, vyzkoumat rychlost konvergence v závislosti na tom,
@@ -494,6 +561,7 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
     std::vector<Configuration> path = {init};
 
     std::vector<Configuration> res;
+    bool finished;
     std::vector<Configuration> snakeRes;
 
     while (true) {
@@ -502,7 +570,7 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
         res.clear();
         auto& pConfig = path.back();
         if (isTopologicalSnake(pConfig))
-            return path;
+            return {path, true};
 
         snakeRes = aerateFromRoot(pConfig);
         auto& config = snakeRes.back();
@@ -556,22 +624,21 @@ std::vector<Configuration> treeToSnake(const Configuration& init) {
                 continue;
             }
 
-            res = connectArm(config, desiredConn.value(), subRoot1, subRoot2);
-            if (!res.empty()) {
+            std::tie(res, finished) = connectArm(config, desiredConn.value(), subRoot1, subRoot2);
+            if (finished) {
                 res.emplace_back(disjoinArm(res.back(), desiredConn.value()));
                 break;
             }
         }
-        if (res.empty()) {
-            std::cout << "We didnt finish, but last computed is this\n";
-            std::cout << IO::toString(config) << std::endl;
-            return {};
-        }
-
         vectorAppend(path, snakeRes);
         vectorAppend(path, res);
+        if (!finished) {
+            std::cout << "We didnt finish, but last computed is this\n";
+            std::cout << IO::toString(config) << std::endl;
+            return {path, false};
+        }
     }
-    return path;
+    return {path, false}; // This is here just to prevent warnings. This code is unreachable
 }
 
 /* * * * * * * *
@@ -680,16 +747,17 @@ ConnectorId getEmptyConn(const Configuration& init, ID id, ShoeId shoe) {
     return XMinus;
 }
 
-std::vector<Configuration> fixParity(const Configuration& init) {
+std::pair<std::vector<Configuration>, bool> fixParity(const Configuration& init) {
     std::vector<Configuration> path = {init};
     std::vector<Configuration> straightRes;
     std::vector<Configuration> res;
+    bool finished;
     std::unordered_map<ID, bool> colours; // true iff A is White
     while (true) {
         res.clear();
         auto& preConfig = path.back();
         if (isParitySnake(preConfig))
-            return path;
+            return {path, true};
         straightRes = straightenSnake(preConfig);
         auto& config = straightRes.back();
         auto leafs = colourAndFindLeafs(config, colours);
@@ -703,12 +771,12 @@ std::vector<Configuration> fixParity(const Configuration& init) {
         std::cout << "************ Another one ************" << std::endl;
 
         if (canConnect(side1, colours[id1], side2, colours[id2])) {
-            res = connectArm(config, desiredEdge, config.getFixedId(), config.getFixedId());
-            if (res.empty()) {
+            std::tie(res, finished) = connectArm(config, desiredEdge, config.getFixedId(), config.getFixedId());
+            if (!finished) {
                 std::cout << "We sad, but we computed last this:\n";
                 std::cout << IO::toString(straightRes.back()) << std::endl;
                 std::cout << IO::toString(desiredEdge) << std::endl;
-                return {};
+                return {res, false};
             }
             auto toRemove = getEdgeToStrictDisjoinArm(res.back(), desiredEdge).first;
 
@@ -732,12 +800,12 @@ std::vector<Configuration> fixParity(const Configuration& init) {
             ShoeId wside = parityBack.side1() == A ? B : A;
             ConnectorId wconn = getEmptyConn(config, parityBack.id1(), wside);
             auto realDesire = Edge(id1, side1, ZMinus, North, wconn, wside, parityBack.id1());
-            res = connectArm(config, realDesire, config.getFixedId(), config.getFixedId());
-            if (res.empty()) {
+            std::tie(res, finished) = connectArm(config, realDesire, config.getFixedId(), config.getFixedId());
+            if (!finished) {
                 std::cout << "We sad, but we computed last this:\n";
                 std::cout << IO::toString(straightRes.back()) << std::endl;
                 std::cout << IO::toString(realDesire) << std::endl;
-                return {};
+                return {res, false};
             }
             Action::Reconnect disj(false, parityBack);
             Action armDisjoin(disj);
@@ -752,7 +820,7 @@ std::vector<Configuration> fixParity(const Configuration& init) {
         vectorAppend(path, straightRes);
         vectorAppend(path, res);
     }
-    return {};
+    return {path, false}; // This is here just to prevent warnings. This code is unreachable
 }
 
 /* * * * * * *
@@ -804,43 +872,41 @@ std::optional<Edge> getNonsnakeEdge(const Configuration& config) {
     return {};
 }
 
-std::vector<Configuration> fixDocks(const Configuration& init) {
+std::pair<std::vector<Configuration>, bool> fixDocks(const Configuration& init) {
     auto path = straightenSnake(init);
     auto missing = missingCircle(path.back());
-    auto circle = connectArm(path.back(), missing, path.back().getFixedId(), path.back().getFixedId());
-    std::vector<Configuration> res;
-    if (circle.empty()) {
+    auto [circle, finished] = connectArm(path.back(), missing, path.back().getFixedId(), path.back().getFixedId());
+    if (!finished) {
         std::cout << "We weri saad" << std::endl;
         std::cout << IO::toString(path.back()) << std::endl;
         std::cout << IO::toString(missing) << std::endl;
-        return {};
+        return {circle, false};
     }
     vectorAppend(path, circle);
     while (true) {
-        res.clear();
         const auto& preConfig = path.back();
         std::optional<Edge> optInvalid = getNonsnakeEdge(path.back());
         if (!optInvalid.has_value())
-            return path;
+            return {path, true};
         Edge& invalid = optInvalid.value();
 
         Action::Reconnect disj(false, invalid);
         Action armDisjoin(disj);
         auto optDisjoined = executeIfValid(preConfig, armDisjoin);
         if (!optDisjoined.has_value()) {
-            std::cout << IO::toString(res.back()) << std::endl;
+            std::cout << IO::toString(path.back()) << std::endl;
             std::cout << IO::toString(invalid) << std::endl;
             throw std::logic_error("Bug in strict disjoin arm!");
         }
         const auto& config = optDisjoined.value();
 
         Edge replaceEdg(invalid.id1(), invalid.side1(), ZMinus, North, ZMinus, invalid.side2(), invalid.id2());
-        res = connectArm(config, replaceEdg, config.getFixedId(), config.getFixedId());
-        if (res.empty()) {
+        auto [res, connected] = connectArm(config, replaceEdg, config.getFixedId(), config.getFixedId());
+        if (!connected) {
             std::cout << "We weri saadXXX" << std::endl;
             std::cout << IO::toString(config) << std::endl;
             std::cout << IO::toString(replaceEdg) << std::endl;
-            return {};
+            return {res, false};
         }
         path.emplace_back(config);
         vectorAppend(path, res);
@@ -865,7 +931,7 @@ Configuration fixRots(const Configuration& init) {
     return executeIfValid(init, act).value();
 }
 
-std::vector<Configuration> flattenCircle(const Configuration& init) {
+std::pair<std::vector<Configuration>, bool> flattenCircle(const Configuration& init) {
     std::optional<Edge> toRemove;
     for (const auto& optEdge : init.getSpanningSucc().at(init.getFixedId())) {
         if (!optEdge.has_value())
@@ -887,5 +953,5 @@ std::vector<Configuration> flattenCircle(const Configuration& init) {
     std::vector<Configuration> path = {optDisjoined.value()};
     vectorAppend(path, res);
     path.emplace_back(fixRots(path.back()));
-    return path;
+    return {path, true}; // I am cheating here a bit, buuuut...
 }
