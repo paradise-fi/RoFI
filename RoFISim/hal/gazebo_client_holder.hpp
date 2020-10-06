@@ -6,6 +6,8 @@
 #include <gazebo/transport/transport.hh>
 
 
+namespace rofi::hal
+{
 class GazeboClientHolder
 {
     GazeboClientHolder()
@@ -43,3 +45,5 @@ public:
         return instance;
     }
 };
+
+} // namespace rofi::hal

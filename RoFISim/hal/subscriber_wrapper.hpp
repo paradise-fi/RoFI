@@ -8,15 +8,15 @@
 #include "gazebo_client_holder.hpp"
 
 
+namespace rofi::hal
+{
 template < typename Message >
 class SubscriberWrapper
 {
 public:
-    using MessagePtr = boost::shared_ptr< const Message >;
-
     SubscriberWrapper( gazebo::transport::NodePtr node,
                        const std::string & topic,
-                       std::function< void( MessagePtr ) > callback )
+                       std::function< void( const Message & ) > callback )
             : _clientHolder( GazeboClientHolder::get() )
             , _callback( std::move( callback ) )
             , _node( std::move( node ) )
@@ -42,19 +42,24 @@ public:
     }
 
 private:
-    void onMsg( const MessagePtr & msg )
+    void onMsg( const boost::shared_ptr< const Message > & msg )
     {
         assert( _callback );
         assert( msg );
-        _callback( msg );
+
+        auto localMsg = msg;
+        assert( localMsg );
+        _callback( *localMsg );
     }
 
     std::shared_ptr< GazeboClientHolder > _clientHolder;
 
-    std::function< void( MessagePtr ) > _callback;
+    std::function< void( const Message & ) > _callback;
     gazebo::transport::NodePtr _node;
     gazebo::transport::SubscriberPtr _sub;
 };
 
 template < typename Message >
 using SubscriberWrapperPtr = std::unique_ptr< SubscriberWrapper< Message > >;
+
+} // namespace rofi::hal

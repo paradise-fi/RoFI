@@ -24,8 +24,6 @@ namespace rofi::hal
 {
 class GazeboWorker
 {
-    using DistributorRespPtr = boost::shared_ptr< const rofi::messages::DistributorResp >;
-    using RofiRespPtr = boost::shared_ptr< const rofi::messages::RofiResp >;
     using MessageVariant = std::variant< rofi::messages::RofiCmd, rofi::messages::DistributorReq >;
 
     GazeboWorker()
@@ -46,7 +44,8 @@ public:
     template < typename Message >
     void publish( Message && msg )
     {
-        publish( getTopic( msg ), std::forward< Message >( msg ) );
+        auto topic = getTopic( msg );
+        publish( std::move( topic ), std::forward< Message >( msg ) );
     }
 
     template < typename Message >
@@ -56,7 +55,7 @@ public:
     }
 
     SubscriberWrapperPtr< rofi::messages::DistributorResp > subscribe(
-            std::function< void( DistributorRespPtr ) > callback )
+            std::function< void( const rofi::messages::DistributorResp & ) > callback )
     {
         using SubWrapper = SubscriberWrapper< rofi::messages::DistributorResp >;
         return std::make_unique< SubWrapper >( _node, getDistRespTopic(), std::move( callback ) );
@@ -64,7 +63,7 @@ public:
 
     SubscriberWrapperPtr< rofi::messages::RofiResp > subscribe(
             rofi::hal::RoFI::Id rofiId,
-            std::function< void( RofiRespPtr ) > callback )
+            std::function< void( const rofi::messages::RofiResp & ) > callback )
     {
         using SubWrapper = SubscriberWrapper< rofi::messages::RofiResp >;
         return std::make_unique< SubWrapper >( _node,
@@ -72,13 +71,11 @@ public:
                                                std::move( callback ) );
     }
 
-    void updateRofiTopics( const DistributorRespPtr & resp )
+    void updateRofiTopics( const rofi::messages::DistributorResp & resp )
     {
-        assert( resp );
-
         {
             std::lock_guard< std::mutex > lock( _rofiTopicsMutex );
-            for ( auto & info : resp->rofiinfos() )
+            for ( auto & info : resp.rofiinfos() )
             {
                 _rofiTopics.emplace( info.rofiid(), info.topic() );
             }
@@ -177,7 +174,7 @@ private:
         }
         assert( pub );
 
-        pub->Publish( std::move( msg ), true );
+        pub->Publish( std::forward< Message >( msg ), true );
     }
 
     void run()
@@ -192,7 +189,8 @@ private:
         while ( true )
         {
             auto [ topic, msgVariant ] = _queue.pop();
-            std::visit( [ this, &topic ]( auto msg ) { sendMessage( topic, msg ); }, msgVariant );
+            std::visit( [ this, &topic = topic ]( auto msg ) { sendMessage( topic, msg ); },
+                        msgVariant );
         }
     }
 

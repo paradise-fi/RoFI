@@ -92,15 +92,11 @@ class RoFISim
     }
 
 public:
-    using RofiRespPtr = boost::shared_ptr< const msgs::RofiResp >;
-    using DistributorRespPtr = boost::shared_ptr< const msgs::DistributorResp >;
-
-
     static void distributorRespGetInfoCb( std::once_flag & onceFlag,
-                                          DistributorRespPtr resp,
-                                          std::promise< DistributorRespPtr > & respPromise )
+                                          msgs::DistributorResp resp,
+                                          std::promise< msgs::DistributorResp > & respPromise )
     {
-        if ( resp->resptype() != msgs::DistributorReq::GET_INFO )
+        if ( resp.resptype() != msgs::DistributorReq::GET_INFO )
         {
             return;
         }
@@ -108,53 +104,53 @@ public:
     }
 
     static void distributorRespLockOneCb( std::once_flag & onceFlag,
-                                          DistributorRespPtr resp,
+                                          msgs::DistributorResp resp,
                                           std::promise< msgs::RofiInfo > & infoPromise )
     {
-        if ( resp->resptype() != msgs::DistributorReq::LOCK_ONE )
+        if ( resp.resptype() != msgs::DistributorReq::LOCK_ONE )
         {
             return;
         }
-        if ( resp->sessionid() != SessionId::get().bytes() )
+        if ( resp.sessionid() != SessionId::get().bytes() )
         {
             return;
         }
         std::call_once( onceFlag, [ & ] {
-            if ( resp->rofiinfos_size() != 1 || !resp->rofiinfos( 0 ).lock() )
+            if ( resp.rofiinfos_size() != 1 || !resp.rofiinfos( 0 ).lock() )
             {
                 infoPromise.set_exception(
                         std::make_exception_ptr( std::runtime_error( "Could not lock a RoFI" ) ) );
                 return;
             }
-            infoPromise.set_value( resp->rofiinfos( 0 ) );
+            infoPromise.set_value( resp.rofiinfos( 0 ) );
         } );
     }
 
     static void distributorRespTryLockCb( std::once_flag & onceFlag,
-                                          DistributorRespPtr resp,
+                                          msgs::DistributorResp resp,
                                           std::promise< msgs::RofiInfo > & infoPromise,
                                           RoFI::Id rofiId )
     {
-        if ( resp->resptype() != msgs::DistributorReq::TRY_LOCK )
+        if ( resp.resptype() != msgs::DistributorReq::TRY_LOCK )
         {
             return;
         }
-        if ( resp->sessionid() != SessionId::get().bytes() )
+        if ( resp.sessionid() != SessionId::get().bytes() )
         {
             return;
         }
-        if ( resp->rofiinfos_size() != 1 || resp->rofiinfos( 0 ).rofiid() != rofiId )
+        if ( resp.rofiinfos_size() != 1 || resp.rofiinfos( 0 ).rofiid() != rofiId )
         {
             return;
         }
         std::call_once( onceFlag, [ & ] {
-            if ( !resp->rofiinfos( 0 ).lock() )
+            if ( !resp.rofiinfos( 0 ).lock() )
             {
                 infoPromise.set_exception( std::make_exception_ptr(
                         std::runtime_error( "Could not lock selected RoFI" ) ) );
                 return;
             }
-            infoPromise.set_value( resp->rofiinfos( 0 ) );
+            infoPromise.set_value( resp.rofiinfos( 0 ) );
         } );
     }
 
@@ -205,7 +201,7 @@ public:
         auto node = boost::make_shared< gazebo::transport::Node >();
         node->Init();
 
-        auto respPromise = std::promise< DistributorRespPtr >();
+        auto respPromise = std::promise< msgs::DistributorResp >();
         auto respFuture = respPromise.get_future();
         std::once_flag onceFlag;
 
@@ -219,7 +215,7 @@ public:
 
         auto resp = respFuture.get();
 
-        for ( auto & info : resp->rofiinfos() )
+        for ( auto & info : resp.rofiinfos() )
         {
             if ( info.rofiid() == rofiId )
             {
@@ -305,11 +301,11 @@ public:
         return descriptor;
     }
 
-    void onJointResp( const RofiRespPtr & resp );
-    void onConnectorResp( const RofiRespPtr & resp );
-    void onDescriptionResp( const RofiRespPtr & resp );
-    void onWaitResp( const RofiRespPtr & resp );
-    void onResponse( const RofiRespPtr & resp );
+    void onJointResp( const msgs::RofiResp & resp );
+    void onConnectorResp( const msgs::RofiResp & resp );
+    void onDescriptionResp( const msgs::RofiResp & resp );
+    void onWaitResp( const msgs::RofiResp & resp );
+    void onResponse( const msgs::RofiResp & resp );
 
     void wait( int ms, std::function< void() > callback )
     {
@@ -371,9 +367,7 @@ public:
         auto result = registerPromise( msgs::ConnectorCmd::GET_STATE );
         rofi->publish( getCmdMsg( msgs::ConnectorCmd::GET_STATE ) );
 
-        auto resp = result.get();
-        assert( resp );
-        return readConnectorState( std::move( resp ) );
+        return readConnectorState( result.get() );
     }
 
     void connect() override
@@ -447,11 +441,10 @@ public:
     }
 
 
-    std::future< RoFISim::RofiRespPtr > registerPromise( msgs::ConnectorCmd::Type type )
+    std::future< msgs::RofiResp > registerPromise( msgs::ConnectorCmd::Type type )
     {
         std::lock_guard< std::mutex > lock( respPromisesMutex );
-        return respPromises.emplace( type, std::promise< RoFISim::RofiRespPtr >() )
-                ->second.get_future();
+        return respPromises.emplace( type, std::promise< msgs::RofiResp >() )->second.get_future();
     }
 
     void registerEventCallback( EventCallback && callback )
@@ -470,10 +463,10 @@ public:
         packetCallbacks.push_back( std::move( callback ) );
     }
 
-    void setPromises( const RoFISim::RofiRespPtr & resp )
+    void setPromises( const msgs::RofiResp & resp )
     {
         std::lock_guard< std::mutex > lock( respPromisesMutex );
-        auto range = respPromises.equal_range( resp->connectorresp().resptype() );
+        auto range = respPromises.equal_range( resp.connectorresp().resptype() );
         for ( auto it = range.first; it != range.second; it++ )
         {
             it->second.set_value( resp );
@@ -514,10 +507,10 @@ public:
         }
     }
 
-    void onResponse( const RoFISim::RofiRespPtr & resp )
+    void onResponse( const msgs::RofiResp & resp )
     {
-        assert( resp->resptype() == msgs::RofiCmd::CONNECTOR_CMD );
-        assert( resp->connectorresp().connector() == _connectorNumber );
+        assert( resp.resptype() == msgs::RofiCmd::CONNECTOR_CMD );
+        assert( resp.connectorresp().connector() == _connectorNumber );
 
         setPromises( resp );
 
@@ -527,9 +520,9 @@ public:
             callEventCallbacks( *event );
         }
 
-        if ( resp->connectorresp().resptype() == msgs::ConnectorCmd::PACKET )
+        if ( resp.connectorresp().resptype() == msgs::ConnectorCmd::PACKET )
         {
-            callPacketCallbacks( resp->connectorresp().packet() );
+            callPacketCallbacks( resp.connectorresp().packet() );
         }
     }
 
@@ -547,15 +540,12 @@ public:
     std::shared_ptr< RoFISim > getRoFI() const
     {
         auto rofi = _rofi.lock();
-        if ( !rofi )
-        {
-            throw std::runtime_error( "RoFI invalid access from connector" );
-        }
+        assert( rofi && "RoFI invalid access from joint" );
         return rofi;
     }
 
 
-    static ConnectorState readConnectorState( RoFISim::RofiRespPtr resp )
+    static ConnectorState readConnectorState( const msgs::RofiResp & resp )
     {
         static_assert( static_cast< ConnectorPosition >( true ) == ConnectorPosition::Extended );
         static_assert( static_cast< ConnectorPosition >( false ) == ConnectorPosition::Retracted );
@@ -569,9 +559,7 @@ public:
         static_assert( static_cast< ConnectorOrientation >( msgs::ConnectorState::WEST )
                        == ConnectorOrientation::West );
 
-        assert( resp );
-
-        const auto & msg = resp->connectorresp().state();
+        const auto & msg = resp.connectorresp().state();
         ConnectorState result;
         result.position = static_cast< ConnectorPosition >( msg.position() );
         result.internal = msg.internal();
@@ -581,9 +569,9 @@ public:
         return result;
     }
 
-    static std::optional< ConnectorEvent > readEvent( RoFISim::RofiRespPtr resp )
+    static std::optional< ConnectorEvent > readEvent( const msgs::RofiResp & resp )
     {
-        switch ( resp->connectorresp().resptype() )
+        switch ( resp.connectorresp().resptype() )
         {
             case msgs::ConnectorCmd::CONNECT:
                 return ConnectorEvent::Connected;
@@ -599,7 +587,7 @@ private:
     std::weak_ptr< RoFISim > _rofi;
 
     std::mutex respPromisesMutex;
-    std::multimap< msgs::ConnectorCmd::Type, std::promise< RoFISim::RofiRespPtr > > respPromises;
+    std::multimap< msgs::ConnectorCmd::Type, std::promise< msgs::RofiResp > > respPromises;
 
     std::mutex eventCallbacksMutex;
     std::vector< EventCallback > eventCallbacks;
@@ -613,7 +601,7 @@ private:
 class JointSim : public Joint::Implementation
 {
 public:
-    using Callback = std::function< void( Joint, RoFISim::RofiRespPtr ) >;
+    using Callback = std::function< void( Joint, const msgs::RofiResp & ) >;
     static constexpr float positionPrecision = 1e-3;
     static_assert( positionPrecision > 0 );
 
@@ -630,9 +618,7 @@ public:
         auto result = registerPromise( msgs::JointCmd::GET_CAPABILITIES );
         rofi->publish( getCmdMsg( msgs::JointCmd::GET_CAPABILITIES ) );
 
-        auto resp = result.get();
-        assert( resp );
-        _capabilities = readCapabilities( std::move( resp ) );
+        _capabilities = readCapabilities( result.get() );
     }
 
 
@@ -648,9 +634,7 @@ public:
         auto result = registerPromise( msgs::JointCmd::GET_VELOCITY );
         rofi->publish( getCmdMsg( msgs::JointCmd::GET_VELOCITY ) );
 
-        auto resp = result.get();
-        assert( resp );
-        return resp->jointresp().value();
+        return result.get().jointresp().value();
     }
 
     void setVelocity( float velocity ) override
@@ -669,9 +653,7 @@ public:
         auto result = registerPromise( msgs::JointCmd::GET_POSITION );
         rofi->publish( getCmdMsg( msgs::JointCmd::GET_POSITION ) );
 
-        auto resp = result.get();
-        assert( resp );
-        return resp->jointresp().value();
+        return result.get().jointresp().value();
     }
 
     void setPosition( float pos, float velocity, std::function< void( Joint ) > callback ) override
@@ -693,9 +675,7 @@ public:
         auto result = registerPromise( msgs::JointCmd::GET_TORQUE );
         rofi->publish( getCmdMsg( msgs::JointCmd::GET_TORQUE ) );
 
-        auto resp = result.get();
-        assert( resp );
-        return resp->jointresp().value();
+        return result.get().jointresp().value();
     }
 
     void setTorque( float torque ) override
@@ -716,18 +696,17 @@ public:
         }
         registerCallback(
                 msgs::JointCmd::ERROR,
-                [ callback = std::move( callback ) ]( Joint joint, RoFISim::RofiRespPtr resp ) {
-                    auto [ error, msg ] = readError( std::move( resp ) );
+                [ callback = std::move( callback ) ]( Joint joint, const msgs::RofiResp & resp ) {
+                    auto [ error, msg ] = readError( resp );
                     callback( joint, error, std::move( msg ) );
                 } );
     }
 
 
-    std::future< RoFISim::RofiRespPtr > registerPromise( msgs::JointCmd::Type type )
+    std::future< msgs::RofiResp > registerPromise( msgs::JointCmd::Type type )
     {
         std::lock_guard< std::mutex > lock( respPromisesMutex );
-        return respPromises.emplace( type, std::promise< RoFISim::RofiRespPtr >() )
-                ->second.get_future();
+        return respPromises.emplace( type, std::promise< msgs::RofiResp >() )->second.get_future();
     }
 
     void registerCallback( msgs::JointCmd::Type type, Callback && callback )
@@ -753,10 +732,10 @@ public:
         }
     }
 
-    void setPromises( const RoFISim::RofiRespPtr & resp )
+    void setPromises( const msgs::RofiResp & resp )
     {
         std::lock_guard< std::mutex > lock( respPromisesMutex );
-        auto range = respPromises.equal_range( resp->jointresp().resptype() );
+        auto range = respPromises.equal_range( resp.jointresp().resptype() );
         for ( auto it = range.first; it != range.second; it++ )
         {
             it->second.set_value( resp );
@@ -764,10 +743,10 @@ public:
         respPromises.erase( range.first, range.second );
     }
 
-    void callCallbacks( const RoFISim::RofiRespPtr & resp )
+    void callCallbacks( const msgs::RofiResp & resp )
     {
         std::lock_guard< std::mutex > lock( respCallbacksMutex );
-        auto range = respCallbacks.equal_range( resp->jointresp().resptype() );
+        auto range = respCallbacks.equal_range( resp.jointresp().resptype() );
         for ( auto it = range.first; it != range.second; it++ )
         {
             assert( it->second );
@@ -786,17 +765,17 @@ public:
         }
     }
 
-    void onResponse( const RoFISim::RofiRespPtr & resp )
+    void onResponse( const msgs::RofiResp & resp )
     {
-        assert( resp->resptype() == msgs::RofiCmd::JOINT_CMD );
-        assert( resp->jointresp().joint() == jointNumber );
+        assert( resp.resptype() == msgs::RofiCmd::JOINT_CMD );
+        assert( resp.jointresp().joint() == jointNumber );
 
         setPromises( resp );
         callCallbacks( resp );
 
-        if ( resp->jointresp().resptype() == msgs::JointCmd::SET_POS_WITH_SPEED )
+        if ( resp.jointresp().resptype() == msgs::JointCmd::SET_POS_WITH_SPEED )
         {
-            checkPositionReachedCallback( resp->jointresp().value() );
+            checkPositionReachedCallback( resp.jointresp().value() );
         }
     }
 
@@ -814,20 +793,14 @@ public:
     std::shared_ptr< RoFISim > getRoFI() const
     {
         auto rofi = _rofi.lock();
-        if ( !rofi )
-        {
-            // TODO call error callback
-            throw std::runtime_error( "RoFI invalid access from joint" );
-        }
+        assert( rofi && "RoFI invalid access from joint" );
         return rofi;
     }
 
 
-    static Capabilities readCapabilities( RoFISim::RofiRespPtr resp )
+    static Capabilities readCapabilities( const msgs::RofiResp & resp )
     {
-        assert( resp );
-
-        const auto & msg = resp->jointresp().capabilities();
+        const auto & msg = resp.jointresp().capabilities();
         Capabilities result;
         result.maxPosition = msg.maxposition();
         result.minPosition = msg.minposition();
@@ -837,7 +810,7 @@ public:
         return result;
     }
 
-    static std::pair< Joint::Error, std::string > readError( RoFISim::RofiRespPtr /* resp */ )
+    static std::pair< Joint::Error, std::string > readError( const msgs::RofiResp & /* resp */ )
     {
         // TODO: implement
         return {};
@@ -849,7 +822,7 @@ private:
     Capabilities _capabilities;
 
     std::mutex respPromisesMutex;
-    std::multimap< msgs::JointCmd::Type, std::promise< RoFISim::RofiRespPtr > > respPromises;
+    std::multimap< msgs::JointCmd::Type, std::promise< msgs::RofiResp > > respPromises;
 
     std::mutex respCallbacksMutex;
     std::multimap< msgs::JointCmd::Type, Callback > respCallbacks;
@@ -880,7 +853,7 @@ Joint RoFISim::getJoint( int index )
 
     auto jointSim = std::dynamic_pointer_cast< Joint::Implementation >( _joints.at( index ) );
     assert( jointSim );
-    return Joint( jointSim );
+    return Joint( std::move( jointSim ) );
 }
 
 Connector RoFISim::getConnector( int index )
@@ -890,14 +863,14 @@ Connector RoFISim::getConnector( int index )
     auto connectorSim =
             std::dynamic_pointer_cast< Connector::Implementation >( _connectors.at( index ) );
     assert( connectorSim );
-    return Connector( connectorSim );
+    return Connector( std::move( connectorSim ) );
 }
 
-void RoFISim::onJointResp( const RoFISim::RofiRespPtr & resp )
+void RoFISim::onJointResp( const msgs::RofiResp & resp )
 {
-    assert( resp->resptype() == msgs::RofiCmd::JOINT_CMD );
+    assert( resp.resptype() == msgs::RofiCmd::JOINT_CMD );
 
-    int index = resp->jointresp().joint();
+    int index = resp.jointresp().joint();
     if ( index < 0 || static_cast< size_t >( index ) >= _joints.size() )
     {
         std::cerr << "Joint index of response is out of range. Ignoring...\n";
@@ -906,11 +879,11 @@ void RoFISim::onJointResp( const RoFISim::RofiRespPtr & resp )
     _joints.at( index )->onResponse( resp );
 }
 
-void RoFISim::onConnectorResp( const RoFISim::RofiRespPtr & resp )
+void RoFISim::onConnectorResp( const msgs::RofiResp & resp )
 {
-    assert( resp->resptype() == msgs::RofiCmd::CONNECTOR_CMD );
+    assert( resp.resptype() == msgs::RofiCmd::CONNECTOR_CMD );
 
-    int index = resp->connectorresp().connector();
+    int index = resp.connectorresp().connector();
     if ( index < 0 || static_cast< size_t >( index ) >= _connectors.size() )
     {
         std::cerr << "Connector index of response is out of range. Ignoring...\n";
@@ -919,9 +892,9 @@ void RoFISim::onConnectorResp( const RoFISim::RofiRespPtr & resp )
     _connectors.at( index )->onResponse( resp );
 }
 
-void RoFISim::onDescriptionResp( const RoFISim::RofiRespPtr & resp )
+void RoFISim::onDescriptionResp( const msgs::RofiResp & resp )
 {
-    assert( resp->resptype() == msgs::RofiCmd::DESCRIPTION );
+    assert( resp.resptype() == msgs::RofiCmd::DESCRIPTION );
 
     std::lock_guard< std::mutex > lock( descriptionMutex );
     if ( hasDescription )
@@ -930,7 +903,7 @@ void RoFISim::onDescriptionResp( const RoFISim::RofiRespPtr & resp )
         return;
     }
 
-    auto & description = resp->rofidescription();
+    auto & description = resp.rofidescription();
 
     if ( description.jointcount() < 0 )
     {
@@ -959,16 +932,16 @@ void RoFISim::onDescriptionResp( const RoFISim::RofiRespPtr & resp )
     hasDescription = true;
 }
 
-void RoFISim::onWaitResp( const RoFISim::RofiRespPtr & resp )
+void RoFISim::onWaitResp( const msgs::RofiResp & resp )
 {
-    assert( resp->resptype() == msgs::RofiCmd::WAIT_CMD );
+    assert( resp.resptype() == msgs::RofiCmd::WAIT_CMD );
 
     std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
 
-    auto it = waitCallbacksMap.find( resp->waitid() );
+    auto it = waitCallbacksMap.find( resp.waitid() );
     if ( it == waitCallbacksMap.end() )
     {
-        std::cerr << "Got wait response without a callback waiting (ID: " << resp->waitid()
+        std::cerr << "Got wait response without a callback waiting (ID: " << resp.waitid()
                   << "). Ignoring...\n";
         return;
     }
@@ -979,9 +952,9 @@ void RoFISim::onWaitResp( const RoFISim::RofiRespPtr & resp )
     waitCallbacksMap.erase( it );
 }
 
-void RoFISim::onResponse( const RoFISim::RofiRespPtr & resp )
+void RoFISim::onResponse( const msgs::RofiResp & resp )
 {
-    switch ( resp->resptype() )
+    switch ( resp.resptype() )
     {
         case msgs::RofiCmd::NO_CMD:
             break;
@@ -1009,7 +982,7 @@ namespace rofi::hal
 {
 RoFI RoFI::getLocalRoFI()
 {
-    static auto localRoFI = RoFISim::createLocal();
+    static const auto localRoFI = RoFISim::createLocal();
     return RoFI( localRoFI );
 }
 
@@ -1028,8 +1001,8 @@ RoFI RoFI::getRemoteRoFI( RoFI::Id remoteId )
     }
 
     assert( remoteRoFI );
-    assert( remotes[ remoteId ].lock() != nullptr );
-    return RoFI( remoteRoFI );
+    assert( remotes[ remoteId ].lock() == remoteRoFI );
+    return RoFI( std::move( remoteRoFI ) );
 }
 
 void RoFI::wait( int ms, std::function< void() > callback )
