@@ -565,7 +565,7 @@ std::pair<std::vector<Configuration>, bool> treeToSnake(const Configuration& ini
     std::vector<Configuration> snakeRes;
 
     while (true) {
-        std::cout << "++++++++++++++ Try while ++++++++++++++" << std::endl;;
+        //std::cout << "++++++++++++++ Try while ++++++++++++++" << std::endl;;
 
         res.clear();
         auto& pConfig = path.back();
@@ -574,7 +574,7 @@ std::pair<std::vector<Configuration>, bool> treeToSnake(const Configuration& ini
 
         snakeRes = aerateFromRoot(pConfig);
         auto& config = snakeRes.back();
-        std::cout << "************** Finish aerateFromRoot **************\n";
+        //std::cout << "************** Finish aerateFromRoot **************\n";
 
         const auto& matrices = config.getMatrices();
         const auto& edges = config.getEdges();
@@ -588,7 +588,7 @@ std::pair<std::vector<Configuration>, bool> treeToSnake(const Configuration& ini
         while (!dists.empty()) {
             auto [_dist, id1, id2] = dists.top();
             dists.pop();
-            std::cout << "|||||||||||||||| Trying " << id1 << " -> " << id2 << " ||||||||||||||||" << std::endl;
+            //std::cout << "|||||||||||||||| Trying " << id1 << " -> " << id2 << " ||||||||||||||||" << std::endl;
             const auto& [isWhite1, shoe1] = allLeafs[id1];
             const auto& [isWhite2, shoe2] = allLeafs[id2];
             const auto& [subRoot1, subRootSide1, radius1] = activeRadiuses.at(id1);
@@ -768,7 +768,7 @@ std::pair<std::vector<Configuration>, bool> fixParity(const Configuration& init)
         auto [id1, side1] = leafs[0];
         auto [id2, side2] = leafs[1];
         Edge desiredEdge(id1, side1, ZMinus, North, ZMinus, side2, id2);
-        std::cout << "************ Another one ************" << std::endl;
+        //std::cout << "************ Another one ************" << std::endl;
 
         if (canConnect(side1, colours[id1], side2, colours[id2])) {
             std::tie(res, finished) = connectArm(config, desiredEdge, config.getFixedId(), config.getFixedId());

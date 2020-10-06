@@ -254,6 +254,7 @@ int main(int argc, char* argv[])
 /**/
     std::ofstream file;
     file.open(std::string(argv[2]), std::ios_base::app);
+    file << argv[1] << std::endl;
     auto res = reconfigToSnake(init, &file).first;
     printVecToFile(res, argv[3]);
 /**/
