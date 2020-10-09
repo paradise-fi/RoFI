@@ -585,6 +585,8 @@ std::pair<std::vector<Configuration>, bool> treeToSnake(const Configuration& ini
         computeActiveRadiuses(config, subtreeSizes, allLeafs, activeRadiuses);
         computeDists(config, allLeafs, dists);
 
+        finished = false;
+
         while (!dists.empty()) {
             auto [_dist, id1, id2] = dists.top();
             dists.pop();
