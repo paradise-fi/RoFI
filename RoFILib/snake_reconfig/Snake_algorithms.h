@@ -172,4 +172,6 @@ std::pair<std::vector<Configuration>, bool> flattenCircle(const Configuration& i
 
 std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration& init, std::ofstream* debug_output = nullptr);
 
+void appendMapped(std::vector<Configuration>& path1, const std::vector<Configuration>& path2);
+
 std::vector<Configuration> reconfigThroughSnake(const Configuration& from, const Configuration& to);
