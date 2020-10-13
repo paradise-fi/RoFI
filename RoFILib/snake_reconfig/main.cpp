@@ -271,6 +271,8 @@ int main(int argc, char* argv[])
     IO::readConfigurations(input1, toSnake1);
     IO::readConfigurations(input2, toSnake2);
 
+    toSnake1.back().isValid();
+    toSnake2.back().isValid();
     appendMapped(toSnake1, toSnake2);
 
     printVecToFile(toSnake1, argv[3]);

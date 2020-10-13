@@ -125,34 +125,44 @@ std::pair<ID, ShoeId> findLeafOfSnake(const Configuration& config) {
     throw std::logic_error("Error in findLeafOfSnake, probably given config isnt snake");
 }
 
-std::unordered_map<ID, std::pair<ID, bool>> createMapping(const Configuration& snake1, const Configuration& snake2) {
-    // redo this with changing root and do it more easily with spannSucc
+std::unordered_map<ID, std::pair<ID, bool>> createMapping(const Configuration& snakeT, const Configuration& snakeF) {
     std::unordered_map<ID, std::pair<ID, bool>> mapping;
-    const auto& edges1 = snake1.getEdges();
-    const auto& edges2 = snake2.getEdges();
-
-    auto [leaf1, side1] = findLeafOfSnake(snake1);
-    auto [leaf2, side2] = findLeafOfSnake(snake2);
-    mapping[leaf2] = {leaf1, side1 == side2};
+    const auto& edgesT = snakeT.getEdges();
+    const auto& edgesF = snakeF.getEdges();
+    auto [leafT, sideT] = findLeafOfSnake(snakeT);
+    auto [leafF, sideF] = findLeafOfSnake(snakeF);
+    std::cout << leafF << " and " << leafT << std::endl;
+    mapping[leafF] = {leafT, sideT == sideF};
 
     std::queue<std::pair<ID, ID>> bag;
-    bag.emplace(leaf2, leaf1);
+    bag.emplace(leafF, leafT);
 
     while (!bag.empty()) {
-        auto [id2, id1] = bag.front();
+        auto [idF, idT] = bag.front();
         bag.pop();
-        for (const auto& optEdge : edges2.at(id2)) {
+        for (const auto& optEdge : edgesF.at(idF)) {
             if (!optEdge.has_value())
                 continue;
-            const Edge& edge = optEdge.value();
-            if (mapping.find(edge.id1()) != mapping.end())
+            const Edge& edgeF = optEdge.value();
+            if (mapping.find(edgeF.id2()) != mapping.end())
                 continue;
-            auto side2 = edge.side2();
-            auto edge1 = edges1.at(id2)[edgeIndex(!mapping[id2].second ? side2 : (side2 == A ? B : A), edge.dock1())].value();
-            mapping[id2] = {id1, edge.side2() == edge1.side2()};
-            bag.emplace(edge.id2(), edge1.id2());
+            auto sideF1 = edgeF.side1();
+            auto edgeT = edgesT.at(idT)[edgeIndex(mapping[idF].second ? sideF1 : (sideF1 == A ? B : A), edgeF.dock1())].value();
+            mapping[edgeF.id2()] = {edgeT.id2(), edgeF.side2() == edgeT.side2()};
+            bag.emplace(edgeF.id2(), edgeT.id2());
         }
     }
+
+    std::vector<std::tuple<ID, ID, bool>> res;
+    for (const auto& [id2, x] : mapping) {
+        const auto& [id1, change] = x;
+        res.emplace_back(id2, id1, change);
+    }
+
+    std::sort(res.begin(), res.end());
+
+    for (const auto& [id2, id1, change] : res)
+        std::cout << id2 << " -> " << id1 << (change ? " with change": " without change") << std::endl;
 
     return mapping;
 }
