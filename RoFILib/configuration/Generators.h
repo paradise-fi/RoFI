@@ -26,6 +26,8 @@ void generateActions(const Configuration& config, std::vector<Action>& res, unsi
  */
 void generateSimpleActions(const Configuration& config, std::vector<Action>& res, unsigned step);
 
+void generateSimpleOnlyRotActions(const Configuration& config, std::vector<Action>& res, unsigned step);
+
 /**
  * \brief Generates all possible "bisimple" actions.
  * 
@@ -95,6 +97,8 @@ void next(const Configuration& config, std::vector<Configuration>& res, unsigned
  * Only rotations with angle + \p step and - \p step are allowed.
  */
 void simpleNext(const Configuration& config, std::vector<Configuration>& res, unsigned step);
+
+void simpleOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step);
 
 /**
  * \brief Generates all possible configurations that \p config can become using one recconect action or 

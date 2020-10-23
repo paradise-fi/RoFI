@@ -162,7 +162,7 @@ inline Configuration treefy(const Configuration& init, chooseRootFunc chooseRoot
 
 std::pair<std::vector<Configuration>, bool> connectArm(const Configuration& init, const Edge& connection, ID subroot1, ID subroot2);
 
-std::pair<std::vector<Configuration>, bool> treeToSnake(const Configuration& init);
+std::pair<std::vector<Configuration>, bool> treeToChain(const Configuration& init);
 
 std::pair<std::vector<Configuration>, bool> fixParity(const Configuration& init);
 

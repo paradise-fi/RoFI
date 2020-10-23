@@ -19,6 +19,13 @@ public:
     }
 };
 
+class SimpleOnlyRotNextGen {
+public:
+    void operator()(const Configuration& config, std::vector<Configuration>& res, unsigned step) const {
+        simpleOnlyRotNext(config, res, step);
+    }
+};
+
 class SmartBisimpleOnlyRotGen {
 public:
     void operator()(const Configuration& config, std::vector<Configuration>& res, unsigned step) const {

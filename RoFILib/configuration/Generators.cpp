@@ -66,6 +66,14 @@ void generateSimpleActions(const Configuration& config, std::vector<Action>& res
         res.emplace_back(reconnection);
 }
 
+void generateSimpleOnlyRotActions(const Configuration& config, std::vector<Action>& res, unsigned step) {
+    std::vector<Action::Rotate> rotations;
+    generateRotations(config, rotations, step);
+
+    for (auto& rotation : rotations)
+        res.emplace_back(rotation);
+}
+
 void generateBisimpleActions(const Configuration& config, std::vector<Action>& res, unsigned step) {
     std::vector<Action::Rotate> rotations;
     generateRotations(config, rotations, step);
@@ -324,6 +332,16 @@ void next(const Configuration& config, std::vector<Configuration>& res, unsigned
 void simpleNext(const Configuration& config, std::vector<Configuration>& res, unsigned step) {
     std::vector<Action> actions;
     generateSimpleActions(config, actions, step);
+    for (auto& action : actions) {
+        auto cfgOpt = executeIfValid(config, action);
+        if (cfgOpt.has_value())
+            res.push_back(cfgOpt.value());
+    }
+}
+
+void simpleOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step) {
+    std::vector<Action> actions;
+    generateSimpleOnlyRotActions(config, actions, step);
     for (auto& action : actions) {
         auto cfgOpt = executeIfValid(config, action);
         if (cfgOpt.has_value())

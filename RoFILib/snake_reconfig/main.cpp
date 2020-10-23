@@ -200,10 +200,10 @@ int main(int argc, char* argv[])
 */
     /* NEED TO CHECK DISCONNECT ARM !!! */
 
-/* Testing treeToSnake */
+/* Testing treeToChain */
 /*
     auto config = treefy<MakeStar>(init);
-    auto res = treeToSnake(config);
+    auto res = treeToChain(config);
     if (res.empty())
         std::cout << "Unsucc" << std::endl;
     else
