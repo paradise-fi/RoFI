@@ -50,19 +50,21 @@ void logTime(std::ofstream* debug_output, unsigned progress, std::optional<momen
 
 std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration& init, std::ofstream* debug_output /*= std::nullptr_t*/) {
     auto start = std::chrono::system_clock::now();
-    std::vector<Configuration> path = aerateConfig(init);
+    std::vector<Configuration> path{init};
+    path.push_back(treefy<MakeStar>(path.back()));
+
+    auto aerated = aerateConfig(init);
     std::cout << "Finish aerate" << std::endl;
     auto afterAerate = std::chrono::system_clock::now();
-    if (path.empty()) {
+    vectorAppend(path, aerated);
+    if (aerated.empty()) {
         if (debug_output)
             logTime(debug_output, 0, start, afterAerate, {}, {}, {}, {}, path.size());
         return {path, false};
     }
 
-    path.push_back(treefy<MakeStar>(path.back()));
-
-    auto [toSnake, finishedTTS] = treeToSnake(path.back());
-    std::cout << "Finish treeToSnake" << std::endl;
+    auto [toSnake, finishedTTS] = treeToChain(path.back());
+    std::cout << "Finish treeToChain" << std::endl;
     auto afterTTS = std::chrono::system_clock::now();
     vectorAppend(path, toSnake);
     if (!finishedTTS) {
@@ -198,12 +200,12 @@ std::vector<Configuration> reconfigThroughSnake(const Configuration& from, const
  * * * * * */
 
 std::vector<Configuration> aerateConfig(const Configuration& init) {
-    SimpleNextGen simpleGen{};
+    SimpleOnlyRotNextGen simpleOnlyRotGen{};
     SpaceGridScore gridScore(init.getIDs().size());
     auto moduleCount = init.getModules().size();
     unsigned limit = 2 * moduleCount * moduleCount;
 
-    return limitedAstar(init, simpleGen, gridScore, limit).first;
+    return limitedAstar(init, simpleOnlyRotGen, gridScore, limit).first;
 }
 
 std::vector<Configuration> aerateFromRoot(const Configuration& init) {
@@ -334,12 +336,12 @@ std::pair<std::vector<Configuration>, bool> connectArm(const Configuration& init
 }
 
 /* * * * * * * * *
- * Tree to snake *
+ * Tree to chain *
  * * * * * * * * */
 
 using PriorityLeafQueue = std::priority_queue<std::tuple<double, ID, ID>, std::vector<std::tuple<double, ID, ID>>, std::greater<std::tuple<double, ID, ID>>>;
 
-bool isTopologicalSnake(const Configuration& config) {
+bool isChain(const Configuration& config) {
     const auto& spannSuccCount = config.getSpanningSuccCount();
     ID fixedId = config.getFixedId();
     for (const auto& [id, sc] : spannSuccCount) {
@@ -556,7 +558,7 @@ Configuration disjoinArm(const Configuration& init, const Edge& addedEdge) {
     return optDisjoined.value();
 }
 
-std::pair<std::vector<Configuration>, bool> treeToSnake(const Configuration& init) {
+std::pair<std::vector<Configuration>, bool> treeToChain(const Configuration& init) {
     // DNEŠNÍ ZJIŠTĚNÍ:
     // * chci vyzkoušet kvalitu "makeSpace" v závislosti na limitu
     // podobně vyzkoušet i další, vyzkoumat rychlost konvergence v závislosti na tom,
@@ -581,7 +583,7 @@ std::pair<std::vector<Configuration>, bool> treeToSnake(const Configuration& ini
 
         res.clear();
         auto& pConfig = path.back();
-        if (isTopologicalSnake(pConfig))
+        if (isChain(pConfig))
             return {path, true};
 
         snakeRes = aerateFromRoot(pConfig);
