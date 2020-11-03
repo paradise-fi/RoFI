@@ -1,5 +1,13 @@
 #pragma once
 
+#include <memory>
+#include <string>
 
+#include "gazebo/Master.hh"
+
+namespace rofi::networking
+{
 // Starts Gazebo master for communication in a separate thread
-bool startMaster( int argc, char ** argv );
+[[nodiscard]] std::unique_ptr< gazebo::Master > startMaster();
+
+} // namespace rofi::networking

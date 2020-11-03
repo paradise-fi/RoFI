@@ -2,28 +2,22 @@
 
 #include <gazebo/gazebo.hh>
 
+#include "distributor.hpp"
 #include "master.hpp"
 
-#include "distributorReq.pb.h"
-#include "distributorResp.pb.h"
+#include <distributorReq.pb.h>
+#include <distributorResp.pb.h>
 
 
-void onDistributorRequest( const boost::shared_ptr< const rofi::messages::DistributorReq > & req )
+int main()
 {
-    std::cout << "Got request:\n" << req->DebugString() << std::endl;
-}
+    using namespace rofi::networking;
 
-int main( int argc, char ** argv )
-{
     std::cout << "Starting master" << std::endl;
 
-    startMaster( argc, argv );
-
-    auto node = boost::make_shared< gazebo::transport::Node >();
-    node->Init();
-
-    auto sub = node->Subscribe( "~/distributor/request", &onDistributorRequest );
-
+    auto master = startMaster();
+    Database database;
+    Distributor distributor = { database };
 
     std::cout << "Waiting for messages..." << std::endl;
     while ( true )
