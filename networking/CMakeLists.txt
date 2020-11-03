@@ -44,6 +44,7 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../RoFISim/hal/messages ${CMAKE_CUR
 set (FILES
     main.cpp
     master.cpp
+    distributor.cpp
 )
 
 add_executable(master ${FILES})
