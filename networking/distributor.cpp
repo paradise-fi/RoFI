@@ -90,21 +90,22 @@ bool LockedModules::isLocked( RofiId rofiId ) const
 Distributor::Distributor( const Database & database, const std::string & worldName )
         : _database( database )
         , _lockedModules( database )
+        , _worldName( worldName )
 {
     _node = boost::make_shared< gazebo::transport::Node >();
     if ( !_node )
     {
         throw std::runtime_error( "Could not create new Node" );
     }
-    _node->Init( worldName + "/distributor" );
+    _node->Init( _worldName );
     assert( _node->IsInitialized() );
 
-    _pub = _node->Advertise< rofi::messages::DistributorResp >( "~/response" );
+    _pub = _node->Advertise< rofi::messages::DistributorResp >( "~/distributor/response" );
     if ( !_pub )
     {
         throw std::runtime_error( "Publisher could not be created" );
     }
-    _sub = _node->Subscribe( "~/request", &Distributor::onRequestCallback, this );
+    _sub = _node->Subscribe( "~/distributor/request", &Distributor::onRequestCallback, this );
     if ( !_sub )
     {
         throw std::runtime_error( "Subcriber could not be created" );

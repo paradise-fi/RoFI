@@ -11,7 +11,7 @@ public:
     static std::string getTopic( RofiId rofiId )
     {
         using std::to_string;
-        return "rofi_" + to_string( rofiId );
+        return "~/rofi_" + to_string( rofiId );
     }
 };
 

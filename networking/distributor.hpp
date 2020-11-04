@@ -60,13 +60,14 @@ public:
     rofi::messages::DistributorResp onUnlockReq( RofiId rofiId, SessionId sessionId );
 
 private:
-    gazebo::transport::NodePtr _node;
-    gazebo::transport::PublisherPtr _pub;
-    gazebo::transport::SubscriberPtr _sub;
-
     const Database & _database;
 
     LockedModules _lockedModules;
+
+    const std::string _worldName;
+    gazebo::transport::NodePtr _node;
+    gazebo::transport::PublisherPtr _pub;
+    gazebo::transport::SubscriberPtr _sub;
 };
 
 } // namespace rofi::networking
