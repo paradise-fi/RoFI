@@ -50,18 +50,17 @@ void logTime(std::ofstream* debug_output, unsigned progress, std::optional<momen
 
 std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration& init, std::ofstream* debug_output /*= std::nullptr_t*/) {
     auto start = std::chrono::system_clock::now();
-    std::vector<Configuration> path{init};
-    path.push_back(treefy<MakeStar>(path.back()));
 
-    auto aerated = aerateConfig(init);
+    auto path = aerateConfig(init);
     std::cout << "Finish aerate" << std::endl;
     auto afterAerate = std::chrono::system_clock::now();
-    vectorAppend(path, aerated);
-    if (aerated.empty()) {
+    if (path.empty()) {
         if (debug_output)
             logTime(debug_output, 0, start, afterAerate, {}, {}, {}, {}, path.size());
         return {path, false};
     }
+
+    path.push_back(treefy<MakeStar>(path.back()));
 
     auto [toSnake, finishedTTS] = treeToChain(path.back());
     std::cout << "Finish treeToChain" << std::endl;
@@ -200,12 +199,12 @@ std::vector<Configuration> reconfigThroughSnake(const Configuration& from, const
  * * * * * */
 
 std::vector<Configuration> aerateConfig(const Configuration& init) {
-    SimpleOnlyRotNextGen simpleOnlyRotGen{};
+    SimpleNextGen simpleGen{};
     SpaceGridScore gridScore(init.getIDs().size());
     auto moduleCount = init.getModules().size();
     unsigned limit = 2 * moduleCount * moduleCount;
 
-    return limitedAstar(init, simpleOnlyRotGen, gridScore, limit).first;
+    return limitedAstar(init, simpleGen, gridScore, limit).first;
 }
 
 std::vector<Configuration> aerateFromRoot(const Configuration& init) {
