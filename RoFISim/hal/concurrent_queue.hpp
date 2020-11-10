@@ -5,7 +5,6 @@
 #include <deque>
 #include <initializer_list>
 #include <mutex>
-#include <thread>
 
 
 template < typename T >

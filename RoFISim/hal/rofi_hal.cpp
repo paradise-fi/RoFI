@@ -480,7 +480,7 @@ public:
         for ( const auto & callback : eventCallbacks )
         {
             assert( callback );
-            std::thread( callback, Connector( shared_from_this() ), event ).detach();
+            callback( Connector( shared_from_this() ), event );
         }
     }
 
@@ -499,11 +499,7 @@ public:
 
             assert( pos == packet.message().size() );
             assert( callback );
-            std::thread( callback,
-                         Connector( shared_from_this() ),
-                         packet.contenttype(),
-                         pbufPacket )
-                    .detach();
+            callback( Connector( shared_from_this() ), packet.contenttype(), pbufPacket );
         }
     }
 
@@ -750,7 +746,7 @@ public:
         for ( auto it = range.first; it != range.second; it++ )
         {
             assert( it->second );
-            std::thread( it->second, Joint( shared_from_this() ), resp ).detach();
+            it->second( Joint( shared_from_this() ), resp );
         }
     }
 
@@ -760,7 +756,7 @@ public:
         auto & [ position, callback ] = positionReachedCallback;
         if ( callback && std::abs( positionReached - position ) <= positionPrecision )
         {
-            std::thread( std::move( callback ), Joint( shared_from_this() ) ).detach();
+            callback( Joint( shared_from_this() ) );
             positionReachedCallback = {};
         }
     }
