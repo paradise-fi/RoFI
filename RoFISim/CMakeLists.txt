@@ -39,8 +39,8 @@ if(${LIBCXX})
 endif(${LIBCXX})
 
 
-add_subdirectory(plugins)
 add_subdirectory(hal)
+add_subdirectory(plugins)
 add_subdirectory(tools)
 
 add_subdirectory(worlds)

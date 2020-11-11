@@ -17,6 +17,7 @@ if(NOT lwip_POPULATED)
 endif()
 
 
+add_subdirectory(messages)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../RoFIDriver/atoms ${CMAKE_CURRENT_BINARY_DIR}/atoms)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../RoFIDriver/lwip++ ${CMAKE_CURRENT_BINARY_DIR}/lwip++)
