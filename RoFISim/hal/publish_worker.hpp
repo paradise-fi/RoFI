@@ -2,15 +2,15 @@
 
 #include <atomic>
 #include <cassert>
-#include <thread>
+#include <mutex>
 #include <type_traits>
 #include <variant>
 
-#include <gazebo/gazebo_client.hh>
 #include <gazebo/transport/transport.hh>
 
 #include "concurrent_queue.hpp"
-#include "gazebo_client_holder.hpp"
+#include "gazebo_node_handler.hpp"
+#include "jthread/jthread.hpp"
 #include "rofi_hal.hpp"
 #include "subscriber_wrapper.hpp"
 
@@ -22,24 +22,31 @@
 
 namespace rofi::hal
 {
-class GazeboWorker
+class PublishWorker
 {
     using MessageVariant = std::variant< rofi::messages::RofiCmd, rofi::messages::DistributorReq >;
 
-    GazeboWorker()
-            : _clientHolder( GazeboClientHolder::get() )
-            , _node( initializedNode() )
-            , _rofiTopicsSub( _node, getDistRespTopic(), [ this ]( auto resp ) {
-                updateRofiTopics( resp );
-            } )
+    PublishWorker()
     {
-        assert( _node );
-        assert( _node->IsInitialized() );
+        _rofiTopicsSub = subscribe( [ this ]( auto resp ) { updateRofiTopics( resp ); } );
+
+        _workerThread = std20::jthread(
+                [ this ]( std20::stop_token stoken ) { this->run( std::move( stoken ) ); } );
     }
 
 public:
-    GazeboWorker( const GazeboWorker & ) = delete;
-    GazeboWorker & operator=( const GazeboWorker & ) = delete;
+    PublishWorker( const PublishWorker & ) = delete;
+    PublishWorker & operator=( const PublishWorker & ) = delete;
+
+    ~PublishWorker()
+    {
+        // End thread before destructor ends
+        if ( _workerThread.joinable() )
+        {
+            _workerThread.request_stop();
+            _workerThread.join();
+        }
+    }
 
     template < typename Message >
     void publish( Message && msg )
@@ -71,6 +78,13 @@ public:
                                                std::move( callback ) );
     }
 
+    static PublishWorker & get()
+    {
+        static PublishWorker instance;
+        return instance;
+    }
+
+private:
     void updateRofiTopics( const rofi::messages::DistributorResp & resp )
     {
         {
@@ -82,43 +96,6 @@ public:
         }
 
         _onRofiTopicsUpdate.notify_all();
-    }
-
-    static GazeboWorker & get()
-    {
-        if ( !instance()._initialized )
-        {
-            instance().runWorker();
-            while ( !instance()._initialized )
-            {
-                std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
-            }
-        }
-        assert( instance()._initialized );
-        return instance();
-    }
-
-private:
-    static gazebo::transport::NodePtr initializedNode()
-    {
-        auto node = boost::make_shared< gazebo::transport::Node >();
-        assert( node );
-        node->Init();
-        assert( node->IsInitialized() );
-        return node;
-    }
-
-    static GazeboWorker & instance()
-    {
-        static GazeboWorker instance;
-        return instance;
-    }
-
-    void runWorker()
-    {
-        std::call_once( instance()._runOnce, [] {
-            std::thread( &GazeboWorker::run, &GazeboWorker::instance() ).detach();
-        } );
     }
 
     std::string getRofiTopic( rofi::hal::RoFI::Id rofiId )
@@ -163,8 +140,6 @@ private:
     template < typename Message >
     void sendMessage( const std::string & topic, Message && msg )
     {
-        assert( _node );
-
         auto & pub = _pubs[ topic ];
         if ( !pub )
         {
@@ -177,37 +152,33 @@ private:
         pub->Publish( std::forward< Message >( msg ), true );
     }
 
-    void run()
+    void run( std20::stop_token stoken )
     {
-        _node = boost::make_shared< gazebo::transport::Node >();
-        assert( _node );
-        _node->Init();
-        assert( _node->IsInitialized() );
-
-        _initialized = true;
-
         while ( true )
         {
-            auto [ topic, msgVariant ] = _queue.pop();
+            auto newMessage = _queue.pop( stoken );
+            if ( !newMessage )
+            {
+                return;
+            }
+            auto & [ topic, msgVariant ] = *newMessage;
             std::visit( [ this, &topic = topic ]( auto msg ) { sendMessage( topic, msg ); },
                         msgVariant );
         }
     }
 
 
-    const std::shared_ptr< GazeboClientHolder > _clientHolder;
+    ConcurrentQueue< std::pair< std::string, MessageVariant > > _queue;
 
-    std::once_flag _runOnce;
-    std::atomic< bool > _initialized = false;
-
-    gazebo::transport::NodePtr _node;
-    std::map< std::string, gazebo::transport::PublisherPtr > _pubs;
+    GazeboNodeHandler _node;
 
     std::mutex _rofiTopicsMutex;
     std::map< RoFI::Id, std::string > _rofiTopics;
     std::condition_variable _onRofiTopicsUpdate;
-    SubscriberWrapper< rofi::messages::DistributorResp > _rofiTopicsSub;
+    SubscriberWrapperPtr< rofi::messages::DistributorResp > _rofiTopicsSub;
 
-    ConcurrentQueue< std::pair< std::string, MessageVariant > > _queue;
+    std::map< std::string, gazebo::transport::PublisherPtr > _pubs;
+
+    std20::jthread _workerThread; // Change to std::jthread with C++20
 };
 } // namespace rofi::hal

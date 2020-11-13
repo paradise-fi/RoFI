@@ -2,10 +2,11 @@
 
 #include <cassert>
 #include <functional>
+#include <memory>
 
 #include <gazebo/transport/transport.hh>
 
-#include "gazebo_client_holder.hpp"
+#include "gazebo_node_handler.hpp"
 
 
 namespace rofi::hal
@@ -14,24 +15,22 @@ template < typename Message >
 class SubscriberWrapper
 {
 public:
-    SubscriberWrapper( gazebo::transport::NodePtr node,
+    SubscriberWrapper( const GazeboNodeHandler & node,
                        const std::string & topic,
                        std::function< void( const Message & ) > callback )
-            : _clientHolder( GazeboClientHolder::get() )
-            , _callback( std::move( callback ) )
-            , _node( std::move( node ) )
+            : _callback( std::move( callback ) )
+            , _node( node )
     {
         if ( !_callback )
         {
             throw std::runtime_error( "empty callback" );
         }
-        if ( !_node || !_node->IsInitialized() )
-        {
-            throw std::runtime_error( "node not initialized" );
-        }
 
         _sub = _node->Subscribe( topic, &SubscriberWrapper::onMsg, this );
     }
+
+    SubscriberWrapper( const SubscriberWrapper & ) = delete;
+    SubscriberWrapper & operator=( const SubscriberWrapper & ) = delete;
 
     ~SubscriberWrapper()
     {
@@ -52,10 +51,8 @@ private:
         _callback( *localMsg );
     }
 
-    std::shared_ptr< GazeboClientHolder > _clientHolder;
-
-    std::function< void( const Message & ) > _callback;
-    gazebo::transport::NodePtr _node;
+    const std::function< void( const Message & ) > _callback;
+    GazeboNodeHandler _node;
     gazebo::transport::SubscriberPtr _sub;
 };
 

@@ -15,7 +15,7 @@
 
 #include <boost/uuid/random_generator.hpp>
 
-#include "worker.hpp"
+#include "publish_worker.hpp"
 
 #include <distributorReq.pb.h>
 #include <distributorResp.pb.h>
@@ -92,16 +92,8 @@ class RoFISim
     }
 
 public:
-    static void distributorRespGetInfoCb( std::once_flag & onceFlag,
-                                          msgs::DistributorResp resp,
-                                          std::promise< msgs::DistributorResp > & respPromise )
-    {
-        if ( resp.resptype() != msgs::DistributorReq::GET_INFO )
-        {
-            return;
-        }
-        std::call_once( onceFlag, [ & ] { respPromise.set_value( resp ); } );
-    }
+    RoFISim( const RoFISim & ) = delete;
+    RoFISim & operator=( const RoFISim & ) = delete;
 
     static void distributorRespLockOneCb( std::once_flag & onceFlag,
                                           msgs::DistributorResp resp,
@@ -156,34 +148,28 @@ public:
 
     static msgs::RofiInfo getNewLocalInfo()
     {
-        auto node = boost::make_shared< gazebo::transport::Node >();
-        node->Init();
-
         auto infoPromise = std::promise< msgs::RofiInfo >();
         auto infoFuture = infoPromise.get_future();
         std::once_flag onceFlag;
 
-        auto sub = GazeboWorker::get().subscribe(
+        auto sub = PublishWorker::get().subscribe(
                 [ & ]( auto resp ) { distributorRespLockOneCb( onceFlag, resp, infoPromise ); } );
 
         msgs::DistributorReq req;
         req.set_sessionid( SessionId::get().bytes() );
         req.set_reqtype( msgs::DistributorReq::LOCK_ONE );
-        GazeboWorker::get().publish( req );
+        PublishWorker::get().publish( req );
 
         return infoFuture.get();
     }
 
     static msgs::RofiInfo tryLockLocal( RoFI::Id rofiId )
     {
-        auto node = boost::make_shared< gazebo::transport::Node >();
-        node->Init();
-
         auto infoPromise = std::promise< msgs::RofiInfo >();
         auto infoFuture = infoPromise.get_future();
         std::once_flag onceFlag;
 
-        auto sub = GazeboWorker::get().subscribe( [ & ]( auto resp ) {
+        auto sub = PublishWorker::get().subscribe( [ & ]( auto resp ) {
             distributorRespTryLockCb( onceFlag, resp, infoPromise, rofiId );
         } );
 
@@ -191,45 +177,13 @@ public:
         req.set_sessionid( SessionId::get().bytes() );
         req.set_reqtype( msgs::DistributorReq::TRY_LOCK );
         req.set_rofiid( rofiId );
-        GazeboWorker::get().publish( req );
+        PublishWorker::get().publish( req );
 
         return infoFuture.get();
     }
 
-    static std::string getTopic( RoFI::Id rofiId )
-    {
-        auto node = boost::make_shared< gazebo::transport::Node >();
-        node->Init();
-
-        auto respPromise = std::promise< msgs::DistributorResp >();
-        auto respFuture = respPromise.get_future();
-        std::once_flag onceFlag;
-
-        auto sub = GazeboWorker::get().subscribe(
-                [ & ]( auto resp ) { distributorRespGetInfoCb( onceFlag, resp, respPromise ); } );
-
-        msgs::DistributorReq req;
-        req.set_sessionid( SessionId::get().bytes() );
-        req.set_reqtype( msgs::DistributorReq::GET_INFO );
-        GazeboWorker::get().publish( req );
-
-        auto resp = respFuture.get();
-
-        for ( auto & info : resp.rofiinfos() )
-        {
-            if ( info.rofiid() == rofiId )
-            {
-                return info.topic();
-            }
-        }
-
-        std::cerr << "No RoFI with ID: " << rofiId << "\n";
-        throw std::runtime_error( "No RoFI with given ID" );
-    }
-
     static std::shared_ptr< RoFISim > createLocal()
     {
-        auto gazeboHolder = GazeboClientHolder::get();
 #ifdef LOCAL_ROFI_ID
         auto rofiId = tryLockLocal( LOCAL_ROFI_ID ).rofiid();
 #else
@@ -240,17 +194,17 @@ public:
         return newRoFI;
     }
 
-    static std::shared_ptr< RoFISim > createRemote( RoFI::Id id )
+    static std::shared_ptr< RoFISim > createRemote( RoFI::Id rofiId )
     {
-        auto gazeboHolder = GazeboClientHolder::get();
-        auto newRoFI = std::shared_ptr< RoFISim >( new RoFISim( id ) );
+        auto newRoFI = std::shared_ptr< RoFISim >( new RoFISim( rofiId ) );
         newRoFI->init();
         return newRoFI;
     }
 
     void init()
     {
-        _sub = GazeboWorker::get().subscribe( _id, [ this ]( auto resp ) { onResponse( resp ); } );
+        // Has to be called after construction of *this
+        _sub = PublishWorker::get().subscribe( _id, [ this ]( auto resp ) { onResponse( resp ); } );
         assert( _sub );
 
         std::cerr << "Waiting for description from RoFI " << _id << "...\n";
@@ -276,15 +230,14 @@ public:
         }
     }
 
+    void initJoints();
+
     void publish( const msgs::RofiCmd & msg )
     {
         assert( msg.rofiid() == getId() );
 
-        GazeboWorker::get().publish( msg );
+        PublishWorker::get().publish( msg );
     }
-
-    void initJoints();
-
 
     RoFI::Id getId() const override
     {
@@ -293,6 +246,7 @@ public:
 
     Joint getJoint( int index ) override;
     Connector getConnector( int index ) override;
+
     RoFI::Descriptor getDescriptor() const override
     {
         RoFI::Descriptor descriptor;
@@ -310,9 +264,9 @@ public:
     void wait( int ms, std::function< void() > callback )
     {
         assert( callback );
-        assert( ms > 0 );
+        assert( ms >= 0 );
 
-        int tmpWaitId = 0;
+        int tmpWaitId = {};
 
         {
             std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
@@ -334,10 +288,10 @@ private:
     std::mutex descriptionMutex;
     std::atomic_bool hasDescription = false;
 
-    SubscriberWrapperPtr< rofi::messages::RofiResp > _sub;
-
     std::vector< std::shared_ptr< JointSim > > _joints;
     std::vector< std::shared_ptr< ConnectorSim > > _connectors;
+
+    SubscriberWrapperPtr< rofi::messages::RofiResp > _sub;
 
     static int waitId;
     static std::mutex waitCallbacksMapMutex;
@@ -358,6 +312,9 @@ public:
             , _rofi( std::move( rofi ) )
     {
     }
+
+    ConnectorSim( const ConnectorSim & ) = delete;
+    ConnectorSim & operator=( const ConnectorSim & ) = delete;
 
 
     ConnectorState getState() override
@@ -536,7 +493,7 @@ public:
     std::shared_ptr< RoFISim > getRoFI() const
     {
         auto rofi = _rofi.lock();
-        assert( rofi && "RoFI invalid access from joint" );
+        assert( rofi && "RoFI invalid access from connector" );
         return rofi;
     }
 
@@ -606,6 +563,9 @@ public:
             , _rofi( std::move( rofi ) )
     {
     }
+
+    JointSim( const JointSim & ) = delete;
+    JointSim & operator=( const JointSim & ) = delete;
 
     void initCapabilities()
     {
@@ -912,18 +872,13 @@ void RoFISim::onDescriptionResp( const msgs::RofiResp & resp )
         return;
     }
 
-    size_t jointCount = static_cast< size_t >( description.jointcount() );
-    while ( _joints.size() < jointCount )
-    {
-        _joints.push_back( std::make_shared< JointSim >( shared_from_this(), _joints.size() ) );
-    }
+    std::generate_n( std::back_inserter( _joints ), description.jointcount(), [ this ] {
+        return std::make_shared< JointSim >( shared_from_this(), _joints.size() );
+    } );
 
-    size_t connectorCount = static_cast< size_t >( description.connectorcount() );
-    while ( _connectors.size() < connectorCount )
-    {
-        _connectors.push_back(
-                std::make_shared< ConnectorSim >( shared_from_this(), _connectors.size() ) );
-    }
+    std::generate_n( std::back_inserter( _connectors ), description.connectorcount(), [ this ] {
+        return std::make_shared< ConnectorSim >( shared_from_this(), _connectors.size() );
+    } );
 
     hasDescription = true;
 }
@@ -1008,9 +963,9 @@ void RoFI::wait( int ms, std::function< void() > callback )
         throw std::invalid_argument( "empty callback" );
     }
 
-    if ( ms <= 0 )
+    if ( ms < 0 )
     {
-        throw std::invalid_argument( "non-positive wait time" );
+        throw std::invalid_argument( "negative wait time" );
     }
 
     auto localRoFI = std::dynamic_pointer_cast< RoFISim >( RoFI::getLocalRoFI()._impl );

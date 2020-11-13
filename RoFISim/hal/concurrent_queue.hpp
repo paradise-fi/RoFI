@@ -1,15 +1,18 @@
 #pragma once
 
 #include <cassert>
-#include <condition_variable>
 #include <deque>
 #include <initializer_list>
 #include <mutex>
+#include <optional>
+
+#include "jthread/condition_variable_any2.hpp"
 
 
 template < typename T >
-struct ConcurrentQueue
+class ConcurrentQueue
 {
+public:
     T pop()
     {
         std::unique_lock< std::mutex > lk( _m );
@@ -18,6 +21,19 @@ struct ConcurrentQueue
         auto r = std::move( _q.front() );
         _q.pop_front();
         return r;
+    }
+
+    // Returns nullopt if stop is requested
+    std::optional< T > pop( std20::stop_token stoken )
+    {
+        std::unique_lock< std::mutex > lk( _m );
+        if ( _popSig.wait( lk, stoken, [ this ] { return !_q.empty(); } ) )
+        {
+            std::optional< T > r = { std::move( _q.front() ) };
+            _q.pop_front();
+            return r;
+        }
+        return {};
     }
 
     void push( const T & x )
@@ -63,7 +79,7 @@ struct ConcurrentQueue
         push<>( il );
     }
 
-    bool empty() const
+    [[nodiscard]] bool empty() const
     {
         std::lock_guard< std::mutex > lk( _m );
         return _q.empty();
@@ -79,5 +95,5 @@ private:
     std::deque< T > _q;
 
     mutable std::mutex _m;
-    std::condition_variable _popSig;
+    std20::condition_variable_any2 _popSig; // Change to std::condition_variable with C++20
 };
