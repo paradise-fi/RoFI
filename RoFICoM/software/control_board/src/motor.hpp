@@ -24,7 +24,13 @@ public:
     }
 
     void set( int val ) {
-        assert( val >= -100 && val <= 100 );
+        if (val < -100 || val > 100 ) {
+            Dbg::info("Invalid motor value %d", val);
+        }
+        if ( val < -100 )
+            val = -100;
+        if ( val > 100 )
+            val = 100;
         if ( val < 0 ) {
             int setpoint = _pwm.top() + val * _pwm.top() / 100;
             _pwm.set( setpoint );
@@ -93,9 +99,9 @@ private:
     void _move() {
         uint32_t duration = HAL_GetTick() - _stateStarted;
         if ( _currentState == State::Expanding )
-            _motor.set( _coef( duration ) * -100 );
+            _motor.set( _coef( duration ) * -80 );
         else if ( _currentState == State::Retracting )
-            _motor.set( _coef( duration ) * 100 );
+            _motor.set( _coef( duration ) * 50 );
         else
             _motor.set( 0 );
     }
@@ -110,11 +116,24 @@ private:
         _stateStarted = HAL_GetTick();
     }
 
-    int _coef( int duration ) {
+    float _coef( int duration ) {
         if ( duration > 6000 )
             return 0;
-        if ( duration % 1500 > 1000 )
+        duration = duration % 1500;
+        if ( duration >= 1000 )
             return 0;
+        return ramp( 250, 1000, duration );
+        if (duration <= 500 )
+            return duration / 500.0;
+        else
+            return 1.0 - (duration - 500) / 500.0;
+    }
+
+    float ramp( int accelTime, int totalTime, int currentTime ) {
+        if ( currentTime < accelTime )
+            return currentTime / float( accelTime );
+        if ( totalTime - currentTime < accelTime )
+            return (totalTime - currentTime) / float(accelTime);
         return 1;
     }
 

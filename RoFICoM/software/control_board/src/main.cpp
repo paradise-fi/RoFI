@@ -21,6 +21,14 @@
 
 using Block = memory::Pool::Block;
 
+enum ConnectorStateFlags {
+    PositionExpanded  = 1 << 0,
+    InternalConnected = 1 << 1,
+    ExternalConnected = 1 << 2,
+    MatingSide        = 1 << 8,
+    Orientation       = 0b11 << 9,
+};
+
 Dbg& dbgInstance() {
     static Dbg inst(
         USART1, LL_DMA_CHANNEL_1, LL_DMA_CHANNEL_2,
@@ -37,11 +45,23 @@ void onCmdVersion( SpiInterface& interf ) {
     interf.sendBlock( std::move( block ), 4 );
 }
 
-void onCmdStatus( SpiInterface& interf, Block /*header*/, ConnComInterface& connInt ) {
+void onCmdStatus( SpiInterface& interf, Block header,
+    ConnComInterface& connInt, Slider& slider )
+{
+    uint16_t status = viewAs< uint16_t >( header.get() );
+    uint16_t mask = viewAs< uint16_t >( header.get() + 2 );
+    if ( mask & ConnectorStateFlags::PositionExpanded ) {
+        if ( status & ConnectorStateFlags::PositionExpanded )
+            slider.expand();
+        else
+            slider.retract();
+    }
+
     auto block = memory::Pool::allocate( 12 );
     memset( block.get(), 0xAA, 12 );
     viewAs< uint8_t >( block.get() + 2 ) = connInt.pending();
     viewAs< uint8_t >( block.get() + 3 ) = connInt.available();
+    viewAs< uint8_t >( block.get() + 4 ) = 42;
     // ToDo: Assign remaining values
     interf.sendBlock( std::move( block ), 12 );
     // ToDo Interpret the header
@@ -95,7 +115,7 @@ int main() {
     motor.enable();
     motor.set( 0 );
 
-    Slider slider( Motor( pwm, GpioB[ 1 ] ), GpioA[ 7 ], GpioA[ 5 ] );
+    Slider slider( Motor( pwm, GpioC[ 14 ] ), GpioB[ 4 ], GpioB[ 8 ] );
 
     PowerSwitch powerInterface;
     ConnectorStatus connectorStatus ( GpioC[ 6 ], GpioA[ 15 ] );
@@ -104,7 +124,7 @@ int main() {
     Spi spi( SPI1,
         Slave(),
         MisoOn( GpioA[ 6 ] ),
-        SckOn( GpioA[ 1 ] ),
+        SckOn( GpioB[ 3 ] ),
         CsOn( GpioA[ 4 ] )
     );
 
@@ -112,6 +132,7 @@ int main() {
         Baudrate( 115200 ),
         TxOn( GpioA[ 2 ] ),
         RxOn( GpioA[ 3 ] ) );
+    uart.enable();
 
     ConnComInterface connComInterface( std::move( uart ) );
 
@@ -123,7 +144,7 @@ int main() {
                 onCmdVersion( spiInterface );
                 break;
             case Command::STATUS:
-                onCmdStatus( spiInterface, std::move( b ), connComInterface );
+                onCmdStatus( spiInterface, std::move( b ), connComInterface, slider );
                 break;
             case Command::INTERRUPT:
                 onCmdInterrupt( spiInterface, std::move( b ) );
@@ -139,6 +160,8 @@ int main() {
             };
         } );
     connComInterface.onNewBlob( [&] { spiInterface.interruptMaster(); } );
+
+    Dbg::error( "Ready for operation" );
 
     while ( true ) {
         slider.run();
@@ -160,7 +183,9 @@ int main() {
                 Dbg::error( "DBG received: %c", Dbg::get() );
             }
         }
-        Defer::run();
+        if (Defer::run()) {
+            // Dbg::error("D\n");
+        }
     }
 }
 

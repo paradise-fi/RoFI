@@ -177,7 +177,7 @@ struct PinCfg {
         LL_GPIO_InitTypeDef cfg{};
         cfg.Pin = 1 << self()._pin._pos;
         cfg.Mode = LL_GPIO_MODE_ALTERNATE;
-        cfg.Speed = LL_GPIO_SPEED_FREQ_VERY_HIGH;
+        cfg.Speed = LL_GPIO_SPEED_FREQ_HIGH;
         cfg.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
         cfg.Pull = LL_GPIO_PULL_NO;
         cfg.Alternate = self().alternativeFun( periph );
@@ -190,6 +190,7 @@ struct CsOn: public PinCfg< CsOn >, public detail::CsOn< CsOn > {
 
     void post( SPI_TypeDef *periph ) {
         PinCfg< CsOn >::post( periph );
+        LL_GPIO_SetPinPull( _pin._periph, 1 << _pin._pos, LL_GPIO_PULL_UP );
         _pin.setupInterrupt( LL_EXTI_TRIGGER_RISING_FALLING, [periph]( bool rising ) {
             if ( rising ) {
                 // Transaction ends
