@@ -19,6 +19,10 @@
 
 namespace rofi::herculex {
 
+class ServoError : public std::runtime_error {
+    using runtime_error::runtime_error;
+};
+
 inline std::string hexDump( const char* c, int len ) {
     std::ostringstream s;
     s.fill( '0' );
@@ -535,11 +539,11 @@ public:
             .use_ref_tick = false
         };
         if ( uart_param_config( _uart, &uart_config ) != ESP_OK )
-            throw std::runtime_error( "Cannot initialize bus" );
+            throw ServoError( "Cannot initialize bus" );
         if ( uart_set_pin( _uart, tx, rx, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE ) != ESP_OK )
-            throw std::runtime_error( "Cannot assign pins to a bus" );
+            throw ServoError( "Cannot assign pins to a bus" );
         if ( uart_driver_install( _uart, 256, 256, 0, nullptr, 0 ) != ESP_OK )
-            throw std::runtime_error( "Cannot install uart driver" );
+            throw ServoError( "Cannot install uart driver" );
     }
 
     /**
@@ -615,6 +619,16 @@ public:
         }
 
         /**
+         * \brief Set acceleration to conservative values
+         */
+        void setConservativeAcceleration() {
+            _bus.send(
+                Packet::ramWrite( _id, RamRegister::AccelerationRatio, uint8_t( 50 ) ) );
+            _bus.send(
+                Packet::ramWrite( _id, RamRegister::MaxAccelerationTime, uint8_t( 254 ) ) );
+        }
+
+        /**
          * \brief Get current position of the motor.
          *
          * Note that it this command blocks - it waits for a round-trip to servo
@@ -626,7 +640,7 @@ public:
             auto p = _bus.read();
             if ( p )
                 return toAngle( p->get< uint16_t >( 2 ) );
-            throw std::runtime_error( "Cannot read position" );
+            throw ServoError( "Cannot read position" );
         }
 
         /**
@@ -641,7 +655,7 @@ public:
             auto p = _bus.read();
             if ( p )
                 return toAngle( p->get< uint16_t >( 2 ) ) / 0.0112;
-            throw std::runtime_error( "Cannot read speed" );
+            throw ServoError( "Cannot read speed" );
         }
 
         /**
@@ -656,7 +670,7 @@ public:
             auto p = _bus.read();
             if ( p )
                 return p->get< uint16_t >( 2 ) / 1023.0;
-            throw std::runtime_error( "Cannot read torque" );
+            throw ServoError( "Cannot read torque" );
         }
 
         /**
@@ -675,7 +689,10 @@ public:
             iJog jog{};
             jog.id = _id;
             jog.jogData = toPosition( pos );
-            jog.timeMs = toTicks( dur );
+            int durationTicks = toTicks( dur );
+            if ( durationTicks > 254 )
+                durationTicks = 254;
+            jog.timeMs = durationTicks;
             jog.speedMode = false;
 
             std::scoped_lock _( _bus._mutex );
@@ -698,7 +715,7 @@ public:
          */
         void rotate( int pwm ) {
             if ( pwm > 1023 || pwm < -1023 )
-                throw std::runtime_error( "Invalid PWM value specified" );
+                throw ServoError( "Invalid PWM value specified" );
             iJog jog{};
             jog.id = _id;
             jog.jogData = abs( pwm );
@@ -732,7 +749,7 @@ public:
             auto p = _bus.read( 10 / portTICK_PERIOD_MS );
             if ( p )
                 return p->get< uint16_t >( 0 );
-            throw std::runtime_error( "Cannot read status" );
+            throw ServoError( "Cannot read status" );
         }
 
         /**
@@ -828,7 +845,7 @@ private:
 
     void syncMovement() {
         if ( !_movement )
-            throw std::runtime_error( "No synchronized movement started" );
+            throw ServoError( "No synchronized movement started" );
         send( Packet::iJog( _movement.value() ) );
         _movement = std::nullopt;
     }

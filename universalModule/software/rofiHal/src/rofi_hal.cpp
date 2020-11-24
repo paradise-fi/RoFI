@@ -206,7 +206,7 @@ public:
             .queueSize( 1 )
             .clockSpeedHz( clkFrequency );
         std::cout << busConfig << "\n";
-        auto ret = spi_bus_initialize( bus, &busConfig, 0 );
+        auto ret = spi_bus_initialize( bus, &busConfig, 1 );
         ESP_ERROR_CHECK( ret );
         ret = spi_bus_add_device( bus, &devConfig, &_spiDev );
         ESP_ERROR_CHECK( ret );
@@ -353,6 +353,7 @@ private:
     }
 
     SpiTransactionGuard startTransaction() {
+        std::cout << "Transaction on " << _cs << "\n";
         return SpiTransactionGuard( _cs, defaultCsConfig( _cs ) );
     }
 
@@ -376,6 +377,10 @@ private:
             if ( _eventCallback )
                 _eventCallback( rofi::hal::Connector( this->shared_from_this() ),
                     event );
+        }
+        if (status.pendingReceive == 255) {
+            std::cout << "invalid pending receive";
+            status.pendingReceive = 0;
         }
         std::cout << "Pending to receive (" << _cs << "): " << status.pendingReceive << "\n";
         while ( _receiveCmdCounter < status.pendingReceive )
@@ -410,9 +415,9 @@ private:
         auto *self = reinterpret_cast< ConnectorLocal* >( arg );
         // Probably a packet, so try to read it, then check the true reason
         // self->_issueReceiveCmd( rtos::ExContext::ISR );
-        ets_printf( "Interrupted %d\n", self->_cs );
-        if ( self->_interruptCounter == 0 )
-            self->_issueInterruptCmd( rtos::ExContext::ISR );
+        // ets_printf("Interrupted %d\n", self->_cs);
+        // if ( self->_interruptCounter == 0 )
+        //     self->_issueInterruptCmd( rtos::ExContext::ISR );
     }
 
     friend class ConnectorBus;
@@ -465,11 +470,12 @@ void ConnectorBus::run( InterruptCommand c ) {
 
 void ConnectorBus::run( StatusCommand c ) {
     using namespace rofi::esp32;
-    rofi::log::info( "Status command" );
+    rofi::log::info( "Status command " + std::to_string(c.conn->_cs ) );
 
     auto transaction = c.conn->startTransaction();
     const int headerSize = 5;
     as< ProtocolCommand >( _dmaBuffer + 0 ) = ProtocolCommand::Status;
+    std::cout << std::hex << c.flags << ", " << c.writeMask << "\n" << std::dec;
     as< uint16_t >( _dmaBuffer + 1 ) = c.flags;
     as< uint16_t >( _dmaBuffer + 3 ) = c.writeMask;
     spiWrite( _spiDev, _dmaBuffer, headerSize );
@@ -485,7 +491,8 @@ void ConnectorBus::run( StatusCommand c ) {
 
 void ConnectorBus::run( SendCommand c ) {
     using namespace rofi::esp32;
-    rofi::log::info( "Send command" );
+    // rofi::log::info( "Send command" );
+    ets_printf("Send command %d\n", c.conn->_cs);
 
     if ( c.packet.size() > 2048 ) {
         rofi::log::warning( "Trying to send big packet" );
@@ -495,20 +502,26 @@ void ConnectorBus::run( SendCommand c ) {
     auto transaction = c.conn->startTransaction();
     const int headerSize = 1;
     as< ProtocolCommand >( _dmaBuffer ) = ProtocolCommand::Send;
+    ets_printf("Send command %d - A\n", c.conn->_cs);
     spiWrite( _spiDev, _dmaBuffer, headerSize );
+     ets_printf("Send command %d - B\n", c.conn->_cs);
 
     slaveDelay();
 
     const int packetHeaderSize = 4;
     as< uint16_t >( _dmaBuffer ) = c.contentType;
     as< uint16_t >( _dmaBuffer + 2 ) = c.packet.size();
+     ets_printf("Send command %d - C\n", c.conn->_cs);
     spiWrite( _spiDev, _dmaBuffer, packetHeaderSize );
+     ets_printf("Send command %d - D\n", c.conn->_cs);
 
     for ( auto it = c.packet.chunksBegin(); it != c.packet.chunksEnd(); ++it ) {
         spiWrite( _spiDev, it->mem(), it->size() );
     }
+    ets_printf("Send command %d -E \n", c.conn->_cs);
     transaction.end();
 
+    ets_printf("Send command %d finished\n", c.conn->_cs);
     c.conn->finish( c );
 }
 
@@ -524,18 +537,19 @@ void ConnectorBus::run( ReceiveCommand c ) {
     slaveDelay();
 
     // Strangely, the original code did not work. No idea why...
-    // const in payloadHeaderSize = 4;
-    // spiRead( _spiDev, _dmaBuffer, payloadHeaderSize );
-    // auto contentType = as< uint16_t >( _dmaBuffer );
-    // auto size = as< uint16_t >( _dmaBuffer );
+    const int payloadHeaderSize = 4;
+    spiRead( _spiDev, _dmaBuffer, payloadHeaderSize );
+    auto contentType = as< uint16_t >( _dmaBuffer );
+    auto size = as< uint16_t >( _dmaBuffer );
     // But splitting into two transactions works. Some dark magic probably.
 
-    const int payloadHeaderSize = 2;
-    spiRead( _spiDev, _dmaBuffer, payloadHeaderSize );
+    // const int payloadHeaderSize = 2;
+    // spiRead( _spiDev, _dmaBuffer, payloadHeaderSize );
+    // auto contentType = as< uint16_t >( _dmaBuffer );
 
-    auto contentType = as< uint16_t >( _dmaBuffer );
-    spiRead( _spiDev, _dmaBuffer, payloadHeaderSize );
-    auto size = as< uint16_t >( _dmaBuffer );
+    // spiRead( _spiDev, _dmaBuffer, payloadHeaderSize );
+    // auto size = as< uint16_t >( _dmaBuffer );
+
     if ( size == 0 || size > 2048 ) {
         std::cout << "    Nothing received: " << size << "\n";
         c.conn->finish( c );
@@ -558,13 +572,15 @@ class JointLocal :
     public std::enable_shared_from_this< JointLocal >
 {
 public:
-    JointLocal( rofi::herculex::Bus::Servo servo, const Capabilities& cap ):
-        _capabilities( cap ), _servo( std::move( servo ) )
+    JointLocal( rofi::herculex::Bus::Servo servo, const Capabilities& cap,
+                float gearRatio ):
+        _capabilities( cap ), _servo( std::move( servo ) ), _gearRatio( gearRatio )
     {
         _servo.resetErrors();
         _servo.torqueOn();
-        _servo.setLimits( Angle::rad( cap.minPosition ),
-                          Angle::rad( cap.maxPosition ) );
+        _servo.setLimits( Angle::rad( cap.minPosition ) / _gearRatio,
+                          Angle::rad( cap.maxPosition ) / _gearRatio );
+        _servo.setConservativeAcceleration();
     }
 
     virtual const Capabilities& getCapabilities() override {
@@ -589,6 +605,7 @@ public:
         float maxVelocity = 2 * pi;
         velocity = std::min( maxVelocity, std::max( -maxVelocity, velocity ) );
         int pwm = velocity / maxVelocity * 1023;
+        _servo.torqueOn(); // In case we lost connection
         _servo.rotate( pwm );
         _poller = rtos::Timer( 20ms, rtos::Timer::Type::Periodic,
             [this, pwm]() {
@@ -610,7 +627,7 @@ public:
     }
 
     virtual float getPosition() override {
-        return _servo.getPosition().rad();
+        return _servo.getPosition().rad() * _gearRatio;
     }
 
     virtual void setPosition( float pos, float velocity,
@@ -618,19 +635,26 @@ public:
     {
         using namespace std::chrono_literals;
 
+        std::cout << "Setting position: " << pos << "\n";
+        std::cout << "    gear ratio: " << _gearRatio << "\n";
+
         auto currentPos = getPosition();
         auto distance = abs( pos - currentPos );
         auto duration = std::chrono::milliseconds( int( distance / velocity * 1000 ) );
-        _poller = rtos::Timer( 20ms, rtos::Timer::Type::Periodic,
-            [ this, callback, pos ]() {
-                auto currentPos = getPosition();
-                if ( abs( currentPos - pos ) < Angle::deg( 4 * 0.325 ).rad() ) {
-                    callback( rofi::hal::Joint( this->shared_from_this() ) );
-                    _poller.stop();
-                }
-            } );
-        _servo.move( Angle::rad( pos ), duration );
-        _poller.start();
+        std::cout << "Duration: " << duration.count() << "\n";
+        // duration = std::chrono::milliseconds(0);
+        // _poller = rtos::Timer( 20ms, rtos::Timer::Type::Periodic,
+        //     [ this, callback, pos ]() {
+        //         auto currentPos = getPosition();
+        //         if ( abs( currentPos - pos ) < Angle::deg( 4 * 0.325 ).rad() ) {
+        //             callback( rofi::hal::Joint( this->shared_from_this() ) );
+        //             _poller.stop();
+        //         }
+        //     } );
+        std::cout << "   position: " << Angle::rad( pos ).deg() / _gearRatio << "\n";
+        _servo.torqueOn(); // In case we lost connection
+        _servo.move( Angle::rad( pos ) / _gearRatio, duration );
+        // _poller.start();
     }
 
     virtual float getTorque() override {
@@ -640,6 +664,7 @@ public:
     virtual void setTorque( float torque ) override {
         torque = std::min( _capabilities.maxTorque, std::max( -_capabilities.maxTorque, torque ) );
         int pwm = torque / _capabilities.maxTorque * 1023;
+        _servo.torqueOn(); // In case we lost connection
         _servo.rotate( pwm );
     }
 
@@ -664,6 +689,7 @@ public:
 private:
     Capabilities _capabilities;
     rofi::herculex::Bus::Servo _servo;
+    float _gearRatio;
     rtos::Timer _poller;
     rtos::Timer _errorPoller;
     std::function< void( Joint, Joint::Error, const std::string& msg ) > _errorCallback;
@@ -671,8 +697,8 @@ private:
 
 rofi::hal::Joint::Implementation::Capabilities shoeJointCapability() {
     rofi::hal::Joint::Implementation::Capabilities cap;
-    cap.maxPosition = pi / 2; // rad
-    cap.minPosition = -pi / 2; // rad
+    cap.maxPosition = pi / 2 * 1.1; // rad
+    cap.minPosition = -pi / 2 * 1.1; // rad
     cap.maxSpeed = 2 * pi; // rad / s
     cap.minSpeed = 2 * pi; // rad / s
     cap.maxTorque = 1.2; // N * m
@@ -694,9 +720,12 @@ public:
     RoFILocal():
         _servoBus( UART_NUM_1, GPIO_NUM_4, GPIO_NUM_2 ),
         _joints( {
-            std::make_shared< JointLocal >( _servoBus.getServo( 1 ), shoeJointCapability() ),
-            std::make_shared< JointLocal >( _servoBus.getServo( 2 ), shoeJointCapability() ),
-            std::make_shared< JointLocal >( _servoBus.getServo( 3 ), bodyJointCapability() )
+            std::make_shared< JointLocal >(
+                _servoBus.getServo( 1 ), shoeJointCapability(), 25.f / 35.f ),
+            std::make_shared< JointLocal >(
+                _servoBus.getServo( 2 ), shoeJointCapability(), 25.f / 35.f  ),
+            std::make_shared< JointLocal >(
+             _servoBus.getServo( 3 ), bodyJointCapability(), 1.f )
         } ),
         _connectorBus( HSPI_HOST, GPIO_NUM_18, GPIO_NUM_5, 1000000 ),
         _connectors( {
