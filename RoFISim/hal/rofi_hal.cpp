@@ -18,6 +18,7 @@
 #include "connector_worker.hpp"
 #include "joint_worker.hpp"
 #include "publish_worker.hpp"
+#include "wait_worker.hpp"
 
 #include <distributorReq.pb.h>
 #include <distributorResp.pb.h>
@@ -268,19 +269,12 @@ public:
         assert( callback );
         assert( ms >= 0 );
 
-        int tmpWaitId = {};
-
-        {
-            std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
-            tmpWaitId = ++waitId;
-            assert( waitCallbacksMap.find( tmpWaitId ) == waitCallbacksMap.end() );
-            waitCallbacksMap.emplace( tmpWaitId, std::move( callback ) );
-        }
+        int waitId = waitWorker.registerWaitCallback( std::move( callback ) );
 
         msgs::RofiCmd rofiCmd;
         rofiCmd.set_rofiid( getId() );
         rofiCmd.set_cmdtype( msgs::RofiCmd::WAIT_CMD );
-        rofiCmd.mutable_waitcmd()->set_waitid( tmpWaitId );
+        rofiCmd.mutable_waitcmd()->set_waitid( waitId );
         rofiCmd.mutable_waitcmd()->set_waitms( ms );
         publish( rofiCmd );
     }
@@ -300,9 +294,7 @@ public:
 private:
     SubscriberWrapperPtr< rofi::messages::RofiResp > _sub;
 
-    static int waitId;
-    static std::mutex waitCallbacksMapMutex;
-    static std::unordered_map< int, std::function< void() > > waitCallbacksMap;
+    static WaitWorker waitWorker;
 };
 
 /**
@@ -641,9 +633,7 @@ private:
 };
 
 
-int RoFISim::waitId = {};
-std::mutex RoFISim::waitCallbacksMapMutex = {};
-std::unordered_map< int, std::function< void() > > RoFISim::waitCallbacksMap = {};
+rofi::hal::WaitWorker RoFISim::waitWorker = {};
 
 void RoFISim::initJoints()
 {
@@ -777,20 +767,7 @@ void RoFISim::onWaitResp( const msgs::RofiResp & resp )
 {
     assert( resp.resptype() == msgs::RofiCmd::WAIT_CMD );
 
-    std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
-
-    auto it = waitCallbacksMap.find( resp.waitid() );
-    if ( it == waitCallbacksMap.end() )
-    {
-        std::cerr << "Got wait response without a callback waiting (ID: " << resp.waitid()
-                  << "). Ignoring...\n";
-        return;
-    }
-
-    assert( it->second );
-    std::thread( it->second ).detach();
-
-    waitCallbacksMap.erase( it );
+    waitWorker.processMessage( resp.waitid() );
 }
 
 void RoFISim::onResponse( const msgs::RofiResp & resp )
