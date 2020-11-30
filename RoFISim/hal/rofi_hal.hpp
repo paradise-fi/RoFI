@@ -238,8 +238,10 @@ struct ConnectorState
  */
 enum class ConnectorEvent : signed char
 {
-    Connected = 0,    ///< Connection with other Connector started.
-    Disconnected = 1, ///< Connection with other Connector ended.
+    Connected, ///< Connection with other Connector started.
+    Disconnected,  ///< Connection with other Connector ended.
+    ConnectedPower,
+    DisconnectedPower,
 };
 
 /**
