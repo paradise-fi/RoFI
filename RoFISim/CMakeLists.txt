@@ -32,15 +32,15 @@ endif(NOT CMAKE_CONFIGURATION_TYPES AND NOT CMAKE_BUILD_TYPE)
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O3 -g")
 set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-set(CMAKE_CXX_FLAGS "${GAZEBO_CXX_FLAGS} -Wall -Wextra -pedantic")
+set(CMAKE_CXX_FLAGS "${GAZEBO_CXX_FLAGS} -Wall -Wextra -pedantic -pthread")
 
 if(${LIBCXX})
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++")
 endif(${LIBCXX})
 
 
-add_subdirectory(plugins)
 add_subdirectory(hal)
+add_subdirectory(plugins)
 add_subdirectory(tools)
 
 add_subdirectory(worlds)

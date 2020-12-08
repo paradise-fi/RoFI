@@ -1,6 +1,7 @@
 #include <cassert>
 #include <future>
 #include <iostream>
+#include <thread>
 
 #include "rofi_hal.hpp"
 
