@@ -44,13 +44,13 @@ int main(int argc, char* argv[])
     if (argc < 2) {
         throw std::invalid_argument("No filepath given");
     }
-/*
+/**/
     std::ifstream initInput;
     initInput.open(argv[1]);
     Configuration init;
     IO::readConfiguration(initInput, init);
     init.computeMatrices();
-*/
+/**/
 /*
     {
         std::cout << "Loaded: \n" << IO::toString(init);
@@ -252,15 +252,15 @@ int main(int argc, char* argv[])
     printVecToFile(res, argv[3]);
 */
 /* Testing with path debug */
-/*
+/**/
     std::ofstream file;
     file.open(std::string(argv[2]), std::ios_base::app);
-    file << argv[1] << std::endl;
+    file << argv[1] << ";";
     auto res = reconfigToSnake(init, &file).first;
     printVecToFile(res, argv[3]);
-*/
-/* Testing mapping */
 /**/
+/* Testing mapping */
+/*
     std::vector<Configuration> toSnake1;
     std::vector<Configuration> toSnake2;
     std::ifstream input1;
@@ -276,7 +276,6 @@ int main(int argc, char* argv[])
     appendMapped(toSnake1, toSnake2);
 
     printVecToFile(toSnake1, argv[3]);
-
-/**/
+*/
     return 0;
 }
