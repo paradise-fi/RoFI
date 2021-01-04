@@ -11,41 +11,41 @@ void logTime(std::ofstream* debug_output, unsigned progress, std::optional<momen
     std::optional<moment> tts, std::optional<moment> parity, std::optional<moment> docks, std::optional<moment> circle,
     unsigned pathLen) {
 
-    *debug_output << progress << " " << std::chrono::duration_cast<std::chrono::seconds>(*aerate - *start).count();
+    *debug_output << progress << ";" << std::chrono::duration_cast<std::chrono::seconds>(*aerate - *start).count();
 
     if (progress < 1) {
-        *debug_output << " x x x x " << std::chrono::duration_cast<std::chrono::seconds>(*aerate - *start).count();
-        *debug_output << " " << pathLen << std::endl;
+        *debug_output << ";x;x;x;x;" << std::chrono::duration_cast<std::chrono::seconds>(*aerate - *start).count();
+        *debug_output << ";" << pathLen << std::endl;
         return;
     }
 
-    *debug_output << " " << std::chrono::duration_cast<std::chrono::seconds>(*tts - *aerate).count();
+    *debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*tts - *aerate).count();
 
     if (progress < 2) {
-        *debug_output << " x x x " << std::chrono::duration_cast<std::chrono::seconds>(*tts - *start).count();
-        *debug_output << " " << pathLen << std::endl;
+        *debug_output << ";x;x;x;" << std::chrono::duration_cast<std::chrono::seconds>(*tts - *start).count();
+        *debug_output << ";" << pathLen << std::endl;
         return;
     }
 
-    *debug_output << " " << std::chrono::duration_cast<std::chrono::seconds>(*parity - *tts).count();
+    *debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*parity - *tts).count();
 
     if (progress < 3) {
-        *debug_output << " x x " << std::chrono::duration_cast<std::chrono::seconds>(*parity - *start).count();
-        *debug_output << " " << pathLen << std::endl;
+        *debug_output << ";x;x;" << std::chrono::duration_cast<std::chrono::seconds>(*parity - *start).count();
+        *debug_output << ";" << pathLen << std::endl;
         return;
     }
 
-    *debug_output << " " << std::chrono::duration_cast<std::chrono::seconds>(*docks - *parity).count();
+    *debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*docks - *parity).count();
 
     if (progress < 4) {
-        *debug_output << " x " << std::chrono::duration_cast<std::chrono::seconds>(*docks - *start).count();
-        *debug_output << " " << pathLen << std::endl;
+        *debug_output << ";x;" << std::chrono::duration_cast<std::chrono::seconds>(*docks - *start).count();
+        *debug_output << ";" << pathLen << std::endl;
         return;
     }
 
-    *debug_output << " " << std::chrono::duration_cast<std::chrono::seconds>(*circle - *docks).count();
-    *debug_output << " " << std::chrono::duration_cast<std::chrono::seconds>(*circle - *start).count();
-    *debug_output << " " << pathLen << std::endl;
+    *debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*circle - *docks).count();
+    *debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*circle - *start).count();
+    *debug_output << ";" << pathLen << std::endl;
 }
 
 std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration& init, std::ofstream* debug_output /*= std::nullptr_t*/) {
