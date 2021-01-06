@@ -155,10 +155,11 @@ private:
 class MakeStar {
 public:
     MakeStar(const Configuration& init, ID root);
-    std::vector<Edge> operator()(std::stack<ID>& dfs_stack, std::unordered_set<ID>& seen, ID curr);
+    std::vector<Edge> operator()(std::stack<ID>& dfs_stack, ID curr);
 
 private:
     const Vector mass;
     const Configuration& config;
-    std::unordered_map<ID, double> dists;
+    std::unordered_map<ID, std::array<double, 2>> dists;
+    std::unordered_set<ID> seen;
 };
