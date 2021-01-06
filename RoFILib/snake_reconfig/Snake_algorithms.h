@@ -128,31 +128,31 @@ std::vector<Configuration> aerateFromRoot(const Configuration& init);
 std::vector<Configuration> straightenSnake(const Configuration& init);
 
 
-using chooseRootFunc = ID(const Configuration&);
-ID closestMass(const Configuration& init);
+using chooseRootFunc = std::pair<ID,ShoeId>(const Configuration&);
+std::pair<ID,ShoeId> closestMass(const Configuration& init);
 
 template<typename Next>
 inline Configuration treefy(const Configuration& init, chooseRootFunc chooseRoot = closestMass) {
-    ID root = chooseRoot(init);
+    auto [root, shoe] = chooseRoot(init);
     Configuration treed = init;
     treed.clearEdges();
-    treed.setFixed(root, A, identity);
+    treed.setFixed(root, shoe, identity);
 
-    std::unordered_set<ID> seen{};
-    std::stack<ID> dfs_stack{};
+    std::unordered_set<ID> visited{};
+    std::stack<ID> stack{};
 
     Next oracle(init, root);
 
-    dfs_stack.push(root);
+    stack.push(root);
 
-    while (!dfs_stack.empty()) {
-        ID curr = dfs_stack.top();
-        dfs_stack.pop();
-        if (seen.find(curr) != seen.end())
+    while (!stack.empty()) {
+        ID curr = stack.top();
+        stack.pop();
+        if (visited.find(curr) != visited.end())
             continue;
 
-        seen.insert(curr);
-        std::vector<Edge> edges = oracle(dfs_stack, seen, curr);
+        visited.insert(curr);
+        std::vector<Edge> edges = oracle(stack, curr);
         for (const auto& e : edges)
             treed.addEdge(e);
     }

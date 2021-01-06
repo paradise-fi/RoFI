@@ -226,23 +226,30 @@ int SpaceGridScore::_add_score(int x, int y, int z) {
 MakeStar::MakeStar(const Configuration& init, ID root)
 : mass(init.massCenter())
 , config(init)
-, dists() {
+, dists()
+, seen() {
+    seen.insert(root);
     for (const auto& [id, ms] : init.getMatrices()) {
-        double currDist = 0;
-        for (unsigned side = 0; side < 2; ++side)
-            currDist += sqDistVM(ms[side], mass);
-
-        dists.emplace(id, currDist);
+        dists.emplace(id, std::array<double,2>{0, 0});
+        double currDist0 = sqDistVM(ms[0], mass);
+        double currDist1 = sqDistVM(ms[1], mass);
+        dists[id][0] = currDist0;
+        dists[id][1] = currDist1;
     }
 }
 
-std::vector<Edge> MakeStar::operator()(std::stack<ID>& dfs_stack, std::unordered_set<ID>& seen, ID curr) {
+std::vector<Edge> MakeStar::operator()(std::stack<ID>& stack, ID curr) {
     std::vector<Edge> nEdges = config.getEdges(curr, seen);
     std::sort(nEdges.begin(), nEdges.end(), [&](const Edge& a, const Edge& b){
-        return dists[a.id2()] < dists[b.id2()];
+        return dists[a.id2()][a.side2()] > dists[b.id2()][a.side2()];
     });
-    for (const auto& e : nEdges)
-        dfs_stack.push(e.id2());
-
-    return nEdges;
+    std::vector<Edge> fEdges;
+    for (const auto& e : nEdges) {
+        if (seen.find(e.id2()) != seen.end())
+            continue;
+        seen.insert(e.id2());
+        stack.push(e.id2());
+        fEdges.emplace_back(e);
+    }
+    return fEdges;
 }
