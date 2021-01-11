@@ -227,7 +227,7 @@ std::vector<Configuration> straightenSnake(const Configuration& init) {
  * Treefy  *
  * * * * * */
 
-ID closestMass(const Configuration& init) {
+std::pair<ID,ShoeId> closestMass(const Configuration& init) {
     Vector mass = init.massCenter();
     ID bestID = 0;
     ShoeId bestShoe = A;
@@ -243,7 +243,7 @@ ID closestMass(const Configuration& init) {
             }
         }
     }
-    return bestID;
+    return {bestID, bestShoe};
 }
 
 /* * * * * * * *
