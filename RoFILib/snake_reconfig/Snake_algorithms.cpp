@@ -52,7 +52,6 @@ std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration&
     auto start = std::chrono::system_clock::now();
 
     auto path = aerateConfig(init);
-    std::cout << "Finish aerate" << std::endl;
     auto afterAerate = std::chrono::system_clock::now();
     if (path.empty()) {
         if (debug_output)
@@ -63,7 +62,6 @@ std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration&
     path.push_back(treefy<MakeStar>(path.back()));
 
     auto [toSnake, finishedTTS] = treeToChain(path.back());
-    std::cout << "Finish treeToChain" << std::endl;
     auto afterTTS = std::chrono::system_clock::now();
     vectorAppend(path, toSnake);
     if (!finishedTTS) {
@@ -73,7 +71,6 @@ std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration&
     }
 
     auto [fixedSnake, finishedFP] = fixParity(path.back());
-    std::cout << "Finish fixParity" << std::endl;
     auto afterParity = std::chrono::system_clock::now();
     vectorAppend(path, fixedSnake);
     if (!finishedFP) {
@@ -83,7 +80,6 @@ std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration&
     }
 
     auto [dockSnake, finishedFD] = fixDocks(path.back());
-    std::cout << "Finish fixDocks" << std::endl;
     auto afterDocks = std::chrono::system_clock::now();
     vectorAppend(path, dockSnake);
     if (!finishedFD) {
@@ -93,7 +89,6 @@ std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration&
     }
 
     auto [flatCircle, finishedFC] = flattenCircle(path.back());
-    std::cout << "Finish flattenCircle" << std::endl;
     auto afterCircle = std::chrono::system_clock::now();
     vectorAppend(path, flatCircle);
     if (!finishedFC) {
@@ -102,7 +97,6 @@ std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration&
         return {path, false};
     }
 
-    std::cout << "Finish ALL" << std::endl;
     if (debug_output)
         logTime(debug_output, 5, start, afterAerate, afterTTS, afterParity, afterDocks, afterCircle, path.size());
     return {path, true};
@@ -132,7 +126,6 @@ std::unordered_map<ID, std::pair<ID, bool>> createMapping(const Configuration& s
     const auto& edgesF = snakeF.getEdges();
     auto [leafT, sideT] = findLeafOfSnake(snakeT);
     auto [leafF, sideF] = findLeafOfSnake(snakeF);
-    std::cout << leafF << " and " << leafT << std::endl;
     mapping[leafF] = {leafT, sideT == sideF};
 
     std::queue<std::pair<ID, ID>> bag;
@@ -162,9 +155,6 @@ std::unordered_map<ID, std::pair<ID, bool>> createMapping(const Configuration& s
 
     std::sort(res.begin(), res.end());
 
-    for (const auto& [id2, id1, change] : res)
-        std::cout << id2 << " -> " << id1 << (change ? " with change": " without change") << std::endl;
-
     return mapping;
 }
 
@@ -180,13 +170,13 @@ void appendMapped(std::vector<Configuration>& path1, const std::vector<Configura
 std::vector<Configuration> reconfigThroughSnake(const Configuration& from, const Configuration& to) {
     auto [path1, finished1] = reconfigToSnake(from);
     if (!finished1) {
-        std::cout << "Couldnt compute reconfig from `from` to snake" << std::endl;
+        std::cerr << "Couldnt compute reconfig from `from` to snake" << std::endl;
         return {};
     }
 
     auto [path2, finished2] = reconfigToSnake(to);
     if (!finished2) {
-        std::cout << "Couldnt compute reconfig from `to` to snake" << std::endl;
+        std::cerr << "Couldnt compute reconfig from `to` to snake" << std::endl;
         return {};
     }
 
@@ -324,8 +314,6 @@ std::pair<std::vector<Configuration>, bool> connectArm(const Configuration& init
     Action armJoin(join);
     auto optJoined = executeIfValid(spacePath.back(), armJoin);
     if (!optJoined.has_value()) {
-        std::cout << IO::toString(spacePath.back()) << std::endl << std::endl;
-        std::cout << IO::toString(connection) << std::endl;
         throw std::logic_error("Bug in join arm!");
     }
 
@@ -495,7 +483,6 @@ void computeDists(const Configuration& config, const std::unordered_map<ID, std:
 }
 
 Configuration disjoinArm(const Configuration& init, const Edge& addedEdge) {
-    // it is possible just to change the leafs bags and not recompute them, but we are not doing it now
     const auto& edges = init.getEdges();
     ID root = init.getFixedId();
     ID currId = addedEdge.id2();
@@ -550,22 +537,12 @@ Configuration disjoinArm(const Configuration& init, const Edge& addedEdge) {
     Action armDisjoin(disj);
     auto optDisjoined = executeIfValid(init, armDisjoin);
     if (!optDisjoined.has_value()) {
-        std::cout << IO::toString(init) << std::endl << std::endl;
-        std::cout << IO::toString(addedEdge) << std::endl;
         throw std::logic_error("Bug in disjoin arm!");
     }
     return optDisjoined.value();
 }
 
 std::pair<std::vector<Configuration>, bool> treeToChain(const Configuration& init) {
-    // DNEŠNÍ ZJIŠTĚNÍ:
-    // * chci vyzkoušet kvalitu "makeSpace" v závislosti na limitu
-    // podobně vyzkoušet i další, vyzkoumat rychlost konvergence v závislosti na tom,
-    // kolikátá iterace to je
-    //
-    // * makeSpace je v connectArm nejpomalejší část, možná vyzkoušet s menšími
-    // limity a "po vrstvách"
-
     std::unordered_map<ID, std::pair<bool, ShoeId>> allLeafs; // true for white, shoeId of real leaf
 
     std::unordered_map<ID, unsigned> subtreeSizes;
@@ -578,7 +555,6 @@ std::pair<std::vector<Configuration>, bool> treeToChain(const Configuration& ini
     std::vector<Configuration> snakeRes;
 
     while (true) {
-        //std::cout << "++++++++++++++ Try while ++++++++++++++" << std::endl;;
 
         res.clear();
         auto& pConfig = path.back();
@@ -587,7 +563,6 @@ std::pair<std::vector<Configuration>, bool> treeToChain(const Configuration& ini
 
         snakeRes = aerateFromRoot(pConfig);
         auto& config = snakeRes.back();
-        //std::cout << "************** Finish aerateFromRoot **************\n";
 
         const auto& matrices = config.getMatrices();
         const auto& edges = config.getEdges();
@@ -603,7 +578,6 @@ std::pair<std::vector<Configuration>, bool> treeToChain(const Configuration& ini
         while (!dists.empty()) {
             auto [_dist, id1, id2] = dists.top();
             dists.pop();
-            //std::cout << "|||||||||||||||| Trying " << id1 << " -> " << id2 << " ||||||||||||||||" << std::endl;
             const auto& [isWhite1, shoe1] = allLeafs[id1];
             const auto& [isWhite2, shoe2] = allLeafs[id2];
             const auto& [subRoot1, subRootSide1, radius1] = activeRadiuses.at(id1);
@@ -648,8 +622,6 @@ std::pair<std::vector<Configuration>, bool> treeToChain(const Configuration& ini
         vectorAppend(path, snakeRes);
         vectorAppend(path, res);
         if (!finished) {
-            std::cout << "We didnt finish, but last computed is this\n";
-            std::cout << IO::toString(config) << std::endl;
             return {path, false};
         }
     }
@@ -777,20 +749,15 @@ std::pair<std::vector<Configuration>, bool> fixParity(const Configuration& init)
         auto& config = straightRes.back();
         auto leafs = colourAndFindLeafs(config, colours);
         if (leafs.size() != 2) {
-            std::cout << IO::toString(config) << std::endl;
             throw std::logic_error("Bug in fixParity, config doesnt have 2 leafs");
         }
         auto [id1, side1] = leafs[0];
         auto [id2, side2] = leafs[1];
         Edge desiredEdge(id1, side1, ZMinus, North, ZMinus, side2, id2);
-        //std::cout << "************ Another one ************" << std::endl;
 
         if (canConnect(side1, colours[id1], side2, colours[id2])) {
             std::tie(res, finished) = connectArm(config, desiredEdge, config.getFixedId(), config.getFixedId());
             if (!finished) {
-                std::cout << "We sad, but we computed last this:\n";
-                std::cout << IO::toString(straightRes.back()) << std::endl;
-                std::cout << IO::toString(desiredEdge) << std::endl;
                 return {res, false};
             }
             auto toRemove = getEdgeToStrictDisjoinArm(res.back(), desiredEdge).first;
@@ -799,8 +766,6 @@ std::pair<std::vector<Configuration>, bool> fixParity(const Configuration& init)
             Action armDisjoin(disj);
             auto optDisjoined = executeIfValid(res.back(), armDisjoin);
             if (!optDisjoined.has_value()) {
-                std::cout << IO::toString(res.back()) << std::endl;
-                std::cout << IO::toString(toRemove) << std::endl;
                 throw std::logic_error("Bug in strict disjoin arm!");
             }
             res.emplace_back(optDisjoined.value());
@@ -817,17 +782,12 @@ std::pair<std::vector<Configuration>, bool> fixParity(const Configuration& init)
             auto realDesire = Edge(id1, side1, ZMinus, North, wconn, wside, parityBack.id1());
             std::tie(res, finished) = connectArm(config, realDesire, config.getFixedId(), config.getFixedId());
             if (!finished) {
-                std::cout << "We sad, but we computed last this:\n";
-                std::cout << IO::toString(straightRes.back()) << std::endl;
-                std::cout << IO::toString(realDesire) << std::endl;
                 return {res, false};
             }
             Action::Reconnect disj(false, parityBack);
             Action armDisjoin(disj);
             auto optDisjoined = executeIfValid(res.back(), armDisjoin);
             if (!optDisjoined.has_value()) {
-                std::cout << IO::toString(res.back()) << std::endl;
-                std::cout << IO::toString(parityBack) << std::endl;
                 throw std::logic_error("Bug in strict disjoin arm!");
             }
             res.emplace_back(optDisjoined.value());
@@ -892,9 +852,6 @@ std::pair<std::vector<Configuration>, bool> fixDocks(const Configuration& init) 
     auto missing = missingCircle(path.back());
     auto [circle, finished] = connectArm(path.back(), missing, path.back().getFixedId(), path.back().getFixedId());
     if (!finished) {
-        std::cout << "We weri saad" << std::endl;
-        std::cout << IO::toString(path.back()) << std::endl;
-        std::cout << IO::toString(missing) << std::endl;
         return {circle, false};
     }
     vectorAppend(path, circle);
@@ -909,8 +866,6 @@ std::pair<std::vector<Configuration>, bool> fixDocks(const Configuration& init) 
         Action armDisjoin(disj);
         auto optDisjoined = executeIfValid(preConfig, armDisjoin);
         if (!optDisjoined.has_value()) {
-            std::cout << IO::toString(path.back()) << std::endl;
-            std::cout << IO::toString(invalid) << std::endl;
             throw std::logic_error("Bug in strict disjoin arm!");
         }
         const auto& config = optDisjoined.value();
@@ -918,9 +873,6 @@ std::pair<std::vector<Configuration>, bool> fixDocks(const Configuration& init) 
         Edge replaceEdg(invalid.id1(), invalid.side1(), ZMinus, North, ZMinus, invalid.side2(), invalid.id2());
         auto [res, connected] = connectArm(config, replaceEdg, config.getFixedId(), config.getFixedId());
         if (!connected) {
-            std::cout << "We weri saadXXX" << std::endl;
-            std::cout << IO::toString(config) << std::endl;
-            std::cout << IO::toString(replaceEdg) << std::endl;
             return {res, false};
         }
         path.emplace_back(config);
@@ -958,8 +910,6 @@ std::pair<std::vector<Configuration>, bool> flattenCircle(const Configuration& i
     Action armDisjoin(disj);
     auto optDisjoined = executeIfValid(init, armDisjoin);
     if (!optDisjoined.has_value()) {
-        std::cout << IO::toString(init) << std::endl;
-        std::cout << IO::toString(armDisjoin) << std::endl;
         throw std::logic_error("Bug in flattenCircle!");
     }
 
