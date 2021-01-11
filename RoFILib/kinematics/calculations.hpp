@@ -291,26 +291,36 @@ struct kinematic_chain {
     // Move chain in such a way that given joint reaches target position
     bool reach( size_t joint_index, size_t goal_index, bool fix_next = false ){
 
+        std::vector< double > local_end = joint_positions[ joint_index ];
+        std::vector< double > local_goal = goals[ goal_index ];
+
         while( vec_dist( joint_positions[ joint_index ], goals[ goal_index ] ) > error ){
 
             for( size_t i = joint_index; i != 0; --i ){
+                local_end = joint_positions[ joint_index ];
+                local_goal = goals[ goal_index ];
+                for( int j = 0; j <= i; ++j ){
+                    local_end = chain[ j ].from_previous() * local_end;
+                    local_goal = chain[ j ].from_previous() * local_goal;
+                }
+
                 double current_x = chain[ i ].rx;
-                double rotation_x = rotx( joint_positions[ joint_index ] - joint_positions[ i ],
-                                          goals[ goal_index ] - joint_positions[ i ] );
+                double rotation_x = rotx( local_end, local_goal );
+
                 chain[ i ].rx = std::clamp( current_x + rotation_x, -M_PI / 2, M_PI / 2 );
 
                 double current_z = chain[ i ].rz;
                 double rotation_z = 0.0;
                 if( i % 2 == 1 ){
-                    rotation_z = rotz( joint_positions[ joint_index ] - joint_positions[ i ],
-                                       goals[ goal_index ] - joint_positions[ i ] );
+                    rotation_z = rotz( local_end, local_goal );
                     chain[ i ].rz = mod( current_z + rotation_z, 360.0 );
                 }
 
                 set_position( i );
 
                 if( fix_next ){
-                    while( vec_dist( joint_positions[ joint_index ], goals[ goal_index + 1 ] ) > 1.0 + error ){
+                    while( vec_dist( joint_positions[ joint_index ], goals[ goal_index + 1 ] ) > 1.0 + error ||
+                           vec_dist( joint_positions[ joint_index - 1 ], goals[ goal_index + 1 ] ) < 1.0){
                         rotation_x /= 2.0;
                         rotation_z /= 2.0;
                         chain[ i ].rx = std::clamp( current_x + rotation_x, -M_PI / 2, M_PI / 2 );

@@ -47,11 +47,12 @@ int main( int argc, char** argv ){
     std::vector< double > local_end = kc.joint_positions.back();
     std::vector< double > local_goal = helper_goal;
 
+    local_end = kc.joint_positions.back();
+    local_goal = helper_goal;
     for( int j = 0; j < kc.chain.size() - 1; ++j ){
         local_end = kc.chain[ j ].from_previous() * local_end;
         local_goal = kc.chain[ j ].from_previous() * local_goal;
     }
-
     kc.chain[ i ].rz = kc.chain[ i ].rz + rotz( local_end, local_goal );
     kc.set_position( i );
 
@@ -61,22 +62,9 @@ int main( int argc, char** argv ){
         local_end = kc.chain[ j ].from_previous() * local_end;
         local_goal = kc.chain[ j ].from_previous() * local_goal;
     }
-
-    double current_x = kc.chain.back().rx;
-    double rotation_x = rotx( local_end, local_goal );
-
-    kc.chain.back().rx = std::clamp( kc.chain.back().rx + rotation_x, -M_PI / 2, M_PI / 2 );
-
+    kc.chain.back().rx = std::clamp( kc.chain.back().rx + rotx( local_end, local_goal ), -M_PI / 2, M_PI / 2 );
     kc.set_position( i );
 
-    local_end = kc.joint_positions.back();
-    local_goal = helper_goal;
-    for( int j = 0; j < kc.chain.size() - 1; ++j ){
-        local_end = kc.chain[ j ].from_previous() * local_end;
-        local_goal = kc.chain[ j ].from_previous() * local_goal;
-    }
-    kc.chain[ i ].rz = kc.chain[ i ].rz + rotz( local_end, local_goal );
-    kc.set_position( i );
 
     for( auto& vec : kc.joint_positions ){
         std::cerr << vec;
