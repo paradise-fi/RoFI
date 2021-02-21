@@ -1,12 +1,12 @@
 
-#include "master.hpp"
+#include "gazebo_master.hpp"
 
 #include <gazebo/gazebo.hh>
 
 
 namespace rofi::networking
 {
-std::unique_ptr< gazebo::Master > startMaster()
+std::unique_ptr< gazebo::Master > startGazeboMaster()
 {
     std::string host; // Host is ignored for master
     unsigned port = {};
