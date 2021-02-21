@@ -1,7 +1,5 @@
 #include <iostream>
 
-#include <gazebo/gazebo.hh>
-
 #include "controllers.hpp"
 #include "gazebo_master.hpp"
 #include "simulation.hpp"

@@ -41,14 +41,17 @@ endif(${LIBCXX})
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../RoFISim/hal/messages ${CMAKE_CURRENT_BINARY_DIR}/messages)
 
 
+add_subdirectory(gazebo_master)
 add_subdirectory(rofi_interface)
+add_subdirectory(simulation)
+add_subdirectory(controllers)
 
 set (FILES
     main.cpp
-    controllers.cpp
-    gazebo_master.cpp
 )
 
 add_executable(master ${FILES})
-target_link_libraries(master PUBLIC rofiInterface)
-target_link_libraries(master PUBLIC rofiMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(master PUBLIC networkingGazeboMaster)
+target_link_libraries(master PUBLIC networkingRofiInterface)
+target_link_libraries(master PUBLIC networkingSimulation)
+target_link_libraries(master PUBLIC networkingControllers)

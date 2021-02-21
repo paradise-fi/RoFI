@@ -1,4 +1,3 @@
-
 #include "gazebo_master.hpp"
 
 #include <gazebo/gazebo.hh>
