@@ -5,6 +5,7 @@
 
 #include "gazebo/Master.hh"
 
+
 namespace rofi::networking
 {
 // Starts Gazebo master for communication in a separate thread
