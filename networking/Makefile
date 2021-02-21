@@ -14,7 +14,7 @@ clean:
 	rm -rf build
 
 format-all:
-	find ./ ! \( -path "./build/*" \) -a \( -type f -iname *.hpp -o -type f -iname *.cpp \) | xargs clang-format --style=file -i
+	find ./ ! \( -path "./build/*" \) -a \( -type f -iname "*.hpp" -o -type f -iname "*.cpp" \) | xargs clang-format --style=file -i
 
 help:
 	@echo "Available targets:"

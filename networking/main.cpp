@@ -2,11 +2,9 @@
 
 #include <gazebo/gazebo.hh>
 
-#include "distributor.hpp"
-#include "master.hpp"
-
-#include <distributorReq.pb.h>
-#include <distributorResp.pb.h>
+#include "controllers.hpp"
+#include "gazebo_master.hpp"
+#include "simulation.hpp"
 
 
 int main()
@@ -15,9 +13,11 @@ int main()
 
     std::cout << "Starting master" << std::endl;
 
-    auto master = startMaster();
-    Database database;
-    Distributor distributor = { database };
+    auto gzMaster = startGazeboMaster();
+    Simulation simulation;
+    RofiInterface rofiInterface;
+
+    runRofiController( simulation, rofiInterface );
 
     std::cout << "Waiting for messages..." << std::endl;
     while ( true )
