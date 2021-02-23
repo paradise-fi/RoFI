@@ -15,7 +15,7 @@ int main()
     Simulation simulation;
     RofiInterface rofiInterface;
 
-    runRofiController( simulation, rofiInterface );
+    auto rofiController = runRofiController( simulation, rofiInterface );
 
     std::cout << "Waiting for messages..." << std::endl;
     while ( true )
