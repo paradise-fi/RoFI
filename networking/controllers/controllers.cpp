@@ -33,13 +33,18 @@ void rofiControllerThread( stop_token stopToken,
         }
 
         auto rofiCommands = rofiInterface.getRofiCommands();
+        std::vector< rofi::messages::RofiResp > processResponses;
         for ( auto & rofiCmd : rofiCommands )
         {
-            simulation.processRofiCommand( *rofiCmd );
+            if ( auto resp = simulation.processRofiCommand( *rofiCmd ) )
+            {
+                processResponses.push_back( std::move( *resp ) );
+            }
         }
 
-        auto responses = simulation.moveRofisOneIteration();
-        rofiInterface.sendRofiResponses( std::move( responses ) );
+        auto eventResponses = simulation.moveRofisOneIteration();
+        rofiInterface.sendRofiResponses( std::move( processResponses ) );
+        rofiInterface.sendRofiResponses( std::move( eventResponses ) );
     }
 }
 
