@@ -39,6 +39,7 @@ if(${LIBCXX})
 endif(${LIBCXX})
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../RoFISim/hal/messages ${CMAKE_CURRENT_BINARY_DIR}/messages)
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../RoFISim/hal/jthread ${CMAKE_CURRENT_BINARY_DIR}/jthread)
 
 
 add_subdirectory(gazebo_master)
