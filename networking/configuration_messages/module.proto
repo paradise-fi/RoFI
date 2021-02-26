@@ -1,0 +1,29 @@
+syntax = "proto3";
+package rofi.messages;
+
+import "common.proto";
+import "component.proto";
+import "joint.proto";
+
+
+message ComponentJoint {
+    Joint joint = 1;
+    int32 source_component = 2;
+    int32 dest_component = 3;
+}
+
+message Module {
+    enum Type {
+        UNKNOWN_MODULE = 0;
+        UNIVERSAL_MODULE = 1;
+        CUBE_MODULE = 2;
+    }
+
+    int32 id = 1;
+    Type type = 2;
+    repeated Component components = 3; // first connector_count are connectors
+    int32 connector_count = 4;
+    repeated ComponentJoint joints = 5;
+    sint32 root_component = 6;
+    // std::optional< std::vector< Matrix > > _componentPosition;
+}
