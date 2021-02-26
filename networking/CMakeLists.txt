@@ -42,6 +42,8 @@ add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../RoFISim/hal/messages ${CMAKE_CUR
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../RoFISim/hal/jthread ${CMAKE_CURRENT_BINARY_DIR}/jthread)
 
 
+add_subdirectory(configuration_messages)
+
 add_subdirectory(gazebo_master)
 add_subdirectory(rofi_interface)
 add_subdirectory(simulation)
