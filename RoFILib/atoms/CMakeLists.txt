@@ -23,7 +23,7 @@ function(add_resources out_var)
 endfunction()
 
 set(CMAKE_CXX_STANDARD 17)
-file(GLOB_RECURSE SRC *.cpp)
+file(GLOB SRC *.cpp)
 
 add_library(atoms INTERFACE ${SRC})
 target_include_directories(atoms INTERFACE)
@@ -32,3 +32,9 @@ target_link_libraries(atoms INTERFACE "stdc++fs")
 
 # We use C++ tmpname - which triggers warning
 target_link_options(atoms INTERFACE -Wno-deprecated-declarations)
+
+file(GLOB TEST_SRC test/*.cpp)
+add_executable(atoms-test ${TEST_SRC})
+target_link_libraries(atoms-test PRIVATE Catch2::Catch2 )
+target_include_directories(atoms-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} )
+catch_discover_tests(atoms-test)

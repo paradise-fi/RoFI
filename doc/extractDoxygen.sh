@@ -14,7 +14,7 @@ fi
 
 cfg=$(cat <<END
     INPUT             = $2
-    EXCLUDE_PATTERNS += *_deps*
+    EXCLUDE_PATTERNS += *_deps* *build* *test*
     EXCLUDE_PATTERNS += *CMake*
     FILE_PATTERNS     = *.cpp *.c *.hpp *.h
     RECURSIVE         = YES

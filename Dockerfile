@@ -61,6 +61,10 @@ RUN cd /tmp; \
 
 RUN pip3 install sphinx breathe sphinx-rtd-theme recommonmark
 
+# Temporarly install dev version of sphinx as it has many bugfixes for C++
+# (e.g., trailing return type)
+RUN pip3 install wheel; pip3 install --no-deps --force git+https://github.com/sphinx-doc/sphinx@3.x
+
 RUN ldconfig
 
 CMD ["bash"]
