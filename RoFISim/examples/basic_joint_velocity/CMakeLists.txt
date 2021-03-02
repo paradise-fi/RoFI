@@ -1,0 +1,4 @@
+cmake_minimum_required(VERSION 3.11)
+
+add_executable(basic_joint_velocity basic_joint_velocity.cpp)
+target_link_libraries(basic_joint_velocity rofiHal)

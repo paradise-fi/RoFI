@@ -68,9 +68,6 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
             EXTI_InitStruct.Trigger = edge;
             LL_EXTI_Init( &EXTI_InitStruct );
 
-            LL_GPIO_SetPinPull( _periph, 1 << _pos, LL_GPIO_PULL_NO );
-            LL_GPIO_SetPinMode( _periph, 1 << _pos, LL_GPIO_MODE_INPUT);
-
             Gpio::_lines[ _pos ] = c;
             IRQn_Type irq =
                   _pos == 1 ? EXTI0_1_IRQn
@@ -78,6 +75,11 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
                 : EXTI4_15_IRQn;
             NVIC_SetPriority( irq, 1 );
             NVIC_EnableIRQ( irq );
+            return *this;
+        }
+
+        Pin& disableInterrupt() {
+            LL_EXTI_DisableIT_0_31( 1 << 1 << _pos );
             return *this;
         }
 

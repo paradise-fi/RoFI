@@ -1,0 +1,27 @@
+syntax = "proto3";
+package rofi.messages;
+
+import "connectorPacket.proto";
+
+message ConnectorCmd {
+    enum Type {
+        NO_CMD = 0;
+        GET_STATE = 1;
+        CONNECT = 2;
+        DISCONNECT = 3;
+        PACKET = 4;
+        CONNECT_POWER = 5;
+        DISCONNECT_POWER = 6;
+    }
+
+    enum Line {
+        INT_LINE = 0;
+        EXT_LINE = 1;
+    }
+
+    int32 connector = 1;
+    Type cmdType = 2;
+
+    Packet packet = 3;
+    Line line = 4;
+}

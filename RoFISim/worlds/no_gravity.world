@@ -1,0 +1,17 @@
+<sdf version='1.6'>
+  <world name='default'>
+    <!-- Remove gravity -->
+    <gravity>0 0 0</gravity>
+
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+
+    <!-- Distributor plugin -->
+    <plugin name='distributor' filename='libdistributorPlugin.so'/>
+
+    <!-- Attacher plugin -->
+    <plugin name='attacher' filename='libattacherPlugin.so'/>
+  </world>
+</sdf>

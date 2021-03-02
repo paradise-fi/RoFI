@@ -6,6 +6,11 @@ project(rofi)
 
 include(FetchContent)
 
+# Build options
+option(VISUALIZER "Build visualizer" ON)
+option(DISTRIBUTED_RECONFIG "Build distributed reconfiguraiton tool" OFF)
+option(SMT_RECONFIG "Build SMT reconfiguration" ON)
+
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
@@ -14,9 +19,6 @@ if(${LIBCXX})
 endif(${LIBCXX})
 
 find_package(Armadillo REQUIRED)
-
-find_package(VTK REQUIRED)
-include(${VTK_USE_FILE})
 
 FetchContent_Declare(
   catch
@@ -56,10 +58,18 @@ endif()
 
 add_subdirectory(atoms)
 add_subdirectory(configuration)
-add_subdirectory(distribute)
+if(DISTRIBUTED_RECONFIG)
+  add_subdirectory(distribute)
+endif()
 add_subdirectory(generate)
 add_subdirectory(reconfig)
-add_subdirectory(visualizer)
+if(VISUALIZER)
+  find_package(VTK REQUIRED)
+  include(${VTK_USE_FILE})
+  add_subdirectory(visualizer)
+endif()
 add_subdirectory(util)
-add_subdirectory(smtreconfig)
+if(SMT_RECONFIG)
+  add_subdirectory(smtreconfig)
+endif()
 add_subdirectory(snake_reconfig)

@@ -1,6 +1,5 @@
 EESchema Schematic File Version 4
-LIBS:control_board-cache
-EELAYER 29 0
+EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
@@ -20,7 +19,7 @@ U 1 1 5C8FB3FC
 P 5700 4050
 F 0 "U1" H 5700 5257 50  0000 C CNN
 F 1 "STM32G071GBU6" H 5700 5166 50  0000 C CNN
-F 2 "rofi:UFQFPN28" H 5700 5075 50  0000 C CIN
+F 2 "rofi:UFQFPN28" H 5700 5000 50  0000 C CIN
 F 3 "" H 5700 3100 50  0000 C CNN
 F 4 "STM32G071GBU6" H 5700 4050 50  0001 C CNN "manf#"
 	1    5700 4050
@@ -54,7 +53,7 @@ Text GLabel 4700 4200 0    50   Input ~ 0
 SDA
 Text GLabel 4700 4100 0    50   Input ~ 0
 SCL
-Text GLabel 4700 3300 0    50   Input ~ 0
+Text GLabel 6700 3400 2    50   Input ~ 0
 SPI_SCK
 Text GLabel 4700 3600 0    50   Input ~ 0
 SPI_SS
@@ -70,7 +69,7 @@ Text GLabel 4700 3500 0    50   Input ~ 0
 RX
 Text GLabel 4700 4000 0    50   Input ~ 0
 MOTOR_PWM
-Text GLabel 6700 3300 2    50   Input ~ 0
+Text GLabel 4700 4850 0    50   Input ~ 0
 MOTOR
 Wire Wire Line
 	6800 4800 6700 4800
@@ -141,19 +140,6 @@ F 3 "" H 5750 1800 50  0001 C CNN
 	1    5750 1800
 	1    0    0    -1  
 $EndComp
-$Comp
-L power:GND #PWR0105
-U 1 1 5C86B95E
-P 5250 1200
-F 0 "#PWR0105" H 5250 950 50  0001 C CNN
-F 1 "GND" H 5255 1027 50  0000 C CNN
-F 2 "" H 5250 1200 50  0001 C CNN
-F 3 "" H 5250 1200 50  0001 C CNN
-	1    5250 1200
-	-1   0    0    1   
-$EndComp
-Wire Wire Line
-	5250 1200 5250 1300
 $Comp
 L power:VCC #PWR0106
 U 1 1 5C86BBA9
@@ -503,9 +489,9 @@ Text GLabel 1750 7150 0    50   Input ~ 0
 LIMIT_2
 NoConn ~ 1750 6400
 NoConn ~ 1750 7250
-Text GLabel 4700 3900 0    50   Input ~ 0
+Text GLabel 6700 3500 2    50   Input ~ 0
 LIMIT_1
-Text GLabel 4700 3700 0    50   Input ~ 0
+Text GLabel 6700 3900 2    50   Input ~ 0
 LIMIT_2
 Text GLabel 6700 3200 2    50   Input ~ 0
 POT_SENSE
@@ -557,15 +543,15 @@ F 3 "" H 7400 1750 50  0001 C CNN
 $EndComp
 Text GLabel 4700 4950 0    50   Input ~ 0
 INT_SW
-Text GLabel 4700 4850 0    50   Input ~ 0
+Text GLabel 4700 3300 0    50   Input ~ 0
 INT_U
-Text GLabel 6700 3900 2    50   Input ~ 0
+Text GLabel 4700 3900 0    50   Input ~ 0
 INT_I
 Text GLabel 6700 3600 2    50   Input ~ 0
 EXT_SW
-Text GLabel 6700 3500 2    50   Input ~ 0
+Text GLabel 4700 3700 0    50   Input ~ 0
 EXT_U
-Text GLabel 6700 3400 2    50   Input ~ 0
+Text GLabel 6700 3300 2    50   Input ~ 0
 EXT_I
 Text GLabel 4700 4750 0    50   Input ~ 0
 SENSE_A
@@ -1020,4 +1006,15 @@ Text GLabel 1500 2450 0    50   Input ~ 0
 SWDIO
 Text GLabel 1500 2350 0    50   Input ~ 0
 RST
+$Comp
+L power:VCC #PWR0105
+U 1 1 5F468B95
+P 5250 1300
+F 0 "#PWR0105" H 5250 1150 50  0001 C CNN
+F 1 "VCC" V 5268 1427 50  0000 L CNN
+F 2 "" H 5250 1300 50  0001 C CNN
+F 3 "" H 5250 1300 50  0001 C CNN
+	1    5250 1300
+	0    -1   -1   0   
+$EndComp
 $EndSCHEMATC

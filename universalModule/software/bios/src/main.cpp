@@ -29,6 +29,7 @@ int main() {
     LineReader< Dbg > reader( dbgInstance() );
 
     phy.setup();
+    phy.enableUsbBridge( true );
     phy.enableUsbToBusConverter();
     phy.enableBattToBusConverter( false );
     phy.enableCharger( false );

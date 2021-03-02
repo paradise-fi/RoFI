@@ -1,0 +1,19 @@
+syntax = "proto3";
+package rofi.messages;
+
+
+enum Orientation {
+    NORTH = 0;
+    EAST = 1;
+    SOUTH = 2;
+    WEST = 3;
+}
+
+
+message Vector4 {
+    repeated double values = 1;
+}
+
+message Matrix44 {
+    repeated double values = 1;
+}

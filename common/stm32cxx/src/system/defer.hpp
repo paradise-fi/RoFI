@@ -20,8 +20,11 @@ private:
     { }
 
     bool _run() {
-        if ( !_queue.empty() )
+        if ( !_queue.empty() ) {
             _queue.pop_front()();
+            return true;
+        }
+        return false;
         return !_queue.empty();
     }
 

@@ -1,0 +1,11 @@
+syntax = "proto3";
+package rofi.messages;
+
+import "connectorState.proto";
+
+message ConnectorAttachInfo {
+    string modelName1 = 1;
+    string modelName2 = 2;
+    bool attach = 3;
+    ConnectorState.Orientation orientation = 4;
+}

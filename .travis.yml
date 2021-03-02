@@ -1,4 +1,5 @@
 sudo: required
+dist: bionic # To deal with docker & statx syscall
 services:
   - docker
 env: SH="docker exec -t container bash -c"

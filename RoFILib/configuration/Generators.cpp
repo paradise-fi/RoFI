@@ -1,4 +1,5 @@
 #include "Generators.h"
+#include <queue>
 
 std::optional<Configuration> executeIfValid(const Configuration& config, const Action &action) {
     int steps = 10;
@@ -65,6 +66,14 @@ void generateSimpleActions(const Configuration& config, std::vector<Action>& res
         res.emplace_back(reconnection);
 }
 
+void generateSimpleOnlyRotActions(const Configuration& config, std::vector<Action>& res, unsigned step) {
+    std::vector<Action::Rotate> rotations;
+    generateRotations(config, rotations, step);
+
+    for (auto& rotation : rotations)
+        res.emplace_back(rotation);
+}
+
 void generateBisimpleActions(const Configuration& config, std::vector<Action>& res, unsigned step) {
     std::vector<Action::Rotate> rotations;
     generateRotations(config, rotations, step);
@@ -73,14 +82,31 @@ void generateBisimpleActions(const Configuration& config, std::vector<Action>& r
 
     for (auto it1 = rotations.begin(); it1 != rotations.end(); ++it1) {
         res.emplace_back(*it1);
-        for (auto it2 = it1; it2 != rotations.end(); ++it2)
+        for (auto it2 = it1; it2 != rotations.end(); ++it2) {
+            if (it1 == it2)
+                continue;
             res.emplace_back(std::vector<Action::Rotate>{*it1, *it2}, std::vector<Action::Reconnect>{});
+        }
     }
     for (auto& reconnection : reconnections)
         res.emplace_back(reconnection);
 }
 
-void generateParalyzedActions(const Configuration& config, std::vector<Action>& res, unsigned step, 
+void generateBisimpleOnlyRotActions(const Configuration& config, std::vector<Action>& res, unsigned step) {
+    std::vector<Action::Rotate> rotations;
+    generateRotations(config, rotations, step);
+
+    for (auto it1 = rotations.begin(); it1 != rotations.end(); ++it1) {
+        res.emplace_back(*it1);
+        for (auto it2 = it1; it2 != rotations.end(); ++it2) {
+            if (it1 == it2)
+                continue;
+            res.emplace_back(std::vector<Action::Rotate>{*it1, *it2}, std::vector<Action::Reconnect>{});
+        }
+    }
+}
+
+void generateParalyzedActions(const Configuration& config, std::vector<Action>& res, unsigned step,
     const std::unordered_set<ID>& allowed_indices)
 {
     std::vector<Action::Rotate> rotations;
@@ -95,6 +121,60 @@ void generateParalyzedActions(const Configuration& config, std::vector<Action>& 
         res.emplace_back(reconnection);
 }
 
+void generateBiParalyzedOnlyRotActions(const Configuration& config, std::vector<Action>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices)
+{
+    std::vector<Action::Rotate> rotations;
+    generateParalyzedRotations(config, rotations, step, allowed_indices);
+
+    for (auto it1 = rotations.begin(); it1 != rotations.end(); ++it1) {
+        res.emplace_back(*it1);
+        for (auto it2 = it1; it2 != rotations.end(); ++it2) {
+            if (it1 == it2)
+                continue;
+            res.emplace_back(std::vector<Action::Rotate>{*it1, *it2}, std::vector<Action::Reconnect>{});
+        }
+    }
+}
+
+void generateSmartParalyzedOnlyRotActions(const Configuration& config, std::vector<Action>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices)
+{
+    std::unordered_map<ID, std::vector<Action::Rotate>> rotations;
+    generateMappedParalyzedRotations(config, rotations, step, allowed_indices);
+
+    const auto& spannSucc = config.getSpanningSucc();
+    for (const auto& [id, rots] : rotations) {
+        for (auto it1 = rots.begin(); it1 != rots.end(); ++it1) {
+            res.emplace_back(*it1);
+            for (auto it2 = it1; it2 != rots.end(); ++it2) {
+                if (it1 == it2)
+                    continue;
+                res.emplace_back(std::vector<Action::Rotate>{*it1, *it2}, std::vector<Action::Reconnect>{});
+            }
+            std::queue<ID> bag;
+            for (const auto& optEdge : spannSucc.at(id)) {
+                if (!optEdge.has_value())
+                    continue;
+                bag.emplace(optEdge.value().id2());
+            }
+            while (!bag.empty()) {
+                ID currId = bag.front();
+                bag.pop();
+                if (rotations.find(currId) != rotations.end()) {
+                    for (const auto& rot2 : rotations.at(currId))
+                        res.emplace_back(std::vector<Action::Rotate>{*it1, rot2}, std::vector<Action::Reconnect>{});
+                }
+                for (const auto& optEdge : spannSucc.at(currId)) {
+                    if (!optEdge.has_value())
+                        continue;
+                    bag.emplace(optEdge.value().id2());
+                }
+            }
+        }
+    }
+}
+
 void generateRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step) {
     for (auto [id, mod] : config.getModules()) {
         for (int d : {-step, step}) {
@@ -106,8 +186,8 @@ void generateRotations(const Configuration& config, std::vector<Action::Rotate>&
     }
 }
 
-void generateParalyzedRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step, 
-    const std::unordered_set<ID>& allowed_indices) 
+void generateParalyzedRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices)
 {
     for (auto [id, mod] : config.getModules()) {
         if (allowed_indices.find(id) == allowed_indices.end())
@@ -117,6 +197,24 @@ void generateParalyzedRotations(const Configuration& config, std::vector<Action:
             for (Joint joint : {Alpha, Beta, Gamma}) {
                 if (mod.rotateJoint(joint, d))
                     res.emplace_back(id, joint, d);
+            }
+        }
+    }
+}
+
+void generateMappedParalyzedRotations(const Configuration& config, std::unordered_map<ID, std::vector<Action::Rotate>>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices)
+{
+    for (auto [id, mod] : config.getModules()) {
+        if (allowed_indices.find(id) == allowed_indices.end())
+            continue;
+
+        for (int d : {-step, step}) {
+            for (Joint joint : {Alpha, Beta, Gamma}) {
+                if (mod.rotateJoint(joint, d)) {
+                    res.try_emplace(id, std::vector<Action::Rotate>{});
+                    res[id].emplace_back(id, joint, d);
+                }
             }
         }
     }
@@ -152,7 +250,7 @@ void generateConnections(const Configuration& config, std::vector<Action::Reconn
 }
 
 void generateParalyzedConnections(const Configuration& config, std::vector<Action::Reconnect>& res,
-    const std::unordered_set<ID>& allowed_indices) 
+    const std::unordered_set<ID>& allowed_indices)
 {
     for (const auto& [id1, ms1] : config.getMatrices()) {
         if (allowed_indices.find(id1) == allowed_indices.end())
@@ -198,8 +296,8 @@ void generateDisconnections(const Configuration& config, std::vector<Action::Rec
     }
 }
 
-void generateParalyzedDisconnections(const Configuration& config, std::vector<Action::Reconnect>& res, 
-    const std::unordered_set<ID>& allowed_indices) 
+void generateParalyzedDisconnections(const Configuration& config, std::vector<Action::Reconnect>& res,
+    const std::unordered_set<ID>& allowed_indices)
 {
     for (auto& [id, set] : config.getEdges()) {
         if (allowed_indices.find(id) == allowed_indices.end())
@@ -241,6 +339,16 @@ void simpleNext(const Configuration& config, std::vector<Configuration>& res, un
     }
 }
 
+void simpleOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step) {
+    std::vector<Action> actions;
+    generateSimpleOnlyRotActions(config, actions, step);
+    for (auto& action : actions) {
+        auto cfgOpt = executeIfValid(config, action);
+        if (cfgOpt.has_value())
+            res.push_back(cfgOpt.value());
+    }
+}
+
 
 void bisimpleNext(const Configuration& config, std::vector<Configuration>& res, unsigned step) {
     std::vector<Action> actions;
@@ -252,12 +360,59 @@ void bisimpleNext(const Configuration& config, std::vector<Configuration>& res, 
     }
 }
 
+void bisimpleOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step) {
+    std::vector<Action> actions;
+    generateBisimpleOnlyRotActions(config, actions, step);
+    for (const auto& action : actions) {
+        auto cfgOpt = executeIfValid(config, action);
+        if (cfgOpt.has_value())
+            res.push_back(cfgOpt.value());
+    }
+}
 
-void paralyzedNext(const Configuration& config, std::vector<Configuration>& res, unsigned step, 
-    const std::unordered_set<ID>& allowed_indices) 
+
+void paralyzedNext(const Configuration& config, std::vector<Configuration>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices)
 {
     std::vector<Action> actions;
     generateParalyzedActions(config, actions, step, allowed_indices);
+    for (auto& action : actions) {
+        auto cfgOpt = executeIfValid(config, action);
+        if (cfgOpt.has_value())
+            res.push_back(cfgOpt.value());
+    }
+}
+
+void biParalyzedOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices)
+{
+    std::vector<Action> actions;
+    generateBiParalyzedOnlyRotActions(config, actions, step, allowed_indices);
+    for (auto& action : actions) {
+        auto cfgOpt = executeIfValid(config, action);
+        if (cfgOpt.has_value())
+            res.push_back(cfgOpt.value());
+    }
+}
+
+void smartBisimpleOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step)
+{
+    std::vector<Action> actions;
+    auto ids = config.getIDs();
+    std::unordered_set<ID> allowed_indices(ids.begin(), ids.end());
+    generateSmartParalyzedOnlyRotActions(config, actions, step, allowed_indices);
+    for (auto& action : actions) {
+        auto cfgOpt = executeIfValid(config, action);
+        if (cfgOpt.has_value())
+            res.push_back(cfgOpt.value());
+    }
+}
+
+void smartBisimpleParOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices)
+{
+    std::vector<Action> actions;
+    generateSmartParalyzedOnlyRotActions(config, actions, step, allowed_indices);
     for (auto& action : actions) {
         auto cfgOpt = executeIfValid(config, action);
         if (cfgOpt.has_value())

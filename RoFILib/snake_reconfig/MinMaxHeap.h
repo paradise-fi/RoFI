@@ -221,6 +221,10 @@ public:
         std::cout << "\n%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << std::endl;
     }
 
+    bool full() const {
+        return _occupied == _capacity;
+    }
+
 private:
 
     int _l(int i) const {

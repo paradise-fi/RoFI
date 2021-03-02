@@ -1,0 +1,7 @@
+syntax = "proto3";
+package rofi.messages;
+
+message Packet {
+    uint32 contentType = 1;
+    bytes message = 2;
+}

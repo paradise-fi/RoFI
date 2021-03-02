@@ -8,6 +8,8 @@
 #include <drivers/timer.hpp>
 #include <drivers/spi.hpp>
 #include <drivers/uart.hpp>
+#include <drivers/adc.hpp>
+
 #include <motor.hpp>
 #include <util.hpp>
 
@@ -18,6 +20,14 @@
 
 
 using Block = memory::Pool::Block;
+
+enum ConnectorStateFlags {
+    PositionExpanded  = 1 << 0,
+    InternalConnected = 1 << 1,
+    ExternalConnected = 1 << 2,
+    MatingSide        = 1 << 8,
+    Orientation       = 0b11 << 9,
+};
 
 Dbg& dbgInstance() {
     static Dbg inst(
@@ -30,16 +40,28 @@ Dbg& dbgInstance() {
 
 void onCmdVersion( SpiInterface& interf ) {
     auto block = memory::Pool::allocate( 4 );
-    viewAs< uint16_t >( block.get() ) = 42;
+    viewAs< uint16_t >( block.get() ) = 1;
     viewAs< uint16_t >( block.get() + 2 ) = 1;
     interf.sendBlock( std::move( block ), 4 );
 }
 
-void onCmdStatus( SpiInterface& interf, Block /*header*/, ConnInterface& connInt ) {
+void onCmdStatus( SpiInterface& interf, Block header,
+    ConnComInterface& connInt, Slider& slider )
+{
+    uint16_t status = viewAs< uint16_t >( header.get() );
+    uint16_t mask = viewAs< uint16_t >( header.get() + 2 );
+    if ( mask & ConnectorStateFlags::PositionExpanded ) {
+        if ( status & ConnectorStateFlags::PositionExpanded )
+            slider.expand();
+        else
+            slider.retract();
+    }
+
     auto block = memory::Pool::allocate( 12 );
     memset( block.get(), 0xAA, 12 );
     viewAs< uint8_t >( block.get() + 2 ) = connInt.pending();
     viewAs< uint8_t >( block.get() + 3 ) = connInt.available();
+    viewAs< uint8_t >( block.get() + 4 ) = 42;
     // ToDo: Assign remaining values
     interf.sendBlock( std::move( block ), 12 );
     // ToDo Interpret the header
@@ -51,18 +73,21 @@ void onCmdInterrupt( SpiInterface& interf, Block /*header*/ ) {
     interf.sendBlock( std::move( block ), 2 );
 }
 
-void onCmdSendBlob( SpiInterface& spiInt, ConnInterface& connInt ) {
+void onCmdSendBlob( SpiInterface& spiInt, ConnComInterface& connInt ) {
     spiInt.receiveBlob([&]( Block blob, int size ) {
-        uint16_t blobLen = viewAs< uint16_t >( blob.get() + 2 );
+        int blobLen = viewAs< uint16_t >( blob.get() + 2 );
         if ( size != 4 + blobLen )
             return;
+        Dbg::info( "CMD blob send received: %d, %.*s", blobLen, blobLen, blob.get() + 4 );
         connInt.sendBlob( std::move( blob ) );
     } );
 }
 
-void onCmdReceiveBlob( SpiInterface& spiInt, ConnInterface& connInt ) {
-    if ( connInt.available() > 0 )
-        spiInt.sendBlob( connInt.getBlob() );
+void onCmdReceiveBlob( SpiInterface& spiInt, ConnComInterface& connInt ) {
+    if ( connInt.available() > 0 ) {
+        Block blob = connInt.getBlob();
+        spiInt.sendBlob( std::move( blob ) );
+    }
     else {
         auto block = memory::Pool::allocate( 4 );
         viewAs< uint16_t >( block.get() ) = 0; // content type
@@ -76,8 +101,10 @@ int main() {
     SystemCoreClockUpdate();
     HAL_Init();
 
-    Dbg::info( "Main clock: %d", SystemCoreClock );
-    HAL_Delay( 100 );
+    Dbg::error( "Main clock: %d", SystemCoreClock );
+
+    Adc1.setup();
+    Adc1.enable();
 
     Timer timer( TIM1, FreqAndRes( 1000, 2000 ) );
     auto pwm = timer.pwmChannel( LL_TIM_CHANNEL_CH1 );
@@ -88,12 +115,16 @@ int main() {
     motor.enable();
     motor.set( 0 );
 
-    Slider slider( Motor( pwm, GpioB[ 1 ] ), GpioA[ 7 ], GpioA[ 5 ] );
+    Slider slider( Motor( pwm, GpioC[ 14 ] ), GpioB[ 4 ], GpioB[ 8 ] );
+
+    PowerSwitch powerInterface;
+    ConnectorStatus connectorStatus ( GpioC[ 6 ], GpioA[ 15 ] );
+
 
     Spi spi( SPI1,
         Slave(),
         MisoOn( GpioA[ 6 ] ),
-        SckOn( GpioA[ 1 ] ),
+        SckOn( GpioB[ 3 ] ),
         CsOn( GpioA[ 4 ] )
     );
 
@@ -101,34 +132,43 @@ int main() {
         Baudrate( 115200 ),
         TxOn( GpioA[ 2 ] ),
         RxOn( GpioA[ 3 ] ) );
+    uart.enable();
 
-    ConnInterface connInterface( std::move( uart ) );
+    ConnComInterface connComInterface( std::move( uart ) );
 
     using Command = SpiInterface::Command;
-    SpiInterface spiInterface( std::move( spi ),
+    SpiInterface spiInterface( std::move( spi ), GpioA[ 4 ],
         [&]( Command cmd, Block b ) {
             switch( cmd ) {
             case Command::VERSION:
                 onCmdVersion( spiInterface );
                 break;
             case Command::STATUS:
-                onCmdStatus( spiInterface, std::move( b ), connInterface );
+                onCmdStatus( spiInterface, std::move( b ), connComInterface, slider );
                 break;
             case Command::INTERRUPT:
                 onCmdInterrupt( spiInterface, std::move( b ) );
                 break;
             case Command::SEND_BLOB:
-                onCmdSendBlob( spiInterface, connInterface );
+                onCmdSendBlob( spiInterface, connComInterface );
                 break;
             case Command::RECEIVE_BLOB:
-                onCmdReceiveBlob( spiInterface, connInterface );
+                onCmdReceiveBlob( spiInterface, connComInterface );
                 break;
             default:
-                Dbg::warning( "Unkwnown command %d", cmd );
+                Dbg::warning( "Unknown command %d", cmd );
             };
         } );
+    connComInterface.onNewBlob( [&] { spiInterface.interruptMaster(); } );
+
+    Dbg::error( "Ready for operation" );
+
     while ( true ) {
         slider.run();
+        powerInterface.run();
+        if ( connectorStatus.run() )
+            spiInterface.interruptMaster();
+
         if ( Dbg::available() ) {
             switch( Dbg::get() ) {
             case 'e':
@@ -140,10 +180,12 @@ int main() {
                 Dbg::info("Retracting");
                 break;
             default:
-                Dbg::info( "Received: %c", Dbg::get() );
+                Dbg::error( "DBG received: %c", Dbg::get() );
             }
         }
-        Defer::run();
+        if (Defer::run()) {
+            // Dbg::error("D\n");
+        }
     }
 }
 

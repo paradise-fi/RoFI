@@ -1,0 +1,27 @@
+syntax = "proto3";
+package rofi.messages;
+
+import "jointSetPosWithSpeedCmd.proto";
+import "jointSetVelocityCmd.proto";
+import "jointSetTorqueCmd.proto";
+
+message JointCmd {
+    enum Type {
+        NO_CMD = 0;
+        GET_CAPABILITIES = 1;
+        GET_POSITION = 2;
+        GET_VELOCITY = 3;
+        GET_TORQUE = 4;
+        SET_POS_WITH_SPEED = 5;
+        SET_VELOCITY = 6;
+        SET_TORQUE = 7;
+        ERROR = 8;
+    }
+
+    int32 joint = 1;
+    Type cmdType = 2;
+
+    JointSetPosWithSpeedCmd setPosWithSpeed = 3;
+    JointSetVelocityCmd setVelocity = 4;
+    JointSetTorqueCmd setTorque = 5;
+}

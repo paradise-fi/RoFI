@@ -64,6 +64,8 @@ public:
         if ( periph == SPI1 ) {
             if ( self()._pin._periph == GPIOA && self()._pin._pos == 1 )
                 return LL_GPIO_AF_0;
+            if ( self()._pin._periph == GPIOB && self()._pin._pos == 3 )
+                return LL_GPIO_AF_0;
         }
         // ToDo: Implement more configurations
         assert( false && "Unsupported configuration" );

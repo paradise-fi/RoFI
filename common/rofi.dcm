@@ -10,7 +10,7 @@ F https://www.espressif.com/sites/default/files/documentation/esp32-wrover_datas
 $ENDCMP
 #
 $CMP MP1496
-D  SYNCHRONOUS, STEP-DOWN CONVERTER WITH INTERNAL MOSFETS 
+D  SYNCHRONOUS, STEP-DOWN CONVERTER WITH INTERNAL MOSFETS
 K STEP-DOWN
 F https://www.monolithicpower.com/en/documentview/productdocument/index/version/2/document_type/Datasheet/lang/en/sku/MP1496/document_id/360
 $ENDCMP

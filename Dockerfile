@@ -42,11 +42,14 @@ RUN cd /tmp; \
     cd ..; rm -rf z3
 
 # Install additional dependencies
-RUN env DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    acl xmlstarlet \
-    zip unzip libarmadillo-dev libvtk6-dev libvtk6-qt-dev qtdeclarative5-dev \
-    doxygen graphviz \
-    admesh
+# Note that we call update again in case the cached steps so far contain
+# outdated apt cache
+RUN env DEBIAN_FRONTEND=noninteractive apt-get update && \
+    apt-get install -y --no-install-recommends \
+        acl xmlstarlet \
+        zip unzip libarmadillo-dev libvtk7-dev libvtk7-qt-dev qtdeclarative5-dev \
+        doxygen graphviz \
+        admesh
 
 RUN cd /tmp; \
     git clone https://github.com/catchorg/Catch2.git; \

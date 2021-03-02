@@ -28,3 +28,4 @@ Note that you can preview the development version of the documentation on
    roficom/index
    rofilib/index
    universalModule/index
+   rofisim/index

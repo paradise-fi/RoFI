@@ -23,6 +23,8 @@ public:
             LL_IOP_GRP1_EnableClock( LL_IOP_GRP1_PERIPH_GPIOA );
         else if ( self()._periph == GPIOB )
             LL_IOP_GRP1_EnableClock( LL_IOP_GRP1_PERIPH_GPIOB );
+        else if ( self()._periph == GPIOC )
+            LL_IOP_GRP1_EnableClock( LL_IOP_GRP1_PERIPH_GPIOC );
     }
 
     void disableClock() {
@@ -30,6 +32,8 @@ public:
             LL_IOP_GRP1_DisableClock( LL_IOP_GRP1_PERIPH_GPIOA );
         else if ( self()._periph == GPIOB )
             LL_IOP_GRP1_DisableClock( LL_IOP_GRP1_PERIPH_GPIOB );
+        else if ( self()._periph == GPIOC )
+            LL_IOP_GRP1_DisableClock( LL_IOP_GRP1_PERIPH_GPIOC );
     }
 
     static int _extiConfigLine( int pos ) {

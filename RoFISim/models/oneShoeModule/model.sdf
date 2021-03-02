@@ -1,0 +1,128 @@
+<?xml version='1.0'?>
+<sdf version='1.6'>
+    <model name='oneShoeModule'>
+        <link name='shoe'>
+            <self_collide>false</self_collide>
+            <inertial>
+                <mass>0.1</mass>
+                <inertia>
+                    <ixx>4e-04</ixx>
+                    <ixy>0</ixy>
+                    <ixz>0</ixz>
+                    <iyy>4e-04</iyy>
+                    <iyz>0</iyz>
+                    <izz>4e-04</izz>
+                </inertia>
+            </inertial>
+            <collision name='shoe-collision'>
+                <geometry>
+                    <mesh>
+                        <uri>model://oneShoeModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <!-- <submesh>
+                            <name>shoe</name>
+                        </submesh> -->
+                    </mesh>
+                </geometry>
+            </collision>
+            <visual name='shoe-visual'>
+                <pose>0 0 0 0 0 0</pose>
+                <geometry>
+                    <mesh>
+                        <uri>model://oneShoeModule/meshes/model.obj</uri>
+                        <scale>0.001 0.001 0.001</scale>
+                        <!-- <submesh>
+                            <name>shoe</name>
+                        </submesh> -->
+                    </mesh>
+                </geometry>
+                <material>
+                    <lighting>1</lighting>
+                    <script>
+                        <uri>file://media/materials/scripts/gazebo.material</uri>
+                        <name>Gazebo/Yellow</name>
+                    </script>
+                    <shader type='pixel'>
+                        <normal_map>__default__</normal_map>
+                    </shader>
+                </material>
+            </visual>
+        </link>
+
+
+        <model name='connectorPlusX'>
+            <pose>0.043 0 0 -1.5708 0 -1.5708</pose>
+            <include>
+                <uri>model://roficom</uri>
+            </include>
+        </model>
+
+        <model name='connectorMinusX'>
+            <pose>-0.043 0 0 -1.5708 0 1.5708</pose>
+            <include>
+                <uri>model://roficom</uri>
+            </include>
+        </model>
+
+        <model name='connectorPlusY'>
+            <pose>0 0.043 0 -1.5708 0 0</pose>
+            <include>
+                <uri>model://roficom</uri>
+            </include>
+        </model>
+
+        <model name='connectorMinusY'>
+            <pose>0 -0.043 0 1.5708 0 0</pose>
+            <include>
+                <uri>model://roficom</uri>
+            </include>
+        </model>
+
+        <model name='connectorPlusZ'>
+            <pose>0 0 0.043 0 0 0</pose>
+            <include>
+                <uri>model://roficom</uri>
+            </include>
+        </model>
+
+        <model name='connectorMinusZ'>
+            <pose>0 0 -0.043 3.1416 0 0</pose>
+            <include>
+                <uri>model://roficom</uri>
+            </include>
+        </model>
+
+
+        <joint name='connectorPlusX' type='fixed'>
+            <child>connectorPlusX::RoFICoM::outer</child>
+            <parent>shoe</parent>
+        </joint>
+
+        <joint name='connectorMinusX' type='fixed'>
+            <child>connectorMinusX::RoFICoM::outer</child>
+            <parent>shoe</parent>
+        </joint>
+
+        <joint name='connectorPlusY' type='fixed'>
+            <child>connectorPlusY::RoFICoM::outer</child>
+            <parent>shoe</parent>
+        </joint>
+
+        <joint name='connectorMinusY' type='fixed'>
+            <child>connectorMinusY::RoFICoM::outer</child>
+            <parent>shoe</parent>
+        </joint>
+
+        <joint name='connectorPlusZ' type='fixed'>
+            <child>connectorPlusZ::RoFICoM::outer</child>
+            <parent>shoe</parent>
+        </joint>
+
+        <joint name='connectorMinusZ' type='fixed'>
+            <child>connectorMinusZ::RoFICoM::outer</child>
+            <parent>shoe</parent>
+        </joint>
+
+        <plugin name='control' filename='librofiModulePlugin.so'/>
+    </model>
+</sdf>

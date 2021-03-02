@@ -1,6 +1,6 @@
 #include "Configuration.h"
 #include <stdexcept>
-
+#include <queue>
 
 static const double threshold = 0.0001;
 
@@ -45,7 +45,7 @@ double clampGamma(double val) {
 
     if (val <= -180)
         return 360 + val;
-    
+
     return val;
 }
 
@@ -125,6 +125,14 @@ std::optional<Edge> nextEdge(const Edge& edge) {
                 static_cast<ConnectorId>(next[3]),
                 static_cast<ShoeId>(next[4]),
                 edge.id2())};
+}
+
+unsigned edgeIndex(const Edge& edge) {
+    return edge.side1() * 3 + edge.dock1();
+}
+
+unsigned edgeIndex(ShoeId shoe, ConnectorId dock) {
+    return shoe * 3 + dock;
 }
 
 /* * * * * *
@@ -237,6 +245,20 @@ std::vector<Edge> Configuration::getEdges(ID id, const std::unordered_set<ID>& e
     return res;
 }
 
+
+const std::unordered_map<ID, std::array<std::optional<Edge>, 6>> Configuration::getSpanningSucc() const {
+    return spanningSucc;
+}
+
+const std::unordered_map<ID, unsigned int>& Configuration::getSpanningSuccCount() const {
+    return spanningSuccCount;
+}
+
+const std::unordered_map<ID, std::optional<std::pair<ID, ShoeId>>>& Configuration::getSpanningPred() const {
+    return spanningPred;
+}
+
+
 void Configuration::addModule(double alpha, double beta, double gamma, ID id) {
     modules.emplace(std::piecewise_construct,
                     std::forward_as_tuple(id),  // args for key
@@ -244,8 +266,24 @@ void Configuration::addModule(double alpha, double beta, double gamma, ID id) {
     edges.emplace(std::piecewise_construct,
                     std::forward_as_tuple(id),  // args for key
                     std::forward_as_tuple());
-    if ((modules.size() == 1) || (id < fixedId))
+    if ((modules.size() == 1) || (id < fixedId)) {
         fixedId = id;
+        matricesVal = Value::False;
+    } else {
+        matricesVal = Value::Unknown;
+    }
+    if (modules.size() > 1) {
+        connectedVal = Value::False;
+    }
+    spanningTreeComputed = false;
+    static const std::array<std::optional<Edge>, 6> emptyArray = {};
+    spanningSucc.emplace(id, emptyArray);
+    spanningSuccCount.emplace(id, 0);
+    spanningPred.emplace(id, std::nullopt);
+    spanningCross.emplace(id, emptyArray);
+    isMatrixComputed.emplace(id, std::array<bool,2>{false, false});
+    isMatrixUpdated.emplace(id, std::array<bool,2>{false, false});
+    isChecked.emplace(id, false);
 }
 
 bool Configuration::addEdge(const Edge& edge) {
@@ -253,13 +291,26 @@ bool Configuration::addEdge(const Edge& edge) {
     EdgeList& set1 = edges.at(edge.id1());
     EdgeList& set2 = edges.at(edge.id2());
 
-    int index1 = edge.side1() * 3 + edge.dock1();
-    int index2 = edge.side2() * 3 + edge.dock2();
-    if (set1[index1].has_value() || set2[index2].has_value())
+    unsigned setIndex1 = edgeIndex(edge);
+    unsigned setIndex2 = edgeIndex(reverse(edge));
+    if (set1[setIndex1].has_value() || set2[setIndex2].has_value())
         return false;
 
-    set1[index1] = edge;
-    set2[index2] = reverse(edge);
+    set1[setIndex1] = edge;
+    auto revEdge = reverse(edge);
+    set2[setIndex2] = revEdge;
+    if (connectedVal == Value::False)
+        connectedVal = Value::Unknown;
+    if (spanningTreeComputed) {
+        EdgeList& spanningSet1 = spanningCross.at(edge.id1());
+        EdgeList& spanningSet2 = spanningCross.at(edge.id2());
+
+        unsigned spanningSetIndex1 = edgeIndex(edge);
+        unsigned spanningSetIndex2 = edgeIndex(reverse(edge));
+
+        spanningSet1[spanningSetIndex1] = edge;
+        spanningSet2[spanningSetIndex2] = revEdge;
+    }
     return true;
 }
 
@@ -268,26 +319,64 @@ bool Configuration::removeEdge(const Edge& edge) {
     EdgeList& set1 = edges.at(edge.id1());
     EdgeList& set2 = edges.at(edge.id2());
 
-    int index1 = edge.side1() * 3 + edge.dock1();
-    int index2 = edge.side2() * 3 + edge.dock2();
-    if (!set1[index1].has_value() || !set2[index2].has_value())
+    unsigned setIndex1 = edgeIndex(edge);
+    unsigned setIndex2 = edgeIndex(reverse(edge));
+    if (!set1[setIndex1].has_value() || !set2[setIndex2].has_value())
         return false;
 
-    if (set1[index1].value() != edge || set2[index2].value() != reverse(edge))
+    if (set1[setIndex1].value() != edge || set2[setIndex2].value() != reverse(edge))
         return false;
 
-    set1[index1] = {};
-    set2[index2] = {};
+    set1[setIndex1] = {};
+    set2[setIndex2] = {};
+
+    if (!spanningTreeComputed) {
+        if (connectedVal == Value::True)
+            connectedVal = Value::Unknown;
+        return true;
+    }
+
+    if (spanningPred[edge.id1()].has_value()
+        && spanningPred[edge.id1()].value().first == edge.id2()) {
+        removeSpanningEdge(reverse(edge));
+    } else if (spanningPred[edge.id2()].has_value()
+        && spanningPred[edge.id2()].value().first == edge.id1()) {
+        removeSpanningEdge(edge);
+    } else {
+        EdgeList& spanningSet1 = spanningCross.at(edge.id1());
+        EdgeList& spanningSet2 = spanningCross.at(edge.id2());
+
+        unsigned spanningSetIndex1 = edgeIndex(edge);
+        unsigned spanningSetIndex2 = edgeIndex(reverse(edge));
+
+        spanningSet1[spanningSetIndex1] = {};
+        spanningSet2[spanningSetIndex2] = {};
+    }
+
     return true;
 }
 
+void Configuration::removeSpanningEdge(const Edge& edge) {
+    unsigned setIndex = edgeIndex(edge);
+    spanningSucc[edge.id1()][setIndex] = {};
+    spanningSuccCount[edge.id1()] -= 1;
+
+    spanningPred[edge.id2()] = {};
+
+    connectedVal = Value::Unknown;
+    spanningTreeComputed = false;
+    return;
+}
+
 bool Configuration::findEdge(const Edge& edge) const {
-    int idx = edge.side1() * 3 + edge.dock1();
-    return edges.at(edge.id1())[idx].has_value();
+    unsigned idx = edgeIndex(edge);
+    if (!edges.at(edge.id1())[idx].has_value())
+        return false;
+    return edge == edges.at(edge.id1())[idx].value();
 }
 
 bool Configuration::findConnection(const Edge& edge) const {
-    int idx = edge.side1() * 3 + edge.dock1();
+    unsigned idx = edgeIndex(edge);
     const auto& edgeCandidate = edges.at(edge.id1())[idx];
     return edgeCandidate.has_value() && edgeCandidate.value() == edge;
 }
@@ -296,6 +385,8 @@ void Configuration::setFixed(ID initID, ShoeId initSide, const Matrix& initRotat
     fixedId = initID;
     fixedSide = initSide;
     fixedMatrix = initRotation;
+    spanningTreeComputed = false;
+    matricesVal = Value::False;
 }
 
 bool Configuration::isValid() {
@@ -308,43 +399,100 @@ bool Configuration::isValid() {
 bool Configuration::computeMatrices() {
     if (empty())
         return true;
+    if (matricesVal == Value::True)
+        return true;
 
-    matrices = {};
-    matrices[fixedId][fixedSide] = fixedMatrix;
+    if (!spanningTreeComputed && !computeSpanningTree())
+        return false;
 
-    return computeMatricesRec(fixedId, fixedSide);
-}
+    bool recomputeAll = false;
+    if (matricesVal == Value::False || !isMatrixComputed[fixedId][fixedSide]) {
+        matrices[fixedId][fixedSide] = fixedMatrix;
+        recomputeAll = true;
+        isMatrixComputed[fixedId][fixedSide] = true;
+        isMatrixUpdated[fixedId][fixedSide] = true;
+    } else {
+        isMatrixUpdated[fixedId][fixedSide] = false;
+    }
 
-bool Configuration::computeMatricesRec(ID id, ShoeId side) {
-    bool result = true;
+    std::queue<std::tuple<ID, ShoeId, bool>> bag;
+    bag.emplace(fixedId, fixedSide, recomputeAll);
+    isChecked[fixedId] = false;
 
-    // At first, fix other side of the module.
-    ShoeId side2 = side == A ? B : A;
-    auto& matrixCurr = matrices.at(id);
-    matrixCurr[side2] = computeOtherSideMatrix(id, side);
-
-    for (const std::optional<Edge>& edgeOpt : edges.at(id)) {
-        if (!edgeOpt.has_value() || edgeOpt.value().onCoeff() < 1)
-            continue;
-        
-        const Edge& edge = edgeOpt.value();
-
-        ID idNext = edge.id2();
-        ShoeId sideNext = edge.side2();
-
-        // Compute, where next module should be.
-        Matrix matrixCmp = computeConnectedMatrix(edge);
-
-        if (matrices.find(idNext) == matrices.end()) {
-            matrices[idNext][sideNext] = matrixCmp;
-            result &= computeMatricesRec(idNext, sideNext);
+    ID currId;
+    ShoeId currShoe;
+    bool recompute;
+    std::array<bool, 2> recomputeShoe;
+    while (!bag.empty()) {
+        std::tie(currId, currShoe, recompute) = bag.front();
+        recomputeShoe[currShoe] = recompute;
+        bag.pop();
+        auto& matrixCurr = matrices.at(currId);
+        ShoeId otherShoe = currShoe == A ? B : A;
+        if (recompute || !isMatrixComputed[currId][otherShoe]) {
+            matrixCurr[otherShoe] = computeOtherSideMatrix(currId, currShoe);
+            isMatrixComputed[currId][otherShoe] = true;
+            isMatrixUpdated[currId][otherShoe] = true;
+            recomputeShoe[otherShoe] = true;
         } else {
-            const auto& matrixNext = matrices.at(idNext)[sideNext];
-            if (!equals(matrixNext, matrixCmp))
-                return false;
+            isMatrixUpdated[currId][otherShoe] = false;
+            recomputeShoe[otherShoe] = false;
+        }
+
+        for (const auto& edgeOpt : spanningSucc.at(currId)) {
+            if (!edgeOpt.has_value())
+                continue;
+
+            const Edge& edge = edgeOpt.value();
+            ID nextId = edge.id2();
+            ShoeId nextShoe = edge.side2();
+            bool currRecompute = recomputeShoe[edge.side1()] || !isMatrixComputed[nextId][nextShoe];
+            if (currRecompute) {
+                matrices[nextId][nextShoe] = computeConnectedMatrix(edge);
+                isMatrixComputed[nextId][nextShoe] = true;
+                isMatrixUpdated[nextId][nextShoe] = true;
+            } else {
+                isMatrixUpdated[nextId][nextShoe] = false;
+            }
+
+            bag.emplace(nextId, nextShoe, currRecompute);
+            isChecked[nextId] = false;
         }
     }
-    return result;
+    return checkConsistency();
+}
+
+bool Configuration::checkConsistency() {
+    for (const auto& [id, updatedShoe] : isMatrixUpdated) {
+        for (int side = 0; side < 2; ++side) {
+            if (!updatedShoe[side])
+                continue;
+            for (const auto& crossOpt : spanningCross[id]) {
+                if (!crossOpt.has_value())
+                    continue;
+                const auto& edge = crossOpt.value();
+                if (edge.side1() != side)
+                    continue;
+                if (isChecked[edge.id2()])
+                    continue;
+                if (!isMatrixUpdated[edge.id2()][edge.side2()]) {
+                    // here I assume that if one shoe updated its matrix,
+                    // all other shoes has to as well -- but is it true?
+                    matricesVal = Value::False;
+                    return false;
+                }
+                auto matrixCheck = computeConnectedMatrix(edge);
+                const auto& matrixComputed = matrices[edge.id2()][edge.side2()];
+                if (equals(matrixCheck, matrixComputed))
+                    continue;
+                matricesVal = Value::False;
+                return false;
+            }
+            isChecked[id] = true;
+        }
+    }
+    matricesVal = Value::True;
+    return true;
 }
 
 Matrix Configuration::computeOtherSideMatrix(ID id, ShoeId side) const {
@@ -365,7 +513,20 @@ Matrix Configuration::computeConnectedMatrix(Edge edge) const {
     return matrix * transformConnection(edge.dock1(), edge.ori(), edge.dock2());
 }
 
+bool Configuration::connected() {
+    if (spanningTreeComputed || connectedVal == Value::True)
+        return true;
+    if (connectedVal == Value::False)
+        return false;
+    return computeSpanningTree();
+}
+
 bool Configuration::connected() const {
+    if (spanningTreeComputed || connectedVal == Value::True) {
+        return true;
+    }
+    if (connectedVal == Value::False)
+        return false;
     std::unordered_set<ID> seen;
     seen.insert(fixedId);
     dfsID(fixedId, seen);
@@ -384,7 +545,9 @@ void Configuration::dfsID(ID id, std::unordered_set<ID>& seen) const {
     }
 }
 
-bool Configuration::collisionFree() const {
+bool Configuration::collisionFree() {
+    if (matricesVal != Value::True && !computeMatrices())
+        return false;
     for (auto it1 = matrices.begin(); it1 != matrices.end(); ++it1) {
         for (auto it2 = it1; it2 != matrices.end(); ++it2) {
             const auto& ms1 = it1->second;
@@ -393,7 +556,29 @@ bool Configuration::collisionFree() const {
                 if (centerSqDistance(ms1[A], ms1[B]) < 1)
                     return false;
                 continue;
-            } 
+            }
+            if (centerSqDistance(ms1[A], ms2[A]) < 1 ||
+                centerSqDistance(ms1[B], ms2[B]) < 1 ||
+                centerSqDistance(ms1[B], ms2[A]) < 1 ||
+                centerSqDistance(ms1[A], ms2[B]) < 1)
+                return false;
+        }
+    }
+    return true;
+}
+
+bool Configuration::collisionFree() const {
+    if (matricesVal != Value::True)
+        return false;
+    for (auto it1 = matrices.begin(); it1 != matrices.end(); ++it1) {
+        for (auto it2 = it1; it2 != matrices.end(); ++it2) {
+            const auto& ms1 = it1->second;
+            const auto& ms2 = it2->second;
+            if (it1 == it2) {
+                if (centerSqDistance(ms1[A], ms1[B]) < 1)
+                    return false;
+                continue;
+            }
             if (centerSqDistance(ms1[A], ms2[A]) < 1 ||
                 centerSqDistance(ms1[B], ms2[B]) < 1 ||
                 centerSqDistance(ms1[B], ms2[A]) < 1 ||
@@ -412,6 +597,14 @@ Vector Configuration::massCenter() const {
     }
     mass /= modules.size()*2;
     return mass;
+}
+
+Vector Configuration::getModuleMass(ID id) const {
+    Vector mass({0,0,0,1});
+    for (const auto& m : getMatrices().at(id)) {
+        mass += center(m);
+    }
+    return mass/2;
 }
 
 bool Configuration::execute(const Action& action) {
@@ -487,34 +680,111 @@ void Configuration::clearEdges() {
         for (auto& opt : el)
             opt = std::nullopt;
     }
-}
-
-bool Configuration::eraseEdge(const Edge& edge) {
-    EdgeList& set1 = edges.at(edge.id1());
-    int index1 = edge.side1() * 3 + edge.dock1();
-
-    EdgeList& set2 = edges.at(edge.id2());
-    int index2 = edge.side2() * 3 + edge.dock2();
-
-    if (!set1[index1].has_value() || !set2[index2].has_value())
-        return false;
-
-    set1[index1] = std::nullopt;
-    set2[index2] = std::nullopt;
-    connectedVal = Value::Unknown;
-    return true;
+    spanningTreeComputed = false;
+    if (modules.size() > 1) {
+        connectedVal = Value::False;
+        matricesVal = Value::False;
+    }
 }
 
 bool Configuration::execute(const Action::Rotate& action) {
+    if (!spanningTreeComputed && !computeSpanningTree())
+        return false;
     bool res = modules.at(action.id()).rotateJoint(action.joint(), action.angle());
-    if (res)
+    if (res) {
         matricesVal = Value::Unknown;
+        const auto& spannPred = spanningPred.at(action.id());
+        if (!spannPred.has_value()) {
+            auto otherSide = fixedSide == A ? B : A;
+            isMatrixComputed[action.id()][otherSide] = false;
+        } else {
+            auto otherSide = spannPred.value().second == A ? B : A;
+            isMatrixComputed[action.id()][otherSide] = false;
+        }
+    }
     return res;
 }
 
 bool Configuration::execute(const Action::Reconnect& action) {
     if (action.add())
         return addEdge(action.edge());
+    return removeEdge(action.edge());
+}
 
-    return eraseEdge(action.edge());
+void Configuration::spanningClearId(ID id) {
+    spanningPred.at(id) = std::nullopt;
+    for (auto& succOpt : spanningSucc.at(id)) {
+        succOpt = {};
+    }
+    spanningSuccCount.at(id) = 0;
+    for (auto& crossOpt : spanningCross.at(id)) {
+        crossOpt = {};
+    }
+}
+
+bool Configuration::computeSpanningTree() {
+    if (connectedVal == Value::False) {
+        spanningTreeComputed = false;
+        return false;
+    }
+    std::unordered_set<ID> seen;
+    std::queue<ID> bag;
+
+    bag.push(fixedId);
+    seen.insert(fixedId);
+    spanningClearId(fixedId);
+
+    while (!bag.empty()) {
+        auto currId = bag.front();
+        bag.pop();
+        for (const auto& edgeOpt : edges.at(currId)) {
+            if (!edgeOpt.has_value())
+                continue;
+            const auto& edge = edgeOpt.value();
+            ID nextId = edge.id2();
+            if (seen.find(nextId) != seen.end()) {
+                if (!spanningPred[currId].has_value() || spanningPred[currId].value().first != nextId) {
+                    unsigned spanningSetIndex = edgeIndex(edge);
+                    spanningCross[currId][spanningSetIndex] = edge;
+                }
+                continue;
+            }
+            bag.push(nextId);
+            seen.insert(nextId);
+            spanningClearId(nextId);
+            spanningPred.at(nextId) = {std::make_pair(currId, edge.side2())};
+            unsigned setIndex = edgeIndex(edge);
+            spanningSucc[currId][setIndex] = edgeOpt;
+            spanningSuccCount[currId] += 1;
+        }
+    }
+
+    spanningTreeComputed = seen.size() == modules.size();
+    connectedVal = spanningTreeComputed ? Value::True : Value::False;
+    return spanningTreeComputed;
+}
+
+Configuration remappedConfig(const Configuration& other, const std::unordered_map<ID, std::pair<ID, bool>>& mapping) {
+    Configuration res{};
+    for (const auto& [id, module] : other.getModules()) {
+        const auto& [newId, switchSide] = mapping.at(id);
+        if (switchSide)
+            res.addModule(module.getJoint(Beta), module.getJoint(Alpha), -module.getJoint(Gamma), newId);
+        else
+            res.addModule(module.getJoint(Alpha), module.getJoint(Beta), module.getJoint(Gamma), newId);
+    }
+    for (const auto& [id, edgeList] : other.getEdges()) {
+        const auto& [newId1, switchSide1] = mapping.at(id);
+        for (const auto& optEdge : edgeList) {
+            if (!optEdge.has_value())
+                continue;
+            const Edge& edge = optEdge.value();
+            const auto& [newId2, switchSide2] = mapping.at(edge.id2());
+            auto side1 = !switchSide1 ? edge.side1() : (edge.side1() == A ? B : A);
+            auto side2 = !switchSide2 ? edge.side2() : (edge.side2() == A ? B : A);
+            Edge newEdge(newId1, side1, edge.dock1(), edge.ori(), edge.dock2(), side2, newId2);
+            res.addEdge(newEdge);
+        }
+    }
+    return res;
 }

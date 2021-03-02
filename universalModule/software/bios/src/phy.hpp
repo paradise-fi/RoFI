@@ -75,6 +75,7 @@ private:
     }
 
     void _setupGpio() {
+        enableUsbBridge();
         _enUsbBridgePin().setupPPOutput();
         enableUsbBridge();
 

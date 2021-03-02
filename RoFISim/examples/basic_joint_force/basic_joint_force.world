@@ -1,0 +1,30 @@
+<sdf version='1.6'>
+  <world name='default'>
+    <!-- A global light source -->
+    <include>
+      <uri>model://sun</uri>
+    </include>
+    <!-- A ground plane -->
+    <include>
+      <uri>model://ground_plane</uri>
+    </include>
+
+    <!-- RoFI module -->
+    <include>
+      <uri>model://universalModule</uri>
+    </include>
+
+    <!-- Distributor plugin -->
+    <plugin name='distributor' filename='libdistributorPlugin.so'/>
+
+    <!-- Attacher plugin -->
+    <plugin name='attacher' filename='libattacherPlugin.so'/>
+
+    <!-- World state -->
+    <state world_name='default'>
+      <model name='universalModule'>
+        <pose>0 0 0.043 0 0 0</pose>
+      </model>
+    </state>
+  </world>
+</sdf>

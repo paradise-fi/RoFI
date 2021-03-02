@@ -26,6 +26,8 @@ void generateActions(const Configuration& config, std::vector<Action>& res, unsi
  */
 void generateSimpleActions(const Configuration& config, std::vector<Action>& res, unsigned step);
 
+void generateSimpleOnlyRotActions(const Configuration& config, std::vector<Action>& res, unsigned step);
+
 /**
  * \brief Generates all possible "bisimple" actions.
  * 
@@ -36,12 +38,23 @@ void generateSimpleActions(const Configuration& config, std::vector<Action>& res
  */
 void generateBisimpleActions(const Configuration& config, std::vector<Action>& res, unsigned step);
 
+void generateBisimpleOnlyRotActions(const Configuration& config, std::vector<Action>& res, unsigned step);
+
 void generateParalyzedActions(const Configuration& config, std::vector<Action>& res, unsigned step, 
+    const std::unordered_set<ID>& allowed_indices);
+
+void generateBiParalyzedOnlyRotAction(const Configuration& config, std::vector<Action>& res, unsigned step, 
+    const std::unordered_set<ID>& allowed_indices);
+
+void generateSmartParalyzedOnlyRotActions(const Configuration& config, std::vector<Action>& res, unsigned step,
     const std::unordered_set<ID>& allowed_indices);
 
 void generateRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step);
 
 void generateParalyzedRotations(const Configuration& config, std::vector<Action::Rotate>& res, unsigned step, 
+    const std::unordered_set<ID>& allowed_indices);
+
+void generateMappedParalyzedRotations(const Configuration& config, std::unordered_map<ID, std::vector<Action::Rotate>>& res, unsigned step, 
     const std::unordered_set<ID>& allowed_indices);
 
 void generateConnections(const Configuration& config, std::vector<Action::Reconnect>& res);
@@ -85,6 +98,8 @@ void next(const Configuration& config, std::vector<Configuration>& res, unsigned
  */
 void simpleNext(const Configuration& config, std::vector<Configuration>& res, unsigned step);
 
+void simpleOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step);
+
 /**
  * \brief Generates all possible configurations that \p config can become using one recconect action or 
  * up to two simple rotations.
@@ -94,6 +109,8 @@ void simpleNext(const Configuration& config, std::vector<Configuration>& res, un
  * Only rotations with angle + \p step and - \p step are allowed.
  */
 void bisimpleNext(const Configuration& config, std::vector<Configuration>& res, unsigned step);
+
+void bisimpleOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step);
 
 /**
  * \brief Generates all possible configurations that \p config can become using one simple action that
@@ -105,7 +122,15 @@ void bisimpleNext(const Configuration& config, std::vector<Configuration>& res, 
  * Only rotations with angle + \p step and - \p step are allowed.
  */
 void paralyzedNext(const Configuration& config, std::vector<Configuration>& res, unsigned step, 
-    const std::unordered_set<unsigned>& allowed_indices);
+    const std::unordered_set<ID>& allowed_indices);
+
+void biParalyzedOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step, 
+    const std::unordered_set<ID>& allowed_indices);
+
+void smartBisimpleOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step);
+
+void smartBisimpleParOnlyRotNext(const Configuration& config, std::vector<Configuration>& res, unsigned step,
+    const std::unordered_set<ID>& allowed_indices);
 
 template<typename T>
 inline void getAllSubsetsRec(const std::vector<T>& set, std::vector<std::vector<T>>& res, 
