@@ -1,0 +1,74 @@
+name: "Build & test"
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 3 * * *'
+jobs:
+  build_desktop:
+    name: "Build suite desktop"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build
+        uses: addnab/docker-run-action@v2
+        with:
+          image: yaqwsx/rofi.desktop
+          shell: bash
+          options: -v ${{ github.workspace }}:/work -w /work
+          run: |
+            source setup.sh Release
+            rcfg desktop
+            rmake desktop
+  build_doc:
+    name: "Build documentation"
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            cmake make git doxygen graphviz
+          sudo pip3 install sphinx breathe sphinx-rtd-theme recommonmark
+      - name: "Build"
+        run: |
+          source setup.sh Release
+          rcfg doc
+          rmake doc
+      - name: Build other branches
+        if: github.ref == 'refs/heads/master'
+        run: |
+          source setup.sh Release
+          # Fetch all branches
+          git fetch --all
+          git pull --all
+          releng/doc/buildAllBranches.sh
+      - name: Upload artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: documentation
+          path: build.Release/doc/web
+          retention-days: 14
+  deploy:
+    name: "Deploy documentation"
+    runs-on: ubuntu-20.04
+    needs: build_doc
+    if: github.ref == 'refs/heads/master'
+    steps:
+      - name: Checkout # Required for GH-pages deployment
+        uses: actions/checkout@v2
+      - name: "Download web"
+        uses: actions/download-artifact@v2
+        with:
+          name: documentation
+          path: documentation
+      - run: ls documentation
+      - name: Deploy to GH Pages
+        uses: JamesIves/github-pages-deploy-action@4.1.0
+        with:
+          branch: gh-pages
+          folder: documentation
+          single-commit: true

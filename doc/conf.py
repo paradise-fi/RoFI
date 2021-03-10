@@ -20,7 +20,7 @@ import textwrap
 # -- Project information -----------------------------------------------------
 
 project = 'The RoFI Platform'
-copyright = '2020, Paradise'
+copyright = '2021, Paradise'
 author = 'Paradise'
 
 
@@ -33,14 +33,14 @@ extensions = [
     'breathe',
     'recommonmark'
 ]
-breathe_sources = {
-    "driver": "../RoFIDriver/",
-    "roficom": "../RoFICoM/software/control_board/",
-    "lib": "../RoFILib/",
-    "sim": "../RoFISim/",
-}
-breathe_projects = { name: "build/doxygen/" + name + "/xml" \
-    for name in breathe_sources.keys() }
+# breathe_sources = {
+#     "driver": "../RoFIDriver/",
+#     "roficom": "../RoFICoM/software/control_board/",
+#     "lib": "../RoFILib/",
+#     "sim": "../RoFISim/",
+# }
+# breathe_projects = { name: "build/doxygen/" + name + "/xml" \
+#     for name in breathe_sources.keys() }
 breathe_default_members = ('members', 'undoc-members')
 
 # Tell sphinx what the primary language being documented is.
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     # Generate makefile
     print(textwrap.dedent(
         """
-        SPHINXOPTS    ?=
+        SPHINXOPTS    ?=sphinx-rtd-theme
         SPHINXBUILD   ?= sphinx-build
         DOC_DIR       = .
         BUILDDIR      = build

@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+
+import sys
+import os
+from pathlib import Path
+import subprocess
+import shutil
+from common import *
+
+usage="""Usage:
+rcfg suite1 [suite2...] [-- <CMAKE FLAGS>]
+
+You can also specify "all" to configure all suites.
+To uncofingure a package, prefix it with "-", e.g., "-desktop"
+"""
+
+def unconfigure(suite):
+    path = os.path.join(buildDir, suite)
+    try:
+        shutil.rmtree(path)
+    except FileNotFoundError:
+        pass # Ignore already uncofigured packages
+
+if len(sys.argv) == 1:
+    sys.exit("No targets specified\n\n" + usage)
+
+if len(sys.argv) > 1 and sys.argv[1] in ["-h", "--help"]:
+    print(usage)
+    sys.exit(0)
+
+cmakeFlags = [f"-DCMAKE_BUILD_TYPE={buildCfg}"]
+try:
+    splitIdx = sys.argv.index("--")
+    requestedSuite = sys.argv[1:splitIdx]
+    cmakeFlags += sys.argv[splitIdx + 1:]
+except ValueError:
+    requestedSuite = sys.argv[1:]
+
+suites = availableSuites()
+
+if "all" in requestedSuite:
+    requestedSuite = suites
+
+for t in requestedSuite:
+    x = t
+    if t.startswith("-"):
+        x = t[1:]
+    if x not in suites:
+        sys.exit(f"Invalid suite '{t}' specified.\nAborting\n")
+
+for t in requestedSuite:
+    if t.startswith("-"):
+        unconfigure(t[1:])
+
+for t in requestedSuite:
+    if t.startswith("-"):
+        continue
+    path = Path(buildDir, t)
+    path.mkdir(exist_ok=True, parents=True)
+    source = os.path.join(suiteDir, t)
+    try:
+        print(f"Configuring suite {t}")
+        subprocess.check_call(["cmake", "-S", source, "-B", str(path)] + cmakeFlags)
+    except subprocess.SubprocessError as e:
+        sys.exit(f"CMake invocation for suite {t} failed. See output above\n")
