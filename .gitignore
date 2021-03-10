@@ -1,5 +1,6 @@
-AvrDock.bak
-_build*
+/_build*
+/build*
+__pycache__
 
 # VSCode
 **/.vscode/
