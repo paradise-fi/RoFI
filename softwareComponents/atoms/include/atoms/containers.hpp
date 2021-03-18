@@ -155,6 +155,20 @@ public:
     }
 
     /**
+     * \brief Insert new element and get its ID
+     */
+    id_type insert( T&& value ) {
+        if ( _freeIdxs.empty() ) {
+            _elems.push_back( std::move( value ) );
+            return _elems.size() - 1;
+        }
+        size_type idx = _freeIdxs.back();
+        _freeIdxs.pop_back();
+        _elems[ idx ] = std::move( value );
+        return idx;
+    }
+
+    /**
      * \brief Erase element based on its ID
      */
     void erase( id_type id ) {

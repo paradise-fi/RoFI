@@ -182,10 +182,10 @@ and easier to maintain.
 Sometimes, you need to store a such hierarchy in class which you want to make
 copyable. With ``unique_ptr`` you have to manually define all the copy and move
 constructors. This can be tedious, therefore, atoms provide
-:cpp:class:`atoms::valuePtr` which stores objects on heap, but provides copy
+:cpp:class:`atoms::ValuePtr` which stores objects on heap, but provides copy
 semantics for them. It is somewhat similar to proposed ``std::polymorphic_value``,
 however, it does not feature small-buffer optimization to provide stable
 references.
 
-.. doxygenclass:: atoms::valuePtr
+.. doxygenclass:: atoms::ValuePtr
     :project: lib
