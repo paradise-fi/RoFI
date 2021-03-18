@@ -290,19 +290,21 @@ public:
         return *this;
     }
 
-    ValuePtr( ValuePtr< T >&& other ): _ptr( std::move( other._ptr) ) {}
+    ValuePtr( ValuePtr< T >&& other ) noexcept : _ptr( std::move( other._ptr) ) {}
 
     ValuePtr< T >& operator=( ValuePtr< T >&& other ) {
         this->_ptr = std::move( other._ptr );
         return *this;
     }
 
-    auto operator *() const {
+    typename std::add_lvalue_reference< T >::type operator *() const {
         return *_ptr;
     }
+
     auto operator->() const {
         return _ptr.operator->();
     }
+
     auto get() const {
         return _ptr.get();
     }
