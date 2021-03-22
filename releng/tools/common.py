@@ -12,7 +12,10 @@ def availableSuites():
         if os.path.isdir(os.path.join(suiteDir, x))]
 
 def configuredSuites():
-    return os.listdir(buildDir)
+    try:
+        return os.listdir(buildDir)
+    except FileNotFoundError:
+        return []
 
 class TargetRecord:
     def __init__(self, target, path, suite):
