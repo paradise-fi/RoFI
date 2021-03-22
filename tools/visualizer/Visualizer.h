@@ -225,7 +225,7 @@ void Visualizer::drawConfiguration(const Configuration &config, const std::strin
     }
 }
 
-std::filesystem::path getModel( const std::string& model ) {
+fs::path getModel( const std::string& model ) {
     static ResourceFile body = LOAD_RESOURCE_FILE( model_body_obj );
     static ResourceFile shoe = LOAD_RESOURCE_FILE( model_shoe_obj );
     static ResourceFile connector = LOAD_RESOURCE_FILE( model_connector_obj );

@@ -1,9 +1,16 @@
 #pragma once
 #include <map>
 #include <fstream>
-#include <filesystem>
 #include <cstdlib>
 #include <cstring>
+
+#ifdef ATOMS_FS_FALLBACK
+    #include <ghc/filesystem.hpp>
+    namespace fs = ghc::filesystem;
+#else
+    #include <filesystem>
+    namespace fs = std::filesystem;
+#endif
 
 // There are some APIs (e.g. VTK) which can load resources only from files. This
 // APIs prevent embedding the resources. ResourceManage and ResourceFile help to
@@ -27,7 +34,7 @@
 class ResourceManager {
 public:
     ~ResourceManager() {
-        std::filesystem::remove_all( _tmpDir );
+        fs::remove_all( _tmpDir );
     }
 
     /**
@@ -36,7 +43,7 @@ public:
      * If the resource on given address was already added, existing file is
      * returned. The resource is specified by address and its size in bytes.
      */
-    std::filesystem::path add( const char *data, int count ) {
+    fs::path add( const char *data, int count ) {
         auto entry = _resources.find( data );
         if ( entry != _resources.end() )
             return entry->second;
@@ -54,7 +61,7 @@ public:
     }
 private:
     ResourceManager() {
-        auto templ = ( std::filesystem::temp_directory_path() / "XXXXXX" ).string();
+        auto templ = ( fs::temp_directory_path() / "XXXXXX" ).string();
         std::unique_ptr< char[] > cTempl( new char[ templ.size() + 1] );
         strcpy( cTempl.get(), templ.c_str() );
         if ( !mkdtemp( cTempl.get() ) )
@@ -62,15 +69,15 @@ private:
         _tmpDir = cTempl.get();
     }
 
-    std::filesystem::path createFile( const char *data, int count ) {
+    fs::path createFile( const char *data, int count ) {
         auto path = _tmpDir / std::to_string( _resources.size() );
         std::ofstream file( path );
         file.write( data, count );
         return path;
     }
 
-    std::filesystem::path _tmpDir;
-    std::map< const char *, std::filesystem::path > _resources;
+    fs::path _tmpDir;
+    std::map< const char *, fs::path > _resources;
 };
 
 /**
@@ -92,11 +99,11 @@ public:
     /**
      * \brief Get filename associated with given resource
      */
-    std::filesystem::path name() const {
+    fs::path name() const {
         return _path;
     }
 private:
-    std::filesystem::path _path;
+    fs::path _path;
 };
 
 /**

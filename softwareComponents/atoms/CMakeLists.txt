@@ -29,7 +29,23 @@ target_include_directories(atoms INTERFACE include)
 
 add_library(atoms-heavy INTERFACE)
 target_include_directories(atoms-heavy INTERFACE include)
-target_link_libraries(atoms-heavy INTERFACE "stdc++fs")
+if (${CMAKE_COMPILER_IS_GNUCC} AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS_EQUAL 8.3)
+  # GCC 8.3 does not support std::filesystem, use fallback
+  FetchContent_Declare(
+    altfs
+    GIT_REPOSITORY https://github.com/gulrak/filesystem.git
+    GIT_TAG        v1.5.4
+  )
+  FetchContent_GetProperties(altFs)
+  if(NOT altfs_POPULATED)
+    FetchContent_Populate(altfs)
+    add_subdirectory(${altfs_SOURCE_DIR} ${altfs_BINARY_DIR})
+    target_compile_definitions(atoms-heavy INTERFACE -DATOMS_FS_FALLBACK=1)
+  endif()
+  target_link_libraries(atoms-heavy INTERFACE ghc_filesystem)
+else()
+  target_link_libraries(atoms-heavy INTERFACE "stdc++fs")
+endif()
 
 # We use C++ tmpname - which triggers warning
 target_link_options(atoms-heavy INTERFACE -Wno-deprecated-declarations)
