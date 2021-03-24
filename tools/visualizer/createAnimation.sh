@@ -18,6 +18,10 @@ key="$1"
 
 case $key in
      -h|--help)
+     echo "RoFI video: Script for creating animation from configuration file"
+     echo "Usage: "
+     echo "  rofi-vis-video [OPTIONS]"
+     echo ""
      echo "  -h, --help            Prints help"
      echo "  -i, --input arg       Input config file"
      echo "  -o, --output arg      Output file (path/videoName.mp4)"
@@ -103,7 +107,8 @@ echo "VIS: $VIS"
 echo "VID: $VID"
 
 [ ! -d $PICTURESPATH ] && mkdir $PICTURESPATH
-cd ../build && ./rofi-vis $VIS && cd ../visualizer && ./buildVideo.sh $VID && rmdir $PICTURESPATH
+rofi-vis $VIS && rofi-vis-build-video $VID && rmdir $PICTURESPATH
+
 
 
 
