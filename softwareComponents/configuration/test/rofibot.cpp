@@ -15,7 +15,7 @@ TEST_CASE( "Basic rofibot manipulation" ) {
     auto& m2 = bot.insert( buildUniversalModule( 0, 0, 0 ) );
     REQUIRE( m2.id == 1 );
 
-    connect( m1.connector( 3 ), m2.connector( 2 ), Orientation::North );
+    // connect( m1.connector( 3 ), m2.connector( 2 ), Orientation::North );
 
     // ToDo: Write the test
 }
