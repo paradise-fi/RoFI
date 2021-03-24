@@ -104,7 +104,7 @@ run() {
 
     export PATH=$(realpath releng/tools):$ORIGINAL_PATH
     ## Add bin directories of the suites to path
-    for suite in $(find suites -maxdepth 1 -type d -printf '%f\n'); do
+    for suite in $(find suites -maxdepth 1 -type d -exec basename {} \;); do
         export PATH="${ROFI_BUILD_DIR}/$suite/bin:$PATH"
     done
 
