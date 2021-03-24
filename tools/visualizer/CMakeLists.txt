@@ -25,7 +25,7 @@ add_executable(rofi-vis ${modelResources} ${ARMADILLO_LIBRARIES}
 target_link_libraries(rofi-vis PUBLIC configuration atoms atoms-heavy cxxopts ${VTK_LIBRARIES})
 
 add_executable(rofi-vis-test ${modelResources} test/main.cpp test/test.cpp)
-target_link_libraries(rofi-vis-test PUBLIC configuration atoms ${ARMADILLO_LIBRARIES} ${VTK_LIBRARIES} Catch2::Catch2)
+target_link_libraries(rofi-vis-test PUBLIC configuration atoms atoms-heavy ${ARMADILLO_LIBRARIES} ${VTK_LIBRARIES} Catch2::Catch2)
 target_include_directories(rofi-vis-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
