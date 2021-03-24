@@ -21,7 +21,17 @@ please refer to the project documentation:
 [https://paradise-fi.github.io/RoFI/](https://paradise-fi.github.io/RoFI/).
 
 You will find all the necessary information about building and using the project
-there.
+there. For a brief reminder of the compilation process, see:
+
+```.bash
+$ source setup.sh <Configuration> # Setup your shell for compiling the
+                                  # project in a configuration
+$ rcfg --list                     # Show available compilation suites
+$ rcfg <suiteName>                # Configure given suite
+$ rmake --all                     # Compile all configured suites or...
+$ rmake <targetName>              # Compile given target or...
+$ rmake tools/                    # Compile all configured targets from source prefix
+```
 
 ## Licensing
 

@@ -8,7 +8,9 @@ import shutil
 from common import *
 
 usage="""Usage:
-rcfg suite1 [suite2...] [-- <CMAKE FLAGS>]
+rcfg suite1 [suite2...] [-- <CMAKE FLAGS>]     Configure or uncofigure suites
+rcfg --help                                    Print this help
+rcfg --list                                    List all available suites
 
 You can also specify "all" to configure all suites.
 To uncofingure a package, prefix it with "-", e.g., "-desktop"
@@ -26,6 +28,12 @@ if len(sys.argv) == 1:
 
 if len(sys.argv) > 1 and sys.argv[1] in ["-h", "--help"]:
     print(usage)
+    sys.exit(0)
+
+if len(sys.argv) > 1 and sys.argv[1] in ["-l", "--list"]:
+    print("Available suites: ")
+    for s in availableSuites():
+        print(f"  {s}")
     sys.exit(0)
 
 cmakeFlags = [f"-DCMAKE_BUILD_TYPE={buildCfg}"]
