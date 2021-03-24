@@ -56,6 +56,10 @@ case $key in
 	shift
 	;;
 	-h|--help)
+	echo "RoFI build-video: Script for creating animation from static images"
+	echo "Usage: "
+	echo "   rofi-vis-build-video [OPTIONS]"
+	echo ""
 	echo "  -h, --help           Prints help"
 	echo "  -i, --input arg      Directory with pictures to be animated"
 	echo "  -o, --output arg     Output file (path/videoName.mp4)"
@@ -73,7 +77,7 @@ done
 
 if [ "$INPATH" == "" ]
   then 
-    echo "There must be exactly one -i or --input option"
+    echo "There must be exactly one -i or --input option. *"
     exit 1
 fi
 

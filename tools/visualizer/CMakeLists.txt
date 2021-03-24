@@ -29,6 +29,22 @@ target_link_libraries(rofi-vis-test PUBLIC configuration atoms atoms-heavy ${ARM
 target_include_directories(rofi-vis-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
+add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-vis-build-video
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/buildVideo.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-vis-build-video
+	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/buildVideo.sh
+	COMMENT "Building rofi-vis-build-video")
+
+add_custom_target(rofi-vis-build-video
+	DEPENDS rofi-vis ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-vis-build-video)
+
+add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-vis-video
+	COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_SOURCE_DIR}/createAnimation.sh ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-vis-video
+	DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/createAnimation.sh
+	COMMENT "Building rofi-vis-video")
+
+add_custom_target(rofi-vis-video
+	DEPENDS rofi-vis ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-vis-video ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-vis-build-video)
+
 find_package(Qt5 COMPONENTS Widgets REQUIRED)
 
 if(Qt5_FOUND)
