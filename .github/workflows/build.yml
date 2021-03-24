@@ -21,6 +21,15 @@ jobs:
             source setup.sh Release
             rcfg desktop
             rmake desktop
+      - name: Run tests
+        uses: addnab/docker-run-action@v2
+        with:
+          image: yaqwsx/rofi.desktop
+          shell: bash
+          options: -v ${{ github.workspace }}:/work -w /work
+          run: |
+            source setup.sh Release
+            rmake --test --all
   build_doc:
     name: "Build documentation"
     runs-on: ubuntu-20.04
