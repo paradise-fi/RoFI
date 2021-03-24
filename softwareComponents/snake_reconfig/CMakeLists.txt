@@ -16,6 +16,6 @@ target_link_libraries(snakeAlgorithms PUBLIC configuration generators reconfig s
 add_executable(snakeReconfig main.cpp)
 target_link_libraries(snakeReconfig PUBLIC configuration generators reconfig snakeStructs snakeAlgorithms)
 
-add_executable(snakeReconfig-test test/main.cpp test/test.cpp)
-target_link_libraries(snakeReconfig-test PUBLIC configuration generators reconfig Catch2::Catch2 snakeAlgorithms)
-target_include_directories(snakeReconfig-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/)
+add_executable(test-snakeReconfig test/main.cpp test/test.cpp)
+target_link_libraries(test-snakeReconfig PUBLIC configuration generators reconfig Catch2::Catch2 snakeAlgorithms)
+target_include_directories(test-snakeReconfig PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/../extlib/)
