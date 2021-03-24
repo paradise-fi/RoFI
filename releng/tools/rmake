@@ -7,24 +7,38 @@ import multiprocessing
 from common import *
 
 usage="""Usage:
-    rmake --all                Compile all configured suites
-    rmake --list               Show available compilation targets
-    rmake --doc                Build & serve documentation (rebuilds on every change)
-    rmake --help               Print this help
-    rmake <targetName>...      Compile one or multiple targets
-    rmake <pathPrefix>...      Compile one or multiple targets in path
-    rmake <suitename>...       Compile given suite
-    rmake clean                Clean all suite builds
-    rmake clean-<suitename>... Clean given suite
+    rmake --all                  Compile all configured suites
+
+    rmake --list                 Show available compilation targets
+    rmake --doc                  Build & serve documentation (rebuilds on every change)
+    rmake --help                 Print this help
+
+    rmake <targetName>...        Compile one or multiple targets
+    rmake <pathPrefix>...        Compile one or multiple targets in path
+    rmake <suitename>...         Compile given suite
+
+    rmake --test --all           Compile and run all configured tests
+    rmake --test <targetName>... Compile and run test for target
+    rmake --test <pathName>...   Compile and run tests from given path prefix
+    rmake --test <suitename>...  Compile and run tests from given suite
+
+    rmake clean                  Clean all suite builds
+    rmake clean-<suitename>...   Clean given suite
 """
 
-def compileTarget(target):
-    print(f"Compiling target: {target}")
-    try:
-        subprocess.check_call(["make", f"-j{multiprocessing.cpu_count()}", target.target],
-            cwd=os.path.join(buildDir, target.suite))
-    except subprocess.SubprocessError as e:
-        sys.exit(f"Build of target {target} failed. See output above\n")
+def compileTargets(targets):
+    """
+    Compile given targets. Be as parallel as possible
+    """
+    for s in configuredSuites():
+        sTargets = [x.target for x in targets if x.suite == s]
+        print(f"Compiling targets from suite {s}: {', '.join(sTargets)}")
+        try:
+            threads = int(1.5 * multiprocessing.cpu_count())
+            subprocess.check_call(["make", f"-j{threads}"] + sTargets,
+                cwd=os.path.join(buildDir, s))
+        except subprocess.SubprocessError as e:
+            sys.exit(f"Build of target {', '.join(sTargets)} failed. See output above\n")
 
 def compileSuite(suite):
     print(f"Compiling suite {suite}")
@@ -42,6 +56,14 @@ def cleanSuite(suite):
     except subprocess.SubprocessError as e:
         sys.exit(f"Cleaning of suite {suite} failed. See output above\n")
 
+def runTest(target):
+    testname = f"{target.suite}::{target.target}"
+    print(f"Running test: {testname}")
+    try:
+        subprocess.check_call([target.target])
+    except subprocess.SubprocessError as e:
+        sys.exit(f"Running of suite {testname} failed. See output above\n")
+
 def printTargets():
     aSuites = availableSuites()
     aTargets = availableTargets()
@@ -58,70 +80,31 @@ def printTargets():
             print("  None")
         print("")
 
-def checkIfTargets(args):
+def allAreTargets(args):
     for a in args:
         if a.startswith("--"):
             return False
     return True
 
-if len(sys.argv) < 2:
-    sys.exit("Invalid usage!\n\n" + usage)
+def expandSuite(suite, targetList):
+    return [x for x in targetList if x.suite == suite]
 
-command = sys.argv[1]
-
-if command == "--list":
-    if len(sys.argv) != 2:
-        sys.exit("Invalid usage!\n\n" + usage)
-    printTargets()
-    sys.exit(0)
-
-if command == "--all":
-    if len(sys.argv) != 2:
-        sys.exit("Invalid usage!\n\n" + usage)
-    for suite in configuredSuites():
-        if os.path.exists(os.path.join(buildDir, suite)):
-            compileSuite(suite)
-    sys.exit(0)
-
-if command == "--doc":
-    if len(sys.argv) != 2:
-        sys.exit("Invalid usage!\n\n" + usage)
-    try:
-        tool = os.path.join(root, "releng", "tools", "_build_doc.sh")
-        subprocess.check_call([tool])
-        sys.exit(0)
-    except subprocess.SubprocessError as e:
-        sys.exit(1)
-    except KeyboardInterrupt:
-        sys.exit(0)
-
-if command == "--help":
-    if len(sys.argv) != 2:
-        sys.exit("Invalid usage!\n" + usage)
-    print(usage)
-    sys.exit(0)
-
-if not checkIfTargets(sys.argv[1:]):
-    sys.exit("Invalid usage!\n" + usage)
-
-aSuites = configuredSuites()
-aTargets = availableTargets()
-
-suitesToCompile = set()
-targetsToCompile = set()
-suitesToClean = set()
-
-for pattern in sys.argv[1:]:
-    if pattern in aSuites:
+def matchPattern(pattern, allowedSuites, allowedTargets, suitesToCompile,
+    targetsToCompile, suitesToClean):
+    """
+    Match pattern to allowed suites and targets and add to either
+    suitesToCompile, targetsToCompile or suitesToClean
+    """
+    if pattern in allowedSuites:
         suitesToCompile.add(pattern)
-        continue
+        return
     used = False
-    for target in aTargets:
+    for target in allowedTargets:
         if target.path.startswith(pattern) or target.target == pattern:
             targetsToCompile.add(target)
             used = True
     if pattern == "clean":
-        suitesToClean.update(aSuites)
+        suitesToClean.update(allowedSuites)
         used = True
     if pattern.startswith("clean-"):
         suitesToClean.add(pattern[6:])
@@ -129,15 +112,110 @@ for pattern in sys.argv[1:]:
     if not used:
         sys.exit(f"Invalid target pattern specified: '{pattern}'")
 
-targetsToCompile = list(targetsToCompile)
-targetsToCompile.sort(key=lambda x: x.suite)
+def build(patterns):
+    if not allAreTargets(patterns):
+        sys.exit("Invalid usage!\n" + usage)
 
-for s in suitesToClean:
-    cleanSuite(s)
+    aSuites = configuredSuites()
+    aTargets = availableTargets()
 
-for s in suitesToCompile:
-    compileSuite(s)
+    suitesToCompile = set()
+    targetsToCompile = set()
+    suitesToClean = set()
 
-for t in targetsToCompile:
-    compileTarget(t)
+    for pattern in patterns:
+        matchPattern(pattern, aSuites, aTargets, suitesToCompile,
+            targetsToCompile, suitesToClean)
+
+    targetsToCompile = list(targetsToCompile)
+    targetsToCompile.sort(key=lambda x: x.suite)
+
+    for s in suitesToClean:
+        cleanSuite(s)
+
+    for s in suitesToCompile:
+        compileSuite(s)
+
+    compileTargets(targetsToCompile)
+
+def buildAll():
+    for suite in configuredSuites():
+        if os.path.exists(os.path.join(buildDir, suite)):
+            compileSuite(suite)
+    sys.exit(0)
+
+def test(patterns):
+    aSuites = configuredSuites()
+    aTargets = availableTestTargets()
+
+    if patterns[0] == "--all":
+        patterns = [x.target for x in aTargets]
+    if not allAreTargets(patterns):
+        sys.exit("XInvalid usage!\n" + usage)
+
+    suitesToCompile = set()
+    targetsToCompile = set()
+    suitesToClean = set()
+    for pattern in patterns:
+        matchPattern(pattern, aSuites, aTargets, suitesToCompile,
+            targetsToCompile, suitesToClean)
+
+    for s in suitesToCompile:
+        targetsToCompile.union(expandSuite(s, aTargets))
+
+    targetsToCompile = list(targetsToCompile)
+    targetsToCompile.sort(key=lambda x: x.suite)
+
+    for s in suitesToClean:
+        cleanSuite(s)
+
+    compileTargets(targetsToCompile)
+
+    for t in targetsToCompile:
+        runTest(t)
+
+def main():
+    if len(sys.argv) < 2:
+        sys.exit("Invalid usage!\n\n" + usage)
+
+    command = sys.argv[1]
+
+    if command == "--list":
+        if len(sys.argv) != 2:
+            sys.exit("Invalid usage!\n\n" + usage)
+        printTargets()
+        sys.exit(0)
+
+    if command == "--doc":
+        if len(sys.argv) != 2:
+            sys.exit("Invalid usage!\n\n" + usage)
+        try:
+            tool = os.path.join(root, "releng", "tools", "_build_doc.sh")
+            subprocess.check_call([tool])
+            sys.exit(0)
+        except subprocess.SubprocessError as e:
+            sys.exit(1)
+        except KeyboardInterrupt:
+            sys.exit(0)
+
+    if command == "--help":
+        if len(sys.argv) != 2:
+            sys.exit("Invalid usage!\n" + usage)
+        print(usage)
+        sys.exit(0)
+
+    if command == "--test":
+        test(sys.argv[2:])
+        sys.exit(0)
+
+    if command == "--all":
+        if len(sys.argv) != 2:
+            sys.exit("Invalid usage!\n\n" + usage)
+        buildAll()
+        sys.exit(0)
+
+    build(sys.argv[1:])
+
+if __name__ == "__main__":
+    main()
 

@@ -24,7 +24,7 @@ target_include_directories(generators PUBLIC .)
 target_link_libraries(generators PUBLIC configuration)
 
 file(GLOB TEST_SRC test/*.cpp)
-add_executable(configuration-test ${TEST_SRC})
-target_link_libraries(configuration-test PRIVATE Catch2::Catch2 configuration atoms)
-target_include_directories(configuration-test PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} )
-catch_discover_tests(configuration-test)
+add_executable(test-configuration ${TEST_SRC})
+target_link_libraries(test-configuration PRIVATE Catch2::Catch2 configuration atoms)
+target_include_directories(test-configuration PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} )
+

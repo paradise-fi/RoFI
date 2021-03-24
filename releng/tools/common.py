@@ -17,6 +17,9 @@ def configuredSuites():
     except FileNotFoundError:
         return []
 
+def availableTestTargets():
+    return [x for x in availableTargets() if x.target.startswith("test-")]
+
 class TargetRecord:
     def __init__(self, target, path, suite):
         self.target = target

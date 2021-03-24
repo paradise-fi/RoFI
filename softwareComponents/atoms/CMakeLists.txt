@@ -35,6 +35,5 @@ target_link_libraries(atoms-heavy INTERFACE "stdc++fs")
 target_link_options(atoms-heavy INTERFACE -Wno-deprecated-declarations)
 
 file(GLOB TEST_SRC test/*.cpp)
-add_executable(atoms-test ${TEST_SRC})
-target_link_libraries(atoms-test PRIVATE Catch2::Catch2 atoms atoms-heavy)
-catch_discover_tests(atoms-test)
+add_executable(test-atoms ${TEST_SRC})
+target_link_libraries(test-atoms PRIVATE Catch2::Catch2 atoms atoms-heavy)
