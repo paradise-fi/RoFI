@@ -94,4 +94,5 @@ add_tool(topology2dot)
 add_tool(gazebosimTools)
 
 add_subdirectory($ENV{ROFI_ROOT}/data/gazebo/worlds data/gazebo/worlds)
+add_subdirectory($ENV{ROFI_ROOT}/examples/simulator examples/simulator)
 list_targets()
