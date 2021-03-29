@@ -8,8 +8,6 @@ set(WORLDS
 )
 
 
-add_custom_target(worlds-all ALL)
-
 foreach(WORLD IN LISTS WORLDS)
-    create_world(${WORLD}.world ${WORLD}.in)
+    add_gazebo_world(${WORLD}.world ${WORLD}.in)
 endforeach()
