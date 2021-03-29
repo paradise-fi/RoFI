@@ -187,3 +187,23 @@ To quickly start with RoFI development, we provide a short step-by-step guide:
     🤖R $ rmake tools/         # ... or build only all tools
     🤖R $ rofi-vis             # Run the compiled tool
 
+
+Quick start GazeboSim example
+------------------------------
+
+To quickly start with simulating RoFI using GazeboSim, we provide a short step-by-step guide:
+
+.. code-block:: sh
+
+    $ source setup.sh -f Debug                       # Setup your terminal for compiling RoFI in Debug mode.
+                                                     # This also sets the necessary gazebo variables
+    🤖 D $ rcfg desktop                              # Configure the desktop suite
+    🤖 D $ rmake --all                               # Build everything you have configured
+    🤖 D $ gazebo worlds/two_modules.world --verbose # Run gazebo. We recommend using --verbose for more info
+
+In a different terminal, run the module code for each module that you want to control:
+
+.. code-block:: sh
+
+    $ source setup.sh -f Debug # Setup your terminal
+    🤖 D $ basicJointPosition  # Run the compiled module code

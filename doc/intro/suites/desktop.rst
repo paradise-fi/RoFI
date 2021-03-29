@@ -16,6 +16,8 @@ libraries are required to be installed:
 -  `VTK >=7 <http://vtk.org/>`__: for APT-based system, install ``libvtk7-dev``
 -  `QT 5 and QT-VTK <http://qt.io/>`__: for APT-based system, install
    ``libvtk7-qt-dev qtdeclarative5-dev``
+-  `GazeboSim >=9 <http://gazebosim.org/>`__: for APT-based system, install
+   ``libgazebo9-dev``
 -  `Z3 <https://github.com/Z3Prover/z3>`__: this dependency is only needed for
    compiling SMT reconfiguration.
 
