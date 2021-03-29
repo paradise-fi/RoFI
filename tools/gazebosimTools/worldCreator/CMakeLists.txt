@@ -3,55 +3,50 @@ cmake_minimum_required(VERSION 3.11)
 
 # If you change the cached variables, run a clean compilation
 
-set(EMPTY_WORLD_FILE
-        ${CMAKE_SOURCE_DIR}/worlds/empty.world
+set(ROFI_EMPTY_WORLD_FILE
+        $ENV{ROFI_ROOT}/data/gazebo/worlds/empty.world
     CACHE
         FILEPATH
         "The empty world for world creator."
     )
 
-set(SDF_MODEL_FILES
-        ${CMAKE_SOURCE_DIR}/models/universalModule/model.sdf
-        ${CMAKE_SOURCE_DIR}/models/roficom/model.sdf
+set(ROFI_SDF_MODEL_FILES
+        $ENV{ROFI_ROOT}/data/gazebo/models/roficom/model.sdf
+        $ENV{ROFI_ROOT}/data/gazebo/models/universalModule/model.sdf
     CACHE
         FILEPATH
         "The paths to the sdf models used by the world creator."
     )
 
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../RoFILib/configuration ${CMAKE_CURRENT_BINARY_DIR}/configuration)
+add_executable(rofi-worldCreator worldCreatorMain.cpp worldCreator.cpp)
+target_link_libraries(rofi-worldCreator configuration rofiPluginCommon ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES} armadillo)
+target_compile_definitions(rofi-worldCreator PUBLIC WORLD_FILE=${ROFI_EMPTY_WORLD_FILE})
 
 
-add_library(worldCreatorLib STATIC worldCreator.cpp)
-target_link_libraries(worldCreatorLib configuration rofiPluginCommon ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES} armadillo)
-
-add_executable(worldCreator worldCreatorMain.cpp)
-target_link_libraries(worldCreator worldCreatorLib)
-target_compile_definitions(worldCreator PUBLIC WORLD_FILE=${EMPTY_WORLD_FILE})
-
-
-function(create_world world_file input_file)
+function(add_gazebo_world world_file input_file)
     add_custom_command(
         OUTPUT
-            ${CMAKE_CURRENT_BINARY_DIR}/${world_file}
+            ${CMAKE_BINARY_DIR}/data/gazebo/worlds/${world_file}
         COMMAND
-            ${CMAKE_SOURCE_DIR}/setGazeboVariables.sh
+            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-worldCreator
         ARGS
-            ${CMAKE_BINARY_DIR}/tools/worldCreator/worldCreator
             -i ${CMAKE_CURRENT_SOURCE_DIR}/${input_file}
-            -o ${CMAKE_CURRENT_BINARY_DIR}/${world_file}
+            -o ${CMAKE_BINARY_DIR}/data/gazebo/worlds/${world_file}
         DEPENDS
-            worldCreator
+            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-worldCreator
             ${CMAKE_CURRENT_SOURCE_DIR}/${input_file}
-            ${EMPTY_WORLD_FILE}
-            ${SDF_MODEL_FILES}
+            ${ROFI_EMPTY_WORLD_FILE}
+            ${ROFI_SDF_MODEL_FILES}
     )
 
     add_custom_target(
             ${world_file}
         ALL
         DEPENDS
-            ${CMAKE_CURRENT_BINARY_DIR}/${world_file}
+            ${CMAKE_BINARY_DIR}/data/gazebo/worlds/${world_file}
     )
-    add_dependencies(worlds-all ${world_file})
+    add_dependencies(createGazeboWorlds ${world_file})
 endfunction()
+
+add_custom_target(createGazeboWorlds ALL)

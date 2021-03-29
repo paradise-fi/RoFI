@@ -91,5 +91,7 @@ endif()
 add_tool(generate)
 add_tool(emptyDockFill)
 add_tool(topology2dot)
+add_tool(gazebosimTools)
 
+add_subdirectory($ENV{ROFI_ROOT}/data/gazebo/worlds data/gazebo/worlds)
 list_targets()
