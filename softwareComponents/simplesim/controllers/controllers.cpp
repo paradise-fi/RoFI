@@ -4,18 +4,12 @@
 #include <functional>
 #include <thread>
 
-#if __cplusplus >= 201911L
-#include <stop_token>
-using stop_token = std::stop_token;
-#else
-#include "stop_token.hpp"
-using stop_token = std20::stop_token;
-#endif
+#include "jthread/stop_token.hpp"  // Change to std::jthread with C++20
 
 
 namespace rofi::networking
 {
-void rofiControllerThread( stop_token stopToken,
+void rofiControllerThread( std20::stop_token stopToken,
                            Simulation & simulation,
                            RofiInterface & rofiInterface )
 {
@@ -48,18 +42,18 @@ void rofiControllerThread( stop_token stopToken,
     }
 }
 
-jthread runRofiController( Simulation & simulation, RofiInterface & rofiInterface )
+std20::jthread runRofiController( Simulation & simulation, RofiInterface & rofiInterface )
 {
-    return jthread( &rofiControllerThread, std::ref( simulation ), std::ref( rofiInterface ) );
+    return std20::jthread( &rofiControllerThread, std::ref( simulation ), std::ref( rofiInterface ) );
 }
 
 void introspectionControllerThread()
 {
 }
 
-jthread runIntrospectionController()
+std20::jthread runIntrospectionController()
 {
-    return jthread( &introspectionControllerThread );
+    return std20::jthread( &introspectionControllerThread );
 }
 
 } // namespace rofi::networking

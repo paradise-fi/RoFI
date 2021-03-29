@@ -61,6 +61,10 @@ if(NOT fmt_POPULATED)
   add_subdirectory(${fmt_SOURCE_DIR} ${fmt_BINARY_DIR})
 endif()
 
+find_package(gazebo REQUIRED)
+include_directories(${GAZEBO_INCLUDE_DIRS})
+link_directories(${GAZEBO_LIBRARY_DIRS})
+
 
 
 add_component(atoms)
@@ -70,6 +74,15 @@ add_component(reconfig)
 if (${BUILD_SMTRECONFIG})
   add_component(smtreconfig)
 endif()
+add_component(lwip++)
+add_component(lwipcore)
+add_component(networking)
+add_component(jthread)
+add_component(rofisimMessages)
+add_component(configurationMessages)
+add_component(rofiHalSim)
+add_component(gazebosim)
+add_component(simplesim)
 
 if (NOT ${BUILD_HEADLESS})
   add_tool(visualizer)

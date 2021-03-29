@@ -7,5 +7,5 @@ set (FILES
 )
 
 add_library(networkingRofiInterface ${FILES})
-target_link_libraries(networkingRofiInterface PUBLIC rofiMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(networkingRofiInterface PUBLIC rofisimMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 target_include_directories(networkingRofiInterface INTERFACE ${CMAKE_CURRENT_LIST_DIR})

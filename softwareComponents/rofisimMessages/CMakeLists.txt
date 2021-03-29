@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 
+
 find_package(Protobuf REQUIRED)
 # Include Gazebo messages
 set(PROTOBUF_IMPORT_DIRS)
@@ -33,7 +34,7 @@ set (msgs
 
 PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${msgs})
 
-add_library(rofiMessages SHARED ${PROTO_SRCS})
-target_link_libraries(rofiMessages ${PROTOBUF_LIBRARY})
-target_include_directories(rofiMessages INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
-set_target_properties(rofiMessages PROPERTIES COMPILE_FLAGS "-Wno-all -Wno-extra -Wno-pedantic")
+add_library(rofisimMessages SHARED ${PROTO_SRCS})
+target_link_libraries(rofisimMessages ${PROTOBUF_LIBRARY})
+target_include_directories(rofisimMessages INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
+set_target_properties(rofisimMessages PROPERTIES COMPILE_FLAGS "-Wno-all -Wno-extra -Wno-pedantic")

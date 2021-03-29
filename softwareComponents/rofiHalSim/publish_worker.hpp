@@ -10,7 +10,7 @@
 
 #include "concurrent_queue.hpp"
 #include "gazebo_node_handler.hpp"
-#include "jthread/jthread.hpp"
+#include "jthread/jthread.hpp" // Change to std::jthread with C++20
 #include "rofi_hal.hpp"
 #include "subscriber_wrapper.hpp"
 
@@ -179,6 +179,6 @@ private:
 
     std::map< std::string, gazebo::transport::PublisherPtr > _pubs;
 
-    std20::jthread _workerThread; // Change to std::jthread with C++20
+    std20::jthread _workerThread;
 };
 } // namespace rofi::hal
