@@ -7,7 +7,7 @@
 
 #include "callbacks.hpp"
 #include "concurrent_queue.hpp"
-#include "jthread/jthread.hpp"
+#include "jthread/jthread.hpp" // Change to std::jthread with C++20
 #include "rofi_hal.hpp"
 
 #include <jointResp.pb.h>
@@ -224,7 +224,7 @@ private:
     std::vector< JointCallbacks > _callbacks;
     ConcurrentQueue< Message > _queue;
 
-    std20::jthread _workerThread; // Change to std::jthread with C++20
+    std20::jthread _workerThread;
 };
 
 } // namespace rofi::hal

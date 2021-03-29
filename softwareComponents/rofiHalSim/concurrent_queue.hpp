@@ -6,7 +6,7 @@
 #include <mutex>
 #include <optional>
 
-#include "jthread/condition_variable_any2.hpp"
+#include "jthread/condition_variable_any2.hpp" // Change to std::jthread with C++20
 
 
 template < typename T >
@@ -95,5 +95,5 @@ private:
     std::deque< T > _q;
 
     mutable std::mutex _m;
-    std20::condition_variable_any2 _popSig; // Change to std::condition_variable with C++20
+    std20::condition_variable_any2 _popSig;
 };

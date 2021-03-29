@@ -8,7 +8,7 @@
 #include <type_traits>
 
 #include "concurrent_queue.hpp"
-#include "jthread/jthread.hpp"
+#include "jthread/jthread.hpp" // Change to std::jthread with C++20
 #include "rofi_hal.hpp"
 
 #include <rofiResp.pb.h>
@@ -142,7 +142,7 @@ private:
     ConcurrentQueue< int > _waitIdsQueue;
     std::atomic_int _nextWaitId = 1;
 
-    std20::jthread _workerThread; // Change to std::jthread with C++20
+    std20::jthread _workerThread;
 };
 
 } // namespace rofi::hal
