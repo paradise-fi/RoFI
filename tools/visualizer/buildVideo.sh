@@ -1,7 +1,7 @@
 #!/bin/bash
 
 INPATH=
-OUTPATH=../data/animation/output.mp4
+OUTPATH=${ROFI_ROOT}/data/animation/output.mp4
 OSET=FALSE
 FRAMERATE=24
 FSET=FALSE
@@ -77,7 +77,7 @@ done
 
 if [ "$INPATH" == "" ]
   then 
-    echo "There must be exactly one -i or --input option. *"
+    echo "There must be exactly one -i or --input option."
     exit 1
 fi
 

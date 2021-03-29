@@ -1,13 +1,14 @@
 #!/bin/bash
 
 PICTURESPATH=`mktemp -d /tmp/XXXXXX`
-OUTPATH=../data/animation/output.mp4
 OUTPATHSET=FALSE
+INPUTSET=FALSE
+FRAMERATESET=FALSE
 
-# command line arguments for ./rofi-vis
+# command line arguments for rofi-vis
 VIS="-s -p $PICTURESPATH -a"
 
-# command line arguments for buildVideo.sh
+# command line arguments for rofi-vis-build-video
 VID="-i $PICTURESPATH -d"
 
 # parse input parameters
@@ -37,11 +38,22 @@ case $key in
      exit 0
      ;;
      -i|--input)
+     if [ "$INPUTSET" == "TRUE" ]
+	then 
+	  echo "There can be at most one -i or --input option."
+   	  exit 1
+     fi
      VIS="$VIS -i $2"
+     INPUTSET=TRUE
      shift
      shift
      ;;
      -o|--output)
+     if [ "$OUTPATHSET" == "TRUE" ]
+	then 
+	  echo "There can be at most one -o or --output option."
+   	  exit 1
+     fi
      VID="$VID -o $2"
      OUTPATHSET=TRUE
      shift
@@ -53,8 +65,14 @@ case $key in
      shift
      ;;
      -f|--framerate)
+     if [ "$FRAMERATESET" == "TRUE" ]
+	then 
+	  echo "There can be at most one -f or --framerate option."
+   	  exit 1
+     fi
      VIS="$VIS -f $2"
      VID="$VID -f $2"
+     FRAMERATESET=TRUE
      shift
      shift
      ;;
@@ -99,15 +117,21 @@ case $key in
 esac
 done
 
+
+if [ "$OUTPATHSET" == FALSE ] 
+    then 
+      echo "There must be exactly one -o or --output option"
+      exit 1
+fi
+
 echo "VIS: $VIS"
-
-
-[ "$OUTPATHSET" == "FALSE" ] && VID="$VID -o $OUTPATH"
-
 echo "VID: $VID"
 
 [ ! -d $PICTURESPATH ] && mkdir $PICTURESPATH
-rofi-vis $VIS && rofi-vis-build-video $VID && rmdir $PICTURESPATH
+rofi-vis $VIS && rofi-vis-build-video $VID
+
+# clean up temporary images
+rm -r $PICTURESPATH
 
 
 

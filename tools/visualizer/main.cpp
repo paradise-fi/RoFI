@@ -80,11 +80,11 @@ void parse(int argc, char* argv[], Parameters& p){
             p.inputFile.open(filename);
             if (!p.inputFile.good()){
                 std::cerr << "Could not open file " << filename << ".\n";
-                exit(0);
+                exit(1);
             }
         } else {
             std::cerr << err::exactlyOne("'-i' or '--input'");
-            exit(0);
+            exit(1);
         }
 
         if (result.count("save")){
@@ -101,12 +101,12 @@ void parse(int argc, char* argv[], Parameters& p){
             p.cameraSettings.open(filename);
             if (!p.cameraSettings.good()) {
                 std::cerr << "Could not open file " << filename << ".\n";
-                exit(0);
+                exit(1);
             }
             p.cameraSet = true;
         } else if (result.count("camera") > 1) {
             std::cerr << err::atMostOne("'-c' or '--camera'");
-            exit(0);
+            exit(1);
         }
 
         if (result.count("path") == 1){
@@ -116,75 +116,75 @@ void parse(int argc, char* argv[], Parameters& p){
             }
         } else if (result.count("path") > 1){
             std::cerr << err::atMostOne("'-p' or '--path'");
-            exit(0);
+            exit(1);
         }
 
         if (result.count("framerate") == 1){
             if (!p.animation){
                 std::cerr << err::notAvailable("'-f' or '--framerate'", "'-a' or '--animation'");
-                exit(0);
+                exit(1);
             }
             p.framerate = result["framerate"].as<unsigned int>();
             p.phi = p.omega / p.framerate;
             p.reconnectionPics = static_cast<unsigned int>(std::ceil(p.reconnectionTime * p.framerate));
         } else if (result.count("framerate") > 1){
             std::cerr << err::atMostOne("'-f' or '--framerate'");
-            exit(0);
+            exit(1);
         }
 
         if (result.count("velocity") == 1 && result.count("angle") == 0){
             if (!p.animation){
                 std::cerr << err::notAvailable("'-v' or '--velocity'", "'-a' or '--animation'");
-                exit(0);
+                exit(1);
             }
             double val = result["velocity"].as< double >();
             if (val < 0) {
                 std::cerr << "Angular velocity can not be negative.\n";
-                exit(0);
+                exit(1);
             }
             p.omega = val;
             p.phi = p.omega / p.framerate;
         } else if (result.count("velocity") == 0 && result.count("angle") == 1) {
             if (!p.animation){
                 std::cerr << err::notAvailable("'-g' or '--angle'", "'-a' or '--animation'");
-                exit(0);
+                exit(1);
             }
             double val = result["angle"].as< double >();
             if (val < 0) {
                 std::cerr << "Maximal angle diff can not be negative.\n";
-                exit(0);
+                exit(1);
             }
             p.phi = val;
             p.omega = p.framerate * p.phi;
         } else if (!result.count("velocity") && !result.count("angle")){}
         else {
             std::cerr << err::atMostOne("'-v', '--velocity', '-g' or '--angle'");
-            exit(0);
+            exit(1);
         }
 
         if (result.count("recTime") == 1 && result.count("recPics") == 0){
             if (!p.animation){
                 std::cerr << err::notAvailable("'-t' or '--recTime'", "'-a' or '--animation'");
-                exit(0);
+                exit(1);
             }
             double val = result["recTime"].as< double >();
             if (val < 0) {
                 std::cerr << "Reconnection time can not be negative.\n";
-                exit(0);
+                exit(1);
             }
             p.reconnectionTime = val;
             p.reconnectionPics = static_cast<unsigned int>(std::ceil(p.reconnectionTime * p.framerate));
         } else if (result.count("recTime") == 0 && result.count("recPics") == 1){
             if (!p.animation){
                 std::cerr << err::notAvailable("'-e' or '--recPics'", "'-a' or '--animation'");
-                exit(0);
+                exit(1);
             }
             p.reconnectionPics = result["recPics"].as< unsigned int >();
             p.reconnectionTime = p.reconnectionPics / static_cast<double>(p.framerate);
         } else if (!result.count("recTime") && (!result.count("recPics"))) {}
         else {
             std::cerr << err::atMostOne("'-t', '--recTime', '-e' or '--recPics'");
-            exit(0);
+            exit(1);
         }
 
         if (result.count("many")){
@@ -198,7 +198,7 @@ void parse(int argc, char* argv[], Parameters& p){
                 position = res.find('X');
                 if (position == std::string::npos){
                     std::cerr << "Option resolution has wrong format - 'x' or 'X' is missing." << "\n";
-                    exit(0);
+                    exit(1);
                 }
             }
             std::string x = res.substr(0, position);
@@ -209,37 +209,37 @@ void parse(int argc, char* argv[], Parameters& p){
                 dy = std::stoi(y);
             } catch (std::invalid_argument& e){
                 std::cerr << "Resolution parameter is not a number.\n";
-                exit(0);
+                exit(1);
             }
             if (dx < 0 || dy < 0){
                 std::cerr << "Resolution parameter can not be negative.\n";
-                exit(0);
+                exit(1);
             }
             p.resolution = {dx, dy};
         } else if (result.count("resolution") > 1) {
             std::cerr << err::atMostOne("'-r' or '--resolution'");
-            exit(0);
+            exit(1);
         }
 
         if (result.count("magnify") == 1){
             if (!p.savePicture){
                 std::cerr << err::notAvailable("'-m' or '--magnify'", "'-s' or '--save'");
-                exit(0);
+                exit(1);
             }
             int val = result["magnify"].as<int>();
             if (val < 0){
                 std::cerr << "Magnification can not be negative.\n";
-                exit(0);
+                exit(1);
             }
             p.magnify = val;
         } else if (result.count("magnify") > 1) {
             std::cerr << err::atMostOne("'-m' or '--magnify'");
-            exit(0);
+            exit(1);
         }
 
     } catch (cxxopts::OptionException& e){
         std::cerr << e.what();
-        exit(0);
+        exit(1);
     }
 }
 
