@@ -15,8 +15,11 @@ int main( int argc, char** argv )
         }
 
     }
-    rofi_bot bot( path );
-    bot.connect();
+    rofi_bot bot( path, fixed );
+    //bot.connect();
+    // Vector a = { -0.6, -0.6, -0.3, 1.0 }, b = { 0, 0, -1, 1 };
+    // std::cerr << rotx( a, b ) << "\n\n";
+    bot.reach< strategy::fabrik >( { 1, 1, 1, 1 }, std::vector< double >{ M_PI / 2, 0, 0 } );
     std::cout << IO::toString( bot.get_config() );
     return 0;
 }
@@ -159,6 +162,7 @@ bool rofi_bot::rotate_to( Vector& end_pos, const Vector& end_goal, int i, Joint 
         default:
             throw std::exception();
     }
+    //std::cerr << "end\n" << local_end << "goal\n" << local_goal << "rotat: " << rotation << '\n';
     if( round ){
         if( rotation + current < -45.0 ){
             rotation = -90;
@@ -178,8 +182,107 @@ bool rofi_bot::rotate_if_valid( int module, Joint joint, double angle )
     config.execute( Action( Action::Rotate( module, joint, angle ) ) );
     if( !config.isValid() ){
         config.execute( Action( Action::Rotate( module, joint, -angle ) ) );
+        config.computeMatrices();
         return false;
     }
     return true;
 }
 
+bool rofi_bot::fabrik( const Vector& goal, const std::vector< double >& rotation, const chain& arm, int max_iterations ){
+    assert( rotation.size() == 3 );
+    assert( max_iterations > 0 );
+
+    std::vector< Vector > positions;
+    for( int i : arm ){
+        for( int j : { Alpha, Beta } ){
+            positions.emplace_back( get_global( i, j ) );
+        }
+    }
+    Vector base = positions[ 0 ];
+    Vector second = positions[ 1 ];
+
+    /* To make sure I can rotate the connecter as I need to, I set the
+     * position of the second last joint opposite to the point I want to
+     * face */
+    Vector second_goal = goal + Vector( rotate( rotation[ 0 ], X ) *
+                                        rotate( rotation[ 1 ], Y ) *
+                                        rotate( rotation[ 2 ], Z ) *
+                                        Vector( { 0, 0, -1, 1 } ) );
+
+    int iterations = 0;
+    while( distance( get_global( arm.back(), 1 ), goal ) > 0.001 ||
+           distance( get_global( arm.back(), 0 ), second_goal ) > 0.001 ){
+        
+        positions.back() = goal;
+        positions[ positions.size() - 2 ] = second_goal;
+
+        // old style for loops for easier access to the next element
+
+        /* Forward reaching */
+        for( size_t i = positions.size() - 2; i--; ){
+            Vector direction = positions[ i + 2 ] - positions[ i + 1 ];
+ 
+            /* The limit set on RoFIs: every other joint is projected on the
+             * line between the next and previous one, because there is no 
+             * rotation between two modules */
+            if( i % 2 == 1 ){
+                Vector to_base = positions[ i - 1 ] - positions[ i + 1 ];
+                Vector normal = cross( direction, to_base );
+                positions[ i ] = positions[ i ] - ( normal * ( positions[ i ] - positions[ i + 1 ] ) ) * normal;
+            }
+
+            /* Sets the joint on the line between its previous position and
+             * the next one, so that the link length is one **/
+            double lambda = 1.0 / distance( positions[ i ], positions[ i + 1 ] );
+            positions[ i ] = ( 1.0 - lambda ) * positions[ i + 1 ] + lambda * positions[ i ];
+
+            /* If the new position is too close (doesn't respect the limit of rotation to 90°),
+             * reposition it and find the new one **/
+            if( distance( positions[ i + 2 ], positions[ i ] ) < std::sqrt( 2.0 ) ){
+                positions[ i ] = positions[ i ] - direction;
+
+                lambda = 1.0 / distance( positions[ i ], positions[ i + 1 ] );
+                positions[ i ] = ( 1.0 - lambda ) * positions[ i + 1 ] + lambda * positions[ i ];
+            }
+        }
+
+        positions[ 0 ] = base;
+        positions[ 1 ] = second;
+
+        /* Backward reaching, same procedure */
+        for( size_t i = 2; i < positions.size() - 1; ++i ){
+            Vector direction = positions[ i - 2 ] - positions[ i - 1 ];
+            if( i % 2 == 2 ){
+                Vector to_base = positions[ i - 1 ] - positions[ i + 1 ];
+                Vector normal = cross( direction, to_base );
+                positions[ i ] = positions[ i ] - ( normal * ( positions[ i ] - positions[ i - 1 ] ) ) * normal;
+            }
+
+            double lambda = 1.0 / distance( positions[ i ], positions[ i - 1 ] );
+            positions[ i ] = ( 1.0 - lambda ) * positions[ i - 1 ] + lambda * positions[ i ];
+
+            if( distance( positions[ i - 2 ], positions[ i ] ) < std::sqrt( 2.0 ) ){
+                positions[ i ] = positions[ i ] + ( positions[ i - 1 ] - positions[ i - 2 ] );
+            }
+            lambda = 1.0 / distance( positions[ i ], positions[ i + 1 ] );
+            positions[ i ] = ( 1.0 - lambda ) * positions[ i - 1 ] + lambda * positions[ i ];
+
+            /* Move to the calculated positions */
+            Joint current = i % 2 == 0 ? Alpha : Beta;
+            Vector next_position = get_global( arm[ ( i + 1 ) / 2 ], ( i + 1 ) % 2 );
+            if( current == Beta ){
+                rotate_to( next_position, positions[ i + 1 ], arm[ i / 2 ], Gamma, false );
+            } else {
+                rotate_to( next_position, positions[ i + 1 ], arm[ ( i - 1 ) / 2 ], Gamma, false );
+            }
+            next_position = get_global( arm[ ( i + 1 ) / 2 ], ( i + 1 ) % 2 );
+            rotate_to( next_position, positions[ i + 1 ], arm[ i / 2 ], current, false );
+
+            positions[ i ] = get_global( arm[ i / 2 ], current );
+        }
+        if( ++iterations == max_iterations )
+            return false;
+    }
+
+    return true;
+}

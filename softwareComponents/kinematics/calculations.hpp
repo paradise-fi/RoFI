@@ -52,6 +52,12 @@ inline Vector operator-( const Vector& a, const Vector& b ){
                     1.0 });
 }
 
+inline Vector operator/( const Vector& vec, double num ){
+    return Vector({ vec[ 0 ] / num,
+                    vec[ 1 ] / num,
+                    vec[ 2 ] / num,
+                    vec[ 3 ] });
+}
 inline Vector cross( const Vector& a, const Vector& b ){
     return Vector({ a[ 1 ] * b[ 2 ] - a[ 2 ] * b[ 1 ],
                     a[ 2 ] * b[ 0 ] - a[ 0 ] * b[ 2 ],
@@ -70,18 +76,15 @@ inline double operator*( const Vector& a, const Vector& b ){
 }
 
 inline Matrix inverse( Matrix m ){
-    Matrix transpose, rotation;
+    Matrix transpose = identity;
+    Matrix rotation = identity;
     for( int i = 0; i < 3; ++i ){
         for( int j = 0; j < 3; ++j ){
             rotation.at( i, j ) = m.at( j, i );
         }
     }
-    rotation.at( 3, 3 ) = 1;
     for( int i = 0; i < 3; ++i ){
         transpose.at( i, 3 ) = -m.at( i, 3 );
-    }
-    for( int i = 0; i < 4; ++i ){
-        transpose.at( i, i ) = 1;
     }
     return rotation * transpose;
 }
