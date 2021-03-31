@@ -42,9 +42,9 @@ class rofi_bot {
             return ccd( goal, rotation, arms[ arm ] );
         }
         // WIP
-        // if constexpr( S == strategy::fabrik ){
-        //     return fabrik( goal, rotation, arms[ arm ] );
-        // }
+        if constexpr( S == strategy::fabrik ){
+            return fabrik( goal, rotation, arms[ arm ] );
+        }
 
         return false;
     };
@@ -76,6 +76,7 @@ class rofi_bot {
 
     bool connect_ccd( int a, int b, int max_iterations = 100 );
 
+    /** Classic IK algorithm, Cyclic Coordinate Descent **/
     bool ccd( const Vector& goal, const std::vector< double >& rotation,
               const chain& arm, int max_iterations = 100 );
 
@@ -83,8 +84,12 @@ class rofi_bot {
 
     bool rotate_if_valid( int module, Joint joint, double angle );
 
+    /** Forward And Backward Reaching Inverse Kinematics (FABRIK) algorithm,
+     ** adapted from "Aristidou A, Lasenby J.
+     ** FABRIK: a fast, iterative solver for the Inverse kinematics problem"
+     **/
     bool fabrik( const Vector& goal, const std::vector< double >& rotation,
-                const chain& arm, int max_iterations = 100 );
+                 const chain& arm, int max_iterations = 100 );
 
     /* Position of the last joint */
     inline Vector end_effector( const chain& arm ){
@@ -104,6 +109,7 @@ class rofi_bot {
 
     /* Global position to local */
     inline Vector get_local( int module, int shoe, const Vector& global ){
-        return inverse( config.getMatrices().at( module ).at( shoe ) ) * global;
+        Vector wtf = global;
+        return inverse( config.getMatrices().at( module ).at( shoe ) ) * wtf;
     }
 };
