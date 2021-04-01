@@ -75,11 +75,11 @@ std::optional< rofi::messages::ConnectorState::Orientation > getMutualOrientatio
                 case 0:
                     return rofi::messages::ConnectorState::NORTH;
                 case 1:
-                    return rofi::messages::ConnectorState::WEST;
+                    return rofi::messages::ConnectorState::EAST;
                 case 2:
                     return rofi::messages::ConnectorState::SOUTH;
                 case 3:
-                    return rofi::messages::ConnectorState::EAST;
+                    return rofi::messages::ConnectorState::WEST;
                 default:
                     assert( false );
             }

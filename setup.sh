@@ -11,7 +11,7 @@ backup() {
             TEARDOWN_CMD="$TEARDOWN_CMD export $1=\"\$ORIGINAL_$1\"; unset ORIGINAL_$1;"
         else
             # Set backup so it's not overwritten
-            eval export ORIGINAL_$1=" "
+            eval export ORIGINAL_$1=\"" "\"
             TEARDOWN_CMD="$TEARDOWN_CMD unset $1; unset ORIGINAL_$1;"
         fi
     fi
@@ -41,8 +41,8 @@ configurationDesc() {
 setGazeboVariables() {
     backup GAZEBO_NAME
 
-    backup GAZEBO_MASTER_URI
-    backup GAZEBO_MODEL_DATABASE_URI
+    # backup GAZEBO_MASTER_URI
+    # backup GAZEBO_MODEL_DATABASE_URI
     backup GAZEBO_RESOURCE_PATH
     backup GAZEBO_PLUGIN_PATH
     backup GAZEBO_MODEL_PATH
@@ -60,8 +60,8 @@ setGazeboVariables() {
         return
     fi
 
-    GAZEBO_MASTER_URI=$ORIGINAL_GAZEBO_MASTER_URI
-    GAZEBO_MODEL_DATABASE_URI=$ORIGINAL_GAZEBO_MODEL_DATABASE_URI
+    # GAZEBO_MASTER_URI=$ORIGINAL_GAZEBO_MASTER_URI
+    # GAZEBO_MODEL_DATABASE_URI=$ORIGINAL_GAZEBO_MODEL_DATABASE_URI
     GAZEBO_RESOURCE_PATH=$ORIGINAL_GAZEBO_RESOURCE_PATH
     GAZEBO_PLUGIN_PATH=$ORIGINAL_GAZEBO_PLUGIN_PATH
     GAZEBO_MODEL_PATH=$ORIGINAL_GAZEBO_MODEL_PATH
@@ -150,10 +150,10 @@ run() {
     export GAZEBO_PLUGIN_PATH="$ROFI_BUILD_DIR/desktop/gazebosim/roficom:$GAZEBO_PLUGIN_PATH"
     export GAZEBO_PLUGIN_PATH="$ROFI_BUILD_DIR/desktop/gazebosim/distributor:$GAZEBO_PLUGIN_PATH"
     export GAZEBO_RESOURCE_PATH="$ROFI_ROOT/data/gazebo:$GAZEBO_RESOURCE_PATH"
-    export GAZEBO_RESOURCE_PATH="$ROFI_BUILD_DIR/data/gazebo:$GAZEBO_RESOURCE_PATH"
+    export GAZEBO_RESOURCE_PATH="$ROFI_BUILD_DIR/desktop/data/gazebo:$GAZEBO_RESOURCE_PATH"
 
 
-    export PATH=$(realpath releng/tools):$ORIGINAL_PATH
+    export PATH="$(realpath releng/tools):$ORIGINAL_PATH"
     ## Add bin directories of the suites to path
     for suite in $(find suites -maxdepth 1 -type d -exec basename {} \;); do
         export PATH="${ROFI_BUILD_DIR}/$suite/bin:$PATH"
