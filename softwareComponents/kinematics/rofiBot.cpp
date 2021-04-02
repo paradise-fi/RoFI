@@ -3,23 +3,42 @@
 // executable should probably be separated later
 int main( int argc, char** argv )
 {
-    bool fixed = fixed;
+    bool fixed = false;
     std::string path;
+    strategy s = strategy::fabrik;
+    bool reach = false;
+    bool connect = false;
+    std::pair< int, int > to_connect = { 0, 1 };
+    Vector goal = { 0, 0, 0, 1 };
 
     for( int i = 0; i < argc; ++i ){
         std::string arg = argv[ i ];
         if( arg == "-f" || arg == "--fixed" ){
             fixed = true;
-        } else {
-            path = arg;
+        } else if( arg == "-r" || arg == "--reach" ){
+            reach = true;
+            for( int j = 0; j < 3; ++j ){
+                std::stringstream ss( argv[ i + j + 1 ] );
+                ss >> goal[ j ];
+            }
+        } else if( arg == "-c" || arg == "--connect" ){
+            connect = true;
+            to_connect.first = std::stoi( argv[ i + 1 ] );
+            to_connect.second = std::stoi( argv[ i + 2 ] );
+        } else if( arg == "-i" || arg == "--input" ){
+            path = argv[ i + 1 ];
+        } else if( arg == "-ccd" ){
+            s = strategy::ccd;
         }
 
     }
     rofi_bot bot( path, fixed );
-    //bot.connect();
-    // Vector a = { -0.6, -0.6, -0.3, 1.0 }, b = { 0, 0, -1, 1 };
-    // std::cerr << rotx( a, b ) << "\n\n";
-    bot.reach< strategy::fabrik >( { 1, 1, 1, 1 }, std::vector< double >{ M_PI / 2, 0, 0 } );
+    if( reach ){
+        std::cerr << std::boolalpha << bot.reach< strategy::ccd >( goal ) << '\n';
+    }
+    if( connect ){
+        std::cerr << std::boolalpha << bot.connect< strategy::ccd >( to_connect.first, to_connect.second ) << '\n';
+    }
     std::cout << IO::toString( bot.get_config() );
     return 0;
 }
@@ -108,6 +127,52 @@ bool rofi_bot::connect_ccd( int a, int b, int max_iterations )
     return true;
 }
 
+bool rofi_bot::connect_fabrik( int a, int b, int max_iterations ){
+    config.computeMatrices();
+
+    Vector position_a = end_effector( arms[ a ] );
+    Vector position_b = end_effector( arms[ b ] );
+
+    Vector pointing_a = pointing_to( arms[ a ] );
+    Vector pointing_b = pointing_to( arms[ b ] );
+
+    /* If the arms face outwards, the algorithm doesn't seem to find a solution.
+     * Therefore, rotate the tips towards the other arm */
+    if( distance( pointing_a, get_global( arms[ b ].front(), 0 ) ) > arms[ a ].size() ){
+        for( Joint joint : { Gamma, Alpha } ){
+            rotate_to( position_a, get_global( arms[ b ].front(), 0 ), arms[ a ].back(), joint );
+            rotate_to( position_b, get_global( arms[ a ].front(), 0 ), arms[ b ].back(), joint );
+        }
+
+        position_a = end_effector( arms[ a ] );
+        position_b = end_effector( arms[ b ] );
+
+        pointing_a = pointing_to( arms[ a ] );
+        pointing_b = pointing_to( arms[ b ] );
+
+    }
+ 
+    int iterations = 0;
+    while( distance( position_a, pointing_b ) > 0.01 || distance( position_b, pointing_a ) > 0.01 ){
+
+        fabrik( pointing_a, position_a, arms[ b ], 5 );
+
+        position_b = end_effector( arms[ b ] );
+        pointing_b = pointing_to( arms[ b ] );
+
+        fabrik( pointing_b, position_b, arms[ a ], 5 );
+
+        position_a = end_effector( arms[ a ] );
+        pointing_a = pointing_to( arms[ a ] );
+
+        if( ++iterations == max_iterations ){
+            std::cerr << "Couldn't connect\n";
+            return false;
+        }
+    }
+    return true;
+}
+
 // currently made to work for connection, might need to separate the two cases
 bool rofi_bot::ccd( const Vector& goal, const std::vector< double >& rotation,
                     const chain& arm, int max_iterations )
@@ -122,7 +187,11 @@ bool rofi_bot::ccd( const Vector& goal, const std::vector< double >& rotation,
     while( distance( end_position, goal ) > error ){
         for( auto it = arm.rbegin(); it != arm.rend(); ++it ){
             for( Joint j : { Beta, Gamma, Alpha } ){
-                rotate_to( end_position, goal, *it, j );
+                if( it == arm.rbegin() )
+                    rotate_to( end_position, goal, *it, j, true, true );
+                else
+                    rotate_to( end_position, goal, *it, j );
+                
                 end_position = pointing_to( arm );
             }
         }
@@ -133,7 +202,7 @@ bool rofi_bot::ccd( const Vector& goal, const std::vector< double >& rotation,
 }
 
 
-bool rofi_bot::rotate_to( Vector& end_pos, const Vector& end_goal, int i, Joint joint, bool round )
+bool rofi_bot::rotate_to( const Vector& end_pos, const Vector& end_goal, int i, Joint joint, bool check_validity, bool round )
 {
     Vector local_end;
     Vector local_goal;
@@ -162,7 +231,7 @@ bool rofi_bot::rotate_to( Vector& end_pos, const Vector& end_goal, int i, Joint 
         default:
             throw std::exception();
     }
-    //std::cerr << "end\n" << local_end << "goal\n" << local_goal << "rotat: " << rotation << '\n';
+
     if( round ){
         if( rotation + current < -45.0 ){
             rotation = -90;
@@ -188,7 +257,7 @@ bool rofi_bot::rotate_if_valid( int module, Joint joint, double angle )
     return true;
 }
 
-bool rofi_bot::fabrik( const Vector& goal, const std::vector< double >& rotation, const chain& arm, int max_iterations ){
+bool rofi_bot::fabrik( const Vector& goal, const Vector& pointing, const chain& arm, int max_iterations ){
     assert( rotation.size() == 3 );
     assert( max_iterations > 0 );
 
@@ -201,17 +270,17 @@ bool rofi_bot::fabrik( const Vector& goal, const std::vector< double >& rotation
     Vector base = positions[ 0 ];
     Vector second = positions[ 1 ];
 
-    /* To make sure I can rotate the connecter as I need to, I set the
+    /* To make sure I can rotate the connector as I need to, I set the
      * position of the second last joint opposite to the point I want to
      * face */
-    Vector second_goal = goal + Vector( rotate( rotation[ 0 ], X ) *
-                                        rotate( rotation[ 1 ], Y ) *
-                                        rotate( rotation[ 2 ], Z ) *
-                                        Vector( { 0, 0, -1, 1 } ) );
+    Vector second_goal = goal - ( pointing - goal );
 
     int iterations = 0;
-    while( distance( get_global( arm.back(), 1 ), goal ) > 0.001 ||
-           distance( get_global( arm.back(), 0 ), second_goal ) > 0.001 ){
+    while( distance( get_global( arm.back(), 1 ), goal ) > 0.01 ||
+           distance( get_global( arm.back(), 0 ), second_goal ) > 0.01 ){
+        
+        /* save the last position and end the algorithm if it hasn't changed at all */
+        Vector last_position = get_global( arm.back(), 1 );
         
         positions.back() = goal;
         positions[ positions.size() - 2 ] = second_goal;
@@ -227,7 +296,7 @@ bool rofi_bot::fabrik( const Vector& goal, const std::vector< double >& rotation
              * rotation between two modules */
             if( i % 2 == 1 ){
                 Vector to_base = positions[ i - 1 ] - positions[ i + 1 ];
-                Vector normal = cross( direction, to_base );
+                Vector normal = cross_product( direction, to_base );
                 positions[ i ] = positions[ i ] - ( normal * ( positions[ i ] - positions[ i + 1 ] ) ) * normal;
             }
 
@@ -237,51 +306,32 @@ bool rofi_bot::fabrik( const Vector& goal, const std::vector< double >& rotation
             positions[ i ] = ( 1.0 - lambda ) * positions[ i + 1 ] + lambda * positions[ i ];
 
             /* If the new position is too close (doesn't respect the limit of rotation to 90°),
-             * reposition it and find the new one **/
+             * reposition it to the other side **/
             if( distance( positions[ i + 2 ], positions[ i ] ) < std::sqrt( 2.0 ) ){
-                positions[ i ] = positions[ i ] - direction;
-
-                lambda = 1.0 / distance( positions[ i ], positions[ i + 1 ] );
-                positions[ i ] = ( 1.0 - lambda ) * positions[ i + 1 ] + lambda * positions[ i ];
+                direction = positions[ i + 1 ] - positions[ i - 1 ];
+                positions[ i ] = rotate( M_PI, direction ) * positions[ i ];
             }
         }
 
         positions[ 0 ] = base;
         positions[ 1 ] = second;
 
-        /* Backward reaching, same procedure */
-        for( size_t i = 2; i < positions.size() - 1; ++i ){
-            Vector direction = positions[ i - 2 ] - positions[ i - 1 ];
-            if( i % 2 == 2 ){
-                Vector to_base = positions[ i - 1 ] - positions[ i + 1 ];
-                Vector normal = cross( direction, to_base );
-                positions[ i ] = positions[ i ] - ( normal * ( positions[ i ] - positions[ i - 1 ] ) ) * normal;
-            }
-
-            double lambda = 1.0 / distance( positions[ i ], positions[ i - 1 ] );
-            positions[ i ] = ( 1.0 - lambda ) * positions[ i - 1 ] + lambda * positions[ i ];
-
-            if( distance( positions[ i - 2 ], positions[ i ] ) < std::sqrt( 2.0 ) ){
-                positions[ i ] = positions[ i ] + ( positions[ i - 1 ] - positions[ i - 2 ] );
-            }
-            lambda = 1.0 / distance( positions[ i ], positions[ i + 1 ] );
-            positions[ i ] = ( 1.0 - lambda ) * positions[ i - 1 ] + lambda * positions[ i ];
-
-            /* Move to the calculated positions */
+        /* Backward reaching, this time actually move the links */
+        for( size_t i = 1; i < positions.size() - 1; ++i ){
             Joint current = i % 2 == 0 ? Alpha : Beta;
+            
             Vector next_position = get_global( arm[ ( i + 1 ) / 2 ], ( i + 1 ) % 2 );
             if( current == Beta ){
                 rotate_to( next_position, positions[ i + 1 ], arm[ i / 2 ], Gamma, false );
-            } else {
-                rotate_to( next_position, positions[ i + 1 ], arm[ ( i - 1 ) / 2 ], Gamma, false );
             }
             next_position = get_global( arm[ ( i + 1 ) / 2 ], ( i + 1 ) % 2 );
             rotate_to( next_position, positions[ i + 1 ], arm[ i / 2 ], current, false );
 
-            positions[ i ] = get_global( arm[ i / 2 ], current );
+            positions[ i + 1 ] = get_global( arm[ ( i + 1 ) / 2 ], ( i + 1 ) % 2 );
         }
-        if( ++iterations == max_iterations )
+        if( ++iterations == max_iterations || equals( last_position, get_global( arm.back(), 1 ) ) ){
             return false;
+        }
     }
 
     return true;

@@ -1,5 +1,5 @@
-#include "../configuration/Configuration.h"
-#include "../configuration/IO.h"
+#include "Configuration.h"
+#include "IO.h"
 
 #include <cassert>
 #include <cmath>
@@ -58,25 +58,28 @@ inline Vector operator/( const Vector& vec, double num ){
                     vec[ 2 ] / num,
                     vec[ 3 ] });
 }
-inline Vector cross( const Vector& a, const Vector& b ){
+
+inline Vector cross_product( const Vector& a, const Vector& b ){
     return Vector({ a[ 1 ] * b[ 2 ] - a[ 2 ] * b[ 1 ],
                     a[ 2 ] * b[ 0 ] - a[ 0 ] * b[ 2 ],
                     a[ 0 ] * b[ 1 ] - a[ 1 ] * b[ 0 ] } );
 }
 
-inline double scalar( const Vector& vector ){
+inline double scalar_product( const Vector& vector ){
     return std::sqrt( std::pow( vector[ 0 ], 2 ) +
                       std::pow( vector[ 1 ], 2 ) +
                       std::pow( vector[ 2 ], 2 ) );
 }
 
-// dot
+/* dot product */
 inline double operator*( const Vector& a, const Vector& b ){
     return a[ 0 ] * b[ 0 ] + a[ 1 ] * b[ 1 ] + a[ 2 ] * b[ 2 ];
 }
 
+/* To invert the rotation, you transpose it. To invert a translation,
+ * negate it. This matrix is the result of both */
 inline Matrix inverse( Matrix m ){
-    Matrix transpose = identity;
+    Matrix translate = identity;
     Matrix rotation = identity;
     for( int i = 0; i < 3; ++i ){
         for( int j = 0; j < 3; ++j ){
@@ -84,8 +87,8 @@ inline Matrix inverse( Matrix m ){
         }
     }
     for( int i = 0; i < 3; ++i ){
-        transpose.at( i, 3 ) = -m.at( i, 3 );
+        translate.at( i, 3 ) = -m.at( i, 3 );
     }
-    return rotation * transpose;
+    return rotation * translate;
 }
 
