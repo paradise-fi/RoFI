@@ -41,9 +41,13 @@ class rofi_bot {
         if constexpr( S == strategy::ccd ){
             return ccd( goal, rotation, arms[ arm ] );
         }
-        // WIP
         if constexpr( S == strategy::fabrik ){
-            return fabrik( goal, rotation, arms[ arm ] );
+            Vector pointing = goal + Vector( 
+                        rotate( to_rad( rotation[ 0 ] ), X ) *
+                        rotate( to_rad( rotation[ 1 ] ), Y ) *
+                        rotate( to_rad( rotation[ 2 ] ), Z ) *
+                        Vector( { 0, 0, 1, 1 } ) );
+            return fabrik( goal, pointing, arms[ arm ] );
         }
 
         return false;
@@ -65,6 +69,9 @@ class rofi_bot {
         if constexpr( S == strategy::ccd ){
             return connect_ccd( a, b );
         }
+        if constexpr( S == strategy::fabrik ){
+            return connect_fabrik( a, b );
+        }
         return false;
     };
     
@@ -80,7 +87,8 @@ class rofi_bot {
     bool ccd( const Vector& goal, const std::vector< double >& rotation,
               const chain& arm, int max_iterations = 100 );
 
-    bool rotate_to( Vector& end_pos, const Vector& end_goal, int i, Joint joint, bool round = true );
+    bool rotate_to( const Vector& end_pos, const Vector& end_goal, int i, Joint joint,
+                    bool check_validity = true, bool round = false );
 
     bool rotate_if_valid( int module, Joint joint, double angle );
 
@@ -88,8 +96,10 @@ class rofi_bot {
      ** adapted from "Aristidou A, Lasenby J.
      ** FABRIK: a fast, iterative solver for the Inverse kinematics problem"
      **/
-    bool fabrik( const Vector& goal, const std::vector< double >& rotation,
+    bool fabrik( const Vector& goal, const Vector& pointing,
                  const chain& arm, int max_iterations = 100 );
+
+    bool connect_fabrik( int a, int b, int max_iterations = 100 );
 
     /* Position of the last joint */
     inline Vector end_effector( const chain& arm ){
@@ -109,7 +119,6 @@ class rofi_bot {
 
     /* Global position to local */
     inline Vector get_local( int module, int shoe, const Vector& global ){
-        Vector wtf = global;
-        return inverse( config.getMatrices().at( module ).at( shoe ) ) * wtf;
+        return inverse( config.getMatrices().at( module ).at( shoe ) ) * global;
     }
 };
