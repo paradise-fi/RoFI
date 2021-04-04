@@ -17,10 +17,10 @@ usage="""Usage:
     rmake <pathPrefix>...        Compile one or multiple targets in path
     rmake <suitename>...         Compile given suite
 
-    rmake --test --all           Compile and run all configured tests
-    rmake --test <targetName>... Compile and run test for target
-    rmake --test <pathName>...   Compile and run tests from given path prefix
-    rmake --test <suitename>...  Compile and run tests from given suite
+    rmake --test --all               Compile and run all configured tests
+    rmake --test <testTargetName>... Compile and run test for target
+    rmake --test <pathName>...       Compile and run tests from given path prefix
+    rmake --test <suitename>...      Compile and run tests from given suite
 
     rmake clean                  Clean all suite builds
     rmake clean-<suitename>...   Clean given suite
@@ -34,7 +34,7 @@ def compileTargets(targets):
         sTargets = [x.target for x in targets if x.suite == s]
         print(f"Compiling targets from suite {s}: {', '.join(sTargets)}")
         try:
-            threads = int(1.5 * multiprocessing.cpu_count())
+            threads = 2 + multiprocessing.cpu_count()
             subprocess.check_call(["make", f"-j{threads}"] + sTargets,
                 cwd=os.path.join(buildDir, s))
         except subprocess.SubprocessError as e:
@@ -106,7 +106,7 @@ def matchPattern(pattern, allowedSuites, allowedTargets, suitesToCompile,
     if pattern == "clean":
         suitesToClean.update(allowedSuites)
         used = True
-    if pattern.startswith("clean-"):
+    if pattern.startswith("clean-") and pattern[6:] in allowedSuites:
         suitesToClean.add(pattern[6:])
         used = True
     if not used:
@@ -149,9 +149,11 @@ def test(patterns):
     aTargets = availableTestTargets()
 
     if patterns[0] == "--all":
+        if len(patterns) != 1:
+            sys.exit("Invalid usage!\n" + usage)
         patterns = [x.target for x in aTargets]
     if not allAreTargets(patterns):
-        sys.exit("XInvalid usage!\n" + usage)
+        sys.exit("Invalid usage!\n" + usage)
 
     suitesToCompile = set()
     targetsToCompile = set()
