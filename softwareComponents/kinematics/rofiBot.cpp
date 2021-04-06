@@ -10,6 +10,7 @@ int main( int argc, char** argv )
     bool connect = false;
     std::pair< int, int > to_connect = { 0, 1 };
     Vector goal = { 0, 0, 0, 1 };
+    std::vector< double > rotation = { 0, 0, 0 };
 
     for( int i = 0; i < argc; ++i ){
         std::string arg = argv[ i ];
@@ -21,6 +22,12 @@ int main( int argc, char** argv )
                 std::stringstream ss( argv[ i + j + 1 ] );
                 ss >> goal[ j ];
             }
+
+            for( int j = 0; j < 3; ++j ){
+                std::stringstream ss( argv[ i + j + 4 ] );
+                ss >> rotation[ j ];
+            }
+
         } else if( arg == "-c" || arg == "--connect" ){
             connect = true;
             to_connect.first = std::stoi( argv[ i + 1 ] );
@@ -33,9 +40,23 @@ int main( int argc, char** argv )
 
     }
     rofi_bot bot( path, fixed );
-    if( reach ){
-        std::cerr << std::boolalpha << bot.reach< strategy::ccd >( goal ) << '\n';
-    }
+    // Vector posz = bot.get_global( bot.arms[ 0 ].back(), 1, { 0, 0, -1, 1 } );
+    // Vector globz = bot.get_global( bot.arms[ 0 ].back(), 1 ) + Vector( { 0, 0, 1, 1 } );
+    // Vector posx = bot.get_global( bot.arms[ 0 ].back(), 1, { -1, 0, 0, 1 } );
+    // Vector globx = bot.get_global( bot.arms[ 0 ].back(), 1 ) + Vector( { 1, 0, 0, 1 } );
+    // std::cerr << "rotz: " << rotz( bot.get_local( bot.arms[ 0 ].back(), 1, posx ), bot.get_local( bot.arms[ 0 ].back(), 1, globx ) )
+    //     << "\nrotx: " << rotx( bot.get_local( bot.arms[ 0 ].back(), 1, posz ), bot.get_local( bot.arms[ 0 ].back(), 1, globz ) )
+    //     << '\n';
+
+    // std::cerr << "test\n" << bot.get_global( bot.arms[ 0 ].back(), 1, { 0, 0, 1, 1 }) << '\n'
+    //     << bot.get_global( bot.arms[ 0 ].back(), 1, { 0, 1, 0, 1 }) << '\n'
+    //     << bot.get_global( bot.arms[ 0 ].back(), 1, { 1, 0, 0, 1 }) << '\n';
+
+    std::cerr << std::boolalpha << bot.reach< strategy::pseudoinverse >( goal, rotation ) << '\n';
+
+    // if( reach ){
+    //     std::cerr << std::boolalpha << bot.reach< strategy::ccd >( goal ) << '\n';
+    // }
     if( connect ){
         std::cerr << std::boolalpha << bot.connect< strategy::ccd >( to_connect.first, to_connect.second ) << '\n';
     }
@@ -243,6 +264,11 @@ bool rofi_bot::rotate_to( const Vector& end_pos, const Vector& end_goal, int i, 
         rotation -= current;
     }
 
+    if( !check_validity ){
+        config.execute( Action( Action::Rotate( i, joint, rotation ) ) );
+        return true;
+    }
+
     return rotate_if_valid( i, joint, rotation );
 }
 
@@ -257,7 +283,8 @@ bool rofi_bot::rotate_if_valid( int module, Joint joint, double angle )
     return true;
 }
 
-bool rofi_bot::fabrik( const Vector& goal, const Vector& pointing, const chain& arm, int max_iterations ){
+bool rofi_bot::fabrik( const Vector& goal, const Vector& pointing, const chain& arm, int max_iterations )
+{
     assert( rotation.size() == 3 );
     assert( max_iterations > 0 );
 
@@ -334,5 +361,121 @@ bool rofi_bot::fabrik( const Vector& goal, const Vector& pointing, const chain& 
         }
     }
 
+    return true;
+}
+
+arma::mat33 get_rotation( const Matrix& matrix ){
+    arma::mat33 result;
+    for( int i = 0; i < 3; ++i ){
+        for( int j = 0; j < 3; ++j ){
+            result.at( i, j ) = matrix.at( i, j );
+        }
+    }
+    return result;
+}
+
+arma::vec3 get_translation( const Matrix& matrix ){
+    arma::vec3 result;
+    for( int i = 0; i < 3; ++i ){
+        result[ i ] = matrix.at( i, 3 );
+    }
+    return result;
+}
+
+arma::mat rofi_bot::jacobian( const chain& arm ){
+    int columns = arm.size() * 3;
+    arma::mat result( 6, columns );
+
+    arma::vec3 z1( { 0, 0, 1 } );
+    arma::vec3 x1( { 1, 0, 0 } );
+
+    for( int i = 0; i < columns; ++i ){
+        arma::vec3 rotation;
+        if( i % 3 == 0 )
+            rotation = get_rotation( get_matrix( arm[ i / 3 ], 0 ) ) * x1;
+        else if( i % 3 == 1 )
+            rotation = get_rotation( get_matrix( arm[ i / 3 ], 0 ) ) * z1;
+        else
+            rotation = get_rotation( get_matrix( arm[ i / 3 ], 1 ) ) * x1;
+
+        arma::vec3 current = arma::cross( rotation,
+            get_translation( get_matrix( arm.back(), 1 ) ) - 
+            get_translation( get_matrix( arm[ i / 3 ], i % 3 == 2 ) )
+            );
+        for( int j = 0; j < 3; ++j ){
+            result( j, i ) = current[ j ];
+        }
+        
+        for( int j = 0; j < 3; ++j ){
+            result( j + 3, i ) = rotation[ j ];
+        }
+    }
+    return result;
+}
+
+bool rofi_bot::pseudoinverse( const Vector& goal, const Vector& x_frame, const Vector& z_frame,
+                              const chain& arm, int max_iterations )
+{
+    Vector global_x = end_effector( arm ) + x_frame;
+    Vector global_z = end_effector( arm ) + z_frame;
+
+    double rz = rotz( get_local( arm.back(), 1, global_x ), { -1, 0, 0, 1 } );
+    double rx = rotx( get_local( arm.back(), 1, global_z ), { 0, 0, -1, 1 } );
+    double ry = roty( get_local( arm.back(), 1, global_x ), { -1, 0, 0, 1 } );
+
+    int iterations = 0;
+    while( distance( goal, end_effector( arm ) ) > 0.01 ||
+            std::fabs( rz ) + std::fabs( rx ) + std::fabs( ry ) > 0.1 ){
+
+        Vector pos = end_effector( arm );
+
+        global_x = end_effector( arm ) + x_frame;
+        global_z = end_effector( arm ) + z_frame;
+
+        rz = rotz( get_local( arm.back(), 1, global_x ), { -1, 0, 0, 1 } );
+        rx = rotx( get_local( arm.back(), 1, global_z ), { 0, 0, -1, 1 } );
+        ry = roty( get_local( arm.back(), 1, global_x ), { -1, 0, 0, 1 } );
+    
+        arma::mat j = jacobian( arm );
+
+        arma::vec diff = { goal[ 0 ] - pos[ 0 ], goal[ 1 ] - pos[ 1 ], goal[ 2 ] - pos[ 2 ], rx, ry, rz };
+        arma::mat pseudo_inv = arma::trans( j ) * ( arma::inv( j * arma::trans( j ) ) );
+
+        arma::mat I( 6, 6, arma::fill::eye );
+        double error;
+        /* Ad hoc constant; higher precision can reduce the number of iterations
+         * but increase computation per iteration */
+        double prec = 1e-10;
+        do {
+            error = arbitrary_magnitude( ( I - j * pseudo_inv ) * diff );
+            if( error > prec ){
+                diff /= 2.0;
+            }
+        } while( error > prec );
+
+        /* Normalising the vector seems to work with singularities, might need
+         * further testing */
+        arma::vec velocities = /*arma::normalise*/( pseudo_inv * diff );
+
+        for( int i = 0; i < velocities.size(); ++i ){
+            Joint joint;
+            if( i % 3 == 0 ){
+                joint = Alpha;
+            }
+            if( i % 3 == 1 )
+                joint = Gamma;
+            if( i % 3 == 2 ){
+                joint = Beta;
+                velocities[ i ] = -velocities[ i ];
+            }
+
+            rotate_if_valid( arm[ i / 3 ], joint, velocities[ i ] );
+        }
+        std::cerr << "end\n" << end_effector( arm ) << '\n';
+        if( ++iterations == max_iterations ){
+            return false;
+        }
+    }
+    std::cerr << "Iterations: " << iterations << '\n';
     return true;
 }
