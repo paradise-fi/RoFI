@@ -7,10 +7,10 @@ using chain = std::deque< int >;
 
 constexpr double error = 0.01;
 
-enum class strategy { ccd, fabrik };
+enum class strategy { ccd, fabrik, pseudoinverse };
 
 class rofi_bot {
-
+public:
     Configuration config;
 
     /* Position of the module with the lowest id; for now I always
@@ -48,6 +48,17 @@ class rofi_bot {
                         rotate( to_rad( rotation[ 2 ] ), Z ) *
                         Vector( { 0, 0, 1, 1 } ) );
             return fabrik( goal, pointing, arms[ arm ] );
+        }
+        if constexpr( S == strategy::pseudoinverse ){
+            Vector z_frame = rotate( to_rad( rotation[ 0 ] ), X ) *
+                             rotate( to_rad( rotation[ 1 ] ), Y ) *
+                             rotate( to_rad( rotation[ 2 ] ), Z ) *
+                                Vector( { 0, 0, 1, 1 } );
+            Vector x_frame = rotate( to_rad( rotation[ 0 ] ), X ) *
+                             rotate( to_rad( rotation[ 1 ] ), Y ) *
+                             rotate( to_rad( rotation[ 2 ] ), Z ) *
+                                Vector( { 1, 0, 0, 1 } );
+            return pseudoinverse( goal, x_frame, z_frame, arms[ arm ] );
         }
 
         return false;
@@ -101,6 +112,12 @@ class rofi_bot {
 
     bool connect_fabrik( int a, int b, int max_iterations = 100 );
 
+    /** Jacobian pseudoinverse IK algorithm **/
+    bool pseudoinverse( const Vector& goal, const Vector& x_frame, const Vector& z_frame,
+                        const chain& arm, int max_iterations = 10000 );
+
+    arma::mat jacobian( const chain& arm );
+
     /* Position of the last joint */
     inline Vector end_effector( const chain& arm ){
         return config.getMatrices().at( arm.back() ).at( 1 ) * Vector( { 0, 0, 0, 1 } );
@@ -111,14 +128,17 @@ class rofi_bot {
         return config.getMatrices().at( arm.back() ).at( 1 ) * Vector( { 0, 0, -1, 1 } );
     }
 
+    inline Matrix get_matrix( int module, int shoe ){
+        return config.getMatrices().at( module ).at( shoe );
+    }
     /* Global position of a joint, or a point converted from local
      * coordinates of the joint to global */
     inline Vector get_global( int module, int shoe, const Vector& local = { 0, 0, 0, 1 } ){
-        return config.getMatrices().at( module ).at( shoe ) * local;
+        return get_matrix( module, shoe ) * local;
     }
 
     /* Global position to local */
     inline Vector get_local( int module, int shoe, const Vector& global ){
-        return inverse( config.getMatrices().at( module ).at( shoe ) ) * global;
+        return inverse( get_matrix( module, shoe ) ) * global;
     }
 };
