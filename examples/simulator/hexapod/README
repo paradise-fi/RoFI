@@ -1,0 +1,12 @@
+Walking Hexee
+---------------
+
+First, let's create a world.
+
+$ rofi-worldCreator -o hexapod.world -i hexapod.in
+
+Check our rofibot in the world, by running a gazebo.
+
+$ gazebo hexapod.world
+
+
