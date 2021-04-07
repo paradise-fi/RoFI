@@ -32,6 +32,8 @@ def compileTargets(targets):
     """
     for s in configuredSuites():
         sTargets = [x.target for x in targets if x.suite == s]
+        if len(sTargets) == 0:
+            continue
         print(f"Compiling targets from suite {s}: {', '.join(sTargets)}")
         try:
             threads = 2 + multiprocessing.cpu_count()
@@ -126,7 +128,6 @@ def build(patterns):
     for pattern in patterns:
         matchPattern(pattern, aSuites, aTargets, suitesToCompile,
             targetsToCompile, suitesToClean)
-
     targetsToCompile = list(targetsToCompile)
     targetsToCompile.sort(key=lambda x: x.suite)
 
@@ -135,7 +136,6 @@ def build(patterns):
 
     for s in suitesToCompile:
         compileSuite(s)
-
     compileTargets(targetsToCompile)
 
 def buildAll():
