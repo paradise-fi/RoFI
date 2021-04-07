@@ -17,3 +17,4 @@ Then proceed to the following sections:
 .. toctree::
     compiling
     structure
+    testing
