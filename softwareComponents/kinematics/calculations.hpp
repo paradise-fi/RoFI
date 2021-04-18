@@ -71,7 +71,8 @@ inline Vector operator/( const Vector& vec, double num ){
 inline Vector cross_product( const Vector& a, const Vector& b ){
     return Vector({ a[ 1 ] * b[ 2 ] - a[ 2 ] * b[ 1 ],
                     a[ 2 ] * b[ 0 ] - a[ 0 ] * b[ 2 ],
-                    a[ 0 ] * b[ 1 ] - a[ 1 ] * b[ 0 ] } );
+                    a[ 0 ] * b[ 1 ] - a[ 1 ] * b[ 0 ],
+                    1.0 } );
 }
 
 inline double magnitude( const Vector& vector ){
