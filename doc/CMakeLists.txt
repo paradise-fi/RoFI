@@ -9,7 +9,7 @@ add_doxygen_source(roficom
 add_doxygen_source(lib
     $ENV{ROFI_ROOT}/softwareComponents)
 add_doxygen_source(sim
-    $ENV{ROFI_ROOT}/RoFISim)
+    $ENV{ROFI_ROOT}/softwareComponents/rofiHalSim)
 
 add_sphinx_target(doc
     SOURCE "${CMAKE_CURRENT_SOURCE_DIR}"

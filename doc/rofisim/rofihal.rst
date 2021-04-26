@@ -42,4 +42,4 @@ Networking
 ==========
 
 .. doxygenclass:: rofi::hal::PBuf
-    :project: driver
+    :project: lib
