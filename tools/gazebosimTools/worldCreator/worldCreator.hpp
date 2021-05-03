@@ -58,6 +58,7 @@ void setModulePosition( sdf::ElementPtr moduleStateSdf,
                         const Module & module,
                         const std::array< Matrix, 2 > & matrices,
                         const ignition::math::Pose3d & beginPose );
+void setModulePIDPositionController( sdf::ElementPtr modulePluginSdf, const Module & module );
 void setRoficomExtendedPlugin( sdf::ElementPtr pluginSdf, bool extended );
 sdf::ElementPtr createRoficomState( sdf::ElementPtr roficomSdf,
                                     bool extended,

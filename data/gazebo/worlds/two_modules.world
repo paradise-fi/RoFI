@@ -1026,7 +1026,7 @@
           <xyz>0 0.01 0</xyz>
           <limit>
             <velocity>6.545</velocity>
-            <effort>1.2</effort>
+            <effort>2</effort>
             <lower>-1e+16</lower>
             <upper>1e+16</upper>
           </limit>
@@ -1047,7 +1047,7 @@
             <lower>-1.5708</lower>
             <upper>1.5708</upper>
             <velocity>6.545</velocity>
-            <effort>1.2</effort>
+            <effort>2</effort>
           </limit>
           <dynamics>
             <friction>0</friction>
@@ -1066,7 +1066,7 @@
             <lower>-1.5708</lower>
             <upper>1.5708</upper>
             <velocity>6.545</velocity>
-            <effort>1.2</effort>
+            <effort>2</effort>
           </limit>
           <dynamics>
             <friction>0</friction>
@@ -1956,7 +1956,7 @@
           <xyz>0 0.01 0</xyz>
           <limit>
             <velocity>6.545</velocity>
-            <effort>1.2</effort>
+            <effort>2</effort>
             <lower>-1e+16</lower>
             <upper>1e+16</upper>
           </limit>
@@ -1977,7 +1977,7 @@
             <lower>-1.5708</lower>
             <upper>1.5708</upper>
             <velocity>6.545</velocity>
-            <effort>1.2</effort>
+            <effort>2</effort>
           </limit>
           <dynamics>
             <friction>0</friction>
@@ -1996,7 +1996,7 @@
             <lower>-1.5708</lower>
             <upper>1.5708</upper>
             <velocity>6.545</velocity>
-            <effort>1.2</effort>
+            <effort>2</effort>
           </limit>
           <dynamics>
             <friction>0</friction>

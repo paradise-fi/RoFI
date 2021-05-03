@@ -253,7 +253,7 @@
                 <xyz>0 0.01 0</xyz>
                 <limit>
                     <velocity>6.545</velocity> <!-- 60/0.16 deg/s -->
-                    <effort>1.2</effort> <!-- max torque [Nm] -->
+                    <effort>2</effort> <!-- max torque [Nm] -->
                 </limit>
                 <dynamics>
                     <friction>0</friction>
@@ -273,7 +273,7 @@
                     <lower>-1.57079632679</lower>
                     <upper>1.57079632679</upper>
                     <velocity>6.545</velocity> <!-- 60/0.16 deg/s -->
-                    <effort>1.2</effort> <!-- max torque [Nm] -->
+                    <effort>2</effort> <!-- max torque [Nm] -->
                 </limit>
                 <dynamics>
                     <friction>0</friction>
@@ -293,7 +293,7 @@
                     <lower>-1.57079632679</lower>
                     <upper>1.57079632679</upper>
                     <velocity>6.545</velocity> <!-- 60/0.16 deg/s -->
-                    <effort>1.2</effort> <!-- max torque [Nm] -->
+                    <effort>2</effort> <!-- max torque [Nm] -->
                 </limit>
                 <dynamics>
                     <friction>0</friction>

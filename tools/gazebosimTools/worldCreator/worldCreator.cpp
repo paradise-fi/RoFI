@@ -5,6 +5,7 @@
 #include <sstream>
 
 #include "IO.h"
+#include "pidLoader.hpp"
 
 
 constexpr std::array< const char *, 2 > shoeNames = { "shoeA", "shoeB" };
@@ -140,6 +141,9 @@ void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & conf
         auto & matrices = config.config.getMatrices().at( id );
         setModulePosition( moduleStateSdf, module, matrices, config.pose );
 
+        auto modulePluginSdf = getElemByName< true >( moduleSdf, "plugin", "rofiModule" );
+        setModulePIDPositionController( modulePluginSdf, module );
+
         addModuleToDistributor( distributorSdf, id );
 
         const EdgeList & edges = config.config.getEdges().at( id );
@@ -251,6 +255,29 @@ void setModulePosition( sdf::ElementPtr moduleStateSdf,
              origShoePoses[ A ] + shoePoses[ A ] + beginPose );
     setPose( getElemByNameOrCreate( moduleStateSdf, "link", "shoeB" ),
              origShoePoses[ B ] + shoePoses[ B ] + beginPose );
+}
+
+void setModulePIDPositionController( sdf::ElementPtr modulePluginSdf, const Module & module )
+{
+    PIDLoader::loadControllerValues( modulePluginSdf );
+
+    for ( auto controllerSdf : getChildren( modulePluginSdf, "controller" ) )
+    {
+        auto jointName = getOnlyChild< true >( controllerSdf, "joint" )->Get< std::string >();
+        Joint jointIndex = [ &jointName ]() {
+            if ( jointName == "shoeARev" )
+                return Joint::Alpha;
+            if ( jointName == "shoeBRev" )
+                return Joint::Beta;
+            if ( jointName == "bodyRev" )
+                return Joint::Gamma;
+            throw std::runtime_error( "Unrecognized module joint in sdf" );
+        }();
+
+        auto positionControllerSdf = getOnlyChild< true >( controllerSdf, "position" );
+        auto initTargetPosSdf = getOnlyChildOrCreate( positionControllerSdf, "init_target" );
+        setValue( initTargetPosSdf, IGN_DTOR( module.getJoint( jointIndex ) ) );
+    }
 }
 
 void setRoficomExtendedPlugin( sdf::ElementPtr pluginSdf, bool extended )
