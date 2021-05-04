@@ -5,38 +5,63 @@
 #include <iostream>
 
 #include "rofi_hal.hpp"
-
 using namespace rofi::hal;
 
-// auxiliary function to help referencing of modules
+// Hexapod contains 16 modules, with ids 1 - 17, see hexapod.in.
+// Shape of the hexapod is as follows.
+//
+//             (head)
+//
+//             16A 17B
+// 06A=06B-05A=05B-11A=11B-12A=12B 
+//             15A=15B
+// 04A=04B-03A=03B-09A=09B-10A=10B 
+//             14A=14B
+// 02A=02B-01A=01B-07A=07B-08A=08B 
+//             13A=13B
+//
+//             (tail)
+//
+// Positive values of joints in 01A,03A,05A,07B,09B,11B go towards the head.
+// Positive values of joints in 02B,04B,06B,08A,10A,12A go towards the ground.
+// Shoes A contain alpha joints, shoes B contain beta joints.
+// --------------------------------------------------------------------
+
+
+// constants for joints, here we strictly assume universal RoFI modules
+// --------------------------------------------------------------------
+const int Cj = 0; // center joint (gamma)
+const int Aj = 1; // joint in shoe A (alpha)
+const int Bj = 2; // joint in shoe B (beta)
+
+
+// some auxiliary functions
+// --------------------------------------------------------------------
 int id(int v) { return v-1; }
+
+// command and callback functions for monitoring the number of
+// proceeding joint operations 
+// --------------------------------------------------------------------
+volatile int processing = 0;
+constexpr float pi = 3.141592741f;
+constexpr float fifteen = pi / 12;
+
+void opFinished ( Joint ) {
+  if ( processing > 0 ) processing --;
+}
+
+void jointCommand( Joint j, float pos, int speed )
+{
+  processing ++;
+  j.setPosition( pos, speed, opFinished );
+}
+
+
+// main :-)
+// --------------------------------------------------------------------
 
 int main()
 {
-    // Hexapod contains 16 modules, with ids 1 - 17, see hexapod.in.
-    // Shape of the hexapod is as follows.
-    //
-    //             (head)
-    //
-    //             16A 17B
-    // 06A=06B-05A=05B-11A=11B-12A=12B 
-    //             15A=15B
-    // 04A=04B-03A=03B-09A=09B-10A=10B 
-    //             14A=14B
-    // 02A=02B-01A=01B-07A=07B-08A=08B 
-    //             13A=13B
-    //
-    //             (tail)
-    //
-    // Positive values of joints in 01A,03A,05A,07B,09B,11B go towards the head.
-    // Positive values of joints in 02B,04B,06B,08A,10A,12A go towards the ground.
-    // Shoes A contain alpha joints, shoes B contain beta joints.
-
-    constexpr float pi = 3.141592741f;
-    
-    const int gamma = 0;
-    const int alpha = 1;
-    const int beta  = 2;
 
 
     std::vector< RoFI > modules;
@@ -44,33 +69,68 @@ int main()
       modules.push_back( RoFI::getRemoteRoFI(i) );
     }
 
-    const int speed = modules[id(1)].getJoint(1).maxSpeed() / 2;
+    const int speed = modules[id(1)].getJoint(1).maxSpeed();
     const auto step = 0.3;
   
-    // We will decompose the movement into 6 phases.
+    // We will decompose the movement into 6 separate phases.
     int init_phase = 1;
     int last_phase = 6;
     int phase = init_phase;
     
+
+    // Movement of each leg follows a triangle shape, each dash takes one
+    // phase (diagonal moves are twice as fast). Three of the six legs
+    // are three phases ahead of the other three legs.
+    // 
+    //      /\ 
+    //     ----
+    // 
+
+    // First, let's raise three of six legs  (01-02), (09-10), and (05-06)
+    //--------------------------------------------------------------------
+    // jointCommand(modules[id(02)].getJoint(Bj), 2*fifteen , speed );
+    // jointCommand(modules[id(06)].getJoint(Bj), 2*fifteen , speed );
     
-    // Raise legs 1-2 9-10 and 5-6
-    //----------------------------
-    modules[id(02)].getJoint(beta).setPosition( step, speed, NULL );
-    modules[id(06)].getJoint(beta).setPosition( step, speed, NULL );
-    modules[id(10)].getJoint(alpha).setPosition( step, speed, NULL );
-    
+    // jointCommand(modules[id(10)].getJoint(Aj), 2*fifteen , speed );
+
+    jointCommand(modules[id(02)].getJoint(Bj), 2*fifteen , speed );
+    while (processing >0) {};
+
     while (true)
     {
-        // -------------------------------------
+        // ---------------------------------------------------
+        // wait until all the previous actions finish
+        // ---------------------------------------------------
+
+
+      jointCommand(modules[id(01)].getJoint(Aj), 2*fifteen , speed );
+      jointCommand(modules[id(02)].getJoint(Bj), 3*fifteen , speed );
+      while (processing >0) {};
+
+      jointCommand(modules[id(01)].getJoint(Aj), fifteen , speed / 4 );
+      while (processing >0) {};
+
+      jointCommand(modules[id(01)].getJoint(Aj), 0 , speed / 4 );
+      while (processing >0) {};
+
+      jointCommand(modules[id(01)].getJoint(Aj), -fifteen , speed / 4 );
+      while (processing >0) {};
+
+      jointCommand(modules[id(01)].getJoint(Aj), -2*fifteen , speed / 4 );
+      while (processing >0) {};
+      
+      jointCommand(modules[id(02)].getJoint(Bj), 2*fifteen , speed );
+      jointCommand(modules[id(01)].getJoint(Aj), 0 , speed );
+      while (processing >0) {};
+
+
+
+      // -------------------------------------
         // decide what to do
         // -------------------------------------
 
         // -------------------------------------
         // do it
-        // -------------------------------------
-
-        // -------------------------------------
-        // wait for finishing the action
         // -------------------------------------
 
         phase ++;
