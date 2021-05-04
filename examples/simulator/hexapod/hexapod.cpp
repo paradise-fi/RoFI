@@ -28,16 +28,15 @@ using namespace rofi::hal;
 // --------------------------------------------------------------------
 
 
+std::vector< RoFI > modules;
+
+
 // constants for joints, here we strictly assume universal RoFI modules
 // --------------------------------------------------------------------
-const int Cj = 0; // center joint (gamma)
-const int Aj = 1; // joint in shoe A (alpha)
-const int Bj = 2; // joint in shoe B (beta)
+const int gam = 0; // center joint (gamma)
+const int alf = 1; // joint in shoe A (alpha)
+const int bet = 2; // joint in shoe B (beta)
 
-
-// some auxiliary functions
-// --------------------------------------------------------------------
-int id(int v) { return v-1; }
 
 // command and callback functions for monitoring the number of
 // proceeding joint operations 
@@ -47,13 +46,18 @@ constexpr float pi = 3.141592741f;
 constexpr float fifteen = pi / 12;
 
 void opFinished ( Joint ) {
-  if ( processing > 0 ) processing --;
+  if ( processing > 0 )
+    processing --;
+  // std::cout << "-- op finished, remains "<< processing << std::endl;
 }
 
-void jointCommand( Joint j, float pos, int speed )
+void jointCommand( int module_id, int joint_id, float pos, int speed )
 {
   processing ++;
-  j.setPosition( pos, speed, opFinished );
+  //std::cout << "# of running operations increased to " << processing << std::endl;
+  std::cout << "Command: m="<<module_id<<" j="<<joint_id
+	    << " speed=" << speed <<" pos=" << pos << std::endl;
+  modules[module_id-1].getJoint(joint_id).setPosition( pos, speed, opFinished );
 }
 
 
@@ -63,123 +67,36 @@ void jointCommand( Joint j, float pos, int speed )
 int main()
 {
 
-
-    std::vector< RoFI > modules;
     for (int i = 1; i <= 17; i++) {
       modules.push_back( RoFI::getRemoteRoFI(i) );
+      //      std::cout << RoFI::getRemoteRoFI(i).getId() <<std::endl;
     }
 
-    const int speed = modules[id(1)].getJoint(1).maxSpeed();
-    const auto step = 0.3;
-  
-    // We will decompose the movement into 6 separate phases.
-    int init_phase = 1;
-    int last_phase = 6;
-    int phase = init_phase;
+    const int speed = modules[0].getJoint(1).maxSpeed();   
+
     
-
-    // Movement of each leg follows a triangle shape, each dash takes one
-    // phase (diagonal moves are twice as fast). Three of the six legs
-    // are three phases ahead of the other three legs.
-    // 
-    //      /\ 
-    //     ----
-    // 
-
-    // First, let's raise three of six legs  (01-02), (09-10), and (05-06)
-    //--------------------------------------------------------------------
-    // jointCommand(modules[id(02)].getJoint(Bj), 2*fifteen , speed );
-    // jointCommand(modules[id(06)].getJoint(Bj), 2*fifteen , speed );
-    
-    // jointCommand(modules[id(10)].getJoint(Aj), 2*fifteen , speed );
-
-    jointCommand(modules[id(02)].getJoint(Bj), 2*fifteen , speed );
+    // 02A=02B-01A=01B-07A=07B-08A=08B 
+    jointCommand( 2 , bet , -2*fifteen , speed ); // raise the leg off the ground
     while (processing >0) {};
 
     while (true)
     {
-        // ---------------------------------------------------
-        // wait until all the previous actions finish
-        // ---------------------------------------------------
 
 
-      jointCommand(modules[id(01)].getJoint(Aj), 2*fifteen , speed );
-      jointCommand(modules[id(02)].getJoint(Bj), 3*fifteen , speed );
+      // 02A=02B-01A=01B-07A=07B-08A=08B 
+      
+      jointCommand( 1 , alf , 2*fifteen , speed ); // move the leg forward from center
+      jointCommand( 2 , bet , 0 , speed ); // lay the leg on the ground
+      //jointCommand( 2 , bet , 3*fifteen , speed ); // lay the leg on the ground
       while (processing >0) {};
 
-      jointCommand(modules[id(01)].getJoint(Aj), fifteen , speed / 4 );
-      while (processing >0) {};
-
-      jointCommand(modules[id(01)].getJoint(Aj), 0 , speed / 4 );
-      while (processing >0) {};
-
-      jointCommand(modules[id(01)].getJoint(Aj), -fifteen , speed / 4 );
-      while (processing >0) {};
-
-      jointCommand(modules[id(01)].getJoint(Aj), -2*fifteen , speed / 4 );
+      jointCommand( 1 , alf , -2*fifteen , speed ); // move the leg backward
       while (processing >0) {};
       
-      jointCommand(modules[id(02)].getJoint(Bj), 2*fifteen , speed );
-      jointCommand(modules[id(01)].getJoint(Aj), 0 , speed );
+      jointCommand( 2 , bet , -2*fifteen , speed ); // raise the leg off the ground
+      jointCommand( 1 , alf , 0 , speed ); // center the leg 
       while (processing >0) {};
-
-
-
-      // -------------------------------------
-        // decide what to do
-        // -------------------------------------
-
-        // -------------------------------------
-        // do it
-        // -------------------------------------
-
-        phase ++;
-        if (phase > last_phase) { phase = init_phase; }
     }
         
-    
-    // RoFI localRofi = RoFI::getLocalRoFI();
-    // int jointCount = localRofi.getDescriptor().jointCount;
-    // assert( jointCount > 0 );
-    // Joint joint = localRofi.getJoint( 0 );
-
-    // const auto minPos = std::clamp( joint.minPosition(), -pi, 0.f );
-    // const auto maxPos = std::clamp( joint.maxPosition(), 0.f, pi );
-
-    // const int delayMs = 1000;
-    // const int speed = joint.maxSpeed() / 2;
-
-    // while ( true )
-    // {
-    //     std::promise< void > endCyclePromise;
-    //     auto endCycleFuture = endCyclePromise.get_future();
-
-    //     joint.setPosition( 0, speed, [ & ]( Joint ) {
-    //         RoFI::wait( delayMs, [ & ] {
-    //             joint.setPosition( minPos / 2, speed, [ & ]( Joint ) {
-    //                 RoFI::wait( delayMs, [ & ] {
-    //                     joint.setPosition( minPos * 9.f / 10, speed, [ & ]( Joint ) {
-    //                         RoFI::wait( delayMs, [ & ] {
-    //                             joint.setPosition( maxPos / 2, speed, [ & ]( Joint ) {
-    //                                 RoFI::wait( delayMs, [ & ] {
-    //                                     joint.setPosition( maxPos * 9.f / 10,
-    //                                                        speed,
-    //                                                        [ & ]( Joint ) {
-    //                                                            RoFI::wait( delayMs, [ & ] {
-    //                                                                endCyclePromise.set_value();
-    //                                                            } );
-    //                                                        } );
-    //                                 } );
-    //                             } );
-    //                         } );
-    //                     } );
-    //                 } );
-    //             } );
-    //         } );
-    //     } );
-
-    //     endCycleFuture.get();
-    // }
-
     return 0;
 }
