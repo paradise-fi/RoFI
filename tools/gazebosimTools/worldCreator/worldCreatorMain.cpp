@@ -1,12 +1,21 @@
+#include <algorithm>
+#include <string_view>
+
 #include "worldCreator.hpp"
 
-
-#define STRINGIFY( x ) #x
-#define TOSTRING( x ) STRINGIFY( x )
 
 #ifndef WORLD_FILE
 static_assert( false, "world file is not defined" );
 #endif
+
+#define STRINGIFY( x ) #x
+#define TOSTRING( x ) STRINGIFY( x )
+
+constexpr std::string_view worldFileName = std::string_view( TOSTRING( WORLD_FILE ) );
+
+#undef TOSTRING
+#undef STRINGIFY
+
 
 struct CmdArguments
 {
@@ -14,51 +23,77 @@ struct CmdArguments
     std::optional< std::string > inputFile;
     std::optional< std::string > outputFile;
 
-    void setArg( const std::string & key, const std::string & value )
+    void setArg( std::string_view key, std::string_view value )
     {
         if ( key == "-w" )
         {
-            worldFile = value;
+            worldFile = std::string( value );
             return;
         }
         if ( key == "-i" )
         {
-            inputFile = value;
+            inputFile = std::string( value );
             return;
         }
         if ( key == "-o" )
         {
-            outputFile = value;
+            outputFile = std::string( value );
             return;
         }
 
-        throw std::runtime_error( "Unrecognized command argument: '" + key + "'" );
+        throw std::runtime_error( "Unrecognized command argument: '" + std::string( key ) + "'" );
     }
 
-    static CmdArguments readArguments( const std::vector< std::string > & args )
+    static CmdArguments readArguments( const std::vector< std::string_view > & args )
     {
-        if ( args.size() % 2 != 0 )
-        {
-            throw std::runtime_error( "Wrong number of command arguments" );
-        }
-
         CmdArguments cmdArgs;
         for ( size_t i = 0; i + 1 < args.size(); i += 2 )
         {
             cmdArgs.setArg( args[ i ], args[ i + 1 ] );
         }
+
+        if ( args.size() % 2 != 0 )
+        {
+            throw std::runtime_error( "Unexpected last command argument '"
+                                      + std::string( args.back() ) + "'" );
+        }
         return cmdArgs;
     }
 };
 
+void printHelp( std::string_view programName )
+{
+    std::cerr << "Usage:\n\t" << programName
+              << " [-i <input_file>] [-o <output_file>] [-w <empty_world_file>]\n\n"
+              << "Runs the World creator tool.\n"
+              << "You have to be in RoFI environment for this tool to work properly.\n"
+              << "If input/output file is not set, the standard input/output is used.\n"
+              << "Make sure that the <empty_world_file> "
+              << "has distributor and attacher plugins.\n";
+}
+
 int main( int argc, char ** argv )
 {
-    std::vector< std::string > strArgs;
-    for ( int i = 1; i < argc; i++ )
+    auto strArgs = std::vector< std::string_view >( argv + 1, argv + argc );
+    if ( std::any_of( strArgs.begin(), strArgs.end(), []( auto arg ) {
+             return arg == "-h" || arg == "--help";
+         } ) )
     {
-        strArgs.emplace_back( argv[ i ] );
+        printHelp( argv[ 0 ] );
+        return 1;
     }
-    auto cmdArgs = CmdArguments::readArguments( strArgs );
+
+    CmdArguments cmdArgs;
+    try
+    {
+        cmdArgs = CmdArguments::readArguments( strArgs );
+    }
+    catch ( const std::exception & error )
+    {
+        std::cerr << error.what() << "\n\n";
+        printHelp( argv[ 0 ] );
+        return 1;
+    }
 
 
     std::ifstream ifile;
@@ -67,7 +102,8 @@ int main( int argc, char ** argv )
         ifile.open( *cmdArgs.inputFile );
         if ( !ifile.is_open() )
         {
-            throw std::runtime_error( "Could not open input file '" + *cmdArgs.inputFile + "'" );
+            std::cerr << "Could not open input file '" << *cmdArgs.inputFile << "'\n";
+            return 1;
         }
     }
 
@@ -82,13 +118,13 @@ int main( int argc, char ** argv )
         }
         if ( !config.config.isValid() )
         {
-            throw std::runtime_error(
-                    "Loaded config is not valid (make sure each config is connected)" );
+            std::cerr << "Loaded config is not valid (make sure each config is connected)\n";
+            return 1;
         }
     }
 
 
-    auto worldFile = cmdArgs.worldFile ? *cmdArgs.worldFile : std::string( TOSTRING( WORLD_FILE ) );
+    auto worldFile = cmdArgs.worldFile ? *cmdArgs.worldFile : std::string( worldFileName );
     auto worldSdf = createWorld( worldFile, configs );
 
 

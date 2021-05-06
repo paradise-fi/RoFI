@@ -23,8 +23,14 @@ std::string trim( std::string str, const std::string & chars = "\t\n\v\f\r " )
     return ltrim( rtrim( str, chars ), chars );
 }
 
-int main()
+int main( int argc, char ** /* argv */ )
 {
+    if ( argc != 1 )
+    {
+        std::cerr << "This tool does not take any arguments\n";
+        return 1;
+    }
+
     using Info = rofi::messages::ConnectorAttachInfo;
 
     gazebo::client::setup();

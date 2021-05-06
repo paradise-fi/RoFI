@@ -19,10 +19,10 @@ set(ROFI_SDF_MODEL_FILES
     )
 
 
-add_executable(rofi-worldCreator worldCreatorMain.cpp worldCreator.cpp)
-target_link_libraries(rofi-worldCreator legacy-configuration rofiPluginCommon ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
-target_include_directories(rofi-worldCreator SYSTEM PRIVATE ${GAZEBO_INCLUDE_DIRS})
-target_compile_definitions(rofi-worldCreator PUBLIC WORLD_FILE=${ROFI_EMPTY_WORLD_FILE})
+add_executable(rofi-gazebosim-worldCreator worldCreatorMain.cpp worldCreator.cpp)
+target_link_libraries(rofi-gazebosim-worldCreator legacy-configuration rofiPluginCommon ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+target_include_directories(rofi-gazebosim-worldCreator SYSTEM PRIVATE ${GAZEBO_INCLUDE_DIRS})
+target_compile_definitions(rofi-gazebosim-worldCreator PUBLIC WORLD_FILE=${ROFI_EMPTY_WORLD_FILE})
 
 
 function(add_gazebo_world world_file input_file)
@@ -30,11 +30,11 @@ function(add_gazebo_world world_file input_file)
         OUTPUT
             ${CMAKE_BINARY_DIR}/data/gazebo/worlds/${world_file}
         COMMAND
-            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-worldCreator
+            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-gazebosim-worldCreator
                 -i ${CMAKE_CURRENT_SOURCE_DIR}/${input_file}
                 -o ${CMAKE_BINARY_DIR}/data/gazebo/worlds/${world_file}
         DEPENDS
-            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-worldCreator
+            ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-gazebosim-worldCreator
             ${CMAKE_CURRENT_SOURCE_DIR}/${input_file}
             ${ROFI_EMPTY_WORLD_FILE}
             ${ROFI_SDF_MODEL_FILES}
