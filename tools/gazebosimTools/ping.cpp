@@ -1,5 +1,7 @@
+#include <algorithm>
 #include <iostream>
 #include <sstream>
+#include <string_view>
 
 #include "rofi_hal.hpp"
 
@@ -9,13 +11,16 @@ using namespace rofi::hal;
 
 int main( int argc, char ** argv )
 {
-    std::cout << "Starting ping tool\n";
-
-    if ( argc == 1 )
+    if ( argc == 1 || std::any_of( argv + 1, argv + argc, []( auto arg ) {
+             using namespace std::string_view_literals;
+             return arg == "-h"sv || arg == "--help"sv;
+         } ) )
     {
-        std::cerr << "Run:\n" << argv[ 0 ] << " [RoFI_ID] [...]\n";
+        std::cerr << "Run:\n" << argv[ 0 ] << " [RoFI_ID ...]\n";
         return 1;
     }
+
+    std::cout << "Starting ping tool\n";
 
     for ( int i = 1; i < argc; i++ )
     {

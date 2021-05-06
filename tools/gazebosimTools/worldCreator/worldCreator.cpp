@@ -101,6 +101,8 @@ sdf::SDFPtr createWorld( const std::string & worldPath,
 {
     using namespace ignition::math;
 
+    sdf::setFindCallback( []( auto & filename ) { return gazebo::common::find_file( filename ); } );
+
     auto sdf = loadFromFile( worldPath );
     assert( sdf );
     assert( sdf->Root() );

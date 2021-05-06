@@ -1,4 +1,5 @@
 #include <cassert>
+#include <string_view>
 
 #include <gazebo/gazebo_client.hh>
 #include <gazebo/transport/transport.hh>
@@ -34,7 +35,8 @@ void printMessage( const boost::shared_ptr< const Message > & msg )
 
 int main( int argc, char ** argv )
 {
-    if ( argc != 2 )
+    using namespace std::string_view_literals;
+    if ( argc != 2 || argv[ 1 ] == "-h"sv || argv[ 1 ] == "--help"sv )
     {
         std::cerr << "Usage: " << argv[ 0 ] << " <topic>" << std::endl;
         return 1;
