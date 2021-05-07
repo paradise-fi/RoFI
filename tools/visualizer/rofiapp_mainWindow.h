@@ -50,7 +50,7 @@ private:
     bool fullScreen;
 
     Configuration *current_cfg;
-    Configuration *aux_cfg;
+    bool check_cfg(bool update_current_cfg);
 
 //    vtkSmartPointer<vtkGenericOpenGLRenderWindow> renderWindow;  // VTK 8.2 and newer
     vtkSmartPointer<vtkRenderWindow> renderWindow;  // VTK 7.1 and older

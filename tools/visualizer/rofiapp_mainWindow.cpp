@@ -37,6 +37,37 @@ Rofiapp_MainWindow::~Rofiapp_MainWindow()
     delete ui;
 }
 
+bool Rofiapp_MainWindow::check_cfg(bool update_current_cfg)
+{
+    bool correct = false;
+    Configuration *aux_cfg;
+    aux_cfg = new Configuration();
+
+    QString lineContents="";
+    lineContents = ui->configTextWindow->toPlainText();
+    std::istringstream iStream(lineContents.toStdString());
+    try { IO::readConfiguration(iStream, *aux_cfg); }
+    catch (...) {
+        qDebug("Error on parsing configuration.");
+    }
+    if (aux_cfg -> isValid())
+    {
+        correct = true;
+        if (update_current_cfg)
+        {
+            delete current_cfg;
+            current_cfg = aux_cfg;
+            renderer->RemoveAllViewProps();
+            VtkSupp::buildScene(current_cfg, renderer);
+        } else {
+            delete aux_cfg;
+        }
+    } else {
+        delete aux_cfg;
+    }
+    return correct;
+}
+
 void Rofiapp_MainWindow::showSphere()
 {
     /* Sphere */
@@ -84,8 +115,8 @@ void Rofiapp_MainWindow::on_loadConf_clicked()
               QDir::currentPath(),
               "All files (*.*)");
     
-    if( !fileName.isNull() ) {
-
+    if( !fileName.isNull() )
+    {
         QString lineContents="";
         QFile file(fileName);
         if (!file.open(QIODevice::ReadOnly)) {
@@ -98,8 +129,12 @@ void Rofiapp_MainWindow::on_loadConf_clicked()
                }
             file.close();
             ui->configTextWindow->setPlainText(lineContents);
-            this->on_showConf_clicked();
-            ui->resetCamera->setEnabled(true);
+            if (this -> check_cfg(true))
+            {
+                ui -> resetCamera -> setEnabled(true);
+                this -> on_resetCamera_clicked();
+                this -> on_showConf_clicked();
+            }
         }
     }
  }
@@ -107,24 +142,9 @@ void Rofiapp_MainWindow::on_loadConf_clicked()
 
 void Rofiapp_MainWindow::on_showConf_clicked()
 {
-    QString lineContents="";
-    lineContents = ui->configTextWindow->toPlainText();
-
-    delete current_cfg;
-    current_cfg = new Configuration();
-
-    std::istringstream iStream(lineContents.toStdString());
-    try { IO::readConfiguration(iStream, *current_cfg); }
-    catch (...) {
-        qDebug("Error on parsing configuration.");
-    }
-    current_cfg -> computeMatrices();
-
-    renderer->RemoveAllViewProps();
-    VtkSupp::buildScene(current_cfg, renderer);
-
-    ui->resetCamera->setEnabled(true);
-    this -> on_resetCamera_clicked();
+    this -> check_cfg(true);
+    renderer -> Render();
+    ui->qvtkWidget->update();
 }
 
 void Rofiapp_MainWindow::on_resetCamera_clicked()
@@ -135,6 +155,7 @@ void Rofiapp_MainWindow::on_resetCamera_clicked()
     camera->SetPosition(massCenter(0), massCenter(1) - 6, massCenter(2));
     camera->SetViewUp(0,0,1);
 
+    renderer -> ResetCamera();
     renderer -> Render();
     ui->qvtkWidget->update();
 }
@@ -142,19 +163,14 @@ void Rofiapp_MainWindow::on_resetCamera_clicked()
 void Rofiapp_MainWindow::on_configTextWindow_textChanged()
 {
 
-    aux_cfg = new Configuration;
-    QString lineContents="";
-    lineContents = ui->configTextWindow->toPlainText();
-    std::istringstream iStream(lineContents.toStdString());
-    try {
-        IO::readConfiguration(iStream, *aux_cfg);
+    if (check_cfg(false))
+    {
         ui->showConf->setEnabled(true);
         ui->saveConf->setEnabled(true);
-    } catch (...) {
+    } else {
         ui->showConf->setEnabled(false);
         ui->saveConf->setEnabled(false);
     }
-    delete aux_cfg;
 }
 
 void Rofiapp_MainWindow::on_saveConf_clicked()
