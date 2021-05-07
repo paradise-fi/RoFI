@@ -2,6 +2,20 @@
 
 namespace rofi {
 
+double orientationToAngle( Orientation o ) {
+	switch ( o ) {
+		case Orientation::North:
+			return 0;
+		case Orientation::East:
+			return M_PI_2;
+		case Orientation::South:
+			return M_PI;
+		case Orientation::West:
+			return - M_PI_2;
+	}
+	assert( false && "Orientation was modified" );
+}
+
 void rofi::Module::setJointParams( int idx, const Joint::Positions& p ) {
     // Currently we invalidate all positions; ToDo: think if we can improve it
     assert( idx < _joints.size() );
