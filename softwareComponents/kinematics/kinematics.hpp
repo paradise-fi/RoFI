@@ -9,8 +9,13 @@ constexpr double error = 0.01;
 
 enum class strategy { ccd, fabrik, pseudoinverse };
 
+struct options {
+    bool verbose = false;
+    bool animate = false;
+};
+
 class kinematic_rofibot {
-public:
+
     Configuration config;
 
     /* Is the configuration an arm fixed at it's lowest point, or something
@@ -20,11 +25,13 @@ public:
     /* Chain of IDs that belong to an arm */
     std::vector< chain > arms;
 
+    options opt;
+
   public:
 
-    kinematic_rofibot( Configuration new_config, bool fixed = false );
+    kinematic_rofibot( Configuration new_config, bool fixed = false, options opt = {} );
 
-    kinematic_rofibot( std::string file_name, bool fixed = false );
+    kinematic_rofibot( std::string file_name, bool fixed = false, options opt = {} );
 
     /* Reach a position with the given end-effector rotation */
     bool reach( Vector goal, std::vector< double > rotation = { 0, 0, 0 }, strategy s = strategy::ccd, int arm = 0 ){
@@ -49,7 +56,7 @@ public:
             return ccd( goal, x_frame, y_frame, z_frame, arms[ arm ], 1000 );
         }
         if( s == strategy::fabrik ){
-            return fabrik( goal, y_frame, z_frame, arms[ arm ], 1000 );
+            return fabrik( goal, y_frame, z_frame, arms[ arm ] );
         }
         if( s == strategy::pseudoinverse ){
  
@@ -75,7 +82,7 @@ public:
             return connect_ccd( a, b );
         }
         if( s == strategy::fabrik ){
-            return connect_fabrik( a, b );
+            return connect_fabrik( a, b, 20 );
         }
         if( s == strategy::pseudoinverse ){
             return connect_pseudoinverse( a, b, 20 );
@@ -95,8 +102,8 @@ public:
     bool ccd( const Vector& goal, const Vector& x_frame, const Vector& y_frame,
               const Vector& z_frame, const chain& arm, int max_iterations = 100 );
 
-    bool ccd2( const Vector& goal, const std::vector< double >& rotation,
-              const chain& arm, int max_iterations = 100 );
+    bool ccd2( const Vector& goal, const Vector& x_frame, const Vector& y_frame,
+               const Vector& z_frame, const chain& arm, int max_iterations = 100 );
 
     bool rotate_to( const Vector& end_pos, const Vector& end_goal, int i, Joint joint,
                     bool check_validity = true, bool round = false );
@@ -108,7 +115,7 @@ public:
      ** FABRIK: a fast, iterative solver for the Inverse kinematics problem"
      **/
     bool fabrik( const Vector& goal, const Vector& y_frame, const Vector& z_frame,
-                 const chain& arm, int max_iterations = 100 );
+                 const chain& arm, int max_iterations = 100, int a_length = -1 );
 
     bool connect_fabrik( int a, int b, int max_iterations = 100 );
 

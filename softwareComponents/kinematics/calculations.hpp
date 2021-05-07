@@ -93,6 +93,9 @@ inline double operator*( const Vector& a, const Vector& b ){
     return a[ 0 ] * b[ 0 ] + a[ 1 ] * b[ 1 ] + a[ 2 ] * b[ 2 ];
 }
 
+inline Vector operator-( const Vector& a ){
+    return { -a[ 0 ], -a[ 1 ], -a[ 2 ], 1.0 };
+}
 /* To invert the rotation, you transpose it. To invert a translation,
  * negate it. This matrix is the result of both */
 inline Matrix inverse( Matrix m ){
@@ -109,3 +112,22 @@ inline Matrix inverse( Matrix m ){
     return rotation * translate;
 }
 
+/* Rotational part of a matrix */
+arma::mat33 get_rotation( const Matrix& matrix ){
+    arma::mat33 result;
+    for( int i = 0; i < 3; ++i ){
+        for( int j = 0; j < 3; ++j ){
+            result.at( i, j ) = matrix.at( i, j );
+        }
+    }
+    return result;
+}
+
+/* Translational part */
+arma::vec3 get_translation( const Matrix& matrix ){
+    arma::vec3 result;
+    for( int i = 0; i < 3; ++i ){
+        result[ i ] = matrix.at( i, 3 );
+    }
+    return result;
+}
