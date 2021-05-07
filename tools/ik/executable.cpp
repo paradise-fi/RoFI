@@ -4,6 +4,8 @@ int main( int argc, char** argv )
 {
     bool fixed = false;
     std::string path;
+    options opt;
+
     strategy s = strategy::fabrik;
     bool reach = false;
     bool connect = false;
@@ -22,7 +24,7 @@ int main( int argc, char** argv )
                 return 1;
             }
             for( int j = 0; j < 3; ++j ){
-                std::stringstream ss( argv[ i + j + 1 ] );
+                std::stringstream ss( argv[ ++i ] );
                 try {
                     std::stod( ss.str() );
                 } catch( std::exception& ) {
@@ -33,7 +35,7 @@ int main( int argc, char** argv )
             }
 
             for( int j = 0; j < 3; ++j ){
-                std::stringstream ss( argv[ i + j + 4 ] );
+                std::stringstream ss( argv[ ++i ] );
                 try {
                     std::stod( ss.str() );
                 } catch( std::exception& ) {
@@ -44,28 +46,37 @@ int main( int argc, char** argv )
 
         } else if( arg == "-c" || arg == "--connect" ){
             connect = true;
-
-            to_connect.first = std::stoi( argv[ i + 1 ] );
-            to_connect.second = std::stoi( argv[ i + 2 ] );
+            to_connect.first = std::stoi( argv[ ++i ] );
+            to_connect.second = std::stoi( argv[ ++i ] );
         } else if( arg == "-i" || arg == "--input" ){
-            path = argv[ i + 1 ];
+            path = argv[ ++i ];
         } else if( arg == "-ccd" ){
             s = strategy::ccd;
         } else if( arg == "-pi" ){
             s = strategy::pseudoinverse;
         } else if( arg == "-fabrik" ){
             s = strategy::fabrik;
+        } else if( arg == "-v" || arg == "--verbose" ){
+            opt.verbose = true;
+        } else if( arg == "-a" || arg == "--animate" ){
+            opt.animate = true;
+        } else {
+            std::cerr << "Unrecognized command line option: " << arg << '\n';
+            return 1;
         }
 
     }
-    kinematic_rofibot bot( path, fixed );
+    kinematic_rofibot bot( path, fixed, opt );
 
+    bool result;
     if( reach ){
-        std::cerr << std::boolalpha << bot.reach( goal, rotation, s ) << '\n';
+        result = bot.reach( goal, rotation, s ) << '\n';
     }
     if( connect ){
-        std::cerr << std::boolalpha << bot.connect( s, to_connect.first, to_connect.second ) << '\n';
+        result = bot.connect( s, to_connect.first, to_connect.second ) << '\n';
     }
+    if( opt.verbose )
+        std::cerr << std::boolalpha << result << '\n';
     std::cout << IO::toString( bot.get_config() );
     return 0;
 }
