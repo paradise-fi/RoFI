@@ -28,3 +28,4 @@ add_executable(test-configuration ${TEST_SRC})
 target_link_libraries(test-configuration PRIVATE Catch2::Catch2 configuration atoms)
 target_include_directories(test-configuration PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} )
 
+catch_discover_tests(test-configuration)
