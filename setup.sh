@@ -1,3 +1,5 @@
+# RoFI environment setup script
+
 # Backup a value of a variable in order to restore it during teardown
 backup() {
     local varcontent="$(eval echo \"'$'$1\")"
@@ -17,8 +19,7 @@ backup() {
     fi
 }
 
-teardown() {
-    echo "Tearing down the RoFI environment"
+teardownImpl() {
     eval $TEARDOWN_CMD
 
     unset ROFI_BUILD_CONFIGURATION
@@ -27,6 +28,12 @@ teardown() {
     unset TEARDOWN_CMD
 
     unset -f teardown
+    unset -f teardownImpl
+}
+
+teardown() {
+    echo "Tearing down the RoFI environment"
+    teardownImpl
 }
 
 configurationDesc() {
@@ -34,7 +41,8 @@ configurationDesc() {
         "Debug") echo D;;
         "Release") echo R;;
         "RelWithDebInfo") echo RD;;
-        ?) echo U
+        "MinSizeRel") echo MSR;;
+        *) echo U
     esac
 }
 
@@ -72,7 +80,7 @@ setGazeboVariables() {
 print_help() {
     cat << EOF
 Usage:
-    source setup.sh [-f] <Release|Debug|RelWithDebInfo>
+    source setup.sh [-f] <Release|Debug|RelWithDebInfo|MinSizeRel>
         Setup environment for given configuration. Release is the default one.
     ./setup.sh -h
         Print help
@@ -96,18 +104,23 @@ run() {
     local OPTIND flag
     local ALTER_PROMPT
     while getopts "fh" flag; do
-    case "$flag" in
-        f) ALTER_PROMPT=1;;
-        h)
-            print_help
-            return 0
-            ;;
-        ?)
-            print_help
-            return 1
-            ;;
-    esac
+        case "$flag" in
+            f) ALTER_PROMPT=1;;
+            h)
+                print_help
+                return 0
+                ;;
+            ?)
+                return 1
+                ;;
+        esac
     done
+
+    CWD=$(pwd)
+    if [ ! -e ${CWD}/setup.sh ] || [ "$(head -n1 ${CWD}/setup.sh)" != "# RoFI environment setup script" ]; then
+        echo "The script needs to be invoked from the root of the project."
+        return 1
+    fi
 
     export PS1 # Bring shell variable into env, so we can back it up
     backup PS1
@@ -119,9 +132,7 @@ run() {
 
     if [ -z "$sourced" ]; then
         echo "Invalid usage; do not invoke directly, use 'source [-f] <Release|Debug|RelWithDebInfo>' instead\n"
-        print_help
-        teardown
-        exit 1
+        return 1
     fi
 
     ARG1=${@:$OPTIND:1}
@@ -129,6 +140,13 @@ run() {
         then ROFI_BUILD_CONFIGURATION=${ARG1};
     fi
 
+    case "$ROFI_BUILD_CONFIGURATION" in
+        Release|Debug|RelWithDebInfo|MinSizeRel);;
+        *)
+            echo "Unsupported build configuration $ROFI_BUILD_CONFIGURATION"
+            return 1
+            ;;
+    esac
 
     echo "Setting up environment for $ROFI_BUILD_CONFIGURATION."
     echo "   To go back, invoke teardown"
@@ -168,6 +186,12 @@ run() {
 }
 
 run $@
+if [ $? -ne 0 ]; then
+    echo "No changes have been made"
+    print_help
+    teardownImpl
+fi
+
 
 ## Cleanup namespace
 unset -f print_help
