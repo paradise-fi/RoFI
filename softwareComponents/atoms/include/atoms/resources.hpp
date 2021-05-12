@@ -100,6 +100,19 @@ private:
 };
 
 /**
+ * \brief Obtain an function that returns ResourceFile for given resource
+ * specified by the CMake macro.
+ *
+ * Specify the resource name directly, without string quotes, and replace
+ * special symbols by and underscore. E.g., for resource `test/file.bmp` use
+ * `test_file_bmp`.
+ */
+#define LOAD_RESOURCE_FILE_LAZY(x) ([]() {                             \
+    extern const char _binary_##x##_start, _binary_##x##_end;           \
+    return ResourceFile(&_binary_##x##_start, &_binary_##x##_end);      \
+})
+
+/**
  * \brief Obtain an instance of ResourceFile for given resource specified by the
  * CMake macro.
  *
