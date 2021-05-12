@@ -73,6 +73,17 @@ if(NOT pybind11_POPULATED)
   add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR})
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${pybind11_SOURCE_DIR}/contrib")
 endif()
+  
+FetchContent_Declare(
+  dimcli
+  URL https://github.com/gknowles/dimcli/archive/refs/tags/v6.0.0.zip
+)
+FetchContent_GetProperties(dimcli)
+if(NOT dimcli_POPULATED)
+  FetchContent_Populate(dimcli)
+  add_library(dimcli STATIC ${dimcli_SOURCE_DIR}/libs/dimcli/cli.cpp)
+  target_include_directories(dimcli PUBLIC ${dimcli_SOURCE_DIR}/libs)
+endif()
 
 find_package(gazebo REQUIRED)
 include_directories(${GAZEBO_INCLUDE_DIRS})
@@ -108,6 +119,7 @@ add_tool(emptyDockFill)
 add_tool(topology2dot)
 add_tool(gazebosimTools)
 add_tool(ik)
+add_tool(rofiTool)
 
 add_subdirectory($ENV{ROFI_ROOT}/data/gazebo/worlds data/gazebo/worlds)
 add_subdirectory($ENV{ROFI_ROOT}/examples/simulator examples/simulator)
