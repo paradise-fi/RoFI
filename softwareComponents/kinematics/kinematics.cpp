@@ -462,7 +462,7 @@ bool kinematic_rofibot::fabrik( const Vector& goal, const Vector& y_frame, const
         position = end_effector( arm ) + z_frame;
     }
     while( ( distance ( next_position, positions[ last + 1 ] ) > 1e-10 ) && it < 10 ){
-        rotate_to( next_position, position, arm[ i / 2 ], Gamma, false );
+        rotate_to( next_position, position, arm[ last / 2 ], Gamma, false );
         next_position = get_global( arm [ last / 2 ], 1, { 0, 0, -1, 1 } );
         rotate_to( next_position, position, arm[ last / 2 ], Beta, false );
         next_position = get_global( arm [ last / 2 ], 1, { 0, 0, -1, 1 } );
@@ -487,14 +487,14 @@ bool kinematic_rofibot::fabrik( const Vector& goal, const Vector& y_frame, const
         }
     }
     it = 0;
-    i = a_length * 2;
-    if( i != positions.size() ){
-        next_position = get_global( arm [ i / 2 ], 1, { 0, 0, -1, 1 } );
-        while( ( distance ( next_position, positions[ i + 1 ] ) > 1e-10 ) && it < 10 ){
-            rotate_to( next_position, positions[ i - 1 ], arm[ i / 2 ], Gamma, false );
-            next_position = get_global( arm [ i / 2 ], 1, { 0, 0, -1, 1 } );
-            rotate_to( next_position, positions[ i - 1 ], arm[ i / 2 ], Beta, false );
-            next_position = get_global( arm [ i / 2 ], 1, { 0, 0, -1, 1 } );
+    last = a_length * 2;
+    if( last != positions.size() ){
+        next_position = get_global( arm [ last / 2 ], 1, { 0, 0, -1, 1 } );
+        while( ( distance ( next_position, positions[ last + 1 ] ) > 1e-10 ) && it < 10 ){
+            rotate_to( next_position, positions[ last - 1 ], arm[ last / 2 ], Gamma, false );
+            next_position = get_global( arm [ last / 2 ], 1, { 0, 0, -1, 1 } );
+            rotate_to( next_position, positions[ last - 1 ], arm[ last / 2 ], Beta, false );
+            next_position = get_global( arm [ last / 2 ], 1, { 0, 0, -1, 1 } );
             ++it;
         }
     }
