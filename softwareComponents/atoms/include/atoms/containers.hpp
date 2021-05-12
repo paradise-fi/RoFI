@@ -157,7 +157,12 @@ public:
     /**
      * \brief Insert new element and get its ID
      */
-    id_type insert( T&& value ) {
+    template< typename TT = T>
+    auto insert( T&& value )
+        -> std::enable_if_t<
+            std::is_move_constructible_v< TT > && std::is_move_assignable_v< TT >,
+            id_type >
+    {
         if ( _freeIdxs.empty() ) {
             _elems.push_back( std::move( value ) );
             return _elems.size() - 1;
