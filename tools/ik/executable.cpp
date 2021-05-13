@@ -1,10 +1,21 @@
 #include "kinematics.cpp"
+#include <ctime>
+
+std::ostream& operator<<( std::ostream& os, std::vector< int > vec ){
+    os << "[";
+    for( int i : vec ){
+        os << i << ",";
+    }
+    os << "]";
+    return os;
+}
 
 int main( int argc, char** argv )
 {
     bool fixed = false;
     std::string path;
     options opt;
+    std::srand( std::time( 0 ) );
 
     strategy s = strategy::fabrik;
     bool reach = false;
@@ -12,6 +23,7 @@ int main( int argc, char** argv )
     std::pair< int, int > to_connect = { 0, 1 };
     Vector goal = { 0, 0, 0, 1 };
     std::vector< double > rotation = { 0, 0, 0 };
+    int random_targets = 0;
     std::ifstream targets;
     std::ofstream results;
 
@@ -74,6 +86,9 @@ int main( int argc, char** argv )
             opt.verbose = true;
         } else if( arg == "-a" || arg == "--animate" ){
             opt.animate = true;
+        } else if( arg == "--random" ){
+            opt.random = true;
+            random_targets = std::stoi( argv[ ++i ] );
         } else {
             std::cerr << "Unrecognized command line option: " << arg << '\n';
             return 1;
@@ -83,6 +98,9 @@ int main( int argc, char** argv )
     kinematic_rofibot bot( path, fixed, opt );
 
     bool result;
+    int success = 0;
+    std::vector<int> eliminate;
+    int cur = 0;
     if( !targets.is_open() ){
         if( reach ){
             result = bot.reach( goal, rotation, s ) << '\n';
@@ -90,10 +108,20 @@ int main( int argc, char** argv )
         if( connect ){
             result = bot.connect( s, to_connect.first, to_connect.second ) << '\n';
         }
-        if( results.is_open() )
-            results << std::boolalpha << result << '\n';
-        else
-            std::cerr << std::boolalpha << result << '\n';
+        for( int i = 0; i < random_targets; ++i ){
+            if( opt.random ){
+                result = bot.reach_random( s );
+            }
+            if( results.is_open() ){
+                success += (int) result;
+                if( !result ){
+                    eliminate.push_back(cur);
+                }
+                cur++;
+            }
+            else
+                std::cerr << std::boolalpha << result << '\n';
+        }
     } else {
         Configuration reset = bot.get_config();
         std::string line;
@@ -113,12 +141,25 @@ int main( int argc, char** argv )
                 return 1;
             }
 
-            if( results.is_open() )
-                results << std::boolalpha << result << '\n';
-            else
-                std::cerr << std::boolalpha << result << '\n';
+            success += (int) result;
+            if( !result ){
+                eliminate.push_back(cur);
+            }
+            cur++;
+
+            // if( results.is_open() )
+            //     results << std::boolalpha << result << '\n';
+            //else
+                //std::cout << std::boolalpha << result << '\n';
+            bot.config = reset;
         }
     }
+
+    if( results.is_open() ){
+        results << "{ " << "\"successes\" : " << success << ",\n \"failed\" : \"" << eliminate << "\""
+           << " }\n";
+    }
+
     std::cout << IO::toString( bot.get_config() );
     return 0;
 }

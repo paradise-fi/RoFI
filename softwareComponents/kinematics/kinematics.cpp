@@ -67,8 +67,8 @@ bool kinematic_rofibot::ccd( const Vector& goal, const Vector& x_frame, const Ve
     Vector x_goal = goal + x_frame;
 
     int iterations = 0;
-    while( distance( end_position, goal ) > error ||
-           distance( pointing_to( arm ), goal + z_frame ) > error ){
+    while( distance( end_position, goal ) > error /*||
+           distance( pointing_to( arm ), goal + z_frame ) > error*/ ){
         for( auto it = arm.rbegin(); it != arm.rend(); ++it ){
             for( Joint j : { Beta, Gamma, Alpha } ){
 
@@ -317,7 +317,10 @@ bool kinematic_rofibot::fabrik( const Vector& goal, const Vector& y_frame, const
             std::cout << IO::toString( config );
         }
 
-        if( ++iterations == max_iterations || distance( last_position, positions.back() ) < 1e-10 ){
+        if( ++iterations == max_iterations /*|| distance( last_position, positions.back() ) < 1e-10*/ ){
+            if( opt.verbose ){
+                std::cerr << "E position:\n" << positions.back();
+            }
             return false;
         }
     }
@@ -337,7 +340,7 @@ bool kinematic_rofibot::fabrik( const Vector& goal, const Vector& y_frame, const
             next_position = get_global( arm[ ( i + 1 ) / 2 ], ( i + 1 ) % 2 );
             if( current == Beta ){
                 rotate_to( next_position, positions[ i + 1 ], arm[ i / 2 ], Gamma, false );
-            } else if( i != 0 && std::fabs( config.getModule( arm[ ( i - 1 ) / 2 ] ).getJoint( Beta ) ) < 1.0 ) {
+            } else if( i != 0 && std::fabs( config.getModule( arm[ ( i - 1 ) / 2 ] ).getJoint( Beta ) ) < 2.0 ) {
                 rotate_to( next_position, positions[ i + 1 ], arm[ ( i - 1 ) / 2 ], Gamma, false );
             }
             next_position = get_global( arm[ ( i + 1 ) / 2 ], ( i + 1 ) % 2 );
@@ -352,9 +355,10 @@ bool kinematic_rofibot::fabrik( const Vector& goal, const Vector& y_frame, const
     if( last != positions.size() - 1 ){
         position = positions[ last + 1 ];
     } else {
-        position = end_effector( arm ) + z_frame;
+        position = goal + z_frame;
     }
-    while( ( distance ( next_position, positions[ last + 1 ] ) > 1e-10 ) && it < 100 ){
+    next_position = get_global( arm [ last / 2 ], 1, { 0, 0, -1, 1 } );
+    while( ( distance ( next_position, position ) > 1e-10 ) && it < 100 ){
         rotate_to( next_position, position, arm[ last / 2 ], Gamma, false );
         next_position = get_global( arm [ last / 2 ], 1, { 0, 0, -1, 1 } );
         rotate_to( next_position, position, arm[ last / 2 ], Beta, false );
@@ -451,7 +455,7 @@ bool kinematic_rofibot::pseudoinverse( const Vector& goal, const Vector& x_frame
         double error;
         /* Ad hoc constant; higher precision can reduce the number of iterations
          * but increase computation per iteration */
-        double prec = 1e-10;
+        double prec = 1e-8;
         do {
             error = arbitrary_magnitude( ( I - j * pseudo_inv ) * diff );
             if( error > prec ){
@@ -632,6 +636,7 @@ bool kinematic_rofibot::connect_fabrik( int a, int b, int max_iterations ){
     Vector b_y = get_global( arms[ b ].front(), 0, { 0, 1, 0, 1 } );
     fabrik( b_begin, b_y - b_begin, b_z - b_begin, arm, 1000, arms[ a ].size() );
 
+    std::cout << IO::toString( config );
     Edge e = { arms[ a ].back(), B, ZMinus, North, ZMinus, B, arms[ b ].back() };
     return config.execute( Action( Action::Reconnect( true, e ) ) );
 }
@@ -664,4 +669,20 @@ bool kinematic_rofibot::connect_pseudoinverse( int a, int b, int max_iterations 
     }
 
     return config.execute( Action( Action::Reconnect( true, new_edge ) ) );
+}
+
+target kinematic_rofibot::random_target( const chain& arm ){
+    auto dummy = *this;
+    auto modules = config.getModules();
+    for( auto& [ id, module ] : modules ){
+        for( auto j : { Alpha, Beta, Gamma } ){
+            int rotation = std::rand() % 180 - 90;
+            dummy.rotate_if_valid( id, j, rotation );
+        }
+    }
+    Vector position = dummy.get_global( arm.back(), 1 );
+    Vector x_frame = dummy.get_global( arm.back(), 1, { -1, 0, 0, 1 } ) - position;
+    Vector y_frame = dummy.get_global( arm.back(), 1, { 0, 1, 0, 1 } ) - position;
+    Vector z_frame = dummy.get_global( arm.back(), 1, { 0, 0, -1, 1 } ) - position;
+    return { position, x_frame, y_frame, z_frame };
 }
