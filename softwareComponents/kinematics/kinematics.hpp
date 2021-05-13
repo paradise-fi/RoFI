@@ -56,7 +56,7 @@ class kinematic_rofibot {
             return ccd( goal, x_frame, y_frame, z_frame, arms[ arm ], 1000 );
         }
         if( s == strategy::fabrik ){
-            return fabrik( goal, y_frame, z_frame, arms[ arm ] );
+            return fabrik( goal, y_frame, z_frame, arms[ arm ], 100, arms[ arm ].size() );
         }
         if( s == strategy::pseudoinverse ){
  
