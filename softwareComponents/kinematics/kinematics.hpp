@@ -48,7 +48,7 @@ class kinematic_rofibot {
                             rotate( to_rad( rotation[ 1 ] ), Y ) *
                             rotate( to_rad( rotation[ 2 ] ), Z ) *
                             Vector( { 1, 0, 0, 1 } );
-        // TODO: might want to move as close as possible even if unreachable
+
         if( distance( get_global( arms[ arm ].front(), 0 ), goal ) > max_length ){
             return false;
         }
@@ -59,7 +59,7 @@ class kinematic_rofibot {
             return fabrik( goal, y_frame, z_frame, arms[ arm ], 100, arms[ arm ].size() );
         }
         if( s == strategy::pseudoinverse ){
- 
+
             return pseudoinverse( goal, x_frame, z_frame, arms[ arm ] );
         }
 
@@ -96,8 +96,6 @@ class kinematic_rofibot {
 
   private:
 
-    bool connect_ccd( int a, int b, int max_iterations = 100 );
-
     /** Classic IK algorithm, Cyclic Coordinate Descent **/
     bool ccd( const Vector& goal, const Vector& x_frame, const Vector& y_frame,
               const Vector& z_frame, const chain& arm, int max_iterations = 100 );
@@ -105,9 +103,13 @@ class kinematic_rofibot {
     bool ccd2( const Vector& goal, const Vector& x_frame, const Vector& y_frame,
                const Vector& z_frame, const chain& arm, int max_iterations = 100 );
 
+    bool connect_ccd( int a, int b, int max_iterations = 100 );
+
+    /** Rotate a joint so that the end aligns with the goal **/
     bool rotate_to( const Vector& end_pos, const Vector& end_goal, int i, Joint joint,
                     bool check_validity = true, bool round = false );
 
+    /** Rotate a joint if it results in a valid configuration **/
     bool rotate_if_valid( int module, Joint joint, double angle );
 
     /** Forward And Backward Reaching Inverse Kinematics (FABRIK) algorithm,
@@ -140,6 +142,7 @@ class kinematic_rofibot {
     inline Matrix get_matrix( int module, int shoe ){
         return config.getMatrices().at( module ).at( shoe );
     }
+
     /* Global position of a joint, or a point converted from local
      * coordinates of the joint to global */
     inline Vector get_global( int module, int shoe, const Vector& local = { 0, 0, 0, 1 } ){
