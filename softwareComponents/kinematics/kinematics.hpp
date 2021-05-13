@@ -4,6 +4,7 @@
 #include <math.h>
 
 using chain = std::deque< int >;
+using target = std::tuple< Vector, Vector, Vector, Vector >;
 
 constexpr double error = 0.01;
 
@@ -12,11 +13,12 @@ enum class strategy { ccd, fabrik, pseudoinverse };
 struct options {
     bool verbose = false;
     bool animate = false;
+    bool random = false;
 };
 
 class kinematic_rofibot {
 
-    Configuration config;
+    // Configuration config;
 
     /* Is the configuration an arm fixed at it's lowest point, or something
      * with multiple arms? */
@@ -28,13 +30,31 @@ class kinematic_rofibot {
     options opt;
 
   public:
+    Configuration config;
 
     kinematic_rofibot( Configuration new_config, bool fixed = false, options opt = {} );
 
     kinematic_rofibot( std::string file_name, bool fixed = false, options opt = {} );
 
+    bool reach_random( strategy s = strategy::fabrik, int arm = 0 ){
+        auto [ goal, x_frame, y_frame, z_frame ] = random_target( arms[ arm ] );
+        
+        if( s == strategy::ccd ){
+            return ccd( goal, x_frame, y_frame, z_frame, arms[ arm ], 1000 );
+        }
+        if( s == strategy::fabrik ){
+            return fabrik( goal, y_frame, z_frame, arms[ arm ], 100, arms[ arm ].size() );
+        }
+        if( s == strategy::pseudoinverse ){
+
+            return pseudoinverse( goal, x_frame, z_frame, arms[ arm ] );
+        }
+
+        return false;
+    }
+
     /* Reach a position with the given end-effector rotation */
-    bool reach( Vector goal, std::vector< double > rotation = { 0, 0, 0 }, strategy s = strategy::ccd, int arm = 0 ){
+    bool reach( Vector goal, std::vector< double > rotation = { 0, 0, 0 }, strategy s = strategy::fabrik, int arm = 0 ){
         int max_length = arms[ arm ].size() * 2 - 1;
         Vector y_frame = rotate( to_rad( rotation[ 0 ] ), X ) *
                             rotate( to_rad( rotation[ 1 ] ), Y ) *
@@ -128,6 +148,9 @@ class kinematic_rofibot {
     bool connect_pseudoinverse( int a, int b, int max_iterations = 100 );
 
     arma::mat jacobian( const chain& arm );
+
+    /* Generate a random configuration, and take its end-effector as target */
+    target random_target( const chain& arm );
 
     /* Position of the last joint */
     inline Vector end_effector( const chain& arm ){
