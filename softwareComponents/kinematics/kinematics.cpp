@@ -636,10 +636,30 @@ bool kinematic_rofibot::pseudoinverse( const Vector& goal, const Vector& x_frame
 bool kinematic_rofibot::connect_pseudoinverse( int a, int b, int max_iterations )
 {
     config.computeMatrices();
-    // TODO: finish the method
-    // Edge toRemove = { 1, B, ZMinus, North, ZMinus, A, 2 };
-    // config.execute( Action( Action::Reconnect( false, toRemove ) ) );
-    // Edge e = { 1, A, ZMinus, North, ZMinus, B, 3 };
-    // config.execute( Action( Action::Reconnect( true, e ) ) );
-    return config.isValid();
+    Configuration new_config = get_config();
+
+    Vector goal = get_global( arms[ b ].front(), 1 );
+    Vector x_frame = get_global( arms[ b ].front(), 1, { -1, 0, 0, 1 } ) - goal;
+    Vector z_frame = get_global( arms[ b ].front(), 1, { 0, 0, -1, 1 } ) - goal;
+
+    std::unordered_set< int > exclude = { arms[ b ][ 1 ] };
+    auto edges = config.getEdges( arms[ b ].front(), exclude );
+    int x = arms[ b ].front();
+    int y = edges.front().id2();
+    Edge remove = { x, B, ZMinus, North, ZMinus, B, y };
+    new_config.execute( Action( Action::Reconnect( false, remove ) ) );
+    Edge new_edge = { arms[ b ].back(), A, ZMinus, North, ZMinus, B, arms[ a ].back() };
+    new_config.execute( Action( Action::Reconnect( true, new_edge ) ) );
+
+    std::cerr << "goal\n" << goal << "x\n" << x_frame << "z\n" << z_frame;
+    kinematic_rofibot dummy( new_config, fixed, opt );
+    dummy.pseudoinverse( goal, { -1, 0, 0, 1 }, { 0, 0, -1, 1 }, dummy.arms[ 0 ] );
+    auto modules = dummy.config.getModules();
+    for( const auto& [id, m] : modules ){
+        for( auto j : { Alpha, Beta, Gamma } ){
+            config.getModule( id ).setJoint( j, m.getJoint( j ) );
+        }
+    }
+
+    return config.execute( Action( Action::Reconnect( true, new_edge ) ) );
 }
