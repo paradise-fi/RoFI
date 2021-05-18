@@ -48,6 +48,9 @@ Once you setup the environment, you have management commands available in your
 shell (e.g., ``rcfg`` and ``rmake``). Then you can proceed to configuration of
 compilation suites and building targets.
 
+Note that if you would like to make ``setup.sh`` silent (e.g., when benchmarking
+or running in CI), you can pass the option ``-s`` to make it silent.
+
 Compilation suites
 ------------------
 
