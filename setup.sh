@@ -1,5 +1,13 @@
 # RoFI environment setup script
 
+SILENT=
+
+silentEcho() {
+    if [ ! $SILENT ]; then
+        echo $@
+    fi
+}
+
 # Backup a value of a variable in order to restore it during teardown
 backup() {
     local varcontent="$(eval echo \"'$'$1\")"
@@ -32,7 +40,7 @@ teardownImpl() {
 }
 
 teardown() {
-    echo "Tearing down the RoFI environment"
+    silentEcho "Tearing down the RoFI environment"
     teardownImpl
 }
 
@@ -87,6 +95,7 @@ Usage:
 
 Options:
     -f  Alternate prompt to indicate the environment.
+    -s  Make the script silent (e.g., when running from CI)
 EOF
 }
 
@@ -103,13 +112,14 @@ EOF
 run() {
     local OPTIND flag
     local ALTER_PROMPT
-    while getopts "fh" flag; do
+    while getopts "fhs" flag; do
         case "$flag" in
             f) ALTER_PROMPT=1;;
             h)
                 print_help
                 return 0
                 ;;
+            s)  SILENT=1;;
             ?)
                 return 1
                 ;;
@@ -118,7 +128,7 @@ run() {
 
     CWD=$(pwd)
     if [ ! -e ${CWD}/setup.sh ] || [ "$(head -n1 ${CWD}/setup.sh)" != "# RoFI environment setup script" ]; then
-        echo "The script needs to be invoked from the root of the project."
+        >&2 echo "The script needs to be invoked from the root of the project."
         return 1
     fi
 
@@ -131,7 +141,8 @@ run() {
     ROFI_BUILD_CONFIGURATION="Release"
 
     if [ -z "$sourced" ]; then
-        echo "Invalid usage; do not invoke directly, use 'source [-f] <Release|Debug|RelWithDebInfo>' instead\n"
+        >&2 echo "Invalid usage; do not invoke directly, use 'source [-f] <Release|Debug|RelWithDebInfo>' instead"
+        >&2 echo
         return 1
     fi
 
@@ -143,14 +154,14 @@ run() {
     case "$ROFI_BUILD_CONFIGURATION" in
         Release|Debug|RelWithDebInfo|MinSizeRel);;
         *)
-            echo "Unsupported build configuration $ROFI_BUILD_CONFIGURATION"
+            >&2 echo "Unsupported build configuration $ROFI_BUILD_CONFIGURATION"
             return 1
             ;;
     esac
 
-    echo "Setting up environment for $ROFI_BUILD_CONFIGURATION."
-    echo "   To go back, invoke teardown"
-    echo "   To change the configuration, simply invoke setup again"
+    silentEcho "Setting up environment for $ROFI_BUILD_CONFIGURATION."
+    silentEcho "   To go back, invoke teardown"
+    silentEcho "   To change the configuration, simply invoke setup again"
 
     if [ -n "$ALTER_PROMPT" ]
     then
@@ -187,8 +198,8 @@ run() {
 
 run $@
 if [ $? -ne 0 ]; then
-    echo "No changes have been made"
-    print_help
+    >&2 echo "No changes have been made"
+    >&2 print_help
     teardownImpl
 fi
 
