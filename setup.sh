@@ -135,6 +135,7 @@ run() {
     export PS1 # Bring shell variable into env, so we can back it up
     backup PS1
     backup PATH
+    backup PYTHONPATH
 
     setGazeboVariables
 
@@ -175,9 +176,7 @@ run() {
     export ROFI_BUILD_DIR="$(pwd)/build.${ROFI_BUILD_CONFIGURATION}"
 
     export GAZEBO_MODEL_PATH="$ROFI_ROOT/data/gazebo/models:$GAZEBO_MODEL_PATH"
-    export GAZEBO_PLUGIN_PATH="$ROFI_BUILD_DIR/desktop/gazebosim/rofiModule:$GAZEBO_PLUGIN_PATH"
-    export GAZEBO_PLUGIN_PATH="$ROFI_BUILD_DIR/desktop/gazebosim/roficom:$GAZEBO_PLUGIN_PATH"
-    export GAZEBO_PLUGIN_PATH="$ROFI_BUILD_DIR/desktop/gazebosim/distributor:$GAZEBO_PLUGIN_PATH"
+    export GAZEBO_PLUGIN_PATH="$ROFI_BUILD_DIR/desktop/lib:$GAZEBO_PLUGIN_PATH"
     export GAZEBO_RESOURCE_PATH="$ROFI_ROOT/data/gazebo:$GAZEBO_RESOURCE_PATH"
     export GAZEBO_RESOURCE_PATH="$ROFI_BUILD_DIR/desktop/data/gazebo:$GAZEBO_RESOURCE_PATH"
 
@@ -186,6 +185,7 @@ run() {
     ## Add bin directories of the suites to path
     for suite in $(find suites -maxdepth 1 -type d -exec basename {} \;); do
         export PATH="${ROFI_BUILD_DIR}/$suite/bin:$PATH"
+        export PYTHONPATH="${ROFI_BUILD_DIR}/$suite/lib:$PYTHONPATH"
     done
 
     ## Register tab completion

@@ -210,3 +210,9 @@ In a different terminal, run the module code for each module that you want to co
 
     $ source setup.sh -f Debug # Setup your terminal
     🤖 D $ basicJointPosition  # Run the compiled module code
+
+If you are interested in controlling the simulation via Python instead of C++,
+you can follow example `examples/simulator/pythonInterface`:
+
+.. code-block:: sh
+    🤖 D $ python3 examples/simulator/pythonInterface/oscilate.py
