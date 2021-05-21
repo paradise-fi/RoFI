@@ -66,6 +66,38 @@ bool checkOldConfigurationEInput( int id1, int id2, int side1, int side2, int do
     return ok;
 }
 
+int parseStringDescription( std::istringstream& line
+                          , std::vector< std::pair< std::string, int > > opts ) {
+    std::string part;
+    line >> part;
+    for ( auto& [ str, value ] : opts ) {
+        if ( str == part )
+            return value;
+    }
+    std::string expected = "| ";
+    for ( auto& [ str, _ ] : opts )
+        expected.append( str ).append( " | " );
+    throw std::runtime_error( "Unexpected value |" + part + "| expected one of " + expected );
+}
+
+auto parseEdge( std::istringstream& line ) {
+    int id1, id2, side1, side2, dock1, dock2, orientation;
+    line >> id1 >> side1;
+    if ( line ) {
+        line >> dock1 >> orientation >> dock2 >> side2;
+    } else { // config file has the letter notation
+        line.clear(); // reset the bad state
+        side1 = parseStringDescription( line, { { "A", 0 }, { "B", 1 } } );
+        dock1 = parseStringDescription( line, { { "+X", 0 }, { "-X", 1 }, { "-Z", 2 } } );
+        orientation = parseStringDescription( line, { { "N", 0 }, { "E", 1 }, { "S", 2 }, { "W", 3 } } );
+        dock2 = parseStringDescription( line, { { "+X", 0 }, { "-X", 1 }, { "-Z", 2 } } );
+        side2 = parseStringDescription( line, { { "A", 0 }, { "B", 1 } } );
+    }
+    line >> id2;
+
+    return std::make_tuple( id1, id2, side1, side2, dock1, dock2, orientation );
+}
+
 Rofibot readOldConfigurationFormat( std::istream& s ) {
     std::string line;
     Rofibot rofibot;
@@ -90,10 +122,9 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
             continue;
         }
         if ( type == "E" ) {
-            int id1, id2, side1, side2, dock1, dock2, orientation;
-            lineStr >> id1 >> side1 >> dock1 >> orientation >> dock2 >> side2 >> id2;
+            auto [ id1, id2, side1, side2, dock1, dock2, orientation ] = parseEdge( lineStr );
             if ( !checkOldConfigurationEInput( id1, id2, side1, side2, dock1, dock2, orientation, moduleMapping ) )
-                continue; // skip the line
+                throw std::runtime_error( "Invalid edge specification" );
             auto& component1 = rofibot.getModule( moduleMapping[ id1 ] )->connector( side1 * 3 + dock1 );
             auto& component2 = rofibot.getModule( moduleMapping[ id2 ] )->connector( side2 * 3 + dock2 );
             connect( component1, component2, static_cast< rofi::Orientation >( orientation ) );
