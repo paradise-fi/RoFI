@@ -18,7 +18,7 @@ struct options {
 
 class kinematic_rofibot {
 
-    // Configuration config;
+    Configuration config;
 
     /* Is the configuration an arm fixed at it's lowest point, or something
      * with multiple arms? */
@@ -30,7 +30,6 @@ class kinematic_rofibot {
     options opt;
 
   public:
-    Configuration config;
 
     kinematic_rofibot( Configuration new_config, bool fixed = false, options opt = {} );
 
@@ -113,6 +112,12 @@ class kinematic_rofibot {
     const inline Configuration& get_config(){
         return config;
     };
+
+    /* Reset to a different configuration */
+    inline void reset( const Configuration& reset ){
+        config = reset;
+        config.computeMatrices();
+    }
 
   private:
 

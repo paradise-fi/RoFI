@@ -88,6 +88,7 @@ inline double arbitrary_magnitude( const arma::vec& vector ){
     }
     return std::sqrt( sum );
 }
+
 /* dot product */
 inline double operator*( const Vector& a, const Vector& b ){
     return a[ 0 ] * b[ 0 ] + a[ 1 ] * b[ 1 ] + a[ 2 ] * b[ 2 ];
@@ -96,6 +97,14 @@ inline double operator*( const Vector& a, const Vector& b ){
 inline Vector operator-( const Vector& a ){
     return { -a[ 0 ], -a[ 1 ], -a[ 2 ], 1.0 };
 }
+
+/* projects a point onto a plane defined by normal and a point */
+inline Vector project( const Vector& normal, const Vector& on_plane,
+                       const Vector& to_project ) {
+    Vector dir = to_project - on_plane;
+    return to_project - ( ( dir * normal ) / ( normal * normal ) ) * normal;
+}
+
 /* To invert the rotation, you transpose it. To invert a translation,
  * negate it. This matrix is the result of both */
 inline Matrix inverse( Matrix m ){
