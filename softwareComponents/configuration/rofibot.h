@@ -33,7 +33,7 @@ enum class Orientation { North, East, South, West };
 /**
  * Return a corresponding angle in radians for a given orientation
  */
-double orientationToAngle( Orientation o );
+double orientationToAngle( Orientation o = Orientation::North );
 
 /**
  * \brief Translate degrees into radians
@@ -170,37 +170,6 @@ public:
             _rootComponent = _computeRoot();
     }
 
-    Module( Module&& o ) noexcept {
-        swap( o );
-    }
-
-    Module( const Module& o ):
-        id( o.id ),
-        type( o.type ),
-        parent( o.parent ),
-        _components( o._components ),
-        _connectorCount( o._connectorCount ),
-        _joints( o._joints ),
-        _rootComponent( o._rootComponent ),
-        _componentPosition( o._componentPosition )
-    {}
-
-    Module& operator=( Module o ) {
-        swap( o );
-        return *this;
-    }
-
-    void swap( Module& o ) {
-        using std::swap;
-        swap( id, o.id );
-        swap( type, o.type );
-        swap( parent, o.parent );
-        swap( _components, o._components );
-        swap( _connectorCount, o._connectorCount );
-        swap( _joints, o._joints );
-        swap( _componentPosition, o._componentPosition );
-    }
-
     void setJointParams( int idx, const Joint::Positions& p );
     // Implemented in CPP files as it depends on definition of Rofibot
 
@@ -220,10 +189,31 @@ public:
      * \brief Get a component position within coordinate system specified by the
      * second argument.
      *
-     * Raises std::logic_error if the components are inconsistent
+     * Raises std::logic_error if the components are not prepared
      */
-    Matrix getComponentPosition( int idx, Matrix position ) {
+    Matrix getComponentPosition( int idx, Matrix position ) const {
+        if ( !_componentPosition )
+            throw std::logic_error( "Module is not prepared" );
         return position * _componentPosition.value()[ idx ];
+    }
+
+    /**
+     * \brief Get a vector of occupied positions relative to module origin
+     *
+     * Raises std::logic_error if the components are not prepared
+     */
+    std::vector< Matrix > getOccupiedPositions() const {
+        if ( !_componentPosition )
+            throw std::logic_error( "Module is not prepared" );
+
+        std::vector< Matrix > res;
+        for ( auto& m : _componentPosition.value() ) {
+            res.push_back( translate( center( m ) ) );
+        }
+        std::sort( res.begin(), res.end(), []( auto a, auto b ) { return equals( a, b ); } );
+        res.erase( std::unique( res.begin(), res.end(), []( auto a, auto b ) { return equals( a, b ); } ), res.end() );
+
+        return res;
     }
 
     /**
@@ -355,7 +345,7 @@ public:
     /**
      * \brief Decide if two modules collide
      */
-    bool operator()( const Module& a, const Module& b ) {
+    bool operator()( const Module& a, const Module& b, Matrix posA, Matrix posB ) {
         return false;
     }
 };
@@ -369,7 +359,14 @@ public:
     /**
      * \brief Decide if two modules collide
      */
-    bool operator()( const Module& a, const Module& b ) {
+    bool operator()( const Module& a, const Module& b, Matrix posA, Matrix posB ) {
+        for ( auto pA : a.getOccupiedPositions() ) {
+            for ( auto pB : b.getOccupiedPositions() ) {
+                if ( equals( static_cast< Matrix >( posA * pA ), posB * pB ) )
+                    return true;
+            }
+        }
+
         return false;
     }
 };
@@ -494,7 +491,7 @@ public:
             for ( const ModuleInfo& n : _modules ) {
                 if ( n.module->id >= m.module->id ) // Collision is symmetric
                     break;
-                if ( collisionModel( *n.module, *m.module ) ) {
+                if ( collisionModel( *n.module, *m.module, *n.position, *m.position ) ) {
                     return { false, fmt::format("Modules {} and {} collide",
                         m.module->id, n.module->id ) };
                 }
@@ -615,12 +612,16 @@ private:
     struct ModuleInfo {
         ModuleInfo() = default;
         ModuleInfo( const ModuleInfo& ) = default;
-        ModuleInfo( ModuleInfo&& o ) noexcept : module( std::move( o.module ) )
-        , inJointsIdx( std::move( o.inJointsIdx ) ), outJointsIdx( std::move( o.outJointsIdx ) )
-        , spaceJoints( std::move( o.spaceJoints ) ), position( std::move( o.position ) ) {}
-        ModuleInfo( atoms::ValuePtr< Module >&& m, const std::vector< int >& i, const std::vector< int >& o
-                    , const std::vector< int >& s, const std::optional< Matrix >& pos )
-        : module( std::move( m ) ), inJointsIdx( i ), outJointsIdx( o ), spaceJoints( s ), position( pos ) {}
+        ModuleInfo( ModuleInfo&& o ) noexcept
+        : module( std::move( o.module ) ), inJointsIdx( std::move( o.inJointsIdx ) ),
+            outJointsIdx( std::move( o.outJointsIdx ) ), spaceJoints( std::move( o.spaceJoints ) ),
+            position( std::move( o.position ) )
+        {}
+
+        ModuleInfo( atoms::ValuePtr< Module >&& m, const std::vector< int >& i, const std::vector< int >& o,
+            const std::vector< int >& s, const std::optional< Matrix >& pos )
+        : module( std::move( m ) ), inJointsIdx( i ), outJointsIdx( o ), spaceJoints( s ), position( pos )
+        {}
 
         ModuleInfo& operator=( const ModuleInfo& ) = default;
         ModuleInfo& operator=( ModuleInfo&& ) = default;
