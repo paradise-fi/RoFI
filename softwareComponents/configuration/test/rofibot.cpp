@@ -109,7 +109,7 @@ TEST_CASE( "Two modules next to each other" ) {
     rofi::Rofibot bot;
     auto& m1 = bot.insert( rofi::buildUniversalModule( 0, 0, 0 ) );
     auto& m2 = bot.insert( rofi::buildUniversalModule( 0, 0, 0 ) );
-    connect( m1.connector( 0 ), m2.connector( 2 ), rofi::Orientation::South );
+    connect( m1.connector( 0 ), m2.connector( 1 ), rofi::Orientation::South );
     rofi::connect< rofi::RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
     REQUIRE_NOTHROW( bot.prepare() );
 

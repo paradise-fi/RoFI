@@ -98,8 +98,8 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
                    Vector desAxis, double min, double max )
         : _limits( { min, max } )
     {
-        _pre  = rotate( 0, sourceOrigin );
-        _post = rotate( 0, destOrigin );
+        _pre  = translate( sourceOrigin );
+        _post = translate( destOrigin );
         _axis = desAxis - sourceAxis;
     }
 
