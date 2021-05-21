@@ -8,8 +8,8 @@
 #include <functional>
 #include <map>
 
-#include <rofibot.h>
-#include <universalModule.h>
+#include <rofibot.hpp>
+#include <universalModule.hpp>
 
 #include <atoms/resources.hpp>
 
@@ -39,7 +39,7 @@ vtkSmartPointer< vtkMatrix4x4 > convertMatrix( const Matrix& m ) {
     return mat;
 }
 
-std::array< double, 3 > getModuleColor( int moduleIdx ) {
+constexpr std::array< double, 3 > getModuleColor( int moduleIdx ) {
     const std::array< std::array< uint8_t, 3 >, 7 > palette = {{
         { 191, 218, 112 },
         { 242, 202, 121 },
@@ -125,9 +125,9 @@ void addModuleToScene( vtkRenderer* renderer, rofi::Module& m,
     for ( int i = 0; i != components.size(); i++ ) {
         const auto& component = components[ i ];
         auto cPosition = m.getComponentPosition( i, mPosition );
-		// make connected RoFICoMs connected visually
-		if ( active_cons.count( i ) > 0 )
-			cPosition = cPosition * translate( { -0.05, 0, 0 } );
+        // make connected RoFICoMs connected visually
+        if ( active_cons.count( i ) > 0 )
+            cPosition = cPosition * translate( { -0.05, 0, 0 } );
 
         auto posTrans = vtkSmartPointer< vtkTransform >::New();
         posTrans->SetMatrix( convertMatrix( cPosition ) );
@@ -153,18 +153,18 @@ void addModuleToScene( vtkRenderer* renderer, rofi::Module& m,
 }
 
 void buildConfigurationScene( vtkRenderer* renderer, rofi::Rofibot& bot ) {
-	// get active (i.e. connected) connectors for each module within Rofibot
-	std::map< rofi::ModuleId, std::set< int > > active_cons;
-	for ( const auto& roficom : bot.roficoms() ) {
-		active_cons[ roficom.sourceModule ].insert( roficom.sourceConnector );
-		active_cons[ roficom.destModule   ].insert( roficom.destConnector );
-	}
+    // get active (i.e. connected) connectors for each module within Rofibot
+    std::map< rofi::ModuleId, std::set< int > > active_cons;
+    for ( const auto& roficom : bot.roficoms() ) {
+        active_cons[ roficom.sourceModule ].insert( roficom.sourceConnector );
+        active_cons[ roficom.destModule   ].insert( roficom.destConnector );
+    }
 
     int index = 0;
     for ( auto& mInfo : bot.modules() ) {
         assert( mInfo.position && "The configuration has to be prepared" );
-		if ( active_cons.count( mInfo.module->id ) == 0 )
-			active_cons[ mInfo.module->id ] = {};
+        if ( active_cons.count( mInfo.module->id ) == 0 )
+            active_cons[ mInfo.module->id ] = {};
         addModuleToScene( renderer, *mInfo.module, *mInfo.position, index, active_cons[ mInfo.module->id ] );
         index++;
     }

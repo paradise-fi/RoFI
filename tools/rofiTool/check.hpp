@@ -1,5 +1,5 @@
 #include <dimcli/cli.h>
-#include <universalModule.h>
+#include <universalModule.hpp>
 
 static auto& command = Dim::Cli().command( "check" )
     .desc( "Check a given configuration" );
