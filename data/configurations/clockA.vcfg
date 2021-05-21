@@ -1,0 +1,30 @@
+C
+M 0 0 0 0
+M 1 0 0 0
+M 2 0 0 0
+M 3 0 0 0
+M 4 0 45 0
+M 5 0 0 0
+M 6 0 0 0
+M 7 0 0 0
+M 8 0 0 0
+M 9 0 0 0
+M 10 0 0 0
+M 11 0 0 0
+M 12 0 0 0
+#
+E 0 B -Z S -Z A 1
+E 1 B -Z S -Z A 2
+E 2 B -Z S -Z A 3
+E 3 B -Z S -Z A 4
+# clock left
+E 0 A -X N -X A 5
+E 1 A -X E -X A 6
+E 2 A -X S -X A 7
+E 3 A -X W -X A 8
+# clock right
+E 0 A +X N -X B 9
+E 1 A +X E -X B 10
+E 2 A +X S -X B 11
+E 3 A +X W -X B 12
+
