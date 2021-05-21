@@ -15,7 +15,6 @@ int main( int argc, char** argv )
     bool fixed = false;
     std::string path;
     options opt;
-    std::srand( std::time( 0 ) );
 
     strategy s = strategy::fabrik;
     bool reach = false;
@@ -97,6 +96,9 @@ int main( int argc, char** argv )
     }
     kinematic_rofibot bot( path, fixed, opt );
 
+    if( opt.random ){
+        std::srand( std::time( 0 ) );
+    }
     bool result;
     int success = 0;
     std::vector<int> eliminate;
@@ -122,8 +124,9 @@ int main( int argc, char** argv )
             else
                 std::cerr << std::boolalpha << result << '\n';
         }
+        std::cerr << std::boolalpha << result << '\n';
     } else {
-        Configuration reset = bot.get_config();
+        Configuration initial = bot.get_config();
         std::string line;
         while( getline( targets, line ) ){
             std::string method;
@@ -143,21 +146,19 @@ int main( int argc, char** argv )
 
             success += (int) result;
             if( !result ){
-                eliminate.push_back(cur);
+                eliminate.push_back( cur );
             }
             cur++;
 
-            // if( results.is_open() )
-            //     results << std::boolalpha << result << '\n';
-            //else
-                //std::cout << std::boolalpha << result << '\n';
-            bot.config = reset;
+            if( !results.is_open() )
+                std::cerr << std::boolalpha << result << '\n';
+            bot.reset( initial );
         }
     }
 
     if( results.is_open() ){
-        results << "{ " << "\"successes\" : " << success << ",\n \"failed\" : \"" << eliminate << "\""
-           << " }\n";
+        results << "{ " << "\"successes\" : " << success << ",\n \"failed\" : \""
+            << eliminate << "\"" << " }\n";
     }
 
     std::cout << IO::toString( bot.get_config() );

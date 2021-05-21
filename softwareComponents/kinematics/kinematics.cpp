@@ -55,6 +55,8 @@ kinematic_rofibot::kinematic_rofibot( std::string file_name, bool fixed, options
 bool kinematic_rofibot::ccd( const Vector& goal, const Vector& x_frame, const Vector& y_frame,
                              const Vector& z_frame, const chain& arm, int max_iterations )
 {
+    assert( max_iterations > 0 );
+
     double wp = 1.0, wa = 1.0;
     double k1, k2, k3;
 
@@ -67,8 +69,9 @@ bool kinematic_rofibot::ccd( const Vector& goal, const Vector& x_frame, const Ve
     Vector x_goal = goal + x_frame;
 
     int iterations = 0;
-    while( distance( end_position, goal ) > error /*||
-           distance( pointing_to( arm ), goal + z_frame ) > error*/ ){
+    /* iterate until the desired position and rotation is reached */
+    while( distance( end_position, goal ) > error ||
+           distance( pointing_to( arm ), goal + z_frame ) > error ){
         for( auto it = arm.rbegin(); it != arm.rend(); ++it ){
             for( Joint j : { Beta, Gamma, Alpha } ){
 
@@ -78,19 +81,6 @@ bool kinematic_rofibot::ccd( const Vector& goal, const Vector& x_frame, const Ve
                 Vector current_x = get_global( arm.back(), 1, { -1, 0, 0, 1 } ) - end_position;
                 Vector current_y = get_global( arm.back(), 1, { 0, 1, 0, 1 } ) - end_position;
                 Vector current_z = get_global( arm.back(), 1, { 0, 0, -1, 1 } ) - end_position;
-
-                // Vector current_x = { -get_matrix( arm.back(), 1 ).at( 0, 0 ),
-                //                      -get_matrix( arm.back(), 1 ).at( 0, 1 ),
-                //                      -get_matrix( arm.back(), 1 ).at( 0, 2 ),
-                //                      1.0 };
-                // Vector current_y = { get_matrix( arm.back(), 1 ).at( 1, 0 ),
-                //                      get_matrix( arm.back(), 1 ).at( 1, 1 ),
-                //                      get_matrix( arm.back(), 1 ).at( 1, 2 ),
-                //                      1.0 };
-                // Vector current_z = { -get_matrix( arm.back(), 1 ).at( 2, 0 ),
-                //                      -get_matrix( arm.back(), 1 ).at( 2, 1 ),
-                //                      -get_matrix( arm.back(), 1 ).at( 2, 2 ),
-                //                      1.0 };
 
                 current_x = current_x / magnitude( current_x );
                 current_y = current_y / magnitude( current_y );
@@ -177,7 +167,6 @@ bool kinematic_rofibot::ccd( const Vector& goal, const Vector& x_frame, const Ve
 bool kinematic_rofibot::fabrik( const Vector& goal, const Vector& y_frame, const Vector& z_frame,
                                 const chain& arm, int max_iterations, int a_length )
 {
-    assert( rotation.size() == 3 );
     assert( max_iterations > 0 );
 
     std::vector< Vector > positions;
@@ -205,26 +194,45 @@ bool kinematic_rofibot::fabrik( const Vector& goal, const Vector& y_frame, const
 
     Vector base = positions[ 0 ];
 
+    /* check that the second last body is in the correct plane */
     auto respects_limit = [&]() {
         Vector normal = cross_product( z_frame, y_frame );
-        Vector dir = positions[ positions.size() - 2 ] - positions.back();
-
-        Vector projected = positions[ positions.size() - 2 ] - ( ( dir * normal ) / ( normal * normal ) ) * normal;
+        Vector projected = project( normal, positions.back(), positions[ positions.size() - 2 ] );
         return equals( projected, positions[ positions.size() - 2 ]);
     };
+
     int iterations = 0;
+
+    /* Sets the joint on the line between its previous position and
+     * the next one, so that the link length is one **/
+    auto reposition = [&]( int current, bool forward ){
+        Vector previous = forward ? positions[ current + 1 ] : positions[ current - 1 ];
+        double lambda = 1.0 / distance( positions[ current ], previous );
+        return ( 1.0 - lambda ) * previous + lambda * positions[ current ];
+    };
+
+    auto align = [&]( int i, bool first ){
+        Joint current = ( i % 2 == 0 ) == first ? Alpha : Beta;
+        int next = first ? i + 1 : i - 1;
+        int prev = first ? i - 1 : i + 1;
+        Vector next_position = get_global( arm[ next / 2 ], ( next ) % 2 );
+        if( current == Beta ){
+            rotate_to( next_position, positions[ next ], arm[ i / 2 ], Gamma, false );
+        } else if( i != 0 && std::fabs( config.getModule( arm[ prev / 2 ] ).getJoint( Beta ) ) < 1.0 ) {
+            rotate_to( next_position, positions[ next ], arm[ prev / 2 ], Gamma, false );
+        }
+        next_position = get_global( arm[ next / 2 ], ( i + first ) % 2 );
+        rotate_to( next_position, positions[ next ], arm[ i / 2 ], current, false );
+    };
+
     /* At the start of the connect method, the final point is equal to the goal;
-     * a different enter condition is needed */
-    bool enter = true;
-    while( distance( positions.back(), goal ) > error || enter ||
-            !respects_limit() )
+     * a different entry condition is needed */
+    bool enter = a_length != arm.size();
+    while( distance( positions.back(), goal ) > error || enter || !respects_limit() )
     {
         enter = false;
         if( opt.animate )
             std::cout << IO::toString( config );
-        
-        /* save the last position and end the algorithm if it hasn't changed at all */
-        Vector last_position = positions.back();
         
         positions.back() = goal;
 
@@ -237,36 +245,24 @@ bool kinematic_rofibot::fabrik( const Vector& goal, const Vector& y_frame, const
              * rotation between two modules */
             if( i == positions.size() - 2 ){
                 Vector normal = cross_product( z_frame, y_frame );
-
-                Vector dir = positions[ i ] - positions[ i + 1 ];
-                positions[ i ] = positions[ i ] - ( ( dir * normal ) / ( normal * normal ) ) * normal;
+                positions[ i ] = project( normal, positions[ i + 1 ], positions[ i ] );
             } else if( i % 2 == 1 ){
-                Vector direction = positions[ i + 2 ] - positions[ i + 1 ];
-                Vector to_base = positions[ i - 1 ] - positions[ i + 1 ];
-                Vector normal = cross_product( direction, to_base );
-
-                Vector dir = positions[ i ] - positions[ i + 1 ];
-                positions[ i ] = positions[ i ] - ( ( dir * normal ) / ( normal * normal ) ) * normal;
+                Vector prev_dir = positions[ i + 2 ] - positions[ i + 1 ];
+                Vector to_next = positions[ i - 1 ] - positions[ i + 1 ];
+                Vector normal = cross_product( prev_dir, to_next );
+                positions[ i ] = project( normal, positions[ i + 1 ], positions[ i ] );
             }
 
-            /* Sets the joint on the line between its previous position and
-             * the next one, so that the link length is one **/
-            // std::cerr << "i: " << i << '\n' << "pos_i" << positions[i] << "pos_i1" << positions[ i + 1 ];
-            double lambda = 1.0 / distance( positions[ i ], positions[ i + 1 ] );
-            positions[ i ] = ( 1.0 - lambda ) * positions[ i + 1 ] + lambda * positions[ i ];
+            positions[ i ] = reposition( i, true );
 
             /* If the new position is too close (doesn't respect the limit of rotation to 90°),
              * reposition it to the other side **/
             Vector prev = i == positions.size() - 2 ? goal + z_frame : positions[ i + 2 ];
             if( distance( prev, positions[ i ] ) < std::sqrt( 2.0 ) ){
                 Vector normal = prev - positions[ i + 1 ];
-                // positions[ i ] = positions[ i ] - ( normal * ( positions[ i ] - positions[ i + 1 ] ) ) * normal;
+                positions[ i ] = project( normal, positions[ i + 1 ], positions[ i ] );
 
-                Vector dir = positions[ i ] - positions[ i + 1 ];
-                positions[ i ] = positions[ i ] - ( ( dir * normal ) / ( normal * normal ) ) * normal;
-
-                lambda = 1.0 / distance( positions[ i ], positions[ i + 1 ] );
-                positions[ i ] = ( 1.0 - lambda ) * positions[ i + 1 ] + lambda * positions[ i ];
+                positions[ i ] = reposition( i, true );
             }
         }
 
@@ -275,49 +271,37 @@ bool kinematic_rofibot::fabrik( const Vector& goal, const Vector& y_frame, const
         /* Backward reaching stage **/
         for( size_t i = 1; i < positions.size(); ++i ){
             if( i == 1 ){
-                Vector normal = cross_product( z_frame, y_frame );
-                Vector dir = positions[ i ] - positions[ i - 1 ];
-                positions[ i ] = positions[ i ] - ( ( dir * normal ) / ( normal * normal ) ) * normal;
+                Vector z = get_global( arm.front(), 0, { 0, 0, 1, 0 } );
+                Vector y = get_global( arm.front(), 0, { 0, 1, 0, 0 } );
+                Vector normal = cross_product( z, y );
+                positions[ i ] = project( normal, positions[ i - 1 ], positions[ i ] );
             } else if( i % 2 == 0 ){
                 Vector direction = positions[ i - 2 ] - positions[ i - 1 ];
                 Vector to_base = positions[ i + 1 ] - positions[ i - 1 ];
                 Vector normal = cross_product( direction, to_base );
-
-                Vector dir = positions[ i ] - positions[ i - 1 ];
-                positions[ i ] = positions[ i ] - ( ( dir * normal ) / ( normal * normal ) ) * normal;
-
+                positions[ i ] = project( normal, positions[ i - 1 ], positions[ i ] );
             }
 
-            double lambda = 1.0 / distance( positions[ i ], positions[ i - 1 ] );
-            positions[ i ] = ( 1.0 - lambda ) * positions[ i - 1 ] + lambda * positions[ i ];
+            positions[ i ] = reposition( i, false );
 
             Vector prev = i == 1 ? get_global( arm.front(), 0, { 0, 0, -1, 1 } ) : positions[ i - 2 ];
 
             if( distance( prev, positions[ i ] ) < std::sqrt( 2.0 ) ){
                 Vector normal = prev - positions[ i - 1 ];
-                Vector dir = positions[ i ] - positions[ i - 1 ];
-                positions[ i ] = positions[ i ] - ( ( dir * normal ) / ( normal * normal ) ) * normal;
+                positions[ i ] = project( normal, positions[ i - 1 ], positions[ i ] );
 
-                lambda = 1.0 / distance( positions[ i ], positions[ i - 1 ] );
-                positions[ i ] = ( 1.0 - lambda ) * positions[ i - 1 ] + lambda * positions[ i ];
+                positions[ i ] = reposition( i, false );
             }
         }
 
         if( opt.animate ){
             for( size_t i = 0; i < positions.size() - 1; ++i ){
-                Joint current = i % 2 == 0 ? Alpha : Beta;
-
-                Vector next_position = get_global( arm[ ( i + 1 ) / 2 ], ( i + 1 ) % 2 );
-                if( current == Beta ){
-                    rotate_to( next_position, positions[ i + 1 ], arm[ i / 2 ], Gamma, true );
-                }
-                next_position = get_global( arm[ ( i + 1 ) / 2 ], ( i + 1 ) % 2 );
-                rotate_to( next_position, positions[ i + 1 ], arm[ i / 2 ], current, true );
+                align( i, true );
             }
             std::cout << IO::toString( config );
         }
 
-        if( ++iterations == max_iterations /*|| distance( last_position, positions.back() ) < 1e-10*/ ){
+        if( ++iterations == max_iterations ){
             if( opt.verbose ){
                 std::cerr << "E position:\n" << positions.back();
             }
@@ -337,14 +321,8 @@ bool kinematic_rofibot::fabrik( const Vector& goal, const Vector& y_frame, const
         next_position = get_global( arm[ ( i + 1 ) / 2 ], ( i + 1 ) % 2 );
         it = 0;
         while( ( distance ( next_position, positions[ i + 1 ] ) > 1e-10 ) && it < 100 ){
+            align( i, true );
             next_position = get_global( arm[ ( i + 1 ) / 2 ], ( i + 1 ) % 2 );
-            if( current == Beta ){
-                rotate_to( next_position, positions[ i + 1 ], arm[ i / 2 ], Gamma, false );
-            } else if( i != 0 && std::fabs( config.getModule( arm[ ( i - 1 ) / 2 ] ).getJoint( Beta ) ) < 2.0 ) {
-                rotate_to( next_position, positions[ i + 1 ], arm[ ( i - 1 ) / 2 ], Gamma, false );
-            }
-            next_position = get_global( arm[ ( i + 1 ) / 2 ], ( i + 1 ) % 2 );
-            rotate_to( next_position, positions[ i + 1 ], arm[ i / 2 ], current, false );
             ++it;
         }
     }
@@ -372,14 +350,9 @@ bool kinematic_rofibot::fabrik( const Vector& goal, const Vector& y_frame, const
 
         Vector next_position = get_global( arm[ ( i - 1 ) / 2 ], ( i ) % 2 );
         it = 0;
-        while( ( distance ( next_position, positions[ i + 1 ] ) > 1e-10 ) && it < 100 ){
-            if( current == Beta ){
-                rotate_to( next_position, positions[ i - 1 ], arm[ i / 2 ], Gamma, false );
-            } else if( i != 0 && std::fabs( config.getModule( arm[ ( i + 1 ) / 2 ] ).getJoint( Beta ) ) < 1.0 ) {
-                rotate_to( next_position, positions[ i - 1 ], arm[ ( i + 1 ) / 2 ], Gamma, false );
-            }
+        while( ( distance ( next_position, positions[ i - 1 ] ) > 1e-10 ) && it < 100 ){
+            align( i, false );
             next_position = get_global( arm[ ( i - 1 ) / 2 ], ( i ) % 2 );
-            rotate_to( next_position, positions[ i - 1 ], arm[ i / 2 ], current, false );
             ++it;
         }
     }
@@ -398,20 +371,22 @@ bool kinematic_rofibot::fabrik( const Vector& goal, const Vector& y_frame, const
 
     if( opt.verbose ){
         auto it = arm.begin();
-        bool eh = false;
+        bool print = false;
+        std::cerr << "Calculated:\n";
         for( auto p : positions ){
             std::cerr << p << '\n';
-            if( eh ){
-                std::cerr << "0:\n" << get_global( *it, 0 ) << '\n';
-                std::cerr << "1:\n" << get_global( *it, 1 ) << '\n';
+            if( print ){
+                std::cerr << "Actual:\n"
+                    << "0:\n" << get_global( *it, 0 ) << '\n'
+                    << "1:\n" << get_global( *it, 1 ) << '\n'
+                    << "Calculated:\n";
                 ++it;
-                eh = false;
+                print = false;
             } else {
-                eh = true;
+                print = true;
             }
         }
-    }       for( int i : arm ){
-        }
+    }
 
     if( opt.verbose ){
         std::cerr << IO::toString( get_matrix( arm.back(), 1 ) );
@@ -455,7 +430,7 @@ bool kinematic_rofibot::pseudoinverse( const Vector& goal, const Vector& x_frame
         double error;
         /* Ad hoc constant; higher precision can reduce the number of iterations
          * but increase computation per iteration */
-        double prec = 1e-8;
+        double prec = 1e-10;
         do {
             error = arbitrary_magnitude( ( I - j * pseudo_inv ) * diff );
             if( error > prec ){
@@ -636,7 +611,6 @@ bool kinematic_rofibot::connect_fabrik( int a, int b, int max_iterations ){
     Vector b_y = get_global( arms[ b ].front(), 0, { 0, 1, 0, 1 } );
     fabrik( b_begin, b_y - b_begin, b_z - b_begin, arm, 1000, arms[ a ].size() );
 
-    std::cout << IO::toString( config );
     Edge e = { arms[ a ].back(), B, ZMinus, North, ZMinus, B, arms[ b ].back() };
     return config.execute( Action( Action::Reconnect( true, e ) ) );
 }
