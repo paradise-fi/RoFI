@@ -13,6 +13,10 @@ TEST_CASE( "Universal Module Test" ) {
         CHECK( um.connectors().size() - 1 == 6 );
         um.setJointParams( 0, { 0, 0, 0 } );
         CHECK( um.components().size() -1 == 9 );
+        um.prepare();
+        REQUIRE( um.getOccupiedPositions().size() == 2 );
+        CHECK( equals( um.getOccupiedPositions()[ 0 ], identity ) );
+        CHECK( equals( center( um.getOccupiedPositions()[ 1 ] ), { 0, 0, 1, 1 } ) );
     }
 
     SECTION( "Position - default" ) {
@@ -228,10 +232,10 @@ TEST_CASE( "Basic rofibot manipulation" ) {
     CHECK( bot.modules().size() == 5 );
 
     CHECK( bot.roficoms().size() == 0 );
-    connect( m1.connector( 3 ), m2.connector( 2 ), rofi::Orientation::North );
-    connect( m2.connector( 3 ), m3.connector( 2 ), rofi::Orientation::North );
-    connect( m3.connector( 3 ), m4.connector( 2 ), rofi::Orientation::North );
-    connect( m4.connector( 3 ), m5.connector( 2 ), rofi::Orientation::North );
+    connect( m1.connector( 5 ), m2.connector( 2 ), rofi::Orientation::North );
+    connect( m2.connector( 5 ), m3.connector( 2 ), rofi::Orientation::North );
+    connect( m3.connector( 5 ), m4.connector( 2 ), rofi::Orientation::North );
+    connect( m4.connector( 5 ), m5.connector( 2 ), rofi::Orientation::North );
     CHECK( bot.roficoms().size() == 4 );
     rofi::connect< rofi::RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
     m1.setJointParams( 2, { 90 } );
