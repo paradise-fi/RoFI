@@ -57,11 +57,11 @@ vtkAlgorithmOutput *getComponentModel( rofi::ComponentType type ) {
 
     static const std::map< ComponentType, std::function< ResourceFile() > >
         resourceMap({
-            { ComponentType::UmShoe, LOAD_RESOURCE_FILE_LAZY( model_body_obj ) },
-            { ComponentType::UmBody, LOAD_RESOURCE_FILE_LAZY( model_shoe_obj ) },
+            { ComponentType::UmShoe, LOAD_RESOURCE_FILE_LAZY( model_shoe_obj ) },
+            { ComponentType::UmBody, LOAD_RESOURCE_FILE_LAZY( model_body_obj ) },
             { ComponentType::Roficom, LOAD_RESOURCE_FILE_LAZY( model_connector_obj ) }
         });
-    static std::map< ComponentType, vtkSmartPointer< vtkOBJReader > > cache;
+    static std::map< ComponentType, vtkSmartPointer< vtkTransformPolyDataFilter > > cache;
 
     assert( resourceMap.count( type ) == 1 && "Unsupported component type specified" );
 
@@ -70,7 +70,15 @@ vtkAlgorithmOutput *getComponentModel( rofi::ComponentType type ) {
         ResourceFile modelFile = resourceMap.find( type )->second();
         reader->SetFileName( modelFile.name().c_str() );
         reader->Update();
-        cache.insert( { type, reader } );
+
+        auto trans = vtkSmartPointer< vtkTransform >::New();
+        trans->RotateX( 90 );
+        auto t = vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+        t->SetInputConnection( reader->GetOutputPort() );
+        t->SetTransform( trans );
+        t->Update();
+
+        cache.insert( { type, t } );
     }
     return cache[ type ]->GetOutputPort();
 }
@@ -78,6 +86,20 @@ vtkAlgorithmOutput *getComponentModel( rofi::ComponentType type ) {
 void setupRenderer( vtkRenderer* renderer ) {
     renderer->SetBackground(1.0, 1.0, 1.0);
     renderer->ResetCamera();
+}
+
+void buildTemporarySceneShoeOnly( vtkRenderer* renderer, rofi::ComponentType component ) {
+    vtkNew<vtkNamedColors> colors;
+    vtkNew< vtkCylinderSource > cylinder;
+    cylinder->SetResolution( 32 );
+    vtkNew< vtkPolyDataMapper > bodyMapper;
+    bodyMapper->SetInputConnection( getComponentModel( component ) );
+    vtkNew<vtkActor> bodyActor;
+    bodyActor->SetMapper(bodyMapper.Get());
+    bodyActor->SetScale( 1 / 95.0 );
+    bodyActor->GetProperty()->SetColor(
+        colors->GetColor4d( "Tomato" ).GetData());
+    renderer->AddActor( bodyActor.Get() );
 }
 
 void buildTemporaryScene( vtkRenderer* renderer ) {
@@ -89,20 +111,23 @@ void buildTemporaryScene( vtkRenderer* renderer ) {
     vtkNew<vtkActor> cylinderActor;
     cylinderActor->SetMapper(cylinderMapper.Get());
     cylinderActor->GetProperty()->SetColor(
-        colors->GetColor4d("Tomato").GetData());
+        colors->GetColor4d( "Tomato" ).GetData());
     cylinderActor->RotateX(30.0);
     cylinderActor->RotateY(-45.0);
     renderer->AddActor(cylinderActor.Get());
 }
 
 void addModuleToScene( vtkRenderer* renderer, rofi::Module& m,
-                       const Matrix& mPosition, int moduleIndex )
+                       const Matrix& mPosition, int moduleIndex, const std::set< int >& active_cons )
 {
     auto moduleColor = getModuleColor( moduleIndex );
     const auto& components = m.components();
     for ( int i = 0; i != components.size(); i++ ) {
         const auto& component = components[ i ];
         auto cPosition = m.getComponentPosition( i, mPosition );
+		// make connected RoFICoMs connected visually
+		if ( active_cons.count( i ) > 0 )
+			cPosition = cPosition * translate( { -0.05, 0, 0 } );
 
         auto posTrans = vtkSmartPointer< vtkTransform >::New();
         posTrans->SetMatrix( convertMatrix( cPosition ) );
@@ -120,7 +145,7 @@ void addModuleToScene( vtkRenderer* renderer, rofi::Module& m,
         frameActor->GetProperty()->SetOpacity( 1.0 );
         frameActor->GetProperty()->SetFrontfaceCulling( true );
         frameActor->GetProperty()->SetBackfaceCulling( true );
-        frameActor->SetPosition( cPosition(0, 3), cPosition(1, 3), cPosition(2, 3) );
+        frameActor->SetPosition( cPosition( 0, 3 ), cPosition( 1, 3 ), cPosition( 2, 3 ) );
         frameActor->SetScale( 1 / 95.0 );
 
         renderer->AddActor( frameActor );
@@ -128,10 +153,19 @@ void addModuleToScene( vtkRenderer* renderer, rofi::Module& m,
 }
 
 void buildConfigurationScene( vtkRenderer* renderer, rofi::Rofibot& bot ) {
+	// get active (i.e. connected) connectors for each module within Rofibot
+	std::map< rofi::ModuleId, std::set< int > > active_cons;
+	for ( const auto& roficom : bot.roficoms() ) {
+		active_cons[ roficom.sourceModule ].insert( roficom.sourceConnector );
+		active_cons[ roficom.destModule   ].insert( roficom.destConnector );
+	}
+
     int index = 0;
     for ( auto& mInfo : bot.modules() ) {
         assert( mInfo.position && "The configuration has to be prepared" );
-        addModuleToScene( renderer, *mInfo.module, *mInfo.position, index );
+		if ( active_cons.count( mInfo.module->id ) == 0 )
+			active_cons[ mInfo.module->id ] = {};
+        addModuleToScene( renderer, *mInfo.module, *mInfo.position, index, active_cons[ mInfo.module->id ] );
         index++;
     }
 }
@@ -148,8 +182,8 @@ int preview( Dim::Cli & cli ) {
 
     auto configuration = rofi::readOldConfigurationFormat( cfgFile );
     rofi::connect< rofi::RigidJoint >(
-        configuration.getModule( 0 )->bodies()[ 0 ],
-        Vector( {0, 0, 0, 1} ),
+        configuration.getModule( 0 )->body( 0 ),
+        Vector( { 0, 0, 0 } ),
         identity );
     configuration.prepare();
 
@@ -180,3 +214,4 @@ int preview( Dim::Cli & cli ) {
 
     return 0;
 }
+
