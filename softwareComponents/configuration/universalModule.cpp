@@ -46,6 +46,27 @@ Module buildUniversalModule( double alpha, double beta, double gamma ) {
         std::move( joints ) );
 }
 
+bool checkOldConfigurationEInput( int id1, int id2, int side1, int side2, int dock1, int dock2
+                                    , int orientation, const std::map< int, ModuleId >& moduleMapping ) {
+    bool ok = true;
+    if ( moduleMapping.count( id1 ) == 0 )
+        std::cerr << "Unknown module id " << id1 << " skipping edge\n", ok = false;
+    if ( moduleMapping.count( id2 ) == 0 )
+        std::cerr << "Unknown module id " << id2 << " skipping edge\n", ok = false;
+    if ( orientation > 3 || orientation < 0 )
+        std::cerr << "Invalid orientation: " << orientation << "\n", ok = false;
+    if ( side1 > 2 || side1 < 0 )
+        std::cerr << "Invalid side1 specification, got: " << side1 << "\n", ok = false;
+    if ( side2 > 2 || side2 < 0 )
+        std::cerr << "Invalid side2 specification, got: " << side2 << "\n", ok = false;
+    if ( dock1 > 3 || dock1 < 0 )
+        std::cerr << "Invalid dock1 specification, got: " << dock1 << "\n", ok = false;
+    if ( dock2 > 3 || dock2 < 0 )
+        std::cerr << "Invalid dock2 specification, got: " << dock2 << "\n", ok = false;
+
+    return ok;
+}
+
 Rofibot readOldConfigurationFormat( std::istream& s ) {
     std::string line;
     Rofibot rofibot;
@@ -70,8 +91,13 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
             continue;
         }
         if ( type == "E" ) {
-            // Ignore edges for now
-            std::cerr << "Attempted to load edge '" + line + "', but edge loading not implemented yet\n";
+            int id1, id2, side1, side2, dock1, dock2, orientation;
+            lineStr >> id1 >> side1 >> dock1 >> orientation >> dock2 >> side2 >> id2;
+            if ( !checkOldConfigurationEInput( id1, id2, side1, side2, dock1, dock2, orientation, moduleMapping ) )
+                continue; // skip the line
+            auto& component1 = rofibot.getModule( moduleMapping[ id1 ] )->connector( side1 * 3 + dock1 );
+            auto& component2 = rofibot.getModule( moduleMapping[ id2 ] )->connector( side2 * 3 + dock2 );
+            connect( component1, component2, static_cast< rofi::Orientation >( orientation ) );
             continue;
         }
         throw std::runtime_error("Expected a module (M) or edge (E), got " + type + ".");
