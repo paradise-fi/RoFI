@@ -30,7 +30,17 @@ enum class ModuleType {
 
 enum class Orientation { North, East, South, West };
 
+/**
+ * Return a corresponding angle in radians for a given orientation
+ */
 double orientationToAngle( Orientation o );
+
+/**
+ * \brief Translate degrees into radians
+ */
+inline double degToRad( double deg ) {
+    return ( M_PI * deg ) / 180;
+}
 
 /**
  * \brief Joint between two components of the same module
@@ -72,8 +82,10 @@ struct RoficomJoint: public Joint {
 
     Matrix sourceToDest() const override {
         assert( positions.size() == 0 );
-        return rotate( orientationToAngle( orientation ), { 0, 1, 0 } )
-					* translate( { 0, 0, -1 } ); // "default" roficom is of id 1
+        // the "default" roficom is A-X
+        return translate( { -1, 0, 0 } ) * rotate( M_PI, { 0, 0, 1 } )
+            * rotate( M_PI, { 1, 0, 0 } )
+            * rotate( orientationToAngle( orientation ), { -1, 0, 0 } );
     }
 
     std::pair< double, double > jointLimits( int ) const override {
@@ -233,14 +245,14 @@ public:
             initialized[ compIdx ] = true;
             for ( int outJointIdx : _components[ compIdx ].outJoints ) {
                 const ComponentJoint& j = _joints[ outJointIdx ];
-                self( j.destinationComponent, j.joint->sourceToDest() * position, self );
+                self( j.destinationComponent, position * j.joint->sourceToDest(), self );
             }
         };
         dfsTraverse( _rootComponent, identity, dfsTraverse );
 
         if ( !atoms::all( initialized ) )
             throw std::logic_error( "There are components without position" );
-		_componentPosition = std::move( positions );
+        _componentPosition = std::move( positions );
     }
 
     /**
@@ -425,9 +437,9 @@ public:
         return *insertedModule;
     }
 
-	/**
-	 * \brief Get pointer to module with given id within the Rofibot
-	 */
+    /**
+     * \brief Get pointer to module with given id within the Rofibot
+     */
     Module* getModule( ModuleId id ) const {
         auto& ref = *_modules[ id ].module.get();
         return &ref;
@@ -438,6 +450,13 @@ public:
      */
     const auto& modules() const {
         return _modules;
+    }
+
+    /**
+     * \brief Get a container of RoficomJoint
+     */
+    const auto& roficoms() const {
+        return _moduleJoints;
     }
 
     /**
@@ -533,13 +552,18 @@ public:
                 std::back_inserter( joints ) );
             for ( int outJointIdx : joints ) {
                 const RoficomJoint& j = _moduleJoints[ outJointIdx ];
-                Matrix jointTransf = j.sourceModule == m.module->id
-                    ? j.sourceToDest()
-                    : j.destToSource();
-                Matrix jointRefPosition =
-                    position * m.module->getComponentPosition( j.sourceConnector ) * jointTransf;
-                ModuleInfo& other = _modules[ j.destModule ];
-                Matrix otherConnectorPosition = other.module->getComponentPosition( j.destConnector );
+
+                bool mIsSource = j.sourceModule == m.module->id;
+                Matrix jointTransf = mIsSource ? j.sourceToDest() : j.destToSource();
+                Matrix jointRefPosition = position
+                                        * m.module->getComponentPosition( mIsSource
+                                                                        ? j.sourceConnector
+                                                                        : j.destConnector )
+                                        * jointTransf;
+                ModuleInfo& other = _modules[ mIsSource ? j.destModule : j.sourceModule ];
+                Matrix otherConnectorPosition = other.module->getComponentPosition( mIsSource
+                                                                                  ? j.destConnector
+                                                                                  : j.sourceConnector );
                 // Reverse the comonentPosition to get position of the module origin
                 Matrix otherPosition = jointRefPosition * arma::inv( otherConnectorPosition );
                 self( other, otherPosition, self );
@@ -548,7 +572,9 @@ public:
 
         for ( ModuleId id : roots ) {
             ModuleInfo& m = _modules[ id ];
-            dfsTraverse( m, m.position.value(), dfsTraverse );
+            auto pos = m.position.value();
+            m.position.reset();
+            dfsTraverse( m, pos, dfsTraverse );
         }
 
         _prepared = true;
@@ -562,7 +588,10 @@ public:
         _prepared = false;
     }
 
-    Matrix getModuleOrientation( ModuleId id ) {
+    /**
+     * \brief Get position of a module specified by its id
+     */
+    Matrix getModulePosition( ModuleId id ) {
         if ( !_prepared )
             prepare();
         return _modules[ id ].position.value();
@@ -641,7 +670,7 @@ int connect( const Component& c, Vector refpoint, Args&&... args ) {
         refpoint,
         info.module->id,
         info.module->componentIdx( c )
-	} );
+    } );
     info.spaceJoints.push_back( jointId );
     bot._prepared = false;
 

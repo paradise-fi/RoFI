@@ -17,30 +17,29 @@ Module buildUniversalModule( double alpha, double beta, double gamma ) {
     };
 
     std::vector< ComponentJoint > joints = {
-        // ToDo: Specify the joints properly
         makeJoint< RotationJoint >( 7, 6, // BodyA <-> ShoeA
-            identity, Vector( { 1, 0, 0 } ), rotate( alpha, { 1, 0, 0 } ), - M_PI_2, M_PI_2 ),
+            identity, Vector( { 1, 0, 0 } ), identity, - M_PI_2, M_PI_2 ),
         makeJoint< RotationJoint >( 8, 9 // BodyB <-> ShoeB
             , identity
             , Vector( { 1, 0, 0 } )
-            , rotate( -beta, { 1, 0, 0 } )
+            , identity
             , - M_PI_2, M_PI_2 ),
         makeJoint< RotationJoint >( 7, 8 // BodyA <-> BodyB
             , identity
             , Vector( { 0, 0, 1 } )
-            , rotate( gamma, { 0, 0, -1 } ) * translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } )
+            , translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } )
             , - M_PI, M_PI ),
-        makeJoint< RigidJoint >( 6, 0, rotate( -M_PI_2, { 0, 1, 0 } ) ),
-        makeJoint< RigidJoint >( 6, 1, identity ),
-        makeJoint< RigidJoint >( 6, 2, rotate(  M_PI_2, { 0, 1, 0 } ) ),
-        makeJoint< RigidJoint >( 9, 3, rotate( -M_PI_2, { 0, 1, 0 } ) ),
-        makeJoint< RigidJoint >( 9, 4, identity ),
-        makeJoint< RigidJoint >( 9, 5, rotate(  M_PI_2, { 0, 1, 0 } ) ),
+        makeJoint< RigidJoint >( 6, 0, identity ), // A-X
+        makeJoint< RigidJoint >( 6, 1, rotate( M_PI, { 0, 1, 0 } ) ), // A+X
+        makeJoint< RigidJoint >( 6, 2, rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI_2, { 0, -1, 0 } ) ), // A-Z
+        makeJoint< RigidJoint >( 9, 3, identity ), // B-X
+        makeJoint< RigidJoint >( 9, 4, rotate( M_PI, { 0, 1, 0 } ) ), // B+X
+        makeJoint< RigidJoint >( 9, 5, rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI_2, { 0, -1, 0 } ) )  // B-Z
     };
 
-    joints[ 0 ].joint->positions = { alpha };
-    joints[ 1 ].joint->positions = { beta };
-    joints[ 2 ].joint->positions = { gamma };
+    joints[ 0 ].joint->positions = { degToRad( alpha ) };
+    joints[ 1 ].joint->positions = { degToRad( beta  ) };
+    joints[ 2 ].joint->positions = { degToRad( gamma ) };
 
     return Module( ModuleType::Universal, std::move( components ), 7,
         std::move( joints ) );
@@ -67,6 +66,38 @@ bool checkOldConfigurationEInput( int id1, int id2, int side1, int side2, int do
     return ok;
 }
 
+int parseStringDescription( std::istringstream& line
+                          , std::vector< std::pair< std::string, int > > opts ) {
+	std::string part;
+	line >> part;
+	for ( auto& [ str, value ] : opts ) {
+		if ( str == part )
+			return value;
+	}
+	std::string expected = "| ";
+	for ( auto& [ str, _ ] : opts )
+		expected.append( str ).append( " | " );
+	throw std::runtime_error( "Unexpected value |" + part + "| expected one of " + expected );
+}
+
+auto parseEdge( std::istringstream& line ) {
+    int id1, id2, side1, side2, dock1, dock2, orientation;
+    line >> id1 >> side1;
+	if ( line ) {
+		line >> dock1 >> orientation >> dock2 >> side2;
+	} else { // config file has the letter notation
+		line.clear(); // reset the bad state
+		side1 = parseStringDescription( line, { { "A", 0 }, { "B", 1 } } );
+		dock1 = parseStringDescription( line, { { "+X", 0 }, { "-X", 1 }, { "-Z", 2 } } );
+		orientation = parseStringDescription( line, { { "N", 0 }, { "E", 1 }, { "S", 2 }, { "W", 3 } } );
+		dock2 = parseStringDescription( line, { { "+X", 0 }, { "-X", 1 }, { "-Z", 2 } } );
+		side2 = parseStringDescription( line, { { "A", 0 }, { "B", 1 } } );
+	}
+	line >> id2;
+
+	return std::make_tuple( id1, id2, side1, side2, dock1, dock2, orientation );
+}
+
 Rofibot readOldConfigurationFormat( std::istream& s ) {
     std::string line;
     Rofibot rofibot;
@@ -91,10 +122,9 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
             continue;
         }
         if ( type == "E" ) {
-            int id1, id2, side1, side2, dock1, dock2, orientation;
-            lineStr >> id1 >> side1 >> dock1 >> orientation >> dock2 >> side2 >> id2;
+			auto [ id1, id2, side1, side2, dock1, dock2, orientation ] = parseEdge( lineStr );
             if ( !checkOldConfigurationEInput( id1, id2, side1, side2, dock1, dock2, orientation, moduleMapping ) )
-                continue; // skip the line
+                throw std::runtime_error( "Invalid edge specification" );
             auto& component1 = rofibot.getModule( moduleMapping[ id1 ] )->connector( side1 * 3 + dock1 );
             auto& component2 = rofibot.getModule( moduleMapping[ id2 ] )->connector( side2 * 3 + dock2 );
             connect( component1, component2, static_cast< rofi::Orientation >( orientation ) );

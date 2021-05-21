@@ -5,13 +5,13 @@ namespace rofi {
 double orientationToAngle( Orientation o ) {
 	switch ( o ) {
 		case Orientation::North:
-			return 0;
-		case Orientation::East:
-			return M_PI_2;
-		case Orientation::South:
 			return M_PI;
-		case Orientation::West:
+		case Orientation::East:
 			return - M_PI_2;
+		case Orientation::South:
+			return 0;
+		case Orientation::West:
+			return M_PI_2;
 	}
 	assert( false && "Orientation was modified" );
 }
@@ -19,7 +19,7 @@ double orientationToAngle( Orientation o ) {
 void rofi::Module::setJointParams( int idx, const Joint::Positions& p ) {
     // Currently we invalidate all positions; ToDo: think if we can improve it
     assert( idx < _joints.size() );
-    _joints[ idx ].joint->positions = p;
+    std::transform( p.begin(), p.end(), _joints[ idx ].joint->positions.begin(), degToRad );
     _componentPosition = std::nullopt;
     if ( parent )
         parent->onModuleMove( id );
