@@ -1,10 +1,8 @@
 #include <catch2/catch.hpp>
 
 #include <joints.h>
-#include <iostream>
 
 TEST_CASE( "Base RigidJoint" ) {
-    // ToDo: Write the test
     auto j = rofi::RigidJoint( translate( { 42, 42, 42 } ) );
     CHECK( equals( j.sourceToDest(), translate( { 42, 42, 42 } ) ) );
     CHECK( equals( j.destToSource(), translate( { -42, -42, -42 } ) ) );
