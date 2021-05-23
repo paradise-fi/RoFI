@@ -1,5 +1,5 @@
-#include "Configuration.h"
-#include "IO.h"
+#include <Configuration.h>
+#include <IO.h>
 
 #include <cassert>
 #include <cmath>
