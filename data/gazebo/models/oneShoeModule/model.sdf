@@ -93,36 +93,36 @@
         </model>
 
 
-        <joint name='connectorPlusX' type='fixed'>
+        <joint name='connectorPlusXJoint' type='fixed'>
             <child>connectorPlusX::RoFICoM::outer</child>
             <parent>shoe</parent>
         </joint>
 
-        <joint name='connectorMinusX' type='fixed'>
+        <joint name='connectorMinusXJoint' type='fixed'>
             <child>connectorMinusX::RoFICoM::outer</child>
             <parent>shoe</parent>
         </joint>
 
-        <joint name='connectorPlusY' type='fixed'>
+        <joint name='connectorPlusYJoint' type='fixed'>
             <child>connectorPlusY::RoFICoM::outer</child>
             <parent>shoe</parent>
         </joint>
 
-        <joint name='connectorMinusY' type='fixed'>
+        <joint name='connectorMinusYJoint' type='fixed'>
             <child>connectorMinusY::RoFICoM::outer</child>
             <parent>shoe</parent>
         </joint>
 
-        <joint name='connectorPlusZ' type='fixed'>
+        <joint name='connectorPlusZJoint' type='fixed'>
             <child>connectorPlusZ::RoFICoM::outer</child>
             <parent>shoe</parent>
         </joint>
 
-        <joint name='connectorMinusZ' type='fixed'>
+        <joint name='connectorMinusZJoint' type='fixed'>
             <child>connectorMinusZ::RoFICoM::outer</child>
             <parent>shoe</parent>
         </joint>
 
-        <plugin name='control' filename='librofiModulePlugin.so'/>
+        <plugin name='rofiModulePlugin' filename='librofiModulePlugin.so'/>
     </model>
 </sdf>
