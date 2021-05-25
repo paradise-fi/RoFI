@@ -141,7 +141,7 @@ void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & conf
         auto & matrices = config.config.getMatrices().at( id );
         setModulePosition( moduleStateSdf, module, matrices, config.pose );
 
-        auto modulePluginSdf = getElemByName< true >( moduleSdf, "plugin", "rofiModule" );
+        auto modulePluginSdf = getElemByName< true >( moduleSdf, "plugin", "rofiModulePlugin" );
         setModulePIDPositionController( modulePluginSdf, module );
 
         addModuleToDistributor( distributorSdf, id );
@@ -265,11 +265,11 @@ void setModulePIDPositionController( sdf::ElementPtr modulePluginSdf, const Modu
     {
         auto jointName = getOnlyChild< true >( controllerSdf, "joint" )->Get< std::string >();
         Joint jointIndex = [ &jointName ]() {
-            if ( jointName == "shoeARev" )
+            if ( jointName == "shoeAJoint" )
                 return Joint::Alpha;
-            if ( jointName == "shoeBRev" )
+            if ( jointName == "shoeBJoint" )
                 return Joint::Beta;
-            if ( jointName == "bodyRev" )
+            if ( jointName == "bodyJoint" )
                 return Joint::Gamma;
             throw std::runtime_error( "Unrecognized module joint in sdf" );
         }();
