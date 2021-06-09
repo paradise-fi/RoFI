@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
-#include <rofibot.h>
-#include <universalModule.h>
+#include <rofibot.hpp>
+#include <universalModule.hpp>
 
 namespace {
 

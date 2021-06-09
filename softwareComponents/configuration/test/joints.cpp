@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <joints.h>
+#include <joints.hpp>
 
 TEST_CASE( "Base RigidJoint" ) {
     auto j = rofi::RigidJoint( translate( { 42, 42, 42 } ) );

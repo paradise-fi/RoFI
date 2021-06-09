@@ -1,4 +1,4 @@
-#include "rofibot.h"
+#include "rofibot.hpp"
 
 namespace rofi {
 

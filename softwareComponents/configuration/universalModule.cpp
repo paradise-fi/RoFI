@@ -1,4 +1,4 @@
-#include "universalModule.h"
+#include "universalModule.hpp"
 
 namespace rofi {
 
@@ -136,3 +136,4 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
 }
 
 }  // namespace rofi
+

@@ -1,4 +1,4 @@
-#include "joints.h"
+#include "joints.hpp"
 
 namespace rofi {
 
