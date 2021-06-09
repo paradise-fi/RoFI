@@ -9,7 +9,7 @@
 #include <tcb/span.hpp>
 #include <fmt/format.h>
 
-#include "joints.h"
+#include "joints.hpp"
 #include "Matrix.h"
 
 namespace rofi {

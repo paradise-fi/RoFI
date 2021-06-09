@@ -2,7 +2,7 @@
 
 #include <array>
 #include <iostream>
-#include "rofibot.h"
+#include "rofibot.hpp"
 
 namespace rofi {
 
@@ -21,3 +21,4 @@ Module buildUniversalModule( double alpha, double beta, double gamma );
 Rofibot readOldConfigurationFormat( std::istream& s );
 
 } // namespace rofi
+
