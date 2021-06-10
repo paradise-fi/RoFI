@@ -12,6 +12,9 @@ public:
     Angle& operator*=( double c ) { _degs *= c; return *this; }
     Angle& operator/=( double c ) { _degs /= c; return *this; }
 
+    bool operator==( Angle a ) const { return a._degs == _degs; }
+    bool operator!=( Angle a ) const { return !( a == *this ); }
+
     float deg() const { return _degs; }
     float rad() const { return _degs / 180.0 * pi; }
 private:
