@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <optional>
+#include <cassert>
 
 namespace atoms {
 
@@ -70,21 +71,25 @@ class IdSet {
 
         template < bool _IsConst = IsConst >
         std::enable_if_t< _IsConst, reference > operator*() const {
+            assert( _it->has_value() && "No value held" );
             return _it->value();
         }
 
         template < bool _IsConst = IsConst >
         std::enable_if_t< !_IsConst, reference > operator*() const {
+            assert( _it->has_value() && "No value held" );
             return _it->value();
         }
 
          template < bool _IsConst = IsConst >
         std::enable_if_t< _IsConst, pointer > operator->() const {
+            assert( _it->has_value() && "No value held" );
             return &_it->value();
         }
 
         template < bool _IsConst = IsConst >
         std::enable_if_t< !_IsConst, pointer > operator->() const {
+            assert( _it->has_value() && "No value held" );
             return &_it->value();
         }
 
