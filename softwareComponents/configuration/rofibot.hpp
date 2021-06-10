@@ -6,6 +6,7 @@
 
 #include <atoms/containers.hpp>
 #include <atoms/algorithm.hpp>
+#include <atoms/units.hpp>
 #include <tcb/span.hpp>
 #include <fmt/format.h>
 
@@ -88,7 +89,7 @@ struct RoficomJoint: public Joint {
             * rotate( orientationToAngle( orientation ), { -1, 0, 0 } );
     }
 
-    std::pair< double, double > jointLimits( int ) const override {
+    std::pair< Angle, Angle > jointLimits( int ) const override {
         throw std::logic_error( "RoFICoM joint has no parameters" );
     }
 
