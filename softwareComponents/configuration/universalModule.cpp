@@ -2,7 +2,7 @@
 
 namespace rofi {
 
-Module buildUniversalModule( double alpha, double beta, double gamma ) {
+Module buildUniversalModule( Angle alpha, Angle beta, Angle gamma ) {
     std::vector< Component > components = {
         Component{ ComponentType::Roficom },
         Component{ ComponentType::Roficom },
@@ -18,17 +18,17 @@ Module buildUniversalModule( double alpha, double beta, double gamma ) {
 
     std::vector< ComponentJoint > joints = {
         makeJoint< RotationJoint >( 7, 6, // BodyA <-> ShoeA
-            identity, Vector( { 1, 0, 0 } ), identity, - M_PI_2, M_PI_2 ),
+            identity, Vector( { 1, 0, 0 } ), identity, Angle::rad( - M_PI_2 ), Angle::rad( M_PI_2 ) ),
         makeJoint< RotationJoint >( 8, 9 // BodyB <-> ShoeB
             , identity
             , Vector( { 1, 0, 0 } )
             , identity
-            , - M_PI_2, M_PI_2 ),
+            , Angle::rad( - M_PI_2 ), Angle::rad( M_PI_2 ) ),
         makeJoint< RotationJoint >( 7, 8 // BodyA <-> BodyB
             , identity
             , Vector( { 0, 0, 1 } )
             , translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } )
-            , - M_PI, M_PI ),
+            , Angle::rad( - M_PI ), Angle::rad( M_PI ) ),
         makeJoint< RigidJoint >( 6, 0, identity ), // A-X
         makeJoint< RigidJoint >( 6, 1, rotate( M_PI, { 0, 1, 0 } ) ), // A+X
         makeJoint< RigidJoint >( 6, 2, rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI_2, { 0, -1, 0 } ) ), // A-Z
@@ -37,9 +37,9 @@ Module buildUniversalModule( double alpha, double beta, double gamma ) {
         makeJoint< RigidJoint >( 9, 5, rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI_2, { 0, -1, 0 } ) )  // B-Z
     };
 
-    joints[ 0 ].joint->positions = { degToRad( alpha ) };
-    joints[ 1 ].joint->positions = { degToRad( beta  ) };
-    joints[ 2 ].joint->positions = { degToRad( gamma ) };
+    joints[ 0 ].joint->positions = { alpha };
+    joints[ 1 ].joint->positions = { beta  };
+    joints[ 2 ].joint->positions = { gamma };
 
     return Module( ModuleType::Universal, std::move( components ), 7,
         std::move( joints ) );
@@ -116,7 +116,7 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
             double alpha, beta, gamma;
             int id;
             lineStr >> id >> alpha >> beta >> gamma;
-            auto rModule = buildUniversalModule( alpha, beta, gamma );
+            auto rModule = buildUniversalModule( Angle::deg( alpha ), Angle::deg( beta ), Angle::deg( gamma ) );
             rModule = rofibot.insert( rModule );
             moduleMapping.insert({ id, rModule.id });
             continue;

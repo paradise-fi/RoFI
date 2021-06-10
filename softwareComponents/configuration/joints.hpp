@@ -5,6 +5,7 @@
 #include <cassert>
 
 #include <atoms/patterns.hpp>
+#include <atoms/units.hpp>
 #include <Matrix.h>
 
 namespace rofi {
@@ -29,11 +30,11 @@ using JointVisitor = atoms::Visits<
 struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
     virtual ~Joint() = default;
 
-    using Positions = std::vector< double >;
+    using Positions = std::vector< Angle >;
 
     virtual int paramCount() const = 0;
     virtual Matrix sourceToDest() const = 0;
-    virtual std::pair< double, double > jointLimits( int paramIdx ) const = 0;
+    virtual std::pair< Angle, Angle > jointLimits( int paramIdx ) const = 0;
     ATOMS_CLONEABLE_BASE( Joint );
 
     virtual Matrix destToSource() const {
@@ -79,7 +80,7 @@ struct RigidJoint: public atoms::Visitable< Joint, RigidJoint > {
         return _destToSource; // ToDo: Find out if the precomputing is effective or not
     }
 
-    std::pair< double, double > jointLimits( int /*paramIdx*/ ) const override {
+    std::pair< Angle, Angle > jointLimits( int /*paramIdx*/ ) const override {
         throw std::logic_error( "Rigid joint has no parameters" );
     }
 
@@ -95,7 +96,7 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
      * source coordinate system and destination coordinate system.
      */
     RotationJoint( Vector sourceOrigin, Vector sourceAxis, Vector destOrigin,
-                   Vector desAxis, double min, double max )
+                   Vector desAxis, Angle min, Angle max )
         : _limits( { min, max } )
     {
         _pre  = translate( sourceOrigin );
@@ -108,7 +109,7 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
      * followed by rotation axis with origin in (0, 0, 0), followed by another
      * transformation.
      */
-    RotationJoint( Matrix pre, Vector axis, Matrix post, double min, double max )
+    RotationJoint( Matrix pre, Vector axis, Matrix post, Angle min, Angle max )
         : _limits( { min, max } ),
           _axis( axis ),
           _pre( pre ),
@@ -121,7 +122,7 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
 
     Matrix sourceToDest() const override {
         assert( positions.size() == 1 );
-        return _pre * rotate( positions[ 0 ], _axis ) * _post;
+        return _pre * rotate( positions[ 0 ].rad(), _axis ) * _post;
     }
 
     Matrix destToSource() const override {
@@ -129,7 +130,7 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
         return arma::inv( sourceToDest() ); // ToDo: Find out if this is effective enough
     }
 
-    std::pair< double, double > jointLimits( int paramIdx ) const override {
+    std::pair< Angle, Angle > jointLimits( int paramIdx ) const override {
         if ( paramIdx != 0 )
             throw std::logic_error( "RotationJoint joint has only parameter 0" );
         return _limits;
@@ -137,7 +138,7 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
 
     ATOMS_CLONEABLE( RotationJoint );
 
-    std::pair< double, double > _limits; ///< minimal and maximal parameter limit
+    std::pair< Angle, Angle > _limits; ///< minimal and maximal parameter limit
     Vector _axis; ///< axis of rotation around with origin in point (0, 0, 0)
     Matrix _pre; ///< transformation to apply before rotating
     Matrix _post; ///< transformation to apply after rotating
