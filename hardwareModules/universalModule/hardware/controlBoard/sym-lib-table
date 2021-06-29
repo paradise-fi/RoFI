@@ -1,3 +1,4 @@
 (sym_lib_table
   (lib (name rofi)(type Legacy)(uri ${KIPRJMOD}/../../../common/rofi.lib)(options "")(descr ""))
+  (lib (name controlBoard-rescue)(type Legacy)(uri ${KIPRJMOD}/controlBoard-rescue.lib)(options "")(descr ""))
 )

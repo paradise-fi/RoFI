@@ -3,7 +3,7 @@ EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 1 6
+Sheet 1 5
 Title ""
 Date ""
 Rev ""
@@ -13,650 +13,55 @@ Comment2 ""
 Comment3 ""
 Comment4 ""
 $EndDescr
-$Sheet
-S 3550 950  1000 3050
-U 5DD3C100
-F0 "power" 50
-F1 "power.sch" 50
-F2 "BATT_VDD" I L 3550 3800 50 
-F3 "GND" U L 3550 3900 50 
-F4 "3V3" O L 3550 3200 50 
-F5 "INT" O L 3550 2700 50 
-F6 "USB_TO_BUS_EN" I R 4550 1200 50 
-F7 "BATT_TO_BUS_EN" I R 4550 1100 50 
-F8 "USB_C_VDD" I R 4550 1300 50 
-F9 "GND" I R 4550 1400 50 
-$EndSheet
-$Sheet
-S 650  2600 750  1400
-U 5DFADF1E
-F0 "battery" 50
-F1 "battery.sch" 50
-F2 "CHG_EN" I R 1400 2800 50 
-F3 "CHG_AC_OK" O R 1400 3300 50 
-F4 "CHG_OK" O R 1400 3400 50 
-F5 "INT" I R 1400 2700 50 
-F6 "BAT_VDD" O R 1400 3800 50 
-F7 "PWR_SHUTDOWN" I R 1400 3000 50 
-F8 "PWR_START" I R 1400 3100 50 
-F9 "3V3" I R 1400 3200 50 
-F10 "GND" U R 1400 3900 50 
-$EndSheet
-$Sheet
-S 6450 950  800  3100
-U 5E2C3773
-F0 "bios" 50
-F1 "bios.sch" 50
-F2 "GND" U L 6450 3900 50 
-F3 "3V3" I L 6450 3200 50 
-F4 "USB_C_VDD" I L 6450 1300 50 
-F5 "INT" I L 6450 2700 50 
-F6 "CHG_EN" O L 6450 2800 50 
-F7 "CHG_OK" I L 6450 3400 50 
-F8 "CHG_AC_OK" I L 6450 3300 50 
-F9 "BATT_VOLTAGE" I L 6450 2900 50 
-F10 "PWR_START" O L 6450 3100 50 
-F11 "PWR_SHUTDOWN" O L 6450 3000 50 
-F12 "BATT_TO_BUS_EN" I L 6450 1100 50 
-F13 "USB_TO_BUS_EN" I L 6450 1200 50 
-F14 "SW_RIGHT" I R 7250 2500 50 
-F15 "SW_LEFT" I R 7250 2300 50 
-F16 "SW_MID" I R 7250 2400 50 
-F17 "PWR_SHUTDOWN" I R 7250 2200 50 
-F18 "PWR_START" I R 7250 2100 50 
-F19 "GND" I R 7250 1900 50 
-F20 "3V3" I R 7250 2000 50 
-F21 "GND" I L 6450 1400 50 
-F22 "USB_C_VDD" I R 7250 4000 50 
-$EndSheet
-$Comp
-L Connector_Generic:Conn_01x08 J?
-U 1 1 5DDD52B8
-P 2300 3000
-AR Path="/5E8D0C73/5DDD52B8" Ref="J?"  Part="1" 
-AR Path="/5DDD52B8" Ref="J11"  Part="1" 
-F 0 "J11" H 2380 2992 50  0000 L CNN
-F 1 "BATT_3" H 2380 2901 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical" H 2300 3000 50  0001 C CNN
-F 3 "~" H 2300 3000 50  0001 C CNN
-	1    2300 3000
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	2100 3400 1400 3400
-Wire Wire Line
-	1400 3300 2100 3300
-Wire Wire Line
-	2100 3200 2050 3200
-Wire Wire Line
-	1400 3100 2100 3100
-Wire Wire Line
-	2100 2800 1400 2800
-Wire Wire Line
-	1400 2700 1600 2700
-Wire Wire Line
-	2100 3800 2050 3800
-$Comp
-L Connector_Generic:Conn_02x02_Odd_Even J12
-U 1 1 5DDEFEDA
-P 2300 4500
-F 0 "J12" H 2350 4717 50  0000 C CNN
-F 1 "BATT_2" H 2350 4626 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_2x02_P2.54mm_Vertical" H 2300 4500 50  0001 C CNN
-F 3 "~" H 2300 4500 50  0001 C CNN
-	1    2300 4500
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	2600 3800 2600 3500
-Wire Wire Line
-	2600 3500 2050 3500
-Wire Wire Line
-	2050 3500 2050 3800
-Wire Wire Line
-	2100 4500 2100 4600
-Wire Wire Line
-	2600 4500 2600 4600
-Wire Wire Line
-	2050 3800 1400 3800
-Connection ~ 2050 3800
-$Comp
-L Connector_Generic:Conn_01x08 J?
-U 1 1 5DE2B3FC
-P 3000 3000
-AR Path="/5E8D0C73/5DE2B3FC" Ref="J?"  Part="1" 
-AR Path="/5DE2B3FC" Ref="J15"  Part="1" 
-F 0 "J15" H 3080 2992 50  0000 L CNN
-F 1 "PWR_3" H 3080 2901 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical" H 3000 3000 50  0001 C CNN
-F 3 "~" H 3000 3000 50  0001 C CNN
-	1    3000 3000
-	-1   0    0    -1  
-$EndComp
-$Comp
-L Connector_Generic:Conn_02x02_Odd_Even J13
-U 1 1 5DE2C490
-P 3050 3800
-F 0 "J13" H 3100 4017 50  0000 C CNN
-F 1 "PWR_1" H 3100 3926 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_2x02_P2.54mm_Vertical" H 3050 3800 50  0001 C CNN
-F 3 "~" H 3050 3800 50  0001 C CNN
-	1    3050 3800
-	1    0    0    -1  
-$EndComp
-$Comp
-L Connector_Generic:Conn_02x02_Odd_Even J14
-U 1 1 5DE2C913
-P 3050 4500
-F 0 "J14" H 3100 4717 50  0000 C CNN
-F 1 "BATT_2" H 3100 4626 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_2x02_P2.54mm_Vertical" H 3050 4500 50  0001 C CNN
-F 3 "~" H 3050 4500 50  0001 C CNN
-	1    3050 4500
-	1    0    0    -1  
-$EndComp
-$Comp
-L Connector_Generic:Conn_02x02_Odd_Even J10
-U 1 1 5DDECEF3
-P 2300 3800
-F 0 "J10" H 2350 4017 50  0000 C CNN
-F 1 "BATT_1" H 2350 3926 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_2x02_P2.54mm_Vertical" H 2300 3800 50  0001 C CNN
-F 3 "~" H 2300 3800 50  0001 C CNN
-	1    2300 3800
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	1400 3900 2050 3900
-Wire Wire Line
-	2050 3900 2050 4100
-Wire Wire Line
-	2050 4100 2600 4100
-Wire Wire Line
-	2600 4100 2600 3900
-Connection ~ 2050 3900
-Wire Wire Line
-	2050 3900 2100 3900
-Wire Wire Line
-	2600 4100 2600 4500
-Connection ~ 2600 4100
-Connection ~ 2600 4500
-Wire Wire Line
-	2050 4100 2050 4500
-Wire Wire Line
-	2050 4500 2100 4500
-Connection ~ 2050 4100
-Connection ~ 2100 4500
-Wire Wire Line
-	2850 3800 2850 3500
-Wire Wire Line
-	2850 3500 3350 3500
-Wire Wire Line
-	3350 3500 3350 3800
-Wire Wire Line
-	2850 3900 2850 4100
-Wire Wire Line
-	2850 4100 3350 4100
-Wire Wire Line
-	3350 4100 3350 3900
-Connection ~ 3350 4100
-Wire Wire Line
-	3350 4500 3350 4600
-Connection ~ 3350 4500
-Wire Wire Line
-	2850 4600 2850 4500
-Wire Wire Line
-	2850 4500 2850 4100
-Connection ~ 2850 4500
-Connection ~ 2850 4100
-Wire Wire Line
-	3550 3800 3350 3800
-Connection ~ 3350 3800
-Wire Wire Line
-	3350 3900 3550 3900
-Connection ~ 3350 3900
-Wire Wire Line
-	5350 2700 6200 2700
-NoConn ~ 3200 2800
-NoConn ~ 3200 2900
-NoConn ~ 3200 3400
-NoConn ~ 3200 3300
-NoConn ~ 3200 3000
-NoConn ~ 3200 3100
-Wire Wire Line
-	5350 3300 6450 3300
-Wire Wire Line
-	6450 3400 5350 3400
-Wire Wire Line
-	5350 3200 5750 3200
-Wire Wire Line
-	5350 2800 6450 2800
-$Comp
-L Connector_Generic:Conn_02x02_Odd_Even J17
-U 1 1 5DE2DB0D
-P 5150 3800
-F 0 "J17" H 5200 4017 50  0000 C CNN
-F 1 "CTL_1" H 5200 3926 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_2x02_P2.54mm_Vertical" H 5150 3800 50  0001 C CNN
-F 3 "~" H 5150 3800 50  0001 C CNN
-	1    5150 3800
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	4950 3800 4950 3500
-Wire Wire Line
-	4950 3500 5450 3500
-Wire Wire Line
-	5450 3500 5450 3800
-Wire Wire Line
-	4950 3900 4950 4050
-Wire Wire Line
-	4950 4050 5450 4050
-Wire Wire Line
-	5450 4050 5450 3900
-Wire Wire Line
-	5450 3900 5700 3900
-Connection ~ 5450 3900
-Connection ~ 5450 3800
-Connection ~ 6300 2700
-Wire Wire Line
-	6300 2700 6450 2700
-Wire Wire Line
-	6200 3800 5700 3800
-Connection ~ 6100 3900
-Wire Wire Line
-	6100 3900 6450 3900
-$Comp
-L Connector_Generic:Conn_02x02_Odd_Even J18
-U 1 1 5DE421FA
-P 5150 4500
-F 0 "J18" H 5200 4717 50  0000 C CNN
-F 1 "CTL_2" H 5200 4626 50  0000 C CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_2x02_P2.54mm_Vertical" H 5150 4500 50  0001 C CNN
-F 3 "~" H 5150 4500 50  0001 C CNN
-	1    5150 4500
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	4950 4600 4950 4500
-Wire Wire Line
-	4950 4500 4950 4050
-Connection ~ 4950 4500
-Connection ~ 4950 4050
-Wire Wire Line
-	5450 4050 5450 4500
-Connection ~ 5450 4050
-Wire Wire Line
-	5450 4500 5450 4600
-Connection ~ 5450 4500
-$Sheet
-S 9500 950  700  4150
-U 5E8D0C73
-F0 "interface" 50
-F1 "interface.sch" 50
-F2 "GND" I L 9500 1900 50 
-F3 "3V3" I L 9500 2000 50 
-F4 "SW_LEFT" I L 9500 2300 50 
-F5 "SW_MID" I L 9500 2400 50 
-F6 "SW_RIGHT" I L 9500 2500 50 
-F7 "STOP_BUTTON" I L 9500 2200 50 
-F8 "START_BUTTON" I L 9500 2100 50 
-F9 "SDA" B L 9500 2700 50 
-F10 "SCL" I L 9500 2600 50 
-$EndSheet
-Wire Wire Line
-	6300 4300 6450 4300
-Wire Wire Line
-	6200 4400 6450 4400
-Wire Wire Line
-	6100 4500 6450 4500
-Wire Wire Line
-	6000 4600 6450 4600
-Wire Wire Line
-	6100 3900 6100 4500
-Wire Wire Line
-	6200 3800 6200 4400
-Wire Wire Line
-	6300 2700 6300 4300
-$Comp
-L power:PWR_FLAG #FLG0108
-U 1 1 5DF30A5A
-P 3350 3500
-F 0 "#FLG0108" H 3350 3575 50  0001 C CNN
-F 1 "PWR_FLAG" V 3350 3628 50  0000 L CNN
-F 2 "" H 3350 3500 50  0001 C CNN
-F 3 "~" H 3350 3500 50  0001 C CNN
-	1    3350 3500
-	0    1    1    0   
-$EndComp
-Connection ~ 3350 3500
-$Comp
-L power:PWR_FLAG #FLG0109
-U 1 1 5DF33064
-P 3350 4500
-F 0 "#FLG0109" H 3350 4575 50  0001 C CNN
-F 1 "PWR_FLAG" V 3350 4628 50  0000 L CNN
-F 2 "" H 3350 4500 50  0001 C CNN
-F 3 "~" H 3350 4500 50  0001 C CNN
-	1    3350 4500
-	0    1    1    0   
-$EndComp
-Wire Wire Line
-	3350 4100 3350 4500
-$Comp
-L power:PWR_FLAG #FLG0110
-U 1 1 5DF37EA8
-P 6200 2500
-F 0 "#FLG0110" H 6200 2575 50  0001 C CNN
-F 1 "PWR_FLAG" H 6200 2673 50  0000 C CNN
-F 2 "" H 6200 2500 50  0001 C CNN
-F 3 "~" H 6200 2500 50  0001 C CNN
-	1    6200 2500
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	6200 2500 6200 2700
-Connection ~ 6200 2700
-Wire Wire Line
-	6200 2700 6300 2700
-$Comp
-L power:PWR_FLAG #FLG0111
-U 1 1 5DF3B19D
-P 5750 2500
-F 0 "#FLG0111" H 5750 2575 50  0001 C CNN
-F 1 "PWR_FLAG" H 5750 2673 50  0000 C CNN
-F 2 "" H 5750 2500 50  0001 C CNN
-F 3 "~" H 5750 2500 50  0001 C CNN
-	1    5750 2500
-	1    0    0    -1  
-$EndComp
-$Comp
-L power:PWR_FLAG #FLG0112
-U 1 1 5DF3BEE1
-P 5700 3800
-F 0 "#FLG0112" H 5700 3875 50  0001 C CNN
-F 1 "PWR_FLAG" H 5700 3973 50  0000 C CNN
-F 2 "" H 5700 3800 50  0001 C CNN
-F 3 "~" H 5700 3800 50  0001 C CNN
-	1    5700 3800
-	1    0    0    -1  
-$EndComp
-Connection ~ 5700 3800
-Wire Wire Line
-	5700 3800 5450 3800
-$Comp
-L power:PWR_FLAG #FLG0113
-U 1 1 5DF3C8FB
-P 5700 3900
-F 0 "#FLG0113" H 5700 3975 50  0001 C CNN
-F 1 "PWR_FLAG" H 5700 4073 50  0000 C CNN
-F 2 "" H 5700 3900 50  0001 C CNN
-F 3 "~" H 5700 3900 50  0001 C CNN
-	1    5700 3900
-	-1   0    0    1   
-$EndComp
-Connection ~ 5700 3900
-Wire Wire Line
-	5700 3900 6100 3900
-$Comp
-L power:PWR_FLAG #FLG0106
-U 1 1 5DF49198
-P 1600 2600
-F 0 "#FLG0106" H 1600 2675 50  0001 C CNN
-F 1 "PWR_FLAG" H 1600 2773 50  0000 C CNN
-F 2 "" H 1600 2600 50  0001 C CNN
-F 3 "~" H 1600 2600 50  0001 C CNN
-	1    1600 2600
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	3200 2700 3550 2700
-Wire Wire Line
-	1600 2600 1600 2700
-Connection ~ 1600 2700
-Wire Wire Line
-	1600 2700 2100 2700
-$Comp
-L Connector_Generic:Conn_01x09 J21
-U 1 1 5DF98F2D
-P 8550 2300
-F 0 "J21" H 8500 2900 50  0000 L CNN
-F 1 "CTL_4" H 8500 2800 50  0000 L CNN
-F 2 "Connector_PinHeader_2.00mm:PinHeader_1x09_P2.00mm_Vertical" H 8550 2300 50  0001 C CNN
-F 3 "~" H 8550 2300 50  0001 C CNN
-	1    8550 2300
-	1    0    0    -1  
-$EndComp
-$Comp
-L Connector_Generic:Conn_01x09 J22
-U 1 1 5DFA8CEF
-P 9000 2300
-F 0 "J22" H 8918 2917 50  0000 C CNN
-F 1 "INT_1" H 8918 2826 50  0000 C CNN
-F 2 "Connector_PinHeader_2.00mm:PinHeader_1x09_P2.00mm_Vertical" H 9000 2300 50  0001 C CNN
-F 3 "~" H 9000 2300 50  0001 C CNN
-	1    9000 2300
-	-1   0    0    -1  
-$EndComp
-Wire Wire Line
-	9500 2100 9200 2100
-Wire Wire Line
-	9200 2200 9500 2200
-Wire Wire Line
-	9500 2300 9200 2300
-Wire Wire Line
-	9200 2400 9500 2400
-Wire Wire Line
-	9500 2500 9200 2500
-Wire Wire Line
-	9500 1900 9200 1900
-Wire Wire Line
-	9200 2000 9500 2000
-Wire Wire Line
-	9500 2600 9200 2600
-Wire Wire Line
-	9200 2700 9500 2700
-$Sheet
-S 6450 4250 800  1500
-U 5E080FD6
-F0 "control" 50
-F1 "control.sch" 50
-F2 "INT" I L 6450 4300 50 
-F3 "BATT_VDD" I L 6450 4400 50 
-F4 "GND" U L 6450 4500 50 
-F5 "3V3" I L 6450 4600 50 
-F6 "USB_C_VDD" I R 7250 4750 50 
-F7 "SDA" B R 7250 5000 50 
-F8 "SCL" I R 7250 4900 50 
-$EndSheet
-Wire Wire Line
-	7250 5000 8350 5000
-Wire Wire Line
-	8350 5000 8350 2700
-Wire Wire Line
-	7250 4900 8250 4900
-Wire Wire Line
-	8250 4900 8250 2600
-Wire Wire Line
-	8250 2600 8350 2600
-Wire Wire Line
-	7250 2300 8350 2300
-Wire Wire Line
-	7250 2200 8350 2200
-Wire Wire Line
-	7250 2100 8350 2100
-Wire Wire Line
-	7250 2500 8350 2500
-Wire Wire Line
-	7250 2400 8350 2400
-Wire Wire Line
-	7250 2000 8350 2000
-Wire Wire Line
-	8350 1900 7250 1900
-$Comp
-L Connector_Generic:Conn_01x04 J19
-U 1 1 5DFEC693
-P 4800 1200
-F 0 "J19" H 4750 1500 50  0000 L CNN
-F 1 "PWR_4" H 4750 1400 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical" H 4800 1200 50  0001 C CNN
-F 3 "~" H 4800 1200 50  0001 C CNN
-	1    4800 1200
-	1    0    0    -1  
-$EndComp
-$Comp
-L Connector_Generic:Conn_01x04 J20
-U 1 1 5DFF03B1
-P 5250 1200
-F 0 "J20" H 5200 1500 50  0000 L CNN
-F 1 "CTL_5" H 5200 1400 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical" H 5250 1200 50  0001 C CNN
-F 3 "~" H 5250 1200 50  0001 C CNN
-	1    5250 1200
-	-1   0    0    -1  
-$EndComp
-Wire Wire Line
-	5450 1100 6450 1100
-Wire Wire Line
-	6450 1200 5450 1200
-Wire Wire Line
-	5450 1300 6450 1300
-Wire Wire Line
-	6450 1400 5450 1400
-Wire Wire Line
-	4600 1100 4550 1100
-Wire Wire Line
-	4550 1200 4600 1200
-Wire Wire Line
-	4600 1300 4550 1300
-Wire Wire Line
-	4550 1400 4600 1400
-Wire Wire Line
-	7250 4000 7400 4000
-Wire Wire Line
-	7400 4000 7400 4750
-Wire Wire Line
-	7400 4750 7250 4750
-Wire Wire Line
-	1400 3000 2100 3000
-$Comp
-L power:PWR_FLAG #FLG0107
-U 1 1 5DF497C9
-P 2050 2600
-F 0 "#FLG0107" H 2050 2675 50  0001 C CNN
-F 1 "PWR_FLAG" H 2050 2773 50  0000 C CNN
-F 2 "" H 2050 2600 50  0001 C CNN
-F 3 "~" H 2050 2600 50  0001 C CNN
-	1    2050 2600
-	1    0    0    -1  
-$EndComp
-Wire Wire Line
-	2050 2600 2050 3200
-Connection ~ 2050 3200
-Wire Wire Line
-	2050 3200 1400 3200
-Wire Wire Line
-	3550 3200 3200 3200
-Wire Wire Line
-	5750 2500 5750 3200
-Connection ~ 5750 3200
-Wire Wire Line
-	5750 3200 6000 3200
-$Comp
-L Connector_Generic:Conn_01x08 J?
-U 1 1 5DDEAB72
-P 5150 3000
-AR Path="/5E8D0C73/5DDEAB72" Ref="J?"  Part="1" 
-AR Path="/5DDEAB72" Ref="J16"  Part="1" 
-F 0 "J16" H 5230 2992 50  0000 L CNN
-F 1 "CTL_3" H 5230 2901 50  0000 L CNN
-F 2 "Connector_PinHeader_2.54mm:PinHeader_1x08_P2.54mm_Vertical" H 5150 3000 50  0001 C CNN
-F 3 "~" H 5150 3000 50  0001 C CNN
-	1    5150 3000
-	-1   0    0    -1  
-$EndComp
-Wire Wire Line
-	6450 2900 5350 2900
-Wire Wire Line
-	6450 3100 5350 3100
-Wire Wire Line
-	5350 3000 6450 3000
-Wire Wire Line
-	6000 4600 6000 3200
-Connection ~ 6000 3200
-Wire Wire Line
-	6000 3200 6450 3200
 $Comp
 L Mechanical:MountingHole H4
 U 1 1 5DE07B9A
-P 750 2200
-F 0 "H4" H 850 2246 50  0000 L CNN
-F 1 "MountingHole" H 850 2155 50  0000 L CNN
-F 2 "MountingHole:MountingHole_2.1mm" H 750 2200 50  0001 C CNN
-F 3 "~" H 750 2200 50  0001 C CNN
-	1    750  2200
+P 1250 5850
+F 0 "H4" H 1350 5896 50  0000 L CNN
+F 1 "MountingHole" H 1350 5805 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 1250 5850 50  0001 C CNN
+F 3 "~" H 1250 5850 50  0001 C CNN
+	1    1250 5850
 	1    0    0    -1  
 $EndComp
 $Comp
 L Mechanical:MountingHole H3
 U 1 1 5DE0904B
-P 750 2000
-F 0 "H3" H 850 2046 50  0000 L CNN
-F 1 "MountingHole" H 850 1955 50  0000 L CNN
-F 2 "MountingHole:MountingHole_2.1mm" H 750 2000 50  0001 C CNN
-F 3 "~" H 750 2000 50  0001 C CNN
-	1    750  2000
+P 1250 5650
+F 0 "H3" H 1350 5696 50  0000 L CNN
+F 1 "MountingHole" H 1350 5605 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 1250 5650 50  0001 C CNN
+F 3 "~" H 1250 5650 50  0001 C CNN
+	1    1250 5650
 	1    0    0    -1  
 $EndComp
 $Comp
 L Mechanical:MountingHole H2
 U 1 1 5DE091EE
-P 750 1800
-F 0 "H2" H 850 1846 50  0000 L CNN
-F 1 "MountingHole" H 850 1755 50  0000 L CNN
-F 2 "MountingHole:MountingHole_2.1mm" H 750 1800 50  0001 C CNN
-F 3 "~" H 750 1800 50  0001 C CNN
-	1    750  1800
+P 1250 5450
+F 0 "H2" H 1350 5496 50  0000 L CNN
+F 1 "MountingHole" H 1350 5405 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 1250 5450 50  0001 C CNN
+F 3 "~" H 1250 5450 50  0001 C CNN
+	1    1250 5450
 	1    0    0    -1  
 $EndComp
 $Comp
 L Mechanical:MountingHole H1
 U 1 1 5DE0947E
-P 750 1600
-F 0 "H1" H 850 1646 50  0000 L CNN
-F 1 "MountingHole" H 850 1555 50  0000 L CNN
-F 2 "MountingHole:MountingHole_2.1mm" H 750 1600 50  0001 C CNN
-F 3 "~" H 750 1600 50  0001 C CNN
-	1    750  1600
+P 1250 5250
+F 0 "H1" H 1350 5296 50  0000 L CNN
+F 1 "MountingHole" H 1350 5205 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 1250 5250 50  0001 C CNN
+F 3 "~" H 1250 5250 50  0001 C CNN
+	1    1250 5250
 	1    0    0    -1  
 $EndComp
 $Comp
-L Mechanical:MountingHole H5
-U 1 1 5DE0BB0E
-P 9600 5300
-F 0 "H5" H 9700 5346 50  0000 L CNN
-F 1 "MountingHole" H 9700 5255 50  0000 L CNN
-F 2 "MountingHole:MountingHole_2.1mm" H 9600 5300 50  0001 C CNN
-F 3 "~" H 9600 5300 50  0001 C CNN
-	1    9600 5300
-	1    0    0    -1  
-$EndComp
-$Comp
-L Mechanical:MountingHole H6
-U 1 1 5DE0DC9E
-P 9600 5500
-F 0 "H6" H 9700 5546 50  0000 L CNN
-F 1 "MountingHole" H 9700 5455 50  0000 L CNN
-F 2 "MountingHole:MountingHole_2.1mm" H 9600 5500 50  0001 C CNN
-F 3 "~" H 9600 5500 50  0001 C CNN
-	1    9600 5500
-	1    0    0    -1  
-$EndComp
-$Comp
-L rofi:Servo U?
+L rofi:Servo U1
 U 1 1 600E5C98
 P 1450 6150
-F 0 "U?" H 1628 6196 50  0000 L CNN
+F 0 "U1" H 1628 6196 50  0000 L CNN
 F 1 "Servo" H 1628 6105 50  0000 L CNN
 F 2 "rofi:Dynamixel-XL-430-TOP" H 1450 6150 50  0001 C CNN
 F 3 "" H 1450 6150 50  0001 C CNN
@@ -664,25 +69,519 @@ F 3 "" H 1450 6150 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L rofi:Servo U?
+L rofi:Servo U2
 U 1 1 600E6886
-P 1450 6450
-F 0 "U?" H 1628 6496 50  0000 L CNN
-F 1 "Servo" H 1628 6405 50  0000 L CNN
-F 2 "rofi:Dynamixel-XL-430-TOP" H 1450 6450 50  0001 C CNN
-F 3 "" H 1450 6450 50  0001 C CNN
-	1    1450 6450
+P 9800 6200
+F 0 "U2" H 9978 6246 50  0000 L CNN
+F 1 "Servo" H 9978 6155 50  0000 L CNN
+F 2 "rofi:Dynamixel-XL-430-TOP" H 9800 6200 50  0001 C CNN
+F 3 "" H 9800 6200 50  0001 C CNN
+	1    9800 6200
+	1    0    0    -1  
+$EndComp
+$Sheet
+S 9300 2600 1000 500 
+U 5DD3C100
+F0 "power" 50
+F1 "power.sch" 50
+F2 "BATT_VDD" I L 9300 2650 50 
+F3 "INT" I L 9300 2750 50 
+F4 "3V3" I L 9300 2850 50 
+F5 "GND" I L 9300 3000 50 
+$EndSheet
+$Sheet
+S 9300 3300 1000 1650
+U 5E080FD6
+F0 "control" 50
+F1 "control.sch" 50
+F2 "GND" I L 9300 4850 50 
+F3 "3V3" I L 9300 3350 50 
+F4 "SDA" I L 9300 3700 50 
+F5 "SCL" I L 9300 3800 50 
+F6 "SW_LEFT" I L 9300 3950 50 
+F7 "SW_MID" I L 9300 4050 50 
+F8 "SW_RIGHT" I L 9300 4150 50 
+F9 "PWR_SHUTDOWN" O L 9300 4300 50 
+F10 "INT" I L 9300 3450 50 
+F11 "CHK_OK" I L 9300 4400 50 
+F12 "CHG_EN" O L 9300 4500 50 
+F13 "BATT_VDD" I L 9300 3550 50 
+F14 "BUZZER_P" O L 9300 4650 50 
+F15 "BUZZER_N" O L 9300 4750 50 
+$EndSheet
+$Sheet
+S 5400 2600 750  2450
+U 5E8D0C73
+F0 "interface" 50
+F1 "interface.sch" 50
+F2 "GND" I L 5400 4100 50 
+F3 "3V3" I L 5400 2750 50 
+F4 "SW_LEFT" I L 5400 2900 50 
+F5 "SW_MID" I L 5400 3000 50 
+F6 "SW_RIGHT" I L 5400 3100 50 
+F7 "STOP_BUTTON" I L 5400 3200 50 
+F8 "START_BUTTON" I L 5400 3300 50 
+F9 "SDA" I L 5400 3500 50 
+F10 "SCL" I L 5400 3600 50 
+$EndSheet
+Text GLabel 1900 2700 2    50   Input ~ 0
+B_3V3
+Text GLabel 1900 2800 2    50   Input ~ 0
+B_INT
+$Sheet
+S 1150 2600 750  2400
+U 5DFADF1E
+F0 "battery" 50
+F1 "battery.sch" 50
+F2 "CHG_EN" I R 1900 3350 50 
+F3 "CHG_OK" O R 1900 3450 50 
+F4 "INT" I R 1900 2800 50 
+F5 "PWR_SHUTDOWN" I R 1900 3100 50 
+F6 "PWR_START" I R 1900 3200 50 
+F7 "3V3" I R 1900 2700 50 
+F8 "GND" U R 1900 3900 50 
+F9 "PIEZO_P" I R 1900 3600 50 
+F10 "PIEZO_N" I R 1900 3700 50 
+F11 "BATT_VDD" O R 1900 2900 50 
+$EndSheet
+Text GLabel 1900 2900 2    50   Input ~ 0
+B_BATT_VDD
+Text GLabel 1900 3100 2    50   Input ~ 0
+B_PWR_SHUTDOWN
+Text GLabel 1900 3200 2    50   Input ~ 0
+B_PWR_START
+Text GLabel 1900 3350 2    50   Input ~ 0
+B_CHG_EN
+Text GLabel 1900 3450 2    50   Input ~ 0
+B_CHG_OK
+Text GLabel 1900 3600 2    50   Input ~ 0
+B_PIEZO_P
+Text GLabel 1900 3700 2    50   Input ~ 0
+B_PIEZO_N
+Text GLabel 1900 3900 2    50   Input ~ 0
+B_GND
+$Comp
+L Connector_Generic:Conn_01x24 J7
+U 1 1 6118D60A
+P 3750 3750
+F 0 "J7" H 3700 5100 50  0000 L CNN
+F 1 "BATTERY_BOARD_CONN" H 2950 5000 50  0000 L CNN
+F 2 "Connector_PinHeader_2.00mm:PinHeader_2x12_P2.00mm_Vertical" H 3750 3750 50  0001 C CNN
+F 3 "~" H 3750 3750 50  0001 C CNN
+	1    3750 3750
 	1    0    0    -1  
 $EndComp
 $Comp
-L rofi:Servo U?
-U 1 1 600E6E2B
-P 1450 6750
-F 0 "U?" H 1628 6796 50  0000 L CNN
-F 1 "Servo" H 1628 6705 50  0000 L CNN
-F 2 "rofi:Dynamixel-XL-430-TOP" H 1450 6750 50  0001 C CNN
-F 3 "" H 1450 6750 50  0001 C CNN
-	1    1450 6750
+L Connector_Generic:Conn_01x24 J9
+U 1 1 6119B576
+P 4100 3750
+F 0 "J9" H 4100 5100 50  0000 C CNN
+F 1 "INTERFACE_CONN_BOTTOM" H 3700 5000 50  0000 C CNN
+F 2 "rofi:2xM22-6550642R" H 4100 3750 50  0001 C CNN
+F 3 "~" H 4100 3750 50  0001 C CNN
+	1    4100 3750
+	-1   0    0    -1  
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x24 J10
+U 1 1 6119ED75
+P 7050 3750
+F 0 "J10" H 6968 5067 50  0000 C CNN
+F 1 "INTERFACE_CONN_TOP" H 6700 5000 50  0000 C CNN
+F 2 "rofi:2xM22-6550642R" H 7050 3750 50  0001 C CNN
+F 3 "~" H 7050 3750 50  0001 C CNN
+	1    7050 3750
+	1    0    0    -1  
+$EndComp
+$Comp
+L Connector_Generic:Conn_01x24 J11
+U 1 1 611A402C
+P 7450 3750
+F 0 "J11" H 7400 5100 50  0000 L CNN
+F 1 "CONTROL_BOARD_CONN" H 6600 5000 50  0000 L CNN
+F 2 "Connector_PinHeader_2.00mm:PinHeader_2x12_P2.00mm_Vertical" H 7450 3750 50  0001 C CNN
+F 3 "~" H 7450 3750 50  0001 C CNN
+	1    7450 3750
+	-1   0    0    -1  
+$EndComp
+Text GLabel 5400 2750 0    50   Input ~ 0
+I_3V3
+Text GLabel 5400 2900 0    50   Input ~ 0
+I_SW_LEFT
+Text GLabel 5400 3100 0    50   Input ~ 0
+I_SW_RIGHT
+Text GLabel 5400 3000 0    50   Input ~ 0
+I_SW_MID
+Text GLabel 5400 3200 0    50   Input ~ 0
+I_STOP_SW
+Text GLabel 5400 3300 0    50   Input ~ 0
+I_START_SW
+Text GLabel 5400 3500 0    50   Input ~ 0
+I_SDA
+Text GLabel 5400 3600 0    50   Input ~ 0
+I_SCL
+Text GLabel 5150 4100 0    50   Input ~ 0
+I_GND
+Text GLabel 8950 2650 0    50   Input ~ 0
+C_BATT_VDD
+Text GLabel 8950 2750 0    50   Input ~ 0
+C_INT
+Text GLabel 8950 2850 0    50   Input ~ 0
+C_3V3
+Text GLabel 9300 3000 0    50   Input ~ 0
+C_GND
+Text GLabel 9050 4850 0    50   Input ~ 0
+C_GND
+Text GLabel 9300 3550 0    50   Input ~ 0
+C_BATT_VDD
+Text GLabel 9300 3350 0    50   Input ~ 0
+C_3V3
+Text GLabel 9300 3450 0    50   Input ~ 0
+C_INT
+Text GLabel 9300 3700 0    50   Input ~ 0
+C_SDA
+Text GLabel 9300 3800 0    50   Input ~ 0
+C_SCL
+Text GLabel 9300 3950 0    50   Input ~ 0
+C_SW_LEFT
+Text GLabel 9300 4050 0    50   Input ~ 0
+C_SW_MID
+Text GLabel 9300 4150 0    50   Input ~ 0
+C_SW_RIGHT
+Text GLabel 9300 4300 0    50   Input ~ 0
+C_PWR_SHUTDOWN
+Text GLabel 9300 4400 0    50   Input ~ 0
+C_CHG_OK
+Text GLabel 9300 4500 0    50   Input ~ 0
+C_CHG_EN
+Text GLabel 9300 4750 0    50   Input ~ 0
+C_BUZZER_N
+Text GLabel 9300 4650 0    50   Input ~ 0
+C_BUZZER_P
+Text GLabel 7650 2650 2    50   Input ~ 0
+C_BUZZER_P
+Text GLabel 7650 2750 2    50   Input ~ 0
+C_BUZZER_N
+Text GLabel 7650 2850 2    50   Input ~ 0
+C_CHG_EN
+Text GLabel 7650 2950 2    50   Input ~ 0
+C_CHG_OK
+Text GLabel 7650 3050 2    50   Input ~ 0
+C_PWR_SHUTDOWN
+Text GLabel 7650 3250 2    50   Input ~ 0
+C_SW_RIGHT
+Text GLabel 7650 3350 2    50   Input ~ 0
+C_SW_MID
+Text GLabel 7650 3450 2    50   Input ~ 0
+C_SW_LEFT
+Text GLabel 7650 3550 2    50   Input ~ 0
+C_SCL
+Text GLabel 7650 3650 2    50   Input ~ 0
+C_SDA
+Text GLabel 7650 3750 2    50   Input ~ 0
+C_3V3
+Text GLabel 7650 3850 2    50   Input ~ 0
+C_INT
+Text GLabel 7650 3950 2    50   Input ~ 0
+C_INT
+Text GLabel 7650 4050 2    50   Input ~ 0
+C_BATT_VDD
+Text GLabel 7650 4150 2    50   Input ~ 0
+C_BATT_VDD
+Text GLabel 7650 4250 2    50   Input ~ 0
+C_BATT_VDD
+Text GLabel 7650 4350 2    50   Input ~ 0
+C_BATT_VDD
+Text GLabel 7650 4950 2    50   Input ~ 0
+C_GND
+Text GLabel 7650 4850 2    50   Input ~ 0
+C_GND
+Text GLabel 7650 4750 2    50   Input ~ 0
+C_GND
+Text GLabel 7650 4650 2    50   Input ~ 0
+C_GND
+Text GLabel 7650 4550 2    50   Input ~ 0
+C_GND
+Text GLabel 7650 4450 2    50   Input ~ 0
+C_GND
+Text GLabel 3550 3850 0    50   Input ~ 0
+B_INT
+Text GLabel 3550 3950 0    50   Input ~ 0
+B_INT
+Text GLabel 3550 4050 0    50   Input ~ 0
+B_BATT_VDD
+Text GLabel 3550 4150 0    50   Input ~ 0
+B_BATT_VDD
+Text GLabel 3550 4250 0    50   Input ~ 0
+B_BATT_VDD
+Text GLabel 3550 4350 0    50   Input ~ 0
+B_BATT_VDD
+Text GLabel 3550 4950 0    50   Input ~ 0
+B_GND
+Text GLabel 3550 4850 0    50   Input ~ 0
+B_GND
+Text GLabel 3550 4750 0    50   Input ~ 0
+B_GND
+Text GLabel 3550 4650 0    50   Input ~ 0
+B_GND
+Text GLabel 3550 4550 0    50   Input ~ 0
+B_GND
+Text GLabel 3550 4450 0    50   Input ~ 0
+B_GND
+Text GLabel 3550 2650 0    50   Input ~ 0
+B_PIEZO_P
+Text GLabel 3550 2750 0    50   Input ~ 0
+B_PIEZO_N
+Text GLabel 3550 2850 0    50   Input ~ 0
+B_CHG_EN
+Text GLabel 3550 2950 0    50   Input ~ 0
+B_CHG_OK
+Text GLabel 3550 3050 0    50   Input ~ 0
+B_PWR_SHUTDOWN
+Text GLabel 3550 3150 0    50   Input ~ 0
+B_PWR_START
+NoConn ~ 7650 3150
+NoConn ~ 3550 3250
+NoConn ~ 3550 3350
+NoConn ~ 3550 3450
+NoConn ~ 3550 3550
+NoConn ~ 3550 3650
+Text GLabel 6850 3450 0    50   Input ~ 0
+I_SW_LEFT
+Text GLabel 6850 3350 0    50   Input ~ 0
+I_SW_MID
+Text GLabel 6850 3250 0    50   Input ~ 0
+I_SW_RIGHT
+Text GLabel 6850 3050 0    50   Input ~ 0
+I_STOP_SW
+Text GLabel 6850 3150 0    50   Input ~ 0
+I_START_SW
+Text GLabel 6850 3650 0    50   Input ~ 0
+I_SDA
+Text GLabel 6850 3550 0    50   Input ~ 0
+I_SCL
+Text GLabel 6850 3750 0    50   Input ~ 0
+I_3V3
+Text GLabel 4300 4950 2    50   Input ~ 0
+I_GND
+Text GLabel 4300 4850 2    50   Input ~ 0
+I_GND
+Text GLabel 4300 4750 2    50   Input ~ 0
+I_GND
+Text GLabel 4300 4650 2    50   Input ~ 0
+I_GND
+Text GLabel 4300 4550 2    50   Input ~ 0
+I_GND
+Text GLabel 4300 4450 2    50   Input ~ 0
+I_GND
+Text GLabel 6850 4950 0    50   Input ~ 0
+I_GND
+Text GLabel 6850 4850 0    50   Input ~ 0
+I_GND
+Text GLabel 6850 4750 0    50   Input ~ 0
+I_GND
+Text GLabel 6850 4650 0    50   Input ~ 0
+I_GND
+Text GLabel 6850 4550 0    50   Input ~ 0
+I_GND
+Text GLabel 6850 4450 0    50   Input ~ 0
+I_GND
+Text GLabel 4300 4250 2    50   Input ~ 0
+I_BATT_VDD
+Text GLabel 4300 4150 2    50   Input ~ 0
+I_BATT_VDD
+Text GLabel 4300 4050 2    50   Input ~ 0
+I_BATT_VDD
+Text GLabel 6850 4350 0    50   Input ~ 0
+I_BATT_VDD
+Text GLabel 6850 4250 0    50   Input ~ 0
+I_BATT_VDD
+Text GLabel 6850 4150 0    50   Input ~ 0
+I_BATT_VDD
+Text GLabel 6850 4050 0    50   Input ~ 0
+I_BATT_VDD
+Text GLabel 4300 3950 2    50   Input ~ 0
+I_INT
+Text GLabel 4300 3850 2    50   Input ~ 0
+I_INT
+Text GLabel 6850 3950 0    50   Input ~ 0
+I_INT
+Text GLabel 6850 3850 0    50   Input ~ 0
+I_INT
+Text GLabel 4300 4350 2    50   Input ~ 0
+I_BATT_VDD
+Text GLabel 3550 3750 0    50   Input ~ 0
+B_3V3
+Text GLabel 4300 3750 2    50   Input ~ 0
+I_3V3
+Text GLabel 4300 3650 2    50   Input ~ 0
+I_SDA
+Text GLabel 4300 3550 2    50   Input ~ 0
+I_SCL
+Text GLabel 4300 3450 2    50   Input ~ 0
+I_SW_LEFT
+Text GLabel 4300 3350 2    50   Input ~ 0
+I_SW_MID
+Text GLabel 4300 3250 2    50   Input ~ 0
+I_SW_RIGHT
+Text GLabel 4300 3150 2    50   Input ~ 0
+I_START_SW
+Text GLabel 4300 3050 2    50   Input ~ 0
+I_STOP_SW
+Text GLabel 4300 2650 2    50   Input ~ 0
+I_PIEZO_P
+Text GLabel 4300 2750 2    50   Input ~ 0
+I_PIEZO_N
+Text GLabel 4300 2850 2    50   Input ~ 0
+I_CHG_EN
+Text GLabel 4300 2950 2    50   Input ~ 0
+I_CHG_OK
+Text GLabel 6850 2650 0    50   Input ~ 0
+I_PIEZO_P
+Text GLabel 6850 2750 0    50   Input ~ 0
+I_PIEZO_N
+Text GLabel 6850 2850 0    50   Input ~ 0
+I_CHG_EN
+Text GLabel 6850 2950 0    50   Input ~ 0
+I_CHG_OK
+Wire Wire Line
+	5150 4100 5200 4100
+$Comp
+L power:PWR_FLAG #FLG0112
+U 1 1 612A8F47
+P 5200 4250
+F 0 "#FLG0112" H 5200 4325 50  0001 C CNN
+F 1 "PWR_FLAG" H 5200 4423 50  0000 C CNN
+F 2 "" H 5200 4250 50  0001 C CNN
+F 3 "~" H 5200 4250 50  0001 C CNN
+	1    5200 4250
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	5200 4250 5200 4100
+Connection ~ 5200 4100
+Wire Wire Line
+	5200 4100 5400 4100
+$Comp
+L power:PWR_FLAG #FLG0113
+U 1 1 612AA753
+P 9100 5050
+F 0 "#FLG0113" H 9100 5125 50  0001 C CNN
+F 1 "PWR_FLAG" H 9100 5223 50  0000 C CNN
+F 2 "" H 9100 5050 50  0001 C CNN
+F 3 "~" H 9100 5050 50  0001 C CNN
+	1    9100 5050
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	9050 4850 9100 4850
+Wire Wire Line
+	9100 5050 9100 4850
+Connection ~ 9100 4850
+Wire Wire Line
+	9100 4850 9300 4850
+Wire Wire Line
+	8950 2750 9100 2750
+Wire Wire Line
+	9300 2650 9200 2650
+Wire Wire Line
+	9300 2850 9000 2850
+Wire Wire Line
+	9200 2650 9200 2300
+Wire Wire Line
+	9200 2300 9400 2300
+Connection ~ 9200 2650
+Wire Wire Line
+	9200 2650 8950 2650
+$Comp
+L power:PWR_FLAG #FLG0114
+U 1 1 612B295E
+P 9400 2300
+F 0 "#FLG0114" H 9400 2375 50  0001 C CNN
+F 1 "PWR_FLAG" V 9400 2428 50  0000 L CNN
+F 2 "" H 9400 2300 50  0001 C CNN
+F 3 "~" H 9400 2300 50  0001 C CNN
+	1    9400 2300
+	0    1    1    0   
+$EndComp
+$Comp
+L power:PWR_FLAG #FLG0115
+U 1 1 612B2D54
+P 9400 2200
+F 0 "#FLG0115" H 9400 2275 50  0001 C CNN
+F 1 "PWR_FLAG" V 9400 2328 50  0000 L CNN
+F 2 "" H 9400 2200 50  0001 C CNN
+F 3 "~" H 9400 2200 50  0001 C CNN
+	1    9400 2200
+	0    1    1    0   
+$EndComp
+$Comp
+L power:PWR_FLAG #FLG0116
+U 1 1 612B30CC
+P 9400 2100
+F 0 "#FLG0116" H 9400 2175 50  0001 C CNN
+F 1 "PWR_FLAG" V 9400 2228 50  0000 L CNN
+F 2 "" H 9400 2100 50  0001 C CNN
+F 3 "~" H 9400 2100 50  0001 C CNN
+	1    9400 2100
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	9400 2200 9100 2200
+Wire Wire Line
+	9100 2200 9100 2750
+Connection ~ 9100 2750
+Wire Wire Line
+	9100 2750 9300 2750
+Wire Wire Line
+	9400 2100 9000 2100
+Wire Wire Line
+	9000 2100 9000 2850
+Connection ~ 9000 2850
+Wire Wire Line
+	9000 2850 8950 2850
+$Comp
+L Mechanical:MountingHole H8
+U 1 1 6138C533
+P 9500 5900
+F 0 "H8" H 9600 5946 50  0000 L CNN
+F 1 "MountingHole" H 9600 5855 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 9500 5900 50  0001 C CNN
+F 3 "~" H 9500 5900 50  0001 C CNN
+	1    9500 5900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H7
+U 1 1 6138C785
+P 9500 5700
+F 0 "H7" H 9600 5746 50  0000 L CNN
+F 1 "MountingHole" H 9600 5655 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 9500 5700 50  0001 C CNN
+F 3 "~" H 9500 5700 50  0001 C CNN
+	1    9500 5700
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H6
+U 1 1 6138C78F
+P 9500 5500
+F 0 "H6" H 9600 5546 50  0000 L CNN
+F 1 "MountingHole" H 9600 5455 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 9500 5500 50  0001 C CNN
+F 3 "~" H 9500 5500 50  0001 C CNN
+	1    9500 5500
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H5
+U 1 1 6138C799
+P 9500 5300
+F 0 "H5" H 9600 5346 50  0000 L CNN
+F 1 "MountingHole" H 9600 5255 50  0000 L CNN
+F 2 "MountingHole:MountingHole_2.1mm" H 9500 5300 50  0001 C CNN
+F 3 "~" H 9500 5300 50  0001 C CNN
+	1    9500 5300
 	1    0    0    -1  
 $EndComp
 $EndSCHEMATC

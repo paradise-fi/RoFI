@@ -1,0 +1,13 @@
+(module CST-931AP (layer F.Cu) (tedit 60DAC92B)
+  (fp_text reference REF** (at 0 2.75) (layer F.SilkS) hide
+    (effects (font (size 1 1) (thickness 0.15)))
+  )
+  (fp_text value CST-931AP (at 0 -5.75) (layer F.Fab)
+    (effects (font (size 1 1) (thickness 0.15)))
+  )
+  (fp_circle (center 0 0) (end 4.5 0) (layer F.Fab) (width 0.12))
+  (fp_circle (center 0 0) (end 0.5 0) (layer F.Fab) (width 0.12))
+  (fp_circle (center 0 0) (end 4.75 0) (layer F.SilkS) (width 0.15))
+  (pad 1 thru_hole circle (at -2 0) (size 1.3 1.3) (drill 0.7) (layers *.Cu *.Mask))
+  (pad 2 thru_hole circle (at 2 0) (size 1.3 1.3) (drill 0.7) (layers *.Cu *.Mask))
+)
