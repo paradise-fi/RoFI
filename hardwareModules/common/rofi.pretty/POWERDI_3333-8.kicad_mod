@@ -1,4 +1,5 @@
-(module POWERDI_3333-8 (layer F.Cu) (tedit 5C877AA0)
+(module POWERDI_3333-8 (layer F.Cu) (tedit 60E560A5)
+  (attr smd)
   (fp_text reference REF** (at 0 2.9) (layer F.SilkS)
     (effects (font (size 1 1) (thickness 0.15)))
   )

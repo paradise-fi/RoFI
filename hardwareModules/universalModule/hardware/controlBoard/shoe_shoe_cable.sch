@@ -1,0 +1,90 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 13 14
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Connector_Generic:Conn_01x10 J?
+U 1 1 61B97407
+P 6300 3650
+AR Path="/619E4ACE/61B97407" Ref="J?"  Part="1" 
+AR Path="/619E4ACE/61B33DE5/61B97407" Ref="J?"  Part="1" 
+AR Path="/619E4ACE/61B3C82E/61B97407" Ref="J?"  Part="1" 
+AR Path="/619E4ACE/61B3C9CE/61B97407" Ref="J?"  Part="1" 
+AR Path="/619E4ACE/61B96469/61B97407" Ref="J41"  Part="1" 
+F 0 "J41" H 6200 4300 50  0000 L CNN
+F 1 "B" H 6100 4200 50  0000 L CNN
+F 2 "rofi:UM_SHOE_PADS_BOTH" H 6300 3650 50  0001 C CNN
+F 3 "~" H 6300 3650 50  0001 C CNN
+F 4 "YES" H 6300 3650 50  0001 C CNN "JLCPCB_IGNORE"
+	1    6300 3650
+	1    0    0    1   
+$EndComp
+Text Label 6100 3850 2    50   ~ 0
+MISO
+Text Label 6100 3950 2    50   ~ 0
+SCK
+Text Label 6100 4050 2    50   ~ 0
+GND2
+$Comp
+L Connector_Generic:Conn_01x10 J?
+U 1 1 61B97410
+P 4800 3650
+AR Path="/619E4ACE/61B97410" Ref="J?"  Part="1" 
+AR Path="/619E4ACE/61B33DE5/61B97410" Ref="J?"  Part="1" 
+AR Path="/619E4ACE/61B3C82E/61B97410" Ref="J?"  Part="1" 
+AR Path="/619E4ACE/61B3C9CE/61B97410" Ref="J?"  Part="1" 
+AR Path="/619E4ACE/61B96469/61B97410" Ref="J40"  Part="1" 
+F 0 "J40" H 4700 4300 50  0000 L CNN
+F 1 "A" H 4600 4200 50  0000 L CNN
+F 2 "rofi:UM_SHOE_PADS_BOTH" H 4800 3650 50  0001 C CNN
+F 3 "~" H 4800 3650 50  0001 C CNN
+F 4 "YES" H 4800 3650 50  0001 C CNN "JLCPCB_IGNORE"
+	1    4800 3650
+	-1   0    0    1   
+$EndComp
+Wire Wire Line
+	6100 3150 5000 3150
+Wire Wire Line
+	5000 3250 6100 3250
+Wire Wire Line
+	6100 3350 5000 3350
+Wire Wire Line
+	5000 3450 6100 3450
+Wire Wire Line
+	6100 3550 5000 3550
+Wire Wire Line
+	5000 3650 6100 3650
+Wire Wire Line
+	5000 3750 6100 3750
+Text Label 5950 3550 0    50   ~ 0
+SS1
+Text Label 5950 3650 0    50   ~ 0
+SS2
+Text Label 5950 3750 0    50   ~ 0
+SS3
+Wire Wire Line
+	6100 3850 5000 3850
+Wire Wire Line
+	5000 3950 6100 3950
+Wire Wire Line
+	6100 4050 5000 4050
+Text Label 6100 3450 2    50   ~ 0
+VCC
+Text Label 6100 3350 2    50   ~ 0
+INT
+Text Label 6100 3250 2    50   ~ 0
+EXT
+Text Label 6100 3150 2    50   ~ 0
+GND1
+$EndSCHEMATC

@@ -1,4 +1,5 @@
-(module SLO0630H (layer F.Cu) (tedit 5FC6845E)
+(module SLO0630H (layer F.Cu) (tedit 60E560D2)
+  (attr smd)
   (fp_text reference REF** (at 0 4) (layer F.SilkS) hide
     (effects (font (size 1 1) (thickness 0.15)))
   )

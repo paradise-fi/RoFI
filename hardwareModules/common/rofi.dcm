@@ -5,6 +5,24 @@ D x Voltage Protection with Automatic Cell Balance for 2-Series Cell Li-Ion Batt
 F https://www.mouser.com/datasheet/2/405/slusa52b-521993.pdf
 $ENDCMP
 #
+$CMP Conn_01x10-FPC
+D Generic connector, single row, 01x10, script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
+$CMP Conn_01x15_UM_slipring
+D Generic connector, single row, 01x15, script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
+$CMP Conn_01x40-FPC
+D Generic connector, single row, 01x40, script generated (kicad-library-utils/schlib/autogen/connector/)
+K connector
+F ~
+$ENDCMP
+#
 $CMP ESP32-WROVER
 F https://www.espressif.com/sites/default/files/documentation/esp32-wrover_datasheet_en.pdf
 $ENDCMP

@@ -3,7 +3,7 @@ EELAYER 30 0
 EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
-Sheet 3 5
+Sheet 3 14
 Title ""
 Date ""
 Rev ""
@@ -22,6 +22,8 @@ F 1 "ESP32-WROVER" H 2200 3284 50  0000 C CNN
 F 2 "rofi:ESP32-WROVER" H 2200 2950 50  0001 C CNN
 F 3 "https://www.espressif.com/sites/default/files/documentation/esp32-wrover_datasheet_en.pdf" H 2200 2950 50  0001 C CNN
 F 4 "356-ESP32-WROB(16MB)" H 2200 2000 50  0001 C CNN "#manf"
+F 5 "C529591" H 2200 2000 50  0001 C CNN "LCSC"
+F 6 "0;-8.2;90" H 2200 2000 50  0001 C CNN "JLCPCB_CORRECTION"
 	1    2200 2000
 	1    0    0    -1  
 $EndComp
@@ -65,18 +67,6 @@ Wire Wire Line
 	1450 3150 1450 3250
 Connection ~ 1450 3150
 $Comp
-L Device:C C40
-U 1 1 5E136009
-P 1250 2550
-F 0 "C40" H 1365 2596 50  0000 L CNN
-F 1 "470n" H 1365 2505 50  0000 L CNN
-F 2 "Capacitor_SMD:C_0402_1005Metric" H 1288 2400 50  0001 C CNN
-F 3 "~" H 1250 2550 50  0001 C CNN
-F 4 "JMK105BJ474KV-F" H 1250 2550 50  0001 C CNN "#manf"
-	1    1250 2550
-	1    0    0    -1  
-$EndComp
-$Comp
 L Device:C C39
 U 1 1 5E1367F8
 P 800 2550
@@ -85,14 +75,10 @@ F 1 "22u" H 915 2505 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric" H 838 2400 50  0001 C CNN
 F 3 "~" H 800 2550 50  0001 C CNN
 F 4 "GRM21BR61C226ME44L" H 800 2550 50  0001 C CNN "#manf"
+F 5 "C45783" H 800 2550 50  0001 C CNN "LCSC"
 	1    800  2550
 	1    0    0    -1  
 $EndComp
-Wire Wire Line
-	1550 2400 1250 2400
-Wire Wire Line
-	1250 2400 800  2400
-Connection ~ 1250 2400
 Text GLabel 2850 2650 2    50   Input ~ 0
 SPI_MISO_MOSI
 Text GLabel 2850 1650 2    50   Input ~ 0
@@ -144,15 +130,11 @@ Connection ~ 3950 3700
 NoConn ~ 2850 850 
 NoConn ~ 2850 950 
 NoConn ~ 2850 1050
-Text HLabel 4700 750  0    50   Input ~ 0
-GND
 Text HLabel 3950 3250 1    50   Input ~ 0
 3V3
 Text HLabel 3950 4000 3    50   Input ~ 0
 3V3
 Text HLabel 1450 3250 3    50   Input ~ 0
-GND
-Text HLabel 1250 2700 3    50   Input ~ 0
 GND
 Text HLabel 800  2700 3    50   Input ~ 0
 GND
@@ -177,6 +159,7 @@ F 0 "TP3" H 3458 3568 50  0000 L CNN
 F 1 "TP_SCL" H 3458 3477 50  0000 L CNN
 F 2 "TestPoint:TestPoint_Pad_D2.0mm" H 3600 3450 50  0001 C CNN
 F 3 "~" H 3600 3450 50  0001 C CNN
+F 4 "YES" H 3400 3450 50  0001 C CNN "JLCPCB_IGNORE"
 	1    3400 3450
 	1    0    0    -1  
 $EndComp
@@ -197,6 +180,7 @@ F 0 "TP4" H 3342 3826 50  0000 R CNN
 F 1 "TP_SDA" H 3342 3917 50  0000 R CNN
 F 2 "TestPoint:TestPoint_Pad_D2.0mm" H 3600 3800 50  0001 C CNN
 F 3 "~" H 3600 3800 50  0001 C CNN
+F 4 "YES" H 3400 3800 50  0001 C CNN "JLCPCB_IGNORE"
 	1    3400 3800
 	-1   0    0    1   
 $EndComp
@@ -209,6 +193,7 @@ F 1 "3k3" H 4020 3805 50  0000 L CNN
 F 2 "Resistor_SMD:R_0402_1005Metric" V 3880 3850 50  0001 C CNN
 F 3 "~" H 3950 3850 50  0001 C CNN
 F 4 "RR0510P-332-D" H 3950 3850 50  0001 C CNN "#manf"
+F 5 "C25890" H 3950 3850 50  0001 C CNN "LCSC"
 	1    3950 3850
 	1    0    0    -1  
 $EndComp
@@ -221,6 +206,7 @@ F 1 "3k3" H 4020 3355 50  0000 L CNN
 F 2 "Resistor_SMD:R_0402_1005Metric" V 3880 3400 50  0001 C CNN
 F 3 "~" H 3950 3400 50  0001 C CNN
 F 4 "RR0510P-332-D" H 3950 3400 50  0001 C CNN "#manf"
+F 5 "C25890" H 3950 3400 50  0001 C CNN "LCSC"
 	1    3950 3400
 	1    0    0    -1  
 $EndComp
@@ -240,11 +226,11 @@ Text Label 8950 2450 0    50   ~ 0
 USB_VOLTAGE
 Text HLabel 8800 2850 2    50   Input ~ 0
 SW_LEFT
-Text HLabel 8800 2950 2    50   Input ~ 0
-SW_MID
 Text HLabel 8800 3050 2    50   Input ~ 0
+SW_MID
+Text HLabel 8800 2950 2    50   Input ~ 0
 SW_RIGHT
-Text HLabel 7500 3550 0    50   Output ~ 0
+Text HLabel 7500 2550 0    50   Output ~ 0
 PWR_SHUTDOWN
 $Comp
 L Device:C C?
@@ -257,6 +243,7 @@ F 1 "22u" H 9015 805 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric" H 8938 700 50  0001 C CNN
 F 3 "~" H 8900 850 50  0001 C CNN
 F 4 "GRM21BR61C226ME44L" H 8900 850 50  0001 C CNN "#manf"
+F 5 "C45783" H 8900 850 50  0001 C CNN "LCSC"
 	1    8900 850 
 	1    0    0    -1  
 $EndComp
@@ -271,6 +258,7 @@ F 1 "470n" H 9415 805 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0402_1005Metric" H 9338 700 50  0001 C CNN
 F 3 "~" H 9300 850 50  0001 C CNN
 F 4 "JMK105BJ474KV-F" H 9300 850 50  0001 C CNN "#manf"
+F 5 "C47339" H 9300 850 50  0001 C CNN "LCSC"
 	1    9300 850 
 	1    0    0    -1  
 $EndComp
@@ -285,6 +273,7 @@ F 1 "470n" H 9865 805 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0402_1005Metric" H 9788 700 50  0001 C CNN
 F 3 "~" H 9750 850 50  0001 C CNN
 F 4 "JMK105BJ474KV-F" H 9750 850 50  0001 C CNN "#manf"
+F 5 "C47339" H 9750 850 50  0001 C CNN "LCSC"
 	1    9750 850 
 	1    0    0    -1  
 $EndComp
@@ -299,6 +288,7 @@ F 1 "470n" H 10315 805 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0402_1005Metric" H 10238 700 50  0001 C CNN
 F 3 "~" H 10200 850 50  0001 C CNN
 F 4 "JMK105BJ474KV-F" H 10200 850 50  0001 C CNN "#manf"
+F 5 "C47339" H 10200 850 50  0001 C CNN "LCSC"
 	1    10200 850 
 	1    0    0    -1  
 $EndComp
@@ -327,10 +317,6 @@ Text GLabel 8800 3650 2    50   Input ~ 0
 SWDIO
 Text GLabel 7700 5300 2    50   Input ~ 0
 USB_C_D+
-NoConn ~ 7700 4900
-NoConn ~ 7700 4800
-Wire Wire Line
-	6800 6100 7100 6100
 Wire Wire Line
 	8000 4600 7950 4600
 $Comp
@@ -360,6 +346,8 @@ F 0 "J8" H 7207 6067 50  0000 C CNN
 F 1 "USB_C_Receptacle_USB2.0" H 7207 5976 50  0000 C CNN
 F 2 "rofi:USB_C_Female-16Pin-HPJF" H 7250 5200 50  0001 C CNN
 F 3 "https://www.usb.org/sites/default/files/documents/usb_type-c.zip" H 7250 5200 50  0001 C CNN
+F 4 "C165948" H 7100 5200 50  0001 C CNN "LCSC"
+F 5 "1.8;-3.3;180" H 7100 5200 50  0001 C CNN "JLCPCB_CORRECTION"
 	1    7100 5200
 	1    0    0    -1  
 $EndComp
@@ -384,6 +372,7 @@ F 1 "2k2" H 9220 4805 50  0000 L CNN
 F 2 "Resistor_SMD:R_0402_1005Metric" V 9080 4850 50  0001 C CNN
 F 3 "~" H 9150 4850 50  0001 C CNN
 F 4 "RR0510P-222-D" H 9150 4850 50  0001 C CNN "#manf"
+F 5 "C25879" H 9150 4850 50  0001 C CNN "LCSC"
 	1    9150 4850
 	1    0    0    -1  
 $EndComp
@@ -398,6 +387,7 @@ F 1 "2k2" H 9620 4805 50  0000 L CNN
 F 2 "Resistor_SMD:R_0402_1005Metric" V 9480 4850 50  0001 C CNN
 F 3 "~" H 9550 4850 50  0001 C CNN
 F 4 "RR0510P-222-D" H 9550 4850 50  0001 C CNN "#manf"
+F 5 "C25879" H 9550 4850 50  0001 C CNN "LCSC"
 	1    9550 4850
 	1    0    0    -1  
 $EndComp
@@ -412,6 +402,7 @@ F 1 "10k" H 9220 5305 50  0000 L CNN
 F 2 "Resistor_SMD:R_0402_1005Metric" V 9080 5350 50  0001 C CNN
 F 3 "~" H 9150 5350 50  0001 C CNN
 F 4 "RT0402FRE0710KL" H 9150 5350 50  0001 C CNN "#manf"
+F 5 "C25744" H 9150 5350 50  0001 C CNN "LCSC"
 	1    9150 5350
 	1    0    0    -1  
 $EndComp
@@ -426,6 +417,7 @@ F 1 "10k" H 9620 5305 50  0000 L CNN
 F 2 "Resistor_SMD:R_0402_1005Metric" V 9480 5350 50  0001 C CNN
 F 3 "~" H 9550 5350 50  0001 C CNN
 F 4 "RT0402FRE0710KL" H 9550 5350 50  0001 C CNN "#manf"
+F 5 "C25744" H 9550 5350 50  0001 C CNN "LCSC"
 	1    9550 5350
 	1    0    0    -1  
 $EndComp
@@ -452,8 +444,6 @@ Wire Wire Line
 Wire Wire Line
 	9150 4600 9100 4600
 Wire Wire Line
-	9550 4700 9550 4600
-Wire Wire Line
 	9550 4600 9600 4600
 Wire Wire Line
 	9550 5500 9550 5700
@@ -478,38 +468,40 @@ https://github.com/Crypter/QC3Client/\nhttp://blog.deconinck.info/post/2017/08/0
 $Comp
 L Device:R R?
 U 1 1 5FF97293
-P 4650 4550
+P 2750 6000
 AR Path="/5E2C3773/5FF97293" Ref="R?"  Part="1" 
 AR Path="/5E080FD6/5FF97293" Ref="R23"  Part="1" 
-F 0 "R23" H 4720 4596 50  0000 L CNN
-F 1 "68k" H 4720 4505 50  0000 L CNN
-F 2 "Resistor_SMD:R_0402_1005Metric" V 4580 4550 50  0001 C CNN
-F 3 "~" H 4650 4550 50  0001 C CNN
-F 4 "RR0510P-683-D" H 4650 4550 50  0001 C CNN "#manf"
-	1    4650 4550
+F 0 "R23" H 2820 6046 50  0000 L CNN
+F 1 "68k" H 2820 5955 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric" V 2680 6000 50  0001 C CNN
+F 3 "~" H 2750 6000 50  0001 C CNN
+F 4 "RR0510P-683-D" H 2750 6000 50  0001 C CNN "#manf"
+F 5 "C36871" H 2750 6000 50  0001 C CNN "LCSC"
+	1    2750 6000
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:R R?
 U 1 1 5FF9729A
-P 4650 4950
+P 2750 6400
 AR Path="/5E2C3773/5FF9729A" Ref="R?"  Part="1" 
 AR Path="/5E080FD6/5FF9729A" Ref="R30"  Part="1" 
-F 0 "R30" H 4720 4996 50  0000 L CNN
-F 1 "10k" H 4720 4905 50  0000 L CNN
-F 2 "Resistor_SMD:R_0402_1005Metric" V 4580 4950 50  0001 C CNN
-F 3 "~" H 4650 4950 50  0001 C CNN
-F 4 "RT0402FRE0710KL" H 4650 4950 50  0001 C CNN "#manf"
-	1    4650 4950
+F 0 "R30" H 2820 6446 50  0000 L CNN
+F 1 "10k" H 2820 6355 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric" V 2680 6400 50  0001 C CNN
+F 3 "~" H 2750 6400 50  0001 C CNN
+F 4 "RT0402FRE0710KL" H 2750 6400 50  0001 C CNN "#manf"
+F 5 "C25744" H 2750 6400 50  0001 C CNN "LCSC"
+	1    2750 6400
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	4650 4700 4650 4750
+	2750 6150 2750 6200
 Wire Wire Line
-	4650 4750 5200 4750
-Connection ~ 4650 4750
+	2750 6200 3300 6200
+Connection ~ 2750 6200
 Wire Wire Line
-	4650 4750 4650 4800
+	2750 6200 2750 6250
 $Comp
 L Device:R R?
 U 1 1 5FF972A5
@@ -521,6 +513,7 @@ F 1 "68k" H 3670 4455 50  0000 L CNN
 F 2 "Resistor_SMD:R_0402_1005Metric" V 3530 4500 50  0001 C CNN
 F 3 "~" H 3600 4500 50  0001 C CNN
 F 4 "RR0510P-683-D" H 3600 4500 50  0001 C CNN "#manf"
+F 5 "C36871" H 3600 4500 50  0001 C CNN "LCSC"
 	1    3600 4500
 	1    0    0    -1  
 $EndComp
@@ -535,13 +528,14 @@ F 1 "10k" H 3670 4905 50  0000 L CNN
 F 2 "Resistor_SMD:R_0402_1005Metric" V 3530 4950 50  0001 C CNN
 F 3 "~" H 3600 4950 50  0001 C CNN
 F 4 "RT0402FRE0710KL" H 3600 4950 50  0001 C CNN "#manf"
+F 5 "C25744" H 3600 4950 50  0001 C CNN "LCSC"
 	1    3600 4950
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	4500 4350 4650 4350
+	2600 5800 2750 5800
 Wire Wire Line
-	4650 4350 4650 4400
+	2750 5800 2750 5850
 Wire Wire Line
 	3350 4350 3600 4350
 Wire Wire Line
@@ -563,11 +557,11 @@ Text HLabel 4700 1550 0    50   Input ~ 0
 3V3
 Text HLabel 3350 4350 0    50   Input ~ 0
 INT
-Text HLabel 4650 5100 3    50   Input ~ 0
+Text HLabel 2750 6550 3    50   Input ~ 0
 GND
 Text HLabel 3600 5100 3    50   Input ~ 0
 GND
-Text Label 4850 4750 0    50   ~ 0
+Text Label 2950 6200 0    50   ~ 0
 USB_VOLTAGE
 Text Label 3800 4700 0    50   ~ 0
 BUS_VOLTAGE
@@ -584,62 +578,63 @@ BIOS_TX
 $Comp
 L Device:R R?
 U 1 1 600E42B4
-P 5600 4600
+P 3700 6050
 AR Path="/5DFADF1E/600E42B4" Ref="R?"  Part="1" 
 AR Path="/5E2C3773/600E42B4" Ref="R?"  Part="1" 
 AR Path="/5E080FD6/600E42B4" Ref="R31"  Part="1" 
-F 0 "R31" H 5670 4646 50  0000 L CNN
-F 1 "20k" H 5670 4555 50  0000 L CNN
-F 2 "Resistor_SMD:R_0402_1005Metric" V 5530 4600 50  0001 C CNN
-F 3 "~" H 5600 4600 50  0001 C CNN
-F 4 "RR0510P-203-D" H 5600 4600 50  0001 C CNN "#manf"
-F 5 "C25765" H 5600 4600 50  0001 C CNN "LCSC"
-	1    5600 4600
+F 0 "R31" H 3770 6096 50  0000 L CNN
+F 1 "20k" H 3770 6005 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric" V 3630 6050 50  0001 C CNN
+F 3 "~" H 3700 6050 50  0001 C CNN
+F 4 "RR0510P-203-D" H 3700 6050 50  0001 C CNN "#manf"
+F 5 "C25765" H 3700 6050 50  0001 C CNN "LCSC"
+	1    3700 6050
 	1    0    0    -1  
 $EndComp
 $Comp
 L Device:R R?
 U 1 1 600E42BC
-P 5600 4900
+P 3700 6350
 AR Path="/5DFADF1E/600E42BC" Ref="R?"  Part="1" 
 AR Path="/5E2C3773/600E42BC" Ref="R?"  Part="1" 
 AR Path="/5E080FD6/600E42BC" Ref="R32"  Part="1" 
-F 0 "R32" H 5670 4946 50  0000 L CNN
-F 1 "10k" H 5670 4855 50  0000 L CNN
-F 2 "Resistor_SMD:R_0402_1005Metric" V 5530 4900 50  0001 C CNN
-F 3 "~" H 5600 4900 50  0001 C CNN
-F 4 "RT0402FRE0710KL" H 5600 4900 50  0001 C CNN "#manf"
-F 5 "C25744" H 5600 4900 50  0001 C CNN "LCSC"
-	1    5600 4900
+F 0 "R32" H 3770 6396 50  0000 L CNN
+F 1 "10k" H 3770 6305 50  0000 L CNN
+F 2 "Resistor_SMD:R_0402_1005Metric" V 3630 6350 50  0001 C CNN
+F 3 "~" H 3700 6350 50  0001 C CNN
+F 4 "RT0402FRE0710KL" H 3700 6350 50  0001 C CNN "#manf"
+F 5 "C25744" H 3700 6350 50  0001 C CNN "LCSC"
+	1    3700 6350
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	5600 4750 5900 4750
-Connection ~ 5600 4750
+	3700 6200 4000 6200
+Connection ~ 3700 6200
 $Comp
 L Connector:TestPoint TP?
 U 1 1 600E42C4
-P 5600 4300
+P 3700 5750
 AR Path="/5DFADF1E/600E42C4" Ref="TP?"  Part="1" 
 AR Path="/5E2C3773/600E42C4" Ref="TP?"  Part="1" 
 AR Path="/5E080FD6/600E42C4" Ref="TP1"  Part="1" 
-F 0 "TP1" H 5658 4418 50  0000 L CNN
-F 1 "TP_BAT" H 5658 4327 50  0000 L CNN
-F 2 "TestPoint:TestPoint_Pad_D2.0mm" H 5800 4300 50  0001 C CNN
-F 3 "~" H 5800 4300 50  0001 C CNN
-	1    5600 4300
+F 0 "TP1" H 3758 5868 50  0000 L CNN
+F 1 "TP_BAT" H 3758 5777 50  0000 L CNN
+F 2 "TestPoint:TestPoint_Pad_D2.0mm" H 3900 5750 50  0001 C CNN
+F 3 "~" H 3900 5750 50  0001 C CNN
+F 4 "YES" H 3700 5750 50  0001 C CNN "JLCPCB_IGNORE"
+	1    3700 5750
 	1    0    0    -1  
 $EndComp
 Wire Wire Line
-	5500 4300 5600 4300
+	3600 5750 3700 5750
 Wire Wire Line
-	5600 4300 5600 4450
-Connection ~ 5600 4300
-Text HLabel 5500 4300 0    50   Input ~ 0
+	3700 5750 3700 5900
+Connection ~ 3700 5750
+Text HLabel 3600 5750 0    50   Input ~ 0
 BATT_VDD
-Text HLabel 5600 5050 3    50   UnSpc ~ 0
+Text HLabel 3700 6500 3    50   UnSpc ~ 0
 GND
-Text Label 5900 4750 0    50   ~ 0
+Text Label 4000 6200 0    50   ~ 0
 BATT_VOLTAGE
 Text Label 9200 2750 0    50   ~ 0
 BATT_VOLTAGE
@@ -652,6 +647,7 @@ F 1 "STM32F411CEUx" H 7550 3950 50  0000 C CNN
 F 2 "Package_DFN_QFN:QFN-48-1EP_7x7mm_P0.5mm_EP5.6x5.6mm" H 7600 950 50  0001 R CNN
 F 3 "http://www.st.com/st-web-ui/static/active/en/resource/technical/document/datasheet/DM00115249.pdf" H 8200 2450 50  0001 C CNN
 F 4 "C60420" H 8200 2450 50  0001 C CNN "LCSC"
+F 5 "0;0;90" H 8200 2450 50  0001 C CNN "JLCPCB_CORRECTION"
 	1    8200 2450
 	1    0    0    -1  
 $EndComp
@@ -686,6 +682,7 @@ F 0 "JP1" V 5896 2218 50  0000 L CNN
 F 1 "BootSelector" V 5805 2218 50  0000 L CNN
 F 2 "Jumper:SolderJumper-3_P2.0mm_Open_TrianglePad1.0x1.5mm" H 5850 2150 50  0001 C CNN
 F 3 "~" H 5850 2150 50  0001 C CNN
+F 4 "YES" H 5850 2150 50  0001 C CNN "JLCPCB_IGNORE"
 	1    5850 2150
 	0    -1   -1   0   
 $EndComp
@@ -716,6 +713,7 @@ F 1 "470n" H 5965 1255 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0402_1005Metric" H 5888 1150 50  0001 C CNN
 F 3 "~" H 5850 1300 50  0001 C CNN
 F 4 "JMK105BJ474KV-F" H 5850 1300 50  0001 C CNN "#manf"
+F 5 "C47339" H 5850 1300 50  0001 C CNN "LCSC"
 	1    5850 1300
 	1    0    0    -1  
 $EndComp
@@ -742,13 +740,13 @@ Text HLabel 7500 3250 0    50   Input ~ 0
 SCL
 Text GLabel 9100 4600 0    50   Input ~ 0
 QC_2_M
-Text GLabel 7500 2550 0    50   Input ~ 0
+Text GLabel 7500 3550 0    50   Input ~ 0
 QC_10_N
-Text GLabel 7500 2650 0    50   Input ~ 0
+Text GLabel 7500 3750 0    50   Input ~ 0
 QC_2_P
 Text GLabel 7500 2750 0    50   Input ~ 0
 QC_10_P
-Text HLabel 7500 3350 0    50   Input ~ 0
+Text HLabel 7500 2650 0    50   Input ~ 0
 CHK_OK
 Text HLabel 7500 3450 0    50   Output ~ 0
 CHG_EN
@@ -760,58 +758,6 @@ Wire Wire Line
 	3950 3550 4400 3550
 Wire Wire Line
 	3950 3700 4400 3700
-$Comp
-L Connector_Generic:Conn_01x20 J3
-U 1 1 61066023
-P 5450 6650
-F 0 "J3" H 5368 7767 50  0000 C CNN
-F 1 "ROFICOMS" H 5368 7676 50  0000 C CNN
-F 2 "Connector_FFC-FPC:Hirose_FH12-20S-0.5SH_1x20-1MP_P0.50mm_Horizontal" H 5450 6650 50  0001 C CNN
-F 3 "~" H 5450 6650 50  0001 C CNN
-F 4 "C11055" H 5450 6650 50  0001 C CNN "LCSC"
-	1    5450 6650
-	-1   0    0    -1  
-$EndComp
-Text HLabel 5650 5750 2    50   Input ~ 0
-GND
-Text GLabel 5650 5850 2    50   Input ~ 0
-SPI_SCK
-Text HLabel 5650 5950 2    50   Input ~ 0
-GND
-Text GLabel 5650 6050 2    50   Input ~ 0
-SPI_MISO_MOSI
-Text HLabel 5650 6150 2    50   Input ~ 0
-GND
-Text GLabel 5650 6250 2    50   Input ~ 0
-DOCK_1_CE
-Text GLabel 5650 6350 2    50   Input ~ 0
-DOCK_2_CE
-Text GLabel 5650 6450 2    50   Input ~ 0
-DOCK_3_CE
-Text HLabel 5650 6650 2    50   Input ~ 0
-BATT_VDD
-Text HLabel 5650 6550 2    50   Input ~ 0
-GND
-Text HLabel 5650 6750 2    50   Input ~ 0
-BATT_VDD
-Text HLabel 5650 7050 2    50   Input ~ 0
-INT
-Text HLabel 5650 6850 2    50   Input ~ 0
-GND
-Text HLabel 5650 7150 2    50   Input ~ 0
-INT
-Text Label 5650 7350 0    50   ~ 0
-EXT
-Text Label 5650 7450 0    50   ~ 0
-EXT
-Text HLabel 5650 6950 2    50   Input ~ 0
-GND
-Text HLabel 5650 7250 2    50   Input ~ 0
-GND
-Text HLabel 5650 7550 2    50   Input ~ 0
-GND
-Text HLabel 5650 7650 2    50   Input ~ 0
-GND
 Text HLabel 8800 3150 2    50   Output ~ 0
 BUZZER_P
 Text HLabel 7500 3650 0    50   Output ~ 0
@@ -825,6 +771,7 @@ F 1 "MPU-6050" H 1350 5200 50  0000 C CNN
 F 2 "Sensor_Motion:InvenSense_QFN-24_4x4mm_P0.5mm" H 1800 3850 50  0001 C CNN
 F 3 "https://store.invensense.com/datasheets/invensense/MPU-6050_DataSheet_V3%204.pdf" H 1800 4500 50  0001 C CNN
 F 4 "C24112" H 1800 4650 50  0001 C CNN "LCSC"
+F 5 "0;0;90" H 1800 4650 50  0001 C CNN "JLCPCB_CORRECTION"
 	1    1800 4650
 	1    0    0    -1  
 $EndComp
@@ -845,6 +792,7 @@ F 1 "470n" H 2815 4055 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0402_1005Metric" H 2738 3950 50  0001 C CNN
 F 3 "~" H 2700 4100 50  0001 C CNN
 F 4 "JMK105BJ474KV-F" H 2700 4100 50  0001 C CNN "#manf"
+F 5 "C47339" H 2700 4100 50  0001 C CNN "LCSC"
 	1    2700 4100
 	-1   0    0    1   
 $EndComp
@@ -857,6 +805,7 @@ F 1 "470n" H 965 4005 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0402_1005Metric" H 888 3900 50  0001 C CNN
 F 3 "~" H 850 4050 50  0001 C CNN
 F 4 "JMK105BJ474KV-F" H 850 4050 50  0001 C CNN "#manf"
+F 5 "C47339" H 850 4050 50  0001 C CNN "LCSC"
 	1    850  4050
 	-1   0    0    1   
 $EndComp
@@ -895,6 +844,7 @@ F 1 "470n" H 2865 5055 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0402_1005Metric" H 2788 4950 50  0001 C CNN
 F 3 "~" H 2750 5100 50  0001 C CNN
 F 4 "JMK105BJ474KV-F" H 2750 5100 50  0001 C CNN "#manf"
+F 5 "C47339" H 2750 5100 50  0001 C CNN "LCSC"
 	1    2750 5100
 	-1   0    0    1   
 $EndComp
@@ -908,7 +858,7 @@ Text GLabel 2500 4350 2    50   Input ~ 0
 MPU_INT
 Text HLabel 1100 4550 0    50   Input ~ 0
 GND
-Text GLabel 7500 3050 0    50   Input ~ 0
+Text GLabel 7500 3850 0    50   Input ~ 0
 MPU_INT
 Wire Wire Line
 	3200 4850 3200 4950
@@ -923,6 +873,7 @@ F 1 "470n" H 3315 5055 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0402_1005Metric" H 3238 4950 50  0001 C CNN
 F 3 "~" H 3200 5100 50  0001 C CNN
 F 4 "JMK105BJ474KV-F" H 3200 5100 50  0001 C CNN "#manf"
+F 5 "C47339" H 3200 5100 50  0001 C CNN "LCSC"
 	1    3200 5100
 	-1   0    0    1   
 $EndComp
@@ -935,6 +886,7 @@ F 1 "HT7533-1-SOT89" H 10000 1976 50  0000 C CNN
 F 2 "Package_TO_SOT_SMD:SOT-89-3" H 10000 2025 50  0001 C CIN
 F 3 "https://www.holtek.com/documents/10179/116711/HT75xx-1v250.pdf" H 10000 1800 50  0001 C CNN
 F 4 "C14289" H 10000 1700 50  0001 C CNN "LCSC"
+F 5 "0;0;180" H 10000 1700 50  0001 C CNN "JLCPCB_CORRECTION"
 	1    10000 1700
 	1    0    0    -1  
 $EndComp
@@ -949,6 +901,7 @@ F 1 "22u" H 9565 1705 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric" H 9488 1600 50  0001 C CNN
 F 3 "~" H 9450 1750 50  0001 C CNN
 F 4 "GRM21BR61C226ME44L" H 9450 1750 50  0001 C CNN "#manf"
+F 5 "C45783" H 9450 1750 50  0001 C CNN "LCSC"
 	1    9450 1750
 	1    0    0    -1  
 $EndComp
@@ -969,6 +922,7 @@ F 1 "22u" H 10565 1705 50  0000 L CNN
 F 2 "Capacitor_SMD:C_0805_2012Metric" H 10488 1600 50  0001 C CNN
 F 3 "~" H 10450 1750 50  0001 C CNN
 F 4 "GRM21BR61C226ME44L" H 10450 1750 50  0001 C CNN "#manf"
+F 5 "C45783" H 10450 1750 50  0001 C CNN "LCSC"
 	1    10450 1750
 	1    0    0    -1  
 $EndComp
@@ -991,137 +945,92 @@ Wire Wire Line
 Connection ~ 10450 1600
 Text Label 10550 1600 0    50   ~ 0
 3V3_ANALOG
-Text GLabel 7500 3750 0    50   Output ~ 0
+Text GLabel 7500 3350 0    50   Output ~ 0
 USB_TO_BUS_EN
-Text GLabel 7500 3850 0    50   Output ~ 0
+Text GLabel 7500 3050 0    50   Output ~ 0
 BATT_TO_BUS_EN
-Text GLabel 4500 4350 0    50   Input ~ 0
+Text GLabel 2600 5800 0    50   Input ~ 0
 USB_C_VDD
 Text GLabel 8000 4600 2    50   Input ~ 0
 USB_C_VDD
 $Comp
-L Connector_Generic:Conn_01x10 J1
+L rofi:Conn_01x10-FPC J1
 U 1 1 60F597D4
 P 4900 1150
 F 0 "J1" H 4980 1142 50  0000 L CNN
 F 1 "DEBUG" H 4980 1051 50  0000 L CNN
-F 2 "Connector_FFC-FPC:Hirose_FH12-10S-0.5SH_1x10-1MP_P0.50mm_Horizontal" H 4900 1150 50  0001 C CNN
+F 2 "rofi:Hirose_FH12-10S-0.5SH_1x10-1MP_P0.50mm_Horizontal" H 4900 1150 50  0001 C CNN
 F 3 "~" H 4900 1150 50  0001 C CNN
+F 4 "FH12-10S-0.5SH(55)" H 4900 1150 50  0001 C CNN "MFR"
+F 5 "1" H 4900 1150 50  0001 C CNN "MFR_QTY"
+F 6 "YES" H 4900 1150 50  0001 C CNN "JLCPCB_IGNORE"
 	1    4900 1150
 	1    0    0    -1  
 $EndComp
-Text HLabel 2950 7400 2    50   Input ~ 0
+Text HLabel 1850 7400 2    50   Input ~ 0
 GND
 Wire Wire Line
-	3100 7300 2950 7300
-Text Label 3100 7300 0    50   ~ 0
+	2000 7300 1850 7300
+Text Label 2000 7300 0    50   ~ 0
 EXT
-Text HLabel 2950 7200 2    50   Input ~ 0
+Text HLabel 1850 7200 2    50   Input ~ 0
 INT
-Text GLabel 2950 7100 2    50   Input ~ 0
-MOTORS_TX
-Text GLabel 2950 7000 2    50   Input ~ 0
-MOTORS_RX
-Text HLabel 2950 6900 2    50   Input ~ 0
+Text HLabel 1850 6900 2    50   Input ~ 0
 BATT_VDD
-Text HLabel 2950 6800 2    50   Input ~ 0
+Text HLabel 1850 6800 2    50   Input ~ 0
 BATT_VDD
-Text HLabel 2950 6700 2    50   Input ~ 0
+Text HLabel 1850 6700 2    50   Input ~ 0
 GND
-NoConn ~ 2950 6600
-NoConn ~ 2950 6500
-NoConn ~ 2950 6400
-NoConn ~ 2950 6300
-Text HLabel 2950 6200 2    50   Input ~ 0
+Text HLabel 1850 6200 2    50   Input ~ 0
 GND
-NoConn ~ 2950 6100
-Text HLabel 2950 6000 2    50   Input ~ 0
+Text HLabel 1850 6000 2    50   Input ~ 0
 GND
-Text GLabel 2350 6300 0    50   Input ~ 0
+Text GLabel 1250 6300 0    50   Input ~ 0
 SPI_MISO_MOSI
-Text HLabel 2350 7400 0    50   Input ~ 0
+Text HLabel 1250 7400 0    50   Input ~ 0
 GND
 Wire Wire Line
-	2350 7300 2150 7300
-Text HLabel 2350 6900 0    50   Input ~ 0
+	1250 7300 1050 7300
+Text HLabel 1250 6900 0    50   Input ~ 0
 BATT_VDD
-Text HLabel 2350 6200 0    50   Input ~ 0
+Text HLabel 1250 6200 0    50   Input ~ 0
 GND
-$Comp
-L Connector_Generic:Conn_01x15 J6
-U 1 1 60FE83F3
-P 2750 6700
-F 0 "J6" H 2668 5775 50  0000 C CNN
-F 1 "SHOE_B2" H 2668 5866 50  0000 C CNN
-F 2 "rofi:SlipRing-120220-0161" H 2750 6700 50  0001 C CNN
-F 3 "~" H 2750 6700 50  0001 C CNN
-	1    2750 6700
-	-1   0    0    1   
-$EndComp
 $Comp
 L Connector_Generic:Conn_01x15 J5
 U 1 1 60FE5197
-P 2550 6700
-F 0 "J5" H 2500 7650 50  0000 L CNN
-F 1 "SHOE_B1" H 2300 7550 50  0000 L CNN
-F 2 "rofi:SlipRing-120220-0161" H 2550 6700 50  0001 C CNN
-F 3 "~" H 2550 6700 50  0001 C CNN
-	1    2550 6700
+P 1450 6700
+F 0 "J5" H 1400 7650 50  0000 L CNN
+F 1 "SHOE_B1" H 1200 7550 50  0000 L CNN
+F 2 "rofi:SlipRing-120220-0161" H 1450 6700 50  0001 C CNN
+F 3 "~" H 1450 6700 50  0001 C CNN
+F 4 "120220-0161" H 1450 6700 50  0001 C CNN "MFR"
+F 5 "15" H 1450 6700 50  0001 C CNN "MFR_QTY"
+F 6 "YES" H 1450 6700 50  0001 C CNN "JLCPCB_IGNORE"
+	1    1450 6700
 	1    0    0    -1  
 $EndComp
-Text Label 2150 7300 0    50   ~ 0
+Text Label 1050 7300 0    50   ~ 0
 EXT
-Text HLabel 2350 7200 0    50   Input ~ 0
+Text HLabel 1250 7200 0    50   Input ~ 0
 INT
-Text HLabel 2350 6000 0    50   Input ~ 0
+Text HLabel 1250 6000 0    50   Input ~ 0
 GND
-Text HLabel 2350 6700 0    50   Input ~ 0
+Text HLabel 1250 6700 0    50   Input ~ 0
 GND
-Text HLabel 2350 6800 0    50   Input ~ 0
+Text HLabel 1250 6800 0    50   Input ~ 0
 BATT_VDD
-Text GLabel 2350 6600 0    50   Input ~ 0
+Text GLabel 1250 6600 0    50   Input ~ 0
 DOCK_6_CE
-Text GLabel 2350 6500 0    50   Input ~ 0
+Text GLabel 1250 6500 0    50   Input ~ 0
 DOCK_5_CE
-Text GLabel 2350 6400 0    50   Input ~ 0
+Text GLabel 1250 6400 0    50   Input ~ 0
 DOCK_4_CE
-Text GLabel 2350 6100 0    50   Input ~ 0
+Text GLabel 1250 6100 0    50   Input ~ 0
 SPI_SCK
-Text GLabel 2350 7100 0    50   Input ~ 0
+Text GLabel 1250 7100 0    50   Input ~ 0
 MOTORS_TX
-Text GLabel 2350 7000 0    50   Input ~ 0
+Text GLabel 1250 7000 0    50   Input ~ 0
 MOTORS_RX
-Text HLabel 4400 6750 2    50   Input ~ 0
-GND
-Text HLabel 4400 6350 2    50   Input ~ 0
-GND
-Text HLabel 4400 6850 2    50   Input ~ 0
-GND
-Text HLabel 4400 6950 2    50   Input ~ 0
-GND
-Text HLabel 4400 7050 2    50   Input ~ 0
-GND
-Text HLabel 4400 6650 2    50   Input ~ 0
-BATT_VDD
-Text HLabel 4400 6550 2    50   Input ~ 0
-BATT_VDD
-Text HLabel 4400 6450 2    50   Input ~ 0
-BATT_VDD
-Text GLabel 4400 6250 2    50   Input ~ 0
-MOTORS_RX
-Text GLabel 4400 6150 2    50   Input ~ 0
-MOTORS_TX
-$Comp
-L Connector_Generic:Conn_01x10 J4
-U 1 1 61077600
-P 4200 6550
-F 0 "J4" H 4118 7167 50  0000 C CNN
-F 1 "MOTORS" H 4118 7076 50  0000 C CNN
-F 2 "Connector_FFC-FPC:Hirose_FH12-10S-0.5SH_1x10-1MP_P0.50mm_Horizontal" H 4200 6550 50  0001 C CNN
-F 3 "~" H 4200 6550 50  0001 C CNN
-	1    4200 6550
-	-1   0    0    -1  
-$EndComp
 NoConn ~ 8800 3850
 NoConn ~ 7500 2050
 NoConn ~ 7500 2150
@@ -1192,23 +1101,215 @@ Wire Wire Line
 Wire Wire Line
 	6000 2750 6000 2800
 Wire Wire Line
-	7000 3000 7000 1850
+	6800 3000 6800 1850
 Wire Wire Line
-	7000 1850 7500 1850
+	6800 1850 7500 1850
 Wire Wire Line
-	6400 3000 7000 3000
+	6400 3000 6800 3000
 Connection ~ 6400 3000
 Wire Wire Line
-	7500 1750 6900 1750
+	7500 1750 6750 1750
 Wire Wire Line
-	6900 1750 6900 2650
+	6750 1750 6750 2650
 Wire Wire Line
-	6900 2650 5650 2650
+	6750 2650 5650 2650
 Wire Wire Line
 	5650 2650 5650 3000
 Connection ~ 5650 3000
 Wire Wire Line
 	6000 2150 6250 2150
 Wire Wire Line
-	6450 1550 7500 1550
+	6450 1550 6650 1550
+Wire Wire Line
+	800  2400 1550 2400
+$Comp
+L Device:R R37
+U 1 1 614D1327
+P 8050 4800
+F 0 "R37" V 7950 4800 50  0000 C CNN
+F 1 "5k1" V 8050 4800 50  0000 C CNN
+F 2 "Resistor_SMD:R_0402_1005Metric" V 7980 4800 50  0001 C CNN
+F 3 "~" H 8050 4800 50  0001 C CNN
+F 4 "C25905" V 8050 4800 50  0001 C CNN "LCSC"
+	1    8050 4800
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R R38
+U 1 1 614D2F88
+P 8050 4900
+F 0 "R38" V 8150 4900 50  0000 C CNN
+F 1 "5k1" V 8050 4900 50  0000 C CNN
+F 2 "Resistor_SMD:R_0402_1005Metric" V 7980 4900 50  0001 C CNN
+F 3 "~" H 8050 4900 50  0001 C CNN
+F 4 "C25905" V 8050 4900 50  0001 C CNN "LCSC"
+	1    8050 4900
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	7900 4800 7700 4800
+Wire Wire Line
+	7700 4900 7900 4900
+Wire Wire Line
+	8200 4800 8400 4800
+Wire Wire Line
+	8400 4800 8400 4900
+Wire Wire Line
+	8400 4900 8200 4900
+Text HLabel 8400 4800 2    50   Input ~ 0
+GND
+Text Label 7700 4800 0    50   ~ 0
+CC1
+Text Label 7700 4900 0    50   ~ 0
+CC2
+Wire Wire Line
+	6800 6100 7100 6100
+Text GLabel 4700 750  0    50   Input ~ 0
+ESP_EN
+$Comp
+L rofi:Conn_01x40-FPC J22
+U 1 1 617EB0F4
+P 5100 5650
+F 0 "J22" H 5018 3425 50  0000 C CNN
+F 1 "SHOE_OUT" H 5018 3516 50  0000 C CNN
+F 2 "rofi:Hirose_FH12-40S-0.5SH_1x40-1MP_P0.50mm_Horizontal" H 5100 5650 50  0001 C CNN
+F 3 "~" H 5100 5650 50  0001 C CNN
+F 4 "FH12-40S-0.5SH(55)" H 5100 5650 50  0001 C CNN "MFR"
+F 5 "YES" H 5100 5650 50  0001 C CNN "JLCPCB_IGNORE"
+F 6 "2" H 5100 5650 50  0001 C CNN "MFR_QTY"
+	1    5100 5650
+	-1   0    0    1   
+$EndComp
+Text HLabel 5300 3650 2    50   Input ~ 0
+GND
+Text GLabel 5300 3750 2    50   Input ~ 0
+SPI_SCK
+Text HLabel 5300 3850 2    50   Input ~ 0
+GND
+Text GLabel 5300 3950 2    50   Input ~ 0
+SPI_MISO_MOSI
+Text HLabel 5300 4050 2    50   Input ~ 0
+GND
+Text GLabel 5300 4150 2    50   Input ~ 0
+DOCK_1_CE
+Text GLabel 5300 4250 2    50   Input ~ 0
+DOCK_2_CE
+Text GLabel 5300 4350 2    50   Input ~ 0
+DOCK_3_CE
+Text HLabel 5300 4450 2    50   Input ~ 0
+GND
+Text GLabel 5300 4550 2    50   Input ~ 0
+MOTORS_TX
+Text GLabel 5300 4650 2    50   Input ~ 0
+MOTORS_RX
+Text HLabel 5300 4750 2    50   Input ~ 0
+GND
+Text HLabel 5300 4950 2    50   Input ~ 0
+BATT_VDD
+Text HLabel 5300 5250 2    50   Input ~ 0
+BATT_VDD
+Text HLabel 5300 5050 2    50   Input ~ 0
+BATT_VDD
+Text HLabel 5300 5150 2    50   Input ~ 0
+BATT_VDD
+Text HLabel 5300 5350 2    50   Input ~ 0
+BATT_VDD
+Text HLabel 5300 5450 2    50   Input ~ 0
+BATT_VDD
+Text HLabel 5300 5550 2    50   Input ~ 0
+BATT_VDD
+Text HLabel 5300 5650 2    50   Input ~ 0
+BATT_VDD
+Text HLabel 5300 7550 2    50   Input ~ 0
+GND
+Text HLabel 5300 7450 2    50   Input ~ 0
+GND
+Text HLabel 5300 7350 2    50   Input ~ 0
+GND
+Text HLabel 5300 7250 2    50   Input ~ 0
+GND
+Text HLabel 5300 7150 2    50   Input ~ 0
+GND
+Text HLabel 5300 7050 2    50   Input ~ 0
+GND
+Text HLabel 5300 6950 2    50   Input ~ 0
+GND
+Text HLabel 5300 6850 2    50   Input ~ 0
+GND
+Text HLabel 5300 6750 2    50   Input ~ 0
+GND
+Text HLabel 5300 6650 2    50   Input ~ 0
+GND
+Text HLabel 5300 6550 2    50   Input ~ 0
+GND
+Text HLabel 5300 5850 2    50   Input ~ 0
+INT
+Text HLabel 5300 5950 2    50   Input ~ 0
+INT
+Text HLabel 5300 6050 2    50   Input ~ 0
+INT
+Text HLabel 5300 5750 2    50   Input ~ 0
+INT
+Text Label 5300 6250 0    50   ~ 0
+EXT
+Text Label 5300 6350 0    50   ~ 0
+EXT
+Text Label 5300 6450 0    50   ~ 0
+EXT
+Text Label 5300 6150 0    50   ~ 0
+EXT
+Text HLabel 5300 4850 2    50   Input ~ 0
+GND
+Wire Wire Line
+	9550 4700 9550 4600
+$Comp
+L power:PWR_FLAG #FLG0109
+U 1 1 61B601A6
+P 6250 2150
+F 0 "#FLG0109" H 6250 2225 50  0001 C CNN
+F 1 "PWR_FLAG" H 6250 2323 50  0000 C CNN
+F 2 "" H 6250 2150 50  0001 C CNN
+F 3 "~" H 6250 2150 50  0001 C CNN
+	1    6250 2150
+	-1   0    0    1   
+$EndComp
+Connection ~ 6250 2150
+$Comp
+L power:PWR_FLAG #FLG0111
+U 1 1 61B60807
+P 6650 1550
+F 0 "#FLG0111" H 6650 1625 50  0001 C CNN
+F 1 "PWR_FLAG" H 6650 1700 50  0000 C CNN
+F 2 "" H 6650 1550 50  0001 C CNN
+F 3 "~" H 6650 1550 50  0001 C CNN
+	1    6650 1550
+	1    0    0    -1  
+$EndComp
+Connection ~ 6650 1550
+Wire Wire Line
+	6650 1550 7500 1550
+Text Notes 6000 2500 0    50   ~ 0
+Supress warning\nfrom the jumper
+$Comp
+L rofi:Conn_01x15_UM_slipring J6
+U 1 1 60FE83F3
+P 1650 6700
+F 0 "J6" H 1568 5775 50  0000 C CNN
+F 1 "SHOE_B2" H 1568 5866 50  0000 C CNN
+F 2 "rofi:SlipRing-120220-0161-incomplete" H 1650 6700 50  0001 C CNN
+F 3 "~" H 1650 6700 50  0001 C CNN
+F 4 "120220-0161" H 1650 6700 50  0001 C CNN "MFR"
+F 5 "8" H 1650 6700 50  0001 C CNN "MFR_QTY"
+F 6 "YES" H 1650 6700 50  0001 C CNN "JLCPCB_IGNORE"
+	1    1650 6700
+	-1   0    0    1   
+$EndComp
+Text HLabel 5150 750  2    50   Input ~ 0
+BATT_VDD
+Text HLabel 5150 1650 2    50   Input ~ 0
+BATT_VDD
+Text HLabel 4850 7550 0    50   Input ~ 0
+GND
+Text HLabel 4850 3650 0    50   Input ~ 0
+INT
 $EndSCHEMATC

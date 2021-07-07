@@ -1,17 +1,14 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(rofi)
+project(rofi_doc)
 
-option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." FALSE)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} $ENV{ROFI_ROOT}/releng/cmake)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 
-include(FetchContent)
 include(CollectTargets)
+include(Kikit)
 
-# TBA
+add_subdirectory($ENV{ROFI_ROOT}/hardwareModules/universalModule/hardware universalModule)
+add_subdirectory($ENV{ROFI_ROOT}/hardwareModules/RoFICoM/hardware roficom)
+
 
 list_targets()

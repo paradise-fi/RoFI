@@ -1,4 +1,5 @@
-(module pogo_pads_4_3 (layer F.Cu) (tedit 5C8A413F)
+(module pogo_pads_4_3 (layer F.Cu) (tedit 60E56086)
+  (attr virtual)
   (fp_text reference REF** (at 0 4.5) (layer F.SilkS)
     (effects (font (size 1 1) (thickness 0.15)))
   )

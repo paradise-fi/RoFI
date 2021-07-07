@@ -1,0 +1,374 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 9 14
+Title ""
+Date ""
+Rev ""
+Comp ""
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L Mechanical:MountingHole H15
+U 1 1 5F56E29B
+P 3950 1350
+F 0 "H15" H 4050 1396 50  0000 L CNN
+F 1 "MountingHole" H 4050 1305 50  0000 L CNN
+F 2 "rofi:RoFICoM-MountingHolesThreaded" H 3950 1350 50  0001 C CNN
+F 3 "~" H 3950 1350 50  0001 C CNN
+F 4 "YES" H 3950 1350 50  0001 C CNN "JLCPCB_IGNORE"
+	1    3950 1350
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H13
+U 1 1 5F56FA8A
+P 3900 2800
+F 0 "H13" H 4000 2846 50  0000 L CNN
+F 1 "MountingHole" H 4000 2755 50  0000 L CNN
+F 2 "rofi:RoFICoM-MountingHolesThreaded" H 3900 2800 50  0001 C CNN
+F 3 "~" H 3900 2800 50  0001 C CNN
+F 4 "YES" H 3900 2800 50  0001 C CNN "JLCPCB_IGNORE"
+	1    3900 2800
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H14
+U 1 1 5F570017
+P 3900 4850
+F 0 "H14" H 4000 4896 50  0000 L CNN
+F 1 "MountingHole" H 4000 4805 50  0000 L CNN
+F 2 "rofi:RoFICoM-MountingHolesThreaded" H 3900 4850 50  0001 C CNN
+F 3 "~" H 3900 4850 50  0001 C CNN
+F 4 "YES" H 3900 4850 50  0001 C CNN "JLCPCB_IGNORE"
+	1    3900 4850
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H28
+U 1 1 5F574175
+P 5050 1350
+F 0 "H28" H 5150 1396 50  0000 L CNN
+F 1 "MountingHole" H 5150 1305 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5050 1350 50  0001 C CNN
+F 3 "~" H 5050 1350 50  0001 C CNN
+F 4 "YES" H 5050 1350 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5050 1350
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H29
+U 1 1 5F577660
+P 5050 1550
+F 0 "H29" H 5150 1596 50  0000 L CNN
+F 1 "MountingHole" H 5150 1505 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5050 1550 50  0001 C CNN
+F 3 "~" H 5050 1550 50  0001 C CNN
+F 4 "YES" H 5050 1550 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5050 1550
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H16
+U 1 1 5F57BFEC
+P 5000 2500
+F 0 "H16" H 5100 2546 50  0000 L CNN
+F 1 "MountingHole" H 5100 2455 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5000 2500 50  0001 C CNN
+F 3 "~" H 5000 2500 50  0001 C CNN
+F 4 "YES" H 5000 2500 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5000 2500
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H17
+U 1 1 5F57BFF2
+P 5000 2700
+F 0 "H17" H 5100 2746 50  0000 L CNN
+F 1 "MountingHole" H 5100 2655 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5000 2700 50  0001 C CNN
+F 3 "~" H 5000 2700 50  0001 C CNN
+F 4 "YES" H 5000 2700 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5000 2700
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H18
+U 1 1 5F57CC52
+P 5000 2950
+F 0 "H18" H 5100 2996 50  0000 L CNN
+F 1 "MountingHole" H 5100 2905 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5000 2950 50  0001 C CNN
+F 3 "~" H 5000 2950 50  0001 C CNN
+F 4 "YES" H 5000 2950 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5000 2950
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H19
+U 1 1 5F57CC58
+P 5000 3150
+F 0 "H19" H 5100 3196 50  0000 L CNN
+F 1 "MountingHole" H 5100 3105 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5000 3150 50  0001 C CNN
+F 3 "~" H 5000 3150 50  0001 C CNN
+F 4 "YES" H 5000 3150 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5000 3150
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H24
+U 1 1 5F57DA46
+P 5000 4700
+F 0 "H24" H 5100 4746 50  0000 L CNN
+F 1 "MountingHole" H 5100 4655 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5000 4700 50  0001 C CNN
+F 3 "~" H 5000 4700 50  0001 C CNN
+F 4 "YES" H 5000 4700 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5000 4700
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H25
+U 1 1 5F57DA4C
+P 5000 4900
+F 0 "H25" H 5100 4946 50  0000 L CNN
+F 1 "MountingHole" H 5100 4855 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5000 4900 50  0001 C CNN
+F 3 "~" H 5000 4900 50  0001 C CNN
+F 4 "YES" H 5000 4900 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5000 4900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H30
+U 1 1 5F58CA41
+P 5050 1750
+F 0 "H30" H 5150 1796 50  0000 L CNN
+F 1 "MountingHole" H 5150 1705 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5050 1750 50  0001 C CNN
+F 3 "~" H 5050 1750 50  0001 C CNN
+F 4 "YES" H 5050 1750 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5050 1750
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H31
+U 1 1 5F58CA4B
+P 5050 1950
+F 0 "H31" H 5150 1996 50  0000 L CNN
+F 1 "MountingHole" H 5150 1905 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5050 1950 50  0001 C CNN
+F 3 "~" H 5050 1950 50  0001 C CNN
+F 4 "YES" H 5050 1950 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5050 1950
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H20
+U 1 1 5F598979
+P 5000 3350
+F 0 "H20" H 5100 3396 50  0000 L CNN
+F 1 "MountingHole" H 5100 3305 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5000 3350 50  0001 C CNN
+F 3 "~" H 5000 3350 50  0001 C CNN
+F 4 "YES" H 5000 3350 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5000 3350
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H21
+U 1 1 5F598983
+P 5000 3550
+F 0 "H21" H 5100 3596 50  0000 L CNN
+F 1 "MountingHole" H 5100 3505 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5000 3550 50  0001 C CNN
+F 3 "~" H 5000 3550 50  0001 C CNN
+F 4 "YES" H 5000 3550 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5000 3550
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H22
+U 1 1 5F59898D
+P 5000 3800
+F 0 "H22" H 5100 3846 50  0000 L CNN
+F 1 "MountingHole" H 5100 3755 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5000 3800 50  0001 C CNN
+F 3 "~" H 5000 3800 50  0001 C CNN
+F 4 "YES" H 5000 3800 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5000 3800
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H23
+U 1 1 5F598997
+P 5000 4000
+F 0 "H23" H 5100 4046 50  0000 L CNN
+F 1 "MountingHole" H 5100 3955 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5000 4000 50  0001 C CNN
+F 3 "~" H 5000 4000 50  0001 C CNN
+F 4 "YES" H 5000 4000 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5000 4000
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H26
+U 1 1 5F5A3385
+P 5000 5100
+F 0 "H26" H 5100 5146 50  0000 L CNN
+F 1 "MountingHole" H 5100 5055 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5000 5100 50  0001 C CNN
+F 3 "~" H 5000 5100 50  0001 C CNN
+F 4 "YES" H 5000 5100 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5000 5100
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole H27
+U 1 1 5F5A338F
+P 5000 5300
+F 0 "H27" H 5100 5346 50  0000 L CNN
+F 1 "MountingHole" H 5100 5255 50  0000 L CNN
+F 2 "rofi:ThreadedHole-M2" H 5000 5300 50  0001 C CNN
+F 3 "~" H 5000 5300 50  0001 C CNN
+F 4 "YES" H 5000 5300 50  0001 C CNN "JLCPCB_IGNORE"
+	1    5000 5300
+	1    0    0    -1  
+$EndComp
+$Sheet
+S 2050 1250 1550 950 
+U 61B33DE5
+F0 "Shoe pads left" 50
+F1 "shoe_pads.sch" 50
+F2 "SS" I L 2050 1450 50 
+F3 "SS3" I L 2050 1650 50 
+F4 "SS2" I L 2050 1750 50 
+F5 "SS1" I L 2050 1850 50 
+$EndSheet
+$Sheet
+S 2000 4450 1650 1050
+U 61B3C9CE
+F0 "Shoe pads right" 50
+F1 "shoe_pads.sch" 50
+F2 "SS" I L 2000 4700 50 
+F3 "SS3" I L 2000 4900 50 
+F4 "SS2" I L 2000 5000 50 
+F5 "SS1" I L 2000 5100 50 
+$EndSheet
+Wire Wire Line
+	2000 4900 1800 4900
+Wire Wire Line
+	1800 4900 1800 4700
+Wire Wire Line
+	1800 4700 2000 4700
+$Sheet
+S 2000 2800 1600 1000
+U 61B3C82E
+F0 "Shoe pads middle" 50
+F1 "shoe_pads.sch" 50
+F2 "SS" I L 2000 3050 50 
+F3 "SS3" I L 2000 3250 50 
+F4 "SS2" I L 2000 3350 50 
+F5 "SS1" I L 2000 3450 50 
+$EndSheet
+Wire Wire Line
+	2000 3350 1800 3350
+Wire Wire Line
+	1800 3350 1800 3050
+Wire Wire Line
+	1800 3050 2000 3050
+Wire Wire Line
+	2050 1850 1800 1850
+Wire Wire Line
+	1800 1850 1800 1450
+Wire Wire Line
+	1800 1450 2050 1450
+$Sheet
+S 7550 1150 1150 750 
+U 61B96469
+F0 "Shoe-shoe cable" 50
+F1 "shoe_shoe_cable.sch" 50
+$EndSheet
+$Sheet
+S 7600 2450 1100 850 
+U 61B99D9E
+F0 "Body-shoe cable.sch" 50
+F1 "body_shoe_cable.sch" 50
+$EndSheet
+$Comp
+L Graphic:SYM_Arrow45_Normal BODY?
+U 1 1 61C669D7
+P 7400 1600
+AR Path="/61C669D7" Ref="BODY?"  Part="1" 
+AR Path="/619E4ACE/61C669D7" Ref="CABLE1"  Part="1" 
+F 0 "CABLE1" H 7100 1750 50  0000 L CNN
+F 1 "BOARD" H 6950 1750 50  0000 C CNN
+F 2 "kikit:Board" H 7400 1600 50  0001 C CNN
+F 3 "~" H 7400 1600 50  0001 C CNN
+F 4 "YES" H 7400 1600 50  0001 C CNN "JLCPCB_IGNORE"
+	1    7400 1600
+	1    0    0    1   
+$EndComp
+$Comp
+L Graphic:SYM_Arrow45_Normal CABLE?
+U 1 1 61C66BFE
+P 7450 2850
+AR Path="/61C66BFE" Ref="CABLE?"  Part="1" 
+AR Path="/619E4ACE/61C66BFE" Ref="CABLE2"  Part="1" 
+F 0 "CABLE2" H 7150 3000 50  0000 L CNN
+F 1 "BOARD" H 7000 3000 50  0000 C CNN
+F 2 "kikit:Board" H 7450 2850 50  0001 C CNN
+F 3 "~" H 7450 2850 50  0001 C CNN
+F 4 "YES" H 7450 2850 50  0001 C CNN "JLCPCB_IGNORE"
+	1    7450 2850
+	1    0    0    1   
+$EndComp
+$Comp
+L Graphic:SYM_Arrow45_Normal CABLE?
+U 1 1 61C6735C
+P 1950 2200
+AR Path="/61C6735C" Ref="CABLE?"  Part="1" 
+AR Path="/619E4ACE/61C6735C" Ref="SHOE1"  Part="1" 
+F 0 "SHOE1" H 1650 2350 50  0000 L CNN
+F 1 "BOARD" H 1500 2350 50  0000 C CNN
+F 2 "kikit:Board" H 1950 2200 50  0001 C CNN
+F 3 "~" H 1950 2200 50  0001 C CNN
+F 4 "YES" H 1950 2200 50  0001 C CNN "JLCPCB_IGNORE"
+	1    1950 2200
+	1    0    0    1   
+$EndComp
+$Comp
+L Graphic:SYM_Arrow45_Normal SHOE?
+U 1 1 61C67960
+P 1900 3750
+AR Path="/61C67960" Ref="SHOE?"  Part="1" 
+AR Path="/619E4ACE/61C67960" Ref="SHOE2"  Part="1" 
+F 0 "SHOE2" H 1600 3900 50  0000 L CNN
+F 1 "BOARD" H 1450 3900 50  0000 C CNN
+F 2 "kikit:Board" H 1900 3750 50  0001 C CNN
+F 3 "~" H 1900 3750 50  0001 C CNN
+F 4 "YES" H 1900 3750 50  0001 C CNN "JLCPCB_IGNORE"
+	1    1900 3750
+	1    0    0    1   
+$EndComp
+$Comp
+L Graphic:SYM_Arrow45_Normal SHOE?
+U 1 1 61C67DAA
+P 1900 5400
+AR Path="/61C67DAA" Ref="SHOE?"  Part="1" 
+AR Path="/619E4ACE/61C67DAA" Ref="SHOE3"  Part="1" 
+F 0 "SHOE3" H 1600 5550 50  0000 L CNN
+F 1 "BOARD" H 1450 5550 50  0000 C CNN
+F 2 "kikit:Board" H 1900 5400 50  0001 C CNN
+F 3 "~" H 1900 5400 50  0001 C CNN
+F 4 "YES" H 1900 5400 50  0001 C CNN "JLCPCB_IGNORE"
+	1    1900 5400
+	1    0    0    1   
+$EndComp
+$EndSCHEMATC
