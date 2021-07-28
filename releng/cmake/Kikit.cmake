@@ -1,7 +1,5 @@
 find_program (KIKIT NAMES "kikit")
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
-
 function(set_semicolon_safe varname)
     set(tmp "")
     foreach(X ${ARGN})
@@ -12,7 +10,7 @@ function(set_semicolon_safe varname)
 endfunction()
 
 function(add_pcb ADD_PCB_TARGET)
-    set(options)
+    set(options STEPMODEL)
     set(oneValueArgs SOURCE SCHEMATICS)
     set(multiValueArgs PANELIZE SEPARATE FAB)
 
@@ -70,8 +68,18 @@ function(add_pcb ADD_PCB_TARGET)
         )
     endif()
 
+    if("${ADD_PCB_STEPMODEL}")
+        set(stepModel "${CMAKE_CURRENT_BINARY_DIR}/${ADD_PCB_TARGET}.step")
+        add_custom_command(
+            OUTPUT ${stepModel}
+            DEPENDS ${targetBoard}
+            COMMENT "Exporting 3D model of ${ADD_PCB_TARGET}"
+            COMMAND kicad2step -f -o ${stepModel} ${targetBoard}
+        )
+    endif()
+
     add_custom_target(${ADD_PCB_TARGET}
         ALL
         COMMENT "Board ${ADD_PCB_TARGET}"
-        DEPENDS ${targetBoard} ${targetArchive})
+        DEPENDS ${targetBoard} ${targetArchive} ${stepModel})
 endfunction()

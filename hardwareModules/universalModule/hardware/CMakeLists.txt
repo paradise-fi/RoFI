@@ -16,12 +16,23 @@ add_pcb(um_controlBoard
     SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.sch
 )
 
+add_pcb(um_controlBoard3DModel
+    SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
+    SEPARATE --source "annotation\; ref: BODY3\; tolerance: 6mm"
+    STEPMODEL
+)
+
 add_pcb(um_batteryBoard
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     PANELIZE --source "annotation\; ref: BODY1\; tolerance: 6mm" ${SINGLE_PANEL_OPTS}
-             --debug "trace: true"
     FAB jlcpcb --assembly
     SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.sch
+)
+
+add_pcb(um_batteryBoard3DModel
+    SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
+    SEPARATE --source "annotation\; ref: BODY1\; tolerance: 6mm"
+    STEPMODEL
 )
 
 add_pcb(um_displayBoard
@@ -31,16 +42,34 @@ add_pcb(um_displayBoard
     SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.sch
 )
 
+add_pcb(um_displayBoard3DModel
+    SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
+    SEPARATE --source "annotation\; ref: BODY2\; tolerance: 6mm\;stack: 2layer"
+    STEPMODEL
+)
+
 add_pcb(um_slipRing
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     SEPARATE --source "annotation\; ref: BODY5\; tolerance: 6mm\;stack: 2layer"
     FAB jlcpcb
 )
 
+add_pcb(um_slipRing3DModel
+    SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
+    SEPARATE --source "annotation\; ref: BODY5\; tolerance: 6mm\;stack: 2layer"
+    STEPMODEL
+)
+
 add_pcb(um_servoBoard
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     SEPARATE --source "annotation\; ref: BODY4\; tolerance: 3mm\;stack: 2layer"
     FAB jlcpcb
+)
+
+add_pcb(um_servoBoard3DModel
+    SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
+    SEPARATE --source "annotation\; ref: BODY4\; tolerance: 3mm\;stack: 2layer"
+    STEPMODEL
 )
 
 add_pcb(um_debugBoard
@@ -55,16 +84,34 @@ add_pcb(um_shoeLeft
     FAB jlcpcb
 )
 
+add_pcb(um_shoeLeft3DModel
+    SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
+    SEPARATE --source "annotation\; ref: SHOE1\; tolerance: 3mm\;stack: 2layer"
+    STEPMODEL
+)
+
 add_pcb(um_shoeMid
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
-    SEPARATE --source "annotation\; ref: SHOE2\; tolerance: 3mm\;stack: 2layer"
+    SEPARATE --source "annotation\; ref: SHOE2\; tolerance: 8mm\;stack: 2layer"
     FAB jlcpcb
+)
+
+add_pcb(um_shoeMid3DModel
+    SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
+    SEPARATE --source "annotation\; ref: SHOE2\; tolerance: 3mm\;stack: 2layer"
+    STEPMODEL
 )
 
 add_pcb(um_shoeRight
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     SEPARATE --source "annotation\; ref: SHOE3\; tolerance: 3mm\;stack: 2layer"
     FAB jlcpcb
+)
+
+add_pcb(um_shoeRight3DModel
+    SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
+    SEPARATE --source "annotation\; ref: SHOE3\; tolerance: 3mm\;stack: 2layer"
+    STEPMODEL
 )
 
 add_pcb(um_bodyCable

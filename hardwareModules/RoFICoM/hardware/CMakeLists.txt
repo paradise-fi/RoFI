@@ -3,10 +3,10 @@ cmake_minimum_required(VERSION 3.12)
 set_semicolon_safe(SINGLE_PANEL_OPTS
     -p :jlcTooling
     --framing "railstb\; width: 5mm\; space: 3mm"
-    --tabs "fixed\; width: 3mm\; hcount: 2\; vcount: 2\;"
+    --tabs "fixed\; width: 5mm\; hcount: 1\; vcount: 1\;"
     --cuts "mousebites\; drill: 0.3mm\; spacing: 0.6mm\; offset: 0.15mm\; prolong: 0.8mm"
     --tooling "3hole\; hoffset: 2.5mm\; voffset: 2.5mm"
-    --post "millradius: 1mm"
+    --post "millradius: 0.5mm"
     )
 
 add_pcb(roficom_controlBoard
@@ -16,6 +16,12 @@ add_pcb(roficom_controlBoard
              --layout "grid\; rows: 2\; cols: 2\; rotation: 45deg\; space: 2mm"
     FAB jlcpcb --assembly
     SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/control_board/control_board.sch
+)
+
+add_pcb(roficom_controlBoard3DModel
+    SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/control_board/control_board.kicad_pcb
+    SEPARATE --source "annotation\; ref: BOARD1\; tolerance: 6mm"
+    STEPMODEL
 )
 
 add_pcb(roficom_skirt
@@ -30,6 +36,12 @@ add_pcb(roficom_skirt
              --post "millradius: 1mm"
     FAB jlcpcb --assembly
     SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/control_board/control_board.sch
+)
+
+add_pcb(roficom_roficom_skirt3DModel
+    SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/control_board/control_board.kicad_pcb
+    SEPARATE --source "annotation\; ref: BOARD2\; tolerance: 6mm"
+    STEPMODEL
 )
 
 add_pcb(roficom_cable
