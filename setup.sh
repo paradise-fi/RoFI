@@ -136,6 +136,9 @@ run() {
     backup PS1
     backup PATH
     backup PYTHONPATH
+    backup MAKEFLAGS
+
+    export MAKEFLAGS="$(MAKEFLAGS) --no-print-directory"
 
     setGazeboVariables
 
