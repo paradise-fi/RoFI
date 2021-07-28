@@ -1,17 +1,22 @@
 cmake_minimum_required(VERSION 3.12)
 
-project(rofi)
-
-option (FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." FALSE)
-
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} $ENV{ROFI_ROOT}/releng/cmake)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
+
 
 include(FetchContent)
 include(CollectTargets)
+include(STM32Device)
+set(CMAKE_TOOLCHAIN_FILE STM32Toolchain)
+set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)
 
-# TBA
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+
+project(firmware)
+
+add_subdirectory($ENV{ROFI_ROOT}/softwareComponents/stm32cxx stm32cxx)
+add_subdirectory($ENV{ROFI_ROOT}/hardwareModules/RoFICoM/software/control_board/
+roficom)
 
 list_targets()
