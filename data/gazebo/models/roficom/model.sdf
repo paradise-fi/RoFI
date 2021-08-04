@@ -27,7 +27,7 @@
                     </cylinder>
                 </geometry>
             </collision>
-            <visual name='visual'>
+            <visual name='outer-visual'>
                 <pose>0 0 -8.5e-3 0 0 0</pose>
                 <geometry>
                     <cylinder>
@@ -68,7 +68,7 @@
                     </cylinder>
                 </geometry>
             </collision>
-            <visual name='visual'>
+            <visual name='inner-visual'>
                 <pose>0 0 -3.5e-3 0 0 0</pose>
                 <geometry>
                     <cylinder>
@@ -104,7 +104,7 @@
                 <use_parent_model_frame>1</use_parent_model_frame>
             </axis>
         </joint>
-        <plugin name='roficom' filename='libroficomPlugin.so'>
+        <plugin name='roficomPlugin' filename='libroficomPlugin.so'>
             <joint>extendJoint</joint>
             <extend>false</extend>
         </plugin>
