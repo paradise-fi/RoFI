@@ -41,7 +41,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
             cmake make git doxygen graphviz
-          sudo pip3 install sphinx breathe sphinx-rtd-theme recommonmark
+          sudo pip3 install sphinx<4.1.0 breathe sphinx-rtd-theme recommonmark
       - name: "Build"
         run: |
           source setup.sh Release
