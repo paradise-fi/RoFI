@@ -67,12 +67,10 @@ setGazeboVariables() {
         GAZEBO_NAME="gazebo"
     fi
 
-    local GAZEBO_INFO=$(whereis $GAZEBO_NAME | cut -d: -f2)
-    # xargs trims whitespace
-    # local GAZEBO_BIN=$(echo $INFO | xargs | cut -d' ' -f1)
-    local GAZEBO_SHARE=$(echo $GAZEBO_INFO | xargs | cut -d' ' -f2)
+    local GAZEBO_BIN=$(command -v "$GAZEBO_NAME")
+    local GAZEBO_SHARE=$(dirname "$(dirname "$GAZEBO_BIN")")/share/gazebo
 
-    if [ -z "$GAZEBO_SHARE" ]; then
+    if [ ! -d "$GAZEBO_SHARE" ]; then
         return
     fi
 
