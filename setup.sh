@@ -138,7 +138,7 @@ run() {
     backup PYTHONPATH
     backup MAKEFLAGS
 
-    export MAKEFLAGS="$(MAKEFLAGS) --no-print-directory"
+    export MAKEFLAGS="${MAKEFLAGS} --no-print-directory"
 
     setGazeboVariables
 
