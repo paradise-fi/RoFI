@@ -56,6 +56,8 @@ if(Qt5_FOUND)
   add_executable(rofi-app
     rofiapp_mainWindow.cpp rofiapp.cpp rofiapp_resources.qrc Vtk.cpp ${modelResources} )
 
+  target_include_directories(rofi-app
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
   target_link_libraries(rofi-app
     Qt5::Widgets configuration atoms atoms-heavy cxxopts ${VTK_LIBRARIES})
 

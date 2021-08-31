@@ -6,13 +6,13 @@ int main(int argc, char *argv[])
 {
 
 
-// VTK 8.2 and newer
-//    QSurfaceFormat::setDefaultFormat(QVTKOpenGLWidget::defaultFormat());  // VTK 8.2 and newer
-
-// VTK 7.1 and older
+#if (VTK_MAJOR_VERSION == 8 && VTK_MINOR_VERSION >= 2) || VTK_MAJOR_VERSION > 8
+    QSurfaceFormat::setDefaultFormat(QVTKOpenGLWidget::defaultFormat());
+#else
     auto format = QSurfaceFormat::defaultFormat();
     format.setStencilBufferSize(8);
     QSurfaceFormat::setDefaultFormat(format);
+#endif
 
     QApplication a(argc, argv);
     Rofiapp_MainWindow w;

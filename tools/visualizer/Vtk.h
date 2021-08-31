@@ -1,6 +1,10 @@
 #pragma once
 
-// #include <vtkGenericOpenGLRenderWindow.h> // VTK 8.2 and newer
+#include <vtkVersion.h>
+
+#if (VTK_MAJOR_VERSION == 8 && VTK_MINOR_VERSION >= 2) || VTK_MAJOR_VERSION > 8
+#include <vtkGenericOpenGLRenderWindow.h>
+#endif
 
 #include <vtkSmartPointer.h>
 #include <vtkSphereSource.h>

@@ -9,9 +9,7 @@
 #include <QFileDialog>
 #include <QDebug>
 
-// #include <QVTKOpenGLWidget.h>   // VTK 8.2 and newer
-#include <QVTKWidget.h>         // VTK 7.1 and older
-
+#include <CompatQVTKWidget.h>
 
 #include <string.h>
 #include <Configuration.h>
@@ -52,8 +50,11 @@ private:
     Configuration *current_cfg;
     bool check_cfg(bool update_current_cfg);
 
-//    vtkSmartPointer<vtkGenericOpenGLRenderWindow> renderWindow;  // VTK 8.2 and newer
-    vtkSmartPointer<vtkRenderWindow> renderWindow;  // VTK 7.1 and older
+#if (VTK_MAJOR_VERSION == 8 && VTK_MINOR_VERSION >= 2) || VTK_MAJOR_VERSION > 8
+    vtkSmartPointer<vtkGenericOpenGLRenderWindow> renderWindow;
+#else
+    vtkSmartPointer<vtkRenderWindow> renderWindow;
+#endif
 
     vtkSmartPointer<vtkRenderer> renderer;
     vtkSmartPointer<vtkCamera> camera;

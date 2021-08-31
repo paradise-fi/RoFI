@@ -13,8 +13,11 @@ Rofiapp_MainWindow::Rofiapp_MainWindow(QWidget *parent) :
 
 
     /* Fresh Renderer */
-//    renderWindow = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();   // VTK 8.2 and newer
-    renderWindow = vtkSmartPointer<vtkRenderWindow>::New();                // VTK 7.1 and older
+#if (VTK_MAJOR_VERSION == 8 && VTK_MINOR_VERSION >= 2) || VTK_MAJOR_VERSION > 8
+    renderWindow = vtkSmartPointer<vtkGenericOpenGLRenderWindow>::New();
+#else
+    renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
+#endif
     renderer = vtkSmartPointer<vtkRenderer>::New();
     renderWindow->AddRenderer(renderer);
 
