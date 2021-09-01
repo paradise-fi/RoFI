@@ -90,7 +90,7 @@ void Rofiapp_MainWindow::showSphere()
 
     renderer->AddActor( sphereActor );
     renderer->ResetCamera();
-    renderer->Render();
+    renderWindow->Render();
     ui->qvtkWidget->update();
     ui->resetCamera->setEnabled(false);
 }
@@ -100,7 +100,7 @@ void Rofiapp_MainWindow::changeBackground()
     bckgValue -= 0.1;
     if (bckgValue < 0.5) { bckgValue = 1.0; }
     renderer->SetBackground(bckgValue, bckgValue, 1.0);
-    renderer->Render();
+    renderWindow->Render();
     ui->qvtkWidget->update();
 }
 
@@ -150,7 +150,7 @@ void Rofiapp_MainWindow::on_loadConf_clicked()
 void Rofiapp_MainWindow::on_showConf_clicked()
 {
     this -> check_cfg(true);
-    renderer -> Render();
+    renderWindow->Render();
     ui->qvtkWidget->update();
 }
 
@@ -163,7 +163,7 @@ void Rofiapp_MainWindow::on_resetCamera_clicked()
     camera->SetViewUp(0,0,1);
 
     renderer -> ResetCamera();
-    renderer -> Render();
+    renderWindow->Render();
     ui->qvtkWidget->update();
 }
 
