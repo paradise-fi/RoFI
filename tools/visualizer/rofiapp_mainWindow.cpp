@@ -21,7 +21,11 @@ Rofiapp_MainWindow::Rofiapp_MainWindow(QWidget *parent) :
     renderer = vtkSmartPointer<vtkRenderer>::New();
     renderWindow->AddRenderer(renderer);
 
+#if VTK_MAJOR_VERSION >= 9
+    ui->qvtkWidget->setRenderWindow(renderWindow);
+#else
     ui->qvtkWidget->SetRenderWindow(renderWindow);
+#endif
 
     renderer->SetBackground(bckgValue, bckgValue, 1.0);
 

@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 
 
 #if (VTK_MAJOR_VERSION == 8 && VTK_MINOR_VERSION >= 2) || VTK_MAJOR_VERSION > 8
-    QSurfaceFormat::setDefaultFormat(QVTKOpenGLWidget::defaultFormat());
+    QSurfaceFormat::setDefaultFormat(QVTKOpenGLNativeWidget::defaultFormat());
 #else
     auto format = QSurfaceFormat::defaultFormat();
     format.setStencilBufferSize(8);
