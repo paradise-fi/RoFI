@@ -170,7 +170,7 @@ void buildConfigurationScene( vtkRenderer* renderer, rofi::Rofibot& bot ) {
     }
 }
 
-static auto& command = Dim::Cli().command( "preview" )
+static auto command = Dim::Cli().command( "preview" )
     .desc( "Interactively preview a configuration" );
 static auto& inputFile = command.opt< std::string >( "<FILE>" )
     .desc("Specify source file");

@@ -1,7 +1,7 @@
 #include <dimcli/cli.h>
 #include <universalModule.hpp>
 
-static auto& command = Dim::Cli().command( "check" )
+static auto command = Dim::Cli().command( "check" )
     .desc( "Check a given configuration" );
 static auto& inputFile = command.opt< std::string >( "<FILE>" )
     .desc("Specify configuration file");
