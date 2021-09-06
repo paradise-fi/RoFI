@@ -89,6 +89,16 @@ endif()
 if (${BUILD_GAZEBO})
   find_package(gazebo REQUIRED)
 endif()
+FetchContent_Declare(
+  json
+  GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent.git
+  GIT_TAG        v3.10.2
+)
+FetchContent_GetProperties(json)
+if(NOT json_POPULATED)
+  FetchContent_Populate(json)
+  add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR})
+endif()
 
 
 
@@ -105,6 +115,7 @@ add_component(lwip++)
 add_component(lwipcore)
 add_component(networking)
 add_component(jthread)
+add_component(snake_reconfig)
 
 if (${BUILD_GAZEBO})
   add_component(rofisimMessages)

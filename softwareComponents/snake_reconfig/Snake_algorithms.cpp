@@ -1,61 +1,104 @@
 #include "Snake_algorithms.h"
-#include <chrono>
+#include <nlohmann/json.hpp>
 
 /* * * * * * * * *
  * Top-most algo *
  * * * * * * * * */
 
-using moment = std::chrono::time_point<std::chrono::system_clock>;
+namespace nlohmann {
+    template <>
+    struct adl_serializer< std::chrono::milliseconds > {
+        static void to_json( json& j, const std::chrono::milliseconds& opt ) {
+            j = opt.count();
+        }
+    };
 
-void logTime(std::ofstream* debug_output, unsigned progress, std::optional<moment> start, std::optional<moment> aerate,
+    template < typename T >
+    struct adl_serializer< std::optional< T > > {
+        static void to_json( json& j, const std::optional< T >& opt ) {
+            if ( opt.has_value() )
+                j = *opt;
+            else
+                j = nullptr;
+        }
+    };
+}
+
+std::optional< std::chrono::milliseconds > momentDiff(
+        std::optional< moment > end, std::optional< moment > start )
+{
+    if ( start.has_value() && end.has_value() )
+        return std::chrono::duration_cast< std::chrono::milliseconds >(
+            end.value() - start.value() );
+    return std::nullopt;
+}
+
+nlohmann::json logProgressJson( unsigned progress,
+    std::optional<moment> start, std::optional<moment> aerate,
+    std::optional<moment> tts, std::optional<moment> parity,
+    std::optional<moment> docks, std::optional<moment> circle, unsigned pathLen )
+{
+    nlohmann::json j = {
+        { "progress", progress },
+        { "aerate", momentDiff( aerate, start ) },
+        { "tts", momentDiff( tts, start ) },
+        { "parity", momentDiff( parity, start ) },
+        { "docks", momentDiff( docks, start ) },
+        { "circle", momentDiff( circle, start ) },
+        { "pathLen", pathLen }
+    };
+    return j;
+}
+
+
+void logProgressCSV(std::ostream& debug_output, unsigned progress, std::optional<moment> start, std::optional<moment> aerate,
     std::optional<moment> tts, std::optional<moment> parity, std::optional<moment> docks, std::optional<moment> circle,
     unsigned pathLen) {
 
-    *debug_output << progress << ";" << std::chrono::duration_cast<std::chrono::seconds>(*aerate - *start).count();
+    debug_output << progress << ";" << std::chrono::duration_cast<std::chrono::seconds>(*aerate - *start).count();
 
     if (progress < 1) {
-        *debug_output << ";x;x;x;x;" << std::chrono::duration_cast<std::chrono::seconds>(*aerate - *start).count();
-        *debug_output << ";" << pathLen << std::endl;
+        debug_output << ";x;x;x;x;" << std::chrono::duration_cast<std::chrono::seconds>(*aerate - *start).count();
+        debug_output << ";" << pathLen << std::endl;
         return;
     }
 
-    *debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*tts - *aerate).count();
+    debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*tts - *aerate).count();
 
     if (progress < 2) {
-        *debug_output << ";x;x;x;" << std::chrono::duration_cast<std::chrono::seconds>(*tts - *start).count();
-        *debug_output << ";" << pathLen << std::endl;
+        debug_output << ";x;x;x;" << std::chrono::duration_cast<std::chrono::seconds>(*tts - *start).count();
+        debug_output << ";" << pathLen << std::endl;
         return;
     }
 
-    *debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*parity - *tts).count();
+    debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*parity - *tts).count();
 
     if (progress < 3) {
-        *debug_output << ";x;x;" << std::chrono::duration_cast<std::chrono::seconds>(*parity - *start).count();
-        *debug_output << ";" << pathLen << std::endl;
+        debug_output << ";x;x;" << std::chrono::duration_cast<std::chrono::seconds>(*parity - *start).count();
+        debug_output << ";" << pathLen << std::endl;
         return;
     }
 
-    *debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*docks - *parity).count();
+    debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*docks - *parity).count();
 
     if (progress < 4) {
-        *debug_output << ";x;" << std::chrono::duration_cast<std::chrono::seconds>(*docks - *start).count();
-        *debug_output << ";" << pathLen << std::endl;
+        debug_output << ";x;" << std::chrono::duration_cast<std::chrono::seconds>(*docks - *start).count();
+        debug_output << ";" << pathLen << std::endl;
         return;
     }
 
-    *debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*circle - *docks).count();
-    *debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*circle - *start).count();
-    *debug_output << ";" << pathLen << std::endl;
+    debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*circle - *docks).count();
+    debug_output << ";" << std::chrono::duration_cast<std::chrono::seconds>(*circle - *start).count();
+    debug_output << ";" << pathLen << std::endl;
 }
 
-std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration& init, std::ofstream* debug_output /*= std::nullptr_t*/) {
+std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration& init, ProgressCallback logTime) {
     auto start = std::chrono::system_clock::now();
 
     auto path = aerateConfig(init);
     auto afterAerate = std::chrono::system_clock::now();
+    logTime(0, start, afterAerate, {}, {}, {}, {}, path.size());
     if (path.empty()) {
-        if (debug_output)
-            logTime(debug_output, 0, start, afterAerate, {}, {}, {}, {}, path.size());
         return {path, false};
     }
 
@@ -64,41 +107,36 @@ std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration&
     auto [toSnake, finishedTTS] = treeToChain(path.back());
     auto afterTTS = std::chrono::system_clock::now();
     vectorAppend(path, toSnake);
+    logTime(1, start, afterAerate, afterTTS, {}, {}, {}, path.size());
     if (!finishedTTS) {
-        if (debug_output)
-            logTime(debug_output, 1, start, afterAerate, afterTTS, {}, {}, {}, path.size());
         return {path, false};
     }
 
     auto [fixedSnake, finishedFP] = fixParity(path.back());
     auto afterParity = std::chrono::system_clock::now();
     vectorAppend(path, fixedSnake);
+    logTime(2, start, afterAerate, afterTTS, afterParity, {}, {}, path.size());
     if (!finishedFP) {
-        if (debug_output)
-            logTime(debug_output, 2, start, afterAerate, afterTTS, afterParity, {}, {}, path.size());
         return {path, false};
     }
 
     auto [dockSnake, finishedFD] = fixDocks(path.back());
     auto afterDocks = std::chrono::system_clock::now();
     vectorAppend(path, dockSnake);
+    logTime(3, start, afterAerate, afterTTS, afterParity, afterDocks, {}, path.size());
     if (!finishedFD) {
-        if (debug_output)
-            logTime(debug_output, 3, start, afterAerate, afterTTS, afterParity, afterDocks, {}, path.size());
         return {path, false};
     }
 
     auto [flatCircle, finishedFC] = flattenCircle(path.back());
     auto afterCircle = std::chrono::system_clock::now();
     vectorAppend(path, flatCircle);
+    logTime(4, start, afterAerate, afterTTS, afterParity, afterDocks, afterCircle, path.size());
     if (!finishedFC) {
-        if (debug_output)
-            logTime(debug_output, 4, start, afterAerate, afterTTS, afterParity, afterDocks, afterCircle, path.size());
         return {path, false};
     }
 
-    if (debug_output)
-        logTime(debug_output, 5, start, afterAerate, afterTTS, afterParity, afterDocks, afterCircle, path.size());
+    logTime(5, start, afterAerate, afterTTS, afterParity, afterDocks, afterCircle, path.size());
     return {path, true};
 }
 
@@ -168,13 +206,13 @@ void appendMapped(std::vector<Configuration>& path1, const std::vector<Configura
 }
 
 std::vector<Configuration> reconfigThroughSnake(const Configuration& from, const Configuration& to) {
-    auto [path1, finished1] = reconfigToSnake(from);
+    auto [path1, finished1] = reconfigToSnake(from, []( auto... args ){} );
     if (!finished1) {
         std::cerr << "Couldnt compute reconfig from `from` to snake" << std::endl;
         return {};
     }
 
-    auto [path2, finished2] = reconfigToSnake(to);
+    auto [path2, finished2] = reconfigToSnake(to, []( auto... args ){} );
     if (!finished2) {
         std::cerr << "Couldnt compute reconfig from `to` to snake" << std::endl;
         return {};

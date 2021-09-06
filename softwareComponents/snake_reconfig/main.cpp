@@ -1,36 +1,61 @@
 #include <exception>
 #include <fstream>
 #include <tuple>
-#include <stdlib.h>
+#include <iomanip>
+#include <sstream>
 #include "../configuration/Configuration.h"
 #include "../configuration/IO.h"
 #include "Snake_algorithms.h"
+#include <dimcli/cli.h>
 
-void printVecToFile(const std::vector<Configuration>& configs, const char* path) {
-    std::ofstream file;
-    file.open(std::string(path));
+std::string storePath(const std::vector<Configuration>& configs ) {
+    std::ostringstream file;
     for (const auto& conf : configs) {
-        file << IO::toString(conf) << std::endl;
+        file << IO::toString( conf ) << std::endl;
     }
+    return file.str();
+}
+
+nlohmann::json gCurrentProgress;
+std::string gLogPath;
+
+void finishLog() {
+    if ( gLogPath.empty() )
+        return;
+    std::ofstream f( gLogPath );
+    f << std::setw( 4 ) << gCurrentProgress << "\n";
 }
 
 int main(int argc, char* argv[])
 {
-    if (argc < 2) {
-        throw std::invalid_argument("No filepath given");
-    }
+    Dim::Cli cli;
+    auto& inputCfgFile = cli.opt< std::string >( "<INPUT_CFG>" );
+    auto& logFile = cli.opt< std::string >( "l log" );
+    auto& outputFile = cli.opt< std::string >( "[OUTPUT_FILE]" );
+    if ( !cli.parse( argc, argv ) )
+        return cli.printError( std::cerr );
 
-    std::ifstream initInput;
-    initInput.open(argv[1]);
+    gLogPath = *logFile;
+
+    std::ifstream initInput( *inputCfgFile );
     Configuration init;
-    IO::readConfiguration(initInput, init);
+    IO::readConfiguration( initInput, init );
     init.computeMatrices();
 
-    std::ofstream log;
-    log.open(std::string(argv[2]), std::ios_base::app);
-    log << argv[1] << ";";
-    auto res = reconfigToSnake(init, &log).first;
-    printVecToFile(res, argv[3]);
+    auto res = reconfigToSnake(init, [&]( auto... args ) {
+        gCurrentProgress = logProgressJson( std::forward< decltype( args ) >( args )... );
+        void finishLog();
+    }).first;
+
+    auto path = storePath( res );
+    gCurrentProgress["path"] = path;
+
+    if ( outputFile ) {
+        std::ofstream f( *outputFile );
+        f << path;
+    }
+
+    finishLog();
 
     return 0;
 }

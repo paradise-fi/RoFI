@@ -11,6 +11,9 @@
 #include <cmath>
 #include <memory>
 #include <stack>
+#include <functional>
+#include <chrono>
+#include <nlohmann/json.hpp>
 
 template<typename T>
 void vectorAppend(std::vector<T>& base, const std::vector<T>& toApp) {
@@ -170,8 +173,24 @@ std::pair<std::vector<Configuration>, bool> fixDocks(const Configuration& init);
 
 std::pair<std::vector<Configuration>, bool> flattenCircle(const Configuration& init);
 
-std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration& init, std::ofstream* debug_output = nullptr);
+using moment = std::chrono::time_point<std::chrono::system_clock>;
+
+using ProgressCallback = std::function< void(
+    int, std::optional<moment>, std::optional<moment>,
+    std::optional<moment>, std::optional<moment>,
+    std::optional<moment>, std::optional<moment>, int ) >;
+
+std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration& init, ProgressCallback progressCallback);
 
 void appendMapped(std::vector<Configuration>& path1, const std::vector<Configuration>& path2);
 
 std::vector<Configuration> reconfigThroughSnake(const Configuration& from, const Configuration& to);
+
+nlohmann::json logProgressJson( unsigned progress,
+    std::optional<moment> start, std::optional<moment> aerate,
+    std::optional<moment> tts, std::optional<moment> parity,
+    std::optional<moment> docks, std::optional<moment> circle, unsigned pathLen );
+
+void logProgressCSV(std::ostream& debug_output, unsigned progress, std::optional<moment> start, std::optional<moment> aerate,
+    std::optional<moment> tts, std::optional<moment> parity, std::optional<moment> docks, std::optional<moment> circle,
+    unsigned pathLen);
