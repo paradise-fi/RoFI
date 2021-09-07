@@ -37,20 +37,24 @@ int main(int argc, char* argv[])
 
     gLogPath = *logFile;
 
+    finishLog();
+
     std::ifstream initInput( *inputCfgFile );
     Configuration init;
     IO::readConfiguration( initInput, init );
     init.computeMatrices();
 
-    auto res = reconfigToSnake(init, [&]( auto... args ) {
+    auto [reconfigPath, success] = reconfigToSnake(init, [&]( auto... args ) {
         gCurrentProgress = logProgressJson( std::forward< decltype( args ) >( args )... );
         void finishLog();
-    }).first;
+    });
 
-    auto path = storePath( res );
-    gCurrentProgress["path"] = path;
+    auto path = storePath( reconfigPath );
 
-    if ( outputFile ) {
+    if ( success )
+        gCurrentProgress["path"] = path;
+
+    if ( outputFile && success ) {
         std::ofstream f( *outputFile );
         f << path;
     }
