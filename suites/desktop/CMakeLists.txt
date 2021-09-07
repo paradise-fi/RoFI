@@ -132,6 +132,7 @@ add_tool(emptyDockFill)
 add_tool(topology2dot)
 add_tool(ik)
 add_tool(rofiTool)
+add_tool(tangle)
 
 if (NOT ${BUILD_HEADLESS})
   add_tool(visualizer)
