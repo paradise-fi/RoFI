@@ -28,7 +28,6 @@ int main( int argc, char* argv[] ) {
     std::mt19937 gen( rd() );
 
     for ( int i = 0; i < *stepCount; i++ ) {
-        std::cout << "Step: " << i << "\n";
         configuration.computeMatrices();
         std::vector< Action > availableActions;
         generateSimpleActions( configuration, availableActions, 90 );
