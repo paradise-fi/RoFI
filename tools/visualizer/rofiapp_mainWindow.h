@@ -2,14 +2,18 @@
 #define ROFIAPP_MAINWINDOW_H
 
 #include "Vtk.h"
+#include "InteractorStyle.hpp"
 
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QErrorMessage>
 #include <QFileDialog>
 #include <QDebug>
+#include <QRegularExpression>
 
 #include <CompatQVTKWidget.h>
+
+#include <vtkCallbackCommand.h>
 
 #include <string.h>
 #include <Configuration.h>
@@ -42,6 +46,11 @@ private slots:
 
     void saveConf();
 
+    void selectRegex(QRegularExpression regex);
+    void selectBodyInCode(ID moduleId);
+    void selectShoeInCode(ID moduleId, ShoeId shoe);
+    void selectConnectorInCode(ID moduleId, ShoeId shoe, ConnectorId connId);
+
 private:
     Ui::Rofiapp_MainWindow *ui;
     float bckgValue;
@@ -57,7 +66,10 @@ private:
 #endif
 
     vtkSmartPointer<vtkRenderer> renderer;
+    vtkSmartPointer<InteractorStyle> interactorStyle;
     vtkSmartPointer<vtkCamera> camera;
+
+    static void onPartSelected(vtkObject *vtkNotUsed(caller), long unsigned int vtkNotUsed(eventId), void *clientData, void *callData);
 };
 
 #endif // ROFIAPP_MAINWINDOW_H

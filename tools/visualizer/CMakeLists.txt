@@ -54,7 +54,7 @@ if(Qt5_FOUND)
   set(CMAKE_AUTOUIC ON)
 
   add_executable(rofi-app
-    rofiapp_mainWindow.cpp rofiapp.cpp rofiapp_resources.qrc Vtk.cpp ${modelResources} )
+    rofiapp_mainWindow.cpp rofiapp.cpp rofiapp_resources.qrc Vtk.cpp InteractorStyle.cpp ${modelResources} )
 
   target_include_directories(rofi-app
     PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

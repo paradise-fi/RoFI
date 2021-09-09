@@ -1,5 +1,12 @@
 #include "Vtk.h"
 
+namespace VtkSupp {
+vtkInformationIntegerKey* partTypeKey = new vtkInformationIntegerKey(PART_TYPE, ROFI_KEY_LOCATION);
+vtkInformationIntegerKey* moduleIdKey = new vtkInformationIntegerKey(MODULE_ID, ROFI_KEY_LOCATION);
+vtkInformationIntegerKey* shoeIdKey = new vtkInformationIntegerKey(SHOE_ID, ROFI_KEY_LOCATION);
+vtkInformationIntegerKey* connectorIdKey = new vtkInformationIntegerKey(CONNECTOR_ID, ROFI_KEY_LOCATION);
+}
+
 std::filesystem::path getModel(ModelPartType model) {
     static ResourceFile body = LOAD_RESOURCE_FILE( model_body_obj );
     static ResourceFile shoe = LOAD_RESOURCE_FILE( model_shoe_obj );
@@ -16,7 +23,7 @@ std::filesystem::path getModel(ModelPartType model) {
     throw std::runtime_error("Invalid model '" + std::to_string(model) + "' requested");
 }
 
-void addActor(ModelPartType model, const Matrix &matrix, int id, int color, vtkSmartPointer<vtkRenderer> &renderer) {
+vtkSmartPointer<vtkActor> addActor(ModelPartType model, const Matrix &matrix, int id, int color, vtkSmartPointer<vtkRenderer> &renderer) {
 
     // vtkOBJReader is locale sensitive!
     std::locale currentLocale;
@@ -45,7 +52,18 @@ void addActor(ModelPartType model, const Matrix &matrix, int id, int color, vtkS
     frameActor->SetPosition( matrix(0,3), matrix(1,3), matrix(2,3) );
     frameActor->SetScale( 1 / 95.0 );
 
+    // Store information about what the actor corresponds to in the configuration.
+    vtkSmartPointer<vtkInformation> info = frameActor->GetPropertyKeys();
+    if (!info) {
+        info.TakeReference(vtkInformation::New());
+        frameActor->SetPropertyKeys(info);
+    }
+    info->Set(VtkSupp::partTypeKey, model);
+    info->Set(VtkSupp::moduleIdKey, id);
+
     renderer->AddActor( frameActor );
+
+    return frameActor;
 }
 
 void VtkSupp::buildScene(Configuration* current_cfg, vtkSmartPointer<vtkRenderer> &renderer )
@@ -58,14 +76,24 @@ void VtkSupp::buildScene(Configuration* current_cfg, vtkSmartPointer<vtkRenderer
         for (ShoeId s : {A, B})
         {
             Joint j = s == A ? Alpha : Beta;
-            addActor(ModelPartType::SHOE, matrices[s] * shoeMatrix(), color, renderer);
-            addActor(ModelPartType::BODY, matrices[s] * bodyMatrix(mod.getJoint(j)), color, renderer);
+
+            vtkSmartPointer<vtkActor> shoeActor = addActor(ModelPartType::SHOE, matrices[s] * shoeMatrix(), id, color, renderer);
+            vtkSmartPointer<vtkInformation> shoeInfo = shoeActor->GetPropertyKeys();
+            shoeInfo->Set(VtkSupp::shoeIdKey, s);
+
+            vtkSmartPointer<vtkActor> bodyActor = addActor(ModelPartType::BODY, matrices[s] * bodyMatrix(mod.getJoint(j)), id, color, renderer);
+            vtkSmartPointer<vtkInformation> bodyInfo = bodyActor->GetPropertyKeys();
+            bodyInfo->Set(VtkSupp::shoeIdKey, s);
 
             for (ConnectorId dock : {XPlus, XMinus, ZMinus})
             {
                 bool on = edges[s * 3 + dock].has_value();
                 double onCoeff = on ? edges[s * 3 + dock].value().onCoeff() : 0;
-                addActor(ModelPartType::CONNECTOR, matrices[s] * dockMatrix(dock, on, onCoeff), color, renderer);
+
+                vtkSmartPointer<vtkActor> connectorActor = addActor(ModelPartType::CONNECTOR, matrices[s] * dockMatrix(dock, on, onCoeff), id, color, renderer);
+                vtkSmartPointer<vtkInformation> connectorInfo = connectorActor->GetPropertyKeys();
+                connectorInfo->Set(VtkSupp::shoeIdKey, s);
+                connectorInfo->Set(VtkSupp::connectorIdKey, dock);
             }
         }
     }

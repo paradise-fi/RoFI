@@ -32,6 +32,14 @@ Rofiapp_MainWindow::Rofiapp_MainWindow(QWidget *parent) :
     vtkSmartPointer<vtkCamera> camera = vtkSmartPointer<vtkCamera>::New();
     renderer->SetActiveCamera(camera);
 
+    interactorStyle = vtkSmartPointer<InteractorStyle>::New();
+    renderWindow->GetInteractor()->SetInteractorStyle(interactorStyle);
+
+    vtkSmartPointer<vtkCallbackCommand> onPartSelected = vtkSmartPointer<vtkCallbackCommand>::New();
+    onPartSelected->SetClientData(this);
+    onPartSelected->SetCallback(Rofiapp_MainWindow::onPartSelected);
+    interactorStyle->AddObserver(interactorStyle->PartSelectedEvent, onPartSelected);
+
     connect(ui->actionShow_sphere, SIGNAL(triggered()), this, SLOT(showSphere()));
     connect(ui->actionToggle_full_screen, SIGNAL(triggered()), this, SLOT(toggleFullScreen()));
     connect(ui->actionChange_background, SIGNAL(triggered()), this, SLOT(changeBackground()));
@@ -68,6 +76,7 @@ bool Rofiapp_MainWindow::check_cfg(bool update_current_cfg)
         {
             delete current_cfg;
             current_cfg = aux_cfg;
+            interactorStyle->clear();
             renderer->RemoveAllViewProps();
             VtkSupp::buildScene(current_cfg, renderer);
         } else {
@@ -90,6 +99,7 @@ void Rofiapp_MainWindow::showSphere()
     sphereActor->GetProperty()->SetFrontfaceCulling(true);
     sphereActor->SetMapper( sphereMapper );
 
+    interactorStyle->clear();
     renderer->RemoveAllViewProps();
 
     renderer->AddActor( sphereActor );
@@ -204,5 +214,55 @@ void Rofiapp_MainWindow::saveConf()
             out << lineContents;
             file.close();
         }
+    }
+}
+
+void Rofiapp_MainWindow::selectRegex(QRegularExpression regex) {
+    QTextCursor cursor = ui->configTextWindow->document()->find(regex, 0);
+    ui->configTextWindow->setTextCursor(cursor);
+}
+
+void Rofiapp_MainWindow::selectBodyInCode(ID moduleId) {
+    const QRegularExpression findBody(QString("^M\\s+%1\\s+-?\\d+\\s+-?\\d+\\s+\\K-?\\d+").arg(moduleId), QRegularExpression::MultilineOption);
+    this->selectRegex(findBody);
+}
+
+void Rofiapp_MainWindow::selectShoeInCode(ID moduleId, ShoeId shoe) {
+    const QRegularExpression findShoe(QString("^M\\s+%1%2\\s+\\K-?\\d+").arg(moduleId).arg(shoe == ShoeId::A ? "" : "\\s+-?\\d+"), QRegularExpression::MultilineOption);
+    this->selectRegex(findShoe);
+}
+
+void Rofiapp_MainWindow::selectConnectorInCode(ID moduleId, ShoeId shoe, ConnectorId dock) {
+    const QRegularExpression findEdge(QString("^(E\\s+%1\\s+%2\\s+%3\\s+[NESW0123]\\s+([012]|\\+X|-X|-Z)\\s+[01AB]\\s+\\d+|E\\s+\\d+\\s+[01AB]\\s+([012]|\\+X|-X|-Z)\\s+[NESW0123]\\s+%3\\s+%2\\s+%1)$").arg(moduleId).arg(shoe).arg(dock), QRegularExpression::MultilineOption);
+    this->selectRegex(findEdge);
+}
+
+void Rofiapp_MainWindow::onPartSelected(vtkObject *vtkNotUsed(caller), long unsigned int vtkNotUsed(eventId), void *clientData, void *callData) {
+    Rofiapp_MainWindow *self = static_cast<Rofiapp_MainWindow *>(clientData);
+    vtkSmartPointer<vtkActor> pickedActor = vtkActor::SafeDownCast(static_cast<vtkObject *>(callData));
+
+    vtkSmartPointer<vtkInformation> info = pickedActor->GetPropertyKeys();
+
+    if (!info) {
+        // Test sphere does not have info.
+        return;
+    }
+
+    ID moduleId = info->Get(VtkSupp::moduleIdKey);
+    ModelPartType partType = static_cast<ModelPartType>(info->Get(VtkSupp::partTypeKey));
+
+    switch (partType) {
+    case ModelPartType::BODY:
+        self->selectBodyInCode(moduleId);
+        break;
+    case ModelPartType::SHOE: {
+        ShoeId shoeId = static_cast<ShoeId>(info->Get(VtkSupp::shoeIdKey));
+        self->selectShoeInCode(moduleId, shoeId);
+    } break;
+    case ModelPartType::CONNECTOR: {
+        ShoeId shoeId = static_cast<ShoeId>(info->Get(VtkSupp::shoeIdKey));
+        ConnectorId connectorId = static_cast<ConnectorId>(info->Get(VtkSupp::connectorIdKey));
+        self->selectConnectorInCode(moduleId, shoeId, connectorId);
+    } break;
     }
 }
