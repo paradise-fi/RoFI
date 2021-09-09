@@ -104,3 +104,8 @@ const int colors[10][3] = { {255, 255, 255},
 void buildScene(Configuration* current_cfg, vtkSmartPointer<vtkRenderer> &renderer );
 }
 
+enum ModelPartType {
+    BODY,
+    SHOE,
+    CONNECTOR,
+};

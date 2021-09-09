@@ -1,22 +1,22 @@
 #include "Vtk.h"
 
-std::filesystem::path getModel( const std::string& model ) {
+std::filesystem::path getModel(ModelPartType model) {
     static ResourceFile body = LOAD_RESOURCE_FILE( model_body_obj );
     static ResourceFile shoe = LOAD_RESOURCE_FILE( model_shoe_obj );
     static ResourceFile connector = LOAD_RESOURCE_FILE( model_connector_obj );
 
-    if ( model == "body" )
+    switch (model) {
+    case ModelPartType::BODY:
         return body.name();
-    if ( model == "shoe" )
+    case ModelPartType::SHOE:
         return shoe.name();
-    if ( model == "connector" )
+    case ModelPartType::CONNECTOR:
         return connector.name();
-    throw std::runtime_error( "Invalid model '" + model + "' requested" );
+    }
+    throw std::runtime_error("Invalid model '" + std::to_string(model) + "' requested");
 }
 
-
-void addActor(const std::string &model, const Matrix &matrix, int color, vtkSmartPointer<vtkRenderer> &renderer)
-{
+void addActor(ModelPartType model, const Matrix &matrix, int id, int color, vtkSmartPointer<vtkRenderer> &renderer) {
 
     // vtkOBJReader is locale sensitive!
     std::locale currentLocale;
@@ -58,14 +58,14 @@ void VtkSupp::buildScene(Configuration* current_cfg, vtkSmartPointer<vtkRenderer
         for (ShoeId s : {A, B})
         {
             Joint j = s == A ? Alpha : Beta;
-            addActor("shoe", matrices[s] * shoeMatrix(), color, renderer);
-            addActor("body", matrices[s] * bodyMatrix(mod.getJoint(j)), color, renderer);
+            addActor(ModelPartType::SHOE, matrices[s] * shoeMatrix(), color, renderer);
+            addActor(ModelPartType::BODY, matrices[s] * bodyMatrix(mod.getJoint(j)), color, renderer);
 
             for (ConnectorId dock : {XPlus, XMinus, ZMinus})
             {
                 bool on = edges[s * 3 + dock].has_value();
                 double onCoeff = on ? edges[s * 3 + dock].value().onCoeff() : 0;
-                addActor("connector", matrices[s] * dockMatrix(dock, on, onCoeff), color, renderer);
+                addActor(ModelPartType::CONNECTOR, matrices[s] * dockMatrix(dock, on, onCoeff), color, renderer);
             }
         }
     }
