@@ -36,6 +36,10 @@ Rofiapp_MainWindow::Rofiapp_MainWindow(QWidget *parent) :
     connect(ui->actionToggle_full_screen, SIGNAL(triggered()), this, SLOT(toggleFullScreen()));
     connect(ui->actionChange_background, SIGNAL(triggered()), this, SLOT(changeBackground()));
     connect(ui->actionQuit, SIGNAL(triggered()), this, SLOT(close()));
+    connect(ui->actionShowConf, SIGNAL(triggered()), this, SLOT(showConf()));
+    connect(ui->actionLoadConf, SIGNAL(triggered()), this, SLOT(loadConf()));
+    connect(ui->actionSaveConf, SIGNAL(triggered()), this, SLOT(saveConf()));
+    connect(ui->actionResetCamera, SIGNAL(triggered()), this, SLOT(resetCamera()));
     connect(ui->configTextWindow, SIGNAL(textChanged()),this,SLOT(on_configTextWindow_textChanged()));
 }
 
@@ -92,7 +96,7 @@ void Rofiapp_MainWindow::showSphere()
     renderer->ResetCamera();
     renderWindow->Render();
     ui->qvtkWidget->update();
-    ui->resetCamera->setEnabled(false);
+    ui->actionResetCamera->setEnabled(false);
 }
 
 void Rofiapp_MainWindow::changeBackground()
@@ -114,7 +118,7 @@ void Rofiapp_MainWindow::toggleFullScreen()
     fullScreen = not fullScreen;
 }
 
-void Rofiapp_MainWindow::on_loadConf_clicked()
+void Rofiapp_MainWindow::loadConf()
 {
     QString fileName =  QFileDialog::getOpenFileName(
               this,
@@ -138,23 +142,23 @@ void Rofiapp_MainWindow::on_loadConf_clicked()
             ui->configTextWindow->setPlainText(lineContents);
             if (this -> check_cfg(true))
             {
-                ui -> resetCamera -> setEnabled(true);
-                this -> on_resetCamera_clicked();
-                this -> on_showConf_clicked();
+                ui->actionResetCamera->setEnabled(true);
+                this->resetCamera();
+                this->showConf();
             }
         }
     }
  }
 
 
-void Rofiapp_MainWindow::on_showConf_clicked()
+void Rofiapp_MainWindow::showConf()
 {
     this -> check_cfg(true);
     renderWindow->Render();
     ui->qvtkWidget->update();
 }
 
-void Rofiapp_MainWindow::on_resetCamera_clicked()
+void Rofiapp_MainWindow::resetCamera()
 {
     camera = renderer -> GetActiveCamera();
     Vector massCenter = current_cfg->massCenter();
@@ -172,15 +176,15 @@ void Rofiapp_MainWindow::on_configTextWindow_textChanged()
 
     if (check_cfg(false))
     {
-        ui->showConf->setEnabled(true);
-        ui->saveConf->setEnabled(true);
+        ui->actionShowConf->setEnabled(true);
+        ui->actionSaveConf->setEnabled(true);
     } else {
-        ui->showConf->setEnabled(false);
-        ui->saveConf->setEnabled(false);
+        ui->actionShowConf->setEnabled(false);
+        ui->actionSaveConf->setEnabled(false);
     }
 }
 
-void Rofiapp_MainWindow::on_saveConf_clicked()
+void Rofiapp_MainWindow::saveConf()
 {
     QString fileName =  QFileDialog::getSaveFileName(
               this,

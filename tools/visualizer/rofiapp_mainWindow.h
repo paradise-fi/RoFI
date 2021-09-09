@@ -35,12 +35,12 @@ private slots:
     void changeBackground();
     void toggleFullScreen();
 
-    void on_loadConf_clicked();
-    void on_showConf_clicked();
-    void on_resetCamera_clicked();
+    void loadConf();
+    void showConf();
+    void resetCamera();
     void on_configTextWindow_textChanged();
 
-    void on_saveConf_clicked();
+    void saveConf();
 
 private:
     Ui::Rofiapp_MainWindow *ui;
