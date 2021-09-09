@@ -156,6 +156,7 @@ void Rofiapp_MainWindow::showConf()
     this -> check_cfg(true);
     renderWindow->Render();
     ui->qvtkWidget->update();
+    ui->actionResetCamera->setEnabled(true);
 }
 
 void Rofiapp_MainWindow::resetCamera()
