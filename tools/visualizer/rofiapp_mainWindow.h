@@ -10,6 +10,7 @@
 #include <QFileDialog>
 #include <QDebug>
 #include <QRegularExpression>
+#include <QTextCursor>
 
 #include <CompatQVTKWidget.h>
 
@@ -46,10 +47,17 @@ private slots:
 
     void saveConf();
 
-    void selectRegex(QRegularExpression regex);
-    void selectBodyInCode(ID moduleId);
-    void selectShoeInCode(ID moduleId, ShoeId shoe);
-    void selectConnectorInCode(ID moduleId, ShoeId shoe, ConnectorId connId);
+    QTextCursor findRegex(QRegularExpression regex);
+    QTextCursor findBodyInCode(ID moduleId);
+    QTextCursor findShoeInCode(ID moduleId, ShoeId shoe);
+    QTextCursor findConnectorInCode(ID moduleId, ShoeId shoe, ConnectorId connId);
+
+    void setActiveCursor(QTextCursor cursor);
+
+    void angleAlphaBetaDial_changed(int value);
+    void angleGammaDial_changed(int value);
+    void angleDial_released();
+    void connectedCheckBox_toggled(bool value);
 
 private:
     Ui::Rofiapp_MainWindow *ui;
@@ -64,6 +72,27 @@ private:
 #else
     vtkSmartPointer<vtkRenderWindow> renderWindow;
 #endif
+
+    bool partSelected = false;
+    ModelPartType selectedPartType;
+    ID selectedModuleId;
+    ShoeId selectedShoeId;
+    ConnectorId selectedConnectorId;
+
+    /**
+     * Currently active cursor in the text editor.
+     *
+     * Used to group text editing operations together
+     * into an edit block so that undo operation reverts
+     * the text to the previous state instead of just
+     * the previous step of dragging the dial.
+     */
+    QTextCursor activeCursor;
+    /**
+     * Whether the user is currently dragging the angle dial.
+     * Used to group text editing operations together.
+     */
+    bool angleDialMoving = false;
 
     vtkSmartPointer<vtkRenderer> renderer;
     vtkSmartPointer<InteractorStyle> interactorStyle;

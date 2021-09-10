@@ -49,6 +49,13 @@ Rofiapp_MainWindow::Rofiapp_MainWindow(QWidget *parent) :
     connect(ui->actionSaveConf, SIGNAL(triggered()), this, SLOT(saveConf()));
     connect(ui->actionResetCamera, SIGNAL(triggered()), this, SLOT(resetCamera()));
     connect(ui->configTextWindow, SIGNAL(textChanged()),this,SLOT(on_configTextWindow_textChanged()));
+    connect(ui->angleGammaDial, SIGNAL(valueChanged(int)), this, SLOT(angleGammaDial_changed(int)));
+    connect(ui->angleGammaDial, SIGNAL(sliderReleased()), this, SLOT(angleDial_released()));
+    connect(ui->angleAlphaDial, SIGNAL(valueChanged(int)), this, SLOT(angleAlphaBetaDial_changed(int)));
+    connect(ui->angleAlphaDial, SIGNAL(sliderReleased()), this, SLOT(angleDial_released()));
+    connect(ui->angleBetaDial, SIGNAL(valueChanged(int)), this, SLOT(angleAlphaBetaDial_changed(int)));
+    connect(ui->angleBetaDial, SIGNAL(sliderReleased()), this, SLOT(angleDial_released()));
+    connect(ui->connectedCheckBox, SIGNAL(toggled(bool)), this, SLOT(connectedCheckBox_toggled(bool)));
 }
 
 Rofiapp_MainWindow::~Rofiapp_MainWindow()
@@ -217,28 +224,110 @@ void Rofiapp_MainWindow::saveConf()
     }
 }
 
-void Rofiapp_MainWindow::selectRegex(QRegularExpression regex) {
-    QTextCursor cursor = ui->configTextWindow->document()->find(regex, 0);
+QTextCursor Rofiapp_MainWindow::findRegex(QRegularExpression regex) {
+    activeCursor.setPosition(0);
+    QTextCursor cursor = ui->configTextWindow->document()->find(regex, activeCursor);
+    return cursor;
+}
+
+QTextCursor Rofiapp_MainWindow::findBodyInCode(ID moduleId) {
+    const QRegularExpression findBody(QString("^M\\s+%1\\s+-?\\d+\\s+-?\\d+\\s+\\K-?\\d+").arg(moduleId), QRegularExpression::MultilineOption);
+    return this->findRegex(findBody);
+}
+
+QTextCursor Rofiapp_MainWindow::findShoeInCode(ID moduleId, ShoeId shoe) {
+    const QRegularExpression findShoe(QString("^M\\s+%1%2\\s+\\K-?\\d+").arg(moduleId).arg(shoe == ShoeId::A ? "" : "\\s+-?\\d+"), QRegularExpression::MultilineOption);
+    return this->findRegex(findShoe);
+}
+
+QTextCursor Rofiapp_MainWindow::findConnectorInCode(ID moduleId, ShoeId shoe, ConnectorId dock) {
+    const QRegularExpression findEdge(QString("^(E\\s+%1\\s+%2\\s+%3\\s+[NESW0123]\\s+([012]|\\+X|-X|-Z)\\s+[01AB]\\s+\\d+|E\\s+\\d+\\s+[01AB]\\s+([012]|\\+X|-X|-Z)\\s+[NESW0123]\\s+%3\\s+%2\\s+%1)$").arg(moduleId).arg(shoe).arg(dock), QRegularExpression::MultilineOption);
+    return this->findRegex(findEdge);
+}
+
+void Rofiapp_MainWindow::setActiveCursor(QTextCursor cursor) {
+    activeCursor = cursor;
     ui->configTextWindow->setTextCursor(cursor);
 }
 
-void Rofiapp_MainWindow::selectBodyInCode(ID moduleId) {
-    const QRegularExpression findBody(QString("^M\\s+%1\\s+-?\\d+\\s+-?\\d+\\s+\\K-?\\d+").arg(moduleId), QRegularExpression::MultilineOption);
-    this->selectRegex(findBody);
+void Rofiapp_MainWindow::angleAlphaBetaDial_changed(int value) {
+    if (!(partSelected && selectedPartType == ModelPartType::SHOE)) {
+        return;
+    }
+
+    if (angleDialMoving) {
+        activeCursor.joinPreviousEditBlock();
+    } else {
+        activeCursor.beginEditBlock();
+        angleDialMoving = true;
+    }
+    findShoeInCode(selectedModuleId, selectedShoeId).insertText(QString("%1").arg(value));
+    activeCursor.endEditBlock();
 }
 
-void Rofiapp_MainWindow::selectShoeInCode(ID moduleId, ShoeId shoe) {
-    const QRegularExpression findShoe(QString("^M\\s+%1%2\\s+\\K-?\\d+").arg(moduleId).arg(shoe == ShoeId::A ? "" : "\\s+-?\\d+"), QRegularExpression::MultilineOption);
-    this->selectRegex(findShoe);
+void Rofiapp_MainWindow::angleGammaDial_changed(int value) {
+    if (!(partSelected && selectedPartType == ModelPartType::BODY)) {
+        return;
+    }
+
+    if (angleDialMoving) {
+        activeCursor.joinPreviousEditBlock();
+    } else {
+        activeCursor.beginEditBlock();
+        angleDialMoving = true;
+    }
+    findBodyInCode(selectedModuleId).insertText(QString("%1").arg(value));
+    activeCursor.endEditBlock();
 }
 
-void Rofiapp_MainWindow::selectConnectorInCode(ID moduleId, ShoeId shoe, ConnectorId dock) {
-    const QRegularExpression findEdge(QString("^(E\\s+%1\\s+%2\\s+%3\\s+[NESW0123]\\s+([012]|\\+X|-X|-Z)\\s+[01AB]\\s+\\d+|E\\s+\\d+\\s+[01AB]\\s+([012]|\\+X|-X|-Z)\\s+[NESW0123]\\s+%3\\s+%2\\s+%1)$").arg(moduleId).arg(shoe).arg(dock), QRegularExpression::MultilineOption);
-    this->selectRegex(findEdge);
+void Rofiapp_MainWindow::angleDial_released() {
+    angleDialMoving = false;
+}
+
+void setConnectorChecked(Ui::Rofiapp_MainWindow* ui, bool value) {
+    for (QWidget* widget : std::initializer_list<QWidget*>{ui->connectedLabel, ui->connectedCheckBox,}) {
+        widget->setEnabled(value);
+        if (value) {
+            widget->setToolTip(nullptr);
+        } else {
+            widget->setToolTip("Re-connecting not currently supported.");
+        }
+        widget->setVisible(true);
+    }
+}
+
+void Rofiapp_MainWindow::connectedCheckBox_toggled(bool value) {
+    if (!(partSelected && selectedPartType == ModelPartType::CONNECTOR)) {
+        return;
+    }
+
+    if (!value) {
+        findConnectorInCode(selectedModuleId, selectedShoeId, selectedConnectorId).removeSelectedText();
+    } else {
+        std::cerr << "Creating connections is not currently supported." << std::endl;
+    }
+
+    setConnectorChecked(this->ui, value);
 }
 
 void Rofiapp_MainWindow::onPartSelected(vtkObject *vtkNotUsed(caller), long unsigned int vtkNotUsed(eventId), void *clientData, void *callData) {
     Rofiapp_MainWindow *self = static_cast<Rofiapp_MainWindow *>(clientData);
+
+    self->ui->connectedLabel->setVisible(false);
+    self->ui->connectedCheckBox->setVisible(false);
+    self->ui->angleAlphaLabel->setVisible(false);
+    self->ui->angleAlphaDial->setVisible(false);
+    self->ui->angleBetaLabel->setVisible(false);
+    self->ui->angleBetaDial->setVisible(false);
+    self->ui->angleGammaLabel->setVisible(false);
+    self->ui->angleGammaDial->setVisible(false);
+
+    self->partSelected = (callData != nullptr);
+
+    if (!self->partSelected) {
+        return;
+    }
+
     vtkSmartPointer<vtkActor> pickedActor = vtkActor::SafeDownCast(static_cast<vtkObject *>(callData));
 
     vtkSmartPointer<vtkInformation> info = pickedActor->GetPropertyKeys();
@@ -248,21 +337,38 @@ void Rofiapp_MainWindow::onPartSelected(vtkObject *vtkNotUsed(caller), long unsi
         return;
     }
 
-    ID moduleId = info->Get(VtkSupp::moduleIdKey);
-    ModelPartType partType = static_cast<ModelPartType>(info->Get(VtkSupp::partTypeKey));
+    self->selectedModuleId = info->Get(VtkSupp::moduleIdKey);
+    self->selectedPartType = static_cast<ModelPartType>(info->Get(VtkSupp::partTypeKey));
 
-    switch (partType) {
-    case ModelPartType::BODY:
-        self->selectBodyInCode(moduleId);
-        break;
+    switch (self->selectedPartType) {
+    case ModelPartType::BODY: {
+        QTextCursor cursor = self->findBodyInCode(self->selectedModuleId);
+        self->setActiveCursor(cursor);
+        self->ui->angleGammaDial->setValue(cursor.selectedText().toInt());
+        self->ui->angleGammaLabel->setVisible(true);
+        self->ui->angleGammaDial->setVisible(true);
+    } break;
     case ModelPartType::SHOE: {
-        ShoeId shoeId = static_cast<ShoeId>(info->Get(VtkSupp::shoeIdKey));
-        self->selectShoeInCode(moduleId, shoeId);
+        self->selectedShoeId = static_cast<ShoeId>(info->Get(VtkSupp::shoeIdKey));
+        QTextCursor cursor = self->findShoeInCode(self->selectedModuleId, self->selectedShoeId);
+        self->setActiveCursor(cursor);
+        if (self->selectedShoeId == ShoeId::A) {
+            self->ui->angleAlphaDial->setValue(cursor.selectedText().toInt());
+            self->ui->angleAlphaLabel->setVisible(true);
+            self->ui->angleAlphaDial->setVisible(true);
+        } else {
+            self->ui->angleBetaDial->setValue(cursor.selectedText().toInt());
+            self->ui->angleBetaLabel->setVisible(true);
+            self->ui->angleBetaDial->setVisible(true);
+        }
     } break;
     case ModelPartType::CONNECTOR: {
-        ShoeId shoeId = static_cast<ShoeId>(info->Get(VtkSupp::shoeIdKey));
-        ConnectorId connectorId = static_cast<ConnectorId>(info->Get(VtkSupp::connectorIdKey));
-        self->selectConnectorInCode(moduleId, shoeId, connectorId);
+        self->selectedShoeId = static_cast<ShoeId>(info->Get(VtkSupp::shoeIdKey));
+        self->selectedConnectorId = static_cast<ConnectorId>(info->Get(VtkSupp::connectorIdKey));
+        QTextCursor cursor = self->findConnectorInCode(self->selectedModuleId, self->selectedShoeId, self->selectedConnectorId);
+        self->setActiveCursor(cursor);
+        setConnectorChecked(self->ui, !cursor.isNull());
+        self->ui->connectedCheckBox->setChecked(!cursor.isNull());
     } break;
     }
 }

@@ -54,9 +54,7 @@ void InteractorStyle::OnLeftButtonUp() {
         }
 
         vtkSmartPointer<vtkActor> pickedActor = picker->GetActor();
-        if (pickedActor != nullptr) {
-            this->InvokeEvent(this->PartSelectedEvent, pickedActor);
-        }
+        this->InvokeEvent(this->PartSelectedEvent, pickedActor);
     }
 
     // Forward events.
