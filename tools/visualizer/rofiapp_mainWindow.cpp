@@ -48,7 +48,6 @@ Rofiapp_MainWindow::Rofiapp_MainWindow(QWidget *parent) :
     connect(ui->actionLoadConf, SIGNAL(triggered()), this, SLOT(loadConf()));
     connect(ui->actionSaveConf, SIGNAL(triggered()), this, SLOT(saveConf()));
     connect(ui->actionResetCamera, SIGNAL(triggered()), this, SLOT(resetCamera()));
-    connect(ui->configTextWindow, SIGNAL(textChanged()),this,SLOT(on_configTextWindow_textChanged()));
     connect(ui->angleGammaDial, SIGNAL(valueChanged(int)), this, SLOT(angleGammaDial_changed(int)));
     connect(ui->angleGammaDial, SIGNAL(sliderReleased()), this, SLOT(angleDial_released()));
     connect(ui->angleAlphaDial, SIGNAL(valueChanged(int)), this, SLOT(angleAlphaBetaDial_changed(int)));
