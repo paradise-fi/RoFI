@@ -145,27 +145,32 @@ void Rofiapp_MainWindow::loadConf()
     
     if( !fileName.isNull() )
     {
-        QString lineContents="";
         QFile file(fileName);
-        if (!file.open(QIODevice::ReadOnly)) {
-            QMessageBox::information(this, tr("Unable to open file"), file.errorString());
-        } else {
-            QTextStream inputStream(&file);
-            while( !inputStream.atEnd() )
-               {
-                  lineContents += inputStream.readLine()+"\n";
-               }
-            file.close();
-            ui->configTextWindow->setPlainText(lineContents);
-            if (this -> check_cfg(true))
-            {
-                ui->actionResetCamera->setEnabled(true);
-                this->resetCamera();
-                this->showConf();
-            }
-        }
+        loadConfFile(file);
     }
  }
+
+void Rofiapp_MainWindow::loadConfFile(QFile &file)
+{
+    if (!file.open(QIODevice::ReadOnly)) {
+        QMessageBox::information(this, tr("Unable to open file"), file.errorString());
+    } else {
+        QString lineContents="";
+        QTextStream inputStream(&file);
+        while( !inputStream.atEnd() )
+           {
+              lineContents += inputStream.readLine()+"\n";
+           }
+        file.close();
+        ui->configTextWindow->setPlainText(lineContents);
+        if (this -> check_cfg(true))
+        {
+            ui->actionResetCamera->setEnabled(true);
+            this->resetCamera();
+            this->showConf();
+        }
+    }
+}
 
 
 void Rofiapp_MainWindow::showConf()

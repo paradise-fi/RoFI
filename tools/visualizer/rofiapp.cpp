@@ -17,6 +17,15 @@ int main(int argc, char *argv[])
     QApplication a(argc, argv);
     Rofiapp_MainWindow w;
 
+    if (QApplication::arguments().size() == 2) {
+        QString fileName = QApplication::arguments().at(1);
+        QFile file(fileName);
+        w.loadConfFile(file);
+    } else if (QApplication::arguments().size() > 2) {
+        qDebug("Too many arguments.");
+        qDebug("usage: rofi-app <configuration.in>");
+        std::exit(EXIT_FAILURE);
+    }
 
     w.show();
 

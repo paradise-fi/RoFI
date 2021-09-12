@@ -35,6 +35,9 @@ public:
     explicit Rofiapp_MainWindow(QWidget *parent = nullptr);
     ~Rofiapp_MainWindow();
 
+public slots:
+    void loadConfFile(QFile &file);
+
 private slots:
     void showSphere();
     void changeBackground();
