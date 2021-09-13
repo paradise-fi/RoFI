@@ -5,6 +5,7 @@ set(WORLDS
     spider
     wheel
     50-init
+    two_modules
 )
 
 
