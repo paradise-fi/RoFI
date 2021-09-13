@@ -14,18 +14,18 @@ There are the following directories:
 
     -  ``universalModule``: All sources for the universal module (does not
        contain concrete RoFI applications)
--  ``softwareModules``: All libraries provided by the project. We do not
+-  ``softwareComponents``: All libraries provided by the project. We do not
    distinguish whether the libraries target embedded or desktop. Each directory
    is single library and has its readme file containing further details. Some of
    the notable libraries are:
 
-   -  ``atoms``: A library of general-purpose data structures and algorithms.
-      This library has a :doc:`dedicated section <../rofilib/atoms/index>` of
-      the documentation.
-   -  ``configuration``: A library for representation of a RoFIBot. See
-      :doc:`documentation <../rofilib/configuration>`.
-   -  ``rofiHalSim`` and ``rofiHalPhys``: The hardware abstraction layer for
-      RoFI modules.
+    -  ``atoms``: A library of general-purpose data structures and algorithms.
+       This library has a :doc:`dedicated section <../rofilib/atoms/index>` of
+       the documentation.
+    -  ``configuration``: A library for representation of a RoFIBot. See
+       :doc:`documentation <../rofilib/configuration>`.
+    -  ``rofiHalSim`` and ``rofiHalPhys``: The hardware abstraction layer for
+       RoFI modules.
 -  ``tools``: The tools for working with RoFI
 -  ``examples``: A self-contained, easily executable examples demonstrating the
    the project. Often referred from this documentation.
@@ -34,4 +34,3 @@ There are the following directories:
 -  ``media``: Pictures & videos of the project used in readmes.
 -  ``releng``: Packaging & compilation
 -  ``doc``: This documentation
-
