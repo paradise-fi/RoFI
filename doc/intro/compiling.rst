@@ -36,7 +36,7 @@ prepended to you prompt:
 
 .. code-block:: sh
 
-    🤖R $
+    🤖 R $
 
 If you don't want to alter you shell, simply omit ``-f``. The letter after the
 robot icon indicates which configuration is currently active. If you want to
@@ -87,9 +87,9 @@ You can setup the compilation units via invoking:
 
 .. code-block:: sh
 
-    🤖R $ rcfg desktop firmware # Setup desktop and firmware suites
-    🤖R $ rcfg --all            # Setup all suites
-    🤖R $ rcfg -desktop         # Unconfigure the desktop suite
+    🤖 R $ rcfg desktop firmware                 # Setup desktop and firmware suites
+    🤖 R $ rcfg desktop -- -DBUILD_HEADLESS=true # Setup desktop with headless build option
+    🤖 R $ rcfg -desktop                         # Unconfigure the desktop suite
 
 Note that tab-completion works for this command. Once you setup the suites, you
 can proceed to the compilation. You can also pass extra options to the
@@ -161,11 +161,11 @@ target, you can specify one more targets to ``rmake``:
 
 .. code-block:: sh
 
-    🤖R $ rmake desktop  # Compile all targets from the suite desktop
-    🤖R $ rmake rofi-vis # Compile only target rofi-vis (and its dependencies)
-    🤖R $ rmake tools/   # Compile all targets that are in the source tree under prefix
-    🤖R $ rmake tools/ doc  # You can mix various types of targets
-    🤖R $ rmake --all       # Compile everything
+    🤖 R $ rmake desktop    # Compile all targets from the suite desktop
+    🤖 R $ rmake rofi-vis   # Compile only target rofi-vis (and its dependencies)
+    🤖 R $ rmake tools/     # Compile all targets that are in the source tree under prefix
+    🤖 R $ rmake tools/ doc # You can mix various types of targets
+    🤖 R $ rmake --all      # Compile everything
 
 Note that once you compile a target, you can directly run the binaries as they
 are in ``PATH``. If you would like to inspect the build artifacts, they are
@@ -185,10 +185,10 @@ To quickly start with RoFI development, we provide a short step-by-step guide:
 
     $ source setup.sh -f Debug # Setup your terminal for compiling RoFI in Debug mode.
                                # Your prompt will change to indicate the environment
-    🤖R $ rcfg desktop doc     # Configure the suites you want
-    🤖R $ rmake --all          # Build everything you have configured
-    🤖R $ rmake tools/         # ... or build only all tools
-    🤖R $ rofi-vis             # Run the compiled tool
+    🤖 D $ rcfg desktop doc     # Configure the suites you want
+    🤖 D $ rmake --all          # Build everything you have configured
+    🤖 D $ rmake tools/         # ... or build only all tools
+    🤖 D $ rofi-vis             # Run the compiled tool
 
 
 Quick start GazeboSim example
@@ -198,8 +198,8 @@ To quickly start with simulating RoFI using GazeboSim, we provide a short step-b
 
 .. code-block:: sh
 
-    $ source setup.sh -f Debug                       # Setup your terminal for compiling RoFI in Debug mode.
-                                                     # This also sets the necessary gazebo variables
+    $ source setup.sh -f Debug                      # Setup your terminal for compiling RoFI in Debug mode.
+                                                    # This also sets the necessary gazebo variables
     🤖 D $ rcfg desktop                              # Configure the desktop suite
     🤖 D $ rmake --all                               # Build everything you have configured
     🤖 D $ gazebo worlds/two_modules.world --verbose # Run gazebo. We recommend using --verbose for more info
@@ -209,10 +209,11 @@ In a different terminal, run the module code for each module that you want to co
 .. code-block:: sh
 
     $ source setup.sh -f Debug # Setup your terminal
-    🤖 D $ basicJointPosition  # Run the compiled module code
+    🤖 D $ basicJointPosition   # Run the compiled module code
 
 If you are interested in controlling the simulation via Python instead of C++,
 you can follow example `examples/simulator/pythonInterface`:
 
 .. code-block:: sh
+
     🤖 D $ python3 examples/simulator/pythonInterface/oscilate.py
