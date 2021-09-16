@@ -24,6 +24,8 @@ struct Parameters{
     unsigned int framerate = 24;
     Resolution resolution = {1920, 1080};
     int magnify = 1;
+    std::ifstream colorsFile;
+    bool colorsSet = false;
 };
 
 namespace err {
@@ -66,6 +68,7 @@ void parse(int argc, char* argv[], Parameters& p){
             ("r,resolution", "Size of the window on the screen or resolution of the saved picture in format "
                              "<num>x<num>", cxxopts::value<std::string>())
             ("m,magnify", "Magnification of saved pictures", cxxopts::value<int>())
+            ("o,color", "Colors definition file", cxxopts::value<std::string>())
             ;
 
     try {
@@ -106,6 +109,19 @@ void parse(int argc, char* argv[], Parameters& p){
             p.cameraSet = true;
         } else if (result.count("camera") > 1) {
             std::cerr << err::atMostOne("'-c' or '--camera'");
+            exit(1);
+        }
+
+        if (result.count("color") == 1){
+            std::string colorsFilename = result["color"].as< std::string >();
+            p.colorsFile.open(colorsFilename);
+            if (!p.colorsFile.good()){
+                std::cerr << "Could not open file " << colorsFilename << ".\n";
+                exit(1);
+            }
+            p.colorsSet = true;
+        } else if (result.count("color") > 1) {
+            std::cerr << err::atMostOne("'-o' or '--color'");
             exit(1);
         }
 
@@ -254,15 +270,20 @@ int main(int argc, char* argv[]){
     bool cameraMove;
     std::vector<Configuration> configs;
     Configuration cfg;
+    std::vector<ColorRule> colorRules;
 
     if (params.cameraSet) {
         readCameraSettings(params.cameraSettings, cameraStart, cameraEnd, cameraMove);
     }
 
+    if (params.colorsSet){
+        readColorRules(params.colorsFile, colorRules);
+    }
+
     if (!params.many){
         readConfiguration(params.inputFile, cfg);
         animator.visualizeOneConfig(cfg, params.path, params.savePicture, cameraStart,
-                params.resolution, params.magnify);
+                params.resolution, params.magnify, colorRules);
         return 0;
     }
 
@@ -271,10 +292,10 @@ int main(int argc, char* argv[]){
     if (params.animation){
         animator.visualizeMainConfigs(configs, params.phi, params.reconnectionPics, params.path,
                 params.savePicture, cameraStart, cameraEnd,
-                params.resolution, params.magnify);
+                params.resolution, params.magnify, colorRules);
         return 0;
     }
     animator.visualizeAllConfigs(configs, params.path, params.savePicture, cameraStart, cameraEnd,
-            params.resolution, params.magnify);
+            params.resolution, params.magnify, colorRules);
 
 }

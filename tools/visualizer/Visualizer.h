@@ -25,6 +25,7 @@
 #include <Configuration.h>
 #include "Camera.h"
 #include <sstream>
+#include "Colors.h"
 
 #include <vtkOBJReader.h>
 #include <vtkRenderLargeImage.h>
@@ -91,11 +92,13 @@ public:
      * @param cameraParams parameters for camera settings
      * @param resolution size of the renderer window
      * @param magnify increase the resolution of the saved image
+     * @param colorRules list of given color rules
      */
     void drawConfiguration(const Configuration& config, const std::string& path, bool savePicture,
             const Camera& cameraParams, const Resolution& resolution,
-            int magnify);
+            int magnify, const std::vector<ColorRule> &colorRules = {});
 
+    /*
     const int colors[10][3] = { {255, 255, 255},
                                 {0, 255, 0},
                                 {0, 0, 255},
@@ -106,9 +109,10 @@ public:
                                 {104, 135, 205},
                                 {250, 176, 162},
                                 {234, 110, 111}};
+                                */
 
 private:
-    void addActor(const std::string &model, const Matrix &matrix, int color) const;
+    void addActor(const std::string &model, const Matrix &matrix, const std::array<int, 3> &color) const;
     vtkSmartPointer<vtkRenderer> renderer;
 };
 
@@ -135,7 +139,7 @@ inline vtkSmartPointer<vtkMatrix4x4> convertMatrix( const Matrix& m )
 }
 
 void Visualizer::drawConfiguration(const Configuration &config, const std::string& path, bool savePicture,
-        const Camera& cameraParams, const Resolution& resolution, int magnify)
+        const Camera& cameraParams, const Resolution& resolution, int magnify, const std::vector<ColorRule> &colorRules)
 {
     renderer = vtkSmartPointer<vtkRenderer>::New();
     vtkSmartPointer<vtkRenderWindow> renderWindow =
@@ -143,7 +147,9 @@ void Visualizer::drawConfiguration(const Configuration &config, const std::strin
 
     for ( const auto& [id, matrices] : config.getMatrices())
     {
-        int color =  id % 7 + 3;
+        //int color =  id % 7 + 3;
+        std::array<int, 3> color = getColor(id, colorRules);
+        std::cout << id << color[0] << std::endl;
         const Module& mod = config.getModules().at(id);
         EdgeList edges = config.getEdges().at(id);
         for (ShoeId s : {A, B})
@@ -240,7 +246,7 @@ std::filesystem::path getModel( const std::string& model ) {
 }
 
 
-void Visualizer::addActor(const std::string &model, const Matrix &matrix, int color) const
+void Visualizer::addActor(const std::string &model, const Matrix &matrix, const std::array<int, 3> &color) const
 {
     vtkSmartPointer<vtkOBJReader> reader =
             vtkSmartPointer<vtkOBJReader>::New();
@@ -265,7 +271,7 @@ void Visualizer::addActor(const std::string &model, const Matrix &matrix, int co
     frameActor->SetPosition( matrix(0,3), matrix(1,3), matrix(2,3) );
     frameActor->SetScale( 1 / 95.0 );
 //	frameActor->SetUserTransform( rotation );
-    frameActor->GetProperty()->SetColor(colors[color][0]/256.0, colors[color][1]/256.0 , colors[color][2]/256.0);
+    frameActor->GetProperty()->SetColor(color[0]/256.0, color[1]/256.0 , color[2]/256.0);
 
     renderer->AddActor(frameActor);
 }

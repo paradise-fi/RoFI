@@ -30,7 +30,7 @@ public:
      */
     void visualizeMainConfigs(std::vector<Configuration>& mainConfigs, double maxPhi, unsigned int reconnectionPics,
             const std::string& path, bool savePicture, Camera cameraStart, Camera cameraEnd,
-            const Resolution& resolution, int magnify){
+            const Resolution& resolution, int magnify, const std::vector<ColorRule> &colorRules){
         bool firstConfig = true;
         if (mainConfigs.empty()){
             return;
@@ -38,7 +38,7 @@ public:
         if (mainConfigs.size() == 1){
             std::vector<Configuration> cfg;
             cfg.push_back(mainConfigs[0]);
-            visualizeAllConfigs(cfg, path, savePicture, cameraStart, cameraEnd, resolution, magnify);
+            visualizeAllConfigs(cfg, path, savePicture, cameraStart, cameraEnd, resolution, magnify, colorRules);
             return;
         }
         unsigned long allConfigsCount = getAllConfigsCount(mainConfigs, maxPhi, reconnectionPics);
@@ -60,7 +60,7 @@ public:
             currentCameraStart = interpolateCamera(cameraStart, cameraEnd, currentStep, allConfigsCount - 1);
             currentCameraEnd = interpolateCamera(cameraStart, cameraEnd, currentStep + generatedConfigs.size() - 1, allConfigsCount - 1);
             visualizeAllConfigs(generatedConfigs, path, savePicture, currentCameraStart, currentCameraEnd,
-                    resolution, magnify);
+                    resolution, magnify, colorRules);
             currentStep += generatedConfigs.size();
         }
     }
@@ -78,7 +78,7 @@ public:
      */
     void visualizeAllConfigs(std::vector<Configuration>& allConfigs, const std::string& path, bool savePicture,
             Camera cameraStart, Camera cameraEnd, const Resolution& resolution,
-                             int magnify){
+                             int magnify, const std::vector<ColorRule> &colorRules){
         unsigned long step = 0;
         setCamerasDefault(allConfigs.at(0), cameraStart, cameraEnd);
         Camera camera;
@@ -91,7 +91,7 @@ public:
             if (cameraMove) {
                 camera = interpolateCamera(cameraStart, cameraEnd, step, allConfigs.size() - 1);
             }
-            visualizeOneConfig(c, path, savePicture, camera, resolution, magnify);
+            visualizeOneConfig(c, path, savePicture, camera, resolution, magnify, colorRules);
             step++;
         }
     }
@@ -108,11 +108,12 @@ public:
      */
     void visualizeOneConfig(Configuration& config, const std::string& path, bool savePicture,
             const Camera& camera, const Resolution& resolution,
-            int magnify){
+            int magnify, const std::vector<ColorRule> &colorRules){
         Visualizer visualizer;
         config.computeMatrices();
         std::string filename = getFilename(path);
-        visualizer.drawConfiguration(config, filename, savePicture, camera, resolution, magnify);
+        visualizer.drawConfiguration(config, filename, savePicture, camera, resolution, magnify, colorRules);
+        std::cout << colorRules.size() << std::endl;
     }
 
 private:
