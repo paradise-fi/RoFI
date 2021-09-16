@@ -102,7 +102,7 @@ public:
      * @param config configuration to be visualized
      * @param path where to save the pictures
      * @param savePicture whether to save pictures or render the configurations on the screen
-     * @param camera camera parametersgit s
+     * @param camera camera parameters
      * @param resolution size of the renderer window
      * @param magnify increase the resolution of the saved image
      */

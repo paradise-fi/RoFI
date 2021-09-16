@@ -35,6 +35,7 @@ case $key in
      echo "  -r, --resolution arg  Resolution of the animation"
      echo "  -m, --magnify arg     Magnification of the resolution"
      echo "  -l, --nologo          Video without RoFI logo"
+     echo "  -q, --color arg       Colors definition file"
      exit 0
      ;;
      -i|--input)
@@ -61,6 +62,11 @@ case $key in
      ;;
      -c|--camera)
      VIS="$VIS -c $2"
+     shift
+     shift
+     ;;
+     -q|--colors)
+     VIS="$VIS -q $2"
      shift
      shift
      ;;

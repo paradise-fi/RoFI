@@ -27,6 +27,14 @@ The file can contain following lines:
 * `CV x y z`: camera view up or
 * `CVM xs xe ys ye zs ze`: camera view up move xstart -> xend, ystart -> yend, zstart -> zend
 
+You can specify color definitions in a separate file too. 
+
+The file can contain following lines:
+
+* `S id r g b`: set rgb for single module (e.g. `S 1 255 255 255`)
+* `M id1,id2,id3,id4 r g b`: set the same rgb for multiple modules (e.g. `M 1,17,8 255 255 255`)
+* `R idFrom idTo r g b`: set the same rgb for modules with id in range [idFrom, idTo] (e.g. `R 0 10 255 255 255`)
+
 Default values use mass center of the first configuration.
 
 ```
@@ -49,6 +57,7 @@ Usage:
   -r, --resolution arg  Size of the window on the screen or resolution of the
                         saved picture in format numberxnumber
   -m, --magnify arg     Magnification of saved pictures
+  -q, --color arg       Colors definiton file
 ```
 
 Examples:
@@ -153,6 +162,7 @@ Options:
   -r, --resolution arg  Resolution of the animation
   -m, --magnify arg     Magnification of the resolution
   -l, --nologo          Video without RoFI logo
+  -q, --color arg       Colors definition file
 ```
 
 Examples:

@@ -97,7 +97,7 @@ if [ "$LOGO" == "TRUE" ]
     LOGOHEIGHT=$(( HEIGHT / 8 ))
     # create logo
     LOGOPIC=`mktemp /tmp/XXXXXX.png`
-    inkscape -z -e $LOGOPIC -h $LOGOHEIGHT ${ROFI_ROOT}/tools/visualizer/rofi-logo-2row-black.svg
+    inkscape -o $LOGOPIC -h $LOGOHEIGHT ${ROFI_ROOT}/tools/visualizer/rofi-logo-2row-black.svg
     # add logo
     ffmpeg -i $AUXILIARY2 -i $LOGOPIC -filter_complex 'overlay=x=W-w-30:y=H-h-20' $OUTPATH
     rm $LOGOPIC
