@@ -68,7 +68,7 @@ void parse(int argc, char* argv[], Parameters& p){
             ("r,resolution", "Size of the window on the screen or resolution of the saved picture in format "
                              "<num>x<num>", cxxopts::value<std::string>())
             ("m,magnify", "Magnification of saved pictures", cxxopts::value<int>())
-            ("o,color", "Colors definition file", cxxopts::value<std::string>())
+            ("q,color", "Colors definition file", cxxopts::value<std::string>())
             ;
 
     try {
@@ -121,7 +121,7 @@ void parse(int argc, char* argv[], Parameters& p){
             }
             p.colorsSet = true;
         } else if (result.count("color") > 1) {
-            std::cerr << err::atMostOne("'-o' or '--color'");
+            std::cerr << err::atMostOne("'-q' or '--color'");
             exit(1);
         }
 
