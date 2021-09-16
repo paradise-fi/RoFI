@@ -17,7 +17,7 @@ libraries are required to be installed:
 -  `QT 5 and QT-VTK <http://qt.io/>`__: for APT-based system, install
    ``libvtk7-qt-dev qtdeclarative5-dev``
 -  `GazeboSim >=9 <http://gazebosim.org/>`__: for APT-based system, install
-   ``libgazebo9-dev``
+   ``libgazebo9-dev``. This dependecy can be removed using the build options.
 -  `Z3 <https://github.com/Z3Prover/z3>`__: this dependency is only needed for
    compiling SMT reconfiguration.
 
@@ -28,7 +28,8 @@ Build options
 -------------
 
 -  ``BUILD_HEADLESS`` (default ``FALSE``): Build only parts of the project that
-   can run headlessly. I. e., does not compile visualizer nor rofi-app.
+   can run headlessly. I.e., does not compile visualizer nor rofi-app.
+-  ``BUILD_GAZEBO`` (default ``TRUE``): Build parts that require gazebo libraries.
 -  ``BUILD_SMTRECONFIG`` (default ``FALSE``): Defines whether to build the
    library for reconfiguration via reduction to SMT. The library is not directly
    applicable and also brings heavy dependency in the form of Z3, thus it makes

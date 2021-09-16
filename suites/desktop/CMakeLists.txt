@@ -4,7 +4,8 @@ project(rofi)
 
 option(FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." FALSE)
 option(BUILD_SMTRECONFIG "Build SMT-based reconfiguration library." FALSE)
-option(BUILD_HEADLESS "Build only parts of the project, that can run headlessly" FALSE)
+option(BUILD_HEADLESS "Build only parts of the project, that can run headlessly." FALSE)
+option(BUILD_GAZEBO "Build parts that require gazebo libraries." TRUE)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -73,7 +74,7 @@ if(NOT pybind11_POPULATED)
   add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR})
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${pybind11_SOURCE_DIR}/contrib")
 endif()
-  
+
 FetchContent_Declare(
   dimcli
   URL https://github.com/gknowles/dimcli/archive/refs/tags/v6.0.0.zip
@@ -85,9 +86,9 @@ if(NOT dimcli_POPULATED)
   target_include_directories(dimcli PUBLIC ${dimcli_SOURCE_DIR}/libs)
 endif()
 
-find_package(gazebo REQUIRED)
-include_directories(${GAZEBO_INCLUDE_DIRS})
-link_directories(${GAZEBO_LIBRARY_DIRS})
+if (${BUILD_GAZEBO})
+  find_package(gazebo REQUIRED)
+endif()
 
 
 
@@ -99,28 +100,41 @@ if (${BUILD_SMTRECONFIG})
   add_component(smtreconfig)
 endif()
 add_component(lwip++)
+
+# Libraries for simulators
 add_component(lwipcore)
 add_component(networking)
 add_component(jthread)
-add_component(rofisimMessages)
-add_component(configurationMessages)
-add_component(rofiHalSim)
-add_component(rofiHalSimPy)
-add_component(gazebosim)
-add_component(simplesim)
 
+if (${BUILD_GAZEBO})
+  add_component(rofisimMessages)
+  add_component(configurationMessages)
+  add_component(rofiHalSim)
+  add_component(rofiHalSimPy)
+  add_component(gazebosim)
+  add_component(simplesim)
+endif()
+
+
+add_tool(generate)
+add_tool(emptyDockFill)
+add_tool(topology2dot)
+add_tool(ik)
+add_tool(rofiTool)
 
 if (NOT ${BUILD_HEADLESS})
   add_tool(visualizer)
 endif()
 
-add_tool(generate)
-add_tool(emptyDockFill)
-add_tool(topology2dot)
-add_tool(gazebosimTools)
-add_tool(ik)
-add_tool(rofiTool)
+if (${BUILD_GAZEBO})
+  add_tool(gazebosimTools)
+endif()
 
-add_subdirectory($ENV{ROFI_ROOT}/data/gazebo/worlds data/gazebo/worlds)
-add_subdirectory($ENV{ROFI_ROOT}/examples/simulator examples/simulator)
+
+if (${BUILD_GAZEBO})
+  add_subdirectory($ENV{ROFI_ROOT}/data/gazebo/worlds data/gazebo/worlds)
+  add_subdirectory($ENV{ROFI_ROOT}/examples/simulator examples/simulator)
+endif()
+
+
 list_targets()
