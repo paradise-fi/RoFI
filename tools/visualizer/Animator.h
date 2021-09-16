@@ -102,7 +102,7 @@ public:
      * @param config configuration to be visualized
      * @param path where to save the pictures
      * @param savePicture whether to save pictures or render the configurations on the screen
-     * @param camera camera parameters
+     * @param camera camera parametersgit s
      * @param resolution size of the renderer window
      * @param magnify increase the resolution of the saved image
      */
@@ -113,7 +113,6 @@ public:
         config.computeMatrices();
         std::string filename = getFilename(path);
         visualizer.drawConfiguration(config, filename, savePicture, camera, resolution, magnify, colorRules);
-        std::cout << colorRules.size() << std::endl;
     }
 
 private:

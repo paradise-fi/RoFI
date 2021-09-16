@@ -149,7 +149,6 @@ void Visualizer::drawConfiguration(const Configuration &config, const std::strin
     {
         //int color =  id % 7 + 3;
         std::array<int, 3> color = getColor(id, colorRules);
-        std::cout << id << color[0] << std::endl;
         const Module& mod = config.getModules().at(id);
         EdgeList edges = config.getEdges().at(id);
         for (ShoeId s : {A, B})

@@ -20,82 +20,55 @@ const int COLORS[10][3] = { {255, 255, 255},
                             {250, 176, 162},
                             {234, 110, 111}};
 
-
+enum RuleType { simple, multiple, range};
 
 class ColorRule {
 protected:
     std::array<int, 3> rgb;
+    RuleType type;
+    std::vector<int> multipleIds;
+    int simpleId;
+    int rangeIdFrom;
+    int rangeIdTo;
 
 public:
-    virtual ~ColorRule() {}
-    virtual bool applyRule(int otherId) const {
-        return false;
+    ColorRule(int id, int red, int green, int blue){
+        simpleId = id;
+        type = simple;
+        rgb = {red, green, blue};
+    }
+
+    ColorRule(int idFrom, int idTo, int red, int green, int blue){
+        rangeIdFrom = idFrom;
+        rangeIdTo = idTo;
+        type = range;
+        rgb = {red, green, blue};
+    }
+
+    ColorRule(const std::vector<int> &idsVec, int red, int green, int blue) {
+        multipleIds = idsVec;
+        type = multiple;
+        rgb = {red, green, blue};
+    }
+
+    bool applyRule(int otherId) const {
+        switch(type)
+        {
+            case simple:
+                return simpleId == otherId;
+            case multiple:
+                return std::find(multipleIds.begin(), multipleIds.end(), otherId) != multipleIds.end();
+            case range:
+                return otherId >= rangeIdFrom && otherId <= rangeIdTo;
+            default:
+                return false;
+        }
     }
 
     std::array<int, 3> getRGB() const {
         return rgb;
     }
 };
-
-
-
-class SimpleColorRule : public ColorRule {
-    int id;
-
-public:
-    SimpleColorRule(int id, int red, int green, int blue) {
-        id = id;
-        rgb = {red, green, blue};
-    }
-
-    bool applyRule(int otherId) const override{
-        if (id == otherId) {
-            return true;
-        }
-        return false;
-    }
-
-};
-
-
-class MultipleColorRule : public ColorRule {
-    std::vector<int> ids;
-
-public:
-    MultipleColorRule(const std::vector<int> &idsVec, int red, int green, int blue) {
-        ids = idsVec; //TODO copy?
-        rgb = {red, green, blue};
-    }
-
-    bool applyRule(int otherId) const override{
-        if (std::find(ids.begin(), ids.end(), otherId) != ids.end()) {
-            return true;
-        }
-        return false;
-    }
-
-};
-
-
-class RangeColorRule : public ColorRule {
-    int idFrom;
-    int idTo;
-
-public:
-    RangeColorRule(int idFrom, int idTo, int red, int green, int blue) {
-        idFrom = idFrom;
-        idTo = idTo;
-        rgb = {red, green, blue};
-    }
-
-    bool applyRule(int otherId) const override{
-        if (otherId >= idFrom && otherId <= idTo) {
-            return true;
-        }
-        return false;
-    }
-};
-
 
 inline std::array<int, 3> getColor(int id, std::vector<ColorRule> colorRules){
 
@@ -117,13 +90,20 @@ inline std::array<int, 3> getColor(int id, std::vector<ColorRule> colorRules){
 namespace IO {
 
     inline void readMultipleIds(std::string idsStr, std::vector<int> &ids){
-        std::string::size_type position = idsStr.find(',');
-        while (position != std::string::npos){
-            std::string idStr = idsStr.substr(0, position);
+        std::string::size_type toPosition = idsStr.find(',');
+        std::string::size_type fromPosition = 0;
+        while (toPosition != std::string::npos){
+            std::string idStr = idsStr.substr(fromPosition, toPosition);
             int id = std::stoi(idStr);
             ids.push_back(id);
-            position = idsStr.find(',', position);
+            fromPosition = ++toPosition;
+            toPosition = idsStr.find(',', fromPosition);
         }
+        std::string idStr = idsStr.substr(fromPosition, toPosition);
+        int id = std::stoi(idStr);
+        ids.push_back(id);
+        fromPosition = ++toPosition;
+        toPosition = idsStr.find(',', fromPosition);
     }
 
     inline void readColor(std::stringstream &str, const std::string &line, std::array<int, 3> &color){
@@ -151,19 +131,22 @@ namespace IO {
             std::stringstream str(line);
             std::string type;
             str >> type;
+            if (type.empty()){
+                continue;
+            }
             if (type == "S") {          //simple color rule
                 int id;
                 str >> id;
                 std::array<int, 3> color;
                 readColor(str, line, color);
-                SimpleColorRule rule(id, color[0], color[1], color[2]);
+                ColorRule rule(id, color[0], color[1], color[2]);
                 colorRules.push_back(rule);
             } else if (type == "R") {   //range color rule
                 int idFrom, idTo;
                 str >> idFrom >> idTo;
                 std::array<int, 3> color;
                 readColor(str, line, color);
-                RangeColorRule rule(idFrom, idTo, color[0], color[1], color[2]);
+                ColorRule rule(idFrom, idTo, color[0], color[1], color[2]);
                 colorRules.push_back(rule);
             } else if (type == "M") {   //multiple color rule
                 std::string idsStr;
@@ -172,7 +155,7 @@ namespace IO {
                 readMultipleIds(idsStr, ids);
                 std::array<int, 3> color;
                 readColor(str, line, color);
-                MultipleColorRule rule(ids, color[0], color[1], color[2]);
+                ColorRule rule(ids, color[0], color[1], color[2]);
                 colorRules.push_back(rule);
             } else {
                 throw std::runtime_error(
@@ -180,9 +163,6 @@ namespace IO {
             }
         }
     }
-
-
-
 
 
 } // namespace IO
