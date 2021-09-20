@@ -28,8 +28,7 @@ public:
             }() )
             , _modules( _node )
             , _distributor( *_node, _modules )
-    {
-    }
+    {}
 
     // Returns true if the insertion was succesful
     // Returns false if the rofiId was already registered

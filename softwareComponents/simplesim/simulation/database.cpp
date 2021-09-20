@@ -7,8 +7,7 @@ using namespace rofi::simplesim;
 std::optional< Database::RofiDescription > Database::getDescription( RofiId rofiId ) const
 {
     auto rofi = _internalStates.find( rofiId );
-    if ( rofi == _internalStates.end() )
-    {
+    if ( rofi == _internalStates.end() ) {
         return {};
     }
 
@@ -21,17 +20,14 @@ std::optional< Database::RofiDescription > Database::getDescription( RofiId rofi
 
 std::optional< float > Database::getVelocity( RofiId rofiId, int joint ) const
 {
-    if ( joint < 0 )
-    {
+    if ( joint < 0 ) {
         return {};
     }
     auto rofi = _internalStates.find( rofiId );
-    if ( rofi == _internalStates.end() )
-    {
+    if ( rofi == _internalStates.end() ) {
         return {};
     }
-    if ( size_t( joint ) >= rofi->second.jointsSize() )
-    {
+    if ( size_t( joint ) >= rofi->second.jointsSize() ) {
         return {};
     }
 
@@ -40,17 +36,14 @@ std::optional< float > Database::getVelocity( RofiId rofiId, int joint ) const
 
 bool Database::setPositionWithSpeed( RofiId rofiId, int joint, float position, float speed )
 {
-    if ( joint < 0 )
-    {
+    if ( joint < 0 ) {
         return false;
     }
     auto rofi = _internalStates.find( rofiId );
-    if ( rofi == _internalStates.end() )
-    {
+    if ( rofi == _internalStates.end() ) {
         return false;
     }
-    if ( size_t( joint ) >= rofi->second.jointsSize() )
-    {
+    if ( size_t( joint ) >= rofi->second.jointsSize() ) {
         return false;
     }
 
@@ -61,17 +54,14 @@ bool Database::setPositionWithSpeed( RofiId rofiId, int joint, float position, f
 
 bool Database::setVelocity( RofiId rofiId, int joint, float velocity )
 {
-    if ( joint < 0 )
-    {
+    if ( joint < 0 ) {
         return false;
     }
     auto rofi = _internalStates.find( rofiId );
-    if ( rofi == _internalStates.end() )
-    {
+    if ( rofi == _internalStates.end() ) {
         return false;
     }
-    if ( size_t( joint ) >= rofi->second.jointsSize() )
-    {
+    if ( size_t( joint ) >= rofi->second.jointsSize() ) {
         return false;
     }
 
@@ -83,17 +73,14 @@ bool Database::setVelocity( RofiId rofiId, int joint, float velocity )
 std::optional< Database::ConnectorState > Database::getConnectorState( RofiId rofiId,
                                                                        int connector ) const
 {
-    if ( connector < 0 )
-    {
+    if ( connector < 0 ) {
         return {};
     }
     auto rofi = _internalStates.find( rofiId );
-    if ( rofi == _internalStates.end() )
-    {
+    if ( rofi == _internalStates.end() ) {
         return {};
     }
-    if ( size_t( connector ) >= rofi->second.connectorsSize() )
-    {
+    if ( size_t( connector ) >= rofi->second.connectorsSize() ) {
         return {};
     }
 
@@ -102,17 +89,14 @@ std::optional< Database::ConnectorState > Database::getConnectorState( RofiId ro
 
 Database::ConnectedTo Database::getConnectedTo( RofiId rofiId, int connector ) const
 {
-    if ( connector < 0 )
-    {
+    if ( connector < 0 ) {
         return {};
     }
     auto rofi = _internalStates.find( rofiId );
-    if ( rofi == _internalStates.end() )
-    {
+    if ( rofi == _internalStates.end() ) {
         return {};
     }
-    if ( size_t( connector ) >= rofi->second.connectorsSize() )
-    {
+    if ( size_t( connector ) >= rofi->second.connectorsSize() ) {
         return {};
     }
 
@@ -121,17 +105,14 @@ Database::ConnectedTo Database::getConnectedTo( RofiId rofiId, int connector ) c
 
 bool Database::extendConnector( RofiId rofiId, int connector )
 {
-    if ( connector < 0 )
-    {
+    if ( connector < 0 ) {
         return false;
     }
     auto rofi = _internalStates.find( rofiId );
-    if ( rofi == _internalStates.end() )
-    {
+    if ( rofi == _internalStates.end() ) {
         return false;
     }
-    if ( size_t( connector ) >= rofi->second.connectorsSize() )
-    {
+    if ( size_t( connector ) >= rofi->second.connectorsSize() ) {
         return false;
     }
 
@@ -141,17 +122,14 @@ bool Database::extendConnector( RofiId rofiId, int connector )
 
 bool Database::retractConnector( RofiId rofiId, int connector )
 {
-    if ( connector < 0 )
-    {
+    if ( connector < 0 ) {
         return false;
     }
     auto rofi = _internalStates.find( rofiId );
-    if ( rofi == _internalStates.end() )
-    {
+    if ( rofi == _internalStates.end() ) {
         return false;
     }
-    if ( size_t( connector ) >= rofi->second.connectorsSize() )
-    {
+    if ( size_t( connector ) >= rofi->second.connectorsSize() ) {
         return false;
     }
 
@@ -163,22 +141,18 @@ bool Database::setConnectorPower( RofiId rofiId, int connector, ConnectorLine li
 {
     using ConnectorCmd = rofi::messages::ConnectorCmd;
 
-    if ( connector < 0 )
-    {
+    if ( connector < 0 ) {
         return false;
     }
     auto rofi = _internalStates.find( rofiId );
-    if ( rofi == _internalStates.end() )
-    {
+    if ( rofi == _internalStates.end() ) {
         return false;
     }
-    if ( size_t( connector ) >= rofi->second.connectorsSize() )
-    {
+    if ( size_t( connector ) >= rofi->second.connectorsSize() ) {
         return false;
     }
 
-    switch ( line )
-    {
+    switch ( line ) {
         case ConnectorCmd::INT_LINE:
         {
             rofi->second.getConnector( connector ).internal = connect;
