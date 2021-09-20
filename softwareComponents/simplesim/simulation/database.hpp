@@ -8,7 +8,7 @@
 #include "rofiDescription.pb.h"
 
 
-namespace rofi::networking
+namespace rofi::simplesim
 {
 class Database
 {
@@ -58,4 +58,4 @@ private:
     std::map< RofiId, InternalState > _internalStates;
 };
 
-} // namespace rofi::networking
+} // namespace rofi::simplesim

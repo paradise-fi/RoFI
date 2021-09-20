@@ -1,7 +1,7 @@
 #include "database.hpp"
 
 
-using namespace rofi::networking;
+using namespace rofi::simplesim;
 
 
 std::optional< Database::RofiDescription > Database::getDescription( RofiId rofiId ) const

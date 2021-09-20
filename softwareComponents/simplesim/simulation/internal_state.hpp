@@ -9,7 +9,7 @@
 #include "rofiCmd.pb.h"
 
 
-namespace rofi::networking
+namespace rofi::simplesim
 {
 class InternalJointState
 {
@@ -118,4 +118,4 @@ private:
     std::vector< InternalConnectorState > _connectors;
 };
 
-} // namespace rofi::networking
+} // namespace rofi::simplesim

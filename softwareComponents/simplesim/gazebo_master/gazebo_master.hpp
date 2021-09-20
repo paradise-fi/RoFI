@@ -3,12 +3,12 @@
 #include <memory>
 #include <string>
 
-#include "gazebo/Master.hh"
+#include <gazebo/Master.hh>
 
 
-namespace rofi::networking
+namespace rofi::simplesim
 {
 // Starts Gazebo master for communication in a separate thread
 [[nodiscard]] std::unique_ptr< gazebo::Master > startGazeboMaster();
 
-} // namespace rofi::networking
+} // namespace rofi::simplesim

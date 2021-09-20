@@ -5,7 +5,6 @@ set (FILES
     controllers.cpp
 )
 
-add_library(networkingControllers ${FILES})
-target_link_libraries(networkingControllers PUBLIC networkingRofiInterface networkingSimulation)
-target_link_libraries(networkingControllers PUBLIC atoms)
-target_include_directories(networkingControllers INTERFACE ${CMAKE_CURRENT_LIST_DIR})
+add_library(simplesimControllers ${FILES})
+target_link_libraries(simplesimControllers PUBLIC simplesimRofiInterface simplesimSimulation atoms)
+target_include_directories(simplesimControllers INTERFACE ${CMAKE_CURRENT_LIST_DIR})

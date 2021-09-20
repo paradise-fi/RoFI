@@ -16,7 +16,7 @@
 #include <rofiResp.pb.h>
 
 
-namespace rofi::networking
+namespace rofi::simplesim
 {
 class ModulesInfo
 {
@@ -160,4 +160,4 @@ private:
     std::vector< RofiCmdPtr > _rofiCmds;
 };
 
-} // namespace rofi::networking
+} // namespace rofi::simplesim

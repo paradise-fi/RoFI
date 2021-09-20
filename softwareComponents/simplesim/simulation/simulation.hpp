@@ -12,7 +12,7 @@
 #include <rofiResp.pb.h>
 
 
-namespace rofi::networking
+namespace rofi::simplesim
 {
 /** Class that handles and encapsulates the simulation
  */
@@ -80,4 +80,4 @@ private:
     Database _database;
 };
 
-} // namespace rofi::networking
+} // namespace rofi::simplesim

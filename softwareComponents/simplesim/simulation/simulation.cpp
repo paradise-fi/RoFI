@@ -3,7 +3,7 @@
 #include <iostream>
 
 
-using namespace rofi::networking;
+using namespace rofi::simplesim;
 
 using RofiId = Simulation::RofiId;
 
