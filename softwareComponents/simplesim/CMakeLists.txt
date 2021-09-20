@@ -10,8 +10,8 @@ set (SRC
     main.cpp
 )
 
-add_executable(master ${SRC})
-target_link_libraries(master PUBLIC networkingGazeboMaster)
-target_link_libraries(master PUBLIC networkingRofiInterface)
-target_link_libraries(master PUBLIC networkingSimulation)
-target_link_libraries(master PUBLIC networkingControllers)
+add_executable(rofi-simplesim ${SRC})
+target_link_libraries(rofi-simplesim PUBLIC simplesimGazeboMaster)
+target_link_libraries(rofi-simplesim PUBLIC simplesimRofiInterface)
+target_link_libraries(rofi-simplesim PUBLIC simplesimSimulation)
+target_link_libraries(rofi-simplesim PUBLIC simplesimControllers)

@@ -11,7 +11,7 @@
 #include <rofiResp.pb.h>
 
 
-namespace rofi::networking
+namespace rofi::simplesim
 {
 class RofiInterface
 {
@@ -57,4 +57,4 @@ private:
     Distributor _distributor;
 };
 
-} // namespace rofi::networking
+} // namespace rofi::simplesim

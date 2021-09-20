@@ -1,7 +1,7 @@
 #include "modules_info.hpp"
 
 
-using namespace rofi::networking;
+using namespace rofi::simplesim;
 
 using RofiId = ModulesInfo::RofiId;
 using SessionId = ModulesInfo::SessionId;

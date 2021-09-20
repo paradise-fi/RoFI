@@ -1,7 +1,7 @@
 #include "distributor.hpp"
 
 
-using namespace rofi::networking;
+using namespace rofi::simplesim;
 
 Distributor::Distributor( gazebo::transport::Node & node, ModulesInfo & modulesInfo )
         : _modulesInfo( modulesInfo )

@@ -3,7 +3,7 @@
 #include <gazebo/gazebo.hh>
 
 
-namespace rofi::networking
+namespace rofi::simplesim
 {
 std::unique_ptr< gazebo::Master > startGazeboMaster()
 {
@@ -19,7 +19,7 @@ std::unique_ptr< gazebo::Master > startGazeboMaster()
     gazebo::common::load();
 
     // Initialize the informational logger. This will log warnings, and errors.
-    gzLogInit( "networking-sim-", "default.log" );
+    gzLogInit( "simplesim-", "default.log" );
 
     if ( !gazebo::transport::init() )
     {
@@ -33,4 +33,4 @@ std::unique_ptr< gazebo::Master > startGazeboMaster()
     return master;
 }
 
-} // namespace rofi::networking
+} // namespace rofi::simplesim

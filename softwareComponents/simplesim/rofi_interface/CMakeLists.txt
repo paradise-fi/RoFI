@@ -6,7 +6,7 @@ set (FILES
     modules_info.cpp
 )
 
-add_library(networkingRofiInterface ${FILES})
-target_link_libraries(networkingRofiInterface PUBLIC rofisimMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
-target_include_directories(networkingRofiInterface PUBLIC ${GAZEBO_INCLUDE_DIRS})
-target_include_directories(networkingRofiInterface INTERFACE ${CMAKE_CURRENT_LIST_DIR})
+add_library(simplesimRofiInterface ${FILES})
+target_link_libraries(simplesimRofiInterface PUBLIC rofisimMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+target_include_directories(simplesimRofiInterface PUBLIC ${GAZEBO_INCLUDE_DIRS})
+target_include_directories(simplesimRofiInterface INTERFACE ${CMAKE_CURRENT_LIST_DIR})

@@ -7,9 +7,9 @@
 
 int main()
 {
-    using namespace rofi::networking;
+    using namespace rofi::simplesim;
 
-    std::cout << "Starting master" << std::endl;
+    std::cout << "Starting simplesim master" << std::endl;
 
     auto gzMaster = startGazeboMaster();
     Simulation simulation;

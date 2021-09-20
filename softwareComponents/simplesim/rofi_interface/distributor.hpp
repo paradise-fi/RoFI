@@ -8,7 +8,7 @@
 #include <distributorResp.pb.h>
 
 
-namespace rofi::networking
+namespace rofi::simplesim
 {
 class Distributor
 {
@@ -42,4 +42,4 @@ private:
     gazebo::transport::PublisherPtr _pub;
     gazebo::transport::SubscriberPtr _sub;
 };
-} // namespace rofi::networking
+} // namespace rofi::simplesim

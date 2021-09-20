@@ -6,7 +6,7 @@
 #include <thread>
 
 
-namespace rofi::networking
+namespace rofi::simplesim
 {
 void rofiControllerThread( std::stop_token stopToken,
                            Simulation & simulation,
@@ -55,4 +55,4 @@ std::jthread runIntrospectionController()
     return std::jthread( &introspectionControllerThread );
 }
 
-} // namespace rofi::networking
+} // namespace rofi::simplesim
