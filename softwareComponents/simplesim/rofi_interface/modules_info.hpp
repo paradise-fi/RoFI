@@ -40,8 +40,7 @@ public:
                 , _topic( std::move( _topic ) )
                 , _pub( std::move( _pub ) )
                 , _sub( std::move( _sub ) )
-        {
-        }
+        {}
         LockedModuleInfo & operator=( LockedModuleInfo && ) = delete;
         LockedModuleInfo( const LockedModuleInfo & ) = delete;
         LockedModuleInfo & operator=( const LockedModuleInfo & ) = delete;
@@ -96,8 +95,7 @@ public:
     {
         std::shared_lock< std::shared_mutex > lock( _modulesMutex );
 
-        for ( auto & [ rofiId, moduleInfo ] : _lockedModules )
-        {
+        for ( auto & [ rofiId, moduleInfo ] : _lockedModules ) {
             function( rofiId, moduleInfo.topic() );
         }
     }
@@ -107,8 +105,7 @@ public:
     {
         std::shared_lock< std::shared_mutex > lock( _modulesMutex );
 
-        for ( auto rofiId : _freeModules )
-        {
+        for ( auto rofiId : _freeModules ) {
             function( rofiId );
         }
     }
@@ -118,8 +115,7 @@ public:
     {
         std::shared_lock< std::shared_mutex > lock1( _modulesMutex );
 
-        for ( auto resp : responses )
-        {
+        for ( auto resp : responses ) {
             auto it = _lockedModules.find( resp.rofiid() );
             it->second.pub().Publish( resp );
         }

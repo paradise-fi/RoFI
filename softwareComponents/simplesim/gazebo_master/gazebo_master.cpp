@@ -21,8 +21,7 @@ std::unique_ptr< gazebo::Master > startGazeboMaster()
     // Initialize the informational logger. This will log warnings, and errors.
     gzLogInit( "simplesim-", "default.log" );
 
-    if ( !gazebo::transport::init() )
-    {
+    if ( !gazebo::transport::init() ) {
         throw std::runtime_error( "Unable to initialize transport." );
     }
 

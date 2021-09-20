@@ -28,8 +28,7 @@ bool ModulesInfo::addNewRofi( RofiId rofiId )
 {
     std::lock_guard< std::shared_mutex > lock( _modulesMutex );
 
-    if ( _lockedModules.find( rofiId ) != _lockedModules.end() )
-    {
+    if ( _lockedModules.find( rofiId ) != _lockedModules.end() ) {
         return false;
     }
     return _freeModules.insert( rofiId ).second;
@@ -40,8 +39,7 @@ std::optional< RofiId > ModulesInfo::lockFreeRofi( SessionId sessionId )
     std::lock_guard< std::shared_mutex > lock( _modulesMutex );
 
     auto it = _freeModules.begin();
-    if ( it == _freeModules.end() )
-    {
+    if ( it == _freeModules.end() ) {
         return {};
     }
 
@@ -56,8 +54,7 @@ bool ModulesInfo::tryLockRofi( RofiId rofiId, SessionId sessionId )
     std::lock_guard< std::shared_mutex > lock( _modulesMutex );
 
     auto it = _freeModules.find( rofiId );
-    if ( it == _freeModules.end() )
-    {
+    if ( it == _freeModules.end() ) {
         return false;
     }
 
@@ -71,13 +68,11 @@ bool ModulesInfo::unlockRofi( RofiId rofiId, SessionId sessionId )
     std::lock_guard< std::shared_mutex > lock( _modulesMutex );
 
     auto it = _lockedModules.find( rofiId );
-    if ( it == _lockedModules.end() )
-    {
+    if ( it == _lockedModules.end() ) {
         return true;
     }
 
-    if ( it->second.sessionId() != sessionId )
-    {
+    if ( it->second.sessionId() != sessionId ) {
         return false;
     }
 
@@ -92,8 +87,7 @@ std::optional< SessionId > ModulesInfo::getSessionId( RofiId rofiId ) const
     std::shared_lock< std::shared_mutex > lock( _modulesMutex );
 
     auto it = _lockedModules.find( rofiId );
-    if ( it != _lockedModules.end() )
-    {
+    if ( it != _lockedModules.end() ) {
         return it->second.sessionId();
     }
     return {};
@@ -104,8 +98,7 @@ std::optional< std::string > ModulesInfo::getTopic( RofiId rofiId ) const
     std::shared_lock< std::shared_mutex > lock( _modulesMutex );
 
     auto it = _lockedModules.find( rofiId );
-    if ( it != _lockedModules.end() )
-    {
+    if ( it != _lockedModules.end() ) {
         return it->second.topic();
     }
     return {};

@@ -9,7 +9,8 @@
 namespace rofi::simplesim
 {
 // Starts a new thread that runs the RoFI controller
-[[nodiscard]] std::jthread runRofiController( Simulation & simulation, RofiInterface & rofiInterface );
+[[nodiscard]] std::jthread runRofiController( Simulation & simulation,
+                                              RofiInterface & rofiInterface );
 
 // Starts a new thread that runs the introspection (master) controller
 [[nodiscard]] std::jthread runIntrospectionController();

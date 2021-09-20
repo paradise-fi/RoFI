@@ -7,13 +7,11 @@ Distributor::Distributor( gazebo::transport::Node & node, ModulesInfo & modulesI
         : _modulesInfo( modulesInfo )
 {
     _pub = node.Advertise< rofi::messages::DistributorResp >( "~/distributor/response" );
-    if ( !_pub )
-    {
+    if ( !_pub ) {
         throw std::runtime_error( "Publisher could not be created" );
     }
     _sub = node.Subscribe( "~/distributor/request", &Distributor::onRequestCallback, this );
-    if ( !_sub )
-    {
+    if ( !_sub ) {
         throw std::runtime_error( "Subcriber could not be created" );
     }
 }
@@ -22,16 +20,14 @@ void Distributor::onRequest( const rofi::messages::DistributorReq & req )
 {
     using rofi::messages::DistributorReq;
 
-    switch ( req.reqtype() )
-    {
+    switch ( req.reqtype() ) {
         case DistributorReq::NO_REQ:
         {
             break;
         }
         case DistributorReq::GET_INFO:
         {
-            if ( req.rofiid() != 0 )
-            {
+            if ( req.rofiid() != 0 ) {
                 std::cerr << "Got GET_INFO distributor request with non-zero id\n";
             }
             _pub->Publish( onGetInfoReq(), true );
@@ -39,8 +35,7 @@ void Distributor::onRequest( const rofi::messages::DistributorReq & req )
         }
         case DistributorReq::LOCK_ONE:
         {
-            if ( req.rofiid() != 0 )
-            {
+            if ( req.rofiid() != 0 ) {
                 std::cerr << "Got LOCK_ONE distributor request with non-zero id\n";
             }
 
@@ -94,16 +89,14 @@ rofi::messages::DistributorResp Distributor::onLockOneReq( SessionId sessionId )
     resp.set_sessionid( sessionId );
 
     auto freeId = _modulesInfo.lockFreeRofi( sessionId );
-    if ( !freeId )
-    {
+    if ( !freeId ) {
         return resp;
     }
 
     auto & info = *resp.add_rofiinfos();
     info.set_rofiid( *freeId );
     info.set_lock( true );
-    if ( auto topic = _modulesInfo.getTopic( *freeId ) )
-    {
+    if ( auto topic = _modulesInfo.getTopic( *freeId ) ) {
         info.set_topic( *topic );
     }
 
@@ -119,8 +112,7 @@ rofi::messages::DistributorResp Distributor::onTryLockReq( RofiId rofiId, Sessio
     auto & info = *resp.add_rofiinfos();
     info.set_rofiid( rofiId );
     info.set_lock( _modulesInfo.tryLockRofi( rofiId, sessionId ) );
-    if ( auto topic = _modulesInfo.getTopic( rofiId ) )
-    {
+    if ( auto topic = _modulesInfo.getTopic( rofiId ) ) {
         info.set_topic( *topic );
     }
 
@@ -136,8 +128,7 @@ rofi::messages::DistributorResp Distributor::onUnlockReq( RofiId rofiId, Session
     auto & info = *resp.add_rofiinfos();
     info.set_rofiid( rofiId );
 
-    if ( !_modulesInfo.isLocked( rofiId ) )
-    {
+    if ( !_modulesInfo.isLocked( rofiId ) ) {
         std::cerr << "Got UNLOCK distributor request without id locked\n";
         return resp;
     }

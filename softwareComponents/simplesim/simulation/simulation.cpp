@@ -31,8 +31,7 @@ Simulation::OptionalRofiResp Simulation::processRofiCommand( const rofi::message
 {
     using RofiCmd = rofi::messages::RofiCmd;
 
-    switch ( cmd.cmdtype() )
-    {
+    switch ( cmd.cmdtype() ) {
         case RofiCmd::NO_CMD:
         {
             return {};
@@ -47,8 +46,7 @@ Simulation::OptionalRofiResp Simulation::processRofiCommand( const rofi::message
         }
         case RofiCmd::DESCRIPTION:
         {
-            if ( auto description = _database.getDescription( cmd.rofiid() ) )
-            {
+            if ( auto description = _database.getDescription( cmd.rofiid() ) ) {
                 rofi::messages::RofiResp resp;
                 resp.set_rofiid( cmd.rofiid() );
                 resp.set_resptype( cmd.cmdtype() );
@@ -77,8 +75,7 @@ Simulation::OptionalRofiResp Simulation::processJointCommand( RofiId rofiId,
 {
     using JointCmd = rofi::messages::JointCmd;
 
-    switch ( cmd.cmdtype() )
-    {
+    switch ( cmd.cmdtype() ) {
         case JointCmd::NO_CMD:
         {
             return {};
@@ -98,8 +95,7 @@ Simulation::OptionalRofiResp Simulation::processJointCommand( RofiId rofiId,
         }
         case JointCmd::GET_VELOCITY:
         {
-            if ( auto velocity = _database.getVelocity( rofiId, cmd.joint() ) )
-            {
+            if ( auto velocity = _database.getVelocity( rofiId, cmd.joint() ) ) {
                 return getJointResp( rofiId, cmd.joint(), cmd.cmdtype(), *velocity );
             }
             std::cerr << "Rofi " << rofiId << " doesn't exist or does not have joint "
@@ -111,13 +107,11 @@ Simulation::OptionalRofiResp Simulation::processJointCommand( RofiId rofiId,
             // TODO clamp pos and speed
             auto pos = cmd.setposwithspeed().position();
             auto speed = cmd.setposwithspeed().speed();
-            if ( pos < 0 )
-            {
+            if ( pos < 0 ) {
                 std::cerr << "Got set position command with negative speed. Setting to zero\n";
                 pos = 0;
             }
-            if ( !_database.setPositionWithSpeed( rofiId, cmd.joint(), pos, speed ) )
-            {
+            if ( !_database.setPositionWithSpeed( rofiId, cmd.joint(), pos, speed ) ) {
                 std::cerr << "Rofi " << rofiId << " doesn't exist or does not have joint "
                           << cmd.joint() << " (joint command type: " << cmd.cmdtype() << ")\n";
             }
@@ -127,8 +121,7 @@ Simulation::OptionalRofiResp Simulation::processJointCommand( RofiId rofiId,
         {
             // TODO clamp velocity
             auto velocity = cmd.setvelocity().velocity();
-            if ( !_database.setVelocity( rofiId, cmd.joint(), velocity ) )
-            {
+            if ( !_database.setVelocity( rofiId, cmd.joint(), velocity ) ) {
                 std::cerr << "Rofi " << rofiId << " doesn't exist or does not have joint "
                           << cmd.joint() << " (joint command type: " << cmd.cmdtype() << ")\n";
             }
@@ -159,16 +152,14 @@ Simulation::OptionalRofiResp Simulation::processConnectorCommand(
 {
     using ConnectorCmd = rofi::messages::ConnectorCmd;
 
-    switch ( cmd.cmdtype() )
-    {
+    switch ( cmd.cmdtype() ) {
         case ConnectorCmd::NO_CMD:
         {
             return {};
         }
         case ConnectorCmd::GET_STATE:
         {
-            if ( auto state = _database.getConnectorState( rofiId, cmd.connector() ) )
-            {
+            if ( auto state = _database.getConnectorState( rofiId, cmd.connector() ) ) {
                 auto resp = getConnectorResp( rofiId, cmd.connector(), cmd.cmdtype() );
                 *resp.mutable_connectorresp()->mutable_state() = std::move( *state );
                 return resp;
@@ -180,8 +171,7 @@ Simulation::OptionalRofiResp Simulation::processConnectorCommand(
         case ConnectorCmd::CONNECT:
         {
             // TODO check somewhere for new connections
-            if ( !_database.extendConnector( rofiId, cmd.connector() ) )
-            {
+            if ( !_database.extendConnector( rofiId, cmd.connector() ) ) {
                 std::cerr << "Rofi " << rofiId << " doesn't exist or does not have connector "
                           << cmd.connector() << " (connector command type: " << cmd.cmdtype()
                           << ")\n";
@@ -191,8 +181,7 @@ Simulation::OptionalRofiResp Simulation::processConnectorCommand(
         case ConnectorCmd::DISCONNECT:
         {
             // TODO send disconnect event
-            if ( !_database.retractConnector( rofiId, cmd.connector() ) )
-            {
+            if ( !_database.retractConnector( rofiId, cmd.connector() ) ) {
                 std::cerr << "Rofi " << rofiId << " doesn't exist or does not have connector "
                           << cmd.connector() << " (connector command type: " << cmd.cmdtype()
                           << ")\n";
@@ -201,8 +190,7 @@ Simulation::OptionalRofiResp Simulation::processConnectorCommand(
         }
         case ConnectorCmd::PACKET:
         {
-            if ( auto connectedTo = _database.getConnectedTo( rofiId, cmd.connector() ) )
-            {
+            if ( auto connectedTo = _database.getConnectedTo( rofiId, cmd.connector() ) ) {
                 auto resp = getConnectorResp( connectedTo->rofiId,
                                               connectedTo->connector,
                                               cmd.cmdtype() );
@@ -214,8 +202,7 @@ Simulation::OptionalRofiResp Simulation::processConnectorCommand(
         }
         case ConnectorCmd::CONNECT_POWER:
         {
-            if ( !_database.setConnectorPower( rofiId, cmd.connector(), cmd.line(), true ) )
-            {
+            if ( !_database.setConnectorPower( rofiId, cmd.connector(), cmd.line(), true ) ) {
                 std::cerr << "Rofi " << rofiId << " doesn't exist or does not have connector "
                           << cmd.connector() << " (connector command type: " << cmd.cmdtype()
                           << ")\n";
@@ -224,8 +211,7 @@ Simulation::OptionalRofiResp Simulation::processConnectorCommand(
         }
         case ConnectorCmd::DISCONNECT_POWER:
         {
-            if ( !_database.setConnectorPower( rofiId, cmd.connector(), cmd.line(), false ) )
-            {
+            if ( !_database.setConnectorPower( rofiId, cmd.connector(), cmd.line(), false ) ) {
                 std::cerr << "Rofi " << rofiId << " doesn't exist or does not have connector "
                           << cmd.connector() << " (connector command type: " << cmd.cmdtype()
                           << ")\n";

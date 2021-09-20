@@ -30,11 +30,8 @@ public:
     {
     public:
         Connector( RofiId rofiId, int connector, ConnectorState::Orientation orientation )
-                : rofiId( rofiId )
-                , connector( connector )
-                , orientation( orientation )
-        {
-        }
+                : rofiId( rofiId ), connector( connector ), orientation( orientation )
+        {}
 
         RofiId rofiId = {};
         int connector = {};
@@ -64,8 +61,7 @@ public:
         state.set_internal( internal );
         state.set_external( external );
         state.set_connected( connectedTo.has_value() );
-        if ( connectedTo.has_value() )
-        {
+        if ( connectedTo.has_value() ) {
             state.set_orientation( connectedTo->orientation );
         }
         return state;
@@ -79,9 +75,7 @@ public:
     static_assert( std::is_same_v< RofiId, InternalJointState::RofiId > );
     static_assert( std::is_same_v< RofiId, InternalConnectorState::RofiId > );
 
-    InternalState( int joints, int connectors ) : _joints( joints ), _connectors( connectors )
-    {
-    }
+    InternalState( int joints, int connectors ) : _joints( joints ), _connectors( connectors ) {}
 
     InternalState( const InternalState & ) = default;
     InternalState & operator=( const InternalState & ) = default;
