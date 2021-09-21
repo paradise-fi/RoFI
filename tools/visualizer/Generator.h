@@ -250,7 +250,7 @@ private:
         double beta = std::abs(m1.getJoint(Beta) - m2.getJoint(Beta));
         double gamma = std::abs(m1.getJoint(Gamma) - m2.getJoint(Gamma));
         if (gamma > 180){
-            gamma = 360 - 180;
+            gamma = 360 - gamma;
         }
         return std::max(std::max(alpha, beta), gamma);
     }
