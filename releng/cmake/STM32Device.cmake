@@ -1,16 +1,25 @@
 macro(setup_mcu_details MCU)
     if(${MCU} STREQUAL "STM32G071xx")
-        add_definitions(-D${MCU})
         set(MCU_FAMILY STM32G0xx)
         set(MCU_ARCH cortex-m0plus)
         set(MCU_FLOAT_ABI soft)
     elseif(${MCU} STREQUAL "STM32F030x8")
-        add_definitions(-D${MCU})
         set(MCU_FAMILY STM32F0xx)
         set(MCU_ARCH cortex-m0)
         set(MCU_FLOAT_ABI soft)
+    elseif(${MCU} MATCHES "STM32F41.*")
+        set(MCU_FAMILY STM32F4xx)
+        set(MCU_ARCH cortex-m4)
+        set(MCU_FLOAT_ABI hard)
+        set(MCU_FPU fpv4-sp-d16)
     else()
         message(FATAL_ERROR "Unsupported MCU '${MCU}' specified." )
+    endif()
+
+    if((${MCU_ARCH} STREQUAL cortex-m0) OR (${MCU_ARCH} STREQUAL cortex-m0plus))
+        set(MCU_RTOS_FLAVOR ARM_CM0)
+    elseif(${MCU_ARCH} STREQUAL cortex-m4)
+        set(MCU_RTOS_FLAVOR ARM_CM4F)
     endif()
 endmacro()
 
@@ -18,16 +27,17 @@ endmacro()
 function(add_stm32_compiler_flags)
     cmake_parse_arguments(A "" "TARGET;MCU" "" ${ARGN})
 
-    setup_mcu_details(${MCU})
+    setup_mcu_details(${A_MCU})
 
-    set(BUILD_FLAGS "-mcpu=${MCU_ARCH} \
+    set(BUILD_FLAGS "-D${A_MCU} -D${MCU_FAMILY} \
+                     -mcpu=${MCU_ARCH} \
                      -mthumb -mfloat-abi=${MCU_FLOAT_ABI} \
                      -ffunction-sections -fdata-sections -g \
-                     -fno-common -fmessage-length=0 \
-                     -fno-exceptions -fno-rtti")
+                     -fno-common -fmessage-length=0")
     if (MCU_FLOAT_ABI STREQUAL hard)
         set(BUILD_FLAGS "${BUILD_FLAGS} -mfpu=${MCU_FPU}")
-    endif ()
+        target_link_options(${A_TARGET} PUBLIC "-mfloat-abi=${MCU_FLOAT_ABI}" "-mfpu=${MCU_FPU}")
+    endif()
 
     if(CMAKE_BUILD_TYPE MATCHES Debug)
         set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -gdwarf-2")
@@ -36,6 +46,7 @@ function(add_stm32_compiler_flags)
 
     set_target_properties(${A_TARGET} PROPERTIES COMPILE_FLAGS ${BUILD_FLAGS})
     set_target_properties(${A_TARGET} PROPERTIES LINKER_LANGUAGE CXX)
+    target_link_options(${A_TARGET} PUBLIC "-mthumb" "-mcpu=${MCU_ARCH}")
 endfunction()
 
 function(add_stm32_target)
@@ -49,14 +60,17 @@ function(add_stm32_target)
     else()
         message(FATAL_ERROR "You have to specify either EXECUTABLE or a LIB")
     endif()
+
     add_stm32_compiler_flags(
         TARGET ${A_TARGET}
-        MCU ${MCU})
+        MCU ${A_MCU})
     target_link_options(
         ${A_TARGET} PRIVATE "-Wl,-Map=control.map,--cref"
         "-Wl,--print-memory-usage" "-funwind-tables" "-fasynchronous-unwind-tables"
-        "--specs=nosys.specs" "-Wl,--gc-sections" -lc -lm -lnosys
-        "-T" "${A_LINKER_SCRIPT}")
+        "--specs=nosys.specs" "-Wl,--gc-sections" -lc -lm -lnosys)
+    if (${A_LINKER_SCRIPT})
+        target_link_options(${A_TARGET} PRIVATE "-T" "${A_LINKER_SCRIPT}")
+    endif()
 
     if ("${A_EXECUTABLE}")
         set(HEX_FILE ${PROJECT_BINARY_DIR}/${A_TARGET}.hex)

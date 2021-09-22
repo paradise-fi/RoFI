@@ -3,84 +3,21 @@ cmake_minimum_required(VERSION 3.11)
 include(FetchContent)
 
 function(setup_stm32cxx PREFIX MCU)
+    if (NOT TARGET ${PREFIX}_CMSIS)
+        setup_stm32cube(${PREFIX} ${MCU})
+    endif()
 
     setup_mcu_details(${MCU})
-
-    enable_language(C CXX ASM)
-
     # STM32 HAL and CMSIS
     string(TOLOWER ${MCU} MCU_LOWER)
     string(TOLOWER ${MCU_FAMILY} MCU_FAMILY_LOWER)
 
-    # Fetch HAL libraries
-    if(${MCU_FAMILY} STREQUAL "STM32F0xx")
-        FetchContent_Declare(
-            hal
-            GIT_REPOSITORY https://github.com/STMicroelectronics/STM32CubeF0.git
-            GIT_TAG        v1.11.0
-        )
-    elseif(${MCU_FAMILY} STREQUAL "STM32G0xx")
-        FetchContent_Declare(
-            hal
-            GIT_REPOSITORY https://github.com/STMicroelectronics/STM32CubeG0.git
-            GIT_TAG        v1.3.0
-        )
-    else()
-        message(FATAL_ERROR "Unsupported MCU family '${MCU_FAMILY}' specified." )
-    endif()
-
-    FetchContent_GetProperties("hal")
-    if(NOT "${hal_POPULATED}")
-    FetchContent_Populate("hal")
-    # Turn config template into config
-    file(GLOB_RECURSE cfgFile "${hal_SOURCE_DIR}/Drivers/*_conf_template.h")
-    foreach(f ${cfgFile})
-            string(REGEX REPLACE "_template\.h$" ".h" newF ${f})
-            file(RENAME ${f} ${newF})
-        endforeach(f)
-    endif()
-
-    set(STM_LIB ${hal_SOURCE_DIR}/Drivers)
-    set(HAL_PATH ${STM_LIB}/${MCU_FAMILY}_HAL_Driver)
-
-    add_stm32_target(LIB
-        TARGET ${PREFIX}_startup
-        LIBTYPE OBJECT
-        FILES ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Source/Templates/gcc/startup_${MCU_LOWER}.s)
-
-    add_stm32_target(LIB
+    get_property(STM_LIB
         TARGET ${PREFIX}_CMSIS
-        LIBTYPE STATIC
-        FILES ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Source/Templates/system_${MCU_FAMILY_LOWER}.c)
-    target_include_directories(${PREFIX}_CMSIS
-        SYSTEM PUBLIC ${STM_LIB}/CMSIS/Include
-        SYSTEM PUBLIC ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Include)
-
-    function(add_hallib libname)
-        set(sources "")
-        foreach(f ${ARGN})
-            list(APPEND sources "${HAL_PATH}/Src/${MCU_FAMILY_LOWER}_${f}")
-        endforeach(f)
-        add_stm32_target(LIB
-            TARGET ${PREFIX}_${libname}
-            LIBTYPE STATIC
-            FILES ${sources})
-        target_include_directories(${PREFIX}_${libname} SYSTEM PUBLIC ${HAL_PATH}/Inc)
-        target_link_libraries(${PREFIX}_${libname} PUBLIC ${PREFIX}_CMSIS)
-        target_compile_options(${PREFIX}_${libname} PUBLIC -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER -D${MCU_FAMILY})
-    endfunction()
-
-    add_hallib(HAL hal.c hal_rcc.c hal_cortex.c)
-    add_hallib(LL ll_utils.c ll_rcc.c)
-    add_hallib(LL_Adc ll_adc.c)
-    add_hallib(LL_Dma ll_dma.c)
-    add_hallib(LL_Exti ll_exti.c)
-    add_hallib(LL_Gpio ll_gpio.c)
-    add_hallib(LL_Spi ll_spi.c)
-    add_hallib(LL_Tim ll_tim.c)
-    add_hallib(LL_Usart ll_usart.c)
-        target_link_libraries(${PREFIX}_LL_Usart PUBLIC ${PREFIX}_LL)
-    add_hallib(HAL_CRC hal_crc.c hal_crc_ex.c)
+        PROPERTY STM_LIB)
+    get_property(HAL_PATH
+        TARGET ${PREFIX}_CMSIS
+        PROPERTY HAL_PATH)
 
     # Function 2
     FetchContent_Declare(
@@ -105,6 +42,7 @@ function(setup_stm32cxx PREFIX MCU)
         FetchContent_Populate(printf)
         add_stm32_target(LIB
             TARGET ${PREFIX}_printf
+            MCU ${MCU}
             LIBTYPE STATIC
             FILES  ${printf_SOURCE_DIR}/printf.c)
         target_include_directories(${PREFIX}_printf PUBLIC ${printf_SOURCE_DIR})
@@ -119,6 +57,7 @@ function(setup_stm32cxx PREFIX MCU)
     # archive to achieve weak symbol overriding
     add_stm32_target(LIB
         TARGET ${PREFIX}_stm32cxx_irq
+        MCU ${MCU}
         LIBTYPE STATIC
         FILES ${IRQ_SRC})
     target_compile_options(${PREFIX}_stm32cxx_irq PUBLIC -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER -D${MCU_FAMILY})
@@ -134,6 +73,7 @@ function(setup_stm32cxx PREFIX MCU)
 
     add_stm32_target(LIB
         TARGET ${PREFIX}_stm32cxx
+        MCU ${MCU}
         LIBTYPE STATIC
         FILES ${SRC}
               ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Source/Templates/gcc/startup_${MCU_LOWER}.s)

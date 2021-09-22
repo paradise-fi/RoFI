@@ -12,20 +12,19 @@ set(MEMORY_BLOCK_COUNT 20)
 
 project(control_board C CXX ASM)
 
-set(MCU "STM32G071xx")
-set(MCU_LINKER_SCRIPT $ENV{ROFI_ROOT}/hardwareModules/RoFICoM/software/control_board/stm32/STM32G071GBUx_FLASH.ld)
+set(ROFICOM_MCU "STM32G071xx")
 
 file(GLOB_RECURSE SRC src/*.cpp src/*.c)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fmax-errors=5")
 
-setup_stm32cxx("g0" ${MCU})
+setup_stm32cxx("g0" ${ROFICOM_MCU})
 
 add_stm32_target(
         EXECUTABLE
         TARGET roficomFw
-        MCU ${MCU}
-        LINKER_SCRIPT ${MCU_LINKER_SCRIPT}
+        MCU ${ROFICOM_MCU}
+        LINKER_SCRIPT $ENV{ROFI_ROOT}/hardwareModules/RoFICoM/software/control_board/stm32/STM32G071GBUx_FLASH.ld
         FILES ${SRC})
 set_property(TARGET roficomFw PROPERTY CXX_STANDARD 17)
 target_include_directories(roficomFw PRIVATE src)

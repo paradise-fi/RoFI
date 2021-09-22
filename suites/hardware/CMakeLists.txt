@@ -10,5 +10,4 @@ include(Kikit)
 add_subdirectory($ENV{ROFI_ROOT}/hardwareModules/universalModule/hardware universalModule)
 add_subdirectory($ENV{ROFI_ROOT}/hardwareModules/RoFICoM/hardware roficom)
 
-
 list_targets()
