@@ -27,6 +27,7 @@ enum class ModuleType {
     Unknown,
     Universal,
     Cube,
+    Pad,
 };
 
 enum class Orientation { North, East, South, West };
@@ -373,7 +374,9 @@ public:
 };
 
 /**
- * \brief
+ * \brief RoFI bot
+ *
+ * The rofibot is composed out of modules.
  */
 class Rofibot {
 public:

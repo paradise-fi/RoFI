@@ -14,6 +14,7 @@ double orientationToAngle( Orientation o ) {
             return M_PI_2;
     }
     assert( false && "Orientation was modified" );
+    return 0; // never reached
 }
 
 void rofi::Module::setJointParams( int idx, const Joint::Positions& p ) {
