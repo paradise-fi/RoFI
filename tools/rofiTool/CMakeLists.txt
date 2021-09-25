@@ -7,7 +7,7 @@ include(${VTK_USE_FILE})
 add_resources(modelResources
     "model/body.obj" "model/connector.obj" "model/shoe.obj")
 
-add_executable(rofi-tool main.cpp preview.cpp
+add_executable(rofi-tool main.cpp preview.cpp build.cpp rendering.cpp
     ${modelResources})
 target_link_libraries(rofi-tool PRIVATE dimcli configuration ${VTK_LIBRARIES} atoms-heavy)
 
