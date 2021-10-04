@@ -20,6 +20,7 @@ double orientationToAngle( Orientation o ) {
 void rofi::Module::setJointParams( int idx, const Joint::Positions& p ) {
     // Currently we invalidate all positions; ToDo: think if we can improve it
     assert( idx < _joints.size() && idx >= 0 );
+    assert( p.size() == _joints[ idx ].joint->positions.size() );
     std::copy( p.begin(), p.end(), _joints[ idx ].joint->positions.begin() );
     _componentPosition = std::nullopt;
     if ( parent )
