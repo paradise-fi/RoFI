@@ -2,12 +2,16 @@
 
 #include <utility>
 #include <memory>
+#include <type_traits>
 #include <atoms/traits.hpp>
 
 /**
- * \brief Declare base class as cloneable.
+ * \brief Declare abstract base class as cloneable.
  *
  * Typical usage: `class Animal { public: ATOMS_CLONEABLE_BASE( Animal ); }
+ *
+ * The method is abstract so that zou don't forget to use `ATOMS_CLONEABLE`
+ * in the derived classes.
  */
 #define ATOMS_CLONEABLE_BASE( Type ) \
     virtual Type *clone() const = 0;
@@ -16,9 +20,17 @@
  * \brief Declare derived class as cloneable.
  *
  * Typical usage: `class Dog: public Animal { public: ATOMS_CLONEABLE( Dog ); }
+ *
+ * The return type has to be a pointer type to allow implicit conversions to
+ * the base class.
+ * Method requires that the type has virtual destructor, because the usecase is
+ * with classes with class hierarchy.
  */
 #define ATOMS_CLONEABLE( Type ) \
-    virtual Type *clone() const override { return new Type( *this ); }
+    virtual Type *clone() const override { \
+        static_assert( std::has_virtual_destructor_v< Type > ); \
+        return new Type( *this ); \
+    }
 
 namespace atoms::detail {
 
@@ -270,10 +282,11 @@ auto visit( T& object, Fs... fs ) {
 
 
 /**
- * \brief Store object on a heap (to provide stable address or to allow virtual
- * function calls) and provide deep copies
+ * \brief Store object on a heap (to allow virtual function calls and
+ * to provide stable address on move) and provide deep copies
  *
  * It requires that T provides `T *clone() const`.
+ * Use `ATOMS_CLONEABLE_BASE` and `ATOMS_CLONEABLE` for providing this method.
  */
 template < typename T >
 class ValuePtr {

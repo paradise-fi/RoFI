@@ -104,14 +104,14 @@ class IdSet {
         void afterIncrement() {
             if ( _set->_elems.empty() )
                 return;
-            while ( !_it->has_value() && _it != _set->_elems.end() )
+            while ( _it != _set->_elems.end() && !_it->has_value() )
                 _it++;
         }
 
         void afterDecrement() {
             if ( _set->_elems.empty() )
                 return;
-            while( !_it->has_value() && _it != _set->_elems.begin() )
+            while( _it != _set->_elems.begin() && !_it->has_value() )
                 _it--;
         }
 
