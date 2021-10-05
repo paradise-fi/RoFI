@@ -116,7 +116,7 @@ def matchPattern(pattern, allowedSuites, allowedTargets, suitesToCompile,
 
 def build(patterns):
     if not allAreTargets(patterns):
-        sys.exit("Invalid usage!\n" + usage)
+        sys.exit("Invalid usage!\n\n" + usage)
 
     aSuites = configuredSuites()
     aTargets = availableTargets()
@@ -148,12 +148,14 @@ def test(patterns):
     aSuites = configuredSuites()
     aTargets = availableTestTargets()
 
+    if len(patterns) == 0:
+        sys.exit("Invalid usage!\n\n" + usage)
     if patterns[0] == "--all":
         if len(patterns) != 1:
-            sys.exit("Invalid usage!\n" + usage)
+            sys.exit("Invalid usage!\n\n" + usage)
         patterns = [x.target for x in aTargets]
     if not allAreTargets(patterns):
-        sys.exit("Invalid usage!\n" + usage)
+        sys.exit("Invalid usage!\n\n" + usage)
 
     suitesToCompile = set()
     targetsToCompile = set()
@@ -202,7 +204,7 @@ def main():
 
     if command == "--help":
         if len(sys.argv) != 2:
-            sys.exit("Invalid usage!\n" + usage)
+            sys.exit("Invalid usage!\n\n" + usage)
         print(usage)
         sys.exit(0)
 

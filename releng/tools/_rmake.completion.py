@@ -24,10 +24,10 @@ if len(words) > 0 and words[0].startswith("--"):
         sys.exit(0)
     else:
         test = True
-        if "--all" not in words:
-            print("--all")
 
 candidates = []
+if test and word == 2:
+    candidates += ["--all"]
 if word == 1:
     candidates += flags
 
