@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.11)
+cmake_minimum_required(VERSION 3.12)
 
 include(FetchContent)
 
 function(setup_stm32cxx PREFIX MCU)
-    if (NOT TARGET ${PREFIX}_CMSIS)
+    if (NOT TARGET ${PREFIX}_CUBE)
         setup_stm32cube(${PREFIX} ${MCU})
     endif()
 
@@ -13,10 +13,10 @@ function(setup_stm32cxx PREFIX MCU)
     string(TOLOWER ${MCU_FAMILY} MCU_FAMILY_LOWER)
 
     get_property(STM_LIB
-        TARGET ${PREFIX}_CMSIS
+        TARGET ${PREFIX}_CUBE
         PROPERTY STM_LIB)
     get_property(HAL_PATH
-        TARGET ${PREFIX}_CMSIS
+        TARGET ${PREFIX}_CUBE
         PROPERTY HAL_PATH)
 
     # Function 2
@@ -33,72 +33,74 @@ function(setup_stm32cxx PREFIX MCU)
 
     # Printf
     FetchContent_Declare(
-    printf
-    GIT_REPOSITORY https://github.com/mpaland/printf.git
-    GIT_TAG        v4.0.0
+        printf
+        GIT_REPOSITORY https://github.com/mpaland/printf.git
+        GIT_TAG        v4.0.0
     )
     FetchContent_GetProperties(printf)
     if(NOT printf_POPULATED)
         FetchContent_Populate(printf)
-        add_stm32_target(LIB
-            TARGET ${PREFIX}_printf
-            MCU ${MCU}
-            LIBTYPE STATIC
-            FILES  ${printf_SOURCE_DIR}/printf.c)
-        target_include_directories(${PREFIX}_printf PUBLIC ${printf_SOURCE_DIR})
     endif()
+    add_library(${PREFIX}_printf INTERFACE)
+    target_include_directories(${PREFIX}_printf INTERFACE ${printf_SOURCE_DIR})
+    target_sources(${PREFIX}_printf INTERFACE ${printf_SOURCE_DIR}/printf.c)
 
     # STM32CXX
-    file(GLOB_RECURSE SRC $ENV{ROFI_ROOT}/softwareComponents/stm32cxx/src/*.cpp src/*.c)
-    file(GLOB_RECURSE IRQ_SRC $ENV{ROFI_ROOT}/softwareComponents/stm32cxx/src/*.irq.cpp src/*.irq.c)
-    list(REMOVE_ITEM SRC ${IRQ_SRC})
+    function(add_sublib NAME)
+        cmake_parse_arguments(A "" "" "SRC_GLOB;PORT_GLOB;LINK_HAL;LINK" ${ARGN})
 
-    # We have to separate IRQ into a special library which is linked as whole
-    # archive to achieve weak symbol overriding
-    add_stm32_target(LIB
-        TARGET ${PREFIX}_stm32cxx_irq
-        MCU ${MCU}
-        LIBTYPE STATIC
-        FILES ${IRQ_SRC})
-    target_compile_options(${PREFIX}_stm32cxx_irq PUBLIC -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER -D${MCU_FAMILY})
-    set_property(TARGET ${PREFIX}_stm32cxx_irq PROPERTY CXX_STANDARD 17)
-    target_include_directories(${PREFIX}_stm32cxx_irq PUBLIC $ENV{ROFI_ROOT}/softwareComponents/stm32cxx/src)
-    target_link_libraries(${PREFIX}_stm32cxx_irq PUBLIC ${PREFIX}_printf
-        ${PREFIX}_HAL ${PREFIX}_LL
-        ${PREFIX}_LL_Adc ${PREFIX}_LL_Dma ${PREFIX}_LL_Exti ${PREFIX}_LL_Gpio
-        ${PREFIX}_LL_Spi ${PREFIX}_LL_Usart)
-    # Use this to force linking stm32cxx_irq as a whole archive to override the
-    # weak symbols
-    target_link_options(${PREFIX}_stm32cxx_irq PUBLIC -Wl,--whole-archive $<TARGET_FILE:${PREFIX}_stm32cxx_irq> -Wl,--no-whole-archive)
+        list(TRANSFORM A_SRC_GLOB
+             PREPEND $ENV{ROFI_ROOT}/softwareComponents/stm32cxx/src/)
+        list(TRANSFORM A_PORT_GLOB
+             PREPEND $ENV{ROFI_ROOT}/softwareComponents/stm32cxx/port/${MCU_FAMILY_LOWER}/)
+        list(TRANSFORM A_LINK_HAL
+             PREPEND ${PREFIX}_)
 
-    add_stm32_target(LIB
-        TARGET ${PREFIX}_stm32cxx
-        MCU ${MCU}
-        LIBTYPE STATIC
-        FILES ${SRC}
-              ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Source/Templates/gcc/startup_${MCU_LOWER}.s)
-    target_compile_options(${PREFIX}_stm32cxx PUBLIC -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER -D${MCU_FAMILY})
-    set_property(TARGET ${PREFIX}_stm32cxx PROPERTY CXX_STANDARD 17)
-    target_link_libraries(${PREFIX}_stm32cxx PRIVATE
-        ${PREFIX}_stm32cxx_irq)
-    target_link_libraries(${PREFIX}_stm32cxx PUBLIC
+        file(GLOB_RECURSE L_SRC ${A_SRC_GLOB} ${A_PORT_GLOB})
+
+        add_library(${PREFIX}_stm32cxx_${NAME} INTERFACE)
+        target_sources(${PREFIX}_stm32cxx_${NAME} INTERFACE ${L_SRC})
+        target_link_libraries(${PREFIX}_stm32cxx_${NAME} INTERFACE
+            ${PREFIX}_stm32cxx ${A_LINK_HAL} ${LINK})
+    endfunction()
+
+    add_library(${PREFIX}_stm32cxx INTERFACE)
+    target_compile_options(${PREFIX}_stm32cxx INTERFACE
+        -DUSE_FULL_LL_DRIVER
+        -DUSE_HAL_DRIVER
+        -D${MCU_FAMILY})
+    target_link_libraries(${PREFIX}_stm32cxx INTERFACE
         function2 ${PREFIX}_printf
-        ${PREFIX}_HAL ${PREFIX}_LL
-        ${PREFIX}_LL_Adc ${PREFIX}_LL_Dma ${PREFIX}_LL_Exti ${PREFIX}_LL_Gpio
-        ${PREFIX}_LL_Spi ${PREFIX}_LL_Usart ${PREFIX}_LL_Tim ${PREFIX}_HAL_CRC)
-    target_include_directories(${PREFIX}_stm32cxx PUBLIC $ENV{ROFI_ROOT}/softwareComponents/stm32cxx/src)
-    target_include_directories(${PREFIX}_stm32cxx SYSTEM PUBLIC ${HAL_PATH}/Inc)
+        ${PREFIX}_HAL ${PREFIX}_LL ${PREFIX}_HAL_Gpio)
+    target_include_directories(${PREFIX}_stm32cxx INTERFACE
+        $ENV{ROFI_ROOT}/softwareComponents/stm32cxx/src
+        $ENV{ROFI_ROOT}/softwareComponents/stm32cxx/port/${MCU_FAMILY_LOWER})
 
-    # There is a pooled memory functionality in the library, if no values are set,
-    # define one
-    if(NOT DEFINED MEMORY_BLOCK_SIZE)
-        set(MEMORY_BLOCK_SIZE 1024)
-    endif()
-
-    if(NOT DEFINED MEMORY_BLOCK_COUNT)
-        set(MEMORY_BLOCK_COUNT 10)
-    endif()
-
-    target_compile_options(${PREFIX}_stm32cxx PUBLIC -DMEMORY_BLOCK_SIZE=${MEMORY_BLOCK_SIZE} -DMEMORY_BLOCK_COUNT=${MEMORY_BLOCK_COUNT})
-    target_compile_options(${PREFIX}_stm32cxx_irq PUBLIC -DMEMORY_BLOCK_SIZE=${MEMORY_BLOCK_SIZE} -DMEMORY_BLOCK_COUNT=${MEMORY_BLOCK_COUNT})
+    add_sublib(uart
+        SRC_GLOB uart.cpp
+        PORT_GLOB uart*.cpp
+        LINK_HAL LL_Usart LL_Gpio)
+    add_sublib(spi
+        SRC_GLOB spi.cpp
+        PORT_GLOB spi.cpp
+        LINK_HAL LL_Spi LL_Gpio)
+    add_sublib(gpio
+        SRC_GLOB gpio*.cpp
+        PORT_GLOB gpio*.cpp
+        LINK_HAL LL_Gpio LL_Exti)
+    add_sublib(dma
+        SRC_GLOB dma.cpp
+        PORT_GLOB dma*.cpp
+        LINK_HAL LL_Dma)
+    add_sublib(adc
+        SRC_GLOB adc.cpp
+        PORT_GLOB adc.cpp
+        LINK_HAL LL_Adc)
+    add_sublib(crc
+        LINK_HAL HAL_CRC)
+    add_sublib(timer
+        LINK_HAL LL_Tim)
+    add_sublib(system
+        SRC_GLOB system/assert.cpp system/system.cpp
+        LINK_HAL stm32cxx_dma)
 endfunction()

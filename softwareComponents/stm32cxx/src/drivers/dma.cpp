@@ -1,3 +1,3 @@
 #include "dma.hpp"
 
-std::array< Dma::Handlers, Dma::channelCount > Dma::_channels;
+std::array< Dma::ChannelsData, Dma::availablePeripherals.size() > Dma::_channelData;

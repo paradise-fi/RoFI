@@ -19,14 +19,15 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions")
 
 project(firmware)
 
-
-add_subdirectory($ENV{ROFI_ROOT}/softwareComponents/stm32cxx stm32cxx)
-add_subdirectory($ENV{ROFI_ROOT}/softwareComponents/freeChibiHal freeChibiHal)
-
-add_subdirectory($ENV{ROFI_ROOT}/hardwareModules/RoFICoM/software/control_board/
-roficom)
-
-add_subdirectory($ENV{ROFI_ROOT}/hardwareModules/universalModule/software/bios2 bios2)
+add_subdirectory(
+    $ENV{ROFI_ROOT}/softwareComponents/stm32cxx
+    stm32cxx)
+add_subdirectory(
+    $ENV{ROFI_ROOT}/hardwareModules/RoFICoM/software/control_board/
+    roficom)
+add_subdirectory(
+    $ENV{ROFI_ROOT}/hardwareModules/universalModule/software/bios2
+    bios2)
 
 
 list_targets()

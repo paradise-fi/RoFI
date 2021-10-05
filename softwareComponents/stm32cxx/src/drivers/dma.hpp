@@ -1,43 +1,55 @@
 #pragma once
 
-#if defined(STM32G0xx)
-    #include <drivers/stm32g0xx/dma.hpp>
-#elif defined(STM32F0xx)
-    #include <drivers/stm32f0xx/dma.hpp>
-#else
-    #error "Unsuported MCU family"
-#endif
+#include <dma.port.hpp>
 
 #include <array>
 #include <cassert>
 #include <functional>
 
-extern "C" void DMA1_Channel1_IRQHandler();
-extern "C" void DMA1_Channel2_3_IRQHandler();
-extern "C" void DMA1_Ch4_7_DMAMUX1_OVR_IRQHandler();
+#include <system/util.hpp>
 
+/**
+ * Dma driver manages two aspects of DMA:
+ * - allocation of the channels and
+ * - the possibility to add arbitrary callbacks on DMA events.
+ *
+ * Managing of DMA sources and targets is up to the user or other drivers.
+ *
+ * As there are different naming conventions across the families, we define a
+ * new naming that (hopefully) does not clash with the existing one.
+ * We use:
+ * - *peripheral* to denote DMA1 or DMA2
+ * - *channel* to a part of DMA performing the transition (sometimes called stream)
+ * - *trigger* to denote the triggering signal for DMA.
+ */
 class Dma: public detail::Dma< Dma > {
-    GEN_FIRED( HT );
-    GEN_FIRED( TC );
-    GEN_FIRED( TE );
-
-    GEN_CLEAR( HT );
-    GEN_CLEAR( TE );
-    GEN_CLEAR( TC );
 public:
-    using Handler = std::function< void( int /* channel */ ) >;
+    static const constexpr std::initializer_list< DMA_TypeDef * > availablePeripherals = {
+        #ifdef DMA1
+            DMA1,
+        #endif
+        #ifdef DMA2
+            DMA2,
+        #endif
+    };
 
-    class Channel {
-        Channel( int channel ): _channel( channel ) {
-            Dma::channel( channel )._available = false;
+    class Channel: public detail::Dma< Dma >::Channel< Channel > {
+        Channel( DMA_TypeDef *periph, int channel ):
+            _periph( periph ),
+            _channel( channel )
+        {
+            Dma::channelData( periph, channel )._available = false;
+            Dma::_enableClock( periph );
         }
 
         friend class Dma;
     public:
-        Channel(): _channel( 0 ) {}
+        Channel(): _periph( nullptr ), _channel( 0 ) {}
         ~Channel() {
-            if ( _channel )
-                Dma::channel( _channel )._available = true;
+            if ( _periph ) {
+                abort();
+                Dma::channelData( _periph, _channel )._available = true;
+            }
         }
 
         Channel( const Channel& ) = delete;
@@ -50,117 +62,107 @@ public:
             return *this;
         }
 
-        operator bool() {
-            return _channel != 0;
+        operator DMA_TypeDef*() const {
+            return _periph;
         }
 
-        operator uint32_t() {
+        operator bool() const {
+            return _periph != nullptr;
+        }
+
+        operator uint32_t() const {
             return _channel;
         }
 
         void swap( Channel& o ) {
             using std::swap;
+            swap( _periph, o._periph );
             swap( _channel, o._channel );
-        }
-
-        void enableInterrupt( int priority = 0 ) {
-            Dma::enableInterrupt( _channel, priority );
         }
 
         template < typename Callback >
         void onComplete( Callback callback ) {
-            Dma::channel( _channel )._complete = Handler( callback );
-            LL_DMA_EnableIT_TC( DMA1, _channel );
+            Dma::channelData( _periph, _channel )._complete = Handler( callback );
+            _enableOnComplete();
         }
 
         void disableOnComplete() {
-            LL_DMA_DisableIT_TC( DMA1, _channel );
+            Dma::channelData( _periph, _channel )._complete = {};
+            _disableOnComplete();
         }
 
         template < typename Callback >
         void onHalf( Callback callback ) {
-            Dma::channel( _channel )._half = Handler( callback );
-            LL_DMA_EnableIT_HT( DMA1, _channel );
+            Dma::channelData( _periph, _channel )._half = Handler( callback );
+            _enableOnHalf();
         }
 
         void disableOnHalf() {
-            LL_DMA_DisableIT_TC( DMA1, _channel );
+            Dma::channelData( _periph, _channel )._half = {};
+            _disableOnHalf();
         }
 
         template < typename Callback >
         void onError( Callback callback ) {
-            Dma::channel( _channel )._error = Handler( callback );
-            LL_DMA_EnableIT_TE( DMA1, _channel );
+            Dma::channelData( _periph, _channel )._error = Handler( callback );
+            _enableOnError();
         }
 
         void disableOnError() {
-            LL_DMA_DisableIT_TE( DMA1, _channel );
+            Dma::channelData( _periph, _channel )._error = {};
+            _disableOnError();
         }
 
         void abort() {
-            if ( !LL_DMA_IsEnabledChannel( DMA1, _channel ) )
+            if ( !isEnabled() )
                 return;
-            LL_DMA_DisableChannel( DMA1, _channel );
-            auto &handlers = Dma::channel( _channel );
+            disable();
+            ChannelData &handlers = Dma::channelData( _periph, _channel );
             if ( handlers._complete )
-                handlers._complete( _channel );
+                handlers._complete();
         }
 
+        DMA_TypeDef* _periph = nullptr;
         int _channel = 0;
     };
 
-    static Channel allocate( int chan = 0 ) {
-        if ( chan != 0 ) {
-            if ( channel( chan )._available )
-                return Channel( chan );
+    static Channel allocate( DMA_TypeDef* periph, int chan = -1 ) {
+        if ( chan != -1 ) {
+            if ( channelData( periph, chan )._available )
+                return Channel( periph, chan );
             return Channel();
         }
-        for ( int i = 0; i != _channels.size(); i++ ) {
-            if ( !_channels[ i ]._available )
+
+        assert( supportsMuxing && "This family does not support arbitrary allocation" );
+
+        int periphIdx = indexOf( periph, availablePeripherals );
+        assert( periphIdx >= 0 );
+        for ( unsigned i = 0; i != _channelData[ periphIdx ].size(); i++ ) {
+            if ( !_channelData[ periphIdx ][ i ]._available )
                 continue;
-            return Channel( i + 1 );
+            return Channel( periph, i + 1 );
         }
         return Channel();
     }
+
 private:
-
-    struct Handlers {
-        void onHalf( Handler h ) { _half = h; }
-        void onComplete( Handler h ) { _complete = h; }
-        void onError( Handler h ) { _error = h; }
-
-        void _handleIsr( int channel ) {
-            if ( _firedHT( channel ) ) {
-                _clearHT( channel );
-                _half( channel );
-            }
-
-            if ( _firedTC( channel ) ) {
-                _clearTC( channel );
-                _complete( channel );
-            }
-
-            if ( _firedTE( channel ) ) {
-                _clearTE( channel );
-                _error( channel );
-            }
-        }
-
+    using Handler = std::function< void() >;
+    struct ChannelData: public detail::Dma< Dma >::ChannelData< ChannelData > {
         Handler _half;
         Handler _complete;
         Handler _error;
         bool _available = true;
     };
 
-    static Handlers& channel( int channel ) {
-        assert( channel >= 1 && channel < channelCount + 1 );
-        return _channels[ channel - 1 ];
+    using ChannelsData = std::array< ChannelData, channelCount + 1 >; // We add + 1 as some families index from 0, some from 1
+    static std::array< ChannelsData, availablePeripherals.size() > _channelData;
+
+public:
+    static ChannelData& channelData( DMA_TypeDef *periph, int channel ) {
+        int periphIdx = indexOf( periph, availablePeripherals );
+        assert( periphIdx >= 0 );
+        assert( channel >= 0 && channel <= channelCount );
+
+        return _channelData[ periphIdx ][ channel ];
     }
-
-
-    static std::array< Handlers, channelCount > _channels;
-
-    friend void DMA1_Channel1_IRQHandler();
-    friend void DMA1_Channel2_3_IRQHandler();
-    friend void DMA1_Ch4_7_DMAMUX1_OVR_IRQHandler();
 };

@@ -33,5 +33,5 @@ private:
         return d;
     }
 
-    RingBuffer< Job > _queue;
+    RingBuffer< Job, memory::Pool > _queue;
 };

@@ -1,26 +1,15 @@
 #pragma once
 
-#if defined(STM32G0xx)
-    #include <drivers/stm32g0xx/uart.hpp>
-#elif defined(STM32F0xx)
-    #include <drivers/stm32f0xx/uart.hpp>
-#else
-    #error "Unsuported MCU family"
-#endif
-
 #include <algorithm>
 #include <array>
 #include <cassert>
 #include <functional>
+#include <initializer_list>
 
 #include <drivers/peripheral.hpp>
-#include <drivers/dma.hpp>
 #include <drivers/gpio.hpp>
-#include <system/ringBuffer.hpp>
 
-extern "C" void USART1_IRQHandler();
-extern "C" void USART2_IRQHandler();
-extern "C" void USART3_4_LPUART1_IRQHandler();
+#include <system/util.hpp>
 
 #define HANDLE_WITH( FLAG, HANDLER )                 \
     if ( LL_USART_IsEnabledIT_ ## FLAG ( uart )      \
@@ -30,10 +19,63 @@ extern "C" void USART3_4_LPUART1_IRQHandler();
         HANDLER();                                   \
     }
 
+#include <uart.port.hpp>
+
+namespace detail {
+    int uartAlternateFunTX( USART_TypeDef *periph, GPIO_TypeDef *port, int pos );
+    int uartAlternateFunRX( USART_TypeDef *periph, GPIO_TypeDef *port, int pos );
+    int uartAlternateFunCTS( USART_TypeDef *periph, GPIO_TypeDef *port, int pos );
+    int uartAlternateFunRTS( USART_TypeDef *periph, GPIO_TypeDef *port, int pos );
+    int uartAlternateFunDE( USART_TypeDef *periph, GPIO_TypeDef *port, int pos );
+}; // namespace detail
+
+/**
+ * UART peripheral driver
+ */
 struct Uart: public Peripheral< USART_TypeDef >, public detail::Uart< Uart > {
 public:
     friend class detail::Uart< Uart >;
 
+    static const constexpr std::initializer_list< USART_TypeDef * > availablePeripherals = {
+        #ifdef USART1
+            USART1,
+        #endif
+        #ifdef USART2
+            USART2,
+        #endif
+        #ifdef USART3
+            USART3,
+        #endif
+        #ifdef USART4
+            USART4,
+        #endif
+        #ifdef USART5
+            USART5,
+        #endif
+        #ifdef USART6
+            USART6,
+        #endif
+        #ifdef USART7
+            USART7,
+        #endif
+        #ifdef USART8
+            USART8,
+        #endif
+        #ifdef USART9
+            USART9,
+        #endif
+        #ifdef USART10
+            USART10,
+        #endif
+        #ifdef LPUART1
+            LPUART1,
+        #endif
+    };
+
+    /**
+     * Initialize UART driver. You can specify a number of configuration
+     * modifiers, e.g., TxOn, RxOn, Baudrate, etc.
+     */
     template < typename... Configs >
     Uart( USART_TypeDef *periph = nullptr, Configs... configs )
         : Peripheral< USART_TypeDef >( periph )
@@ -57,8 +99,7 @@ public:
 
     void enable() {
         LL_USART_Enable( _periph );
-        while( (!LL_USART_IsActiveFlag_TEACK( _periph) )
-            || (!LL_USART_IsActiveFlag_REACK( _periph) ) );
+        _waitForEnable();
     }
 
     void disable() {
@@ -91,46 +132,34 @@ public:
         while ( !LL_USART_IsActiveFlag_TXE( _periph ) );
     }
 
-    void enableTimeout() {
-        LL_USART_EnableRxTimeout( _periph );
-        LL_USART_EnableIT_RTO( _periph );
-    }
-
-    template < typename Callback >
-    void enableTimeout( int bitDuration, Callback callback ) {
-        LL_USART_SetRxTimeout( _periph, bitDuration );
-        handlers().rxTimeout = Handler( callback );
-        enableTimeout();
-    }
-
-    void disableTimout() {
-        LL_USART_DisableRxTimeout( _periph );
-        LL_USART_DisableIT_RTO( _periph );
-    }
-
 protected:
-    struct Handlers {
-        Handler rxTimeout;
-
+    struct Handlers: public detail::Uart< Uart >::Handlers  {
         void _handleIsr( USART_TypeDef *uart ) {
-            HANDLE_WITH( RTO, rxTimeout );
+            detail::Uart< Uart >::Handlers::_handleIsr( uart );
         }
     };
 
-    using detail::Uart< Uart >::handlers;
-
-    Handlers& handlers() {
-        return this->handlers( _periph );
+    static Handlers& handlers( USART_TypeDef* periph ) {
+        return _uarts[ indexOf( periph, availablePeripherals ) ];
     }
 
-    static std::array< Handlers, handlerCount > _uarts;
+    Handlers& handlers() {
+        return _uarts[ indexOf( _periph, availablePeripherals ) ];
+    }
+
+    static std::array< Handlers, availablePeripherals.size() > _uarts;
 
 
     friend void USART1_IRQHandler();
     friend void USART2_IRQHandler();
+    friend void USART6_IRQHandler();
     friend void USART3_4_LPUART1_IRQHandler();
 };
 
+/**
+ * A base for UART configurators. All other configurators have to inherit from
+ * this base and they should redefine the appropriate methods.
+ */
 struct UartConfigBase {
     void pre( LL_USART_InitTypeDef& ) {}
     void post( USART_TypeDef * ) {}
@@ -144,7 +173,7 @@ struct Baudrate: public UartConfigBase {
     int _baudrate;
 };
 
-struct TxOn: public UartConfigBase, public detail::TxOn< TxOn > {
+struct TxOn: public UartConfigBase {
     TxOn( Gpio::Pin p ) : _pin( p ) {}
     void post( USART_TypeDef *periph ) {
 
@@ -156,7 +185,8 @@ struct TxOn: public UartConfigBase, public detail::TxOn< TxOn > {
         GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
         GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
         GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-        GPIO_InitStruct.Alternate = alternativeFun( periph );
+        GPIO_InitStruct.Alternate =
+            detail::uartAlternateFunTX( periph, _pin._periph, _pin._pos );
 
         LL_GPIO_Init( _pin._periph, &GPIO_InitStruct );
     }
@@ -164,7 +194,7 @@ struct TxOn: public UartConfigBase, public detail::TxOn< TxOn > {
     Gpio::Pin _pin;
 };
 
-struct RxOn: public UartConfigBase, public detail::RxOn< RxOn > {
+struct RxOn: public UartConfigBase {
     RxOn( Gpio::Pin p ) : _pin( p ) {}
     void post( USART_TypeDef *periph ) {
 
@@ -176,220 +206,11 @@ struct RxOn: public UartConfigBase, public detail::RxOn< RxOn > {
         GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
         GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
         GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
-        GPIO_InitStruct.Alternate = alternativeFun( periph );
-
-        LL_GPIO_Init( _pin._periph, &GPIO_InitStruct );
+        GPIO_InitStruct.Alternate =
+            detail::uartAlternateFunRX( periph, _pin._periph, _pin._pos );
     }
 
     Gpio::Pin _pin;
-};
-
-class UartReader {
-public:
-    using Mem = memory::Pool::Block;
-
-    UartReader( Uart& uart, int dmaChannel = 0 ) : _uart( uart ) {
-        _channel = Dma::allocate( dmaChannel );
-        assert( _channel );
-
-        LL_AHB1_GRP1_EnableClock( LL_AHB1_GRP1_PERIPH_DMA1 );
-
-        // If DMA supports muxing
-        #ifdef DMAMUX1
-            LL_DMA_SetPeriphRequest( DMA1, _channel, LL_DMAMUX_REQ_RX( _uart.periph() ) );
-        #endif
-        LL_DMA_SetDataTransferDirection( DMA1, _channel, LL_DMA_DIRECTION_PERIPH_TO_MEMORY );
-        LL_DMA_SetChannelPriorityLevel( DMA1, _channel, LL_DMA_PRIORITY_LOW );
-        LL_DMA_SetMode( DMA1, _channel, LL_DMA_MODE_NORMAL );
-        LL_DMA_SetPeriphIncMode( DMA1, _channel, LL_DMA_PERIPH_NOINCREMENT );
-        LL_DMA_SetMemoryIncMode( DMA1, _channel, LL_DMA_MEMORY_INCREMENT );
-        LL_DMA_SetPeriphSize( DMA1, _channel, LL_DMA_PDATAALIGN_BYTE);
-        LL_DMA_SetMemorySize( DMA1, _channel, LL_DMA_MDATAALIGN_BYTE);
-
-        LL_DMA_SetPeriphAddress( DMA1, _channel,
-            LL_USART_DMA_GetRegAddr( _uart.periph(), LL_USART_DMA_REG_DATA_RECEIVE ) );
-        LL_USART_EnableDMAReq_RX( _uart.periph() );
-
-        _channel.enableInterrupt();
-    }
-
-    template < typename Callback >
-    void readBlock( Mem block, int offset, int size, int bitTimeout, Callback callback ) {
-        _block = std::move( block );
-        LL_DMA_SetMemoryAddress( DMA1, _channel, uint32_t( _block.get() + offset ) );
-        LL_DMA_SetDataLength( DMA1, _channel, size );
-
-        if ( bitTimeout == 0 )
-            _uart.disableTimout();
-        else {
-            _uart.enableTimeout( bitTimeout, [&, callback, size]() {
-                LL_DMA_DisableChannel( DMA1, _channel );
-                int read = size - LL_DMA_GetDataLength( DMA1, _channel );
-                callback( std::move( _block ), read );
-            } );
-        }
-
-        _channel.onComplete( [&, callback, size]( int /* channel */ ) {
-            LL_DMA_DisableChannel( DMA1, _channel );
-            int read = size - LL_DMA_GetDataLength( DMA1, _channel );
-            callback( std::move( _block ), read );
-        } );
-
-        LL_DMA_EnableChannel( DMA1, _channel );
-    }
-
-    void startBufferedReading( int bufferSize = 256 ) {
-        _buffer = RingBuffer< char >( memory::Pool::allocate( bufferSize ), bufferSize );
-        _updateBuffer( 0 );
-    }
-
-    bool available() const {
-        return !_buffer.empty();
-    }
-
-    int size() const {
-        return _buffer.size();
-    }
-
-    char get() {
-        return _buffer.pop_front();
-    }
-
-private:
-    void _updateBuffer( int read ) {
-        _buffer.advance( read );
-        auto [ location, size ] = _buffer.insertPosition();
-        int requested = std::min( size, 32 );
-        LL_DMA_SetMemoryAddress( DMA1, _channel, uint32_t( location ) );
-        LL_DMA_SetDataLength( DMA1, _channel, requested );
-        _uart.enableTimeout( 32, [&, requested]{
-            LL_DMA_DisableChannel( DMA1, _channel );
-            int read = requested - LL_DMA_GetDataLength( DMA1, _channel );
-            _updateBuffer( read );
-        } );
-
-        _channel.onComplete( [&, requested]( int /* channel */ ) {
-            LL_DMA_DisableChannel( DMA1, _channel );
-            int read = requested - LL_DMA_GetDataLength( DMA1, _channel );
-            _updateBuffer( read );
-        } );
-
-        LL_DMA_EnableChannel( DMA1, _channel );
-    }
-
-    Uart& _uart;
-    Dma::Channel _channel;
-    RingBuffer< char > _buffer;
-    Mem _block;
-};
-
-template < typename Reader >
-class LineReader {
-public:
-    using Mem = memory::Pool::Block;
-
-    LineReader( Reader& reader, int lineBufferSize = 256 ) :
-        _reader( reader ),
-        _pos( 0 ),
-        _available( false ),
-        _lineBufferSize( lineBufferSize )
-    { }
-
-    bool available() {
-        _readLine();
-        return _available;
-    }
-
-    Mem get() {
-        assert( _available );
-        auto ret = std::move( _line );
-        _available = false;
-        return ret;
-    }
-
-private:
-    bool _readLine() {
-        if ( _available )
-            return true;
-        if ( !_line ) {
-            _line = memory::Pool::allocate( _lineBufferSize );
-            assert( _line );
-            _pos = 0;
-        }
-        while ( _reader.available() ) {
-            char chr = _reader.get();
-            if ( chr == '\n' ) {
-                _available = true;
-                _line[ _pos ] = '\0';
-                break;
-            }
-            if ( _pos < _lineBufferSize - 1 ) {
-                _line[ _pos ] = chr;
-                _pos++;
-            }
-        }
-        return _available;
-    }
-
-    Reader& _reader;
-    Mem _line;
-    int _pos;
-    bool _available;
-    int _lineBufferSize;
-};
-
-class UartWriter {
-public:
-    using Mem = memory::Pool::Block;
-
-    UartWriter( Uart& uart, int dmaChannel = 0 ) : _uart( uart ) {
-        _channel = Dma::allocate( dmaChannel );
-        assert( _channel );
-
-        LL_AHB1_GRP1_EnableClock( LL_AHB1_GRP1_PERIPH_DMA1 );
-
-        // If DMA supports muxing
-        #ifdef DMAMUX1
-            LL_DMA_SetPeriphRequest( DMA1, _channel, LL_DMAMUX_REQ_TX( _uart.periph() ) );
-        #endif
-        LL_DMA_SetDataTransferDirection( DMA1, _channel, LL_DMA_DIRECTION_MEMORY_TO_PERIPH );
-        LL_DMA_SetChannelPriorityLevel( DMA1, _channel, LL_DMA_PRIORITY_LOW );
-        LL_DMA_SetMode( DMA1, _channel, LL_DMA_MODE_NORMAL );
-        LL_DMA_SetPeriphIncMode( DMA1, _channel, LL_DMA_PERIPH_NOINCREMENT );
-        LL_DMA_SetMemoryIncMode( DMA1, _channel, LL_DMA_MEMORY_INCREMENT );
-        LL_DMA_SetPeriphSize( DMA1, _channel, LL_DMA_PDATAALIGN_BYTE );
-        LL_DMA_SetMemorySize( DMA1, _channel, LL_DMA_MDATAALIGN_BYTE );
-
-        LL_DMA_SetPeriphAddress( DMA1, _channel,
-            LL_USART_DMA_GetRegAddr( _uart.periph(), LL_USART_DMA_REG_DATA_TRANSMIT ) );
-        LL_USART_EnableDMAReq_TX( _uart.periph() );
-
-        _channel.enableInterrupt();
-    }
-
-    template < typename Callback >
-    void writeBlock( Mem block, int offset, int size, Callback callback ) {
-        _block = std::move( block );
-        LL_DMA_SetMemoryAddress( DMA1, _channel, uint32_t( _block.get() + offset ) );
-        LL_DMA_SetDataLength( DMA1, _channel, size );
-
-        _channel.onComplete( [&, callback, size]( int /* channel */ ) {
-            LL_DMA_DisableChannel( DMA1, _channel );
-            int written = size - LL_DMA_GetDataLength( DMA1, _channel );
-            callback( std::move( _block ), written );
-        } );
-
-        LL_DMA_EnableChannel( DMA1, _channel );
-    }
-
-    void abort() {
-        LL_DMA_DisableChannel( DMA1, _channel );
-    }
-
-private:
-    Uart& _uart;
-    Dma::Channel _channel;
-    Mem _block;
 };
 
 #undef HANDLE_WITH

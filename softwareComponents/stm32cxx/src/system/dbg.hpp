@@ -1,6 +1,9 @@
 #pragma once
 
+#include <stm32cxx.config.hpp>
+
 #include <drivers/uart.hpp>
+#include <drivers/uartReaderWriter.hpp>
 #include <system/memory.hpp>
 #include <printf.h>
 
@@ -8,9 +11,15 @@ class Dbg;
 extern Dbg& dbgInstance();
 
 class Dbg {
+public:
+    using Allocator = STM32CXX_DBG_ALLOCATOR;
+    using Mem = typename Allocator::Block;
+private:
     template < typename... Configs >
-    Dbg( USART_TypeDef *uartPer, int dmaRead, int dmaWrite, Configs...configs ):
-        _uart( uartPer, configs... ), _writer( _uart, dmaWrite ), _reader( _uart, dmaRead )
+    Dbg( USART_TypeDef *uartPer, Dma::Channel dmaRead, Dma::Channel dmaWrite,
+        Configs...configs )
+    : _uart( uartPer, configs... ), _writer( _uart, std::move( dmaWrite ) ),
+      _reader( _uart, std::move( dmaRead ) )
     {
         _uart.enable();
         _reader.startBufferedReading();
@@ -63,11 +72,11 @@ private:
         while ( _txBusy );
         _txBusy = true;
 
-        auto buffer = memory::Pool::allocate( 256 );
+        auto buffer = Allocator::allocate( 256 );
         assert( buffer );
         int size = snprintf( reinterpret_cast< char * >( buffer.get() ), 256, fmt, args... );
         buffer[ size ] = '\n';
-        _writer.writeBlock( std::move( buffer ), 0, size + 1, [&]( memory::Pool::Block, int ){
+        _writer.writeBlock( std::move( buffer ), 0, size + 1, [&]( Mem, int ) {
             _txBusy = false;
         } );
     }
@@ -95,7 +104,7 @@ private:
     }
 
     Uart _uart;
-    UartWriter _writer;
-    UartReader _reader;
+    UartWriter< Allocator > _writer;
+    UartReader< Allocator >_reader;
     volatile bool _txBusy;
 };

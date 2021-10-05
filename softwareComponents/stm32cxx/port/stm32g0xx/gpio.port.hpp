@@ -4,6 +4,8 @@
 #include <stm32g0xx_ll_gpio.h>
 #include <stm32g0xx_ll_exti.h>
 
+#include <system/util.hpp>
+
 #include <cassert>
 
 namespace detail {
@@ -36,8 +38,14 @@ public:
             LL_IOP_GRP1_DisableClock( LL_IOP_GRP1_PERIPH_GPIOC );
     }
 
-    static int _extiConfigLine( int pos ) {
-        static const int table[ 16 ] = {
+    static IRQn_Type _positionToInterrupt( int pos ) {
+        return    pos == 1 ? EXTI0_1_IRQn
+                : pos <= 3 ? EXTI2_3_IRQn
+                : EXTI4_15_IRQn;
+    }
+
+    static uint32_t _extiConfigLine( int pos ) {
+        static const constexpr uint32_t table[ 16 ] = {
             LL_EXTI_CONFIG_LINE1,
             LL_EXTI_CONFIG_LINE2,
             LL_EXTI_CONFIG_LINE3,
@@ -57,6 +65,24 @@ public:
         return table[ pos ];
     }
 
+    static uint32_t _extiPort( int portIdx ) {
+        static constexpr uint32_t table[] = {
+            LL_EXTI_CONFIG_PORTA,
+            LL_EXTI_CONFIG_PORTB,
+            LL_EXTI_CONFIG_PORTC,
+            #ifdef LL_EXTI_CONFIG_PORTD
+                LL_EXTI_CONFIG_PORTD,
+            #endif
+            #ifdef LL_EXTI_CONFIG_PORTE
+                LL_EXTI_CONFIG_PORTE,
+            #endif
+            #ifdef LL_EXTI_CONFIG_PORTF
+                LL_EXTI_CONFIG_PORTF,
+            #endif
+        };
+        return table[ portIdx ];
+    }
+
     static void _handleIrq( int line ) {
         int l = 1 << line;
         if ( !LL_EXTI_IsEnabledIT_0_31( l ) )
@@ -72,10 +98,8 @@ public:
     }
 
     void setExtiSource( int line ) {
-        if ( self()._periph == GPIOA )
-            LL_EXTI_SetEXTISource( LL_EXTI_CONFIG_PORTA, _extiConfigLine( line ) );
-        else
-            LL_EXTI_SetEXTISource( LL_EXTI_CONFIG_PORTB, _extiConfigLine( line ) );
+        int portIdx = indexOf( self()._periph, self().availablePeripherals );
+        LL_EXTI_SetEXTISource( _extiPort( portIdx ), _extiConfigLine( line ) );
     }
 
 protected:

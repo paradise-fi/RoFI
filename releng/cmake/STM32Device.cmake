@@ -65,14 +65,19 @@ function(add_stm32_target)
         TARGET ${A_TARGET}
         MCU ${A_MCU})
     target_link_options(
-        ${A_TARGET} PRIVATE "-Wl,-Map=control.map,--cref"
+        ${A_TARGET} PUBLIC "-Wl,-Map=control.map,--cref"
         "-Wl,--print-memory-usage" "-funwind-tables" "-fasynchronous-unwind-tables"
         "--specs=nosys.specs" "-Wl,--gc-sections" -lc -lm -lnosys)
-    if (${A_LINKER_SCRIPT})
-        target_link_options(${A_TARGET} PRIVATE "-T" "${A_LINKER_SCRIPT}")
+    if (NOT "${A_LINKER_SCRIPT}" STREQUAL "")
+        target_link_options(${A_TARGET} PUBLIC "-T${A_LINKER_SCRIPT}")
     endif()
 
     if ("${A_EXECUTABLE}")
+        target_compile_options(${A_TARGET} PRIVATE
+            $<$<COMPILE_LANGUAGE:C>:${C_DEFS} ${C_FLAGS}>
+            $<$<COMPILE_LANGUAGE:CXX>:${CXX_DEFS} ${CXX_FLAGS}>
+            $<$<COMPILE_LANGUAGE:ASM>:-x assembler-with-cpp ${ASM_FLAGS}>
+        )
         set(HEX_FILE ${PROJECT_BINARY_DIR}/${A_TARGET}.hex)
         set(BIN_FILE ${PROJECT_BINARY_DIR}/${A_TARGET}.bin)
         add_custom_command(

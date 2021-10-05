@@ -17,7 +17,13 @@ public:
         return *static_cast< Self * >( this );
     }
 
-    static constexpr int handlerCount = 2;
+    struct Handlers {
+        typename Self::Handler rxTimeout;
+
+        void _handleIsr( USART_TypeDef *uart ) {
+            HANDLE_WITH( RTO, rxTimeout );
+        }
+    };
 
     void configureFifo() {}
 
@@ -44,53 +50,21 @@ public:
             assert( false && "Not implemented" );
     }
 
-    static auto& handlers( USART_TypeDef *u ) {
-        if ( u == USART1 )
-            return Self::_uarts[ 0 ];
-        if ( u == USART2 )
-            return Self::_uarts[ 1 ];
-        assert( false && "Invalid USART specified" );
-        __builtin_trap();
-    }
-};
-
-template < typename Self >
-struct TxOn {
-    Self& self() {
-        return *static_cast< Self * >( this );
-    }
-    const Self& self() const {
-        return *static_cast< Self * >( this );
+    void enableTimeout() {
+        LL_USART_EnableRxTimeout( self()._periph );
+        LL_USART_EnableIT_RTO( self()._periph );
     }
 
-    int alternativeFun( USART_TypeDef *periph ) {
-        if ( periph == USART1 ) {
-            if ( self()._pin._periph == GPIOB && self()._pin._pos == 6 )
-                return LL_GPIO_AF_0;
-        }
-        // ToDo: Implement more
-        assert( false && "Incorrect TX pin" );
-        __builtin_trap();
-    }
-};
-
-template < typename Self >
-struct RxOn {
-    Self& self() {
-        return *static_cast< Self * >( this );
-    }
-    const Self& self() const {
-        return *static_cast< Self * >( this );
+    template < typename Callback >
+    void enableTimeout( int bitDuration, Callback callback ) {
+        LL_USART_SetRxTimeout( self()._periph, bitDuration );
+        self().handlers().rxTimeout = Handler( callback );
+        enableTimeout();
     }
 
-    int alternativeFun( USART_TypeDef *periph ) {
-        if ( periph == USART1 ) {
-            if ( self()._pin._periph == GPIOB && self()._pin._pos == 7 )
-                return LL_GPIO_AF_0;
-        }
-        // ToDo: Implement more
-        assert( false && "Incorrect RX pin" );
-        __builtin_trap();
+    void disableTimout() {
+        LL_USART_DisableRxTimeout( self()._periph );
+        LL_USART_DisableIT_RTO( self()._periph );
     }
 };
 

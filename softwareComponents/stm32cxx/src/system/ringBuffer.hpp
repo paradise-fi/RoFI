@@ -2,12 +2,15 @@
 
 #include <system/memory.hpp>
 
-template < typename T >
+template < typename T, typename AllocatorT >
 class RingBuffer {
 public:
+    using Allocator = AllocatorT;
+    using Mem = typename Allocator::Block;
+
     RingBuffer(): _head( 1 ), _tail( 0 ), _storageCapacity( 1 ) {}
 
-    RingBuffer( memory::Pool::Block storage, int storageSize )
+    RingBuffer( Mem storage, int storageSize )
         : _head( 0 ), _tail( 0 ), _storage( std::move( storage ) ),
           _storageCapacity( storageSize / sizeof( T ) )
     {
@@ -92,7 +95,7 @@ private:
     T *_data() { return reinterpret_cast< T *>( _storage.get() ); }
 
     int _head, _tail;
-    memory::Pool::Block _storage;
+    Mem _storage;
     int _storageCapacity;
 };
 

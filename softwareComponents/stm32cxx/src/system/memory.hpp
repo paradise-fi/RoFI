@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stm32cxx.config.hpp>
+
 #include <cassert>
 #include <cstdint>
 #include <memory>
@@ -104,6 +106,12 @@ public:
 
 namespace memory {
 
-using Pool = detail::BlockPool< MEMORY_BLOCK_SIZE, MEMORY_BLOCK_COUNT >;
+#ifdef STM32CXX_USE_MEMORY_POOL
+    #if !defined(STM32CXX_MEMORY_BLOCK_SIZE) || !defined(STM32CXX_MEMORY_BLOCK_COUNT)
+        #error To use memory pool STM32CXX_MEMORY_BLOCK_SIZE and STM32CXX_MEMORY_BLOCK_COUNT have to defined
+    #endif
+
+    using Pool = detail::BlockPool< STM32CXX_MEMORY_BLOCK_SIZE, STM32CXX_MEMORY_BLOCK_COUNT >;
+#endif
 
 } // namespace memory

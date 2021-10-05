@@ -1,11 +1,4 @@
-#if defined(STM32G0xx)
-    #include <stm32g0xx_hal.h>
-#elif defined(STM32F0xx)
-    #include <stm32f0xx_hal.h>
-#else
-    #error "Unsuported MCU family"
-#endif
-
+#include <hal.port.hpp>
 #include <system/dbg.hpp>
 #include <unwind.h>
 

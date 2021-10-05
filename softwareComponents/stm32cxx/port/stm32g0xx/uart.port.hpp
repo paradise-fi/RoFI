@@ -8,6 +8,9 @@
 
 #include <cassert>
 
+extern "C" void USART1_IRQHandler();
+extern "C" void USART2_IRQHandler();
+extern "C" void USART6_IRQHandler();
 
 namespace detail {
 
@@ -21,7 +24,13 @@ public:
         return *static_cast< Self * >( this );
     }
 
-    static constexpr int handlerCount = 2;
+    struct Handlers {
+        typename Self::Handler rxTimeout;
+
+        void _handleIsr( USART_TypeDef *uart ) {
+            HANDLE_WITH( RTO, rxTimeout );
+        }
+    };
 
     void configureFifo() {
         LL_USART_SetTXFIFOThreshold( self()._periph, LL_USART_FIFOTHRESHOLD_1_8 );
@@ -55,6 +64,11 @@ public:
             assert( false && "Unknown USART instance" );
     }
 
+    void _waitForEnable() {
+        while( (!LL_USART_IsActiveFlag_TEACK( self()._periph) )
+            || (!LL_USART_IsActiveFlag_REACK( self()._periph) ) );
+    }
+
     void _enableInterrupt( int priority = 0 ) {
         if ( self()._periph == USART1 ) {
             NVIC_SetPriority( USART1_IRQn, priority );
@@ -70,65 +84,29 @@ public:
         }
     }
 
-    static auto& handlers( USART_TypeDef *u ) {
-        if ( u == USART1 )
-            return Self::_uarts[ 0 ];
-        if ( u == USART2 )
-            return Self::_uarts[ 1 ];
-        if ( u == USART3 )
-            return Self::_uarts[ 2 ];
-        if ( u == USART3 )
-            return Self::_uarts[ 3 ];
-        assert( false && "Invalid USART specified" );
-        __builtin_trap();
-    }
-};
-
-template < typename Self >
-struct TxOn {
-    Self& self() {
-        return *static_cast< Self * >( this );
-    }
-    const Self& self() const {
-        return *static_cast< Self * >( this );
+    void enableTimeout() {
+        LL_USART_EnableRxTimeout( self()._periph );
+        LL_USART_EnableIT_RTO( self()._periph );
     }
 
-    int alternativeFun( USART_TypeDef *periph ) {
-        if ( periph == USART1 ) {
-            if ( self()._pin._pos == 6 )
-                return LL_GPIO_AF_0;
-        }
-        else if ( periph == USART2 ) {
-            if ( self()._pin._pos == 2 )
-                return LL_GPIO_AF_1;
-        }
-        // ToDo: More configurations
-        assert( false && "Incorrect TX pin" );
-        __builtin_trap();
-    }
-};
-
-template < typename Self >
-struct RxOn {
-    Self& self() {
-        return *static_cast< Self * >( this );
-    }
-    const Self& self() const {
-        return *static_cast< Self * >( this );
+    template < typename Callback >
+    void enableTimeout( int bitDuration, Callback callback ) {
+        LL_USART_SetRxTimeout( self()._periph, bitDuration );
+        self().handlers().rxTimeout = typename Self::Handler( callback );
+        enableTimeout();
     }
 
-    int alternativeFun( USART_TypeDef *periph ) {
-        if ( periph == USART1 ) {
-            if ( self()._pin._pos == 7 )
-                return LL_GPIO_AF_0;
-        }
-        else if ( periph == USART2 ) {
-            if ( self()._pin._pos == 3 )
-                return LL_GPIO_AF_1;
-        }
-        // ToDo: More configurations
-        assert( false && "Incorrect RX pin" );
-        __builtin_trap();
+    void disableTimout() {
+        LL_USART_DisableRxTimeout( self()._periph );
+        LL_USART_DisableIT_RTO( self()._periph );
+    }
+
+    auto getDmaRxAddr() {
+        return LL_USART_DMA_GetRegAddr( self()._periph, LL_USART_DMA_REG_DATA_RECEIVE );
+    }
+
+    auto getDmaTxAddr() {
+        return LL_USART_DMA_GetRegAddr( self()._periph, LL_USART_DMA_REG_DATA_TRANSMIT );
     }
 };
 

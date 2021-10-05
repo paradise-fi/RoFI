@@ -9,7 +9,7 @@ function(cube_resolve_startup MCU OUTPUT)
     endif()
 
     string(TOLOWER ${MCU} MCU_LOWER)
-    set(${OUTPUT} startup_${MCU_LOWER}.s)
+    set(${OUTPUT} startup_${MCU_LOWER}.s PARENT_SCOPE)
 endfunction()
 
 function(setup_stm32cube PREFIX MCU)
@@ -58,26 +58,34 @@ function(setup_stm32cube PREFIX MCU)
             string(REGEX REPLACE "_template\.h$" ".h" newF ${f})
             file(RENAME ${f} ${newF})
         endforeach(f)
+        # Delete the projects directory as it kills most IDEs (multiple copies
+        # of the drivers package) and it is not needed for the compilation.
+        file(REMOVE_RECURSE "${${hal}_SOURCE_DIR}/Projects")
     endif()
 
     set(STM_LIB ${${hal}_SOURCE_DIR}/Drivers)
     set(HAL_PATH ${STM_LIB}/${MCU_FAMILY}_HAL_Driver)
 
     cube_resolve_startup(${MCU} STARTUP_SCRIPT)
-    add_stm32_target(LIB
-        TARGET ${PREFIX}_startup
-        MCU ${MCU}
-        LIBTYPE OBJECT
-        FILES ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Source/Templates/gcc/${STARTUP_SCRIPT})
+    add_library(${PREFIX}_startup INTERFACE)
+    target_sources(${PREFIX}_startup INTERFACE
+        ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Source/Templates/gcc/${STARTUP_SCRIPT})
 
     add_stm32_target(LIB
-        TARGET ${PREFIX}_CMSIS
+        TARGET ${PREFIX}_CUBE
         MCU ${MCU}
         LIBTYPE STATIC
         FILES ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Source/Templates/system_${MCU_FAMILY_LOWER}.c)
-    target_include_directories(${PREFIX}_CMSIS
+    target_include_directories(${PREFIX}_CUBE
         SYSTEM PUBLIC ${STM_LIB}/CMSIS/Include
         SYSTEM PUBLIC ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Include)
+
+    add_library(${PREFIX}_CMSIS INTERFACE)
+    target_sources(${PREFIX}_CMSIS INTERFACE
+        ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Source/Templates/system_${MCU_FAMILY_LOWER}.c)
+    target_include_directories(${PREFIX}_CMSIS
+        SYSTEM INTERFACE ${STM_LIB}/CMSIS/Include
+        SYSTEM INTERFACE ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Include)
 
     function(add_hallib libname)
         cmake_parse_arguments(A "" "" "REQUIRED;OPTIONAL" ${ARGN})
@@ -90,18 +98,16 @@ function(setup_stm32cube PREFIX MCU)
                 list(APPEND sources "${HAL_PATH}/Src/${MCU_FAMILY_LOWER}_${f}")
             endif()
         endforeach(f)
-        add_stm32_target(LIB
-            TARGET ${PREFIX}_${libname}
-            MCU ${MCU}
-            LIBTYPE STATIC
-            FILES ${sources})
-        target_include_directories(${PREFIX}_${libname} SYSTEM PUBLIC ${HAL_PATH}/Inc)
-        target_link_libraries(${PREFIX}_${libname} PUBLIC ${PREFIX}_CMSIS)
-        target_compile_options(${PREFIX}_${libname} PUBLIC -DUSE_FULL_LL_DRIVER -DUSE_HAL_DRIVER -D${MCU_FAMILY})
+        add_library(${PREFIX}_${libname} INTERFACE)
+        target_sources(${PREFIX}_${libname} INTERFACE ${sources})
+        target_include_directories(${PREFIX}_${libname} SYSTEM INTERFACE ${HAL_PATH}/Inc)
+        target_link_libraries(${PREFIX}_${libname} INTERFACE ${PREFIX}_CMSIS)
     endfunction()
 
     add_hallib(HAL
         REQUIRED hal.c hal_rcc.c hal_cortex.c)
+    add_hallib(HAL_Gpio
+        REQUIRED hal_gpio.c)
     add_hallib(LL
         REQUIRED ll_utils.c ll_rcc.c)
     add_hallib(LL_Adc
@@ -118,14 +124,14 @@ function(setup_stm32cube PREFIX MCU)
         REQUIRED ll_tim.c)
     add_hallib(LL_Usart
         REQUIRED ll_usart.c)
-        target_link_libraries(${PREFIX}_LL_Usart PUBLIC ${PREFIX}_LL)
+        target_link_libraries(${PREFIX}_LL_Usart INTERFACE ${PREFIX}_LL)
     add_hallib(HAL_CRC
         REQUIRED hal_crc.c
         OPTIONAL hal_crc_ex.c)
 
-    set_property(TARGET ${PREFIX}_CMSIS
+    set_property(TARGET ${PREFIX}_CUBE
         PROPERTY STM_LIB ${STM_LIB})
-    set_property(TARGET ${PREFIX}_CMSIS
+    set_property(TARGET ${PREFIX}_CUBE
         PROPERTY HAL_PATH ${HAL_PATH})
 
 

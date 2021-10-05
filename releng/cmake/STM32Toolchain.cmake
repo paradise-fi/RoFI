@@ -33,7 +33,7 @@ set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
 
 set(CMAKE_TRY_COMPILE_TARGET_TYPE STATIC_LIBRARY)
 
-set(MCU_FPU fpv4-sp-d16)
+# set(MCU_FPU fpv4-sp-d16)
 
 # set(COMMON_FLAGS "-mcpu=${MCU_ARCH} -mthumb -mfloat-abi=${MCU_FLOAT_ABI} -ffunction-sections -fdata-sections -g -fno-common -fmessage-length=0 --specs=nosys.specs")
 
@@ -48,10 +48,10 @@ set(MCU_FPU fpv4-sp-d16)
 # set(CMAKE_EXE_LINKER_FLAGS "-Wl,--gc-sections ${STDLIBS} -T ${MCU_LINKER_SCRIPT}")
 # set(LINKER_LANGUAGE CXX)
 
-# if(CMAKE_BUILD_TYPE MATCHES Debug)
-#     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -gdwarf-2")
-#     set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -gdwarf-2")
-# endif()
+if(CMAKE_BUILD_TYPE MATCHES Debug)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -gdwarf-2")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -g -gdwarf-2")
+endif()
 
 
 

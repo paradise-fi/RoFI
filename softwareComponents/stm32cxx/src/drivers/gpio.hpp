@@ -1,18 +1,44 @@
 #pragma once
 
-#if defined(STM32G0xx)
-    #include <drivers/stm32g0xx/gpio.hpp>
-#elif defined(STM32F0xx)
-    #include <drivers/stm32f0xx/gpio.hpp>
-#else
-    #error "Unsuported MCU family"
-#endif
+#include <initializer_list>
+
+#include <gpio.port.hpp>
 
 #include <functional>
 #include <drivers/peripheral.hpp>
 
 
 struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
+    static const constexpr std::initializer_list< GPIO_TypeDef * > availablePeripherals = {
+        #ifdef GPIOA
+            GPIOA,
+        #endif
+        #ifdef GPIOB
+            GPIOB,
+        #endif
+        #ifdef GPIOC
+            GPIOC,
+        #endif
+        #ifdef GPIOD
+            GPIOD,
+        #endif
+        #ifdef GPIOE
+            GPIOE,
+        #endif
+        #ifdef GPIOF
+            GPIOF,
+        #endif
+        #ifdef GPIOG
+            GPIOG,
+        #endif
+        #ifdef GPIOH
+            GPIOH,
+        #endif
+        #ifdef GPIOI
+            GPIOI,
+        #endif
+    };
+
     Gpio( GPIO_TypeDef *_periph ) : Peripheral< GPIO_TypeDef >( _periph ) {}
 
     struct Pin {
@@ -69,10 +95,7 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
             LL_EXTI_Init( &EXTI_InitStruct );
 
             Gpio::_lines[ _pos ] = c;
-            IRQn_Type irq =
-                  _pos == 1 ? EXTI0_1_IRQn
-                : _pos <= 3 ? EXTI2_3_IRQn
-                : EXTI4_15_IRQn;
+            IRQn_Type irq = _positionToInterrupt( _pos );
             NVIC_SetPriority( irq, 1 );
             NVIC_EnableIRQ( irq );
             return *this;
@@ -102,12 +125,14 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
         }
 
         uint32_t readAnalog() {
-            auto adc = Gpio::_getAdcPeriph( _periph, _pos );
-            auto channel = Gpio::_getAdcChannel( _periph, _pos );
-            LL_ADC_REG_SetSequencerChannels( adc, channel );
-            LL_ADC_REG_StartConversion( adc );
-            while ( LL_ADC_REG_IsConversionOngoing( adc ) );
-            return LL_ADC_REG_ReadConversionData32( adc );
+            assert( false );
+            // TBA
+            // auto adc = Gpio::_getAdcPeriph( _periph, _pos );
+            // auto channel = Gpio::_getAdcChannel( _periph, _pos );
+            // LL_ADC_REG_SetSequencerChannels( adc, channel );
+            // LL_ADC_REG_StartConversion( adc );
+            // while ( LL_ADC_REG_IsConversionOngoing( adc ) );
+            // return LL_ADC_REG_ReadConversionData32( adc );
         }
 
         int _pos;

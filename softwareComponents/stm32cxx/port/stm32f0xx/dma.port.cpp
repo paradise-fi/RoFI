@@ -1,6 +1,4 @@
-#include "../dma.hpp"
-
-#ifdef STM32F0xx
+#include <drivers/dma.hpp>
 
 extern "C" void DMA1_Channel1_IRQHandler() {
     Dma::channel( 1 )._handleIsr( 1 );
@@ -12,5 +10,3 @@ extern "C" void DMA1_Channel2_3_IRQHandler() {
 }
 
 // ToDo: Add handlers
-
-#endif

@@ -1,5 +1,4 @@
 #include "gpio.hpp"
-#include <system/dbg.hpp>
 
 Gpio::Handler Gpio::_lines[ 16 ];
 
