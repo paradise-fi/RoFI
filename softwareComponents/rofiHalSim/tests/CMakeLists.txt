@@ -1,4 +1,4 @@
 cmake_minimum_required(VERSION 3.11)
 
-add_executable(test_static_rofi_hal test_static_rofi_hal.cpp)
-target_link_libraries(test_static_rofi_hal rofiHal Catch2)
+add_executable(test-rofiHalStatic test_static_rofi_hal.cpp)
+target_link_libraries(test-rofiHalStatic rofiHal Catch2)
