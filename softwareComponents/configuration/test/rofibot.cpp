@@ -10,13 +10,32 @@ TEST_CASE( "Base Module Test" ) {}
 TEST_CASE( "Universal Module Test" ) {
     SECTION( "Creation" ) {
         rofi::Module um = rofi::buildUniversalModule( 0_deg, 0_deg, 0_deg );
-        CHECK( um.connectors().size() - 1 == 6 );
-        um.setJointParams( 0, { 0_deg, 0_deg, 0_deg } );
-        CHECK( um.components().size() -1 == 9 );
+        CHECK( um.components().size() == 10 );
         um.prepare();
         REQUIRE( um.getOccupiedPositions().size() == 2 );
         CHECK( equals( um.getOccupiedPositions()[ 0 ], identity ) );
         CHECK( equals( center( um.getOccupiedPositions()[ 1 ] ), { 0, 0, 1, 1 } ) );
+    }
+
+    SECTION( "Roficoms" ) {
+        rofi::Module um = rofi::buildUniversalModule( 0_deg, 0_deg, 0_deg );
+        CHECK( um.connectors().size() == 6 );
+
+        for ( int i = 0; i < um.connectors().size(); i++ ) {
+            INFO( "Connector number: " << i );
+            CHECK( um.connectors()[ i ].type == rofi::ComponentType::Roficom );
+        }
+
+        REQUIRE( um.components().size() >= 6 );
+        for ( int i = 0; i < um.components().size(); i++ ) {
+            INFO( "Number of connectors: " << um.connectors().size() );
+            INFO( "Component number: " << i );
+            if ( i < um.connectors().size() ) {
+                CHECK( um.components()[ i ].type == rofi::ComponentType::Roficom );
+            } else {
+                CHECK( um.components()[ i ].type != rofi::ComponentType::Roficom );
+            }
+        }
     }
 
     SECTION( "Position - default" ) {

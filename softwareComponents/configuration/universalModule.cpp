@@ -41,7 +41,7 @@ Module buildUniversalModule( Angle alpha, Angle beta, Angle gamma ) {
     joints[ 1 ].joint->positions = { beta  };
     joints[ 2 ].joint->positions = { gamma };
 
-    return Module( ModuleType::Universal, std::move( components ), 7,
+    return Module( ModuleType::Universal, std::move( components ), 6,
         std::move( joints ) );
 }
 
