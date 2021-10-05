@@ -8,6 +8,9 @@ jobs:
   build_desktop:
     name: "Build suite desktop"
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        environment: [Debug, Release]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -18,7 +21,7 @@ jobs:
           shell: bash
           options: -v ${{ github.workspace }}:/work -w /work
           run: |
-            source setup.sh Release
+            source setup.sh ${{ matrix.environment }}
             rcfg desktop
             rmake desktop
       - name: Run tests
@@ -28,11 +31,14 @@ jobs:
           shell: bash
           options: -v ${{ github.workspace }}:/work -w /work
           run: |
-            source setup.sh Release
+            source setup.sh ${{ matrix.environment }}
             rmake --test --all
   build_doc:
     name: "Build documentation"
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        environment: [Debug, Release]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -44,13 +50,13 @@ jobs:
           sudo pip3 install sphinx==4.0.3 breathe sphinx-rtd-theme recommonmark
       - name: "Build"
         run: |
-          source setup.sh Release
+          source setup.sh ${{ matrix.environment }}
           rcfg doc
           rmake doc
       - name: Build other branches
         if: github.ref == 'refs/heads/master'
         run: |
-          source setup.sh Release
+          source setup.sh ${{ matrix.environment }}
           # Fetch all branches
           git fetch --all
           git pull --all
@@ -59,7 +65,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: documentation
-          path: build.Release/doc/web
+          path: build.${{ matrix.environment }}/doc/web
           retention-days: 14
   deploy:
     name: "Deploy documentation"
