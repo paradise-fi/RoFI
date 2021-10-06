@@ -19,6 +19,7 @@
 #include <vtkAxesActor.h>
 #include <vtkOrientationMarkerWidget.h>
 
+using namespace rofi::configuration;
 
 vtkSmartPointer< vtkMatrix4x4 > convertMatrix( const Matrix& m ) {
     auto mat = vtkSmartPointer< vtkMatrix4x4 >::New();
@@ -42,7 +43,7 @@ constexpr std::array< double, 3 > getModuleColor( int moduleIdx ) {
     return { color[ 0 ] / 255.0, color[ 1 ] / 255.0, color[ 2 ] / 255.0 };
 }
 
-vtkAlgorithmOutput *getComponentModel( rofi::ComponentType type ) {
+vtkAlgorithmOutput *getComponentModel( ComponentType type ) {
     using namespace rofi;
 
     static const std::map< ComponentType, std::function< ResourceFile() > >
@@ -78,7 +79,7 @@ void setupRenderer( vtkRenderer* renderer ) {
     renderer->ResetCamera();
 }
 
-void buildTemporarySceneShoeOnly( vtkRenderer* renderer, rofi::ComponentType component ) {
+void buildTemporarySceneShoeOnly( vtkRenderer* renderer, ComponentType component ) {
     vtkNew<vtkNamedColors> colors;
     vtkNew< vtkCylinderSource > cylinder;
     cylinder->SetResolution( 32 );
@@ -107,7 +108,7 @@ void buildTemporaryScene( vtkRenderer* renderer ) {
     renderer->AddActor(cylinderActor.Get());
 }
 
-void addModuleToScene( vtkRenderer* renderer, rofi::Module& m,
+void addModuleToScene( vtkRenderer* renderer, Module& m,
                        const Matrix& mPosition, int moduleIndex, const std::set< int >& active_cons )
 {
     auto moduleColor = getModuleColor( moduleIndex );
@@ -142,9 +143,9 @@ void addModuleToScene( vtkRenderer* renderer, rofi::Module& m,
     }
 }
 
-void buildConfigurationScene( vtkRenderer* renderer, rofi::Rofibot& bot ) {
+void buildConfigurationScene( vtkRenderer* renderer, Rofibot& bot ) {
     // get active (i.e. connected) connectors for each module within Rofibot
-    std::map< rofi::ModuleId, std::set< int > > active_cons;
+    std::map< ModuleId, std::set< int > > active_cons;
     for ( const auto& roficom : bot.roficoms() ) {
         active_cons[ roficom.sourceModule ].insert( roficom.sourceConnector );
         active_cons[ roficom.destModule   ].insert( roficom.destConnector );
@@ -160,7 +161,7 @@ void buildConfigurationScene( vtkRenderer* renderer, rofi::Rofibot& bot ) {
     }
 }
 
-void renderConfiguration( rofi::Rofibot configuration, const std::string& configName ) {
+void renderConfiguration( Rofibot configuration, const std::string& configName ) {
         vtkNew< vtkRenderer > renderer;
     setupRenderer( renderer.Get() );
     buildConfigurationScene( renderer.Get(), configuration );
@@ -186,4 +187,3 @@ void renderConfiguration( rofi::Rofibot configuration, const std::string& config
     renderWindow->Render();
     renderWindowInteractor->Start();
 }
-

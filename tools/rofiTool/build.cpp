@@ -2,6 +2,7 @@
 #include "rendering.hpp"
 #include <pad.hpp>
 #include <bots/umpad.hpp>
+#include <universalModule.hpp>
 
 static auto command = Dim::Cli().command( "build" )
     .desc( "Build and show given rofibot" );
@@ -24,28 +25,29 @@ int readIntWithMsg( const std::string& msg ) {
     return n;
 }
 
-rofi::Rofibot buildWishedRofibot( BotType botType ) {
-    rofi::Rofibot rofibot;
+rofi::configuration::Rofibot buildWishedRofibot( BotType botType ) {
+    using namespace rofi::configuration;
+    Rofibot rofibot;
     int n, m;
     switch ( botType ) {
         case BotType::UM:
-            rofibot.insert( rofi::buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
+            rofibot.insert( buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
             return rofibot;
         case BotType::UMpadN:
             n = readIntWithMsg( "Dimension: " );
-            return rofi::buildUMpad( n );
+            return buildUMpad( n );
         case BotType::UMpadNM:
             n = readIntWithMsg( "Dimension n: " );
             m = readIntWithMsg( "Dimension m: " );
-            return rofi::buildUMpad( n, m );
+            return buildUMpad( n, m );
         case BotType::NPad:
             n = readIntWithMsg( "Dimension: " );
-            rofibot.insert( rofi::buildPad( n ) );
+            rofibot.insert( buildPad( n ) );
             break;
         case BotType::NMPad:
             n = readIntWithMsg( "Dimension n: " );
             m = readIntWithMsg( "Dimension m: " );
-            rofibot.insert( rofi::buildPad( n, m ) );
+            rofibot.insert( buildPad( n, m ) );
             break;
         default:
             throw std::runtime_error( "Unknown model" );
@@ -72,7 +74,7 @@ std::string botTypeToString( BotType b ) {
 int build( Dim::Cli & cli ) {
     auto configuration = buildWishedRofibot( static_cast< BotType >( *botType ) );
 
-    rofi::connect< rofi::RigidJoint >(
+    rofi::configuration::connect< rofi::configuration::RigidJoint >(
         *botType > 2 ? configuration.getModule( 0 )->connector( 0 ) // No body within the pad
                      : configuration.getModule( 0 )->body( 0 ),     // UM, so we fix its body
         Vector( { 0, 0, 0 } ),
