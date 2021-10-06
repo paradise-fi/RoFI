@@ -16,7 +16,7 @@ endif()
 
 file(GLOB BOTS_SRC bots/*.cpp)
 add_library(configuration STATIC Configuration.cpp joints.cpp
-  universalModule.cpp rofibot.cpp pad.cpp ${BOTS_SRC})
+            universalModule.cpp rofibot.cpp pad.cpp ${BOTS_SRC})
 target_include_directories(configuration PUBLIC .)
 target_link_libraries(configuration PUBLIC ${ARMADILLO_LIBRARIES} PUBLIC atoms span fmt)
 

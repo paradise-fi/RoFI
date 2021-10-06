@@ -5,11 +5,13 @@
 
 namespace {
 
+using namespace rofi::configuration;
+
 TEST_CASE( "Base Module Test" ) {}
 
 TEST_CASE( "Universal Module Test" ) {
     SECTION( "Creation" ) {
-        rofi::Module um = rofi::buildUniversalModule( 0_deg, 0_deg, 0_deg );
+        Module um = buildUniversalModule( 0_deg, 0_deg, 0_deg );
         CHECK( um.components().size() == 10 );
         um.prepare();
         REQUIRE( um.getOccupiedPositions().size() == 2 );
@@ -18,12 +20,12 @@ TEST_CASE( "Universal Module Test" ) {
     }
 
     SECTION( "Roficoms" ) {
-        rofi::Module um = rofi::buildUniversalModule( 0_deg, 0_deg, 0_deg );
+        Module um = buildUniversalModule( 0_deg, 0_deg, 0_deg );
         CHECK( um.connectors().size() == 6 );
 
         for ( int i = 0; i < um.connectors().size(); i++ ) {
             INFO( "Connector number: " << i );
-            CHECK( um.connectors()[ i ].type == rofi::ComponentType::Roficom );
+            CHECK( um.connectors()[ i ].type == ComponentType::Roficom );
         }
 
         REQUIRE( um.components().size() >= 6 );
@@ -31,15 +33,15 @@ TEST_CASE( "Universal Module Test" ) {
             INFO( "Number of connectors: " << um.connectors().size() );
             INFO( "Component number: " << i );
             if ( i < um.connectors().size() ) {
-                CHECK( um.components()[ i ].type == rofi::ComponentType::Roficom );
+                CHECK( um.components()[ i ].type == ComponentType::Roficom );
             } else {
-                CHECK( um.components()[ i ].type != rofi::ComponentType::Roficom );
+                CHECK( um.components()[ i ].type != ComponentType::Roficom );
             }
         }
     }
 
     SECTION( "Position - default" ) {
-        rofi::Module um = rofi::buildUniversalModule( 0_deg, 0_deg, 0_deg );
+        Module um = buildUniversalModule( 0_deg, 0_deg, 0_deg );
         // A part
         CHECK( equals( um.getComponentPosition( 0 ), identity ) );
         CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -67,7 +69,7 @@ TEST_CASE( "Universal Module Test" ) {
 
     SECTION( "Position - rotated gamma" ) {
         SECTION( "degrees" ) {
-            rofi::Module um = rofi::buildUniversalModule( 0_deg, 0_deg, 90_deg );
+            Module um = buildUniversalModule( 0_deg, 0_deg, 90_deg );
             // A part
             CHECK( equals( um.getComponentPosition( 0 ), identity ) );
             CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -98,7 +100,7 @@ TEST_CASE( "Universal Module Test" ) {
     }
 
     SECTION( "radians" ) {
-        rofi::Module um = rofi::buildUniversalModule( 0_rad, 0_rad, 1.57079632679489661923_rad ); // 0, 0, M_PI_2
+        Module um = buildUniversalModule( 0_rad, 0_rad, 1.57079632679489661923_rad ); // 0, 0, M_PI_2
         // A part
         CHECK( equals( um.getComponentPosition( 0 ), identity ) );
         CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -129,7 +131,7 @@ TEST_CASE( "Universal Module Test" ) {
 
     SECTION( "Position - rotated beta + gamma" ) {
         SECTION( "degrees" ) {
-            rofi::Module um = rofi::buildUniversalModule( 0_deg, Angle::deg( -90 ), 90_deg );
+            Module um = buildUniversalModule( 0_deg, Angle::deg( -90 ), 90_deg );
             // A part
             CHECK( equals( um.getComponentPosition( 0 ), identity ) );
             CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -161,7 +163,7 @@ TEST_CASE( "Universal Module Test" ) {
         }
 
         SECTION( "radians" ) {
-            rofi::Module um = rofi::buildUniversalModule( 0_rad, Angle::rad( -1.57079632679489661923 ), 1.57079632679489661923_rad );
+            Module um = buildUniversalModule( 0_rad, Angle::rad( -1.57079632679489661923 ), 1.57079632679489661923_rad );
             // A part
             CHECK( equals( um.getComponentPosition( 0 ), identity ) );
             CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -195,11 +197,11 @@ TEST_CASE( "Universal Module Test" ) {
 }
 
 TEST_CASE( "Two modules next to each other" ) {
-    rofi::Rofibot bot;
-    auto& m1 = bot.insert( rofi::buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
-    auto& m2 = bot.insert( rofi::buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
-    connect( m1.connector( 0 ), m2.connector( 1 ), rofi::Orientation::South );
-    rofi::connect< rofi::RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
+    Rofibot bot;
+    auto& m1 = bot.insert( buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = bot.insert( buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
+    connect( m1.connector( 0 ), m2.connector( 1 ), Orientation::South );
+    connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
     REQUIRE_NOTHROW( bot.prepare() );
 
     SECTION( "The second is just moved to left by one" ) {
@@ -238,11 +240,11 @@ TEST_CASE( "Two modules next to each other" ) {
 }
 
 TEST_CASE( "Two modules - different angles" ) {
-    rofi::Rofibot bot;
-    auto& m1 = bot.insert( rofi::buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
-    auto& m2 = bot.insert( rofi::buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
-    connect( m1.connector( 3 ), m2.connector( 0 ), rofi::Orientation::South );
-    rofi::connect< rofi::RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
+    Rofibot bot;
+    auto& m1 = bot.insert( buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = bot.insert( buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
+    connect( m1.connector( 3 ), m2.connector( 0 ), Orientation::South );
+    connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
     REQUIRE_NOTHROW( bot.prepare() );
 
     SECTION( "BodyA " ) {
@@ -262,13 +264,13 @@ TEST_CASE( "Two modules - different angles" ) {
 }
 
 TEST_CASE( "Three modules -- connect docks 3 to 0s " ) {
-    rofi::Rofibot bot;
-    auto& m1 = bot.insert( rofi::buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
-    auto& m2 = bot.insert( rofi::buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
-    auto& m3 = bot.insert( rofi::buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
-    connect( m1.connector( 3 ), m2.connector( 0 ), rofi::Orientation::South );
-    connect( m2.connector( 3 ), m3.connector( 0 ), rofi::Orientation::South );
-    rofi::connect< rofi::RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
+    Rofibot bot;
+    auto& m1 = bot.insert( buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = bot.insert( buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
+    auto& m3 = bot.insert( buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
+    connect( m1.connector( 3 ), m2.connector( 0 ), Orientation::South );
+    connect( m2.connector( 3 ), m3.connector( 0 ), Orientation::South );
+    connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
     REQUIRE_NOTHROW( bot.prepare() );
 
     SECTION( "Modules are well placed" ) {
@@ -317,12 +319,12 @@ TEST_CASE( "Basic rofibot manipulation" ) {
     CHECK( bot.modules().size() == 5 );
 
     CHECK( bot.roficoms().size() == 0 );
-    connect( m1.connector( 5 ), m2.connector( 2 ), rofi::Orientation::North );
-    connect( m2.connector( 5 ), m3.connector( 2 ), rofi::Orientation::North );
-    connect( m3.connector( 5 ), m4.connector( 2 ), rofi::Orientation::North );
-    connect( m4.connector( 5 ), m5.connector( 2 ), rofi::Orientation::North );
+    connect( m1.connector( 5 ), m2.connector( 2 ), Orientation::North );
+    connect( m2.connector( 5 ), m3.connector( 2 ), Orientation::North );
+    connect( m3.connector( 5 ), m4.connector( 2 ), Orientation::North );
+    connect( m4.connector( 5 ), m5.connector( 2 ), Orientation::North );
     CHECK( bot.roficoms().size() == 4 );
-    rofi::connect< rofi::RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
+    connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
     m1.setJointParams( 2, { 90_deg } );
     auto [ b, str ] = bot.isValid( SimpleColision() );
     CHECK( b );
@@ -340,12 +342,12 @@ TEST_CASE( "Colliding configuration" ) {
     auto& m5 = bot.insert( buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
     CHECK( bot.modules().size() == 5 );
 
-    connect( m1.connector( 1 ), m2.connector( 2 ), rofi::Orientation::North );
-    connect( m2.connector( 1 ), m3.connector( 2 ), rofi::Orientation::North );
-    connect( m3.connector( 1 ), m4.connector( 2 ), rofi::Orientation::North );
-    connect( m4.connector( 1 ), m5.connector( 2 ), rofi::Orientation::North );
+    connect( m1.connector( 1 ), m2.connector( 2 ), Orientation::North );
+    connect( m2.connector( 1 ), m3.connector( 2 ), Orientation::North );
+    connect( m3.connector( 1 ), m4.connector( 2 ), Orientation::North );
+    connect( m4.connector( 1 ), m5.connector( 2 ), Orientation::North );
     CHECK( bot.roficoms().size() == 4 );
-    rofi::connect< rofi::RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
+    connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
     auto [ b, str ] = bot.isValid( SimpleColision() );
     CHECK( !b );
 }

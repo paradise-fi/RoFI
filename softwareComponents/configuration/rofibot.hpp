@@ -13,7 +13,7 @@
 #include "joints.hpp"
 #include "Matrix.h"
 
-namespace rofi {
+namespace rofi::configuration {
 
 /// ModuleId
 using ModuleId = int;
@@ -285,7 +285,7 @@ public:
      */
     int componentIdx( const Component& c ) {
         int idx = 0;
-        for ( const rofi::Component& x : _components ) {
+        for ( const Component& x : _components ) {
             if ( x == c )
                 return idx;
             idx++;
@@ -682,4 +682,4 @@ int connect( const Component& c, Vector refpoint, Args&&... args ) {
     return jointId;
 }
 
-} // namespace rofi
+} // namespace rofi::configuration

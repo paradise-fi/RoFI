@@ -1,10 +1,10 @@
 #pragma once
-#include "universalModule.hpp"
+#include <rofibot.hpp>
 
-namespace rofi {
+namespace rofi::configuration {
 
 Rofibot buildUMpad( int n, int m );
 
 Rofibot buildUMpad( int n );
 
-} // namespace rofi
+} // namespace rofi::configuration

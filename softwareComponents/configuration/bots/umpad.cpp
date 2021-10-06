@@ -1,6 +1,7 @@
 #include "umpad.hpp"
+#include <universalModule.hpp>
 
-namespace rofi {
+namespace rofi::configuration {
 
 Rofibot buildUMpad( int n ) {
     return buildUMpad( n, n );
@@ -29,4 +30,4 @@ Rofibot buildUMpad( int n, int m ) {
     return bot;
 }
 
-} // namespace rofi
+} // namespace rofi::configuration
