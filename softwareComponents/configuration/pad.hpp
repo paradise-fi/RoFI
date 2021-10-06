@@ -4,10 +4,10 @@
 #include <iostream>
 #include "rofibot.hpp"
 
-namespace rofi {
+namespace rofi::configuration {
 
 Module buildPad( int sizeN, int sizeM );
 
 Module buildPad( int size );
 
-} // namespace rofi
+} // namespace rofi::configuration

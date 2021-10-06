@@ -6,9 +6,9 @@
 
 #include <atoms/patterns.hpp>
 #include <atoms/units.hpp>
-#include <Matrix.h>
+#include "Matrix.h"
 
-namespace rofi {
+namespace rofi::configuration {
 
 class RigidJoint;
 class RotationJoint;
@@ -149,4 +149,4 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
  */
 std::ostream& operator<<( std::ostream& out, Joint& j );
 
-} // namespace rofi
+} // namespace rofi::configuration

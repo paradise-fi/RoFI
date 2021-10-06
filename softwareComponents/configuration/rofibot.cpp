@@ -1,6 +1,6 @@
 #include "rofibot.hpp"
 
-namespace rofi {
+namespace rofi::configuration {
 
 double orientationToAngle( Orientation o ) {
     switch ( o ) {
@@ -17,7 +17,7 @@ double orientationToAngle( Orientation o ) {
     return 0; // never reached
 }
 
-void rofi::Module::setJointParams( int idx, const Joint::Positions& p ) {
+void Module::setJointParams( int idx, const Joint::Positions& p ) {
     // Currently we invalidate all positions; ToDo: think if we can improve it
     assert( idx < _joints.size() && idx >= 0 );
     assert( p.size() == _joints[ idx ].joint->positions.size() );
@@ -45,4 +45,4 @@ void connect( const Component& c1, const Component& c2, Orientation o ) {
     bot._prepared = false;
 }
 
-} // rofi
+} // namespace rofi::configuration

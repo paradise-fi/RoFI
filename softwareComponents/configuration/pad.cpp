@@ -1,6 +1,6 @@
 #include "pad.hpp"
 
-namespace rofi {
+namespace rofi::configuration {
 
 Module buildPad( int size ) {
     return buildPad( size, size );
@@ -32,4 +32,4 @@ Module buildPad( int sizeN, int sizeM ) {
         std::move( joints ), 0 );
 }
 
-} // namespace rofi
+} // namespace rofi::configuration

@@ -4,7 +4,7 @@
 #include <iostream>
 #include "rofibot.hpp"
 
-namespace rofi {
+namespace rofi::configuration {
 
 enum UmParts { UmBodyA = 7, UmBodyB = 8, UmShoeA = 6, UmShoeB = 9 };
 
@@ -19,5 +19,5 @@ Module buildUniversalModule( Angle alpha, Angle beta, Angle gamma );
  */
 Rofibot readOldConfigurationFormat( std::istream& s );
 
-} // namespace rofi
+} // namespace rofi::configuration
 

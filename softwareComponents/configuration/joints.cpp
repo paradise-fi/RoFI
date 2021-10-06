@@ -1,6 +1,6 @@
 #include "joints.hpp"
 
-namespace rofi {
+namespace rofi::configuration {
 
 std::ostream& operator<<( std::ostream& out, Joint& j ) {
     atoms::visit( j,
@@ -13,4 +13,4 @@ std::ostream& operator<<( std::ostream& out, Joint& j ) {
     return out;
 };
 
-} // namespace rofi
+} // namespace rofi::configuration

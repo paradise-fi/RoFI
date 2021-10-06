@@ -1,6 +1,6 @@
 #include "universalModule.hpp"
 
-namespace rofi {
+namespace rofi::configuration {
 
 Module buildUniversalModule( Angle alpha, Angle beta, Angle gamma ) {
     std::vector< Component > components = {
@@ -127,7 +127,7 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
                 throw std::runtime_error( "Invalid edge specification" );
             auto& component1 = rofibot.getModule( moduleMapping[ id1 ] )->connector( side1 * 3 + dock1 );
             auto& component2 = rofibot.getModule( moduleMapping[ id2 ] )->connector( side2 * 3 + dock2 );
-            connect( component1, component2, static_cast< rofi::Orientation >( orientation ) );
+            connect( component1, component2, static_cast< Orientation >( orientation ) );
             continue;
         }
         throw std::runtime_error("Expected a module (M) or edge (E), got " + type + ".");
@@ -135,5 +135,5 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
     return rofibot;
 }
 
-}  // namespace rofi
+}  // namespace rofi::configuration
 
