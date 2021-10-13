@@ -5,7 +5,7 @@
 #include <iostream>
 #include <memory>
 
-using atoms::IdSet;
+using atoms::HandleSet;
 using atoms::ValuePtr;
 
 struct Elem {
@@ -28,31 +28,31 @@ struct Span {
 };
 
 
-TEST_CASE( "idSet + ValuePtr" ) {
+TEST_CASE( "HandleSet + ValuePtr" ) {
     int x = 42;
-    IdSet< Span > idSet;
+    HandleSet< Span > HandleSet;
 
     CAPTURE( &x );
     INFO( "Inserting first element" );
-    auto id = idSet.insert( { 0, &x } );
+    auto id = HandleSet.insert( { 0, &x } );
     INFO( "Inserted first element: " << id );
-    Elem& m = *( idSet[ id ].ptr );
+    Elem& m = *( HandleSet[ id ].ptr );
     CAPTURE( m.num_ptr );
     CHECK( m.num_ptr == &x );
     CHECK( *m.num_ptr == 42 );
 
     INFO( "Inserting second element" );
-    id = idSet.insert( { 1, &x } );
+    id = HandleSet.insert( { 1, &x } );
     INFO( "Inserted second element: " << id );
-    Elem& m2 = *( idSet[ id ].ptr );
+    Elem& m2 = *( HandleSet[ id ].ptr );
     CHECK( m.num_ptr == &x );
     CHECK( *m.num_ptr == 42 );
     CHECK( m2.num_ptr == &x );
     CHECK( *m2.num_ptr == 42 );
 
-    id = idSet.insert( { 2, &x } );
+    id = HandleSet.insert( { 2, &x } );
     CAPTURE( id );
-    Elem& m3 = *( idSet[ id ].ptr );
+    Elem& m3 = *( HandleSet[ id ].ptr );
     CHECK( m3.num_ptr == &x );
     CHECK( m2.num_ptr == &x );
     CHECK( m.num_ptr == &x );
