@@ -8,7 +8,7 @@
 
 #include <gazebo/transport/transport.hh>
 
-#include "concurrent_queue.hpp"
+#include "atoms/concurrent_queue.hpp"
 #include "gazebo_node_handler.hpp"
 #include "atoms/jthread.hpp"
 #include "rofi_hal.hpp"
@@ -168,7 +168,7 @@ private:
     }
 
 
-    ConcurrentQueue< std::pair< std::string, MessageVariant > > _queue;
+    atoms::ConcurrentQueue< std::pair< std::string, MessageVariant > > _queue;
 
     GazeboNodeHandler _node;
 

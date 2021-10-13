@@ -9,6 +9,8 @@
 #include "atoms/condition_variable_any.hpp"
 
 
+namespace atoms
+{
 template < typename T >
 class ConcurrentQueue
 {
@@ -97,3 +99,5 @@ private:
     mutable std::mutex _m;
     atoms::condition_variable_any _popSig;
 };
+
+} // namespace atoms
