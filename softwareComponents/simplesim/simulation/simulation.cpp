@@ -4,33 +4,17 @@
 
 
 using namespace rofi::simplesim;
+using namespace rofi::messages;
 
-using RofiId = Simulation::RofiId;
 
-
-RofiId Simulation::addModule()
+std::vector< RofiResp > Simulation::simulateOneIteration()
 {
     // TODO
     return {};
 }
 
-void Simulation::addModule( RofiId rofiId, int joints, int connectors )
+std::optional< RofiResp > Simulation::processRofiCommand( const RofiCmd & cmd )
 {
-    // TODO use some kind of descriptor
-    // TODO add RoFI to configuration
-    _database.addRofi( rofiId, joints, connectors );
-}
-
-std::vector< rofi::messages::RofiResp > Simulation::moveRofisOneIteration()
-{
-    // TODO
-    return {};
-}
-
-Simulation::OptionalRofiResp Simulation::processRofiCommand( const rofi::messages::RofiCmd & cmd )
-{
-    using RofiCmd = rofi::messages::RofiCmd;
-
     switch ( cmd.cmdtype() ) {
         case RofiCmd::NO_CMD:
         {
@@ -46,15 +30,15 @@ Simulation::OptionalRofiResp Simulation::processRofiCommand( const rofi::message
         }
         case RofiCmd::DESCRIPTION:
         {
-            if ( auto description = _database.getDescription( cmd.rofiid() ) ) {
-                rofi::messages::RofiResp resp;
+            if ( auto description = _moduleStates.getDescription( cmd.rofiid() ) ) {
+                RofiResp resp;
                 resp.set_rofiid( cmd.rofiid() );
                 resp.set_resptype( cmd.cmdtype() );
                 *resp.mutable_rofidescription() = std::move( *description );
                 return resp;
             }
-            std::cerr << "Rofi " << cmd.rofiid()
-                      << " doesn't exist (rofi command type: " << cmd.cmdtype() << ")\n";
+            std::cerr << "Could not get RoFI descriptor (RoFI " << cmd.rofiid()
+                      << " doesn't exist)\n";
             return {};
         }
         case RofiCmd::WAIT_CMD:
@@ -70,11 +54,8 @@ Simulation::OptionalRofiResp Simulation::processRofiCommand( const rofi::message
     }
 }
 
-Simulation::OptionalRofiResp Simulation::processJointCommand( RofiId rofiId,
-                                                              const rofi::messages::JointCmd & cmd )
+std::optional< RofiResp > Simulation::processJointCommand( ModuleId moduleId, const JointCmd & cmd )
 {
-    using JointCmd = rofi::messages::JointCmd;
-
     switch ( cmd.cmdtype() ) {
         case JointCmd::NO_CMD:
         {
@@ -82,47 +63,55 @@ Simulation::OptionalRofiResp Simulation::processJointCommand( RofiId rofiId,
         }
         case JointCmd::GET_CAPABILITIES:
         {
-            // TODO get capabilities
-            auto resp = getJointResp( rofiId, cmd.joint(), cmd.cmdtype() );
+            // TODO get from configuration
+            auto resp = getJointResp( moduleId, cmd.joint(), cmd.cmdtype() );
             *resp.mutable_jointresp()->mutable_capabilities() = {}; // TODO
             return resp;
         }
         case JointCmd::GET_POSITION:
         {
-            // TODO get position
+            // TODO get from configuration
             auto position = 0.f; // TODO
-            return getJointResp( rofiId, cmd.joint(), cmd.cmdtype(), position );
+            return getJointResp( moduleId, cmd.joint(), cmd.cmdtype(), position );
         }
         case JointCmd::GET_VELOCITY:
         {
-            if ( auto velocity = _database.getVelocity( rofiId, cmd.joint() ) ) {
-                return getJointResp( rofiId, cmd.joint(), cmd.cmdtype(), *velocity );
-            }
-            std::cerr << "Rofi " << rofiId << " doesn't exist or does not have joint "
-                      << cmd.joint() << " (joint command type: " << cmd.cmdtype() << ")\n";
-            return {};
+            // TODO get from configuration
+            auto velocity = 0.f; // TODO
+            return getJointResp( moduleId, cmd.joint(), cmd.cmdtype(), velocity );
         }
         case JointCmd::SET_POS_WITH_SPEED:
         {
-            // TODO clamp pos and speed
             auto pos = cmd.setposwithspeed().position();
             auto speed = cmd.setposwithspeed().speed();
-            if ( pos < 0 ) {
+            if ( pos < 0.f ) {
                 std::cerr << "Got set position command with negative speed. Setting to zero\n";
-                pos = 0;
+                pos = 0.f;
             }
-            if ( !_database.setPositionWithSpeed( rofiId, cmd.joint(), pos, speed ) ) {
-                std::cerr << "Rofi " << rofiId << " doesn't exist or does not have joint "
+            // TODO clamp pos and speed
+
+            using JointPositionControl = ModuleStates::JointPositionControl;
+            if ( !_moduleStates.setPositionControl( moduleId,
+                                                    cmd.joint(),
+                                                    JointPositionControl{ .position = pos,
+                                                                          .speed = speed } ) )
+            {
+                std::cerr << "Rofi " << moduleId << " doesn't exist or does not have joint "
                           << cmd.joint() << " (joint command type: " << cmd.cmdtype() << ")\n";
             }
             return {};
         }
         case JointCmd::SET_VELOCITY:
         {
-            // TODO clamp velocity
             auto velocity = cmd.setvelocity().velocity();
-            if ( !_database.setVelocity( rofiId, cmd.joint(), velocity ) ) {
-                std::cerr << "Rofi " << rofiId << " doesn't exist or does not have joint "
+            // TODO clamp velocity
+
+            using JointVelocityControl = ModuleStates::JointVelocityControl;
+            if ( !_moduleStates.setVelocityControl( moduleId,
+                                                    cmd.joint(),
+                                                    JointVelocityControl{ .velocity = velocity } ) )
+            {
+                std::cerr << "Rofi " << moduleId << " doesn't exist or does not have joint "
                           << cmd.joint() << " (joint command type: " << cmd.cmdtype() << ")\n";
             }
             return {};
@@ -146,12 +135,9 @@ Simulation::OptionalRofiResp Simulation::processJointCommand( RofiId rofiId,
     }
 }
 
-Simulation::OptionalRofiResp Simulation::processConnectorCommand(
-        RofiId rofiId,
-        const rofi::messages::ConnectorCmd & cmd )
+std::optional< RofiResp > Simulation::processConnectorCommand( ModuleId moduleId,
+                                                               const ConnectorCmd & cmd )
 {
-    using ConnectorCmd = rofi::messages::ConnectorCmd;
-
     switch ( cmd.cmdtype() ) {
         case ConnectorCmd::NO_CMD:
         {
@@ -159,20 +145,20 @@ Simulation::OptionalRofiResp Simulation::processConnectorCommand(
         }
         case ConnectorCmd::GET_STATE:
         {
-            if ( auto state = _database.getConnectorState( rofiId, cmd.connector() ) ) {
-                auto resp = getConnectorResp( rofiId, cmd.connector(), cmd.cmdtype() );
+            if ( auto state = _moduleStates.getConnectorState( moduleId, cmd.connector() ) ) {
+                auto resp = getConnectorResp( moduleId, cmd.connector(), cmd.cmdtype() );
                 *resp.mutable_connectorresp()->mutable_state() = std::move( *state );
                 return resp;
             }
-            std::cerr << "Rofi " << rofiId << " doesn't exist or does not have connector "
+            std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
                       << cmd.connector() << " (connector command type: " << cmd.cmdtype() << ")\n";
             return {};
         }
         case ConnectorCmd::CONNECT:
         {
             // TODO check somewhere for new connections
-            if ( !_database.extendConnector( rofiId, cmd.connector() ) ) {
-                std::cerr << "Rofi " << rofiId << " doesn't exist or does not have connector "
+            if ( !_moduleStates.extendConnector( moduleId, cmd.connector() ) ) {
+                std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
                           << cmd.connector() << " (connector command type: " << cmd.cmdtype()
                           << ")\n";
             }
@@ -180,9 +166,9 @@ Simulation::OptionalRofiResp Simulation::processConnectorCommand(
         }
         case ConnectorCmd::DISCONNECT:
         {
-            // TODO send disconnect event
-            if ( !_database.retractConnector( rofiId, cmd.connector() ) ) {
-                std::cerr << "Rofi " << rofiId << " doesn't exist or does not have connector "
+            // TODO send disconnect event to both sides
+            if ( !_moduleStates.retractConnector( moduleId, cmd.connector() ) ) {
+                std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
                           << cmd.connector() << " (connector command type: " << cmd.cmdtype()
                           << ")\n";
             }
@@ -190,20 +176,33 @@ Simulation::OptionalRofiResp Simulation::processConnectorCommand(
         }
         case ConnectorCmd::PACKET:
         {
-            if ( auto connectedTo = _database.getConnectedTo( rofiId, cmd.connector() ) ) {
-                auto resp = getConnectorResp( connectedTo->rofiId,
-                                              connectedTo->connector,
-                                              cmd.cmdtype() );
-                *resp.mutable_connectorresp()->mutable_packet() = cmd.packet();
+            if ( auto state = _moduleStates.getConnectorState( moduleId, cmd.connector() ) ) {
+                auto resp = getConnectorResp( moduleId, cmd.connector(), cmd.cmdtype() );
+                *resp.mutable_connectorresp()->mutable_state() = std::move( *state );
                 return resp;
             }
-            // TODO packet could not be sent
+            if ( auto connectedToOpt = _moduleStates.getConnectedTo( moduleId, cmd.connector() ) ) {
+                if ( auto connectedTo = *connectedToOpt ) {
+                    auto resp = getConnectorResp( connectedTo->moduleId,
+                                                  connectedTo->connector,
+                                                  cmd.cmdtype() );
+                    *resp.mutable_connectorresp()->mutable_packet() = cmd.packet();
+                    return resp;
+                }
+
+                std::cerr << "Connector " << cmd.connector() << "of module " << moduleId
+                          << " is not connected (connector command type: " << cmd.cmdtype()
+                          << ")\n";
+                return {};
+            }
+            std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
+                      << cmd.connector() << " (connector command type: " << cmd.cmdtype() << ")\n";
             return {};
         }
         case ConnectorCmd::CONNECT_POWER:
         {
-            if ( !_database.setConnectorPower( rofiId, cmd.connector(), cmd.line(), true ) ) {
-                std::cerr << "Rofi " << rofiId << " doesn't exist or does not have connector "
+            if ( !_moduleStates.setConnectorPower( moduleId, cmd.connector(), cmd.line(), true ) ) {
+                std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
                           << cmd.connector() << " (connector command type: " << cmd.cmdtype()
                           << ")\n";
             }
@@ -211,8 +210,9 @@ Simulation::OptionalRofiResp Simulation::processConnectorCommand(
         }
         case ConnectorCmd::DISCONNECT_POWER:
         {
-            if ( !_database.setConnectorPower( rofiId, cmd.connector(), cmd.line(), false ) ) {
-                std::cerr << "Rofi " << rofiId << " doesn't exist or does not have connector "
+            if ( !_moduleStates.setConnectorPower( moduleId, cmd.connector(), cmd.line(), false ) )
+            {
+                std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
                           << cmd.connector() << " (connector command type: " << cmd.cmdtype()
                           << ")\n";
             }
@@ -226,14 +226,11 @@ Simulation::OptionalRofiResp Simulation::processConnectorCommand(
     }
 }
 
-rofi::messages::RofiResp Simulation::getJointResp( RofiId rofiId,
-                                                   int joint,
-                                                   rofi::messages::JointCmd::Type type,
-                                                   float value )
+RofiResp Simulation::getJointResp( ModuleId moduleId, int joint, JointCmd::Type type, float value )
 {
-    rofi::messages::RofiResp rofiResp;
-    rofiResp.set_rofiid( rofiId );
-    rofiResp.set_resptype( rofi::messages::RofiCmd::JOINT_CMD );
+    RofiResp rofiResp;
+    rofiResp.set_rofiid( moduleId );
+    rofiResp.set_resptype( RofiCmd::JOINT_CMD );
     auto & jointResp = *rofiResp.mutable_jointresp();
     jointResp.set_joint( joint );
     jointResp.set_resptype( type );
@@ -241,13 +238,11 @@ rofi::messages::RofiResp Simulation::getJointResp( RofiId rofiId,
     return rofiResp;
 }
 
-rofi::messages::RofiResp Simulation::getConnectorResp( RofiId rofiId,
-                                                       int connector,
-                                                       rofi::messages::ConnectorCmd::Type type )
+RofiResp Simulation::getConnectorResp( ModuleId moduleId, int connector, ConnectorCmd::Type type )
 {
-    rofi::messages::RofiResp rofiResp;
-    rofiResp.set_rofiid( rofiId );
-    rofiResp.set_resptype( rofi::messages::RofiCmd::CONNECTOR_CMD );
+    RofiResp rofiResp;
+    rofiResp.set_rofiid( moduleId );
+    rofiResp.set_resptype( RofiCmd::CONNECTOR_CMD );
     auto & connectorResp = *rofiResp.mutable_connectorresp();
     connectorResp.set_connector( connector );
     connectorResp.set_resptype( type );
