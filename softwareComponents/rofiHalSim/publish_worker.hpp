@@ -10,7 +10,7 @@
 
 #include "concurrent_queue.hpp"
 #include "gazebo_node_handler.hpp"
-#include "jthread/jthread.hpp" // Change to std::jthread with C++20
+#include "atoms/jthread.hpp"
 #include "rofi_hal.hpp"
 #include "subscriber_wrapper.hpp"
 
@@ -30,8 +30,8 @@ class PublishWorker
     {
         _rofiTopicsSub = subscribe( [ this ]( auto resp ) { updateRofiTopics( resp ); } );
 
-        _workerThread = std20::jthread(
-                [ this ]( std20::stop_token stoken ) { this->run( std::move( stoken ) ); } );
+        _workerThread = atoms::jthread(
+                [ this ]( atoms::stop_token stoken ) { this->run( std::move( stoken ) ); } );
     }
 
 public:
@@ -152,7 +152,7 @@ private:
         pub->Publish( std::forward< Message >( msg ), true );
     }
 
-    void run( std20::stop_token stoken )
+    void run( atoms::stop_token stoken )
     {
         while ( true )
         {
@@ -179,6 +179,6 @@ private:
 
     std::map< std::string, gazebo::transport::PublisherPtr > _pubs;
 
-    std20::jthread _workerThread;
+    atoms::jthread _workerThread;
 };
 } // namespace rofi::hal

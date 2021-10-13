@@ -114,7 +114,6 @@ add_component(lwip++)
 # Libraries for simulators
 add_component(lwipcore)
 add_component(networking)
-add_component(jthread)
 add_component(snake_reconfig)
 
 if (${BUILD_GAZEBO})

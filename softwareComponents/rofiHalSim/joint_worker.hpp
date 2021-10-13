@@ -7,7 +7,7 @@
 
 #include "callbacks.hpp"
 #include "concurrent_queue.hpp"
-#include "jthread/jthread.hpp" // Change to std::jthread with C++20
+#include "atoms/jthread.hpp"
 #include "rofi_hal.hpp"
 
 #include <jointResp.pb.h>
@@ -111,8 +111,8 @@ public:
         _rofi = std::move( rofi );
         _callbacks.resize( jointCount );
 
-        _workerThread = std20::jthread(
-                [ this ]( std20::stop_token stoken ) { this->run( std::move( stoken ) ); } );
+        _workerThread = atoms::jthread(
+                [ this ]( atoms::stop_token stoken ) { this->run( std::move( stoken ) ); } );
     }
 
 
@@ -205,7 +205,7 @@ private:
         }
     }
 
-    void run( std20::stop_token stoken )
+    void run( atoms::stop_token stoken )
     {
         while ( true )
         {
@@ -224,7 +224,7 @@ private:
     std::vector< JointCallbacks > _callbacks;
     ConcurrentQueue< Message > _queue;
 
-    std20::jthread _workerThread;
+    atoms::jthread _workerThread;
 };
 
 } // namespace rofi::hal
