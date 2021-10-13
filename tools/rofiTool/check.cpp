@@ -1,6 +1,11 @@
 #include "check.hpp"
 #include <universalModule.hpp>
 
+static auto command = Dim::Cli().command( "check" )
+    .desc( "Check a given configuration" );
+static auto& inputFile = command.opt< std::string >( "<FILE>" )
+    .desc("Specify configuration file");
+
 int check( Dim::Cli & cli ) {
     auto cfgFile = std::ifstream( *inputFile );
     if ( !cfgFile.is_open() )
