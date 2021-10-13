@@ -1,52 +1,48 @@
 #include "controllers.hpp"
 
-#include <chrono>
-#include <functional>
-#include <stop_token>
-#include <thread>
-
 
 namespace rofi::simplesim
 {
-void rofiControllerThread( std::stop_token stopToken,
-                           Simulation & simulation,
-                           RofiInterface & rofiInterface )
+Controller Controller::runRofiController( std::shared_ptr< Simulation > simulation,
+                                          std::shared_ptr< RofiInterface > rofiInterface )
 {
-    using namespace std::chrono_literals;
-    using std::this_thread::sleep_for;
+    assert( simulation );
+    assert( rofiInterface );
 
-    for ( auto waitDuration = 0ms; !stopToken.stop_requested(); sleep_for( waitDuration ) ) {
-        auto lock = simulation.getWriteLock();
+    return Controller( std::jthread( &Controller::rofiControllerThread,
+                                     std::move( simulation ),
+                                     std::move( rofiInterface ) ) );
+}
 
-        waitDuration = simulation.getUpdateDuration();
-        if ( !simulation.isRunning() ) {
-            continue;
+void processRofiCommands( Simulation & simulation, RofiInterface & rofiInterface )
+{
+    auto rofiCommands = rofiInterface.getRofiCommands();
+    for ( auto & rofiCommand : rofiCommands ) {
+        if ( auto response = simulation.processRofiCommand( *rofiCommand ) ) {
+            rofiInterface.sendRofiResponses( std::array{ *response } );
         }
-
-        auto rofiCommands = rofiInterface.getRofiCommands();
-        std::vector< rofi::messages::RofiResp > processResponses;
-        for ( auto & rofiCmd : rofiCommands ) {
-            if ( auto resp = simulation.processRofiCommand( *rofiCmd ) ) {
-                processResponses.push_back( std::move( *resp ) );
-            }
-        }
-
-        auto eventResponses = simulation.moveRofisOneIteration();
-        rofiInterface.sendRofiResponses( std::move( processResponses ) );
-        rofiInterface.sendRofiResponses( std::move( eventResponses ) );
     }
 }
 
-std::jthread runRofiController( Simulation & simulation, RofiInterface & rofiInterface )
-{
-    return std::jthread( &rofiControllerThread, std::ref( simulation ), std::ref( rofiInterface ) );
-}
 
-void introspectionControllerThread() {}
-
-std::jthread runIntrospectionController()
+void Controller::rofiControllerThread( std::stop_token stopToken,
+                                       std::shared_ptr< Simulation > simulationPtr,
+                                       std::shared_ptr< RofiInterface > rofiInterfacePtr )
 {
-    return std::jthread( &introspectionControllerThread );
+    assert( simulationPtr );
+    assert( rofiInterfacePtr );
+    auto & simulation = *simulationPtr;
+    auto & rofiInterface = *rofiInterfacePtr;
+
+    while ( !stopToken.stop_requested() ) {
+        auto startTime = std::chrono::steady_clock::now();
+
+        processRofiCommands( simulation, rofiInterface );
+        auto eventResponses = simulation.simulateOneIteration();
+        rofiInterface.sendRofiResponses( std::move( eventResponses ) );
+
+        std::this_thread::sleep_until( startTime + Controller::updateDuration );
+    }
 }
 
 } // namespace rofi::simplesim

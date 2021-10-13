@@ -1,10 +1,11 @@
 #pragma once
 
+#include <atomic>
 #include <chrono>
 #include <optional>
 #include <shared_mutex>
 
-#include "database.hpp"
+#include "module_states.hpp"
 
 #include <connectorCmd.pb.h>
 #include <jointCmd.pb.h>
@@ -18,66 +19,41 @@ namespace rofi::simplesim
  */
 class Simulation
 {
-    static constexpr auto defaultUpdateDuration = std::chrono::milliseconds( 100 );
-
 public:
-    using RofiId = decltype( rofi::messages::RofiCmd().rofiid() );
-    using WriteLock = std::unique_lock< std::shared_mutex >;
-    using ReadLock = std::shared_lock< std::shared_mutex >;
-    using OptionalRofiResp = std::optional< rofi::messages::RofiResp >;
+    using RofiResp = rofi::messages::RofiResp;
 
-    // Adds a new RoFI module with a new unique Id
-    RofiId addModule();
 
-    // Adds a new RoFI module with given Id
-    // throws if given Id already exists
-    void addModule( RofiId rofiId, int joints, int connectors );
+    explicit Simulation( rofi::configuration::Rofibot && rofibotConfiguration )
+            : _moduleStates( std::move( rofibotConfiguration ) )
+    {}
 
-    // Moves each rofi module based on the internal state
+    // Moves each rofi module based on the inner state
     // Returns the responses that happen inside RoFIs
-    std::vector< rofi::messages::RofiResp > moveRofisOneIteration();
+    std::vector< RofiResp > simulateOneIteration();
 
-    bool isRunning() const
+    std::optional< RofiResp > processRofiCommand( const rofi::messages::RofiCmd & cmd );
+
+    std::set< ModuleId > getModuleIds() const
     {
-        return _isRunning;
-    }
-
-    // Returns the real time between updates
-    std::chrono::milliseconds getUpdateDuration() const
-    {
-        // TODO make configurable
-        return defaultUpdateDuration;
-    }
-
-    OptionalRofiResp processRofiCommand( const rofi::messages::RofiCmd & cmd );
-    OptionalRofiResp processJointCommand( RofiId rofiId, const rofi::messages::JointCmd & cmd );
-    OptionalRofiResp processConnectorCommand( RofiId rofiId,
-                                              const rofi::messages::ConnectorCmd & cmd );
-
-    ReadLock getReadLock() const
-    {
-        return ReadLock( _mutex );
-    }
-
-    WriteLock getWriteLock()
-    {
-        return WriteLock( _mutex );
+        return _moduleStates.getModuleIds();
     }
 
 private:
-    static rofi::messages::RofiResp getJointResp( RofiId rofiId,
-                                                  int joint,
-                                                  rofi::messages::JointCmd::Type type,
-                                                  float value = 0.f );
-    static rofi::messages::RofiResp getConnectorResp( RofiId rofiId,
-                                                      int connector,
-                                                      rofi::messages::ConnectorCmd::Type type );
+    std::optional< RofiResp > processJointCommand( ModuleId moduleId,
+                                                   const rofi::messages::JointCmd & cmd );
+    std::optional< RofiResp > processConnectorCommand( ModuleId moduleId,
+                                                       const rofi::messages::ConnectorCmd & cmd );
+
+    static RofiResp getJointResp( ModuleId moduleId,
+                                  int joint,
+                                  rofi::messages::JointCmd::Type type,
+                                  float value = 0.f );
+    static RofiResp getConnectorResp( ModuleId moduleId,
+                                      int connector,
+                                      rofi::messages::ConnectorCmd::Type type );
 
 
-    bool _isRunning = true;
-
-    mutable std::shared_mutex _mutex;
-    Database _database;
+    ModuleStates _moduleStates;
 };
 
 } // namespace rofi::simplesim

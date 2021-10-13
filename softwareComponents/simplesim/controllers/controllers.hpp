@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+#include <memory>
 #include <thread>
 
 #include "rofi_interface.hpp"
@@ -8,11 +10,29 @@
 
 namespace rofi::simplesim
 {
-// Starts a new thread that runs the RoFI controller
-[[nodiscard]] std::jthread runRofiController( Simulation & simulation,
-                                              RofiInterface & rofiInterface );
+class Controller
+{
+public:
+    static constexpr std::chrono::milliseconds updateDuration = std::chrono::milliseconds( 100 );
 
-// Starts a new thread that runs the introspection (master) controller
-[[nodiscard]] std::jthread runIntrospectionController();
+public:
+    [[nodiscard]] static Controller runRofiController(
+            std::shared_ptr< Simulation > simulation,
+            std::shared_ptr< RofiInterface > rofiInterface );
+
+    void wait()
+    {
+        _thread.join();
+    }
+
+private:
+    Controller( std::jthread thread ) : _thread( std::move( thread ) ) {}
+    static void rofiControllerThread( std::stop_token stopToken,
+                                      std::shared_ptr< Simulation > simulationPtr,
+                                      std::shared_ptr< RofiInterface > rofiInterfacePtr );
+
+private:
+    std::jthread _thread;
+};
 
 } // namespace rofi::simplesim
