@@ -36,9 +36,6 @@ jobs:
   build_doc:
     name: "Build documentation"
     runs-on: ubuntu-20.04
-    strategy:
-      matrix:
-        environment: [Debug, Release]
     steps:
       - name: Checkout
         uses: actions/checkout@v2
@@ -50,13 +47,13 @@ jobs:
           sudo pip3 install sphinx==4.0.3 breathe sphinx-rtd-theme recommonmark
       - name: "Build"
         run: |
-          source setup.sh ${{ matrix.environment }}
+          source setup.sh Debug
           rcfg doc
           rmake doc
       - name: Build other branches
         if: github.ref == 'refs/heads/master'
         run: |
-          source setup.sh ${{ matrix.environment }}
+          source setup.sh Debug
           # Fetch all branches
           git fetch --all
           git pull --all
@@ -65,7 +62,7 @@ jobs:
         uses: actions/upload-artifact@v2
         with:
           name: documentation
-          path: build.${{ matrix.environment }}/doc/web
+          path: build.Debug/doc/web
           retention-days: 14
   deploy:
     name: "Deploy documentation"
