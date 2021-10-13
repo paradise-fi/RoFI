@@ -5,36 +5,36 @@
 
 using atoms::HandleSet;
 
-void testErasing( HandleSet< int >& hset, int eraseIdx ) {
-    INFO( "Erasing idx " << eraseIdx );
-    hset.erase( eraseIdx );
+void testErasing( HandleSet< int >& hset, int eraseHandle ) {
+    INFO( "Erasing handle " << eraseHandle );
+    hset.erase( eraseHandle );
 
     REQUIRE( hset.size() == 9 );
     for ( int i = 0; i != 10; i++ ) {
-        if ( i == eraseIdx )
+        if ( i == eraseHandle )
             continue;
         REQUIRE( hset[ i ] == i );
     }
 
     int counter = 0;
     for ( int i : hset ) {
-        if ( counter == eraseIdx )
-            counter = eraseIdx + 1;
+        if ( counter == eraseHandle )
+            counter = eraseHandle + 1;
         REQUIRE( i == counter );
         counter++;
     }
 
     // Insert
-    REQUIRE( hset.insert( 42 ) == eraseIdx );
+    REQUIRE( hset.insert( 42 ) == eraseHandle );
     for ( int i = 0; i != 10; i++ ) {
-        if ( i == eraseIdx )
+        if ( i == eraseHandle )
             REQUIRE( hset[ i ] == 42 );
         else
             REQUIRE( hset[ i ] == i );
     }
     counter = 0;
     for ( int i : hset ) {
-        if ( counter == eraseIdx )
+        if ( counter == eraseHandle )
             CHECK( i == 42 );
         else
             CHECK( i == counter );
@@ -61,17 +61,17 @@ TEST_CASE( "Basic usage of HandleSet" ) {
         }
     }
 
-    SECTION( "Id set can be iterated" ) {
+    SECTION( "Handle set can be iterated" ) {
         int counter = 0;
-        for ( int i : hset ) {
-            REQUIRE( i == counter );
+        for ( int h : hset ) {
+            REQUIRE( h == counter );
             counter++;
         }
 
         counter = 0;
         const HandleSet< int > constHandleSet = hset;
-        for ( int i : constHandleSet ) {
-            REQUIRE( i == counter );
+        for ( int h : constHandleSet ) {
+            REQUIRE( h == counter );
             counter++;
         }
     }
