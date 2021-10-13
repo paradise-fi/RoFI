@@ -7,11 +7,11 @@
 namespace atoms {
 
 /**
- * \brief std::vector-based set representation providing reusable integer ids
+ * \brief std::vector-based set representation providing reusable integer handles
  * for the inserted elements.
  *
  * You are supposed to insert elements via HandleSet::insert(), which returns unique
- * element ID. Then you can acces this element using HandleSet::operator[]() or
+ * element handle. Then you can acces this element using HandleSet::operator[]() or
  * erase it using HandleSet::erase(). The insertion is performed in amortized
  * constant time, deletion and element access is performed in constant time.
  *
@@ -121,7 +121,7 @@ class HandleSet {
 public:
     using value_type = T;
     using size_type = typename Container::size_type;
-    using id_type = size_type;
+    using handle_type = size_type;
     using difference_type = typename Container::difference_type;
     using reference = T&;
     using const_reference = const T&;
@@ -133,57 +133,57 @@ public:
     void swap( HandleSet& other ) {
         using std::swap;
         swap( _elems, other._elems );
-        swap( _freeIdxs, other._freeIdxs );
+        swap( _freeHandles, other._freeHandles );
     }
 
     size_type size() const {
-        return _elems.size() - _freeIdxs.size();
+        return _elems.size() - _freeHandles.size();
     }
 
     void shrink_to_fit() {
         _elems.shrink_to_fit();
-        _freeIdxs.shrink_to_fit();
+        _freeHandles.shrink_to_fit();
     }
 
     /**
-     * \brief Insert new element and get its ID
+     * \brief Insert new element and get its handle
      */
-    id_type insert( const T& value ) {
-        if ( _freeIdxs.empty() ) {
+    handle_type insert( const T& value ) {
+        if ( _freeHandles.empty() ) {
             _elems.push_back( value );
             return _elems.size() - 1;
         }
-        size_type idx = _freeIdxs.back();
-        _freeIdxs.pop_back();
-        _elems[ idx ] = value;
-        return idx;
+        size_type handle = _freeHandles.back();
+        _freeHandles.pop_back();
+        _elems[ handle ] = value;
+        return handle;
     }
 
     /**
-     * \brief Insert new element and get its ID
+     * \brief Insert new element and get its handle
      */
     template< typename TT = T>
     auto insert( T&& value )
         -> std::enable_if_t<
             std::is_move_constructible_v< TT > && std::is_move_assignable_v< TT >,
-            id_type >
+            handle_type >
     {
-        if ( _freeIdxs.empty() ) {
+        if ( _freeHandles.empty() ) {
             _elems.push_back( std::move( value ) );
             return _elems.size() - 1;
         }
-        size_type idx = _freeIdxs.back();
-        _freeIdxs.pop_back();
-        _elems[ idx ] = std::move( value );
-        return idx;
+        size_type handle = _freeHandles.back();
+        _freeHandles.pop_back();
+        _elems[ handle ] = std::move( value );
+        return handle;
     }
 
     /**
-     * \brief Erase element based on its ID
+     * \brief Erase element based on its handle
      */
-    void erase( id_type id ) {
-        _elems[ id ] = std::nullopt;
-        _freeIdxs.push_back( id );
+    void erase( handle_type handle ) {
+        _elems[ handle ] = std::nullopt;
+        _freeHandles.push_back( handle );
     }
 
     iterator begin() noexcept {
@@ -211,22 +211,22 @@ public:
     }
 
     /**
-     * \brief Access element based on its ID
+     * \brief Access element based on its handle
      */
-    const_reference operator[]( id_type id ) const {
-        return _elems[ id ].value();
+    const_reference operator[]( handle_type handle ) const {
+        return _elems[ handle ].value();
     }
 
     /**
-     * \brief Access element based on its ID
+     * \brief Access element based on its handle
      */
-    reference operator[]( id_type id ) {
-        return _elems[ id ].value();
+    reference operator[]( handle_type handle ) {
+        return _elems[ handle ].value();
     }
 
 private:
     Container _elems;
-    std::vector< size_type > _freeIdxs;
+    std::vector< size_type > _freeHandles;
 };
 
 } // namespace atoms
