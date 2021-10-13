@@ -6,7 +6,7 @@
 #include <mutex>
 #include <optional>
 
-#include "jthread/condition_variable_any2.hpp" // Change to std::jthread with C++20
+#include "atoms/condition_variable_any.hpp"
 
 
 template < typename T >
@@ -24,7 +24,7 @@ public:
     }
 
     // Returns nullopt if stop is requested
-    std::optional< T > pop( std20::stop_token stoken )
+    std::optional< T > pop( atoms::stop_token stoken )
     {
         std::unique_lock< std::mutex > lk( _m );
         if ( _popSig.wait( lk, stoken, [ this ] { return !_q.empty(); } ) )
@@ -95,5 +95,5 @@ private:
     std::deque< T > _q;
 
     mutable std::mutex _m;
-    std20::condition_variable_any2 _popSig;
+    atoms::condition_variable_any _popSig;
 };

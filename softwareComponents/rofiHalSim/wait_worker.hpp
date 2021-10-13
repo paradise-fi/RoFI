@@ -8,7 +8,7 @@
 #include <type_traits>
 
 #include "concurrent_queue.hpp"
-#include "jthread/jthread.hpp" // Change to std::jthread with C++20
+#include "atoms/jthread.hpp"
 #include "rofi_hal.hpp"
 
 #include <rofiResp.pb.h>
@@ -74,8 +74,8 @@ class WaitWorker
 public:
     WaitWorker()
     {
-        _workerThread = std20::jthread(
-                [ this ]( std20::stop_token stoken ) { this->run( std::move( stoken ) ); } );
+        _workerThread = atoms::jthread(
+                [ this ]( atoms::stop_token stoken ) { this->run( std::move( stoken ) ); } );
     }
 
     WaitWorker( const WaitWorker & ) = delete;
@@ -124,7 +124,7 @@ private:
         }
     }
 
-    void run( std20::stop_token stoken )
+    void run( atoms::stop_token stoken )
     {
         while ( true )
         {
@@ -142,7 +142,7 @@ private:
     ConcurrentQueue< int > _waitIdsQueue;
     std::atomic_int _nextWaitId = 1;
 
-    std20::jthread _workerThread;
+    atoms::jthread _workerThread;
 };
 
 } // namespace rofi::hal

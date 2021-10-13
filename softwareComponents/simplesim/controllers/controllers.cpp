@@ -4,12 +4,12 @@
 #include <functional>
 #include <thread>
 
-#include "jthread/stop_token.hpp"  // Change to std::jthread with C++20
+#include "atoms/stop_token.hpp"
 
 
 namespace rofi::networking
 {
-void rofiControllerThread( std20::stop_token stopToken,
+void rofiControllerThread( atoms::stop_token stopToken,
                            Simulation & simulation,
                            RofiInterface & rofiInterface )
 {
@@ -42,18 +42,18 @@ void rofiControllerThread( std20::stop_token stopToken,
     }
 }
 
-std20::jthread runRofiController( Simulation & simulation, RofiInterface & rofiInterface )
+atoms::jthread runRofiController( Simulation & simulation, RofiInterface & rofiInterface )
 {
-    return std20::jthread( &rofiControllerThread, std::ref( simulation ), std::ref( rofiInterface ) );
+    return atoms::jthread( &rofiControllerThread, std::ref( simulation ), std::ref( rofiInterface ) );
 }
 
 void introspectionControllerThread()
 {
 }
 
-std20::jthread runIntrospectionController()
+atoms::jthread runIntrospectionController()
 {
-    return std20::jthread( &introspectionControllerThread );
+    return atoms::jthread( &introspectionControllerThread );
 }
 
 } // namespace rofi::networking
