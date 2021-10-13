@@ -6,7 +6,7 @@
 #include <type_traits>
 
 #include "callbacks.hpp"
-#include "concurrent_queue.hpp"
+#include "atoms/concurrent_queue.hpp"
 #include "atoms/jthread.hpp"
 #include "rofi_hal.hpp"
 
@@ -222,7 +222,7 @@ private:
     std::weak_ptr< RoFI::Implementation > _rofi;
 
     std::vector< JointCallbacks > _callbacks;
-    ConcurrentQueue< Message > _queue;
+    atoms::ConcurrentQueue< Message > _queue;
 
     atoms::jthread _workerThread;
 };

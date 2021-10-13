@@ -7,7 +7,7 @@
 #include <thread>
 #include <type_traits>
 
-#include "concurrent_queue.hpp"
+#include "atoms/concurrent_queue.hpp"
 #include "atoms/jthread.hpp"
 #include "rofi_hal.hpp"
 
@@ -139,7 +139,7 @@ private:
 
 
     WaitCallbacks _callbacks;
-    ConcurrentQueue< int > _waitIdsQueue;
+    atoms::ConcurrentQueue< int > _waitIdsQueue;
     std::atomic_int _nextWaitId = 1;
 
     atoms::jthread _workerThread;
