@@ -637,9 +637,9 @@ private:
         std::optional< Matrix > position;
     };
 
-    atoms::IdSet< ModuleInfo > _modules;
-    atoms::IdSet< RoficomJoint > _moduleJoints;
-    atoms::IdSet< SpaceJoint > _spaceJoints;
+    atoms::HandleSet< ModuleInfo > _modules;
+    atoms::HandleSet< RoficomJoint > _moduleJoints;
+    atoms::HandleSet< SpaceJoint > _spaceJoints;
     bool _prepared = false;
 
     friend void connect( const Component& c1, const Component& c2, Orientation o );

@@ -10,24 +10,24 @@ namespace atoms {
  * \brief std::vector-based set representation providing reusable integer ids
  * for the inserted elements.
  *
- * You are supposed to insert elements via IdSet::insert(), which returns unique
- * element ID. Then you can acces this element using IdSet::operator[]() or
- * erase it using IdSet::erase(). The insertion is performed in amortized
+ * You are supposed to insert elements via HandleSet::insert(), which returns unique
+ * element ID. Then you can acces this element using HandleSet::operator[]() or
+ * erase it using HandleSet::erase(). The insertion is performed in amortized
  * constant time, deletion and element access is performed in constant time.
  *
  * Otherwise this container behaves the same as containers from the standard
  * library.
  */
 template < typename T >
-class IdSet {
+class HandleSet {
     using Container = std::vector< std::optional< T > >;
 
     template < bool IsConst >
     class Iterator {
         using UnderlayingIterator = typename std::conditional_t< IsConst,
             typename Container::const_iterator, typename Container::iterator >;
-        using IdSetPtr = typename std::conditional_t< IsConst,
-            const IdSet*, IdSet* >;
+        using HandleSetPtr = typename std::conditional_t< IsConst,
+            const HandleSet*, HandleSet* >;
     public:
         using iterator_category = std::bidirectional_iterator_tag;
         using value_type = T;
@@ -36,7 +36,7 @@ class IdSet {
         using pointer = typename std::conditional_t< IsConst, T const *, T * >;
 
         Iterator(): _set( nullptr ) {}
-        Iterator( IdSetPtr set, UnderlayingIterator it ):
+        Iterator( HandleSetPtr set, UnderlayingIterator it ):
             _set( set ), _it( it )
         {
             afterIncrement();
@@ -115,7 +115,7 @@ class IdSet {
                 _it--;
         }
 
-        IdSetPtr _set;
+        HandleSetPtr _set;
         UnderlayingIterator _it;
     };
 public:
@@ -130,7 +130,7 @@ public:
     using iterator = Iterator< false >;
     using const_iterator = Iterator< true >;
 
-    void swap( IdSet& other ) {
+    void swap( HandleSet& other ) {
         using std::swap;
         swap( _elems, other._elems );
         swap( _freeIdxs, other._freeIdxs );
