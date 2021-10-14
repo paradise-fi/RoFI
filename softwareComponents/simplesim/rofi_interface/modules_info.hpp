@@ -33,21 +33,9 @@ public:
     public:
         LockedModuleInfo( ModulesInfo & modulesInfo, RofiId rofiId, SessionId sessionId );
 
-        LockedModuleInfo( LockedModuleInfo && other )
-                : _modulesInfo( other._modulesInfo )
-                , _rofiId( std::move( other._rofiId ) )
-                , _sessionId( std::move( other._sessionId ) )
-                , _topic( std::move( _topic ) )
-                , _pub( std::move( _pub ) )
-                , _sub( std::move( _sub ) )
-        {}
-        LockedModuleInfo & operator=( LockedModuleInfo && ) = delete;
-        LockedModuleInfo( const LockedModuleInfo & ) = delete;
-        LockedModuleInfo & operator=( const LockedModuleInfo & ) = delete;
-
-        const std::string & topic() const
+        std::string topic( const gazebo::transport::Node & node ) const
         {
-            return _topic;
+            return "/gazebo/" + node.GetTopicNamespace() + "/" + _topicName;
         }
         const SessionId & sessionId() const
         {
@@ -66,7 +54,7 @@ public:
         ModulesInfo & _modulesInfo;
         RofiId _rofiId = {};
         SessionId _sessionId = {};
-        std::string _topic;
+        std::string _topicName;
         gazebo::transport::PublisherPtr _pub;
         gazebo::transport::SubscriberPtr _sub;
     };
@@ -91,17 +79,17 @@ public:
     bool isLocked( RofiId rofiId ) const;
 
     template < typename F >
-    void forEachLockedModule( F function ) const
+    void forEachLockedModule( F && function ) const
     {
         std::shared_lock< std::shared_mutex > lock( _modulesMutex );
 
         for ( auto & [ rofiId, moduleInfo ] : _lockedModules ) {
-            function( rofiId, moduleInfo.topic() );
+            function( rofiId, moduleInfo.topic( *_node ) );
         }
     }
 
     template < typename F >
-    void forEachFreeModule( F function ) const
+    void forEachFreeModule( F && function ) const
     {
         std::shared_lock< std::shared_mutex > lock( _modulesMutex );
 
@@ -117,7 +105,7 @@ public:
 
         for ( auto resp : responses ) {
             auto it = _lockedModules.find( resp.rofiid() );
-            it->second.pub().Publish( resp );
+            it->second.pub().Publish( std::move( resp ) );
         }
     }
 
@@ -138,10 +126,10 @@ private:
         _rofiCmds.push_back( msg );
     }
 
-    std::atomic_int topicCounter = 0;
-    std::string getNewTopic()
+    std::atomic_int topicNameCounter = 0;
+    std::string getNewTopicName()
     {
-        return "~/rofi_uid_" + std::to_string( topicCounter++ );
+        return "rofi_uid_" + std::to_string( topicNameCounter++ );
     }
 
 

@@ -13,10 +13,10 @@ ModulesInfo::LockedModuleInfo::LockedModuleInfo( ModulesInfo & modulesInfo,
         : _modulesInfo( modulesInfo )
         , _rofiId( rofiId )
         , _sessionId( sessionId )
-        , _topic( _modulesInfo.getNewTopic() )
-        , _pub( _modulesInfo._node->Advertise< rofi::messages::RofiResp >( "~/" + _topic
+        , _topicName( _modulesInfo.getNewTopicName() )
+        , _pub( _modulesInfo._node->Advertise< rofi::messages::RofiResp >( "~/" + _topicName
                                                                            + "/response" ) )
-        , _sub( _modulesInfo._node->Subscribe( "~/" + _topic + "/control",
+        , _sub( _modulesInfo._node->Subscribe( "~/" + _topicName + "/control",
                                                &ModulesInfo::onRofiCmd,
                                                &_modulesInfo ) )
 {
@@ -99,7 +99,7 @@ std::optional< std::string > ModulesInfo::getTopic( RofiId rofiId ) const
 
     auto it = _lockedModules.find( rofiId );
     if ( it != _lockedModules.end() ) {
-        return it->second.topic();
+        return it->second.topic( *_node );
     }
     return {};
 }
