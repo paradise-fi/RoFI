@@ -9,6 +9,7 @@
 #include <type_traits>
 #include <vector>
 
+#include <atoms/guarded.hpp>
 #include <gazebo/transport/transport.hh>
 
 #include <distributorReq.pb.h>
@@ -111,19 +112,15 @@ public:
 
     auto getRofiCommands()
     {
-        std::lock_guard< std::mutex > lock( _rofiCmdsMutex );
-
-        auto result = std::move( _rofiCmds );
-        _rofiCmds.clear();
+        auto result = std::vector< RofiCmdPtr >();
+        _rofiCmds->swap( result );
         return result;
     }
 
 private:
     void onRofiCmd( const RofiCmdPtr & msg )
     {
-        std::lock_guard< std::mutex > lock( _rofiCmdsMutex );
-
-        _rofiCmds.push_back( msg );
+        _rofiCmds->push_back( msg );
     }
 
     std::atomic_int topicNameCounter = 0;
@@ -140,8 +137,7 @@ private:
     std::set< RofiId > _freeModules;
     std::map< RofiId, LockedModuleInfo > _lockedModules;
 
-    std::mutex _rofiCmdsMutex;
-    std::vector< RofiCmdPtr > _rofiCmds;
+    atoms::Guarded< std::vector< RofiCmdPtr > > _rofiCmds;
 };
 
 } // namespace rofi::simplesim
