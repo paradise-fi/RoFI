@@ -41,7 +41,7 @@ rofi::configuration::Rofibot readConfigurationFromFile( const std::string & cfgF
     auto gzMaster = startGazeboMaster();
 
     auto simulation = std::make_shared< Simulation >( std::move( configuration ) );
-    auto rofiInterface = std::make_shared< RofiInterface >();
+    auto rofiInterface = std::make_shared< RofiInterface >( simulation->getModuleIds() );
 
     return Controller::runRofiController( std::move( simulation ), std::move( rofiInterface ) );
 }

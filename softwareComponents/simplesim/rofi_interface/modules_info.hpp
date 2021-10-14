@@ -60,10 +60,13 @@ public:
         gazebo::transport::SubscriberPtr _sub;
     };
 
-    ModulesInfo( gazebo::transport::NodePtr node ) : _node( node )
+    ModulesInfo( gazebo::transport::NodePtr node, std::set< RofiId > rofiIds )
+            : _node( node ), _freeModules( std::move( rofiIds ) )
     {
         assert( _node );
     }
+    ModulesInfo( gazebo::transport::NodePtr node ) : ModulesInfo( node, {} ) {}
+
     ModulesInfo( const ModulesInfo & ) = delete;
     ModulesInfo & operator=( const ModulesInfo & ) = delete;
 
