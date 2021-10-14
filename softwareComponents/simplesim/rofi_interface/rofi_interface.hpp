@@ -18,7 +18,7 @@ class RofiInterface
 public:
     using RofiId = ModulesInfo::RofiId;
 
-    RofiInterface( std::string worldName = "default" )
+    RofiInterface( std::set< ModulesInfo::RofiId > rofiIds, std::string worldName = "default" )
             : _worldName( std::move( worldName ) )
             , _node( [ this ] {
                 auto node = boost::make_shared< gazebo::transport::Node >();
@@ -26,7 +26,7 @@ public:
                 node->Init( this->_worldName );
                 return node;
             }() )
-            , _modules( _node )
+            , _modules( _node, std::move( rofiIds ) )
             , _distributor( *_node, _modules )
     {}
 
