@@ -1,12 +1,13 @@
 #include "distributor.hpp"
 
-#include "modules_info.hpp"
+#include "modules_communication.hpp"
 
 
 using namespace rofi::simplesim;
 
-Distributor::Distributor( gazebo::transport::Node & node, ModulesInfo & modulesInfo )
-        : _modulesInfo( modulesInfo )
+Distributor::Distributor( gazebo::transport::Node & node,
+                          ModulesCommunication & modulesCommunication )
+        : _modulesCommunication( modulesCommunication )
 {
     _pub = node.Advertise< rofi::messages::DistributorResp >( "~/distributor/response" );
     if ( !_pub ) {
@@ -67,14 +68,15 @@ rofi::messages::DistributorResp Distributor::onGetInfoReq()
     rofi::messages::DistributorResp resp;
     resp.set_resptype( rofi::messages::DistributorReq::GET_INFO );
 
-    _modulesInfo.forEachLockedModule( [ &resp ]( RofiId rofiId, const std::string & topic ) {
-        auto & info = *resp.add_rofiinfos();
-        info.set_rofiid( rofiId );
-        info.set_lock( true );
-        info.set_topic( topic );
-    } );
+    _modulesCommunication.forEachLockedModule(
+            [ &resp ]( RofiId rofiId, const std::string & topic ) {
+                auto & info = *resp.add_rofiinfos();
+                info.set_rofiid( rofiId );
+                info.set_lock( true );
+                info.set_topic( topic );
+            } );
 
-    _modulesInfo.forEachFreeModule( [ &resp ]( RofiId rofiId ) {
+    _modulesCommunication.forEachFreeModule( [ &resp ]( RofiId rofiId ) {
         auto & info = *resp.add_rofiinfos();
         info.set_rofiid( rofiId );
         info.set_lock( false );
@@ -90,7 +92,7 @@ rofi::messages::DistributorResp Distributor::onLockOneReq( SessionId sessionId )
     resp.set_resptype( rofi::messages::DistributorReq::LOCK_ONE );
     resp.set_sessionid( sessionId );
 
-    auto freeId = _modulesInfo.lockFreeRofi();
+    auto freeId = _modulesCommunication.lockFreeRofi();
     if ( !freeId ) {
         return resp;
     }
@@ -98,7 +100,7 @@ rofi::messages::DistributorResp Distributor::onLockOneReq( SessionId sessionId )
     auto & info = *resp.add_rofiinfos();
     info.set_rofiid( *freeId );
     info.set_lock( true );
-    if ( auto topic = _modulesInfo.getTopic( *freeId ) ) {
+    if ( auto topic = _modulesCommunication.getTopic( *freeId ) ) {
         info.set_topic( *topic );
     }
 
@@ -113,8 +115,8 @@ rofi::messages::DistributorResp Distributor::onTryLockReq( RofiId rofiId, Sessio
 
     auto & info = *resp.add_rofiinfos();
     info.set_rofiid( rofiId );
-    info.set_lock( _modulesInfo.tryLockRofi( rofiId ) );
-    if ( auto topic = _modulesInfo.getTopic( rofiId ) ) {
+    info.set_lock( _modulesCommunication.tryLockRofi( rofiId ) );
+    if ( auto topic = _modulesCommunication.getTopic( rofiId ) ) {
         info.set_topic( *topic );
     }
 
@@ -130,12 +132,12 @@ rofi::messages::DistributorResp Distributor::onUnlockReq( RofiId rofiId, Session
     auto & info = *resp.add_rofiinfos();
     info.set_rofiid( rofiId );
 
-    if ( !_modulesInfo.isLocked( rofiId ) ) {
+    if ( !_modulesCommunication.isLocked( rofiId ) ) {
         std::cerr << "Got UNLOCK distributor request without id locked\n";
         return resp;
     }
 
-    info.set_lock( !_modulesInfo.unlockRofi( rofiId ) );
+    info.set_lock( !_modulesCommunication.unlockRofi( rofiId ) );
 
     return resp;
 }

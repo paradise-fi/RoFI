@@ -1,27 +1,28 @@
-#include "modules_info.hpp"
+#include "modules_communication.hpp"
 
 
 using namespace rofi::simplesim;
 
-using RofiId = ModulesInfo::RofiId;
+using RofiId = ModulesCommunication::RofiId;
 
 
-LockedModuleInfo::LockedModuleInfo( ModulesInfo & modulesInfo, RofiId rofiId )
-        : _modulesInfo( modulesInfo )
+LockedModuleCommunication::LockedModuleCommunication( ModulesCommunication & modulesCommunication,
+                                                      RofiId rofiId )
+        : _modulesCommunication( modulesCommunication )
         , _rofiId( rofiId )
-        , _topicName( _modulesInfo.getNewTopicName() )
-        , _pub( _modulesInfo._node->Advertise< rofi::messages::RofiResp >( "~/" + _topicName
-                                                                           + "/response" ) )
-        , _sub( _modulesInfo._node->Subscribe( "~/" + _topicName + "/control",
-                                               &LockedModuleInfo::onRofiCmd,
-                                               this ) )
+        , _topicName( _modulesCommunication.getNewTopicName() )
+        , _pub( _modulesCommunication._node->Advertise< rofi::messages::RofiResp >(
+                  "~/" + _topicName + "/response" ) )
+        , _sub( _modulesCommunication._node->Subscribe( "~/" + _topicName + "/control",
+                                                        &LockedModuleCommunication::onRofiCmd,
+                                                        this ) )
 {
     assert( !_topicName.empty() );
     assert( _pub );
     assert( _sub );
 }
 
-void LockedModuleInfo::onRofiCmd( const LockedModuleInfo::RofiCmdPtr & msg )
+void LockedModuleCommunication::onRofiCmd( const LockedModuleCommunication::RofiCmdPtr & msg )
 {
     assert( msg );
 
@@ -30,11 +31,11 @@ void LockedModuleInfo::onRofiCmd( const LockedModuleInfo::RofiCmdPtr & msg )
                   << ". Ignoring...\n";
         return;
     }
-    _modulesInfo.onRofiCmd( msg );
+    _modulesCommunication.onRofiCmd( msg );
 }
 
 
-bool ModulesInfo::addNewRofi( RofiId rofiId )
+bool ModulesCommunication::addNewRofi( RofiId rofiId )
 {
     std::lock_guard< std::shared_mutex > lock( _modulesMutex );
 
@@ -44,7 +45,7 @@ bool ModulesInfo::addNewRofi( RofiId rofiId )
     return _freeModules.insert( rofiId ).second;
 }
 
-std::optional< RofiId > ModulesInfo::lockFreeRofi()
+std::optional< RofiId > ModulesCommunication::lockFreeRofi()
 {
     std::lock_guard< std::shared_mutex > lock( _modulesMutex );
 
@@ -54,12 +55,12 @@ std::optional< RofiId > ModulesInfo::lockFreeRofi()
     }
 
     auto rofiId = *it;
-    _lockedModules.emplace( rofiId, LockedModuleInfo( *this, rofiId ) );
+    _lockedModules.emplace( rofiId, LockedModuleCommunication( *this, rofiId ) );
     _freeModules.erase( it );
     return rofiId;
 }
 
-bool ModulesInfo::tryLockRofi( RofiId rofiId )
+bool ModulesCommunication::tryLockRofi( RofiId rofiId )
 {
     std::lock_guard< std::shared_mutex > lock( _modulesMutex );
 
@@ -68,12 +69,12 @@ bool ModulesInfo::tryLockRofi( RofiId rofiId )
         return false;
     }
 
-    _lockedModules.emplace( rofiId, LockedModuleInfo( *this, rofiId ) );
+    _lockedModules.emplace( rofiId, LockedModuleCommunication( *this, rofiId ) );
     _freeModules.erase( it );
     return true;
 }
 
-bool ModulesInfo::unlockRofi( RofiId rofiId )
+bool ModulesCommunication::unlockRofi( RofiId rofiId )
 {
     std::lock_guard< std::shared_mutex > lock( _modulesMutex );
 
@@ -88,7 +89,7 @@ bool ModulesInfo::unlockRofi( RofiId rofiId )
     return true;
 }
 
-std::optional< std::string > ModulesInfo::getTopic( RofiId rofiId ) const
+std::optional< std::string > ModulesCommunication::getTopic( RofiId rofiId ) const
 {
     std::shared_lock< std::shared_mutex > lock( _modulesMutex );
 
@@ -99,7 +100,7 @@ std::optional< std::string > ModulesInfo::getTopic( RofiId rofiId ) const
     return {};
 }
 
-bool ModulesInfo::isLocked( RofiId rofiId ) const
+bool ModulesCommunication::isLocked( RofiId rofiId ) const
 {
     std::shared_lock< std::shared_mutex > lock( _modulesMutex );
 

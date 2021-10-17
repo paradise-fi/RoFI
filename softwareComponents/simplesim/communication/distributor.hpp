@@ -9,7 +9,7 @@
 
 namespace rofi::simplesim
 {
-class ModulesInfo;
+class ModulesCommunication;
 
 class Distributor
 {
@@ -22,7 +22,7 @@ public:
 
     // Initializes the Distributor
     // Make sure, that Gazebo communication is running before calling this
-    Distributor( gazebo::transport::Node & node, ModulesInfo & modulesInfo );
+    Distributor( gazebo::transport::Node & node, ModulesCommunication & modulesCommunication );
 
     Distributor( const Distributor & ) = delete;
     Distributor & operator=( const Distributor & ) = delete;
@@ -41,7 +41,7 @@ private:
     rofi::messages::DistributorResp onUnlockReq( RofiId rofiId, SessionId sessionId );
 
 
-    ModulesInfo & _modulesInfo;
+    ModulesCommunication & _modulesCommunication;
 
     gazebo::transport::PublisherPtr _pub;
     gazebo::transport::SubscriberPtr _sub;

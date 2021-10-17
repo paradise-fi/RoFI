@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.11)
 
 set (FILES
     distributor.cpp
-    modules_info.cpp
+    modules_communication.cpp
 )
 
 add_library(simplesimCommunication ${FILES})
