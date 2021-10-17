@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.11)
 
 set (FILES
     distributor.cpp
+    locked_module_communication.cpp
     modules_communication.cpp
 )
 

@@ -1,63 +1,23 @@
 #pragma once
-
 #include <atomic>
 #include <map>
-#include <mutex>
 #include <optional>
+#include <set>
 #include <shared_mutex>
 #include <string>
-#include <type_traits>
 #include <vector>
 
 #include <atoms/guarded.hpp>
 #include <gazebo/transport/transport.hh>
 
 #include "distributor.hpp"
+#include "locked_module_communication.hpp"
 
-#include <distributorReq.pb.h>
 #include <rofiCmd.pb.h>
-#include <rofiResp.pb.h>
 
 
 namespace rofi::simplesim
 {
-class ModulesCommunication;
-
-class LockedModuleCommunication
-{
-public:
-    using RofiId = decltype( rofi::messages::RofiCmd().rofiid() );
-    using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
-
-    LockedModuleCommunication( ModulesCommunication & modulesCommunication, RofiId rofiId );
-
-    std::string topic( const gazebo::transport::Node & node ) const
-    {
-        return "/gazebo/" + node.GetTopicNamespace() + "/" + _topicName;
-    }
-    gazebo::transport::Publisher & pub()
-    {
-        assert( _pub );
-        return *_pub;
-    }
-    gazebo::transport::Subscriber & sub()
-    {
-        assert( _sub );
-        return *_sub;
-    }
-
-private:
-    void onRofiCmd( const RofiCmdPtr & msg );
-
-private:
-    ModulesCommunication & _modulesCommunication;
-    RofiId _rofiId = {};
-    std::string _topicName;
-    gazebo::transport::PublisherPtr _pub;
-    gazebo::transport::SubscriberPtr _sub;
-};
-
-
 class ModulesCommunication
 {
 public:
