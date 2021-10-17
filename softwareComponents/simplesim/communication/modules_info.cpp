@@ -31,7 +31,7 @@ bool ModulesInfo::addNewRofi( RofiId rofiId )
     return _freeModules.insert( rofiId ).second;
 }
 
-std::optional< RofiId > ModulesInfo::lockFreeRofi(  )
+std::optional< RofiId > ModulesInfo::lockFreeRofi()
 {
     std::lock_guard< std::shared_mutex > lock( _modulesMutex );
 

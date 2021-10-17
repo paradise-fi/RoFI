@@ -4,7 +4,7 @@
 #include <memory>
 #include <thread>
 
-#include "rofi_interface.hpp"
+#include "communication.hpp"
 #include "simulation.hpp"
 
 
@@ -18,7 +18,7 @@ public:
 public:
     [[nodiscard]] static Controller runRofiController(
             std::shared_ptr< Simulation > simulation,
-            std::shared_ptr< RofiInterface > rofiInterface );
+            std::shared_ptr< Communication > communication );
 
     void wait()
     {
@@ -29,7 +29,7 @@ private:
     Controller( std::jthread thread ) : _thread( std::move( thread ) ) {}
     static void rofiControllerThread( std::stop_token stopToken,
                                       std::shared_ptr< Simulation > simulationPtr,
-                                      std::shared_ptr< RofiInterface > rofiInterfacePtr );
+                                      std::shared_ptr< Communication > communicationPtr );
 
 private:
     std::jthread _thread;

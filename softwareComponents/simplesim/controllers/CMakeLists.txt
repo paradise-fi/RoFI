@@ -6,5 +6,5 @@ set (FILES
 )
 
 add_library(simplesimControllers ${FILES})
-target_link_libraries(simplesimControllers PUBLIC simplesimRofiInterface simplesimSimulation)
+target_link_libraries(simplesimControllers PUBLIC simplesimCommunication simplesimSimulation)
 target_include_directories(simplesimControllers INTERFACE ${CMAKE_CURRENT_LIST_DIR})

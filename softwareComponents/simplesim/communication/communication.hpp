@@ -13,12 +13,12 @@
 
 namespace rofi::simplesim
 {
-class RofiInterface
+class Communication
 {
 public:
     using RofiId = ModulesInfo::RofiId;
 
-    RofiInterface( std::set< ModulesInfo::RofiId > rofiIds, std::string worldName = "default" )
+    Communication( std::set< ModulesInfo::RofiId > rofiIds, std::string worldName = "default" )
             : _worldName( std::move( worldName ) )
             , _node( [ this ] {
                 auto node = boost::make_shared< gazebo::transport::Node >();
