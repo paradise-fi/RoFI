@@ -13,9 +13,10 @@ ModulesInfo::LockedModuleInfo::LockedModuleInfo( ModulesInfo & modulesInfo, Rofi
         , _pub( _modulesInfo._node->Advertise< rofi::messages::RofiResp >( "~/" + _topicName
                                                                            + "/response" ) )
         , _sub( _modulesInfo._node->Subscribe( "~/" + _topicName + "/control",
-                                               &ModulesInfo::onRofiCmd,
-                                               &_modulesInfo ) )
+                                               &ModulesInfo::LockedModuleInfo::onRofiCmd,
+                                               this ) )
 {
+    assert( !_topicName.empty() );
     assert( _pub );
     assert( _sub );
 }

@@ -36,11 +36,26 @@ public:
         }
         gazebo::transport::Publisher & pub()
         {
+            assert( _pub );
             return *_pub;
         }
         gazebo::transport::Subscriber & sub()
         {
+            assert( _sub );
             return *_sub;
+        }
+
+    private:
+        void onRofiCmd( const RofiCmdPtr & msg )
+        {
+            assert( msg );
+
+            if ( msg->rofiid() != _rofiId ) {
+                std::cerr << "Got a command from Module " << _rofiId << " for Module "
+                          << msg->rofiid() << ". Ignoring...\n";
+                return;
+            }
+            _modulesInfo.onRofiCmd( msg );
         }
 
     private:
@@ -111,6 +126,8 @@ public:
     }
 
 private:
+    friend class LockedModuleInfo;
+
     void onRofiCmd( const RofiCmdPtr & msg )
     {
         _rofiCmds->push_back( msg );
