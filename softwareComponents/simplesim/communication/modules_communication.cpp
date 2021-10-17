@@ -26,7 +26,7 @@ std::optional< RofiId > ModulesCommunication::lockFreeRofi()
     }
 
     auto rofiId = *it;
-    _lockedModules.emplace( rofiId, LockedModuleCommunication( *this, rofiId ) );
+    _lockedModules.emplace( rofiId, getNewLockedModule( rofiId ) );
     _freeModules.erase( it );
     return rofiId;
 }
@@ -40,7 +40,7 @@ bool ModulesCommunication::tryLockRofi( RofiId rofiId )
         return false;
     }
 
-    _lockedModules.emplace( rofiId, LockedModuleCommunication( *this, rofiId ) );
+    _lockedModules.emplace( rofiId, getNewLockedModule( rofiId ) );
     _freeModules.erase( it );
     return true;
 }
@@ -54,7 +54,6 @@ bool ModulesCommunication::unlockRofi( RofiId rofiId )
         return true;
     }
 
-    it->second.sub().Unsubscribe();
     _lockedModules.erase( it );
     _freeModules.insert( rofiId );
     return true;

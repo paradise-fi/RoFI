@@ -2,8 +2,6 @@
 
 #include "modules_communication.hpp"
 
-#include <rofiResp.pb.h>
-
 
 using namespace rofi::simplesim;
 
@@ -11,17 +9,18 @@ using RofiId = ModulesCommunication::RofiId;
 
 
 LockedModuleCommunication::LockedModuleCommunication( ModulesCommunication & modulesCommunication,
+                                                      gazebo::transport::Node & node,
+                                                      std::string moduleTopicName,
                                                       RofiId rofiId )
         : _modulesCommunication( modulesCommunication )
         , _rofiId( rofiId )
-        , _topicName( _modulesCommunication.getNewTopicName() )
-        , _pub( _modulesCommunication._node->Advertise< rofi::messages::RofiResp >(
-                  "~/" + _topicName + "/response" ) )
-        , _sub( _modulesCommunication._node->Subscribe( "~/" + _topicName + "/control",
-                                                        &LockedModuleCommunication::onRofiCmd,
-                                                        this ) )
+        , _topic( "/gazebo/" + node.GetTopicNamespace() + "/" + moduleTopicName )
+        , _pub( node.Advertise< rofi::messages::RofiResp >( "~/" + moduleTopicName + "/response" ) )
+        , _sub( node.Subscribe( "~/" + moduleTopicName + "/control",
+                                &LockedModuleCommunication::onRofiCmd,
+                                this ) )
 {
-    assert( !_topicName.empty() );
+    assert( !moduleTopicName.empty() );
     assert( _pub );
     assert( _sub );
 }
@@ -35,5 +34,6 @@ void LockedModuleCommunication::onRofiCmd( const LockedModuleCommunication::Rofi
                   << ". Ignoring...\n";
         return;
     }
+
     _modulesCommunication.onRofiCmd( msg );
 }
