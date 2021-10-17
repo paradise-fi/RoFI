@@ -2,21 +2,22 @@
 
 #include <gazebo/transport/transport.hh>
 
-#include "modules_info.hpp"
-
 #include <distributorReq.pb.h>
 #include <distributorResp.pb.h>
+#include <rofiCmd.pb.h>
 
 
 namespace rofi::simplesim
 {
+class ModulesInfo;
+
 class Distributor
 {
     template < typename T >
     using remove_cvref_t = std::remove_cv_t< std::remove_reference_t< T > >;
 
 public:
-    using RofiId = ModulesInfo::RofiId;
+    using RofiId = decltype( rofi::messages::RofiCmd().rofiid() );
     using SessionId = remove_cvref_t< decltype( rofi::messages::DistributorReq().sessionid() ) >;
 
     // Initializes the Distributor
