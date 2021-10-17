@@ -5,7 +5,7 @@
 
 #include <gazebo/transport/transport.hh>
 
-#include "modules_info.hpp"
+#include "modules_communication.hpp"
 
 
 namespace rofi::simplesim
@@ -13,9 +13,10 @@ namespace rofi::simplesim
 class Communication
 {
 public:
-    using RofiId = ModulesInfo::RofiId;
+    using RofiId = ModulesCommunication::RofiId;
 
-    Communication( std::set< ModulesInfo::RofiId > rofiIds, std::string worldName = "default" )
+    Communication( std::set< ModulesCommunication::RofiId > rofiIds,
+                   std::string worldName = "default" )
             : _worldName( std::move( worldName ) )
             , _node( [ this ] {
                 auto node = boost::make_shared< gazebo::transport::Node >();
@@ -48,7 +49,7 @@ private:
     const std::string _worldName;
     gazebo::transport::NodePtr _node;
 
-    ModulesInfo _modules;
+    ModulesCommunication _modules;
 };
 
 } // namespace rofi::simplesim

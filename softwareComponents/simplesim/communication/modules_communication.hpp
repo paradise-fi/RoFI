@@ -21,15 +21,15 @@
 
 namespace rofi::simplesim
 {
-class ModulesInfo;
+class ModulesCommunication;
 
-class LockedModuleInfo
+class LockedModuleCommunication
 {
 public:
     using RofiId = decltype( rofi::messages::RofiCmd().rofiid() );
     using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
 
-    LockedModuleInfo( ModulesInfo & modulesInfo, RofiId rofiId );
+    LockedModuleCommunication( ModulesCommunication & modulesCommunication, RofiId rofiId );
 
     std::string topic( const gazebo::transport::Node & node ) const
     {
@@ -50,7 +50,7 @@ private:
     void onRofiCmd( const RofiCmdPtr & msg );
 
 private:
-    ModulesInfo & _modulesInfo;
+    ModulesCommunication & _modulesCommunication;
     RofiId _rofiId = {};
     std::string _topicName;
     gazebo::transport::PublisherPtr _pub;
@@ -58,13 +58,13 @@ private:
 };
 
 
-class ModulesInfo
+class ModulesCommunication
 {
 public:
-    using RofiId = LockedModuleInfo::RofiId;
+    using RofiId = LockedModuleCommunication::RofiId;
     using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
 
-    ModulesInfo( gazebo::transport::NodePtr node, std::set< RofiId > rofiIds )
+    ModulesCommunication( gazebo::transport::NodePtr node, std::set< RofiId > rofiIds )
             : _node( node )
             , _freeModules( std::move( rofiIds ) )
             , _distributor( *this->_node, *this )
@@ -72,10 +72,10 @@ public:
     {
         assert( _node );
     }
-    ModulesInfo( gazebo::transport::NodePtr node ) : ModulesInfo( node, {} ) {}
+    ModulesCommunication( gazebo::transport::NodePtr node ) : ModulesCommunication( node, {} ) {}
 
-    ModulesInfo( const ModulesInfo & ) = delete;
-    ModulesInfo & operator=( const ModulesInfo & ) = delete;
+    ModulesCommunication( const ModulesCommunication & ) = delete;
+    ModulesCommunication & operator=( const ModulesCommunication & ) = delete;
 
     // Returns true if the insertion was succesful
     // Returns false if the rofiId was already registered
@@ -93,8 +93,8 @@ public:
     {
         std::shared_lock< std::shared_mutex > lock( _modulesMutex );
 
-        for ( auto & [ rofiId, moduleInfo ] : _lockedModules ) {
-            function( rofiId, moduleInfo.topic( *_node ) );
+        for ( auto & [ rofiId, moduleComm ] : _lockedModules ) {
+            function( rofiId, moduleComm.topic( *_node ) );
         }
     }
 
@@ -127,7 +127,7 @@ public:
     }
 
 private:
-    friend class LockedModuleInfo;
+    friend class LockedModuleCommunication;
 
     void onRofiCmd( const RofiCmdPtr & msg )
     {
@@ -141,14 +141,14 @@ private:
     }
 
 
-    LockedModuleInfo getNewLockedModuleInfo();
+    LockedModuleCommunication getNewLockedModule();
 
 private:
     gazebo::transport::NodePtr _node;
 
     mutable std::shared_mutex _modulesMutex;
     std::set< RofiId > _freeModules;
-    std::map< RofiId, LockedModuleInfo > _lockedModules;
+    std::map< RofiId, LockedModuleCommunication > _lockedModules;
 
     atoms::Guarded< std::vector< RofiCmdPtr > > _rofiCmds;
 
