@@ -12,6 +12,8 @@
 #include <atoms/guarded.hpp>
 #include <gazebo/transport/transport.hh>
 
+#include "distributor.hpp"
+
 #include <distributorReq.pb.h>
 #include <rofiCmd.pb.h>
 #include <rofiResp.pb.h>
@@ -63,7 +65,10 @@ public:
     using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
 
     ModulesInfo( gazebo::transport::NodePtr node, std::set< RofiId > rofiIds )
-            : _node( node ), _freeModules( std::move( rofiIds ) )
+            : _node( node )
+            , _freeModules( std::move( rofiIds ) )
+            , _distributor( *this->_node, *this )
+
     {
         assert( _node );
     }
@@ -137,6 +142,8 @@ private:
 
 
     LockedModuleInfo getNewLockedModuleInfo();
+
+private:
     gazebo::transport::NodePtr _node;
 
     mutable std::shared_mutex _modulesMutex;
@@ -144,6 +151,8 @@ private:
     std::map< RofiId, LockedModuleInfo > _lockedModules;
 
     atoms::Guarded< std::vector< RofiCmdPtr > > _rofiCmds;
+
+    Distributor _distributor;
 };
 
 } // namespace rofi::simplesim

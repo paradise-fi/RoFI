@@ -5,10 +5,7 @@
 
 #include <gazebo/transport/transport.hh>
 
-#include "distributor.hpp"
 #include "modules_info.hpp"
-
-#include <rofiResp.pb.h>
 
 
 namespace rofi::simplesim
@@ -27,7 +24,6 @@ public:
                 return node;
             }() )
             , _modules( _node, std::move( rofiIds ) )
-            , _distributor( *_node, _modules )
     {}
 
     // Returns true if the insertion was succesful
@@ -53,7 +49,6 @@ private:
     gazebo::transport::NodePtr _node;
 
     ModulesInfo _modules;
-    Distributor _distributor;
 };
 
 } // namespace rofi::simplesim

@@ -1,5 +1,7 @@
 #include "distributor.hpp"
 
+#include "modules_info.hpp"
+
 
 using namespace rofi::simplesim;
 
