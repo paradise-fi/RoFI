@@ -4,15 +4,11 @@
 using namespace rofi::simplesim;
 
 using RofiId = ModulesInfo::RofiId;
-using SessionId = ModulesInfo::SessionId;
 
 
-ModulesInfo::LockedModuleInfo::LockedModuleInfo( ModulesInfo & modulesInfo,
-                                                 RofiId rofiId,
-                                                 SessionId sessionId )
+ModulesInfo::LockedModuleInfo::LockedModuleInfo( ModulesInfo & modulesInfo, RofiId rofiId )
         : _modulesInfo( modulesInfo )
         , _rofiId( rofiId )
-        , _sessionId( sessionId )
         , _topicName( _modulesInfo.getNewTopicName() )
         , _pub( _modulesInfo._node->Advertise< rofi::messages::RofiResp >( "~/" + _topicName
                                                                            + "/response" ) )
@@ -34,7 +30,7 @@ bool ModulesInfo::addNewRofi( RofiId rofiId )
     return _freeModules.insert( rofiId ).second;
 }
 
-std::optional< RofiId > ModulesInfo::lockFreeRofi( SessionId sessionId )
+std::optional< RofiId > ModulesInfo::lockFreeRofi(  )
 {
     std::lock_guard< std::shared_mutex > lock( _modulesMutex );
 
@@ -44,12 +40,12 @@ std::optional< RofiId > ModulesInfo::lockFreeRofi( SessionId sessionId )
     }
 
     auto rofiId = *it;
-    _lockedModules.emplace( rofiId, LockedModuleInfo( *this, rofiId, std::move( sessionId ) ) );
+    _lockedModules.emplace( rofiId, LockedModuleInfo( *this, rofiId ) );
     _freeModules.erase( it );
     return rofiId;
 }
 
-bool ModulesInfo::tryLockRofi( RofiId rofiId, SessionId sessionId )
+bool ModulesInfo::tryLockRofi( RofiId rofiId )
 {
     std::lock_guard< std::shared_mutex > lock( _modulesMutex );
 
@@ -58,12 +54,12 @@ bool ModulesInfo::tryLockRofi( RofiId rofiId, SessionId sessionId )
         return false;
     }
 
-    _lockedModules.emplace( rofiId, LockedModuleInfo( *this, rofiId, std::move( sessionId ) ) );
+    _lockedModules.emplace( rofiId, LockedModuleInfo( *this, rofiId ) );
     _freeModules.erase( it );
     return true;
 }
 
-bool ModulesInfo::unlockRofi( RofiId rofiId, SessionId sessionId )
+bool ModulesInfo::unlockRofi( RofiId rofiId )
 {
     std::lock_guard< std::shared_mutex > lock( _modulesMutex );
 
@@ -72,25 +68,10 @@ bool ModulesInfo::unlockRofi( RofiId rofiId, SessionId sessionId )
         return true;
     }
 
-    if ( it->second.sessionId() != sessionId ) {
-        return false;
-    }
-
     it->second.sub().Unsubscribe();
     _lockedModules.erase( it );
     _freeModules.insert( rofiId );
     return true;
-}
-
-std::optional< SessionId > ModulesInfo::getSessionId( RofiId rofiId ) const
-{
-    std::shared_lock< std::shared_mutex > lock( _modulesMutex );
-
-    auto it = _lockedModules.find( rofiId );
-    if ( it != _lockedModules.end() ) {
-        return it->second.sessionId();
-    }
-    return {};
 }
 
 std::optional< std::string > ModulesInfo::getTopic( RofiId rofiId ) const
