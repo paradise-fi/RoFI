@@ -21,26 +21,18 @@ namespace rofi::simplesim
 {
 class ModulesInfo
 {
-    template < typename T >
-    using remove_cvref_t = std::remove_cv_t< std::remove_reference_t< T > >;
-
 public:
     using RofiId = decltype( rofi::messages::RofiCmd().rofiid() );
-    using SessionId = remove_cvref_t< decltype( rofi::messages::DistributorReq().sessionid() ) >;
     using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
 
     class LockedModuleInfo
     {
     public:
-        LockedModuleInfo( ModulesInfo & modulesInfo, RofiId rofiId, SessionId sessionId );
+        LockedModuleInfo( ModulesInfo & modulesInfo, RofiId rofiId );
 
         std::string topic( const gazebo::transport::Node & node ) const
         {
             return "/gazebo/" + node.GetTopicNamespace() + "/" + _topicName;
-        }
-        const SessionId & sessionId() const
-        {
-            return _sessionId;
         }
         gazebo::transport::Publisher & pub()
         {
@@ -54,7 +46,6 @@ public:
     private:
         ModulesInfo & _modulesInfo;
         RofiId _rofiId = {};
-        SessionId _sessionId = {};
         std::string _topicName;
         gazebo::transport::PublisherPtr _pub;
         gazebo::transport::SubscriberPtr _sub;
@@ -74,11 +65,10 @@ public:
     // Returns false if the rofiId was already registered
     bool addNewRofi( RofiId rofiId );
 
-    std::optional< RofiId > lockFreeRofi( SessionId sessionId );
-    bool tryLockRofi( RofiId rofiId, SessionId sessionId );
-    bool unlockRofi( RofiId rofiId, SessionId sessionId );
+    std::optional< RofiId > lockFreeRofi();
+    bool tryLockRofi( RofiId rofiId );
+    bool unlockRofi( RofiId rofiId );
 
-    std::optional< SessionId > getSessionId( RofiId rofiId ) const;
     std::optional< std::string > getTopic( RofiId rofiId ) const;
     bool isLocked( RofiId rofiId ) const;
 
@@ -133,7 +123,7 @@ private:
     }
 
 
-    LockedModuleInfo getNewLockedModuleInfo( SessionId sessionId );
+    LockedModuleInfo getNewLockedModuleInfo();
     gazebo::transport::NodePtr _node;
 
     mutable std::shared_mutex _modulesMutex;

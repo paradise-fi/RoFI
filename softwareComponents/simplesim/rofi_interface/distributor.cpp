@@ -88,7 +88,7 @@ rofi::messages::DistributorResp Distributor::onLockOneReq( SessionId sessionId )
     resp.set_resptype( rofi::messages::DistributorReq::LOCK_ONE );
     resp.set_sessionid( sessionId );
 
-    auto freeId = _modulesInfo.lockFreeRofi( sessionId );
+    auto freeId = _modulesInfo.lockFreeRofi();
     if ( !freeId ) {
         return resp;
     }
@@ -111,7 +111,7 @@ rofi::messages::DistributorResp Distributor::onTryLockReq( RofiId rofiId, Sessio
 
     auto & info = *resp.add_rofiinfos();
     info.set_rofiid( rofiId );
-    info.set_lock( _modulesInfo.tryLockRofi( rofiId, sessionId ) );
+    info.set_lock( _modulesInfo.tryLockRofi( rofiId ) );
     if ( auto topic = _modulesInfo.getTopic( rofiId ) ) {
         info.set_topic( *topic );
     }
@@ -133,7 +133,7 @@ rofi::messages::DistributorResp Distributor::onUnlockReq( RofiId rofiId, Session
         return resp;
     }
 
-    info.set_lock( !_modulesInfo.unlockRofi( rofiId, sessionId ) );
+    info.set_lock( !_modulesInfo.unlockRofi( rofiId ) );
 
     return resp;
 }

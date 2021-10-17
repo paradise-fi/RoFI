@@ -12,9 +12,12 @@ namespace rofi::simplesim
 {
 class Distributor
 {
+    template < typename T >
+    using remove_cvref_t = std::remove_cv_t< std::remove_reference_t< T > >;
+
 public:
     using RofiId = ModulesInfo::RofiId;
-    using SessionId = ModulesInfo::SessionId;
+    using SessionId = remove_cvref_t< decltype( rofi::messages::DistributorReq().sessionid() ) >;
 
     // Initializes the Distributor
     // Make sure, that Gazebo communication is running before calling this
