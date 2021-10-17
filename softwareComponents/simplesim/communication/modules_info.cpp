@@ -6,20 +6,33 @@ using namespace rofi::simplesim;
 using RofiId = ModulesInfo::RofiId;
 
 
-ModulesInfo::LockedModuleInfo::LockedModuleInfo( ModulesInfo & modulesInfo, RofiId rofiId )
+LockedModuleInfo::LockedModuleInfo( ModulesInfo & modulesInfo, RofiId rofiId )
         : _modulesInfo( modulesInfo )
         , _rofiId( rofiId )
         , _topicName( _modulesInfo.getNewTopicName() )
         , _pub( _modulesInfo._node->Advertise< rofi::messages::RofiResp >( "~/" + _topicName
                                                                            + "/response" ) )
         , _sub( _modulesInfo._node->Subscribe( "~/" + _topicName + "/control",
-                                               &ModulesInfo::LockedModuleInfo::onRofiCmd,
+                                               &LockedModuleInfo::onRofiCmd,
                                                this ) )
 {
     assert( !_topicName.empty() );
     assert( _pub );
     assert( _sub );
 }
+
+void LockedModuleInfo::onRofiCmd( const LockedModuleInfo::RofiCmdPtr & msg )
+{
+    assert( msg );
+
+    if ( msg->rofiid() != _rofiId ) {
+        std::cerr << "Got a command from Module " << _rofiId << " for Module " << msg->rofiid()
+                  << ". Ignoring...\n";
+        return;
+    }
+    _modulesInfo.onRofiCmd( msg );
+}
+
 
 bool ModulesInfo::addNewRofi( RofiId rofiId )
 {
