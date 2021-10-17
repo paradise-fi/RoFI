@@ -19,52 +19,48 @@
 
 namespace rofi::simplesim
 {
-class ModulesInfo
+class ModulesInfo;
+
+class LockedModuleInfo
 {
 public:
     using RofiId = decltype( rofi::messages::RofiCmd().rofiid() );
     using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
 
-    class LockedModuleInfo
+    LockedModuleInfo( ModulesInfo & modulesInfo, RofiId rofiId );
+
+    std::string topic( const gazebo::transport::Node & node ) const
     {
-    public:
-        LockedModuleInfo( ModulesInfo & modulesInfo, RofiId rofiId );
+        return "/gazebo/" + node.GetTopicNamespace() + "/" + _topicName;
+    }
+    gazebo::transport::Publisher & pub()
+    {
+        assert( _pub );
+        return *_pub;
+    }
+    gazebo::transport::Subscriber & sub()
+    {
+        assert( _sub );
+        return *_sub;
+    }
 
-        std::string topic( const gazebo::transport::Node & node ) const
-        {
-            return "/gazebo/" + node.GetTopicNamespace() + "/" + _topicName;
-        }
-        gazebo::transport::Publisher & pub()
-        {
-            assert( _pub );
-            return *_pub;
-        }
-        gazebo::transport::Subscriber & sub()
-        {
-            assert( _sub );
-            return *_sub;
-        }
+private:
+    void onRofiCmd( const RofiCmdPtr & msg );
 
-    private:
-        void onRofiCmd( const RofiCmdPtr & msg )
-        {
-            assert( msg );
+private:
+    ModulesInfo & _modulesInfo;
+    RofiId _rofiId = {};
+    std::string _topicName;
+    gazebo::transport::PublisherPtr _pub;
+    gazebo::transport::SubscriberPtr _sub;
+};
 
-            if ( msg->rofiid() != _rofiId ) {
-                std::cerr << "Got a command from Module " << _rofiId << " for Module "
-                          << msg->rofiid() << ". Ignoring...\n";
-                return;
-            }
-            _modulesInfo.onRofiCmd( msg );
-        }
 
-    private:
-        ModulesInfo & _modulesInfo;
-        RofiId _rofiId = {};
-        std::string _topicName;
-        gazebo::transport::PublisherPtr _pub;
-        gazebo::transport::SubscriberPtr _sub;
-    };
+class ModulesInfo
+{
+public:
+    using RofiId = LockedModuleInfo::RofiId;
+    using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
 
     ModulesInfo( gazebo::transport::NodePtr node, std::set< RofiId > rofiIds )
             : _node( node ), _freeModules( std::move( rofiIds ) )
