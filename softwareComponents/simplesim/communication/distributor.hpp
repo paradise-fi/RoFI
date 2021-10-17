@@ -2,6 +2,8 @@
 
 #include <gazebo/transport/transport.hh>
 
+#include "locked_module_communication.hpp"
+
 #include <distributorReq.pb.h>
 #include <distributorResp.pb.h>
 #include <rofiCmd.pb.h>
@@ -17,7 +19,7 @@ class Distributor
     using remove_cvref_t = std::remove_cv_t< std::remove_reference_t< T > >;
 
 public:
-    using RofiId = decltype( rofi::messages::RofiCmd().rofiid() );
+    using RofiId = LockedModuleCommunication::RofiId;
     using SessionId = remove_cvref_t< decltype( rofi::messages::DistributorReq().sessionid() ) >;
 
     // Initializes the Distributor

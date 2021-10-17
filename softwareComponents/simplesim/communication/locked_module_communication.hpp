@@ -5,6 +5,7 @@
 #include <gazebo/transport/transport.hh>
 
 #include <rofiCmd.pb.h>
+#include <rofiResp.pb.h>
 
 
 namespace rofi::simplesim
@@ -17,21 +18,31 @@ public:
     using RofiId = decltype( rofi::messages::RofiCmd().rofiid() );
     using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
 
-    LockedModuleCommunication( ModulesCommunication & modulesCommunication, RofiId rofiId );
+    LockedModuleCommunication( ModulesCommunication & modulesCommunication,
+                               gazebo::transport::Node & node,
+                               std::string moduleTopicName,
+                               RofiId rofiId );
 
-    std::string topic( const gazebo::transport::Node & node ) const
+    ~LockedModuleCommunication()
     {
-        return "/gazebo/" + node.GetTopicNamespace() + "/" + _topicName;
+        _sub->Unsubscribe();
     }
-    gazebo::transport::Publisher & pub()
+
+    LockedModuleCommunication( const LockedModuleCommunication & ) = delete;
+    LockedModuleCommunication( LockedModuleCommunication && ) = default;
+    LockedModuleCommunication & operator=( const LockedModuleCommunication & ) = delete;
+    LockedModuleCommunication & operator=( LockedModuleCommunication && ) = delete;
+
+
+    const std::string & topic( const gazebo::transport::Node & node ) const
+    {
+        return _topic;
+    }
+
+    void sendResponse( rofi::messages::RofiResp resp )
     {
         assert( _pub );
-        return *_pub;
-    }
-    gazebo::transport::Subscriber & sub()
-    {
-        assert( _sub );
-        return *_sub;
+        _pub->Publish( std::move( resp ) );
     }
 
 private:
@@ -39,8 +50,10 @@ private:
 
 private:
     ModulesCommunication & _modulesCommunication;
+
     RofiId _rofiId = {};
-    std::string _topicName;
+    std::string _topic;
+
     gazebo::transport::PublisherPtr _pub;
     gazebo::transport::SubscriberPtr _sub;
 };

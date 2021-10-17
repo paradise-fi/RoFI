@@ -75,7 +75,7 @@ public:
 
         for ( auto resp : responses ) {
             auto it = _lockedModules.find( resp.rofiid() );
-            it->second.pub().Publish( std::move( resp ) );
+            it->second.sendResponse( std::move( resp ) );
         }
     }
 
@@ -86,14 +86,12 @@ public:
         return result;
     }
 
-private:
-    friend class LockedModuleCommunication;
-
     void onRofiCmd( const RofiCmdPtr & msg )
     {
         _rofiCmds->push_back( msg );
     }
 
+private:
     std::atomic_int topicNameCounter = 0;
     std::string getNewTopicName()
     {
@@ -101,7 +99,11 @@ private:
     }
 
 
-    LockedModuleCommunication getNewLockedModule();
+    LockedModuleCommunication getNewLockedModule( RofiId rofiId )
+    {
+        assert( _node );
+        return LockedModuleCommunication( *this, *_node, getNewTopicName(), rofiId );
+    }
 
 private:
     gazebo::transport::NodePtr _node;
