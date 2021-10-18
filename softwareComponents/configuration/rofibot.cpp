@@ -32,8 +32,8 @@ void connect( const Component& c1, const Component& c2, roficom::Orientation o )
     if ( c1.parent->parent != c2.parent->parent )
         throw std::logic_error( "Components have to be in the same rofibot" );
     Rofibot& bot = *c1.parent->parent;
-    Rofibot::ModuleInfo& m1info = bot._modules[ c1.parent->id ];
-    Rofibot::ModuleInfo& m2info = bot._modules[ c2.parent->id ];
+    Rofibot::ModuleInfo& m1info = bot._modules[ bot._idMapping[ c1.parent->id ] ];
+    Rofibot::ModuleInfo& m2info = bot._modules[ bot._idMapping[ c2.parent->id ] ];
 
     auto jointId = bot._moduleJoints.insert( {
         o, m1info.module->id, m2info.module->id,
