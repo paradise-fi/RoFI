@@ -2,7 +2,8 @@
 
 namespace rofi::configuration {
 
-double orientationToAngle( Orientation o ) {
+double roficom::orientationToAngle( roficom::Orientation o ) {
+    using namespace roficom;
     switch ( o ) {
         case Orientation::North:
             return M_PI;
@@ -17,17 +18,17 @@ double orientationToAngle( Orientation o ) {
     return 0; // never reached
 }
 
-void Module::setJointParams( int idx, const Joint::Positions& p ) {
+void Module::setJointParams( int idx, const Joint::Position& p ) {
     // Currently we invalidate all positions; ToDo: think if we can improve it
     assert( idx < _joints.size() && idx >= 0 );
-    assert( p.size() == _joints[ idx ].joint->positions.size() );
-    std::copy( p.begin(), p.end(), _joints[ idx ].joint->positions.begin() );
+    assert( _joints[ idx ].joint->position );
+    _joints[ idx ].joint->position = p;
     _componentPosition = std::nullopt;
     if ( parent )
         parent->onModuleMove( id );
 }
 
-void connect( const Component& c1, const Component& c2, Orientation o ) {
+void connect( const Component& c1, const Component& c2, roficom::Orientation o ) {
     if ( c1.parent->parent != c2.parent->parent )
         throw std::logic_error( "Components have to be in the same rofibot" );
     Rofibot& bot = *c1.parent->parent;
