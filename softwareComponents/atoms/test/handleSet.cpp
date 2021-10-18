@@ -4,8 +4,10 @@
 #include <iostream>
 
 using atoms::HandleSet;
+using handle_int = atoms::HandleSet< int, int >::handle_type;
 
-void testErasing( HandleSet< int >& hset, int eraseHandle ) {
+
+void testErasing( HandleSet< int, int >& hset, handle_int eraseHandle ) {
     INFO( "Erasing handle " << eraseHandle );
     hset.erase( eraseHandle );
 
@@ -43,21 +45,23 @@ void testErasing( HandleSet< int >& hset, int eraseHandle ) {
 }
 
 TEST_CASE( "Basic usage of HandleSet" ) {
-    HandleSet< int > hset;
+    HandleSet< int, int > hset;
     for ( int i = 0; i != 10; i++ )
         hset.insert( i );
     REQUIRE( hset.size() == 10 );
 
     SECTION( "HandleSet can be copied" ) {
-        HandleSet< int > otherSet1 = hset;
+        HandleSet< int, int > otherSet1 = hset;
         for ( int i = 0; i != 10; i++ ) {
-            REQUIRE( hset[ i ] == otherSet1[ i ] );
+            auto index = i;
+            REQUIRE( hset[ index ] == otherSet1[ index ] );
         }
 
-        const HandleSet< int > constHandleSet = hset;
-        HandleSet< int > otherSet2 = constHandleSet;
+        const HandleSet< int, int > constHandleSet = hset;
+        HandleSet< int, int > otherSet2 = constHandleSet;
         for ( int i = 0; i != 10; i++ ) {
-            REQUIRE( hset[ i ] == otherSet2[ i ] );
+            auto index = i;
+            REQUIRE( hset[ index ] == otherSet2[ index ] );
         }
     }
 
@@ -69,7 +73,7 @@ TEST_CASE( "Basic usage of HandleSet" ) {
         }
 
         counter = 0;
-        const HandleSet< int > constHandleSet = hset;
+        const HandleSet< int, int > constHandleSet = hset;
         for ( int h : constHandleSet ) {
             REQUIRE( h == counter );
             counter++;
