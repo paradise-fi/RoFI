@@ -16,13 +16,13 @@ Module buildPad( int sizeN, int sizeM ) {
         for ( int j = 0; j < sizeM; j++ ) {
             if ( i > 0 ) {
                 joints.push_back(
-                    makeJoint< RigidJoint >( (i - 1) * sizeM + j, i * sizeM + j, translate( { 0, 1, 0 } ) )
+                    makeComponentJoint< RigidJoint >( (i - 1) * sizeM + j, i * sizeM + j, translate( { 0, 1, 0 } ) )
                 );
             }
 
             if ( j > 0 ) {
                 joints.push_back(
-                    makeJoint< RigidJoint >( i * sizeM + j - 1, i * sizeM + j, translate( { 0, 0, 1 } ) )
+                    makeComponentJoint< RigidJoint >( i * sizeM + j - 1, i * sizeM + j, translate( { 0, 0, 1 } ) )
                 );
             }
         }
