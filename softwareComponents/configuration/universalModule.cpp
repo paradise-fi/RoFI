@@ -2,7 +2,7 @@
 
 namespace rofi::configuration {
 
-Module buildUniversalModule( Angle alpha, Angle beta, Angle gamma ) {
+Module buildUniversalModule( int id, Angle alpha, Angle beta, Angle gamma ) {
     std::vector< Component > components = {
         Component{ ComponentType::Roficom },
         Component{ ComponentType::Roficom },
@@ -17,32 +17,32 @@ Module buildUniversalModule( Angle alpha, Angle beta, Angle gamma ) {
     };
 
     std::vector< ComponentJoint > joints = {
-        makeJoint< RotationJoint >( 7, 6, // BodyA <-> ShoeA
+        makeComponentJoint< RotationJoint >( 7, 6, // BodyA <-> ShoeA
             identity, Vector( { 1, 0, 0 } ), identity, Angle::rad( - M_PI_2 ), Angle::rad( M_PI_2 ) ),
-        makeJoint< RotationJoint >( 8, 9 // BodyB <-> ShoeB
+        makeComponentJoint< RotationJoint >( 8, 9 // BodyB <-> ShoeB
             , identity
             , Vector( { 1, 0, 0 } )
             , identity
             , Angle::rad( - M_PI_2 ), Angle::rad( M_PI_2 ) ),
-        makeJoint< RotationJoint >( 7, 8 // BodyA <-> BodyB
+        makeComponentJoint< RotationJoint >( 7, 8 // BodyA <-> BodyB
             , identity
             , Vector( { 0, 0, 1 } )
             , translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } )
             , Angle::rad( - M_PI ), Angle::rad( M_PI ) ),
-        makeJoint< RigidJoint >( 6, 0, identity ), // A-X
-        makeJoint< RigidJoint >( 6, 1, rotate( M_PI, { 0, 1, 0 } ) ), // A+X
-        makeJoint< RigidJoint >( 6, 2, rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI_2, { 0, -1, 0 } ) ), // A-Z
-        makeJoint< RigidJoint >( 9, 3, identity ), // B-X
-        makeJoint< RigidJoint >( 9, 4, rotate( M_PI, { 0, 1, 0 } ) ), // B+X
-        makeJoint< RigidJoint >( 9, 5, rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI_2, { 0, -1, 0 } ) )  // B-Z
+        makeComponentJoint< RigidJoint >( 6, 0, identity ), // A-X
+        makeComponentJoint< RigidJoint >( 6, 1, rotate( M_PI, { 0, 1, 0 } ) ), // A+X
+        makeComponentJoint< RigidJoint >( 6, 2, rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI_2, { 0, -1, 0 } ) ), // A-Z
+        makeComponentJoint< RigidJoint >( 9, 3, identity ), // B-X
+        makeComponentJoint< RigidJoint >( 9, 4, rotate( M_PI, { 0, 1, 0 } ) ), // B+X
+        makeComponentJoint< RigidJoint >( 9, 5, rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI_2, { 0, -1, 0 } ) )  // B-Z
     };
 
-    joints[ 0 ].joint->positions = { alpha };
-    joints[ 1 ].joint->positions = { beta  };
-    joints[ 2 ].joint->positions = { gamma };
+    joints[ 0 ].joint->position = { alpha.rad() };
+    joints[ 1 ].joint->position = { beta.rad() };
+    joints[ 2 ].joint->position = { gamma.rad() };
 
     return Module( ModuleType::Universal, std::move( components ), 6,
-        std::move( joints ) );
+        std::move( joints ), id );
 }
 
 bool checkOldConfigurationEInput( int id1, int id2, int side1, int side2, int dock1, int dock2
@@ -116,8 +116,9 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
             double alpha, beta, gamma;
             int id;
             lineStr >> id >> alpha >> beta >> gamma;
-            auto rModule = buildUniversalModule( Angle::deg( alpha ), Angle::deg( beta ), Angle::deg( gamma ) );
+            auto rModule = buildUniversalModule( id, Angle::deg( alpha ), Angle::deg( beta ), Angle::deg( gamma ) );
             rModule = rofibot.insert( rModule );
+            std::cout << "id: " << id << " rModule.id: " << rModule.id << "\n";
             moduleMapping.insert({ id, rModule.id });
             continue;
         }
@@ -127,7 +128,7 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
                 throw std::runtime_error( "Invalid edge specification" );
             auto& component1 = rofibot.getModule( moduleMapping[ id1 ] )->connector( side1 * 3 + dock1 );
             auto& component2 = rofibot.getModule( moduleMapping[ id2 ] )->connector( side2 * 3 + dock2 );
-            connect( component1, component2, static_cast< Orientation >( orientation ) );
+            connect( component1, component2, static_cast< roficom::Orientation >( orientation ) );
             continue;
         }
         throw std::runtime_error("Expected a module (M) or edge (E), got " + type + ".");
