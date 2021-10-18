@@ -57,7 +57,7 @@ struct ComponentJoint {
 };
 
 template< typename JointT, typename...Args >
-ComponentJoint makeJoint( int source, int dest, Args&&...args ) {
+ComponentJoint makeComponentJoint( int source, int dest, Args&&...args ) {
     return ComponentJoint{
         std::make_unique< JointT >( ( std::forward< Args >( args ) )... ),
         source, dest };
