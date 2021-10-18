@@ -31,7 +31,7 @@ rofi::configuration::Rofibot buildWishedRofibot( BotType botType ) {
     int n, m;
     switch ( botType ) {
         case BotType::UM:
-            rofibot.insert( buildUniversalModule( 0_deg, 0_deg, 0_deg ) );
+            rofibot.insert( buildUniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
             return rofibot;
         case BotType::UMpadN:
             n = readIntWithMsg( "Dimension: " );
