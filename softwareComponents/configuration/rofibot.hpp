@@ -3,6 +3,7 @@
 #include <memory>
 #include <vector>
 #include <set>
+#include <map>
 
 #include <atoms/containers.hpp>
 #include <atoms/algorithm.hpp>
@@ -17,6 +18,8 @@ namespace rofi::configuration {
 
 /// ModuleId
 using ModuleId = int;
+
+enum class Handle : unsigned long int {};
 
 enum class ComponentType {
     UmShoe, UmBody,
@@ -380,7 +383,13 @@ public:
  * The rofibot is composed out of modules.
  */
 class Rofibot {
+    struct ModuleInfo;
 public:
+
+    using HandleId = atoms::HandleSet< ModuleInfo >::handle_type;
+    using HandleJoint = atoms::HandleSet< RoficomJoint >::handle_type;
+    using HandleSpace = atoms::HandleSet< SpaceJoint >::handle_type;
+
     Rofibot() = default;
 
     Rofibot( const Rofibot& other )
@@ -431,9 +440,11 @@ public:
      * Returns a reference to the newly created module.
      */
     Module& insert( Module m ) {
-        ModuleId id = _modules.insert( { std::move( m ), {}, {}, {}, std::nullopt } );
+        if ( _idMapping.find( m.id ) != _idMapping.end() )
+            throw std::runtime_error( "Module with given id is already present" );
+        auto id = _modules.insert( { std::move( m ), {}, {}, {}, std::nullopt } );
+        _idMapping.insert( { _modules[ id ].module->id, id } );
         Module* insertedModule = _modules[ id ].module.get();
-        insertedModule->id = id;
         insertedModule->parent = this;
         insertedModule->_prepareComponents();
         return *insertedModule;
@@ -443,7 +454,9 @@ public:
      * \brief Get pointer to module with given id within the Rofibot
      */
     Module* getModule( ModuleId id ) const {
-        auto& ref = *_modules[ id ].module.get();
+        if ( _idMapping.find( id ) == _idMapping.end() )
+            return nullptr;
+        auto& ref = *_modules[ _idMapping.at( id ) ].module.get();
         return &ref;
     }
 
@@ -465,14 +478,18 @@ public:
      * \brief Remove a module from the Rofibot
      */
     void remove( ModuleId id ) {
-        const ModuleInfo& info = _modules[ id ];
-        for ( int idx : info.inJointsIdx )
+        if ( _idMapping.find( id ) == _idMapping.end() )
+            return;
+        auto handle = _idMapping[ id ];
+        const ModuleInfo& info = _modules[ handle ];
+        for ( auto idx : info.inJointsIdx )
             _moduleJoints.erase( idx );
-        for ( int idx : info.outJointsIdx )
+        for ( auto idx : info.outJointsIdx )
             _moduleJoints.erase( idx );
-        for ( int idx : info.spaceJoints )
+        for ( auto idx : info.spaceJoints )
             _spaceJoints.erase( idx );
-        _modules.erase( id );
+        _modules.erase( handle );
+        _idMapping.erase( id );
     }
 
     /**
@@ -521,10 +538,10 @@ public:
         _clearModulePositions();
 
         // Setup position of space joints and extract roots
-        std::set< ModuleId > roots;
+        std::set< HandleId > roots;
         for ( const SpaceJoint& j : _spaceJoints ) {
             Matrix jointPosition = translate( j.refPoint ) * j.joint->sourceToDest();
-            ModuleInfo& mInfo = _modules[ j.destModule ];
+            ModuleInfo& mInfo = _modules[ _idMapping[ j.destModule ] ];
             Matrix componentPosition = mInfo.module->getComponentPosition( j.destComponent );
             // Reverse the comonentPosition to get position of the module origin
             Matrix modulePosition = jointPosition * arma::inv( componentPosition );
@@ -535,7 +552,7 @@ public:
             } else {
                 mInfo.position = componentPosition;
             }
-            roots.insert( mInfo.module->id );
+            roots.insert( _idMapping[ mInfo.module->id ] );
         }
 
         auto dfsTraverse = [&]( ModuleInfo& m, Matrix position, auto& self ) {
@@ -547,12 +564,12 @@ public:
             }
             m.position = position;
             // Traverse ignoring edge orientation
-            std::vector< int > joints;
+            std::vector< HandleJoint > joints;
             std::copy( m.outJointsIdx.begin(), m.outJointsIdx.end(),
                 std::back_inserter( joints ) );
             std::copy( m.inJointsIdx.begin(), m.inJointsIdx.end(),
                 std::back_inserter( joints ) );
-            for ( int outJointIdx : joints ) {
+            for ( auto outJointIdx : joints ) {
                 const RoficomJoint& j = _moduleJoints[ outJointIdx ];
 
                 bool mIsSource = j.sourceModule == m.module->id;
@@ -562,7 +579,7 @@ public:
                                                                         ? j.sourceConnector
                                                                         : j.destConnector )
                                         * jointTransf;
-                ModuleInfo& other = _modules[ mIsSource ? j.destModule : j.sourceModule ];
+                ModuleInfo& other = _modules[ _idMapping[ mIsSource ? j.destModule : j.sourceModule ] ];
                 Matrix otherConnectorPosition = other.module->getComponentPosition( mIsSource
                                                                                   ? j.destConnector
                                                                                   : j.sourceConnector );
@@ -572,8 +589,8 @@ public:
             }
         };
 
-        for ( ModuleId id : roots ) {
-            ModuleInfo& m = _modules[ id ];
+        for ( auto h : roots ) {
+            ModuleInfo& m = _modules[ h ];
             auto pos = m.position.value();
             m.position.reset();
             dfsTraverse( m, pos, dfsTraverse );
@@ -585,8 +602,8 @@ public:
     /**
      * \brief Set position of a space joints specified by its id
      */
-    void setSpaceJointPosition( int jointId, Joint::Positions p ) {
-        _spaceJoints[ jointId ].joint->positions = p;
+    void setSpaceJointPosition( HandleSpace jointId, Joint::Position p ) {
+        _spaceJoints[ jointId ].joint->position = p;
         _prepared = false;
     }
 
@@ -596,7 +613,9 @@ public:
     Matrix getModulePosition( ModuleId id ) {
         if ( !_prepared )
             prepare();
-        return _modules[ id ].position.value();
+        if ( _idMapping.find( id ) == _idMapping.end() )
+            throw std::runtime_error( "bad access: rofibot does not containt module with such id" );
+        return _modules[ _idMapping[ id ] ].position.value();
     }
 
 private:
@@ -623,8 +642,8 @@ private:
             position( std::move( o.position ) )
         {}
 
-        ModuleInfo( atoms::ValuePtr< Module >&& m, const std::vector< int >& i, const std::vector< int >& o,
-            const std::vector< int >& s, const std::optional< Matrix >& pos )
+        ModuleInfo( atoms::ValuePtr< Module >&& m, const std::vector< HandleJoint >& i, const std::vector< HandleJoint >& o,
+            const std::vector< HandleSpace >& s, const std::optional< Matrix >& pos )
         : module( std::move( m ) ), inJointsIdx( i ), outJointsIdx( o ), spaceJoints( s ), position( pos )
         {}
 
@@ -632,21 +651,22 @@ private:
         ModuleInfo& operator=( ModuleInfo&& ) = default;
 
         atoms::ValuePtr< Module > module;  // Use value_ptr to make address of modules stable
-        std::vector< int > inJointsIdx;
-        std::vector< int > outJointsIdx;
-        std::vector< int > spaceJoints;
+        std::vector< HandleJoint > inJointsIdx;
+        std::vector< HandleJoint > outJointsIdx;
+        std::vector< HandleSpace > spaceJoints;
         std::optional< Matrix > position;
     };
 
     atoms::HandleSet< ModuleInfo > _modules;
     atoms::HandleSet< RoficomJoint > _moduleJoints;
     atoms::HandleSet< SpaceJoint > _spaceJoints;
+    std::map< ModuleId, HandleId > _idMapping;
     bool _prepared = false;
 
-    friend void connect( const Component& c1, const Component& c2, Orientation o );
+    friend void connect( const Component& c1, const Component& c2, roficom::Orientation o );
     friend class Module;
     template < typename JointT, typename... Args >
-    friend int connect( const Component& c, Vector refpoint, Args&&... args );
+    friend HandleSpace connect( const Component& c, Vector refpoint, Args&&... args );
 };
 
 /**
@@ -667,9 +687,9 @@ void connect( const Component& c1, const Component& c2, roficom::Orientation o )
  * Returns ID of the joint which can be used for setting parameters of the joint
  */
 template < typename JointT, typename... Args >
-int connect( const Component& c, Vector refpoint, Args&&... args ) {
+Rofibot::HandleSpace connect( const Component& c, Vector refpoint, Args&&... args ) {
     Rofibot& bot = *c.parent->parent;
-    Rofibot::ModuleInfo& info = bot._modules[ c.parent->id ];
+    Rofibot::ModuleInfo& info = bot._modules[ bot._idMapping[ c.parent->id ] ];
 
     auto jointId = bot._spaceJoints.insert( SpaceJoint{
         std::unique_ptr< Joint >( new JointT( ( std::forward< Args >( args ) )... ) ),
@@ -677,6 +697,7 @@ int connect( const Component& c, Vector refpoint, Args&&... args ) {
         info.module->id,
         info.module->componentIdx( c )
     } );
+
     info.spaceJoints.push_back( jointId );
     bot._prepared = false;
 
