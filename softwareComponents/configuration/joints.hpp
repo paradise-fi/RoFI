@@ -3,6 +3,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <cassert>
+#include <optional>
 
 #include <atoms/patterns.hpp>
 #include <atoms/units.hpp>
@@ -25,12 +26,12 @@ using JointVisitor = atoms::Visits<
  * below for concrete instances.
  *
  * Each joint has Joint::paramCount() parameters (real value), which are stored
- * in Joint::positions. These params are, e.g., angle for rotation joint.
+ * in Joint::position. These params are, e.g., angle for rotation joint.
  */
 struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
     virtual ~Joint() = default;
 
-    using Positions = std::vector< Angle >;
+    using Position = std::optional< float >;
 
     virtual int paramCount() const = 0;
     virtual Matrix sourceToDest() const = 0;
@@ -41,17 +42,17 @@ struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
         return arma::inv( sourceToDest() );
     };
 
-    Matrix sourceToDest( const Positions& pos ) {
-        positions = pos;
+    Matrix sourceToDest( const Position& pos ) {
+        position = pos;
         return sourceToDest();
     }
 
-    Matrix destToSource( const Positions& pos ) {
-        positions = pos;
+    Matrix destToSource( const Position& pos ) {
+        position = pos;
         return destToSource();
     }
 
-    Positions positions;
+    Position position;
     friend std::ostream& operator<<( std::ostream& out, Joint& j );
 };
 
@@ -71,12 +72,12 @@ struct RigidJoint: public atoms::Visitable< Joint, RigidJoint > {
     }
 
     Matrix sourceToDest() const override {
-        assert( positions.size() == 0 );
+        assert( !position );
         return _sourceToDest;
     }
 
     Matrix destToSource() const override {
-        assert( positions.size() == 0 );
+        assert( !position );
         return _destToSource; // ToDo: Find out if the precomputing is effective or not
     }
 
@@ -121,12 +122,12 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
     }
 
     Matrix sourceToDest() const override {
-        assert( positions.size() == 1 );
-        return _pre * rotate( positions[ 0 ].rad(), _axis ) * _post;
+        assert( position );
+        return _pre * rotate( *position, _axis ) * _post;
     }
 
     Matrix destToSource() const override {
-        assert( positions.size() == 1 );
+        assert( position );
         return arma::inv( sourceToDest() ); // ToDo: Find out if this is effective enough
     }
 

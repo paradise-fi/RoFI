@@ -30,19 +30,14 @@ enum class ModuleType {
     Pad,
 };
 
-enum class Orientation { North, East, South, West };
+namespace roficom {
+    enum class Orientation { North, East, South, West };
 
-/**
- * Return a corresponding angle in radians for a given orientation
- */
-double orientationToAngle( Orientation o = Orientation::North );
-
-/**
- * \brief Translate degrees into radians
- */
-inline double degToRad( double deg ) {
-    return ( M_PI * deg ) / 180;
-}
+    /**
+     * Return a corresponding angle in radians for a given orientation
+     */
+    double orientationToAngle( Orientation o = Orientation::North );
+} // namespace roficom
 
 /**
  * \brief Joint between two components of the same module
@@ -72,7 +67,7 @@ ComponentJoint makeJoint( int source, int dest, Args&&...args ) {
  * module ids and corresponding component index.
  */
 struct RoficomJoint: public Joint {
-    RoficomJoint( Orientation o, ModuleId sourceModule, ModuleId destModule,
+    RoficomJoint( roficom::Orientation o, ModuleId sourceModule, ModuleId destModule,
         int sourceConnector, int destConnector)
     : orientation( o ), sourceModule( sourceModule ), destModule( destModule ),
       sourceConnector( sourceConnector ), destConnector( destConnector )
@@ -83,11 +78,11 @@ struct RoficomJoint: public Joint {
     }
 
     Matrix sourceToDest() const override {
-        assert( positions.size() == 0 );
+        assert( !position );
         // the "default" roficom is A-X
         return translate( { -1, 0, 0 } ) * rotate( M_PI, { 0, 0, 1 } )
             * rotate( M_PI, { 1, 0, 0 } )
-            * rotate( orientationToAngle( orientation ), { -1, 0, 0 } );
+            * rotate( roficom::orientationToAngle( orientation ), { -1, 0, 0 } );
     }
 
     std::pair< Angle, Angle > jointLimits( int ) const override {
@@ -96,7 +91,7 @@ struct RoficomJoint: public Joint {
 
     ATOMS_CLONEABLE( RoficomJoint );
 
-    Orientation orientation;
+    roficom::Orientation orientation;
     ModuleId sourceModule;
     ModuleId destModule;
     int sourceConnector;
@@ -159,8 +154,9 @@ public:
         std::vector< Component > components,
         int connectorCount,
         std::vector< ComponentJoint > joints,
-        int rootComponent = -1 )
-    : type( type ),
+        int id,
+        std::optional< int > rootComponent = std::nullopt )
+    : type( type ), id( id ),
       _components( std::move( components ) ),
       _connectorCount( connectorCount ),
       _joints( std::move( joints ) ),
@@ -168,11 +164,15 @@ public:
       _rootComponent( rootComponent )
     {
         _prepareComponents();
-        if ( _rootComponent == -1 )
+        if ( !_rootComponent )
             _rootComponent = _computeRoot();
     }
 
-    void setJointParams( int idx, const Joint::Positions& p );
+    int getJointCount() const {
+        return _joints.size();
+    }
+
+    void setJointParams( int idx, const Joint::Position& p );
     // Implemented in CPP files as it depends on definition of Rofibot
 
     /**
@@ -240,7 +240,7 @@ public:
                 self( j.destinationComponent, position * j.joint->sourceToDest(), self );
             }
         };
-        dfsTraverse( _rootComponent, identity, dfsTraverse );
+        dfsTraverse( _rootComponent.value(), identity, dfsTraverse );
 
         if ( !atoms::all( initialized ) )
             throw std::logic_error( "There are components without position" );
@@ -297,14 +297,15 @@ public:
         return new Module( *this );
     }
 
-    ModuleId id; ///< integral identifier unique within a context of a single rofibot
+    // TODO: This is not enforced + user can't specify id upon creation
+    ModuleId id = 0; ///< integral identifier unique within a context of a single rofibot
     ModuleType type; ///< module type
     Rofibot* parent; ///< pointer to parenting Rofibot
 private:
     std::vector< Component > _components; ///< All module components, first _connectorCount are connectors
     int _connectorCount;
     std::vector< ComponentJoint > _joints;
-    int _rootComponent;
+    std::optional< int > _rootComponent;
 
     std::optional< std::vector< Matrix > > _componentPosition;
 
@@ -655,7 +656,7 @@ private:
  * std::logic_error is thrown.
  *
  */
-void connect( const Component& c1, const Component& c2, Orientation o );
+void connect( const Component& c1, const Component& c2, roficom::Orientation o );
 
 /**
  * \brief Connect a module's component to a point in space via given joint type
