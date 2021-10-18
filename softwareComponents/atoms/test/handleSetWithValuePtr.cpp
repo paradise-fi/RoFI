@@ -30,7 +30,7 @@ struct Span {
 
 TEST_CASE( "HandleSet + ValuePtr" ) {
     int x = 42;
-    HandleSet< Span > HandleSet;
+    HandleSet< Span, int > HandleSet;
 
     CAPTURE( &x );
     INFO( "Inserting first element" );

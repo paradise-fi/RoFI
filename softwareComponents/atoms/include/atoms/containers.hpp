@@ -18,7 +18,7 @@ namespace atoms {
  * Otherwise this container behaves the same as containers from the standard
  * library.
  */
-template < typename T >
+template < typename T, typename H = long unsigned int >
 class HandleSet {
     using Container = std::vector< std::optional< T > >;
 
@@ -121,7 +121,7 @@ class HandleSet {
 public:
     using value_type = T;
     using size_type = typename Container::size_type;
-    using handle_type = size_type;
+    using handle_type = H;
     using difference_type = typename Container::difference_type;
     using reference = T&;
     using const_reference = const T&;
@@ -129,6 +129,8 @@ public:
     using const_pointer = const T*;
     using iterator = Iterator< false >;
     using const_iterator = Iterator< true >;
+
+    //enum class handle_type : size_type {};
 
     void swap( HandleSet& other ) {
         using std::swap;
@@ -151,11 +153,11 @@ public:
     handle_type insert( const T& value ) {
         if ( _freeHandles.empty() ) {
             _elems.push_back( value );
-            return _elems.size() - 1;
+            return static_cast< handle_type >( _elems.size() - 1 );
         }
-        size_type handle = _freeHandles.back();
+        handle_type handle = _freeHandles.back();
         _freeHandles.pop_back();
-        _elems[ handle ] = value;
+        _elems[ static_cast< size_type >( handle ) ] = value;
         return handle;
     }
 
@@ -170,11 +172,11 @@ public:
     {
         if ( _freeHandles.empty() ) {
             _elems.push_back( std::move( value ) );
-            return _elems.size() - 1;
+            return static_cast< handle_type >( _elems.size() - 1 );
         }
-        size_type handle = _freeHandles.back();
+        handle_type handle = _freeHandles.back();
         _freeHandles.pop_back();
-        _elems[ handle ] = std::move( value );
+        _elems[ static_cast< size_type >( handle ) ] = std::move( value );
         return handle;
     }
 
@@ -182,7 +184,7 @@ public:
      * \brief Erase element based on its handle
      */
     void erase( handle_type handle ) {
-        _elems[ handle ] = std::nullopt;
+        _elems[ static_cast< size_type >( handle ) ] = std::nullopt;
         _freeHandles.push_back( handle );
     }
 
@@ -214,19 +216,19 @@ public:
      * \brief Access element based on its handle
      */
     const_reference operator[]( handle_type handle ) const {
-        return _elems[ handle ].value();
+        return _elems[ static_cast< size_type >( handle ) ].value();
     }
 
     /**
      * \brief Access element based on its handle
      */
     reference operator[]( handle_type handle ) {
-        return _elems[ handle ].value();
+        return _elems[ static_cast< size_type >( handle ) ].value();
     }
 
 private:
     Container _elems;
-    std::vector< size_type > _freeHandles;
+    std::vector< handle_type > _freeHandles;
 };
 
 } // namespace atoms
