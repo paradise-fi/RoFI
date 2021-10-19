@@ -7,9 +7,9 @@
 #include <string>
 #include <vector>
 
-#include <atoms/guarded.hpp>
 #include <gazebo/transport/transport.hh>
 
+#include "atoms/guarded.hpp"
 #include "distributor.hpp"
 #include "locked_module_communication.hpp"
 
@@ -28,7 +28,6 @@ public:
             : _node( node )
             , _freeModules( std::move( rofiIds ) )
             , _distributor( *this->_node, *this )
-
     {
         assert( _node );
     }

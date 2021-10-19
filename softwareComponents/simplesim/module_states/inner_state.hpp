@@ -7,7 +7,7 @@
 
 #include "configuration/rofibot.hpp"
 
-#include "connectorState.pb.h"
+#include <connectorState.pb.h>
 
 
 namespace rofi::simplesim

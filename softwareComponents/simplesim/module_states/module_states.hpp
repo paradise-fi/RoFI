@@ -7,8 +7,8 @@
 #include "configuration/rofibot.hpp"
 #include "inner_state.hpp"
 
-#include "connectorCmd.pb.h"
-#include "rofiDescription.pb.h"
+#include <connectorCmd.pb.h>
+#include <rofiDescription.pb.h>
 
 
 namespace rofi::simplesim
