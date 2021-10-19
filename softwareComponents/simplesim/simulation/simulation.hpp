@@ -5,6 +5,7 @@
 #include <optional>
 #include <shared_mutex>
 
+#include "command_handler.hpp"
 #include "module_states.hpp"
 
 #include <connectorCmd.pb.h>
@@ -23,37 +24,30 @@ public:
     using RofiResp = rofi::messages::RofiResp;
 
 
-    explicit Simulation( rofi::configuration::Rofibot && rofibotConfiguration )
-            : _moduleStates( std::move( rofibotConfiguration ) )
-    {}
+    explicit Simulation( configuration::Rofibot && rofibotConfiguration )
+            : _moduleStates( std::make_shared< ModuleStates >( std::move( rofibotConfiguration   ) ) )
+            , _commandHandler( std::make_shared< CommandHandler >( this->_moduleStates ) )
+    {
+        assert( _moduleStates );
+        assert( _commandHandler );
+    }
 
     // Moves each rofi module based on the inner state
     // Returns the responses that happen inside RoFIs
-    std::vector< RofiResp > simulateOneIteration();
-
-    std::optional< RofiResp > processRofiCommand( const rofi::messages::RofiCmd & cmd );
-
-    std::set< ModuleId > getModuleIds() const
+    std::vector< RofiResp > simulateOneIteration()
     {
-        return _moduleStates.getModuleIds();
+        // TODO
+        return {};
+    }
+
+    std::shared_ptr< CommandHandler > commandHandler()
+    {
+        return _commandHandler;
     }
 
 private:
-    std::optional< RofiResp > processJointCommand( ModuleId moduleId,
-                                                   const rofi::messages::JointCmd & cmd );
-    std::optional< RofiResp > processConnectorCommand( ModuleId moduleId,
-                                                       const rofi::messages::ConnectorCmd & cmd );
-
-    static RofiResp getJointResp( ModuleId moduleId,
-                                  int joint,
-                                  rofi::messages::JointCmd::Type type,
-                                  float value = 0.f );
-    static RofiResp getConnectorResp( ModuleId moduleId,
-                                      int connector,
-                                      rofi::messages::ConnectorCmd::Type type );
-
-
-    ModuleStates _moduleStates;
+    std::shared_ptr< ModuleStates > _moduleStates;
+    std::shared_ptr< CommandHandler > _commandHandler;
 };
 
 } // namespace rofi::simplesim

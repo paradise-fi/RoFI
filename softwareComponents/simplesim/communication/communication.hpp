@@ -13,9 +13,7 @@ namespace rofi::simplesim
 class Communication
 {
 public:
-    using RofiId = ModulesCommunication::RofiId;
-
-    Communication( std::set< ModulesCommunication::RofiId > rofiIds,
+    Communication( std::shared_ptr< CommandHandler > commandHandler,
                    std::string worldName = "default" )
             : _worldName( std::move( worldName ) )
             , _node( [ this ] {
@@ -24,12 +22,12 @@ public:
                 node->Init( this->_worldName );
                 return node;
             }() )
-            , _modules( _node, std::move( rofiIds ) )
+            , _modules( std::move( commandHandler ), _node )
     {}
 
     // Returns true if the insertion was succesful
     // Returns false if the rofiId was already registered
-    bool addNewRofi( RofiId rofiId )
+    bool addNewRofi( ModulesCommunication::RofiId rofiId )
     {
         return _modules.addNewRofi( rofiId );
     }
@@ -38,11 +36,6 @@ public:
     void sendRofiResponses( ResponsesContainer && responses )
     {
         _modules.sendRofiResponses( std::forward< ResponsesContainer >( responses ) );
-    }
-
-    auto getRofiCommands()
-    {
-        return _modules.getRofiCommands();
     }
 
 private:

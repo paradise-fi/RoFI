@@ -4,21 +4,21 @@
 
 #include <gazebo/transport/transport.hh>
 
+#include "command_handler.hpp"
+
 #include <rofiCmd.pb.h>
 #include <rofiResp.pb.h>
 
 
 namespace rofi::simplesim
 {
-class ModulesCommunication;
-
 class LockedModuleCommunication
 {
 public:
-    using RofiId = decltype( rofi::messages::RofiCmd().rofiid() );
+    using RofiId = CommandHandler::RofiId;
     using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
 
-    LockedModuleCommunication( ModulesCommunication & modulesCommunication,
+    LockedModuleCommunication( CommandHandler & commandHandler,
                                gazebo::transport::Node & node,
                                std::string moduleTopicName,
                                RofiId rofiId );
@@ -49,7 +49,7 @@ private:
     void onRofiCmd( const RofiCmdPtr & msg );
 
 private:
-    ModulesCommunication & _modulesCommunication;
+    CommandHandler & _commandHandler;
 
     RofiId _rofiId = {};
     std::string _topic;

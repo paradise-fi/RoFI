@@ -1,6 +1,7 @@
 #pragma once
 #include <atomic>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <shared_mutex>
@@ -10,6 +11,7 @@
 #include <gazebo/transport/transport.hh>
 
 #include "atoms/guarded.hpp"
+#include "command_handler.hpp"
 #include "distributor.hpp"
 #include "locked_module_communication.hpp"
 
@@ -21,17 +23,18 @@ namespace rofi::simplesim
 class ModulesCommunication
 {
 public:
-    using RofiId = LockedModuleCommunication::RofiId;
-    using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
+    using RofiId = CommandHandler::RofiId;
 
-    ModulesCommunication( gazebo::transport::NodePtr node, std::set< RofiId > rofiIds )
-            : _node( node )
-            , _freeModules( std::move( rofiIds ) )
+    ModulesCommunication( std::shared_ptr< CommandHandler > commandHandler,
+                          gazebo::transport::NodePtr node )
+            : _commandHandler( std::move( commandHandler ) )
+            , _node( std::move( node ) )
+            , _freeModules( this->_commandHandler->getModuleIds() )
             , _distributor( *this->_node, *this )
     {
         assert( _node );
+        assert( _commandHandler );
     }
-    ModulesCommunication( gazebo::transport::NodePtr node ) : ModulesCommunication( node, {} ) {}
 
     ModulesCommunication( const ModulesCommunication & ) = delete;
     ModulesCommunication & operator=( const ModulesCommunication & ) = delete;
@@ -78,18 +81,6 @@ public:
         }
     }
 
-    auto getRofiCommands()
-    {
-        auto result = std::vector< RofiCmdPtr >();
-        _rofiCmds->swap( result );
-        return result;
-    }
-
-    void onRofiCmd( const RofiCmdPtr & msg )
-    {
-        _rofiCmds->push_back( msg );
-    }
-
 private:
     std::atomic_int topicNameCounter = 0;
     std::string getNewTopicName()
@@ -100,18 +91,19 @@ private:
 
     LockedModuleCommunication getNewLockedModule( RofiId rofiId )
     {
+        assert( _commandHandler );
         assert( _node );
-        return LockedModuleCommunication( *this, *_node, getNewTopicName(), rofiId );
+        return LockedModuleCommunication( *_commandHandler, *_node, getNewTopicName(), rofiId );
     }
 
 private:
+    std::shared_ptr< CommandHandler > _commandHandler;
+
     gazebo::transport::NodePtr _node;
 
     mutable std::shared_mutex _modulesMutex;
     std::set< RofiId > _freeModules;
     std::map< RofiId, LockedModuleCommunication > _lockedModules;
-
-    atoms::Guarded< std::vector< RofiCmdPtr > > _rofiCmds;
 
     Distributor _distributor;
 };
