@@ -2,6 +2,7 @@
 
 #include <dimcli/cli.h>
 
+#include "communication.hpp"
 #include "configuration/universalModule.hpp"
 #include "controllers.hpp"
 #include "gazebo_master.hpp"
@@ -41,7 +42,7 @@ rofi::configuration::Rofibot readConfigurationFromFile( const std::string & cfgF
     auto gzMaster = startGazeboMaster();
 
     auto simulation = std::make_shared< Simulation >( std::move( configuration ) );
-    auto communication = std::make_shared< Communication >( simulation->getModuleIds() );
+    auto communication = std::make_shared< Communication >( simulation->commandHandler() );
 
     return Controller::runRofiController( std::move( simulation ), std::move( communication ) );
 }

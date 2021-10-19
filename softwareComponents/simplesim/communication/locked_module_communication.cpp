@@ -1,18 +1,16 @@
 #include "locked_module_communication.hpp"
 
-#include "modules_communication.hpp"
-
 
 using namespace rofi::simplesim;
 
-using RofiId = ModulesCommunication::RofiId;
+using RofiId = LockedModuleCommunication::RofiId;
 
 
-LockedModuleCommunication::LockedModuleCommunication( ModulesCommunication & modulesCommunication,
+LockedModuleCommunication::LockedModuleCommunication( CommandHandler & commandHandler,
                                                       gazebo::transport::Node & node,
                                                       std::string moduleTopicName,
                                                       RofiId rofiId )
-        : _modulesCommunication( modulesCommunication )
+        : _commandHandler( commandHandler )
         , _rofiId( rofiId )
         , _topic( "/gazebo/" + node.GetTopicNamespace() + "/" + moduleTopicName )
         , _pub( node.Advertise< rofi::messages::RofiResp >( "~/" + moduleTopicName + "/response" ) )
@@ -35,5 +33,5 @@ void LockedModuleCommunication::onRofiCmd( const LockedModuleCommunication::Rofi
         return;
     }
 
-    _modulesCommunication.onRofiCmd( msg );
+    _commandHandler.onRofiCmd( msg );
 }

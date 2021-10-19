@@ -8,6 +8,6 @@ set (FILES
 )
 
 add_library(simplesimCommunication ${FILES})
-target_link_libraries(simplesimCommunication PUBLIC rofisimMessages atoms ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(simplesimCommunication PUBLIC simplesimCommandHandler rofisimMessages atoms ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
 target_include_directories(simplesimCommunication PUBLIC ${GAZEBO_INCLUDE_DIRS})
 target_include_directories(simplesimCommunication INTERFACE ${CMAKE_CURRENT_LIST_DIR})
