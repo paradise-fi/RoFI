@@ -19,7 +19,7 @@ namespace rofi::configuration {
 /// ModuleId
 using ModuleId = int;
 
-enum class Handle : unsigned long int {};
+enum class Handle : size_t {};
 
 enum class ComponentType {
     UmShoe, UmBody,
