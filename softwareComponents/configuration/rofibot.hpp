@@ -159,7 +159,7 @@ public:
         std::vector< ComponentJoint > joints,
         int id,
         std::optional< int > rootComponent = std::nullopt )
-    : type( type ), id( id ),
+    : type( type ), _id( id ),
       _components( std::move( components ) ),
       _connectorCount( connectorCount ),
       _joints( std::move( joints ) ),
@@ -174,6 +174,18 @@ public:
     int getJointCount() const {
         return _joints.size();
     }
+
+    int getId() const {
+        return _id;
+    }
+
+    /** \brief Set ID of the module to the new value
+     * 
+     * Checks if the new value is not used within its parental rofibot,
+     * if it's in use, the ID is left the same and the method returns
+     * False. Otherwise the ID is changed. Returns True on success.
+     */
+    bool setId( ModuleId newId );
 
     void setJointParams( int idx, const Joint::Position& p );
     // Implemented in CPP files as it depends on definition of Rofibot
@@ -300,11 +312,10 @@ public:
         return new Module( *this );
     }
 
-    // TODO: This is not enforced + user can't specify id upon creation
-    ModuleId id = 0; ///< integral identifier unique within a context of a single rofibot
     ModuleType type; ///< module type
     Rofibot* parent; ///< pointer to parenting Rofibot
 private:
+    ModuleId _id = 0; ///< integral identifier unique within a context of a single rofibot
     std::vector< Component > _components; ///< All module components, first _connectorCount are connectors
     int _connectorCount;
     std::vector< ComponentJoint > _joints;
@@ -384,10 +395,9 @@ public:
  */
 class Rofibot {
     struct ModuleInfo;
-public:
-
     using HandleId = atoms::HandleSet< ModuleInfo >::handle_type;
     using HandleJoint = atoms::HandleSet< RoficomJoint >::handle_type;
+public:
     using HandleSpace = atoms::HandleSet< SpaceJoint >::handle_type;
 
     Rofibot() = default;
@@ -440,10 +450,10 @@ public:
      * Returns a reference to the newly created module.
      */
     Module& insert( Module m ) {
-        if ( _idMapping.find( m.id ) != _idMapping.end() )
+        if ( _idMapping.find( m._id ) != _idMapping.end() )
             throw std::runtime_error( "Module with given id is already present" );
         auto id = _modules.insert( { std::move( m ), {}, {}, {}, std::nullopt } );
-        _idMapping.insert( { _modules[ id ].module->id, id } );
+        _idMapping.insert( { _modules[ id ].module->_id, id } );
         Module* insertedModule = _modules[ id ].module.get();
         insertedModule->parent = this;
         insertedModule->_prepareComponents();
@@ -511,11 +521,11 @@ public:
 
         for ( const ModuleInfo& m : _modules ) {
             for ( const ModuleInfo& n : _modules ) {
-                if ( n.module->id >= m.module->id ) // Collision is symmetric
+                if ( n.module->_id >= m.module->_id ) // Collision is symmetric
                     break;
                 if ( collisionModel( *n.module, *m.module, *n.position, *m.position ) ) {
                     return { false, fmt::format("Modules {} and {} collide",
-                        m.module->id, n.module->id ) };
+                        m.module->_id, n.module->_id ) };
                 }
             }
         }
@@ -523,7 +533,7 @@ public:
         for ( const ModuleInfo& m : _modules ) {
             if ( !m.position )
                 return { false, fmt::format("Module {} is not rooted",
-                        m.module->id) };
+                        m.module->_id) };
         }
         return { true, "" };
     }
@@ -548,18 +558,18 @@ public:
             if ( mInfo.position ) {
                 if ( !equals( mInfo.position.value(), modulePosition ) )
                     throw std::runtime_error(
-                        fmt::format( "Inconsistent rooting of module {}", mInfo.module->id ) );
+                        fmt::format( "Inconsistent rooting of module {}", mInfo.module->_id ) );
             } else {
                 mInfo.position = componentPosition;
             }
-            roots.insert( _idMapping[ mInfo.module->id ] );
+            roots.insert( _idMapping[ mInfo.module->_id ] );
         }
 
         auto dfsTraverse = [&]( ModuleInfo& m, Matrix position, auto& self ) {
             if ( m.position ) {
                 if ( !equals( position, m.position.value() ) )
                     throw std::runtime_error(
-                        fmt::format( "Inconsistent position of module {}", m.module->id ) );
+                        fmt::format( "Inconsistent position of module {}", m.module->_id ) );
                 return;
             }
             m.position = position;
@@ -572,7 +582,7 @@ public:
             for ( auto outJointIdx : joints ) {
                 const RoficomJoint& j = _moduleJoints[ outJointIdx ];
 
-                bool mIsSource = j.sourceModule == m.module->id;
+                bool mIsSource = j.sourceModule == m.module->_id;
                 Matrix jointTransf = mIsSource ? j.sourceToDest() : j.destToSource();
                 Matrix jointRefPosition = position
                                         * m.module->getComponentPosition( mIsSource
@@ -689,12 +699,12 @@ void connect( const Component& c1, const Component& c2, roficom::Orientation o )
 template < typename JointT, typename... Args >
 Rofibot::HandleSpace connect( const Component& c, Vector refpoint, Args&&... args ) {
     Rofibot& bot = *c.parent->parent;
-    Rofibot::ModuleInfo& info = bot._modules[ bot._idMapping[ c.parent->id ] ];
+    Rofibot::ModuleInfo& info = bot._modules[ bot._idMapping[ c.parent->getId() ] ];
 
     auto jointId = bot._spaceJoints.insert( SpaceJoint{
         std::unique_ptr< Joint >( new JointT( ( std::forward< Args >( args ) )... ) ),
         refpoint,
-        info.module->id,
+        info.module->getId(),
         info.module->componentIdx( c )
     } );
 

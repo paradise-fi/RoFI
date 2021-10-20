@@ -26,7 +26,7 @@ Rofibot buildUMpad( int n, int m ) {
                 connect( md.connector( 1 ), bot.getModule( modules[ (i - 1) * m + j ] )->connector( 0 )
                        , roficom::Orientation::South );
 
-            modules.push_back( md.id );
+            modules.push_back( md.getId() );
         }
     }
 

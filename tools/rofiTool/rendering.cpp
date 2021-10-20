@@ -154,9 +154,9 @@ void buildConfigurationScene( vtkRenderer* renderer, Rofibot& bot ) {
     int index = 0;
     for ( auto& mInfo : bot.modules() ) {
         assert( mInfo.position && "The configuration has to be prepared" );
-        if ( active_cons.count( mInfo.module->id ) == 0 )
-            active_cons[ mInfo.module->id ] = {};
-        addModuleToScene( renderer, *mInfo.module, *mInfo.position, index, active_cons[ mInfo.module->id ] );
+        if ( active_cons.count( mInfo.module->getId() ) == 0 )
+            active_cons[ mInfo.module->getId() ] = {};
+        addModuleToScene( renderer, *mInfo.module, *mInfo.position, index, active_cons[ mInfo.module->getId() ] );
         index++;
     }
 }

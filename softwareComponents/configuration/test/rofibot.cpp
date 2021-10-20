@@ -211,34 +211,34 @@ TEST_CASE( "Two modules next to each other" ) {
         Matrix new_origin = identity * translate( { -1, 0, 0 } );
         REQUIRE( !equals( identity, new_origin ) );
         Matrix mat = identity;
-        CHECK( equals( center( m2.getComponentPosition( 0, bot.getModulePosition( m2.id ) ) )
+        CHECK( equals( center( m2.getComponentPosition( 0, bot.getModulePosition( m2.getId() ) ) )
                      , center( new_origin ) ) );
 
         mat = new_origin * rotate( M_PI, { 0, 0, 1 } );
-        CHECK( equals( center( m2.getComponentPosition( 1, bot.getModulePosition( m2.id ) ) ), center( mat ) ) );
+        CHECK( equals( center( m2.getComponentPosition( 1, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
 
         mat = new_origin * rotate( - M_PI_2, { 0, 1, 0 } );
-        CHECK( equals( center( m2.getComponentPosition( 2, bot.getModulePosition( m2.id ) ) ), center( mat ) ) );
-        CHECK( equals( center( m2.getComponentPosition( 6, bot.getModulePosition( m2.id ) ) ), center( new_origin ) ) );
-        CHECK( equals( center( m2.getComponentPosition( 7, bot.getModulePosition( m2.id ) ) ), center( new_origin ) ) );
+        CHECK( equals( center( m2.getComponentPosition( 2, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
+        CHECK( equals( center( m2.getComponentPosition( 6, bot.getModulePosition( m2.getId() ) ) ), center( new_origin ) ) );
+        CHECK( equals( center( m2.getComponentPosition( 7, bot.getModulePosition( m2.getId() ) ) ), center( new_origin ) ) );
 
         mat =  new_origin * m1.getComponentPosition( 3 );
-        CHECK( equals( center( m2.getComponentPosition( 3, bot.getModulePosition( m2.id ) ) ), center( mat ) ) );
+        CHECK( equals( center( m2.getComponentPosition( 3, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
 
         mat = new_origin * m1.getComponentPosition( 4 );
-        CHECK( equals( center( m2.getComponentPosition( 4, bot.getModulePosition( m2.id ) ) ), center( mat ) ) );
+        CHECK( equals( center( m2.getComponentPosition( 4, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
 
         mat = new_origin * m1.getComponentPosition( 5 );
-        CHECK( equals( center( m2.getComponentPosition( 5, bot.getModulePosition( m2.id ) ) ), center( mat ) ) );
+        CHECK( equals( center( m2.getComponentPosition( 5, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
 
         mat = new_origin * m1.getComponentPosition( 8 );
-        CHECK( equals( center( m2.getComponentPosition( 8, bot.getModulePosition( m2.id ) ) ), center( mat ) ) );
+        CHECK( equals( center( m2.getComponentPosition( 8, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
 
         mat = { { -1, 0, 0, -1 }, { 0, 1, 0, 0 }, { 0, 0, -1, 1 }, { 0, 0, 0, 1 } };
-        CHECK( equals( center( m2.getComponentPosition( 9, bot.getModulePosition( m2.id ) ) ), center( mat ) ) );
+        CHECK( equals( center( m2.getComponentPosition( 9, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
 
         mat = new_origin * m1.getComponentPosition( 9 );
-        CHECK( equals( center( m2.getComponentPosition( 9, bot.getModulePosition( m2.id ) ) ), center( mat ) ) );
+        CHECK( equals( center( m2.getComponentPosition( 9, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
     }
 }
 
@@ -252,13 +252,13 @@ TEST_CASE( "Two modules - different angles" ) {
     REQUIRE_NOTHROW( bot.prepare() );
 
     SECTION( "BodyA " ) {
-        CHECK( equals( bot.getModulePosition( m1.id ), identity ) );
-        CHECK( equals( center( bot.getModulePosition( m2.id ) ), center( identity * translate( { 1, 0, 1 } ) ) ) );
+        CHECK( equals( bot.getModulePosition( m1.getId() ), identity ) );
+        CHECK( equals( center( bot.getModulePosition( m2.getId() ) ), center( identity * translate( { 1, 0, 1 } ) ) ) );
     }
 
     SECTION( "BodyB" ) {
     Matrix m1shoeB = m1.getComponentPosition( 9 );
-    Matrix m2shoeB = m2.getComponentPosition( 9, bot.getModulePosition( m2.id ) );
+    Matrix m2shoeB = m2.getComponentPosition( 9, bot.getModulePosition( m2.getId() ) );
     CHECK( equals( m1shoeB, { { -1, 0,  0, 0 }
                             , {  0, 1,  0, 0 }
                             , {  0, 0, -1, 1 }
@@ -279,23 +279,23 @@ TEST_CASE( "Three modules -- connect docks 3 to 0s " ) {
     REQUIRE_NOTHROW( bot.prepare() );
 
     SECTION( "Modules are well placed" ) {
-        CHECK( equals( center( bot.getModulePosition( m1.id ) ), center( identity ) ) );
-        CHECK( equals( center( bot.getModulePosition( m2.id ) ), center( translate( { 1, 0, 1 } ) ) ) );
-        CHECK( equals( center( bot.getModulePosition( m3.id ) ), center( translate( { 2, 0, 2 } ) ) ) );
+        CHECK( equals( center( bot.getModulePosition( m1.getId() ) ), center( identity ) ) );
+        CHECK( equals( center( bot.getModulePosition( m2.getId() ) ), center( translate( { 1, 0, 1 } ) ) ) );
+        CHECK( equals( center( bot.getModulePosition( m3.getId() ) ), center( translate( { 2, 0, 2 } ) ) ) );
     }
 
     SECTION( "Shoes A" ) {
-        CHECK( equals( m1.getComponentPosition( 6, bot.getModulePosition( m1.id ) ), identity ) );
-        CHECK( equals( m2.getComponentPosition( 6, bot.getModulePosition( m2.id ) ), translate( { 1, 0, 1 } ) ) );
-        CHECK( equals( m3.getComponentPosition( 6, bot.getModulePosition( m3.id ) ), translate( { 2, 0, 2 } ) ) );
+        CHECK( equals( m1.getComponentPosition( 6, bot.getModulePosition( m1.getId() ) ), identity ) );
+        CHECK( equals( m2.getComponentPosition( 6, bot.getModulePosition( m2.getId() ) ), translate( { 1, 0, 1 } ) ) );
+        CHECK( equals( m3.getComponentPosition( 6, bot.getModulePosition( m3.getId() ) ), translate( { 2, 0, 2 } ) ) );
     }
 
     SECTION( "Shoes B" ) {
-        CHECK( equals( m1.getComponentPosition( 9, bot.getModulePosition( m1.id ) )
+        CHECK( equals( m1.getComponentPosition( 9, bot.getModulePosition( m1.getId() ) )
                      , translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } ) ) );
-        CHECK( equals( m2.getComponentPosition( 9, bot.getModulePosition( m2.id ) )
+        CHECK( equals( m2.getComponentPosition( 9, bot.getModulePosition( m2.getId() ) )
                      , translate( { 1, 0, 2 } ) * rotate( M_PI, { 0, 1, 0 } ) ) );
-        CHECK( equals( m3.getComponentPosition( 9, bot.getModulePosition( m3.id ) )
+        CHECK( equals( m3.getComponentPosition( 9, bot.getModulePosition( m3.getId() ) )
                      , translate( { 2, 0, 3 } ) * rotate( M_PI, { 0, 1, 0 } ) ) );
     }
 }
@@ -305,23 +305,23 @@ TEST_CASE( "Basic rofibot manipulation" ) {
     int idCounter = 0;
     Rofibot bot;
     auto& m1 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    CHECK( m1.id == 0 );
-    CHECK( bot.getModule( 0 )->id == 0 );
-    REQUIRE( m1.id == 0 );
+    CHECK( m1.getId() == 0 );
+    CHECK( bot.getModule( 0 )->getId() == 0 );
+    REQUIRE( m1.getId() == 0 );
     REQUIRE( m1.parent == &bot );
     CHECK( &m1 == bot.getModule( 0 ) );
     auto& m2 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    REQUIRE( m2.id == 1 );
-    CHECK( m1.id == 0 );
-    CHECK( bot.getModule( 0 )->id == 0 );
+    REQUIRE( m2.getId() == 1 );
+    CHECK( m1.getId() == 0 );
+    CHECK( bot.getModule( 0 )->getId() == 0 );
     REQUIRE( &m1 == bot.getModule( 0 ) );
     auto& m3 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    REQUIRE( m3.id == 2 );
+    REQUIRE( m3.getId() == 2 );
     REQUIRE( m1.parent == &bot );
     auto& m4 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    REQUIRE( m4.id == 3 );
+    REQUIRE( m4.getId() == 3 );
     auto& m5 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    REQUIRE( m5.id == 4 );
+    REQUIRE( m5.getId() == 4 );
     CHECK( bot.modules().size() == 5 );
 
     CHECK( bot.roficoms().size() == 0 );
@@ -357,6 +357,44 @@ TEST_CASE( "Colliding configuration" ) {
     connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
     auto [ b, str ] = bot.isValid( SimpleColision() );
     CHECK( !b );
+}
+
+TEST_CASE( "Changing modules ID" ) {
+    using namespace rofi;
+    Rofibot bot;
+
+    auto& m1 = bot.insert( buildUniversalModule( 0, 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = bot.insert( buildUniversalModule( 1, 0_deg, 0_deg, 0_deg ) );
+    auto& m3 = bot.insert( buildUniversalModule( 2, 0_deg, 0_deg, 0_deg ) );
+    connect( m1.connector( 5 ), m2.connector( 2 ), Orientation::North );
+    connect( m2.connector( 5 ), m3.connector( 2 ), Orientation::North );
+    connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
+
+    CHECK( bot.isValid( SimpleColision() ).first );
+
+    CHECK( m1.getId() == 0 );
+    CHECK( m2.getId() == 1 );
+    CHECK( m3.getId() == 2 );
+
+    CHECK( m2.setId( 42 ) );
+    CHECK( bot.isValid( SimpleColision() ).first );
+    CHECK( m1.getId() == 0 );
+    CHECK( m2.getId() != 1 );
+    CHECK( m2.getId() == 42 );
+    CHECK( m3.getId() == 2 );
+
+    CHECK( !m2.setId( 0 ) );
+    CHECK( m1.getId() == 0 );
+    CHECK( m2.getId() == 42 );
+    CHECK( m3.getId() == 2 );
+
+    CHECK( m1.setId( 66 ) );
+    CHECK( m3.setId( 78 ) );
+
+    CHECK( m1.getId() == 66 );
+    CHECK( m2.getId() == 42 );
+    CHECK( m3.getId() == 78 );
+
 }
 
 } // namespace
