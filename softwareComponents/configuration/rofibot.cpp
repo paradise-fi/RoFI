@@ -18,6 +18,17 @@ double roficom::orientationToAngle( roficom::Orientation o ) {
     return 0; // never reached
 }
 
+bool Module::setId( ModuleId newId ) {
+    if ( parent ) {
+        if ( parent->_idMapping.find( newId ) != parent->_idMapping.end() )
+            return false;
+        parent->_idMapping[ newId ] = parent->_idMapping[ _id ];
+        parent->_idMapping.erase( _id );
+    }
+    _id = newId;
+    return true;
+}
+
 void Module::setJointParams( int idx, const Joint::Position& p ) {
     // Currently we invalidate all positions; ToDo: think if we can improve it
     assert( idx < _joints.size() && idx >= 0 );
@@ -25,18 +36,18 @@ void Module::setJointParams( int idx, const Joint::Position& p ) {
     _joints[ idx ].joint->position = p;
     _componentPosition = std::nullopt;
     if ( parent )
-        parent->onModuleMove( id );
+        parent->onModuleMove( _id );
 }
 
 void connect( const Component& c1, const Component& c2, roficom::Orientation o ) {
     if ( c1.parent->parent != c2.parent->parent )
         throw std::logic_error( "Components have to be in the same rofibot" );
     Rofibot& bot = *c1.parent->parent;
-    Rofibot::ModuleInfo& m1info = bot._modules[ bot._idMapping[ c1.parent->id ] ];
-    Rofibot::ModuleInfo& m2info = bot._modules[ bot._idMapping[ c2.parent->id ] ];
+    Rofibot::ModuleInfo& m1info = bot._modules[ bot._idMapping[ c1.parent->getId() ] ];
+    Rofibot::ModuleInfo& m2info = bot._modules[ bot._idMapping[ c2.parent->getId() ] ];
 
     auto jointId = bot._moduleJoints.insert( {
-        o, m1info.module->id, m2info.module->id,
+        o, m1info.module->getId(), m2info.module->getId(),
         m1info.module->componentIdx( c1 ), m2info.module->componentIdx( c2 )
     } );
 

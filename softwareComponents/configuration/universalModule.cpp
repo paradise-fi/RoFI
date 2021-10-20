@@ -118,8 +118,8 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
             lineStr >> id >> alpha >> beta >> gamma;
             auto rModule = buildUniversalModule( id, Angle::deg( alpha ), Angle::deg( beta ), Angle::deg( gamma ) );
             rModule = rofibot.insert( rModule );
-            std::cout << "id: " << id << " rModule.id: " << rModule.id << "\n";
-            moduleMapping.insert({ id, rModule.id });
+            std::cout << "id: " << id << " rModule.id: " << rModule.getId() << "\n";
+            moduleMapping.insert({ id, rModule.getId() });
             continue;
         }
         if ( type == "E" ) {
