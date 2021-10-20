@@ -21,6 +21,7 @@ void Controller::rofiControllerThread( std::stop_token stopToken,
     assert( simulationPtr );
     assert( communicationPtr );
     auto & simulation = *simulationPtr;
+    auto & communication = *communicationPtr;
 
     auto commandHandlerPtr = simulation.commandHandler();
     assert( commandHandlerPtr );
@@ -32,6 +33,9 @@ void Controller::rofiControllerThread( std::stop_token stopToken,
         auto commandResponses = commandHandler.processRofiCommands();
         auto eventResponses = simulation.simulateOneIteration();
         // TODO send responses
+
+        communication.sendRofiResponses( commandResponses );
+        communication.sendRofiResponses( eventResponses );
 
         std::this_thread::sleep_until( startTime + Controller::updateDuration );
     }

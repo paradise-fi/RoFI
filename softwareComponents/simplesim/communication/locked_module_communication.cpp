@@ -33,5 +33,8 @@ void LockedModuleCommunication::onRofiCmd( const LockedModuleCommunication::Rofi
         return;
     }
 
-    _commandHandler.onRofiCmd( msg );
+    if ( auto resp = _commandHandler.onRofiCmd( msg ) ) {
+        assert( resp->rofiid() == _rofiId && "Immediate responses have to have same rofi id" );
+        _pub->Publish( *resp );
+    }
 }
