@@ -45,6 +45,36 @@ function(setup_stm32cxx PREFIX MCU)
     target_include_directories(${PREFIX}_printf INTERFACE ${printf_SOURCE_DIR})
     target_sources(${PREFIX}_printf INTERFACE ${printf_SOURCE_DIR}/printf.c)
 
+    # Libusb STM32
+    FetchContent_Declare(
+        libusb_stm32
+        GIT_REPOSITORY https://github.com/dmitrystu/libusb_stm32.git
+        GIT_TAG        48fc3516278cc2415ebf00bf249125eac92a196c
+    )
+    FetchContent_GetProperties(libusb_stm32)
+    if(NOT libusb_stm32_POPULATED)
+        FetchContent_Populate(libusb_stm32)
+    endif()
+    if (${MCU_FAMILY} STREQUAL "STM32F4xx")
+        set(USB_SRC ${libusb_stm32_SOURCE_DIR}/src/usbd_stm32f429_otgfs.c)
+        set(USB_DEFS "-DUSBD_SOF_DISABLED")
+    endif()
+    # TBA: Add support for other families
+    if (NOT "${USB_SRC}" STREQUAL "")
+        set(USB_SUPPORTED TRUE)
+    endif()
+
+    if ("${USB_SUPPORTED}")
+        add_library(${PREFIX}_libusb_stm32 INTERFACE)
+        target_include_directories(${PREFIX}_libusb_stm32
+            INTERFACE ${libusb_stm32_SOURCE_DIR}/inc)
+        target_sources(${PREFIX}_libusb_stm32 INTERFACE
+            ${libusb_stm32_SOURCE_DIR}/src/usbd_core.c
+            ${USB_SRC})
+        target_compile_definitions(${PREFIX}_libusb_stm32 INTERFACE ${USB_DEFS})
+    endif()
+
+
     # STM32CXX
     function(add_sublib NAME)
         cmake_parse_arguments(A "" "" "SRC_GLOB;PORT_GLOB;LINK_HAL;LINK" ${ARGN})
@@ -103,4 +133,11 @@ function(setup_stm32cxx PREFIX MCU)
     add_sublib(system
         SRC_GLOB system/assert.cpp system/system.cpp
         LINK_HAL stm32cxx_dma)
+
+    if ("${USB_SUPPORTED}")
+        add_sublib(usb
+            SRC_GLOB drivers/usb.cpp
+            PORT_GLOB usb*.cpp
+            LINK_HAL libusb_stm32 LL_Gpio)
+    endif()
 endfunction()
