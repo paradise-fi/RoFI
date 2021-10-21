@@ -110,7 +110,7 @@ public:
             LL_DMA_DisableStream( self()._periph, self()._channel );
         }
 
-        void enableInterrupt( int priority = 0 ) {
+        void enableInterrupt( int priority = 128 ) {
             IRQn_Type irq =
                 self()._periph == DMA1 ? dma1Irq[ self()._channel ] :
                                          dma2Irq[ self()._channel ];

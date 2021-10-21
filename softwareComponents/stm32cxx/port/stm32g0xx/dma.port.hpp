@@ -80,7 +80,7 @@ protected:
             LL_DMA_DisableChannel( self()._periph, self()._channel );
         }
 
-        void enableInterrupt( int priority = 0 ) {
+        void enableInterrupt( int priority = 128 ) {
             assert( self()._periph == DMA1 );
 
             if ( self()._channel == 1 ) {
@@ -99,7 +99,7 @@ protected:
             }
         }
 
-        void disableInterrupt( int priority = 0 ) {
+        void disableInterrupt() {
             assert( self()._periph == DMA1 );
 
             if ( self()._channel == 1 ) {

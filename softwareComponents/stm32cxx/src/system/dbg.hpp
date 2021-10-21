@@ -52,6 +52,18 @@ public:
         info( "%s: %s", name, buff );
     }
 
+    static void hexDump( const void *arr, int length ) {
+        auto source = reinterpret_cast< const uint8_t * >( arr );
+        static char buffer[ 512 ];
+        char *start = buffer;
+        for ( int i = 0; i != length; i++ ) {
+            int size = snprintf( start, sizeof( buffer ) - ( start - buffer ),
+                                "%02x:", int( source[ i ] ) );
+            start += size;
+        }
+        error( "%s", buffer );
+    }
+
     static bool available() {
         return _instance()._reader.available();
     }

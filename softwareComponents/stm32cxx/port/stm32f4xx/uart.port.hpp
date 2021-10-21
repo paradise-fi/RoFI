@@ -46,7 +46,7 @@ public:
         assert( false && "Unknown USART instance" );
     }
 
-    void _enableInterrupt( int priority = 0 ) {
+    void _enableInterrupt( int priority = 255 ) {
         if ( self()._periph == USART1 ) {
             NVIC_SetPriority( USART1_IRQn, priority );
             NVIC_EnableIRQ( USART1_IRQn );

@@ -101,7 +101,7 @@ struct Spi: public Peripheral< SPI_TypeDef >, public detail::Spi< Spi > {
     }
 
 private:
-    void _enableInterrupt( int priority = 0 ) {
+    void _enableInterrupt( int priority = 128 ) {
         if ( _periph == SPI1 ) {
             NVIC_SetPriority( SPI1_IRQn, priority );
             NVIC_EnableIRQ( SPI1_IRQn );
