@@ -14,8 +14,8 @@ public:
 
     ConnComInterface( Uart uart )
         : _uart( std::move( uart ) ),
-          _reader( _uart ),
-          _writer( _uart ),
+          _reader( _uart, Dma::allocate( DMA1 ) ),
+          _writer( _uart, Dma::allocate( DMA1 ) ),
           _busy( false ),
           _inQueue( memory::Pool::allocate( 64 ), 64 ),
           _outQueue( memory::Pool::allocate( 64 ), 64 )
@@ -152,10 +152,10 @@ private:
     }
 
     Uart _uart;
-    UartReader _reader;
-    UartWriter _writer;
+    UartReader< memory::Pool > _reader;
+    UartWriter< memory::Pool > _writer;
     volatile bool _busy;
-    RingBuffer< Block > _inQueue, _outQueue;
+    RingBuffer< Block, memory::Pool > _inQueue, _outQueue;
     std::function< void(void) > _notifyNewBlob;
     Block _txBlock;
     static const int _timeout = 64;

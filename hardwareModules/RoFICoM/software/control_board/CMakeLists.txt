@@ -5,11 +5,6 @@ cmake_minimum_required(VERSION 3.6)
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Og")
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Og")
 
-
-# Set pool memory size
-set(MEMORY_BLOCK_SIZE 1024)
-set(MEMORY_BLOCK_COUNT 20)
-
 project(control_board C CXX ASM)
 
 set(ROFICOM_MCU "STM32G071xx")
@@ -28,8 +23,12 @@ add_stm32_target(
         FILES ${SRC})
 set_property(TARGET roficomFw PROPERTY CXX_STANDARD 17)
 target_include_directories(roficomFw PRIVATE src)
-target_compile_options(roficomFw PRIVATE -Wall -Wextra -pedantic -funwind-tables)
-target_link_libraries(roficomFw g0_stm32cxx function2)
+target_compile_options(roficomFw PRIVATE
+        -Wall -Wextra -pedantic -funwind-tables)
+target_link_libraries(roficomFw
+        g0_startup function2 g0_stm32cxx
+        g0_stm32cxx_system g0_stm32cxx_uart g0_stm32cxx_spi g0_stm32cxx_gpio
+        g0_stm32cxx_dma g0_stm32cxx_adc)
 
 # add_executable(${PROJECT_NAME}.elf ${SRC})
 # set_property(TARGET ${PROJECT_NAME}.elf PROPERTY CXX_STANDARD 17)

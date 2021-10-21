@@ -1,7 +1,7 @@
 #pragma once
 
 #include <functional>
-#include <drivers/spi.hpp>
+#include <drivers/spiReaderWriter.hpp>
 #include <util.hpp>
 
 struct RecoverCs:
@@ -25,7 +25,7 @@ public:
     using CmdHandler = std::function< void( Command, Block ) >;
 
     SpiInterface( Spi spi, Gpio::Pin csPin, CmdHandler cmdHandler )
-        : _spi( std::move( spi ) ), _spiRw( _spi ),
+        : _spi( std::move( spi ) ), _spiRw( _spi, Dma::allocate( DMA1 ), Dma::allocate( DMA1 ) ),
           _cmdHandler( std::move( cmdHandler ) ), _csPin( csPin )
     {
         _spi.onTransactionEnds( [&]{ _startCommand(); } );
@@ -111,7 +111,7 @@ private:
     }
 
     Spi _spi;
-    SpiReaderWriter _spiRw;
+    SpiReaderWriter< memory::Pool > _spiRw;
     CmdHandler _cmdHandler;
     Gpio::Pin _csPin;
 };
