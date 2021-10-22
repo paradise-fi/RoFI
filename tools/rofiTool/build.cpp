@@ -31,7 +31,7 @@ rofi::configuration::Rofibot buildWishedRofibot( BotType botType ) {
     int n, m;
     switch ( botType ) {
         case BotType::UM:
-            rofibot.insert( buildUniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+            rofibot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
             return rofibot;
         case BotType::UMpadN:
             n = readIntWithMsg( "Dimension: " );
@@ -42,12 +42,12 @@ rofi::configuration::Rofibot buildWishedRofibot( BotType botType ) {
             return buildUMpad( n, m );
         case BotType::NPad:
             n = readIntWithMsg( "Dimension: " );
-            rofibot.insert( buildPad( n ) );
+            rofibot.insert( Pad( n ) );
             break;
         case BotType::NMPad:
             n = readIntWithMsg( "Dimension n: " );
             m = readIntWithMsg( "Dimension m: " );
-            rofibot.insert( buildPad( n, m ) );
+            rofibot.insert( Pad( n, m ) );
             break;
         default:
             throw std::runtime_error( "Unknown model" );

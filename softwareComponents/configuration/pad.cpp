@@ -2,11 +2,11 @@
 
 namespace rofi::configuration {
 
-Module buildPad( int size ) {
+Module Pad::buildPad( int size ) {
     return buildPad( size, size );
 }
 
-Module buildPad( int sizeN, int sizeM ) {
+Module Pad::buildPad( int sizeN, int sizeM ) {
     assert( sizeN > 0 && sizeM > 0 && "buildPad has to get positive dimensions" );
     std::vector< Component > components( sizeN * sizeM, Component { ComponentType::Roficom } );
 

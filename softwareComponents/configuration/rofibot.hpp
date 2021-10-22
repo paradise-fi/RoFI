@@ -171,6 +171,8 @@ public:
             _rootComponent = _computeRoot();
     }
 
+    virtual ~Module() = default;
+
     int getJointCount() const {
         return _joints.size();
     }
@@ -277,18 +279,22 @@ public:
      * \brief Get read-only view of the bodies
      */
     tcb::span< const Component > bodies() {
-        return { &_components[ _connectorCount ], &_components.back() };
+        return components().subspan( _connectorCount );
     }
 
     const Component& body( int idx ) {
         return bodies()[ idx ];
     }
 
+    tcb::span< const ComponentJoint > joints() const {
+        return _joints;
+    }
+
     /**
      * \brief Get read-only view of the connectors
      */
     tcb::span< const Component > connectors() {
-        return { &_components.front(), size_t( _connectorCount ) };
+        return components().subspan( 0, _connectorCount );
     };
 
     const Component& connector( int idx ) {

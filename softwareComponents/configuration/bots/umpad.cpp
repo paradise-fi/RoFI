@@ -17,7 +17,7 @@ Rofibot buildUMpad( int n, int m ) {
 
     for ( int i = 0; i < n; i++ ) {
         for ( int j = 0; j < m; j++ ) {
-            auto& md = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 90_deg ) );
+            auto& md = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 90_deg ) );
             if ( j > 0 )
                 connect( md.connector( 4 ), bot.getModule( modules.back() )->connector( 3 )
                        , roficom::Orientation::South );
