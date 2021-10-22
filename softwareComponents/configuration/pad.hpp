@@ -6,8 +6,17 @@
 
 namespace rofi::configuration {
 
-Module buildPad( int sizeN, int sizeM );
+class Pad : public Module {
+    Module buildPad( int sizeN, int sizeM );
+    Module buildPad( int size );
 
-Module buildPad( int size );
+public:
+    Pad( int sizeN, int sizeM ) : Module( buildPad( sizeN, sizeM ) ) {};
+
+    explicit Pad( int size ) : Module( buildPad( size ) ) {};
+
+    virtual ~Pad() = default;
+};
+
 
 } // namespace rofi::configuration

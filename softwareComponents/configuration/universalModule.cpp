@@ -2,7 +2,7 @@
 
 namespace rofi::configuration {
 
-Module buildUniversalModule( int id, Angle alpha, Angle beta, Angle gamma ) {
+Module UniversalModule::buildUniversalModule( int id, Angle alpha, Angle beta, Angle gamma ) {
     std::vector< Component > components = {
         Component{ ComponentType::Roficom },
         Component{ ComponentType::Roficom },
@@ -46,11 +46,11 @@ Module buildUniversalModule( int id, Angle alpha, Angle beta, Angle gamma ) {
 }
 
 bool checkOldConfigurationEInput( int id1, int id2, int side1, int side2, int dock1, int dock2
-                                    , int orientation, const std::map< int, ModuleId >& moduleMapping ) {
+                                    , int orientation, const std::set< ModuleId >& knownModules ) {
     bool ok = true;
-    if ( moduleMapping.count( id1 ) == 0 )
+    if ( knownModules.count( id1 ) == 0)
         std::cerr << "Unknown module id " << id1 << " skipping edge\n", ok = false;
-    if ( moduleMapping.count( id2 ) == 0 )
+    if ( knownModules.count( id2 ) == 0 )
         std::cerr << "Unknown module id " << id2 << " skipping edge\n", ok = false;
     if ( orientation > 3 || orientation < 0 )
         std::cerr << "Invalid orientation: " << orientation << "\n", ok = false;
@@ -101,7 +101,7 @@ auto parseEdge( std::istringstream& line ) {
 Rofibot readOldConfigurationFormat( std::istream& s ) {
     std::string line;
     Rofibot rofibot;
-    std::map< int, ModuleId > moduleMapping;
+    std::set< ModuleId > knownModules;
     while ( std::getline( s, line ) ) {
         std::istringstream lineStr( line );
         std::string type;
@@ -116,18 +116,17 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
             double alpha, beta, gamma;
             int id;
             lineStr >> id >> alpha >> beta >> gamma;
-            auto rModule = buildUniversalModule( id, Angle::deg( alpha ), Angle::deg( beta ), Angle::deg( gamma ) );
-            rModule = rofibot.insert( rModule );
-            std::cout << "id: " << id << " rModule.id: " << rModule.getId() << "\n";
-            moduleMapping.insert({ id, rModule.getId() });
+            auto rModule = UniversalModule( id, Angle::deg( alpha ), Angle::deg( beta ), Angle::deg( gamma ) );
+            rofibot.insert( std::move( rModule ) );
+            knownModules.insert( id );
             continue;
         }
         if ( type == "E" ) {
             auto [ id1, id2, side1, side2, dock1, dock2, orientation ] = parseEdge( lineStr );
-            if ( !checkOldConfigurationEInput( id1, id2, side1, side2, dock1, dock2, orientation, moduleMapping ) )
+            if ( !checkOldConfigurationEInput( id1, id2, side1, side2, dock1, dock2, orientation, knownModules ) )
                 throw std::runtime_error( "Invalid edge specification" );
-            auto& component1 = rofibot.getModule( moduleMapping[ id1 ] )->connector( side1 * 3 + dock1 );
-            auto& component2 = rofibot.getModule( moduleMapping[ id2 ] )->connector( side2 * 3 + dock2 );
+            auto& component1 = rofibot.getModule( id1 )->connector( side1 * 3 + dock1 );
+            auto& component2 = rofibot.getModule( id2 )->connector( side2 * 3 + dock2 );
             connect( component1, component2, static_cast< roficom::Orientation >( orientation ) );
             continue;
         }
@@ -137,4 +136,3 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
 }
 
 }  // namespace rofi::configuration
-

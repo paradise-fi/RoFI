@@ -12,7 +12,7 @@ TEST_CASE( "Base Module Test" ) {}
 
 TEST_CASE( "Universal Module Test" ) {
     SECTION( "Creation" ) {
-        Module um = buildUniversalModule( 0, 0_deg, 0_deg, 0_deg );
+        Module um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
         CHECK( um.components().size() == 10 );
         um.prepare();
         REQUIRE( um.getOccupiedPositions().size() == 2 );
@@ -21,7 +21,7 @@ TEST_CASE( "Universal Module Test" ) {
     }
 
     SECTION( "Roficoms" ) {
-        Module um = buildUniversalModule( 0, 0_deg, 0_deg, 0_deg );
+        Module um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
         CHECK( um.connectors().size() == 6 );
 
         for ( int i = 0; i < um.connectors().size(); i++ ) {
@@ -42,7 +42,7 @@ TEST_CASE( "Universal Module Test" ) {
     }
 
     SECTION( "Position - default" ) {
-        Module um = buildUniversalModule( 0, 0_deg, 0_deg, 0_deg );
+        Module um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
         // A part
         CHECK( equals( um.getComponentPosition( 0 ), identity ) );
         CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -70,7 +70,7 @@ TEST_CASE( "Universal Module Test" ) {
 
     SECTION( "Position - rotated gamma" ) {
         SECTION( "degrees" ) {
-            Module um = buildUniversalModule( 0, 0_deg, 0_deg, 90_deg );
+            Module um = UniversalModule( 0, 0_deg, 0_deg, 90_deg );
             // A part
             CHECK( equals( um.getComponentPosition( 0 ), identity ) );
             CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -101,7 +101,7 @@ TEST_CASE( "Universal Module Test" ) {
     }
 
     SECTION( "radians" ) {
-        Module um = buildUniversalModule( 0, 0_rad, 0_rad, 1.57079632679489661923_rad ); // 0, 0, M_PI_2
+        Module um = UniversalModule( 0, 0_rad, 0_rad, 1.57079632679489661923_rad ); // 0, 0, M_PI_2
         // A part
         CHECK( equals( um.getComponentPosition( 0 ), identity ) );
         CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -132,7 +132,7 @@ TEST_CASE( "Universal Module Test" ) {
 
     SECTION( "Position - rotated beta + gamma" ) {
         SECTION( "degrees" ) {
-            Module um = buildUniversalModule( 0, 0_deg, Angle::deg( -90 ), 90_deg );
+            Module um = UniversalModule( 0, 0_deg, Angle::deg( -90 ), 90_deg );
             // A part
             CHECK( equals( um.getComponentPosition( 0 ), identity ) );
             CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -164,7 +164,7 @@ TEST_CASE( "Universal Module Test" ) {
         }
 
         SECTION( "radians" ) {
-            Module um = buildUniversalModule( 0, 0_rad, Angle::rad( -1.57079632679489661923 ), 1.57079632679489661923_rad );
+            Module um = UniversalModule( 0, 0_rad, Angle::rad( -1.57079632679489661923 ), 1.57079632679489661923_rad );
             // A part
             CHECK( equals( um.getComponentPosition( 0 ), identity ) );
             CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -200,8 +200,8 @@ TEST_CASE( "Universal Module Test" ) {
 TEST_CASE( "Two modules next to each other" ) {
     int idCounter = 0;
     Rofibot bot;
-    auto& m1 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m2 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     auto con = m2.connector( 1 );
     connect( m1.connector( 0 ), con, Orientation::South );
     connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
@@ -245,8 +245,8 @@ TEST_CASE( "Two modules next to each other" ) {
 TEST_CASE( "Two modules - different angles" ) {
     int idCounter = 0;
     Rofibot bot;
-    auto& m1 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m2 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     connect( m1.connector( 3 ), m2.connector( 0 ), Orientation::South );
     connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
     REQUIRE_NOTHROW( bot.prepare() );
@@ -270,9 +270,9 @@ TEST_CASE( "Two modules - different angles" ) {
 TEST_CASE( "Three modules -- connect docks 3 to 0s " ) {
     int idCounter = 0;
     Rofibot bot;
-    auto& m1 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m2 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m3 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m3 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     connect( m1.connector( 3 ), m2.connector( 0 ), Orientation::South );
     connect( m2.connector( 3 ), m3.connector( 0 ), Orientation::South );
     connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
@@ -304,23 +304,23 @@ TEST_CASE( "Basic rofibot manipulation" ) {
     using namespace rofi;
     int idCounter = 0;
     Rofibot bot;
-    auto& m1 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     CHECK( m1.getId() == 0 );
     CHECK( bot.getModule( 0 )->getId() == 0 );
     REQUIRE( m1.getId() == 0 );
     REQUIRE( m1.parent == &bot );
     CHECK( &m1 == bot.getModule( 0 ) );
-    auto& m2 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     REQUIRE( m2.getId() == 1 );
     CHECK( m1.getId() == 0 );
     CHECK( bot.getModule( 0 )->getId() == 0 );
     REQUIRE( &m1 == bot.getModule( 0 ) );
-    auto& m3 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m3 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     REQUIRE( m3.getId() == 2 );
     REQUIRE( m1.parent == &bot );
-    auto& m4 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m4 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     REQUIRE( m4.getId() == 3 );
-    auto& m5 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m5 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     REQUIRE( m5.getId() == 4 );
     CHECK( bot.modules().size() == 5 );
 
@@ -342,11 +342,11 @@ TEST_CASE( "Colliding configuration" ) {
     using namespace rofi;
     int idCounter = 0;
     Rofibot bot;
-    auto& m1 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m2 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m3 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m4 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m5 = bot.insert( buildUniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m3 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m4 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m5 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     CHECK( bot.modules().size() == 5 );
 
     connect( m1.connector( 1 ), m2.connector( 2 ), Orientation::North );
@@ -363,9 +363,9 @@ TEST_CASE( "Changing modules ID" ) {
     using namespace rofi;
     Rofibot bot;
 
-    auto& m1 = bot.insert( buildUniversalModule( 0, 0_deg, 0_deg, 0_deg ) );
-    auto& m2 = bot.insert( buildUniversalModule( 1, 0_deg, 0_deg, 0_deg ) );
-    auto& m3 = bot.insert( buildUniversalModule( 2, 0_deg, 0_deg, 0_deg ) );
+    auto& m1 = bot.insert( UniversalModule( 0, 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = bot.insert( UniversalModule( 1, 0_deg, 0_deg, 0_deg ) );
+    auto& m3 = bot.insert( UniversalModule( 2, 0_deg, 0_deg, 0_deg ) );
     connect( m1.connector( 5 ), m2.connector( 2 ), Orientation::North );
     connect( m2.connector( 5 ), m3.connector( 2 ), Orientation::North );
     connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
