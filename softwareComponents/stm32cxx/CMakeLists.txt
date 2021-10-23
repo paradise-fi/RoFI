@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.12)
 
 include(FetchContent)
 
+# We need to capture the source directory as it is used in functions invoked
+# from other list files
+set(STM32CXX_SRC "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "STM32CXX_SRC")
+
 function(setup_stm32cxx PREFIX MCU)
     if (NOT TARGET ${PREFIX}_CUBE)
         setup_stm32cube(${PREFIX} ${MCU})
@@ -80,9 +84,9 @@ function(setup_stm32cxx PREFIX MCU)
         cmake_parse_arguments(A "" "" "SRC_GLOB;PORT_GLOB;LINK_HAL;LINK" ${ARGN})
 
         list(TRANSFORM A_SRC_GLOB
-             PREPEND $ENV{ROFI_ROOT}/softwareComponents/stm32cxx/src/)
+             PREPEND ${STM32CXX_SRC}/src/)
         list(TRANSFORM A_PORT_GLOB
-             PREPEND $ENV{ROFI_ROOT}/softwareComponents/stm32cxx/port/${MCU_FAMILY_LOWER}/)
+             PREPEND ${STM32CXX_SRC}/port/${MCU_FAMILY_LOWER}/)
         list(TRANSFORM A_LINK_HAL
              PREPEND ${PREFIX}_)
 
@@ -102,9 +106,10 @@ function(setup_stm32cxx PREFIX MCU)
     target_link_libraries(${PREFIX}_stm32cxx INTERFACE
         function2 ${PREFIX}_printf
         ${PREFIX}_HAL ${PREFIX}_LL ${PREFIX}_HAL_Gpio)
+    message("INC: ${STM32CXX_SRC}")
     target_include_directories(${PREFIX}_stm32cxx INTERFACE
-        $ENV{ROFI_ROOT}/softwareComponents/stm32cxx/src
-        $ENV{ROFI_ROOT}/softwareComponents/stm32cxx/port/${MCU_FAMILY_LOWER})
+        ${STM32CXX_SRC}/src
+        ${STM32CXX_SRC}/port/${MCU_FAMILY_LOWER})
 
     add_sublib(uart
         SRC_GLOB uart.cpp
