@@ -62,6 +62,10 @@ function(setup_stm32cxx PREFIX MCU)
     if (${MCU_FAMILY} STREQUAL "STM32F4xx")
         set(USB_SRC ${libusb_stm32_SOURCE_DIR}/src/usbd_stm32f429_otgfs.c)
         set(USB_DEFS "-DUSBD_SOF_DISABLED")
+    elseif (${MCU_FAMILY} STREQUAL "STM32G4xx")
+        set(USB_SRC ${libusb_stm32_SOURCE_DIR}/src/usbd_stm32l433_devfs.c
+                    ${libusb_stm32_SOURCE_DIR}/src/usbd_stm32l052_devfs_asm.S)
+        set(USB_DEFS "-DUSBD_SOF_DISABLED" "-DSTM32G4" "-DUSB_PMASIZE=1024")
     endif()
     # TBA: Add support for other families
     if (NOT "${USB_SRC}" STREQUAL "")
@@ -106,7 +110,6 @@ function(setup_stm32cxx PREFIX MCU)
     target_link_libraries(${PREFIX}_stm32cxx INTERFACE
         function2 ${PREFIX}_printf
         ${PREFIX}_HAL ${PREFIX}_LL ${PREFIX}_HAL_Gpio)
-    message("INC: ${STM32CXX_SRC}")
     target_include_directories(${PREFIX}_stm32cxx INTERFACE
         ${STM32CXX_SRC}/src
         ${STM32CXX_SRC}/port/${MCU_FAMILY_LOWER})

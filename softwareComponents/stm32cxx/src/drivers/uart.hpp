@@ -70,6 +70,9 @@ public:
         #ifdef LPUART1
             LPUART1,
         #endif
+        #ifdef LPUART2
+            LPUART2,
+        #endif
     };
 
     /**

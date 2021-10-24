@@ -44,6 +44,13 @@ function(setup_stm32cube PREFIX MCU)
             GIT_TAG        v1.3.0
         )
         set(hal hal_g0)
+    elseif(${MCU_FAMILY} STREQUAL "STM32G4xx")
+        FetchContent_Declare(
+            hal_g4
+            GIT_REPOSITORY https://github.com/STMicroelectronics/STM32CubeG4.git
+            GIT_TAG        v1.4.0
+        )
+        set(hal hal_g4)
     else()
         message(FATAL_ERROR "Unsupported MCU family '${MCU_FAMILY}' specified." )
     endif()
