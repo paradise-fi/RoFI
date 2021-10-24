@@ -1,13 +1,15 @@
 #pragma once
 
 #include <cstdint>
+#include <string>
 #include <array>
-#include <cstring>
 #include <vector>
 #include <map>
 #include <functional>
 #include <cassert>
+#include <cstring>
 #include <memory>
+
 #include <usb.h>
 #include <stm32.h>
 
@@ -241,7 +243,7 @@ public:
     }
 
     int read( void *buff, int maxLength );
-    int write( void *buff, int length );
+    int write( const void *buff, int length );
     void stall();
     void unstall();
 
@@ -311,6 +313,9 @@ public:
         return *this;
     }
 
+    auto& parent() {
+        return *_parent;
+    }
 private:
     UsbInterface( UsbDevice *parent, int intIdx ):
         _parent( parent ), _intIdx( intIdx )
@@ -512,6 +517,10 @@ public:
             s.emplace( langId, StringDescriptor( sd ) );
         return addString( s );
     }
+
+    auto& nativeDevice() {
+        return _device;
+    }
 private:
     UsbDevice() {
         _deviceDescriptor.bLength = sizeof( _deviceDescriptor );
@@ -593,8 +602,6 @@ private:
                     if ( desc == langs.end() )
                         return usbd_fail;
                     std::tie( *address, *length ) = desc->second.getDescriptor();
-                    Dbg::error( "Returning descriptor with length %d", dNumber );
-                    Dbg::hexDump( *address, *length );
                     return usbd_ack;
                 }
                 return usbd_fail;

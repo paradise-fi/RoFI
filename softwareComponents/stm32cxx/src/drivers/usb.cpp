@@ -1,7 +1,6 @@
 #include <drivers/usb.hpp>
 
 void UsbEndpoint::setup() {
-    Dbg::error( "Configuring endpoint %02x", _descriptor.bEndpointAddress );
     usbd_ep_config( &_parent->_device, _descriptor.bEndpointAddress,
         _descriptor.bmAttributes, _descriptor.wMaxPacketSize );
     if ( isDevToHost() )
@@ -11,7 +10,6 @@ void UsbEndpoint::setup() {
 }
 
 void UsbEndpoint::teardown() {
-    Dbg::error( "Tearing down endpoint %02x", _descriptor.bEndpointAddress );
     usbd_ep_deconfig( &_parent->_device, _descriptor.bEndpointAddress );
     if ( isDevToHost() )
         _parent->_devToHostEndp[ _descriptor.bEndpointAddress & 0x7 ] = nullptr;
@@ -25,10 +23,11 @@ int UsbEndpoint::read( void *buff, int maxLength ) {
         buff, maxLength );
 }
 
-int UsbEndpoint::write( void *buff, int length ) {
+int UsbEndpoint::write( const void *buff, int length ) {
     assert( isDevToHost() );
+    // We can use const cast, as the driver does not modify the buffer
     return usbd_ep_write( &_parent->_device, _descriptor.bEndpointAddress,
-        buff, length );
+        const_cast< void * >( buff ), length );
 }
 
 void UsbEndpoint::stall() {
