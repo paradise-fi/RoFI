@@ -3,7 +3,8 @@
 
 using namespace rofi::simplesim;
 using namespace rofi::messages;
-using ModuleStatesPtr = std::shared_ptr< ModuleStates >;
+using RofiCmdPtr = CommandHandler::RofiCmdPtr;
+
 
 RofiResp getJointResp( ModuleId moduleId,
                        int joint,
@@ -34,56 +35,87 @@ RofiResp getConnectorResp( ModuleId moduleId, int connector, ConnectorCmd::Type 
 }
 
 
-std::optional< RofiResp > getJointCapabilities( ModuleStatesPtr moduleStates,
-                                                ModuleId moduleId,
-                                                int joint )
+std::optional< RofiResp > getJointCapabilities( const ModuleStates & moduleStates,
+                                                const RofiCmd & rofiCmd )
 {
+    assert( rofiCmd.cmdtype() == RofiCmd::JOINT_CMD );
+    assert( rofiCmd.jointcmd().cmdtype() == JointCmd::GET_CAPABILITIES );
+
+    ModuleId moduleId = rofiCmd.rofiid();
+    int joint = rofiCmd.jointcmd().joint();
+
     // TODO get from configuration
     auto resp = getJointResp( moduleId, joint, JointCmd::GET_CAPABILITIES );
     *resp.mutable_jointresp()->mutable_capabilities() = {}; // TODO
     return resp;
 }
 
-std::optional< RofiResp > getJointPosition( ModuleStatesPtr moduleStates,
-                                            ModuleId moduleId,
-                                            int joint )
+std::optional< RofiResp > getJointPosition( const ModuleStates & moduleStates,
+                                            const RofiCmd & rofiCmd )
 {
+    assert( rofiCmd.cmdtype() == RofiCmd::JOINT_CMD );
+    assert( rofiCmd.jointcmd().cmdtype() == JointCmd::GET_POSITION );
+
+    ModuleId moduleId = rofiCmd.rofiid();
+    int joint = rofiCmd.jointcmd().joint();
+
     // TODO get from configuration
     auto position = 0.f; // TODO
     return getJointResp( moduleId, joint, JointCmd::GET_POSITION, position );
 }
 
-std::optional< RofiResp > getJointVelocity( ModuleStatesPtr moduleStates,
-                                            ModuleId moduleId,
-                                            int joint )
+std::optional< RofiResp > getJointVelocity( const ModuleStates & moduleStates,
+                                            const RofiCmd & rofiCmd )
 {
+    assert( rofiCmd.cmdtype() == RofiCmd::JOINT_CMD );
+    assert( rofiCmd.jointcmd().cmdtype() == JointCmd::GET_VELOCITY );
+
+    ModuleId moduleId = rofiCmd.rofiid();
+    int joint = rofiCmd.jointcmd().joint();
+
     // TODO get from configuration
     auto velocity = 0.f; // TODO
     return getJointResp( moduleId, joint, JointCmd::GET_VELOCITY, velocity );
 }
 
-std::nullopt_t setJointPosWithSpeed( ModuleStatesPtr moduleStates,
-                                     ModuleId moduleId,
-                                     int joint,
-                                     ModuleStates::JointPositionControl control )
+std::nullopt_t setJointPosWithSpeed( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
 {
+    assert( rofiCmd.cmdtype() == RofiCmd::JOINT_CMD );
+    assert( rofiCmd.jointcmd().cmdtype() == JointCmd::SET_POS_WITH_SPEED );
+
+    ModuleId moduleId = rofiCmd.rofiid();
+    int joint = rofiCmd.jointcmd().joint();
+
+    const auto & setPosWithSpeed = rofiCmd.jointcmd().setposwithspeed();
+    auto pos = setPosWithSpeed.position();
+    auto speed = setPosWithSpeed.speed();
+    if ( speed < 0.f ) {
+        std::cerr << "Got set position command with negative speed. Setting to zero.\n";
+        speed = 0.f;
+    }
+    auto control = ModuleStates::JointPositionControl{ .position = pos, .speed = speed };
+
     // TODO clamp pos and speed
-    assert( moduleStates );
-    if ( !moduleStates->setPositionControl( moduleId, joint, control ) ) {
+    if ( !moduleStates.setPositionControl( moduleId, joint, control ) ) {
         std::cerr << "Rofi " << moduleId << " doesn't exist or does not have joint " << joint
                   << " (joint command type: " << JointCmd::SET_POS_WITH_SPEED << ")\n";
     }
     return std::nullopt;
 }
 
-std::nullopt_t setJointVelocity( ModuleStatesPtr moduleStates,
-                                 ModuleId moduleId,
-                                 int joint,
-                                 ModuleStates::JointVelocityControl control )
+std::nullopt_t setJointVelocity( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
 {
+    assert( rofiCmd.cmdtype() == RofiCmd::JOINT_CMD );
+    assert( rofiCmd.jointcmd().cmdtype() == JointCmd::SET_VELOCITY );
+
+    ModuleId moduleId = rofiCmd.rofiid();
+    int joint = rofiCmd.jointcmd().joint();
+
+    auto velocity = rofiCmd.jointcmd().setvelocity().velocity();
+    auto control = ModuleStates::JointVelocityControl{ .velocity = velocity };
+
     // TODO clamp velocity
-    assert( moduleStates );
-    if ( !moduleStates->setVelocityControl( moduleId, joint, control ) ) {
+    if ( !moduleStates.setVelocityControl( moduleId, joint, control ) ) {
         std::cerr << "Rofi " << moduleId << " doesn't exist or does not have joint " << joint
                   << " (joint command type: " << JointCmd::SET_VELOCITY << ")\n";
     }
@@ -91,12 +123,16 @@ std::nullopt_t setJointVelocity( ModuleStatesPtr moduleStates,
 }
 
 
-std::optional< RofiResp > getConnectorState( ModuleStatesPtr moduleStates,
-                                             ModuleId moduleId,
-                                             int connector )
+std::optional< RofiResp > getConnectorState( const ModuleStates & moduleStates,
+                                             const RofiCmd & rofiCmd )
 {
-    assert( moduleStates );
-    if ( auto state = moduleStates->getConnectorState( moduleId, connector ) ) {
+    assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
+    assert( rofiCmd.connectorcmd().cmdtype() == ConnectorCmd::GET_STATE );
+
+    ModuleId moduleId = rofiCmd.rofiid();
+    int connector = rofiCmd.connectorcmd().connector();
+
+    if ( auto state = moduleStates.getConnectorState( moduleId, connector ) ) {
         auto resp = getConnectorResp( moduleId, connector, ConnectorCmd::GET_STATE );
         *resp.mutable_connectorresp()->mutable_state() = std::move( *state );
         return resp;
@@ -106,41 +142,57 @@ std::optional< RofiResp > getConnectorState( ModuleStatesPtr moduleStates,
     return std::nullopt;
 }
 
-std::nullopt_t extendConnector( ModuleStatesPtr moduleStates, ModuleId moduleId, int connector )
+std::nullopt_t extendConnector( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
 {
-    assert( moduleStates );
+    assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
+    assert( rofiCmd.connectorcmd().cmdtype() == ConnectorCmd::CONNECT );
+
+    ModuleId moduleId = rofiCmd.rofiid();
+    int connector = rofiCmd.connectorcmd().connector();
+
     // TODO check somewhere for new connections
-    if ( !moduleStates->extendConnector( moduleId, connector ) ) {
+    if ( !moduleStates.extendConnector( moduleId, connector ) ) {
         std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
                   << connector << " (connector command type: " << ConnectorCmd::CONNECT << ")\n";
     }
     return std::nullopt;
 }
 
-std::nullopt_t retractConnector( ModuleStatesPtr moduleStates, ModuleId moduleId, int connector )
+std::nullopt_t retractConnector( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
 {
+    assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
+    assert( rofiCmd.connectorcmd().cmdtype() == ConnectorCmd::DISCONNECT );
+
+    ModuleId moduleId = rofiCmd.rofiid();
+    int connector = rofiCmd.connectorcmd().connector();
+
     // TODO can you get a message after disconnect command?
-    assert( moduleStates );
+
     // TODO send disconnect event to both sides
-    if ( !moduleStates->retractConnector( moduleId, connector ) ) {
+    if ( !moduleStates.retractConnector( moduleId, connector ) ) {
         std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
                   << connector << " (connector command type: " << ConnectorCmd::DISCONNECT << ")\n";
     }
     return std::nullopt;
 }
 
-std::optional< RofiResp > sendConnectorPacket( ModuleStatesPtr moduleStates,
-                                               ModuleId moduleId,
-                                               int connector,
-                                               Packet packet )
+std::optional< RofiResp > sendConnectorPacket( ModuleStates & moduleStates,
+                                               const RofiCmd & rofiCmd )
 {
-    assert( moduleStates );
-    if ( auto connectedToOpt = moduleStates->getConnectedTo( moduleId, connector ) ) {
+    assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
+    assert( rofiCmd.connectorcmd().cmdtype() == ConnectorCmd::PACKET );
+
+    ModuleId moduleId = rofiCmd.rofiid();
+    int connector = rofiCmd.connectorcmd().connector();
+
+    const Packet & packet = rofiCmd.connectorcmd().packet();
+
+    if ( auto connectedToOpt = moduleStates.getConnectedTo( moduleId, connector ) ) {
         if ( auto connectedTo = *connectedToOpt ) {
             auto resp = getConnectorResp( connectedTo->moduleId,
                                           connectedTo->connector,
                                           ConnectorCmd::PACKET );
-            *resp.mutable_connectorresp()->mutable_packet() = std::move( packet );
+            *resp.mutable_connectorresp()->mutable_packet() = packet;
             return resp;
         }
 
@@ -153,27 +205,50 @@ std::optional< RofiResp > sendConnectorPacket( ModuleStatesPtr moduleStates,
     return std::nullopt;
 }
 
-std::optional< RofiResp > setConnectorPower( ModuleStatesPtr moduleStates,
-                                             ModuleId moduleId,
-                                             int connector,
-                                             ConnectorCmd::Line line,
-                                             bool connect )
+std::optional< RofiResp > setConnectorPower( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
 {
-    assert( moduleStates );
-    if ( !moduleStates->setConnectorPower( moduleId, connector, line, connect ) ) {
+    assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
+    assert( rofiCmd.connectorcmd().cmdtype() == ConnectorCmd::CONNECT_POWER );
+
+    ModuleId moduleId = rofiCmd.rofiid();
+    int connector = rofiCmd.connectorcmd().connector();
+    ConnectorCmd::Line line = rofiCmd.connectorcmd().line();
+
+    if ( !moduleStates.setConnectorPower( moduleId, connector, line, true ) ) {
         std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
-                  << connector << " (connector command type: "
-                  << ( connect ? ConnectorCmd::CONNECT_POWER : ConnectorCmd::DISCONNECT_POWER )
+                  << connector << " (connector command type: " << ConnectorCmd::CONNECT_POWER
+                  << ")\n";
+    }
+    return std::nullopt;
+}
+
+std::optional< RofiResp > setDisconnectorPower( ModuleStates & moduleStates,
+                                                const RofiCmd & rofiCmd )
+{
+    assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
+    assert( rofiCmd.connectorcmd().cmdtype() == ConnectorCmd::DISCONNECT_POWER );
+
+    ModuleId moduleId = rofiCmd.rofiid();
+    int connector = rofiCmd.connectorcmd().connector();
+    ConnectorCmd::Line line = rofiCmd.connectorcmd().line();
+
+    if ( !moduleStates.setConnectorPower( moduleId, connector, line, false ) ) {
+        std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
+                  << connector << " (connector command type: " << ConnectorCmd::DISCONNECT_POWER
                   << ")\n";
     }
     return std::nullopt;
 }
 
 
-std::optional< RofiResp > getModuleDescription( ModuleStatesPtr moduleStates, ModuleId moduleId )
+std::optional< RofiResp > getModuleDescription( const ModuleStates & moduleStates,
+                                                const RofiCmd & rofiCmd )
 {
-    assert( moduleStates );
-    if ( auto description = moduleStates->getDescription( moduleId ) ) {
+    assert( rofiCmd.cmdtype() == RofiCmd::DESCRIPTION );
+
+    ModuleId moduleId = rofiCmd.rofiid();
+
+    if ( auto description = moduleStates.getDescription( moduleId ) ) {
         RofiResp resp;
         resp.set_rofiid( moduleId );
         resp.set_resptype( RofiCmd::DESCRIPTION );
@@ -185,141 +260,70 @@ std::optional< RofiResp > getModuleDescription( ModuleStatesPtr moduleStates, Mo
 }
 
 
-CommandHandler::CommandCallbacks CommandHandler::onJointCmdCallbacks( ModuleId moduleId,
-                                                                      const JointCmd & cmd )
+CommandHandler::CommandCallbacks CommandHandler::onJointCmdCallbacks( JointCmd::Type cmdType )
 {
-    switch ( cmd.cmdtype() ) {
+    switch ( cmdType ) {
         case JointCmd::NO_CMD:
-        {
             return {};
-        }
+
         case JointCmd::GET_CAPABILITIES:
-        {
-            return { .immediate = std::bind( getJointCapabilities,
-                                             _moduleStates,
-                                             moduleId,
-                                             cmd.joint() ) };
-        }
+            return { .immediate = getJointCapabilities };
+
         case JointCmd::GET_POSITION:
-        {
-            return { .immediate = std::bind( getJointPosition,
-                                             _moduleStates,
-                                             moduleId,
-                                             cmd.joint() ) };
-        }
+            return { .immediate = getJointPosition };
+
         case JointCmd::GET_VELOCITY:
-        {
-            return { .immediate = std::bind( getJointVelocity,
-                                             _moduleStates,
-                                             moduleId,
-                                             cmd.joint() ) };
-        }
+            return { .immediate = getJointVelocity };
+
         case JointCmd::SET_POS_WITH_SPEED:
-        {
-            auto pos = cmd.setposwithspeed().position();
-            auto speed = cmd.setposwithspeed().speed();
-            if ( speed < 0.f ) {
-                std::cerr << "Got set position command with negative speed. Setting to zero.\n";
-                speed = 0.f;
-            }
-            auto control = ModuleStates::JointPositionControl{ .position = pos, .speed = speed };
+            return { .delayed = setJointPosWithSpeed };
 
-            return { .delayed = std::bind( setJointPosWithSpeed,
-                                           _moduleStates,
-                                           moduleId,
-                                           cmd.joint(),
-                                           control ) };
-        }
         case JointCmd::SET_VELOCITY:
-        {
-            auto velocity = cmd.setvelocity().velocity();
-            auto control = ModuleStates::JointVelocityControl{ .velocity = velocity };
+            return { .delayed = setJointVelocity };
 
-            return { .delayed = std::bind( setJointVelocity,
-                                           _moduleStates,
-                                           moduleId,
-                                           cmd.joint(),
-                                           control ) };
-        }
         case JointCmd::GET_TORQUE:
         case JointCmd::SET_TORQUE:
-        {
-            std::cerr << "Torque joint command type: " << cmd.cmdtype() << "\n";
+            std::cerr << "Torque joint command type: " << cmdType << "\n";
             return {};
-        }
+
         case JointCmd::ERROR:
-        {
-            std::cerr << "Error joint command type: " << cmd.cmdtype() << "\n";
+            std::cerr << "Error joint command type: " << cmdType << "\n";
             return {};
-        }
+
         default:
-        {
-            std::cerr << "Unknown joint command type: " << cmd.cmdtype() << "\n";
+            std::cerr << "Unknown joint command type: " << cmdType << "\n";
             return {};
-        }
     }
 }
 
-CommandHandler::CommandCallbacks CommandHandler::onConnectorCmdCallbacks( ModuleId moduleId,
-                                                                          const ConnectorCmd & cmd )
+CommandHandler::CommandCallbacks CommandHandler::onConnectorCmdCallbacks(
+        ConnectorCmd::Type cmdType )
 {
-    switch ( cmd.cmdtype() ) {
+    switch ( cmdType ) {
         case ConnectorCmd::NO_CMD:
-        {
             return {};
-        }
+
         case ConnectorCmd::GET_STATE:
-        {
-            return { .immediate = std::bind( getConnectorState,
-                                             _moduleStates,
-                                             moduleId,
-                                             cmd.connector() ) };
-        }
+            return { .immediate = getConnectorState };
+
         case ConnectorCmd::CONNECT:
-        {
-            return { .delayed = std::bind( extendConnector,
-                                           _moduleStates,
-                                           moduleId,
-                                           cmd.connector() ) };
-        }
+            return { .delayed = extendConnector };
+
         case ConnectorCmd::DISCONNECT:
-        {
-            return { .delayed = std::bind( extendConnector,
-                                           _moduleStates,
-                                           moduleId,
-                                           cmd.connector() ) };
-        }
+            return { .delayed = retractConnector };
+
         case ConnectorCmd::PACKET:
-        {
-            return { .delayed = std::bind( sendConnectorPacket,
-                                           _moduleStates,
-                                           moduleId,
-                                           cmd.connector(),
-                                           cmd.packet() ) };
-        }
+            return { .delayed = sendConnectorPacket };
+
         case ConnectorCmd::CONNECT_POWER:
-        {
-            return { .delayed = std::bind( setConnectorPower,
-                                           _moduleStates,
-                                           moduleId,
-                                           cmd.connector(),
-                                           cmd.line(),
-                                           true ) };
-        }
+            return { .delayed = setConnectorPower };
+
         case ConnectorCmd::DISCONNECT_POWER:
-        {
-            return { .delayed = std::bind( setConnectorPower,
-                                           _moduleStates,
-                                           moduleId,
-                                           cmd.connector(),
-                                           cmd.line(),
-                                           false ) };
-        }
+            return { .delayed = setDisconnectorPower };
+
         default:
-        {
-            std::cerr << "Unknown connector command type: " << cmd.cmdtype() << "\n";
+            std::cerr << "Unknown connector command type: " << cmdType << "\n";
             return {};
-        }
     }
 }
 
@@ -327,31 +331,24 @@ CommandHandler::CommandCallbacks CommandHandler::onRofiCmdCallbacks( const RofiC
 {
     switch ( cmd.cmdtype() ) {
         case RofiCmd::NO_CMD:
-        {
             return {};
-        }
+
         case RofiCmd::JOINT_CMD:
-        {
-            return onJointCmdCallbacks( cmd.rofiid(), cmd.jointcmd() );
-        }
+            return onJointCmdCallbacks( cmd.jointcmd().cmdtype() );
+
         case RofiCmd::CONNECTOR_CMD:
-        {
-            return onConnectorCmdCallbacks( cmd.rofiid(), cmd.connectorcmd() );
-        }
+            return onConnectorCmdCallbacks( cmd.connectorcmd().cmdtype() );
+
         case RofiCmd::DESCRIPTION:
-        {
-            return { .immediate = std::bind( getModuleDescription, _moduleStates, cmd.rofiid() ) };
-        }
+            return { .immediate = getModuleDescription };
+
         case RofiCmd::WAIT_CMD:
-        {
             // TODO
             std::cerr << "Waiting is not yet implemented. Ignoring... (The user code will halt.)\n";
             return {};
-        }
+
         default:
-        {
             std::cerr << "Unknown rofi command type: " << cmd.cmdtype() << "\n";
             return {};
-        }
     }
 }

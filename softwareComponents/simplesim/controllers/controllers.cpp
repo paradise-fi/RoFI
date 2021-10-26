@@ -30,11 +30,11 @@ void Controller::rofiControllerThread( std::stop_token stopToken,
     while ( !stopToken.stop_requested() ) {
         auto startTime = std::chrono::steady_clock::now();
 
-        auto commandResponses = commandHandler.processRofiCommands();
+        // auto commandResponses = commandHandler.processRofiCommands();
         auto eventResponses = simulation.simulateOneIteration();
         // TODO send responses
 
-        communication.sendRofiResponses( commandResponses );
+        // communication.sendRofiResponses( commandResponses );
         communication.sendRofiResponses( eventResponses );
 
         std::this_thread::sleep_until( startTime + Controller::updateDuration );
