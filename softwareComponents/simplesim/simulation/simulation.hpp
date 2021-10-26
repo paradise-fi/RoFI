@@ -36,13 +36,38 @@ public:
     // Returns the responses that happen inside RoFIs
     std::vector< RofiResp > simulateOneIteration()
     {
-        // TODO
-        return {};
+        assert( _moduleStates );
+
+        _moduleStates->updateToNextIteration();
+        auto responses = processRofiCommands();
+
+        // TODO check for callbacks (position reached, connector events, waiting ended)
+
+        return responses;
     }
 
     std::shared_ptr< CommandHandler > commandHandler()
     {
+        assert( _commandHandler );
         return _commandHandler;
+    }
+
+private:
+    std::vector< RofiResp > processRofiCommands()
+    {
+        assert( _commandHandler );
+        assert( _moduleStates );
+
+        auto commandCallbacks = _commandHandler->getCommandCallbacks();
+        std::vector< RofiResp > responses;
+        for ( auto & [ callback, rofiCmdPtr ] : commandCallbacks ) {
+            assert( callback );
+            assert( rofiCmdPtr );
+            if ( auto resp = callback( *_moduleStates, *rofiCmdPtr ) ) {
+                responses.push_back( std::move( *resp ) );
+            }
+        }
+        return responses;
     }
 
 private:

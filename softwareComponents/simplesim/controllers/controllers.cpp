@@ -23,19 +23,12 @@ void Controller::rofiControllerThread( std::stop_token stopToken,
     auto & simulation = *simulationPtr;
     auto & communication = *communicationPtr;
 
-    auto commandHandlerPtr = simulation.commandHandler();
-    assert( commandHandlerPtr );
-    auto & commandHandler = *commandHandlerPtr;
-
     while ( !stopToken.stop_requested() ) {
         auto startTime = std::chrono::steady_clock::now();
 
-        // auto commandResponses = commandHandler.processRofiCommands();
-        auto eventResponses = simulation.simulateOneIteration();
-        // TODO send responses
+        auto responses = simulation.simulateOneIteration();
 
-        // communication.sendRofiResponses( commandResponses );
-        communication.sendRofiResponses( eventResponses );
+        communication.sendRofiResponses( std::move( responses ) );
 
         std::this_thread::sleep_until( startTime + Controller::updateDuration );
     }

@@ -73,11 +73,11 @@ public:
     template < typename ResponsesContainer >
     void sendRofiResponses( ResponsesContainer && responses )
     {
-        std::shared_lock< std::shared_mutex > lock1( _modulesMutex );
+        std::shared_lock< std::shared_mutex > lock( _modulesMutex );
 
-        for ( auto resp : responses ) {
+        for ( auto & resp : responses ) {
             auto it = _lockedModules.find( resp.rofiid() );
-            it->second.sendResponse( std::move( resp ) );
+            it->second.sendResponse( resp );
         }
     }
 
