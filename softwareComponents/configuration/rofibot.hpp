@@ -157,7 +157,7 @@ public:
         std::vector< Component > components,
         int connectorCount,
         std::vector< ComponentJoint > joints,
-        int id,
+        ModuleId id,
         std::optional< int > rootComponent = std::nullopt )
     : type( type ), _id( id ),
       _components( std::move( components ) ),
@@ -171,13 +171,11 @@ public:
             _rootComponent = _computeRoot();
     }
 
+    ATOMS_CLONEABLE_BASE(Module);
+
     virtual ~Module() = default;
 
-    int getJointCount() const {
-        return _joints.size();
-    }
-
-    int getId() const {
+    ModuleId getId() const {
         return _id;
     }
 
@@ -278,12 +276,8 @@ public:
     /**
      * \brief Get read-only view of the bodies
      */
-    tcb::span< const Component > bodies() {
+    tcb::span< const Component > bodies() const {
         return components().subspan( _connectorCount );
-    }
-
-    const Component& body( int idx ) {
-        return bodies()[ idx ];
     }
 
     tcb::span< const ComponentJoint > joints() const {
@@ -297,10 +291,6 @@ public:
         return components().subspan( 0, _connectorCount );
     };
 
-    const Component& connector( int idx ) {
-        return connectors()[ idx ];
-    }
-
     /**
      * \brief Get index of a component
      */
@@ -312,10 +302,6 @@ public:
             idx++;
         }
         throw std::logic_error( "Component does not belong to the module" );
-    }
-
-    Module *clone() const {
-        return new Module( *this );
     }
 
     ModuleType type; ///< module type
@@ -455,10 +441,10 @@ public:
      *
      * Returns a reference to the newly created module.
      */
-    Module& insert( Module m ) {
+    Module& insert( const Module& m ) {
         if ( _idMapping.find( m._id ) != _idMapping.end() )
             throw std::runtime_error( "Module with given id is already present" );
-        auto id = _modules.insert( { std::move( m ), {}, {}, {}, std::nullopt } );
+        auto id = _modules.insert( { m, {}, {}, {}, std::nullopt } );
         _idMapping.insert( { _modules[ id ].module->_id, id } );
         Module* insertedModule = _modules[ id ].module.get();
         insertedModule->parent = this;
