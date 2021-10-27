@@ -293,8 +293,9 @@ class ValuePtr {
 private:
     std::unique_ptr< T > _ptr;
 public:
+    ValuePtr() = default;
     ValuePtr( std::unique_ptr< T > ptr ): _ptr( std::move( ptr ) ) {}
-    ValuePtr( const T& t ): _ptr( std::make_unique< T >( t ) ) {}
+    ValuePtr( const T& t ): _ptr( std::unique_ptr<T>( t.clone() ) ) {}
     ValuePtr( const ValuePtr< T >& other ): _ptr( other._ptr->clone() ) {}
     ValuePtr< T >& operator=( const ValuePtr< T >& other ) {
         if ( this == &other )
