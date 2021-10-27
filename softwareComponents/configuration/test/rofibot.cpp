@@ -12,7 +12,7 @@ TEST_CASE( "Base Module Test" ) {}
 
 TEST_CASE( "Universal Module Test" ) {
     SECTION( "Creation" ) {
-        Module um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
+        auto um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
         CHECK( um.components().size() == 10 );
         um.prepare();
         REQUIRE( um.getOccupiedPositions().size() == 2 );
@@ -21,7 +21,7 @@ TEST_CASE( "Universal Module Test" ) {
     }
 
     SECTION( "Roficoms" ) {
-        Module um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
+        auto um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
         CHECK( um.connectors().size() == 6 );
 
         for ( int i = 0; i < um.connectors().size(); i++ ) {
@@ -42,7 +42,7 @@ TEST_CASE( "Universal Module Test" ) {
     }
 
     SECTION( "Position - default" ) {
-        Module um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
+        auto um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
         // A part
         CHECK( equals( um.getComponentPosition( 0 ), identity ) );
         CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -70,7 +70,7 @@ TEST_CASE( "Universal Module Test" ) {
 
     SECTION( "Position - rotated gamma" ) {
         SECTION( "degrees" ) {
-            Module um = UniversalModule( 0, 0_deg, 0_deg, 90_deg );
+            auto um = UniversalModule( 0, 0_deg, 0_deg, 90_deg );
             // A part
             CHECK( equals( um.getComponentPosition( 0 ), identity ) );
             CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -101,7 +101,7 @@ TEST_CASE( "Universal Module Test" ) {
     }
 
     SECTION( "radians" ) {
-        Module um = UniversalModule( 0, 0_rad, 0_rad, 1.57079632679489661923_rad ); // 0, 0, M_PI_2
+        auto um = UniversalModule( 0, 0_rad, 0_rad, 1.57079632679489661923_rad ); // 0, 0, M_PI_2
         // A part
         CHECK( equals( um.getComponentPosition( 0 ), identity ) );
         CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -132,7 +132,7 @@ TEST_CASE( "Universal Module Test" ) {
 
     SECTION( "Position - rotated beta + gamma" ) {
         SECTION( "degrees" ) {
-            Module um = UniversalModule( 0, 0_deg, Angle::deg( -90 ), 90_deg );
+            auto um = UniversalModule( 0, 0_deg, Angle::deg( -90 ), 90_deg );
             // A part
             CHECK( equals( um.getComponentPosition( 0 ), identity ) );
             CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -164,7 +164,7 @@ TEST_CASE( "Universal Module Test" ) {
         }
 
         SECTION( "radians" ) {
-            Module um = UniversalModule( 0, 0_rad, Angle::rad( -1.57079632679489661923 ), 1.57079632679489661923_rad );
+            auto um = UniversalModule( 0, 0_rad, Angle::rad( -1.57079632679489661923 ), 1.57079632679489661923_rad );
             // A part
             CHECK( equals( um.getComponentPosition( 0 ), identity ) );
             CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -202,9 +202,9 @@ TEST_CASE( "Two modules next to each other" ) {
     Rofibot bot;
     auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto con = m2.connector( 1 );
-    connect( m1.connector( 0 ), con, Orientation::South );
-    connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
+    auto con = m2.connectors()[ 1 ];
+    connect( m1.connectors()[ 0 ], con, Orientation::South );
+    connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
     REQUIRE_NOTHROW( bot.prepare() );
 
     SECTION( "The second is just moved to left by one" ) {
@@ -247,8 +247,8 @@ TEST_CASE( "Two modules - different angles" ) {
     Rofibot bot;
     auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    connect( m1.connector( 3 ), m2.connector( 0 ), Orientation::South );
-    connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
+    connect( m1.connectors()[ 3 ], m2.connectors()[ 0 ], Orientation::South );
+    connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
     REQUIRE_NOTHROW( bot.prepare() );
 
     SECTION( "BodyA " ) {
@@ -273,9 +273,9 @@ TEST_CASE( "Three modules -- connect docks 3 to 0s " ) {
     auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     auto& m3 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    connect( m1.connector( 3 ), m2.connector( 0 ), Orientation::South );
-    connect( m2.connector( 3 ), m3.connector( 0 ), Orientation::South );
-    connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
+    connect( m1.connectors()[ 3 ], m2.connectors()[ 0 ], Orientation::South );
+    connect( m2.connectors()[ 3 ], m3.connectors()[ 0 ], Orientation::South );
+    connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
     REQUIRE_NOTHROW( bot.prepare() );
 
     SECTION( "Modules are well placed" ) {
@@ -325,12 +325,12 @@ TEST_CASE( "Basic rofibot manipulation" ) {
     CHECK( bot.modules().size() == 5 );
 
     CHECK( bot.roficoms().size() == 0 );
-    connect( m1.connector( 5 ), m2.connector( 2 ), Orientation::North );
-    connect( m2.connector( 5 ), m3.connector( 2 ), Orientation::North );
-    connect( m3.connector( 5 ), m4.connector( 2 ), Orientation::North );
-    connect( m4.connector( 5 ), m5.connector( 2 ), Orientation::North );
+    connect( m1.connectors()[ 5 ], m2.connectors()[ 2 ], Orientation::North );
+    connect( m2.connectors()[ 5 ], m3.connectors()[ 2 ], Orientation::North );
+    connect( m3.connectors()[ 5 ], m4.connectors()[ 2 ], Orientation::North );
+    connect( m4.connectors()[ 5 ], m5.connectors()[ 2 ], Orientation::North );
     CHECK( bot.roficoms().size() == 4 );
-    connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
+    connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
     m1.setJointParams( 2, M_PI_2 );
     auto [ b, str ] = bot.isValid( SimpleColision() );
     CHECK( b );
@@ -349,12 +349,12 @@ TEST_CASE( "Colliding configuration" ) {
     auto& m5 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     CHECK( bot.modules().size() == 5 );
 
-    connect( m1.connector( 1 ), m2.connector( 2 ), Orientation::North );
-    connect( m2.connector( 1 ), m3.connector( 2 ), Orientation::North );
-    connect( m3.connector( 1 ), m4.connector( 2 ), Orientation::North );
-    connect( m4.connector( 1 ), m5.connector( 2 ), Orientation::North );
+    connect( m1.connectors()[ 1 ], m2.connectors()[ 2 ], Orientation::North );
+    connect( m2.connectors()[ 1 ], m3.connectors()[ 2 ], Orientation::North );
+    connect( m3.connectors()[ 1 ], m4.connectors()[ 2 ], Orientation::North );
+    connect( m4.connectors()[ 1 ], m5.connectors()[ 2 ], Orientation::North );
     CHECK( bot.roficoms().size() == 4 );
-    connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
+    connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
     auto [ b, str ] = bot.isValid( SimpleColision() );
     CHECK( !b );
 }
@@ -366,9 +366,9 @@ TEST_CASE( "Changing modules ID" ) {
     auto& m1 = bot.insert( UniversalModule( 0, 0_deg, 0_deg, 0_deg ) );
     auto& m2 = bot.insert( UniversalModule( 1, 0_deg, 0_deg, 0_deg ) );
     auto& m3 = bot.insert( UniversalModule( 2, 0_deg, 0_deg, 0_deg ) );
-    connect( m1.connector( 5 ), m2.connector( 2 ), Orientation::North );
-    connect( m2.connector( 5 ), m3.connector( 2 ), Orientation::North );
-    connect< RigidJoint >( m1.body( 0 ), { 0, 0, 0 }, identity );
+    connect( m1.connectors()[ 5 ], m2.connectors()[ 2 ], Orientation::North );
+    connect( m2.connectors()[ 5 ], m3.connectors()[ 2 ], Orientation::North );
+    connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
 
     CHECK( bot.isValid( SimpleColision() ).first );
 
@@ -394,7 +394,6 @@ TEST_CASE( "Changing modules ID" ) {
     CHECK( m1.getId() == 66 );
     CHECK( m2.getId() == 42 );
     CHECK( m3.getId() == 78 );
-
 }
 
 } // namespace
