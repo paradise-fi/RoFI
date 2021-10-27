@@ -11,18 +11,24 @@ class UniversalModule : public Module {
         return Angle::rad( joints()[ i ].joint->position.value() );
     }
 
+    static std::vector< Component > _initComponents();
+    static std::vector< ComponentJoint > _initJoints( Angle alpha, Angle beta, Angle gamma );
+
     /**
      * Build an universal module with given angles of the respective joints.
      */
-    Module buildUniversalModule( int id, Angle alpha, Angle beta, Angle gamma );
+    UniversalModule buildUniversalModule( int id, Angle alpha, Angle beta, Angle gamma );
 
 public:
-    virtual ~UniversalModule() = default;
+    ~UniversalModule() override = default;
+
+    ATOMS_CLONEABLE( UniversalModule );
 
     enum UmParts { UmBodyA = 7, UmBodyB = 8, UmShoeA = 6, UmShoeB = 9 };
 
     explicit UniversalModule( int id ) : UniversalModule( id, 0_deg, 0_deg, 0_deg ) {};
-    UniversalModule( int id, Angle a, Angle b, Angle g ) : Module( buildUniversalModule( id, a, b, g ) ) {};
+    UniversalModule( int id, Angle a, Angle b, Angle g )
+    : Module( ModuleType::Universal, _initComponents(), 6, _initJoints( a, b, g ), id ) {};
 
     Angle getAlpha() const {
         return _getJointAngle( 0 );

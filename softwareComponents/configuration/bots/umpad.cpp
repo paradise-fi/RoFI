@@ -19,11 +19,11 @@ Rofibot buildUMpad( int n, int m ) {
         for ( int j = 0; j < m; j++ ) {
             auto& md = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 90_deg ) );
             if ( j > 0 )
-                connect( md.connector( 4 ), bot.getModule( modules.back() )->connector( 3 )
+                connect( md.connectors()[ 4 ], bot.getModule( modules.back() )->connectors()[ 3 ]
                        , roficom::Orientation::South );
             
             if ( i > 0 )
-                connect( md.connector( 1 ), bot.getModule( modules[ (i - 1) * m + j ] )->connector( 0 )
+                connect( md.connectors()[ 1 ], bot.getModule( modules[ (i - 1) * m + j ] )->connectors()[ 0 ]
                        , roficom::Orientation::South );
 
             modules.push_back( md.getId() );

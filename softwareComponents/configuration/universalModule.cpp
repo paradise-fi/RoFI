@@ -2,8 +2,8 @@
 
 namespace rofi::configuration {
 
-Module UniversalModule::buildUniversalModule( int id, Angle alpha, Angle beta, Angle gamma ) {
-    std::vector< Component > components = {
+std::vector< Component > UniversalModule::_initComponents() {
+    return std::vector< Component > {
         Component{ ComponentType::Roficom },
         Component{ ComponentType::Roficom },
         Component{ ComponentType::Roficom },
@@ -15,7 +15,9 @@ Module UniversalModule::buildUniversalModule( int id, Angle alpha, Angle beta, A
         Component{ ComponentType::UmBody },
         Component{ ComponentType::UmShoe }
     };
+}
 
+std::vector< ComponentJoint > UniversalModule::_initJoints( Angle alpha, Angle beta, Angle gamma ) {
     std::vector< ComponentJoint > joints = {
         makeComponentJoint< RotationJoint >( 7, 6, // BodyA <-> ShoeA
             identity, Vector( { 1, 0, 0 } ), identity, Angle::rad( - M_PI_2 ), Angle::rad( M_PI_2 ) ),
@@ -41,9 +43,9 @@ Module UniversalModule::buildUniversalModule( int id, Angle alpha, Angle beta, A
     joints[ 1 ].joint->position = { beta.rad() };
     joints[ 2 ].joint->position = { gamma.rad() };
 
-    return Module( ModuleType::Universal, std::move( components ), 6,
-        std::move( joints ), id );
+    return joints;
 }
+
 
 bool checkOldConfigurationEInput( int id1, int id2, int side1, int side2, int dock1, int dock2
                                     , int orientation, const std::set< ModuleId >& knownModules ) {
@@ -125,8 +127,8 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
             auto [ id1, id2, side1, side2, dock1, dock2, orientation ] = parseEdge( lineStr );
             if ( !checkOldConfigurationEInput( id1, id2, side1, side2, dock1, dock2, orientation, knownModules ) )
                 throw std::runtime_error( "Invalid edge specification" );
-            auto& component1 = rofibot.getModule( id1 )->connector( side1 * 3 + dock1 );
-            auto& component2 = rofibot.getModule( id2 )->connector( side2 * 3 + dock2 );
+            auto& component1 = rofibot.getModule( id1 )->connectors()[ side1 * 3 + dock1 ];
+            auto& component2 = rofibot.getModule( id2 )->connectors()[ side2 * 3 + dock2 ];
             connect( component1, component2, static_cast< roficom::Orientation >( orientation ) );
             continue;
         }
