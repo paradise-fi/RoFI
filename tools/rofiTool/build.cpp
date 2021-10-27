@@ -75,8 +75,8 @@ int build( Dim::Cli & cli ) {
     auto configuration = buildWishedRofibot( static_cast< BotType >( *botType ) );
 
     rofi::configuration::connect< rofi::configuration::RigidJoint >(
-        *botType > 2 ? configuration.getModule( 0 )->connector( 0 ) // No body within the pad
-                     : configuration.getModule( 0 )->body( 0 ),     // UM, so we fix its body
+        *botType > 2 ? configuration.getModule( 0 )->connectors()[ 0 ] // No body within the pad
+                     : configuration.getModule( 0 )->bodies()[ 0 ],     // UM, so we fix its body
         Vector( { 0, 0, 0 } ),
         identity );
 

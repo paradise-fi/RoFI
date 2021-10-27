@@ -13,7 +13,7 @@ int check( Dim::Cli & cli ) {
 
     auto configuration = rofi::configuration::readOldConfigurationFormat( cfgFile );
     rofi::configuration::connect< rofi::configuration::RigidJoint >(
-        configuration.getModule( 0 )->body( 0 ),
+        configuration.getModule( 0 )->bodies()[ 0 ],
         Vector( { 0, 0, 0 } ),
         identity );
     auto [ ok, str ] = configuration.isValid( rofi::configuration::SimpleColision() );
