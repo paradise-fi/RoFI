@@ -1,5 +1,5 @@
 #pragma once
-#include <rofibot.hpp>
+#include <configuration/rofibot.hpp>
 
 namespace rofi::configuration {
 

@@ -1,5 +1,5 @@
-#include "umpad.hpp"
-#include <universalModule.hpp>
+#include <configuration/bots/umpad.hpp>
+#include <configuration/universalModule.hpp>
 
 namespace rofi::configuration {
 

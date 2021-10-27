@@ -1,4 +1,4 @@
-#include "joints.hpp"
+#include <configuration/joints.hpp>
 
 namespace rofi::configuration {
 
