@@ -7,7 +7,7 @@
 
 #include <atoms/patterns.hpp>
 #include <atoms/units.hpp>
-#include "Matrix.h"
+#include "../Matrix.h"
 
 namespace rofi::configuration {
 

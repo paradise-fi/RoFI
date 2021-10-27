@@ -1,5 +1,5 @@
 #include "check.hpp"
-#include <universalModule.hpp>
+#include <configuration/universalModule.hpp>
 
 static auto command = Dim::Cli().command( "check" )
     .desc( "Check a given configuration" );

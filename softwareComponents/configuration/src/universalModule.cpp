@@ -1,4 +1,4 @@
-#include "universalModule.hpp"
+#include <configuration/universalModule.hpp>
 
 namespace rofi::configuration {
 

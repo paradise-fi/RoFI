@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
 
-#include <joints.hpp>
+#include <configuration/joints.hpp>
 
 namespace {
 

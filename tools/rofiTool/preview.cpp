@@ -4,8 +4,8 @@
 #include <fstream>
 #include <stdexcept>
 
-#include <rofibot.hpp>
-#include <universalModule.hpp>
+#include <configuration/rofibot.hpp>
+#include <configuration/universalModule.hpp>
 
 static auto command = Dim::Cli().command( "preview" )
     .desc( "Interactively preview a configuration" );

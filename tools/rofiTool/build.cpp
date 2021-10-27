@@ -1,8 +1,8 @@
 #include "build.hpp"
 #include "rendering.hpp"
-#include <pad.hpp>
-#include <bots/umpad.hpp>
-#include <universalModule.hpp>
+#include <configuration/pad.hpp>
+#include <configuration/bots/umpad.hpp>
+#include <configuration/universalModule.hpp>
 
 static auto command = Dim::Cli().command( "build" )
     .desc( "Build and show given rofibot" );

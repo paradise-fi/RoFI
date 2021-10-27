@@ -1,4 +1,4 @@
 #pragma once
-#include <rofibot.hpp>
+#include <configuration/rofibot.hpp>
 
 void renderConfiguration( rofi::configuration::Rofibot configuration, const std::string& configName = "unknown" );

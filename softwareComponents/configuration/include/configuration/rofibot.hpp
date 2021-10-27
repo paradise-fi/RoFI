@@ -11,8 +11,7 @@
 #include <tcb/span.hpp>
 #include <fmt/format.h>
 
-#include "joints.hpp"
-#include "Matrix.h"
+#include <configuration/joints.hpp>
 
 namespace rofi::configuration {
 
