@@ -31,9 +31,9 @@ using JointVisitor = atoms::Visits<
 struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
     virtual ~Joint() = default;
 
-    using Position = std::optional< float >;
+    using Positions = std::vector< float >;
 
-    virtual int paramCount() const = 0;
+    virtual int paramCount() const { return positions.size(); }
     virtual Matrix sourceToDest() const = 0;
     virtual std::pair< Angle, Angle > jointLimits( int paramIdx ) const = 0;
     ATOMS_CLONEABLE_BASE( Joint );
@@ -42,17 +42,17 @@ struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
         return arma::inv( sourceToDest() );
     };
 
-    Matrix sourceToDest( const Position& pos ) {
-        position = pos;
+    Matrix sourceToDest( const Positions& pos ) {
+        positions = pos;
         return sourceToDest();
     }
 
-    Matrix destToSource( const Position& pos ) {
-        position = pos;
+    Matrix destToSource( const Positions& pos ) {
+        positions = pos;
         return destToSource();
     }
 
-    Position position;
+    Positions positions;
     friend std::ostream& operator<<( std::ostream& out, Joint& j );
 };
 
@@ -72,12 +72,12 @@ struct RigidJoint: public atoms::Visitable< Joint, RigidJoint > {
     }
 
     Matrix sourceToDest() const override {
-        assert( !position );
+        assert( positions.empty() );
         return _sourceToDest;
     }
 
     Matrix destToSource() const override {
-        assert( !position );
+        assert( positions.empty() );
         return _destToSource; // ToDo: Find out if the precomputing is effective or not
     }
 
@@ -122,12 +122,12 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
     }
 
     Matrix sourceToDest() const override {
-        assert( position );
-        return _pre * rotate( *position, _axis ) * _post;
+        assert( positions.size() == 1 );
+        return _pre * rotate( positions[ 0 ], _axis ) * _post;
     }
 
     Matrix destToSource() const override {
-        assert( position );
+        assert( positions.size() == 1 );
         return arma::inv( sourceToDest() ); // ToDo: Find out if this is effective enough
     }
 
