@@ -340,7 +340,7 @@ TEST_CASE( "Basic rofibot manipulation" ) {
     connect( m4.connectors()[ 5 ], m5.connectors()[ 2 ], Orientation::North );
     CHECK( bot.roficoms().size() == 4 );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    m1.setJointParams( 2, M_PI_2 );
+    m1.setJointParams( 2, { M_PI_2 } );
     auto [ b, str ] = bot.isValid( SimpleColision() );
     CHECK( b );
     if ( !b )
@@ -403,6 +403,15 @@ TEST_CASE( "Changing modules ID" ) {
     CHECK( m1.getId() == 66 );
     CHECK( m2.getId() == 42 );
     CHECK( m3.getId() == 78 );
+}
+
+TEST_CASE( "configurable joints" ) {
+    auto m = UniversalModule( 42, 0_deg, 0_rad, 0_deg );
+    int i = 0;
+    for ( auto j : m.configurableJoints() ) {
+        i++;
+    }
+    CHECK( i == 3 );
 }
 
 } // namespace

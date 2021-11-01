@@ -39,9 +39,9 @@ std::vector< ComponentJoint > UniversalModule::_initJoints( Angle alpha, Angle b
         makeComponentJoint< RigidJoint >( 9, 5, rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI_2, { 0, -1, 0 } ) )  // B-Z
     };
 
-    joints[ 0 ].joint->position = { alpha.rad() };
-    joints[ 1 ].joint->position = { beta.rad() };
-    joints[ 2 ].joint->position = { gamma.rad() };
+    joints[ 0 ].joint->positions = { alpha.rad() };
+    joints[ 1 ].joint->positions = { beta.rad() };
+    joints[ 2 ].joint->positions = { gamma.rad() };
 
     return joints;
 }
