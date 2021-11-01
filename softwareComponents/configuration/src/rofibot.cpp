@@ -29,7 +29,7 @@ bool Module::setId( ModuleId newId ) {
     return true;
 }
 
-void Module::setJointParams( int idx, const Joint::Positions& p ) {
+void Module::setJointPositions( int idx, const Joint::Positions& p ) {
     // Currently we invalidate all positions; ToDo: think if we can improve it
     assert( idx < _joints.size() && idx >= 0 );
     assert( _joints[ idx ].joint->positions.size() == p.size() );

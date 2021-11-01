@@ -207,7 +207,7 @@ TEST_CASE( "Universal Module Test" ) {
 }
 
 TEST_CASE( "Two modules next to each other" ) {
-    int idCounter = 0;
+    ModuleId idCounter = 0;
     Rofibot bot;
     auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
@@ -340,7 +340,7 @@ TEST_CASE( "Basic rofibot manipulation" ) {
     connect( m4.connectors()[ 5 ], m5.connectors()[ 2 ], Orientation::North );
     CHECK( bot.roficoms().size() == 4 );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    m1.setJointParams( 2, { M_PI_2 } );
+    m1.setJointPositions( 2, { M_PI_2 } );
     auto [ b, str ] = bot.isValid( SimpleColision() );
     CHECK( b );
     if ( !b )
