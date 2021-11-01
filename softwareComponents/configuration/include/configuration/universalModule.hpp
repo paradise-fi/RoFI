@@ -8,11 +8,11 @@ namespace rofi::configuration {
 
 class UniversalModule : public Module {
     Angle _getJointAngle( int i ) const {
-        return Angle::rad( joints()[ i ].joint->positions[ 0 ] );
+        return Angle::rad( joints()[ i ].joint->getPositions()[ 0 ] );
     }
 
     static std::vector< Component > _initComponents();
-    static std::vector< ComponentJoint > _initJoints( Angle alpha, Angle beta, Angle gamma );
+    static std::vector< ComponentJoint > _initJoints();
 
     /**
      * Build an universal module with given angles of the respective joints.
@@ -26,7 +26,9 @@ public:
 
     explicit UniversalModule( int id ) : UniversalModule( id, 0_deg, 0_deg, 0_deg ) {};
     UniversalModule( int id, Angle a, Angle b, Angle g )
-    : Module( ModuleType::Universal, _initComponents(), 6, _initJoints( a, b, g ), id ) {};
+    : Module( ModuleType::Universal, _initComponents(), 6, _initJoints(), id ) {
+        setAlpha( a ); setBeta( b ); setGamma( g );
+    };
 
     Angle getAlpha() const {
         return _getJointAngle( 0 );
@@ -39,14 +41,17 @@ public:
     }
 
     void setAlpha( Angle a ) {
-        setJointPositions( 0, { a.rad() } );
+        std::vector< float > tmp{ a.rad() };
+        setJointPositions( 0, { tmp } );
     }
 
     void setBeta( Angle a ) {
-        setJointPositions( 1, { a.rad() } );
+        std::vector< float > tmp{ a.rad() };
+        setJointPositions( 1, { tmp } );
     }
     void setGamma( Angle a ) {
-        setJointPositions( 2, { a.rad() } );
+        std::vector< float > tmp{ a.rad() };
+        setJointPositions( 2, { tmp } );
     }
 };
 
