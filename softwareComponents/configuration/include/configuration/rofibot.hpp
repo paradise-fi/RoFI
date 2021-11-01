@@ -447,7 +447,7 @@ public:
      * Returns a reference to the newly created module.
      */
     Module& insert( const Module& m ) {
-        if ( _idMapping.find( m._id ) != _idMapping.end() )
+        if ( _idMapping.contains( m._id ) )
             throw std::runtime_error( "Module with given id is already present" );
         auto id = _modules.insert( { m, {}, {}, {}, std::nullopt } );
         _idMapping.insert( { _modules[ id ].module->_id, id } );
@@ -461,10 +461,9 @@ public:
      * \brief Get pointer to module with given id within the Rofibot
      */
     Module* getModule( ModuleId id ) const {
-        if ( _idMapping.find( id ) == _idMapping.end() )
+        if ( !_idMapping.contains( id ) )
             return nullptr;
-        auto& ref = *_modules[ _idMapping.at( id ) ].module.get();
-        return &ref;
+        return _modules[ _idMapping.at( id ) ].module.get();
     }
 
     /**
@@ -485,7 +484,7 @@ public:
      * \brief Remove a module from the Rofibot
      */
     void remove( ModuleId id ) {
-        if ( _idMapping.find( id ) == _idMapping.end() )
+        if ( !_idMapping.contains( id ) )
             return;
         auto handle = _idMapping[ id ];
         const ModuleInfo& info = _modules[ handle ];
@@ -621,7 +620,7 @@ public:
     Matrix getModulePosition( ModuleId id ) {
         if ( !_prepared )
             prepare();
-        if ( _idMapping.find( id ) == _idMapping.end() )
+        if ( !_idMapping.contains( id ) )
             throw std::runtime_error( "bad access: rofibot does not containt module with such id" );
         return _modules[ _idMapping[ id ] ].position.value();
     }

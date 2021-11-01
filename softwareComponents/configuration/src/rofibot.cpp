@@ -20,7 +20,7 @@ double roficom::orientationToAngle( roficom::Orientation o ) {
 
 bool Module::setId( ModuleId newId ) {
     if ( parent ) {
-        if ( parent->_idMapping.find( newId ) != parent->_idMapping.end() )
+        if ( parent->_idMapping.contains( newId ) )
             return false;
         parent->_idMapping[ newId ] = parent->_idMapping[ _id ];
         parent->_idMapping.erase( _id );
