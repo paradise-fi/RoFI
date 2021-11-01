@@ -8,9 +8,9 @@ Rofibot buildUMpad( int n ) {
 }
 
 Rofibot buildUMpad( int n, int m ) {
-    assert( n > 0 && "NMPad has to have positive dimensions" );
+    assert( n > 0 && m > 0 && "NMPad has to have positive dimensions" );
 
-    int idCounter = 0;
+    ModuleId idCounter = 0;
     Rofibot bot;
     std::vector< ModuleId > modules;
     modules.reserve( n * m );
