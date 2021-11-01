@@ -17,7 +17,7 @@ std::vector< Component > UniversalModule::_initComponents() {
     };
 }
 
-std::vector< ComponentJoint > UniversalModule::_initJoints( Angle alpha, Angle beta, Angle gamma ) {
+std::vector< ComponentJoint > UniversalModule::_initJoints() {
     std::vector< ComponentJoint > joints = {
         makeComponentJoint< RotationJoint >( 7, 6, // BodyA <-> ShoeA
             identity, Vector( { 1, 0, 0 } ), identity, Angle::rad( - M_PI_2 ), Angle::rad( M_PI_2 ) ),
@@ -38,10 +38,6 @@ std::vector< ComponentJoint > UniversalModule::_initJoints( Angle alpha, Angle b
         makeComponentJoint< RigidJoint >( 9, 4, rotate( M_PI, { 0, 1, 0 } ) ), // B+X
         makeComponentJoint< RigidJoint >( 9, 5, rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI_2, { 0, -1, 0 } ) )  // B-Z
     };
-
-    joints[ 0 ].joint->positions = { alpha.rad() };
-    joints[ 1 ].joint->positions = { beta.rad() };
-    joints[ 2 ].joint->positions = { gamma.rad() };
 
     return joints;
 }

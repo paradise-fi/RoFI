@@ -32,8 +32,8 @@ bool Module::setId( ModuleId newId ) {
 void Module::setJointPositions( int idx, const Joint::Positions& p ) {
     // Currently we invalidate all positions; ToDo: think if we can improve it
     assert( idx < _joints.size() && idx >= 0 );
-    assert( _joints[ idx ].joint->positions.size() == p.size() );
-    _joints[ idx ].joint->positions = p;
+    assert( _joints[ idx ].joint->positionCount() == p.size() );
+    _joints[ idx ].joint->setPositions( p );
     _componentPosition = std::nullopt;
     if ( parent )
         parent->onModuleMove( _id );

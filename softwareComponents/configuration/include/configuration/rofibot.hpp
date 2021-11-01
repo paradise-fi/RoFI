@@ -70,16 +70,11 @@ ComponentJoint makeComponentJoint( int source, int dest, Args&&...args ) {
 struct RoficomJoint: public Joint {
     RoficomJoint( roficom::Orientation o, ModuleId sourceModule, ModuleId destModule,
         int sourceConnector, int destConnector)
-    : orientation( o ), sourceModule( sourceModule ), destModule( destModule ),
+    : Joint( 0 ), orientation( o ), sourceModule( sourceModule ), destModule( destModule ),
       sourceConnector( sourceConnector ), destConnector( destConnector )
     {}
 
-    int paramCount() const override {
-        return 0;
-    }
-
     Matrix sourceToDest() const override {
-        assert( positions.empty() );
         // the "default" roficom is A-X
         return translate( { -1, 0, 0 } ) * rotate( M_PI, { 0, 0, 1 } )
             * rotate( M_PI, { 1, 0, 0 } )
@@ -267,7 +262,7 @@ public:
     auto configurableJoints() {
         return _joints | std::views::transform( []( ComponentJoint& cj ) { return cj.joint; } )
                        | std::views::filter( []( const atoms::ValuePtr< Joint >& ptr ) {
-                                                    return ptr->paramCount() > 0;
+                                                    return ptr->positionCount() > 0;
                                                 } );
     }
 
@@ -609,8 +604,8 @@ public:
      * \brief Set position of a space joints specified by its id
      */
     void setSpaceJointPosition( SpaceJointHandle jointId, const Joint::Positions& p ) {
-        assert( p.size() == _spaceJoints[ jointId ]. joint->positions.size() );
-        _spaceJoints[ jointId ].joint->positions = p;
+        assert( p.size() == _spaceJoints[ jointId ].joint->positionCount() );
+        _spaceJoints[ jointId ].joint->setPositions( p );
         _prepared = false;
     }
 

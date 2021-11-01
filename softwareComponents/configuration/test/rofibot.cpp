@@ -340,7 +340,7 @@ TEST_CASE( "Basic rofibot manipulation" ) {
     connect( m4.connectors()[ 5 ], m5.connectors()[ 2 ], Orientation::North );
     CHECK( bot.roficoms().size() == 4 );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    m1.setJointPositions( 2, { M_PI_2 } );
+    static_cast< UniversalModule& >( m1 ).setGamma( Angle::rad( M_PI_2 ) );
     auto [ b, str ] = bot.isValid( SimpleColision() );
     CHECK( b );
     if ( !b )

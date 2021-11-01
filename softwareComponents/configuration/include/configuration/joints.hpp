@@ -4,6 +4,9 @@
 #include <iostream>
 #include <cassert>
 #include <optional>
+#include <ranges>
+
+#include <tcb/span.hpp>
 
 #include <atoms/patterns.hpp>
 #include <atoms/units.hpp>
@@ -29,31 +32,43 @@ using JointVisitor = atoms::Visits<
  * in Joint::position. These params are, e.g., angle for rotation joint.
  */
 struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
+    using Positions = tcb::span< float >;
+    explicit Joint( size_t s ) : _positions( s, 0 ) {}
     virtual ~Joint() = default;
 
-    using Positions = std::vector< float >;
-
-    virtual int paramCount() const { return positions.size(); }
-    virtual Matrix sourceToDest() const = 0;
-    virtual std::pair< Angle, Angle > jointLimits( int paramIdx ) const = 0;
     ATOMS_CLONEABLE_BASE( Joint );
+
+    size_t positionCount() const { return _positions.size(); }
+    virtual std::pair< Angle, Angle > jointLimits( int paramIdx ) const = 0;
+
+    tcb::span< const float > getPositions() const {
+        return _positions;
+    }
+
+    void setPositions( const Positions& pos ) {
+        assert( pos.size() == _positions.size() && "Positions have to preserve given size" );
+        std::ranges::copy( pos.begin(), pos.end(), _positions.begin() );
+    }
+
+    virtual Matrix sourceToDest() const = 0;
 
     virtual Matrix destToSource() const {
         return arma::inv( sourceToDest() );
     };
 
     Matrix sourceToDest( const Positions& pos ) {
-        positions = pos;
+        std::copy( pos.begin(), pos.end(), _positions.begin() );
         return sourceToDest();
     }
 
     Matrix destToSource( const Positions& pos ) {
-        positions = pos;
+        std::copy( pos.begin(), pos.end(), _positions.begin() );
         return destToSource();
     }
 
-    Positions positions;
     friend std::ostream& operator<<( std::ostream& out, Joint& j );
+private:
+    std::vector< float > _positions;
 };
 
 struct RigidJoint: public atoms::Visitable< Joint, RigidJoint > {
@@ -62,22 +77,14 @@ struct RigidJoint: public atoms::Visitable< Joint, RigidJoint > {
      *
      * Example usage: `RigidJoint( rotate( M_PI/2, { 1, 0, 0, 1 } ) * translate( { 20, 0, 0 } ) )`
      */
-    RigidJoint( const Matrix& sToDest ):
-        _sourceToDest( sToDest ),
-        _destToSource( arma::inv( sToDest ) )
-    {}
-
-    int paramCount() const override {
-        return 0;
-    }
+    RigidJoint( const Matrix& sToDest )
+    : Visitable( 0 ), _sourceToDest( sToDest ), _destToSource( arma::inv( sToDest ) ) {}
 
     Matrix sourceToDest() const override {
-        assert( positions.empty() );
         return _sourceToDest;
     }
 
     Matrix destToSource() const override {
-        assert( positions.empty() );
         return _destToSource; // ToDo: Find out if the precomputing is effective or not
     }
 
@@ -98,7 +105,7 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
      */
     RotationJoint( Vector sourceOrigin, Vector sourceAxis, Vector destOrigin,
                    Vector desAxis, Angle min, Angle max )
-        : _limits( { min, max } )
+        : Visitable( 1 ), _limits( { min, max } )
     {
         _pre  = translate( sourceOrigin );
         _post = translate( destOrigin );
@@ -111,23 +118,17 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
      * transformation.
      */
     RotationJoint( Matrix pre, Vector axis, Matrix post, Angle min, Angle max )
-        : _limits( { min, max } ),
+        : Visitable( 1 ), _limits( { min, max } ),
           _axis( axis ),
           _pre( pre ),
           _post( post )
     {}
 
-    int paramCount() const override {
-        return 1;
-    }
-
     Matrix sourceToDest() const override {
-        assert( positions.size() == 1 );
-        return _pre * rotate( positions[ 0 ], _axis ) * _post;
+        return _pre * rotate( getPositions()[ 0 ], _axis ) * _post;
     }
 
     Matrix destToSource() const override {
-        assert( positions.size() == 1 );
         return arma::inv( sourceToDest() ); // ToDo: Find out if this is effective enough
     }
 
