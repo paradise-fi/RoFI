@@ -19,8 +19,6 @@ namespace rofi::configuration {
 /// ModuleId
 using ModuleId = int;
 
-enum class Handle : size_t {};
-
 enum class ComponentType {
     UmShoe, UmBody,
     Roficom
@@ -612,7 +610,6 @@ public:
      * \brief Set position of a space joints specified by its id
      */
     void setSpaceJointPosition( HandleSpace jointId, const Joint::Positions& p ) {
-        assert( jointId >= 0 && jointId < _spaceJoints.size() );
         assert( p.size() == _spaceJoints[ jointId ]. joint->positions.size() );
         _spaceJoints[ jointId ].joint->positions = p;
         _prepared = false;

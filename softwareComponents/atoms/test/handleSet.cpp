@@ -4,24 +4,27 @@
 #include <iostream>
 
 using atoms::HandleSet;
-using handle_int = atoms::HandleSet< int, int >::handle_type;
+using handle = atoms::HandleSet< int >::handle_type;
 
+// the static casts are ok because we know the underlying
+// implementation but don't use this in you code...
 
-void testErasing( HandleSet< int, int >& hset, handle_int eraseHandle ) {
-    INFO( "Erasing handle " << eraseHandle );
+void testErasing( HandleSet< int >& hset, handle eraseHandle ) {
+    INFO( "Erasing handle " << static_cast< int >( eraseHandle ) );
     hset.erase( eraseHandle );
 
     REQUIRE( hset.size() == 9 );
     for ( int i = 0; i != 10; i++ ) {
-        if ( i == eraseHandle )
+        if ( i == static_cast< int >( eraseHandle ) )
             continue;
-        REQUIRE( hset[ i ] == i );
+        // this is not very nice
+        REQUIRE( hset[ static_cast< handle >( i ) ] == i );
     }
 
     int counter = 0;
     for ( int i : hset ) {
-        if ( counter == eraseHandle )
-            counter = eraseHandle + 1;
+        if ( counter == static_cast< int >( eraseHandle ) )
+            counter = static_cast< int >( eraseHandle ) + 1;
         REQUIRE( i == counter );
         counter++;
     }
@@ -29,14 +32,14 @@ void testErasing( HandleSet< int, int >& hset, handle_int eraseHandle ) {
     // Insert
     REQUIRE( hset.insert( 42 ) == eraseHandle );
     for ( int i = 0; i != 10; i++ ) {
-        if ( i == eraseHandle )
-            REQUIRE( hset[ i ] == 42 );
+        if ( i == static_cast< int >( eraseHandle ) )
+            REQUIRE( hset[ static_cast< handle >( i ) ] == 42 );
         else
-            REQUIRE( hset[ i ] == i );
+            REQUIRE( hset[ static_cast< handle >( i ) ] == i );
     }
     counter = 0;
     for ( int i : hset ) {
-        if ( counter == eraseHandle )
+        if ( counter == static_cast< int >( eraseHandle ) )
             CHECK( i == 42 );
         else
             CHECK( i == counter );
@@ -45,22 +48,22 @@ void testErasing( HandleSet< int, int >& hset, handle_int eraseHandle ) {
 }
 
 TEST_CASE( "Basic usage of HandleSet" ) {
-    HandleSet< int, int > hset;
+    HandleSet< int > hset;
     for ( int i = 0; i != 10; i++ )
         hset.insert( i );
     REQUIRE( hset.size() == 10 );
 
     SECTION( "HandleSet can be copied" ) {
-        HandleSet< int, int > otherSet1 = hset;
+        HandleSet< int > otherSet1 = hset;
         for ( int i = 0; i != 10; i++ ) {
-            auto index = i;
+            handle index = static_cast< handle >( i );
             REQUIRE( hset[ index ] == otherSet1[ index ] );
         }
 
-        const HandleSet< int, int > constHandleSet = hset;
-        HandleSet< int, int > otherSet2 = constHandleSet;
+        const HandleSet< int > constHandleSet = hset;
+        HandleSet< int > otherSet2 = constHandleSet;
         for ( int i = 0; i != 10; i++ ) {
-            auto index = i;
+            handle index = static_cast< handle >( i );
             REQUIRE( hset[ index ] == otherSet2[ index ] );
         }
     }
@@ -73,7 +76,7 @@ TEST_CASE( "Basic usage of HandleSet" ) {
         }
 
         counter = 0;
-        const HandleSet< int, int > constHandleSet = hset;
+        const HandleSet< int > constHandleSet = hset;
         for ( int h : constHandleSet ) {
             REQUIRE( h == counter );
             counter++;
@@ -81,14 +84,14 @@ TEST_CASE( "Basic usage of HandleSet" ) {
     }
 
     SECTION( "We can delete and reinsert items in the middle" ) {
-        testErasing( hset, 5 );
+        testErasing( hset, static_cast< handle >( 5 ) );
     }
 
     SECTION( "We can delete and reinsert items at the end" ) {
-        testErasing( hset, 9 );
+        testErasing( hset, static_cast< handle >( 9 ) );
     }
 
     SECTION( "We can delete and reinsert items at the beginning" ) {
-        testErasing( hset, 0 );
+        testErasing( hset, static_cast< handle >( 0 ) );
     }
 };
