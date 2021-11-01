@@ -18,7 +18,7 @@ namespace atoms {
  * Otherwise this container behaves the same as containers from the standard
  * library.
  */
-template < typename T, typename H = long unsigned int >
+template < typename T >
 class HandleSet {
     using Container = std::vector< std::optional< T > >;
 
@@ -121,7 +121,6 @@ class HandleSet {
 public:
     using value_type = T;
     using size_type = typename Container::size_type;
-    using handle_type = H;
     using difference_type = typename Container::difference_type;
     using reference = T&;
     using const_reference = const T&;
@@ -130,7 +129,7 @@ public:
     using iterator = Iterator< false >;
     using const_iterator = Iterator< true >;
 
-    //enum class handle_type : size_type {};
+    enum class handle_type : size_type {};
 
     void swap( HandleSet& other ) {
         using std::swap;
