@@ -29,19 +29,19 @@ TEST_CASE( "Base RotationJoint" ) {
     SECTION( "basic creation at one point" ) {
         // Vector sourceOrigin, Vector sourceAxis, Vector destOrigin, Vector desAxis, double min, double max
         auto j = RotationJoint( { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, { 0, 0, 0 }, A_PI_2_neg, A_PI_2 );
-        j.position = 0; // set the angle of the rotation
+        j.positions = { 0 }; // set the angle of the rotation
         CHECK( equals( j.sourceToDest(), identity ) );
         CHECK( equals( j.destToSource(), identity ) );
     }
 
     SECTION( "rotation by 0" ) {
         auto j = RotationJoint( { 0, 0, 0 }, { 0, 0, 0 }, { 42, 42, 42 }, { 1, 0, 0 }, A_PI_neg, A_PI );
-        j.position = 0;
+        j.positions = { 0 };
         CHECK( equals( j.sourceToDest(), translate( { 42, 42, 42 } ) ) );
         CHECK( equals( j.destToSource(), translate( { -42, -42, -42 } ) ) );
         CHECK( equals( j.sourceToDest() * j.destToSource(), identity ) );
         j = RotationJoint( identity, { 1, 0, 0 }, translate( { 42, 42, 42 } ), A_PI_2_neg, A_PI_2 );
-        j.position = 0;
+        j.positions = { 0 };
         CHECK( equals( j.sourceToDest(), translate( { 42, 42, 42 } ) ) );
         CHECK( equals( j.destToSource(), translate( { -42, -42, -42 } ) ) );
         CHECK( equals( j.sourceToDest() * j.destToSource(), identity ) );
@@ -49,23 +49,23 @@ TEST_CASE( "Base RotationJoint" ) {
 
     SECTION( "sourceToDest on a ptr of type Joint" ) {
         auto j = RotationJoint( identity, { 1, 0, 0 }, translate( { 42, 42, 42 } ), A_PI_2_neg, A_PI_2 );
-        REQUIRE( !j.position );
+        REQUIRE( j.positions.empty() );
         auto* jj = static_cast< Joint* >( &j );
-        jj->sourceToDest( A_PI.rad() );
-        REQUIRE( j.position );
-        CHECK( *j.position == A_PI.rad() );
+        jj->sourceToDest( { A_PI.rad() } );
+        REQUIRE( !j.positions.empty() );
+        CHECK( j.positions[ 0 ] == A_PI.rad() );
     }
 }
 
 TEST_CASE( "sourceToDest and destToSource" ) {
     SECTION( "Unit size" ) {
         auto j = RotationJoint( { 0, 0, 0 }, { 0, 0, 0 }, { 1, 0, 0 }, { 1, 0, 0 }, A_PI_2_neg, A_PI_2 );
-        j.position = 0;
+        j.positions = { 0 };
         CHECK( equals( j.sourceToDest(), translate( {  1, 0, 0 } ) ) );
         CHECK( equals( j.destToSource(), translate( { -1, 0, 0 } ) ) );
-        j.position = 2 * M_PI;
+        j.positions = { 2 * M_PI };
         CHECK( equals( j.sourceToDest(), translate( { 1, 0, 0 } ) ) );
-        j.position = A_PI_2.rad();
+        j.positions = { A_PI_2.rad() };
         CHECK( equals( j.sourceToDest(), rotate( M_PI_2, { 1, 0, 0 } ) * translate( { 1, 0, 0 } ) ) );
         CHECK( equals( j.sourceToDest() * j.destToSource(), identity ) );
         CHECK_FALSE( equals( j.destToSource(), j.sourceToDest() ) );
@@ -73,15 +73,15 @@ TEST_CASE( "sourceToDest and destToSource" ) {
 
     SECTION( "Bigger size" ) {
         auto j = RotationJoint( { 0, 0, 0 }, { 0, 0, 0 }, { 5, 0, 0 }, { 0, 1, 0 }, A_PI_2_neg, A_PI_2 );
-        j.position = 0;
+        j.positions = { 0 };
         CHECK( equals( j.sourceToDest(), translate( { 5, 0, 0 } ) ) );
-        j.position = A_PI.rad();
+        j.positions = { A_PI.rad() };
         CHECK( equals( j.sourceToDest(), rotate( M_PI, { 0, 1, 0 } ) * translate( { 5, 0, 0 } ) ) );
         CHECK( equals( center( j.sourceToDest() ), { -5, 0, 0, 1 } ) );
-        j.position = A_PI_2.rad();
+        j.positions = { A_PI_2.rad() };
         CHECK( equals( j.sourceToDest(), rotate( M_PI_2, { 0, 1, 0 } ) * translate( { 5, 0, 0 } ) ) );
         CHECK( equals( center( j.sourceToDest() ), { 0, 0, -5, 1 } ) );
-        j.position = A_PI_2_neg.rad();
+        j.positions = { A_PI_2_neg.rad() };
         CHECK( equals( j.sourceToDest(), rotate( -M_PI_2, { 0, 1, 0 } ) * translate( { 5, 0, 0 } ) ) );
         CHECK( equals( center( j.sourceToDest() ), { 0, 0, 5, 1 } ) );
         CHECK( equals( j.sourceToDest() * j.destToSource(), identity ) );
