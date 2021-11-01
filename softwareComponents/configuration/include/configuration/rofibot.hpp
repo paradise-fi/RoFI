@@ -188,7 +188,7 @@ public:
      */
     bool setId( ModuleId newId );
 
-    void setJointParams( int idx, const Joint::Positions& p );
+    void setJointPositions( int idx, const Joint::Positions& p );
     // Implemented in CPP files as it depends on definition of Rofibot
 
     /**
@@ -392,10 +392,10 @@ public:
  */
 class Rofibot {
     struct ModuleInfo;
-    using HandleId = atoms::HandleSet< ModuleInfo >::handle_type;
-    using HandleJoint = atoms::HandleSet< RoficomJoint >::handle_type;
+    using ModuleInfoHandle = atoms::HandleSet< ModuleInfo >::handle_type;
+    using RoficomHandle = atoms::HandleSet< RoficomJoint >::handle_type;
+    using SpaceJointHandle = atoms::HandleSet< SpaceJoint >::handle_type;
 public:
-    using HandleSpace = atoms::HandleSet< SpaceJoint >::handle_type;
 
     Rofibot() = default;
 
@@ -545,7 +545,7 @@ public:
         _clearModulePositions();
 
         // Setup position of space joints and extract roots
-        std::set< HandleId > roots;
+        std::set< ModuleInfoHandle > roots;
         for ( const SpaceJoint& j : _spaceJoints ) {
             Matrix jointPosition = translate( j.refPoint ) * j.joint->sourceToDest();
             ModuleInfo& mInfo = _modules[ _idMapping[ j.destModule ] ];
@@ -571,7 +571,7 @@ public:
             }
             m.position = position;
             // Traverse ignoring edge orientation
-            std::vector< HandleJoint > joints;
+            std::vector< RoficomHandle > joints;
             std::copy( m.outJointsIdx.begin(), m.outJointsIdx.end(),
                 std::back_inserter( joints ) );
             std::copy( m.inJointsIdx.begin(), m.inJointsIdx.end(),
@@ -609,7 +609,7 @@ public:
     /**
      * \brief Set position of a space joints specified by its id
      */
-    void setSpaceJointPosition( HandleSpace jointId, const Joint::Positions& p ) {
+    void setSpaceJointPosition( SpaceJointHandle jointId, const Joint::Positions& p ) {
         assert( p.size() == _spaceJoints[ jointId ]. joint->positions.size() );
         _spaceJoints[ jointId ].joint->positions = p;
         _prepared = false;
@@ -649,8 +649,8 @@ private:
             position( std::move( o.position ) )
         {}
 
-        ModuleInfo( atoms::ValuePtr< Module >&& m, const std::vector< HandleJoint >& i, const std::vector< HandleJoint >& o,
-            const std::vector< HandleSpace >& s, const std::optional< Matrix >& pos )
+        ModuleInfo( atoms::ValuePtr< Module >&& m, const std::vector< RoficomHandle >& i, const std::vector< RoficomHandle >& o,
+            const std::vector< SpaceJointHandle >& s, const std::optional< Matrix >& pos )
         : module( std::move( m ) ), inJointsIdx( i ), outJointsIdx( o ), spaceJoints( s ), position( pos )
         {}
 
@@ -658,22 +658,22 @@ private:
         ModuleInfo& operator=( ModuleInfo&& ) = default;
 
         atoms::ValuePtr< Module > module;  // Use value_ptr to make address of modules stable
-        std::vector< HandleJoint > inJointsIdx;
-        std::vector< HandleJoint > outJointsIdx;
-        std::vector< HandleSpace > spaceJoints;
+        std::vector< RoficomHandle > inJointsIdx;
+        std::vector< RoficomHandle > outJointsIdx;
+        std::vector< SpaceJointHandle > spaceJoints;
         std::optional< Matrix > position;
     };
 
     atoms::HandleSet< ModuleInfo > _modules;
     atoms::HandleSet< RoficomJoint > _moduleJoints;
     atoms::HandleSet< SpaceJoint > _spaceJoints;
-    std::map< ModuleId, HandleId > _idMapping;
+    std::map< ModuleId, ModuleInfoHandle > _idMapping;
     bool _prepared = false;
 
     friend void connect( const Component& c1, const Component& c2, roficom::Orientation o );
     friend class Module;
     template < typename JointT, typename... Args >
-    friend HandleSpace connect( const Component& c, Vector refpoint, Args&&... args );
+    friend SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&... args );
 };
 
 /**
@@ -694,7 +694,7 @@ void connect( const Component& c1, const Component& c2, roficom::Orientation o )
  * Returns ID of the joint which can be used for setting parameters of the joint
  */
 template < typename JointT, typename... Args >
-Rofibot::HandleSpace connect( const Component& c, Vector refpoint, Args&&... args ) {
+Rofibot::SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&... args ) {
     Rofibot& bot = *c.parent->parent;
     Rofibot::ModuleInfo& info = bot._modules[ bot._idMapping[ c.parent->getId() ] ];
 

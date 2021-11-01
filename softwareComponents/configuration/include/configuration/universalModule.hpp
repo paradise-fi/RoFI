@@ -20,8 +20,6 @@ class UniversalModule : public Module {
     UniversalModule buildUniversalModule( int id, Angle alpha, Angle beta, Angle gamma );
 
 public:
-    ~UniversalModule() override = default;
-
     ATOMS_CLONEABLE( UniversalModule );
 
     enum UmParts { UmBodyA = 7, UmBodyB = 8, UmShoeA = 6, UmShoeB = 9 };
@@ -40,18 +38,15 @@ public:
         return _getJointAngle( 2 );
     }
 
-    Angle setAlpha( Angle a ) {
-        setJointParams( 0, { a.rad() } );
-        return getAlpha();
+    void setAlpha( Angle a ) {
+        setJointPositions( 0, { a.rad() } );
     }
 
-    Angle setBeta( Angle a ) {
-        setJointParams( 1, { a.rad() } );
-        return getBeta();
+    void setBeta( Angle a ) {
+        setJointPositions( 1, { a.rad() } );
     }
-    Angle setGamma( Angle a ) {
-        setJointParams( 2, { a.rad() } );
-        return getGamma();
+    void setGamma( Angle a ) {
+        setJointPositions( 2, { a.rad() } );
     }
 };
 

@@ -41,8 +41,6 @@ public:
 
     explicit Pad( int size ) : Pad( size, size ) {};
 
-    ~Pad() override = default;
-
     ATOMS_CLONEABLE( Pad );
 };
 
