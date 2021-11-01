@@ -22,10 +22,10 @@ endif()
 
 add_executable(rofi-vis ${modelResources} ${ARMADILLO_LIBRARIES}
     main.cpp Generator.h Camera.h Animator.h)
-target_link_libraries(rofi-vis PUBLIC original-configuration atoms atoms-heavy cxxopts ${VTK_LIBRARIES})
+target_link_libraries(rofi-vis PUBLIC legacy-configuration atoms atoms-heavy cxxopts ${VTK_LIBRARIES})
 
 add_executable(test-rofi-vis ${modelResources} test/main.cpp test/test.cpp)
-target_link_libraries(test-rofi-vis PUBLIC original-configuration atoms atoms-heavy ${ARMADILLO_LIBRARIES} ${VTK_LIBRARIES} Catch2::Catch2)
+target_link_libraries(test-rofi-vis PUBLIC legacy-configuration atoms atoms-heavy ${ARMADILLO_LIBRARIES} ${VTK_LIBRARIES} Catch2::Catch2)
 target_include_directories(test-rofi-vis PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
 
@@ -57,7 +57,7 @@ if(Qt5_FOUND)
     rofiapp_mainWindow.cpp rofiapp.cpp rofiapp_resources.qrc Vtk.cpp ${modelResources} )
 
   target_link_libraries(rofi-app
-    Qt5::Widgets original-configuration atoms atoms-heavy cxxopts ${VTK_LIBRARIES})
+    Qt5::Widgets legacy-configuration atoms atoms-heavy cxxopts ${VTK_LIBRARIES})
 
 endif()
 

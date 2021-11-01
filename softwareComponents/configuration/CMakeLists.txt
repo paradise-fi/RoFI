@@ -15,9 +15,9 @@ if(NOT span_POPULATED)
 endif()
 
 file(GLOB ORIGINAL_CONF_SRC *)
-add_library(original-configuration STATIC ${ORIGINAL_CONF_SRC})
-target_include_directories(original-configuration PUBLIC .)
-target_link_libraries(original-configuration PUBLIC ${ARMADILLO_LIBRARIES})
+add_library(legacy-configuration STATIC ${ORIGINAL_CONF_SRC})
+target_include_directories(legacy-configuration PUBLIC .)
+target_link_libraries(legacy-configuration PUBLIC ${ARMADILLO_LIBRARIES})
 
 
 file(GLOB CONFIGURATION_SRC src/*)
@@ -27,7 +27,7 @@ target_link_libraries(configuration PUBLIC ${ARMADILLO_LIBRARIES} atoms span fmt
 
 add_library(generators STATIC Generators.cpp Generators.h)
 target_include_directories(generators PUBLIC .)
-target_link_libraries(generators PUBLIC original-configuration)
+target_link_libraries(generators PUBLIC legacy-configuration)
 
 file(GLOB TEST_SRC test/*.cpp)
 add_executable(test-configuration ${TEST_SRC})
