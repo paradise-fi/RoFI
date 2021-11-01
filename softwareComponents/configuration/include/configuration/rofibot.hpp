@@ -4,6 +4,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <ranges>
 
 #include <atoms/containers.hpp>
 #include <atoms/algorithm.hpp>
@@ -80,7 +81,7 @@ struct RoficomJoint: public Joint {
     }
 
     Matrix sourceToDest() const override {
-        assert( !position );
+        assert( positions.empty() );
         // the "default" roficom is A-X
         return translate( { -1, 0, 0 } ) * rotate( M_PI, { 0, 0, 1 } )
             * rotate( M_PI, { 1, 0, 0 } )
@@ -117,9 +118,11 @@ class Module;
  * \brief Single body of a module
  */
 struct Component {
+    using JointId = int;
+
     ComponentType type;
-    std::vector< int > inJoints;
-    std::vector< int > outJoints;
+    std::vector< JointId > inJoints;
+    std::vector< JointId > outJoints;
 
     Module *parent;
 
@@ -165,6 +168,7 @@ public:
       parent( nullptr ),
       _rootComponent( rootComponent )
     {
+        assert( _components.size() > 0 && "Module has to have at least one component" );
         _prepareComponents();
         if ( !_rootComponent )
             _rootComponent = _computeRoot();
@@ -186,7 +190,7 @@ public:
      */
     bool setId( ModuleId newId );
 
-    void setJointParams( int idx, const Joint::Position& p );
+    void setJointParams( int idx, const Joint::Positions& p );
     // Implemented in CPP files as it depends on definition of Rofibot
 
     /**
@@ -208,6 +212,7 @@ public:
      * Raises std::logic_error if the components are not prepared
      */
     Matrix getComponentPosition( int idx, Matrix position ) const {
+        assert( idx >= 0 && idx < _components.size() );
         if ( !_componentPosition )
             throw std::logic_error( "Module is not prepared" );
         return position * _componentPosition.value()[ idx ];
@@ -261,15 +266,18 @@ public:
         _componentPosition = std::move( positions );
     }
 
+    auto configurableJoints() {
+        return _joints | std::views::transform( []( ComponentJoint& cj ) { return cj.joint; } )
+                       | std::views::filter( []( const atoms::ValuePtr< Joint >& ptr ) {
+                                                    return ptr->paramCount() > 0;
+                                                } );
+    }
+
     /**
      * \brief Get read-only view of the components
      */
     tcb::span< const Component > components() const {
         return _components;
-    }
-
-    const Component& component( int idx ) {
-        return components()[ idx ];
     }
 
     /**
@@ -323,7 +331,7 @@ private:
             c.inJoints.clear();
             c.parent = this;
         }
-        for ( int i = 0; i != _joints.size(); i++ ) {
+        for ( Component::JointId i = 0; i != _joints.size(); i++ ) {
             const auto& j = _joints[ i ];
             _components[ j.sourceComponent ].outJoints.push_back( i );
             _components[ j.destinationComponent ].inJoints.push_back( i );
@@ -603,8 +611,10 @@ public:
     /**
      * \brief Set position of a space joints specified by its id
      */
-    void setSpaceJointPosition( HandleSpace jointId, Joint::Position p ) {
-        _spaceJoints[ jointId ].joint->position = p;
+    void setSpaceJointPosition( HandleSpace jointId, const Joint::Positions& p ) {
+        assert( jointId >= 0 && jointId < _spaceJoints.size() );
+        assert( p.size() == _spaceJoints[ jointId ]. joint->positions.size() );
+        _spaceJoints[ jointId ].joint->positions = p;
         _prepared = false;
     }
 
@@ -635,7 +645,6 @@ private:
     }
 
     struct ModuleInfo {
-        ModuleInfo() = default;
         ModuleInfo( const ModuleInfo& ) = default;
         ModuleInfo( ModuleInfo&& o ) noexcept
         : module( std::move( o.module ) ), inJointsIdx( std::move( o.inJointsIdx ) ),

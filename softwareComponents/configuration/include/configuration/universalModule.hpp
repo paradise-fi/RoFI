@@ -8,7 +8,7 @@ namespace rofi::configuration {
 
 class UniversalModule : public Module {
     Angle _getJointAngle( int i ) const {
-        return Angle::rad( joints()[ i ].joint->position.value() );
+        return Angle::rad( joints()[ i ].joint->positions[ 0 ] );
     }
 
     static std::vector< Component > _initComponents();
@@ -41,16 +41,16 @@ public:
     }
 
     Angle setAlpha( Angle a ) {
-        setJointParams( 0, a.rad() );
+        setJointParams( 0, { a.rad() } );
         return getAlpha();
     }
 
     Angle setBeta( Angle a ) {
-        setJointParams( 1, a.rad() );
+        setJointParams( 1, { a.rad() } );
         return getBeta();
     }
     Angle setGamma( Angle a ) {
-        setJointParams( 2, a.rad() );
+        setJointParams( 2, { a.rad() } );
         return getGamma();
     }
 };
