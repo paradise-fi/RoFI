@@ -2,13 +2,22 @@
 
 #include <configuration/rofibot.hpp>
 #include <configuration/universalModule.hpp>
+#include <configuration/unknownModule.hpp>
 
 namespace {
 
 using namespace rofi::configuration;
 using namespace rofi::configuration::roficom;
 
-TEST_CASE( "Base Module Test" ) {}
+TEST_CASE( "UnknownModule (base Module) Test" ) {
+    auto m = UnknownModule( { Component{ ComponentType::Roficom } }, 1, {}, 42 );
+    CHECK( m.bodies().size() == 0 );
+    CHECK( m.components().size() == 1 );
+    CHECK( m.connectors().size() == 1 );
+    CHECK( m.getId() == 42 );
+    CHECK( m.setId( 66 ) );
+    CHECK( m.getId() == 66 );
+}
 
 TEST_CASE( "Universal Module Test" ) {
     SECTION( "Creation" ) {
