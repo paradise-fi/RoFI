@@ -100,6 +100,17 @@ if(NOT json_POPULATED)
   add_subdirectory(${json_SOURCE_DIR} ${json_BINARY_DIR})
 endif()
 
+FetchContent_Declare(
+  cxxopts
+  GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
+  GIT_TAG        v2.2.0
+)
+FetchContent_GetProperties(cxxopts)
+if(NOT cxxopts_POPULATED)
+  FetchContent_Populate(cxxopts)
+  add_subdirectory(${cxxopts_SOURCE_DIR} ${cxxopts_BINARY_DIR})
+endif()
+
 
 
 add_component(atoms)
@@ -130,11 +141,11 @@ add_tool(generate)
 add_tool(emptyDockFill)
 add_tool(topology2dot)
 add_tool(ik)
-add_tool(rofiTool)
 add_tool(tangle)
 
 if (NOT ${BUILD_HEADLESS})
   add_tool(visualizer)
+  add_tool(rofiTool)
 endif()
 
 if (${BUILD_GAZEBO})

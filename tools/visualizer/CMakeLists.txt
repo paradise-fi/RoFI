@@ -9,17 +9,6 @@ add_resources(modelResources "model/body.obj" "model/connector.obj" "model/shoe.
 
 message(${modelResources})
 
-FetchContent_Declare(
-  cxxopts
-  GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
-  GIT_TAG        v2.2.0
-)
-FetchContent_GetProperties(cxxopts)
-if(NOT cxxopts_POPULATED)
-  FetchContent_Populate(cxxopts)
-  add_subdirectory(${cxxopts_SOURCE_DIR} ${cxxopts_BINARY_DIR})
-endif()
-
 add_executable(rofi-vis ${modelResources} ${ARMADILLO_LIBRARIES}
     main.cpp Generator.h Camera.h Animator.h)
 target_link_libraries(rofi-vis PUBLIC legacy-configuration atoms atoms-heavy cxxopts ${VTK_LIBRARIES})
