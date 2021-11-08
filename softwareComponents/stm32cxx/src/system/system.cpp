@@ -65,14 +65,14 @@ _Unwind_Reason_Code trace( _Unwind_Context *ctx, void *d ) {
 void backtrace() {
     phase2_vrs firstContext = mainContext;
     int depth = 0;
-    Dbg::error( "backtrace:");
+    Dbg::error( "backtrace:" );
     __gnu_Unwind_Backtrace( &trace, &depth, &firstContext );
 }
 
 extern "C" void __attribute__((__noinline__, __used__))
 HardFault_HandlerDeref( volatile unsigned *stack) {
     Dbg::error( "\n\n\nHardFault ocurred" );
-    fillPhase2Vrs(stack);
+    fillPhase2Vrs( stack );
     backtrace();
     while ( true );
 }

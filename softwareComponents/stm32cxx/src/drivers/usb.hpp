@@ -236,6 +236,10 @@ public:
         return ( _descriptor.bEndpointAddress & USB_REQ_DIRECTION ) == USB_REQ_DEVTOHOST;
     }
 
+    auto& parentDevice() {
+        return *_parent;
+    }
+
     template < typename F >
     UsbEndpoint& onRx( F f ) {
         _onRx = f;
@@ -375,6 +379,10 @@ public:
         return *_children.back();
     }
 
+    int getIndex() {
+        return _baseDescriptor().bConfigurationValue;
+    }
+
 private:
     UsbConfiguration( UsbDevice *parent, int cfgIdx ):
         _parent( parent ), _cfgIdx( cfgIdx )
@@ -411,7 +419,6 @@ public:
                    _buffer, sizeof( _buffer ) );
 
         _currentConfiguration = 0;
-        // _configurations[ 0 ]->setup();
 
         usbd_reg_config( &_device, _setConfTrampoline );
         usbd_reg_control( &_device, _controlTrampoline );
@@ -524,6 +531,10 @@ public:
         return addString( s );
     }
 
+    bool isConfigured() const {
+        return _device.status.device_state == usbd_state_configured;
+    }
+
     auto& nativeDevice() {
         return _device;
     }
@@ -567,7 +578,7 @@ private:
         if ( _currentConfiguration != 0 )
             _configurations[ _currentConfiguration - 1 ]->teardown();
         if ( requestedConfiguration != 0 )
-        _configurations[ requestedConfiguration - 1 ]->setup();
+            _configurations[ requestedConfiguration - 1 ]->setup();
 
         _currentConfiguration = requestedConfiguration;
         return usbd_ack;
@@ -583,16 +594,21 @@ private:
 
     usbd_respond _getDescriptor( usbd_ctlreq *req, void **address, uint16_t *length ) {
         const uint8_t dType = req->wValue >> 8;
-        const uint8_t dNumber = req->wValue & 0xFF;
+        /*const*/ uint8_t dNumber = req->wValue & 0xFF;
         switch (dType) {
         case USB_DTYPE_DEVICE: {
                 std::tie( *address, *length ) = getDescriptor();
                 return usbd_ack;
             }
         case USB_DTYPE_CONFIGURATION: {
-                if ( dNumber > _configurations.size() )
+                Dbg::error("Cfg size: %d, %d", _configurations.size(), dNumber );
+                if ( dNumber >= _configurations.size() )
                     return usbd_fail;
-                auto [ desc, size ] = _configurations[ dNumber ]->getDescriptor();
+                if ( dNumber == 0 )
+                    dNumber = 1;
+                Dbg::error( "Requested: %d, got %d", dNumber, _configurations[ dNumber - 1 ]->getIndex() );
+                // assert( _configurations[ dNumber - 1 ]->getIndex() == dNumber );
+                auto [ desc, size ] = _configurations[ dNumber - 1 ]->getDescriptor();
                 *address = desc;
                 *length = size;
                 return usbd_ack;

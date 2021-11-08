@@ -2,7 +2,7 @@
 
 #include <stm32cxx.config.hpp>
 
-#include <cassert>
+#include <system/assert.hpp>
 #include <cstdint>
 #include <memory>
 
