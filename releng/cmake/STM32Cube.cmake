@@ -77,6 +77,10 @@ function(setup_stm32cube PREFIX MCU)
     add_library(${PREFIX}_startup INTERFACE)
     target_sources(${PREFIX}_startup INTERFACE
         ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Source/Templates/gcc/${STARTUP_SCRIPT})
+    set_source_files_properties(
+        ${STM_LIB}/CMSIS/Device/ST/${MCU_FAMILY}/Source/Templates/gcc/${STARTUP_SCRIPT}
+        PROPERTIES COMPILE_FLAGS
+        "-Wno-all -Wno-extra -Wno-pedantic -Wno-unused-parameter")
 
     add_stm32_target(LIB
         TARGET ${PREFIX}_CUBE
@@ -107,6 +111,11 @@ function(setup_stm32cube PREFIX MCU)
         endforeach(f)
         add_library(${PREFIX}_${libname} INTERFACE)
         target_sources(${PREFIX}_${libname} INTERFACE ${sources})
+        # HAL yields a lot of warnings, ignore them
+        foreach(f ${sources})
+            set_source_files_properties("${f}" PROPERTIES COMPILE_FLAGS
+                "-Wno-all -Wno-extra -Wno-pedantic -Wno-unused-parameter")
+        endforeach()
         target_include_directories(${PREFIX}_${libname} SYSTEM INTERFACE ${HAL_PATH}/Inc)
         target_link_libraries(${PREFIX}_${libname} INTERFACE ${PREFIX}_CMSIS)
     endfunction()
@@ -115,6 +124,51 @@ function(setup_stm32cube PREFIX MCU)
         REQUIRED hal.c hal_rcc.c hal_cortex.c)
     add_hallib(HAL_Gpio
         REQUIRED hal_gpio.c)
+    add_hallib(HAL_ADC
+        REQUIRED hal_adc.c
+        OPTIONAL hal_adc_ex.c)
+    add_hallib(HAL_CAN
+        REQUIRED hal_can.c
+        OPTIONAL hal_can_ex.c)
+    add_hallib(HAL_Cec
+        OPTIONAL hal_cec.c)
+    add_hallib(HAL_Cortex
+        REQUIRED hal_cortex.c)
+    add_hallib(HAL_CRC
+        REQUIRED hal_crc.c
+        OPTIONAL hal_crc_ex.c)
+    add_hallib(HAL_Cryp
+        REQUIRED hal_cryp.c
+        OPTIONAL hal_crc_ex.c)
+    add_hallib(HAL_DAC
+        REQUIRED hal_dac.c
+        OPTIONAL hal_dac_ex.c)
+    add_hallib(HAL_DCMI
+        REQUIRED hal_dcmi.c
+        OPTIONAL hal_dcmi_ex.c)
+    add_hallib(HAL_DMA
+        REQUIRED hal_dma.c
+        OPTIONAL hal_dma2d.c)
+    add_hallib(HAL_Flash
+        REQUIRED hal_flash.c hal_flash_ramfunc.c
+        OPTIONAL hal_flash_ex.c)
+    add_hallib(HAL_Hash
+        REQUIRED hal_hash.c)
+    add_hallib(HAL_I2C
+        REQUIRED hal_i2c.c
+        OPTIONAL hal_i2c_ex.c)
+    add_hallib(HAL_I2S
+        REQUIRED hal_i2s.c
+        OPTIONAL hal_i2s_ex.c)
+    add_hallib(HAL_RCC
+        REQUIRED hal_rcc.c)
+    add_hallib(HAL_SPI
+        REQUIRED hal_spi.c
+        OPTIONAL hal_spi_ex.c)
+    add_hallib(HAL_Tim
+        REQUIRED hal_tim.c
+        OPTIONAL hal_tim_ex.c)
+
     add_hallib(LL
         REQUIRED ll_utils.c ll_rcc.c)
     add_hallib(LL_Adc
@@ -132,9 +186,6 @@ function(setup_stm32cube PREFIX MCU)
     add_hallib(LL_Usart
         REQUIRED ll_usart.c)
         target_link_libraries(${PREFIX}_LL_Usart INTERFACE ${PREFIX}_LL)
-    add_hallib(HAL_CRC
-        REQUIRED hal_crc.c
-        OPTIONAL hal_crc_ex.c)
 
     set_property(TARGET ${PREFIX}_CUBE
         PROPERTY STM_LIB ${STM_LIB})
@@ -152,6 +203,11 @@ function(setup_stm32cube PREFIX MCU)
     )
     add_library(${PREFIX}_freertos INTERFACE)
     target_sources(${PREFIX}_freertos INTERFACE ${freertos_src})
+    # FreeRTOS yields warnings, ignore them
+    foreach(f ${freertos_src})
+        set_source_files_properties("${f}" PROPERTIES COMPILE_FLAGS
+            "-Wno-all -Wno-extra -Wno-pedantic -Wno-unused-parameter")
+    endforeach()
     target_include_directories(${PREFIX}_freertos INTERFACE
         ${fp}/CMSIS_RTOS
         ${fp}/portable/GCC/${MCU_RTOS_FLAVOR}
