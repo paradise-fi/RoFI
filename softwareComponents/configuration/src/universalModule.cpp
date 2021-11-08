@@ -78,19 +78,29 @@ int parseStringDescription( std::istringstream& line
     throw std::runtime_error( "Unexpected value |" + part + "| expected one of " + expected );
 }
 
+int parseIntOrString( std::istringstream& line, std::vector< std::pair< std::string, int > > opts) {
+    int posibleRes;
+    auto pos = line.tellg();
+    line >> posibleRes;
+    if ( line ) {
+        return posibleRes;
+    }
+
+    line.clear();
+    line.seekg( pos );
+    return parseStringDescription( line, opts );
+}
+
 auto parseEdge( std::istringstream& line ) {
     int id1, id2, side1, side2, dock1, dock2, orientation;
-    line >> id1 >> side1;
-    if ( line ) {
-        line >> dock1 >> orientation >> dock2 >> side2;
-    } else { // config file has the letter notation
-        line.clear(); // reset the bad state
-        side1 = parseStringDescription( line, { { "A", 0 }, { "B", 1 } } );
-        dock1 = parseStringDescription( line, { { "+X", 0 }, { "-X", 1 }, { "-Z", 2 } } );
-        orientation = parseStringDescription( line, { { "N", 0 }, { "E", 1 }, { "S", 2 }, { "W", 3 } } );
-        dock2 = parseStringDescription( line, { { "+X", 0 }, { "-X", 1 }, { "-Z", 2 } } );
-        side2 = parseStringDescription( line, { { "A", 0 }, { "B", 1 } } );
-    }
+    line >> id1;
+
+    side1 = parseIntOrString( line, { { "A", 0 }, { "B", 1 } } );
+    dock1 = parseIntOrString( line, { { "+X", 0 }, { "-X", 1 }, { "-Z", 2 } } );
+    orientation = parseIntOrString( line, { { "N", 0 }, { "E", 1 }, { "S", 2 }, { "W", 3 } } );
+    dock2 = parseIntOrString( line, { { "+X", 0 }, { "-X", 1 }, { "-Z", 2 } } );
+    side2 = parseIntOrString( line, { { "A", 0 }, { "B", 1 } } );
+
     line >> id2;
 
     return std::make_tuple( id1, id2, side1, side2, dock1, dock2, orientation );
