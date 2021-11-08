@@ -3,7 +3,7 @@
 #include <stm32g4xx_ll_adc.h>
 #include <stm32g4xx_hal.h>
 #include <stm32g4xx_ll_bus.h>
-#include <cassert>
+#include <system/assert.hpp>
 
 namespace detail {
 

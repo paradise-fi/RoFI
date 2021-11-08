@@ -3,7 +3,7 @@
 #include <stm32f0xx_ll_bus.h>
 #include <stm32f0xx_ll_usart.h>
 #include <stm32f0xx_ll_gpio.h>
-#include <cassert>
+#include <system/assert.hpp>
 
 namespace detail {
 
@@ -71,11 +71,9 @@ public:
 } // namespace detail
 
 inline int LL_DMAMUX_REQ_RX( USART_TypeDef * /* uart */ ) {
-    assert( false && "Invalid USART specified" );
-    __builtin_trap();
+    impossible( "Invalid USART specified" );
 }
 
 inline int LL_DMAMUX_REQ_TX( USART_TypeDef * /* uart */ ) {
-    assert( false && "Invalid USART specified" );
-    __builtin_trap();
+    impossible( "Invalid USART specified" );
 }

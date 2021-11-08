@@ -6,7 +6,7 @@
 
 #include <system/util.hpp>
 
-#include <cassert>
+#include <system/assert.hpp>
 
 namespace detail {
 

@@ -2,7 +2,7 @@
 
 #pragma once
 
-#include <cassert>
+#include <system/assert.hpp>
 
 #include <stm32f4xx_ll_bus.h>
 #include <stm32f4xx_ll_spi.h>

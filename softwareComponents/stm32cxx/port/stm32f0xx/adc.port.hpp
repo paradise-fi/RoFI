@@ -3,7 +3,7 @@
 #include <stm32f0xx_ll_adc.h>
 #include <stm32f0xx_ll_bus.h>
 #include <stm32f0xx_hal.h>
-#include <cassert>
+#include <system/assert.hpp>
 
 namespace detail {
 
@@ -22,7 +22,7 @@ public:
             LL_APB1_GRP2_EnableClock( LL_APB1_GRP2_PERIPH_ADC1 );
             return;
         }
-        assert( false && "Invalid peripheral specified" );
+        impossible( "Invalid peripheral specified" );
     }
 
     void setupDefaultSampling() {

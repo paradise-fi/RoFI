@@ -133,6 +133,7 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
             // LL_ADC_REG_StartConversion( adc );
             // while ( LL_ADC_REG_IsConversionOngoing( adc ) );
             // return LL_ADC_REG_ReadConversionData32( adc );
+            __builtin_unreachable();
         }
 
         int _pos;

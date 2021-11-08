@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cassert>
+#include <system/assert.hpp>
 
 #include <stm32f0xx_ll_spi.h>
 #include <stm32f0xx_ll_gpio.h>

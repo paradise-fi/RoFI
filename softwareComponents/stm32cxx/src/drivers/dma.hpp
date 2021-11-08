@@ -3,7 +3,7 @@
 #include <dma.port.hpp>
 
 #include <array>
-#include <cassert>
+#include <system/assert.hpp>
 #include <functional>
 
 #include <system/util.hpp>

@@ -2,7 +2,7 @@
 
 #include <algorithm>
 #include <array>
-#include <cassert>
+#include <system/assert.hpp>
 #include <functional>
 #include <initializer_list>
 
@@ -19,6 +19,10 @@
         HANDLER();                                   \
     }
 
+enum class StopBits { N1, N1_5, N2 };
+
+enum class Parity { None, Even, Odd };
+
 #include <uart.port.hpp>
 
 namespace detail {
@@ -27,7 +31,8 @@ namespace detail {
     int uartAlternateFunCTS( USART_TypeDef *periph, GPIO_TypeDef *port, int pos );
     int uartAlternateFunRTS( USART_TypeDef *periph, GPIO_TypeDef *port, int pos );
     int uartAlternateFunDE( USART_TypeDef *periph, GPIO_TypeDef *port, int pos );
-}; // namespace detail
+} // namespace detail
+
 
 /**
  * UART peripheral driver
@@ -211,6 +216,8 @@ struct RxOn: public UartConfigBase {
         GPIO_InitStruct.Pull = LL_GPIO_PULL_UP;
         GPIO_InitStruct.Alternate =
             detail::uartAlternateFunRX( periph, _pin._periph, _pin._pos );
+
+        LL_GPIO_Init( _pin._periph, &GPIO_InitStruct );
     }
 
     Gpio::Pin _pin;

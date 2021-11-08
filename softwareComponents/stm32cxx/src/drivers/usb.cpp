@@ -24,6 +24,7 @@ int UsbEndpoint::read( void *buff, int maxLength ) {
 }
 
 int UsbEndpoint::write( const void *buff, int length ) {
+    Dbg::error("Address: %d", int(_descriptor.bEndpointAddress) );
     assert( isDevToHost() );
     // We can use const cast, as the driver does not modify the buffer
     return usbd_ep_write( &_parent->_device, _descriptor.bEndpointAddress,

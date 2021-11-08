@@ -4,9 +4,11 @@
 #include <string>
 #include <array>
 #include <vector>
+#include <system/arrayMap.hpp>
+#include <system/linearMap.hpp>
 #include <map>
 #include <functional>
-#include <cassert>
+#include <system/assert.hpp>
 #include <cstring>
 #include <memory>
 
@@ -16,6 +18,8 @@
 #include <usb.port.hpp>
 
 #include <system/dbg.hpp>
+
+#define Map LinearMap
 
 class UsbDevice;
 class UsbInteface;
@@ -50,10 +54,12 @@ public:
     void clear() {
         _descriptorData.clear();
         _children.clear();
-        pushDescriptor( Descriptor{
-            .bLength = sizeof( Descriptor ),
-            .bDescriptorType = descriptorType( Descriptor() )
-        } );
+
+        Descriptor d{};
+        d.bLength = sizeof( Descriptor );
+        d.bDescriptorType = descriptorType( d );
+
+        pushDescriptor( d );
     }
 
     /** Push an arbitrary descriptor **/
@@ -194,7 +200,7 @@ private:
 };
 
 using LangId = uint16_t;
-using UsbString = std::map< LangId, std::u16string >;
+using UsbString = Map< LangId, std::u16string >;
 
 class UsbEndpoint {
 public:
@@ -503,7 +509,7 @@ public:
                  sizeof( _deviceDescriptor ) };
     }
 
-    uint16_t addString( const std::map< LangId, StringDescriptor >& s ) {
+    uint16_t addString( const Map< LangId, StringDescriptor >& s ) {
         auto it = std::find( _stringDescs.begin(), _stringDescs.end(), s );
         if ( it != _stringDescs.end() )
             return it - _stringDescs.begin() + 1;
@@ -512,7 +518,7 @@ public:
     }
 
     uint16_t addString( const UsbString& string ) {
-        std::map< LangId, StringDescriptor > s;
+        Map< LangId, StringDescriptor > s;
         for ( const auto& [ langId, sd ] : string )
             s.emplace( langId, StringDescriptor( sd ) );
         return addString( s );
@@ -528,11 +534,11 @@ private:
         _deviceDescriptor.bMaxPacketSize0 = 8;
     }
 
-    static usbd_respond _setConfTrampoline( usbd_device *dev, uint8_t cfg ) {
+    static usbd_respond _setConfTrampoline( usbd_device *, uint8_t cfg ) {
         return instance()._setConf( cfg );
     }
 
-    static usbd_respond _controlTrampoline( usbd_device *dev, usbd_ctlreq *req,
+    static usbd_respond _controlTrampoline( usbd_device *, usbd_ctlreq *req,
                                             usbd_rqc_callback *callback )
     {
         return instance()._onControlRequest( req, callback );
@@ -544,13 +550,13 @@ private:
         return instance()._getDescriptor( req, address, length );
     }
 
-    static void _endpointEventTrampoline( usbd_device *dev, uint8_t event,
+    static void _endpointEventTrampoline( usbd_device *, uint8_t event,
                                            uint8_t ep )
     {
         instance()._handleEndpointEvent( event, ep );
     }
 
-    static void _eventTrampoline( usbd_device *dev, uint8_t event, uint8_t ep ) {
+    static void _eventTrampoline( usbd_device *, uint8_t event, uint8_t ep ) {
         instance()._handleEvent( event, ep );
     }
 
@@ -567,7 +573,7 @@ private:
         return usbd_ack;
     }
 
-    usbd_respond _onControlRequest( usbd_ctlreq *req, usbd_rqc_callback *callback ) {
+    usbd_respond _onControlRequest( usbd_ctlreq *req, usbd_rqc_callback */*callback*/ ) {
         if ( ( USB_REQ_RECIPIENT & req->bmRequestType ) == USB_REQ_INTERFACE ) {
             return _configurations[ _currentConfiguration - 1 ]->_handleControl( *req );
         }
@@ -630,8 +636,7 @@ private:
         }
     }
 
-    void _handleEvent( uint8_t event, uint8_t ep ) {
-        // Dbg::error( "%d, %d", event, ep );
+    void _handleEvent( uint8_t /*event*/, uint8_t /*ep*/ ) {
         // TBA
     }
 
@@ -653,7 +658,7 @@ private:
         _langIdsDesc.resize( 2 + 2 * ids.size() );
         _langIdsDesc[ 0 ] = 2 + 2 * ids.size();
         _langIdsDesc[ 1 ] = USB_DTYPE_STRING;
-        for ( int i = 0; i != ids.size(); i++ ) {
+        for ( size_t i = 0; i != ids.size(); i++ ) {
             memcpy( _langIdsDesc.data() + 2 + 2 * i, &ids[ i ], sizeof( LangId ) );
         }
         return { _langIdsDesc.data(), _langIdsDesc.size() };
@@ -672,7 +677,7 @@ private:
     std::vector< std::unique_ptr< UsbConfiguration > > _configurations;
     int _currentConfiguration;
 
-    std::vector< std::map< LangId, StringDescriptor > > _stringDescs;
+    std::vector< Map< LangId, StringDescriptor > > _stringDescs;
     std::vector< uint8_t > _langIdsDesc;
 
     // We keep a list of active endpoints here in order to properly implement

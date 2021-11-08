@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cassert>
+#include <system/assert.hpp>
 #include <functional>
 
 #include <spi.port.hpp>

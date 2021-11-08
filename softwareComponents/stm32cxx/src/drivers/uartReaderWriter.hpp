@@ -52,7 +52,17 @@ public:
                     callback( std::move( _block ), read );
                 } );
             }
-        } else {
+        }
+        else if constexpr ( UartD::supportsIdle ) {
+            assert( bitTimeout == 8 && "UART only supports idle detection" );
+
+            _uart.enableTimeout( [&, callback, size]() {
+                _channel.disable();
+                int read = size - LL_DMA_GetDataLength( _channel, _channel );
+                callback( std::move( _block ), read );
+            } );
+        }
+        else {
             assert( bitTimeout == 0 && "UART does not support bit timeout" );
         }
 
@@ -201,6 +211,7 @@ public:
 
     template < typename Callback >
     void writeBlock( Mem block, int offset, int size, Callback callback ) {
+        assert( !_channel.isEnabled() );
         _block = std::move( block );
         LL_DMA_SetMemoryAddress( _channel, _channel, uint32_t( _block.get() + offset ) );
         LL_DMA_SetDataLength( _channel, _channel, size );

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cassert>
+#include <system/assert.hpp>
 #include <utility>
 
 #include <stm32g0xx_ll_tim.h>

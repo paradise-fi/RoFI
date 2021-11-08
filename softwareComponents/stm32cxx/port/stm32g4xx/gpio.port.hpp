@@ -7,7 +7,7 @@
 
 #include <system/util.hpp>
 
-#include <cassert>
+#include <system/assert.hpp>
 
 namespace detail {
 
@@ -131,8 +131,8 @@ public:
         return table[ portIdx ];
     }
 
-    static void _handleIrq( int line ) {
-        int l = 1 << line;
+    static void _handleIrq( int /*line*/ ) {
+        // int l = 1 << line;
         // TBA
         assert( false );
         // if ( !LL_EXTI_IsEnabledIT_0_31( l ) )

@@ -6,7 +6,7 @@
 #include <drivers/gpio.hpp>
 #include <drivers/dma.hpp>
 
-#include <cassert>
+#include <system/assert.hpp>
 
 extern "C" void USART1_IRQHandler();
 extern "C" void USART2_IRQHandler();

@@ -1,7 +1,7 @@
 #include <stm32g4xx_ll_bus.h>
 #include <stm32g4xx_ll_usart.h>
 #include <stm32g4xx_ll_gpio.h>
-#include <cassert>
+#include <system/assert.hpp>
 
 namespace detail {
     int uartAlternateFunTX( USART_TypeDef *periph, GPIO_TypeDef *port, int pos ) {

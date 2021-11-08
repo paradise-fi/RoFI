@@ -2,7 +2,7 @@
 
 #include <stm32g4xx_ll_dma.h>
 #include <stm32g4xx_ll_bus.h>
-#include <cassert>
+#include <system/assert.hpp>
 
 // STM32 LL is stupid. There is a special function for each flag for each
 // channel. We do not want to make assumptions about arrangement of the bits,
@@ -153,7 +153,7 @@ protected:
             return *static_cast< ChSelf * >( this );
         }
 
-        void _handleIsr( DMA_TypeDef *periph, int channel ) {
+        void _handleIsr( DMA_TypeDef *, int channel ) {
             if ( _firedHT( channel ) ) {
                 _clearHT( channel );
                 self()._half();

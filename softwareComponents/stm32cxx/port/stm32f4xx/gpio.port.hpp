@@ -7,7 +7,7 @@
 
 #include <system/util.hpp>
 
-#include <cassert>
+#include <system/assert.hpp>
 
 namespace detail {
 
@@ -98,7 +98,7 @@ public:
         return isr[ pos ];
     }
 
-    static void _handleIrq( int line ) {
+    static void _handleIrq( int /*line*/ ) {
         assert( false );
         // TBA
     }

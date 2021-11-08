@@ -1,6 +1,7 @@
 #pragma once
 
 #include <drivers/usb.hpp>
+#include <drivers/uart.hpp>
 #include <usb_cdc.h>
 
 template < typename AllocatorT >
@@ -61,16 +62,26 @@ public:
             .onControl([&]( UsbInterface& interf, const usbd_ctlreq& req ) {
                 switch (req.bRequest) {
                 case USB_CDC_SET_CONTROL_LINE_STATE: {
-                    _lineState = req.wValue;
+                    bool succ = false;
                     if ( _handleControlLineState )
-                        _handleControlLineState( _lineState );
-                    return usbd_ack;
+                        succ = _handleControlLineState(
+                            req.wValue & 0x1, // DTR
+                            req.wValue & 0x2, // RTS
+                            _lineState & 0x1, // prev DTR
+                            _lineState & 0x2  // prev RTS
+                        );
+                    _lineState = req.wValue;
+                    return succ ? usbd_ack : usbd_fail;
                 }
                 case USB_CDC_SET_LINE_CODING: {
-                    memcpy( &_lineCoding, req.data, sizeof( _lineCoding ) );
+                    bool succ = false;
+                    usb_cdc_line_coding coding;
+                    memcpy( &coding, req.data, sizeof( coding ) );
                     if ( _handleLineCodingChange )
-                        _handleLineCodingChange( _lineCoding );
-                    return usbd_ack;
+                        succ = _handleLineCodingChange( coding, _lineCoding );
+                    if ( succ )
+                        _lineCoding = coding;
+                    return succ ? usbd_ack : usbd_fail;
                 }
                 case USB_CDC_GET_LINE_CODING: {
                     interf.parent().nativeDevice().status.data_ptr = &_lineCoding;
@@ -82,7 +93,7 @@ public:
                 }
             });
 
-        auto& mgmtEp = mgmtInterface.pushEndpoint()
+        _mgmtEp = &mgmtInterface.pushEndpoint()
             .setAddress( 0x82 )
             .setAttributes( USB_EPTYPE_INTERRUPT )
             .setPacketSize( 8 )
@@ -105,22 +116,22 @@ public:
                     _handleRx( std::move( mem ), read );
             });
         _txEp = &commInterface.pushEndpoint()
-            .setAddress( s.rxEp | 0x80 )
+            .setAddress( s.txEp | 0x80 )
             .setAttributes( USB_EPTYPE_BULK | USB_EPTYPE_DBLBUF )
             .setPacketSize( _packetSize )
             .setInterval( 1 )
-            .onTxFinished( [&]( UsbEndpoint& ep ) {
+            .onTxFinished( [&]( UsbEndpoint& ) {
                 if ( _handleTxFinished )
                     _handleTxFinished();
             } );
     }
 
-    void send( const char *str ) {
-        _txEp->write( str, strlen( str ) );
+    int send( const char *str ) {
+        return _txEp->write( str, strlen( str ) );
     }
 
-    void send( const uint8_t *buff, int size ) {
-        _txEp->write( buff, size );
+    int send( const uint8_t *buff, int size ) {
+        return _txEp->write( buff, size );
     }
 
     template < typename F >
@@ -151,11 +162,38 @@ private:
     int _packetSize;
     usb_cdc_line_coding _lineCoding;
     uint16_t _lineState;
+    UsbEndpoint *_mgmtEp;
     UsbEndpoint *_rxEp;
     UsbEndpoint *_txEp;
 
     std::function< void() > _handleTxFinished;
     std::function< void( Mem, int ) > _handleRx;
-    std::function< void( uint16_t ) > _handleControlLineState;
-    std::function< void( usb_cdc_line_coding ) > _handleLineCodingChange;
+    /** The function takes 4 bool values:
+     *  - DTR
+     *  - RTS
+     *  - previous DRT
+     *  - previous RTS
+     */
+    std::function< bool( bool, bool, bool, bool ) > _handleControlLineState;
+
+    /** The function takes a new and old coding **/
+    std::function< bool( usb_cdc_line_coding, usb_cdc_line_coding ) > _handleLineCodingChange;
 };
+
+inline std::optional< StopBits > getStopBits( const usb_cdc_line_coding& c ) {
+    switch( c.bCharFormat ) {
+        case USB_CDC_1_STOP_BITS:   return StopBits::N1;
+        case USB_CDC_1_5_STOP_BITS: return StopBits::N1_5;
+        case USB_CDC_2_STOP_BITS:   return StopBits::N2;
+    }
+    return {};
+}
+
+inline std::optional< Parity > getParity( const usb_cdc_line_coding& c ) {
+    switch( c.bParityType ) {
+        case USB_CDC_NO_PARITY:   return Parity::None;
+        case USB_CDC_ODD_PARITY:  return Parity::Odd;
+        case USB_CDC_EVEN_PARITY: return Parity::Even;
+    }
+    return {};
+}

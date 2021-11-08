@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stm32g0xx_hal_crc.h>
-#include <cassert>
+#include <system/assert.hpp>
 
 class Crc {
 public:

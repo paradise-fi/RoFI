@@ -5,7 +5,7 @@
 #include <stm32f0xx_ll_exti.h>
 #include <stm32f0xx_ll_adc.h>
 
-#include <cassert>
+#include <system/assert.hpp>
 
 namespace detail {
 

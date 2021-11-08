@@ -2,7 +2,7 @@
 
 #include <stm32g0xx_ll_dma.h>
 #include <stm32g0xx_ll_bus.h>
-#include <cassert>
+#include <system/assert.hpp>
 
 // STM32 LL is stupid. There is a special function for each flag for each
 // channel. We do not want to make assumptions about arrangement of the bits,
