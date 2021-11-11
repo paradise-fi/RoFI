@@ -2,7 +2,8 @@
 
 #include <system/memory.hpp>
 
-template < typename T, typename AllocatorT >
+
+template < typename T, typename AllocatorT = memory::Pool >
 class RingBuffer {
 public:
     using Allocator = AllocatorT;
@@ -17,6 +18,10 @@ public:
         for ( int i = 0; i != _storageCapacity; i++ )
             new ( _data() + i ) T();
     }
+
+    RingBuffer( int count ):
+        RingBuffer( Allocator::allocate( sizeof( T ) * count ), sizeof( T ) * count )
+    {}
 
     int capacity() const {
         return _storageCapacity - 1;
@@ -48,9 +53,24 @@ public:
         return _data()[ _index( idx ) ];
     }
 
+    /** Push the element into the queue and possibly throw away the oldest
+     ** element if there is no space. Return false if overflow happened. **/
+    bool push_back_force( T val ) {
+        bool ret = true;
+        if ( full() ) {
+            _next( _head ); // Make room, discard first element
+            ret = false;
+        }
+
+        _data()[ _tail ] = std::move( val );
+        _tail = _next( _tail );
+        return ret;
+    }
+
     bool push_back( T val ) {
         if ( full() )
             return false;
+
         _data()[ _tail ] = std::move( val );
         _tail = _next( _tail );
         return true;
@@ -98,4 +118,3 @@ private:
     Mem _storage;
     int _storageCapacity;
 };
-
