@@ -11,12 +11,16 @@
 extern "C" void USART1_IRQHandler();
 extern "C" void USART2_IRQHandler();
 extern "C" void USART6_IRQHandler();
+extern "C" void USART3_4_LPUART1_IRQHandler();
 
 namespace detail {
 
 template < typename Self >
 class Uart {
 public:
+    static const constexpr bool supportsTimeout = true;
+    static const constexpr bool supportsIdle = false;
+
     Self& self() {
         return *static_cast< Self * >( this );
     }

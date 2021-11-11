@@ -54,12 +54,13 @@ protected:
     const Self& self() const {
         return *static_cast< Self * >( this );
     }
-
+public:
     static constexpr int channelCount = 7;
     static const constexpr bool supportsMuxing = true;
 
     template < typename ChSelf >
     class Channel {
+    public:
         ChSelf& self() {
             return *static_cast< ChSelf * >( this );
         }
@@ -141,6 +142,10 @@ protected:
 
         void setPriority( uint32_t priority ) {
             LL_DMA_SetChannelPriorityLevel( self()._periph, self()._channel, priority );
+        }
+
+        void setTrigger( uint32_t trigger ) {
+            LL_DMA_SetPeriphRequest( self()._periph, self()._channel, trigger );
         }
     };
 
