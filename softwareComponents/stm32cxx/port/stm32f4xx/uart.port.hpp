@@ -169,7 +169,7 @@ public:
         enableTimeout();
     }
 
-    void disableTimout() {
+    void disableTimeout() {
         LL_USART_DisableIT_IDLE( self()._periph );
     }
 
