@@ -109,11 +109,9 @@ public:
             .setAttributes( USB_EPTYPE_BULK | USB_EPTYPE_DBLBUF )
             .setPacketSize( _packetSize )
             .setInterval( 1 )
-            .onRx( [&]( UsbEndpoint& ep ) {
-                auto mem = Allocator::allocate( _packetSize );
-                int read = ep.read( mem.get(), _packetSize );
-                if ( read > 0 && _handleRx )
-                    _handleRx( std::move( mem ), read );
+            .onRx( [&]( UsbEndpoint& ) {
+                if ( _handleRx )
+                    _handleRx();
             });
         _txEp = &commInterface.pushEndpoint()
             .setAddress( s.txEp | 0x80 )
@@ -126,12 +124,34 @@ public:
             } );
     }
 
-    int send( const char *str ) {
-        return _txEp->write( str, strlen( str ) );
+    bool isConfigured() {
+        return _txEp->parentDevice().isConfigured();
     }
 
-    int send( const uint8_t *buff, int size ) {
-        return _txEp->write( buff, size );
+    void send( const char *str ) {
+        return send( reinterpret_cast< const uint8_t * >( str ), strlen( str ) );
+    }
+
+    void send( const uint8_t *buff, int size ) {
+        if ( isConfigured() )
+            _txEp->write( buff, size );
+        else
+            Dbg::error("Unconfigured");
+    }
+
+    void send( memory::Pool::Block b, int size ) {
+        if ( isConfigured() )
+            _txEp->write( std::move( b ), size );
+    }
+
+    int read( uint8_t * buff, int maxSize ) {
+        return _rxEp->read( buff, maxSize );
+    }
+
+    std::pair< memory::Pool::Block, int > read() {
+        auto mem = Allocator::allocate( _packetSize );
+        int read = _rxEp->read( mem.get(), _packetSize );
+        return {std::move( mem ), read };
     }
 
     template < typename F >
@@ -167,7 +187,7 @@ private:
     UsbEndpoint *_txEp;
 
     std::function< void() > _handleTxFinished;
-    std::function< void( Mem, int ) > _handleRx;
+    std::function< void() > _handleRx;
     /** The function takes 4 bool values:
      *  - DTR
      *  - RTS

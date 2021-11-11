@@ -19,7 +19,7 @@
 
 #include <system/dbg.hpp>
 
-#define Map LinearMap
+#define Map ArrayMap
 
 class UsbDevice;
 class UsbInteface;
@@ -229,6 +229,12 @@ public:
         return *this;
     }
 
+    UsbEndpoint& setTxChainSize( int size ) {
+        assert( size > 0 );
+        _txChainSize = size;
+        return *this;
+    }
+
     void setup();
     void teardown();
 
@@ -253,32 +259,38 @@ public:
     }
 
     int read( void *buff, int maxLength );
-    int write( const void *buff, int length );
+    void write( memory::Pool::Block b, int size );
+
+    void write( const void *buff, int length ) {
+        assert( length != 0 );
+        auto block = memory::Pool::allocate( length );
+
+        assert( block.get() );
+        memcpy( block.get(), buff, length );
+        write( std::move( block ), length );
+    }
+
     void stall();
     void unstall();
 
 private:
-     UsbEndpoint( UsbDevice *parent ): _parent( parent ) {
+     UsbEndpoint( UsbDevice *parent ): _parent( parent ), _txChainSize( 8 ) {
         _descriptor.bLength = sizeof( _descriptor );
         _descriptor.bDescriptorType = USB_DTYPE_ENDPOINT;
         _descriptor.bInterval = 0xFF;
     }
 
-    void _handleTx() {
-        if ( _onTx )
-            _onTx( *this );
-    }
-
-    void _handleRx() {
-        if ( _onRx )
-            _onRx( *this );
-    }
+    void _handleTx();
+    void _handleRx();
 
     using EvtHandler = std::function< void( UsbEndpoint& ) >;
+    using TxChain = RingBuffer< std::pair< memory::Pool::Block, int > >;
 
     usb_endpoint_descriptor _descriptor;
     UsbDevice *_parent;
     EvtHandler _onTx, _onRx;
+    int _txChainSize;
+    TxChain _txChain;
 
     friend class UsbInterface;
     friend class UsbDevice;
@@ -380,7 +392,7 @@ public:
     }
 
     int getIndex() {
-        return _baseDescriptor().bConfigurationValue;
+        return _cfgIdx;
     }
 
 private:
@@ -418,7 +430,7 @@ public:
         usbd_init( &_device, &_getDriver(), _deviceDescriptor.bMaxPacketSize0,
                    _buffer, sizeof( _buffer ) );
 
-        _currentConfiguration = 0;
+        _currentConfiguration = -1;
 
         usbd_reg_config( &_device, _setConfTrampoline );
         usbd_reg_control( &_device, _controlTrampoline );
@@ -503,7 +515,7 @@ public:
     }
 
     UsbConfiguration& getConfiguration( int idx ) {
-        return *_configurations[ idx - 1 ];
+        return *_configurations[ idx - 1];
     }
 
     void clearConfigurations() {
@@ -518,8 +530,9 @@ public:
 
     uint16_t addString( const Map< LangId, StringDescriptor >& s ) {
         auto it = std::find( _stringDescs.begin(), _stringDescs.end(), s );
-        if ( it != _stringDescs.end() )
+        if ( it != _stringDescs.end() ) {
             return it - _stringDescs.begin() + 1;
+        }
         _stringDescs.push_back( s );
         return _stringDescs.size();
     }
@@ -543,6 +556,7 @@ private:
         _deviceDescriptor.bLength = sizeof( _deviceDescriptor );
         _deviceDescriptor.bDescriptorType = USB_DTYPE_DEVICE;
         _deviceDescriptor.bMaxPacketSize0 = 8;
+        clearConfigurations();
     }
 
     static usbd_respond _setConfTrampoline( usbd_device *, uint8_t cfg ) {
@@ -575,10 +589,9 @@ private:
         if ( requestedConfiguration > _configurations.size() )
             return usbd_fail; // Such configuration does not exists
 
-        if ( _currentConfiguration != 0 )
+        if ( _currentConfiguration > 0 )
             _configurations[ _currentConfiguration - 1 ]->teardown();
-        if ( requestedConfiguration != 0 )
-            _configurations[ requestedConfiguration - 1 ]->setup();
+        _configurations[ requestedConfiguration - 1 ]->setup();
 
         _currentConfiguration = requestedConfiguration;
         return usbd_ack;
@@ -594,21 +607,16 @@ private:
 
     usbd_respond _getDescriptor( usbd_ctlreq *req, void **address, uint16_t *length ) {
         const uint8_t dType = req->wValue >> 8;
-        /*const*/ uint8_t dNumber = req->wValue & 0xFF;
+        const uint8_t dNumber = req->wValue & 0xFF;
         switch (dType) {
         case USB_DTYPE_DEVICE: {
                 std::tie( *address, *length ) = getDescriptor();
                 return usbd_ack;
             }
         case USB_DTYPE_CONFIGURATION: {
-                Dbg::error("Cfg size: %d, %d", _configurations.size(), dNumber );
                 if ( dNumber >= _configurations.size() )
                     return usbd_fail;
-                if ( dNumber == 0 )
-                    dNumber = 1;
-                Dbg::error( "Requested: %d, got %d", dNumber, _configurations[ dNumber - 1 ]->getIndex() );
-                // assert( _configurations[ dNumber - 1 ]->getIndex() == dNumber );
-                auto [ desc, size ] = _configurations[ dNumber - 1 ]->getDescriptor();
+                auto [ desc, size ] = _configurations[ dNumber ]->getDescriptor();
                 *address = desc;
                 *length = size;
                 return usbd_ack;

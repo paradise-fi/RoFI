@@ -1,10 +1,13 @@
 #include <drivers/usb.hpp>
 
 void UsbEndpoint::setup() {
-    usbd_ep_config( &_parent->_device, _descriptor.bEndpointAddress,
+    bool res = usbd_ep_config( &_parent->_device, _descriptor.bEndpointAddress,
         _descriptor.bmAttributes, _descriptor.wMaxPacketSize );
-    if ( isDevToHost() )
+    assert( res );
+    if ( isDevToHost() ) {
         _parent->_devToHostEndp[ _descriptor.bEndpointAddress & 0x7 ] = this;
+        _txChain = TxChain( _txChainSize );
+    }
     else
         _parent->_hostToDevEndp[ _descriptor.bEndpointAddress & 0x7 ] = this;
 }
@@ -15,6 +18,7 @@ void UsbEndpoint::teardown() {
         _parent->_devToHostEndp[ _descriptor.bEndpointAddress & 0x7 ] = nullptr;
     else
         _parent->_hostToDevEndp[ _descriptor.bEndpointAddress & 0x7 ] = nullptr;
+    _txChain = {};
 }
 
 int UsbEndpoint::read( void *buff, int maxLength ) {
@@ -23,12 +27,20 @@ int UsbEndpoint::read( void *buff, int maxLength ) {
         buff, maxLength );
 }
 
-int UsbEndpoint::write( const void *buff, int length ) {
-    Dbg::error("Address: %d", int(_descriptor.bEndpointAddress) );
+void UsbEndpoint::write( memory::Pool::Block block, int length ) {
     assert( isDevToHost() );
-    // We can use const cast, as the driver does not modify the buffer
-    return usbd_ep_write( &_parent->_device, _descriptor.bEndpointAddress,
-        const_cast< void * >( buff ), length );
+    if ( _txChain.size() == 0 ) {
+        // Try send a packet
+        int res = usbd_ep_write(
+            &_parent->_device,
+            _descriptor.bEndpointAddress,
+            const_cast< unsigned char * >( block.get() ),
+            length );
+        if ( res >= 0 )
+            return; // Success, we can return
+    }
+    // There is a TX in progress
+    _txChain.push_back_force( { std::move( block ), length } );
 }
 
 void UsbEndpoint::stall() {
@@ -38,3 +50,23 @@ void UsbEndpoint::stall() {
 void UsbEndpoint::unstall() {
     usbd_ep_unstall( &_parent->_device, _descriptor.bEndpointAddress );
 }
+
+void UsbEndpoint::_handleTx() {
+    if ( _onTx )
+        _onTx( *this );
+    if ( !_txChain.empty() ) {
+        auto [ block, length ] = _txChain.pop_front();
+        int res = usbd_ep_write(
+            &_parent->_device,
+            _descriptor.bEndpointAddress,
+            const_cast< unsigned char * >( block.get() ),
+            length );
+        assert( res >= 0 );
+    }
+}
+
+void UsbEndpoint::_handleRx() {
+    if ( _onRx )
+        _onRx( *this );
+}
+
