@@ -153,14 +153,27 @@ def renderSignalRemapping(output, signalName, separateFunctions, indentLevel=1, 
                 output.write(f"{i3}return {af};\n")
             output.write(f"{i1}}}\n")
         output.write(f"{i0}#endif\n")
-    output.write(f"{i0}assert( false && \"Incorrect {signalName} pin\" );\n")
-    output.write(f"{i0}__builtin_trap();\n")
+    output.write(f"{i0}impossible( \"Incorrect {signalName} pin\" );\n")
+
+def renderProcessorCheck(output, mapping, indentLevel=1, indentStep=4):
+    i0 = (indentLevel * indentStep) * " "
+    i1 = i0 + indentStep * " "
+    i2 = i1 + indentStep * " "
+    CHUNK_SIZE = 3
+    mcus = list(mapping.keys())
+    mcuChunks = [mcus[i:i + CHUNK_SIZE] for i in range(0, len(mcus), CHUNK_SIZE)]
+    mcuChunks = [" && ".join([f"!defined({x})" for x in chunk]) for chunk in mcuChunks]
+    mcuString = f" && \\\n{i0}    ".join(mcuChunks) + "\n"
+    output.write(f"{i0}#if {mcuString}")
+    output.write(f"{i2}#error Invalid MCU specified\n")
+    output.write(f"{i0}#endif\n")
 
 def renderUartSignalFunction(output, signal, mapping, indentLevel=1, indentStep=4):
     i0 = (indentLevel * indentStep) * " "
     i1 = i0 + indentStep * " "
     output.write(f"{i0}int uartAlternateFun{signal}( USART_TypeDef *periph, GPIO_TypeDef *port, int pos ) {{\n")
     separateFunctions = extreactSignalRemapping(mapping, signal)
+    renderProcessorCheck(output, mapping, indentLevel + 1, indentStep)
     renderSignalRemapping(output, signal, separateFunctions, indentLevel + 1, indentStep)
     output.write(f"{i0}}}\n\n")
 
@@ -179,7 +192,7 @@ def uart(db, family, output):
     output.write(f"#include <{family.lower()}_ll_bus.h>\n")
     output.write(f"#include <{family.lower()}_ll_usart.h>\n")
     output.write(f"#include <{family.lower()}_ll_gpio.h>\n")
-    output.write(f"#include <cassert>\n")
+    output.write(f"#include <system/assert.hpp>\n")
     output.write("\n")
 
     output.write("namespace detail {\n")

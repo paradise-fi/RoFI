@@ -1,5 +1,5 @@
 macro(setup_mcu_details MCU)
-    if(${MCU} STREQUAL "STM32G071xx")
+    if(${MCU} MATCHES "STM32G071.*")
         set(MCU_FAMILY STM32G0xx)
         set(MCU_ARCH cortex-m0plus)
         set(MCU_FLOAT_ABI soft)
@@ -30,11 +30,16 @@ endmacro()
 
 
 function(add_stm32_compiler_flags)
-    cmake_parse_arguments(A "" "TARGET;MCU" "" ${ARGN})
+    cmake_parse_arguments(A "" "TARGET;MCU;MCU_SPEC" "" ${ARGN})
 
     setup_mcu_details(${A_MCU})
 
-    set(BUILD_FLAGS "-D${A_MCU} -D${MCU_FAMILY} \
+    set(DMCU_SPEC "")
+    if (${A_MCU_SPEC})
+        set(DMCU_SPEC "-D{A_MCU_SPEC}")
+    endif()
+
+    set(BUILD_FLAGS "-D${A_MCU} -D${MCU_FAMILY} ${DMCU_SPEC}\
                      -mcpu=${MCU_ARCH} \
                      -mthumb -mfloat-abi=${MCU_FLOAT_ABI} \
                      -ffunction-sections -fdata-sections -g \
@@ -56,7 +61,7 @@ endfunction()
 
 function(add_stm32_target)
 
-    cmake_parse_arguments(A "EXECUTABLE;LIB" "TARGET;MCU;LINKER_SCRIPT;LIBTYPE" "FILES" ${ARGN})
+    cmake_parse_arguments(A "EXECUTABLE;LIB" "TARGET;MCU;MCU_SPEC;LINKER_SCRIPT;LIBTYPE" "FILES" ${ARGN})
 
     if ("${A_EXECUTABLE}")
         add_executable(${A_TARGET} ${A_FILES})
@@ -68,7 +73,8 @@ function(add_stm32_target)
 
     add_stm32_compiler_flags(
         TARGET ${A_TARGET}
-        MCU ${A_MCU})
+        MCU ${A_MCU}
+        MCU_SPEC ${A_MCU_SPEC})
     target_link_options(
         ${A_TARGET} PUBLIC "-Wl,-Map=control.map,--cref"
         "-Wl,--print-memory-usage" "-funwind-tables" "-fasynchronous-unwind-tables"

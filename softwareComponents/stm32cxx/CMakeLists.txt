@@ -7,8 +7,11 @@ include(FetchContent)
 set(STM32CXX_SRC "${CMAKE_CURRENT_LIST_DIR}" CACHE INTERNAL "STM32CXX_SRC")
 
 function(setup_stm32cxx PREFIX MCU)
+    if (ARGC EQUAL 3)
+        set(MCU_SPEC ${ARGV2})
+    endif()
     if (NOT TARGET ${PREFIX}_CUBE)
-        setup_stm32cube(${PREFIX} ${MCU})
+        setup_stm32cube(${PREFIX} ${MCU} ${MCU_SPEC})
     endif()
 
     setup_mcu_details(${MCU})
@@ -75,10 +78,14 @@ function(setup_stm32cxx PREFIX MCU)
     if ("${USB_SUPPORTED}")
         add_library(${PREFIX}_libusb_stm32 INTERFACE)
         target_include_directories(${PREFIX}_libusb_stm32
-            INTERFACE ${libusb_stm32_SOURCE_DIR}/inc)
+            SYSTEM INTERFACE ${libusb_stm32_SOURCE_DIR}/inc)
         target_sources(${PREFIX}_libusb_stm32 INTERFACE
             ${libusb_stm32_SOURCE_DIR}/src/usbd_core.c
             ${USB_SRC})
+        foreach(f ${USB_SRC} ${libusb_stm32_SOURCE_DIR}/src/usbd_core.c)
+            set_source_files_properties("${f}" PROPERTIES COMPILE_FLAGS
+                "-Wno-all -Wno-extra -Wno-pedantic -Wno-unused-parameter")
+        endforeach()
         target_compile_definitions(${PREFIX}_libusb_stm32 INTERFACE ${USB_DEFS})
     endif()
 
@@ -100,6 +107,9 @@ function(setup_stm32cxx PREFIX MCU)
         target_sources(${PREFIX}_stm32cxx_${NAME} INTERFACE ${L_SRC})
         target_link_libraries(${PREFIX}_stm32cxx_${NAME} INTERFACE
             ${PREFIX}_stm32cxx ${A_LINK_HAL} ${LINK})
+        if (NOT "${MCU_SPEC}" EQUAL "")
+            target_compile_options(${PREFIX}_stm32cxx_${NAME} INTERFACE -D${MCU_SPEC})
+        endif()
     endfunction()
 
     add_library(${PREFIX}_stm32cxx INTERFACE)

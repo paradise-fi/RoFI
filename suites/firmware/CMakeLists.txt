@@ -15,7 +15,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti -fno-exceptions")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
+                     -fno-rtti -fno-exceptions \
+                     -fmacro-prefix-map=$ENV{ROFI_ROOT}/=/")
 
 project(firmware)
 

@@ -118,6 +118,9 @@ function(setup_stm32cube PREFIX MCU)
         endforeach()
         target_include_directories(${PREFIX}_${libname} SYSTEM INTERFACE ${HAL_PATH}/Inc)
         target_link_libraries(${PREFIX}_${libname} INTERFACE ${PREFIX}_CMSIS)
+        target_compile_options(${PREFIX}_${libname} INTERFACE
+            -DUSE_FULL_LL_DRIVER
+            -DUSE_HAL_DRIVER)
     endfunction()
 
     add_hallib(HAL
@@ -182,7 +185,8 @@ function(setup_stm32cube PREFIX MCU)
     add_hallib(LL_Spi
         REQUIRED ll_spi.c)
     add_hallib(LL_Tim
-        REQUIRED ll_tim.c)
+        REQUIRED ll_tim.c
+        OPTIONAL ll_tim_ex.c)
     add_hallib(LL_Usart
         REQUIRED ll_usart.c)
         target_link_libraries(${PREFIX}_LL_Usart INTERFACE ${PREFIX}_LL)

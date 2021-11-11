@@ -5,6 +5,51 @@
 
 namespace detail {
     int uartAlternateFunTX( USART_TypeDef *periph, GPIO_TypeDef *port, int pos ) {
+        #if !defined(STM32G030C6Tx) && !defined(STM32G030C8Tx) && !defined(STM32G030F6Px) && \
+            !defined(STM32G030J6Mx) && !defined(STM32G030K6Tx) && !defined(STM32G030K8Tx) && \
+            !defined(STM32G070CBTx) && !defined(STM32G070KBTx) && !defined(STM32G070RBTx) && \
+            !defined(STM32G0B0CETx) && !defined(STM32G0B0KETx) && !defined(STM32G0B0RETx) && \
+            !defined(STM32G0B0VETx) && !defined(STM32G031C4Tx) && !defined(STM32G031C6Tx) && \
+            !defined(STM32G031C8Tx) && !defined(STM32G031C4Ux) && !defined(STM32G031C6Ux) && \
+            !defined(STM32G031C8Ux) && !defined(STM32G031F4Px) && !defined(STM32G031F6Px) && \
+            !defined(STM32G031F8Px) && !defined(STM32G031G4Ux) && !defined(STM32G031G6Ux) && \
+            !defined(STM32G031G8Ux) && !defined(STM32G031J4Mx) && !defined(STM32G031J6Mx) && \
+            !defined(STM32G031K4Tx) && !defined(STM32G031K6Tx) && !defined(STM32G031K8Tx) && \
+            !defined(STM32G031K4Ux) && !defined(STM32G031K6Ux) && !defined(STM32G031K8Ux) && \
+            !defined(STM32G031Y8Yx) && !defined(STM32G041C6Tx) && !defined(STM32G041C8Tx) && \
+            !defined(STM32G041C6Ux) && !defined(STM32G041C8Ux) && !defined(STM32G041F6Px) && \
+            !defined(STM32G041F8Px) && !defined(STM32G041G6Ux) && !defined(STM32G041G8Ux) && \
+            !defined(STM32G041J6Mx) && !defined(STM32G041K6Tx) && !defined(STM32G041K8Tx) && \
+            !defined(STM32G041K6Ux) && !defined(STM32G041K8Ux) && !defined(STM32G041Y8Yx) && \
+            !defined(STM32G071C6Tx) && !defined(STM32G071C8Tx) && !defined(STM32G071CBTx) && \
+            !defined(STM32G071C6Ux) && !defined(STM32G071C8Ux) && !defined(STM32G071CBUx) && \
+            !defined(STM32G071EBYx) && !defined(STM32G071G6Ux) && !defined(STM32G071G8Ux) && \
+            !defined(STM32G071GBUx) && !defined(STM32G071G8UxN) && !defined(STM32G071GBUxN) && \
+            !defined(STM32G071K6Tx) && !defined(STM32G071K8Tx) && !defined(STM32G071KBTx) && \
+            !defined(STM32G071K6Ux) && !defined(STM32G071K8Ux) && !defined(STM32G071KBUx) && \
+            !defined(STM32G071K8TxN) && !defined(STM32G071KBTxN) && !defined(STM32G071K8UxN) && \
+            !defined(STM32G071KBUxN) && !defined(STM32G071R6Tx) && !defined(STM32G071R8Tx) && \
+            !defined(STM32G071RBTx) && !defined(STM32G071RBIx) && !defined(STM32G081CBTx) && \
+            !defined(STM32G081CBUx) && !defined(STM32G081EBYx) && !defined(STM32G081GBUx) && \
+            !defined(STM32G081GBUxN) && !defined(STM32G081KBTx) && !defined(STM32G081KBTxN) && \
+            !defined(STM32G081KBUx) && !defined(STM32G081KBUxN) && !defined(STM32G081RBIx) && \
+            !defined(STM32G081RBTx) && !defined(STM32G0B1CCTx) && !defined(STM32G0B1CETx) && \
+            !defined(STM32G0B1CCUx) && !defined(STM32G0B1CEUx) && !defined(STM32G0B1KCTx) && \
+            !defined(STM32G0B1KETx) && !defined(STM32G0B1KCTxN) && !defined(STM32G0B1KETxN) && \
+            !defined(STM32G0B1KCUx) && !defined(STM32G0B1KEUx) && !defined(STM32G0B1KCUxN) && \
+            !defined(STM32G0B1KEUxN) && !defined(STM32G0B1MCTx) && !defined(STM32G0B1METx) && \
+            !defined(STM32G0B1RCIx) && !defined(STM32G0B1REIx) && !defined(STM32G0B1RCTx) && \
+            !defined(STM32G0B1RETx) && !defined(STM32G0B1VCIx) && !defined(STM32G0B1VEIx) && \
+            !defined(STM32G0B1VCTx) && !defined(STM32G0B1VETx) && !defined(STM32G0C1CCTx) && \
+            !defined(STM32G0C1CETx) && !defined(STM32G0C1CCUx) && !defined(STM32G0C1CEUx) && \
+            !defined(STM32G0C1KCTx) && !defined(STM32G0C1KETx) && !defined(STM32G0C1KCTxN) && \
+            !defined(STM32G0C1KETxN) && !defined(STM32G0C1KCUx) && !defined(STM32G0C1KEUx) && \
+            !defined(STM32G0C1KCUxN) && !defined(STM32G0C1KEUxN) && !defined(STM32G0C1MCTx) && \
+            !defined(STM32G0C1METx) && !defined(STM32G0C1RCIx) && !defined(STM32G0C1REIx) && \
+            !defined(STM32G0C1RCTx) && !defined(STM32G0C1RETx) && !defined(STM32G0C1VCIx) && \
+            !defined(STM32G0C1VEIx) && !defined(STM32G0C1VCTx) && !defined(STM32G0C1VETx)
+                #error Invalid MCU specified
+        #endif
         #if defined(STM32G030C6Tx) || defined(STM32G030C8Tx) || defined(STM32G030F6Px) || \
             defined(STM32G030J6Mx) || defined(STM32G030K6Tx) || defined(STM32G030K8Tx) || \
             defined(STM32G031C4Tx) || defined(STM32G031C6Tx) || defined(STM32G031C8Tx) || \
@@ -170,11 +215,55 @@ namespace detail {
                     return 3;
             }
         #endif
-        assert( false && "Incorrect TX pin" );
-        __builtin_trap();
+        impossible( "Incorrect TX pin" );
     }
 
     int uartAlternateFunRX( USART_TypeDef *periph, GPIO_TypeDef *port, int pos ) {
+        #if !defined(STM32G030C6Tx) && !defined(STM32G030C8Tx) && !defined(STM32G030F6Px) && \
+            !defined(STM32G030J6Mx) && !defined(STM32G030K6Tx) && !defined(STM32G030K8Tx) && \
+            !defined(STM32G070CBTx) && !defined(STM32G070KBTx) && !defined(STM32G070RBTx) && \
+            !defined(STM32G0B0CETx) && !defined(STM32G0B0KETx) && !defined(STM32G0B0RETx) && \
+            !defined(STM32G0B0VETx) && !defined(STM32G031C4Tx) && !defined(STM32G031C6Tx) && \
+            !defined(STM32G031C8Tx) && !defined(STM32G031C4Ux) && !defined(STM32G031C6Ux) && \
+            !defined(STM32G031C8Ux) && !defined(STM32G031F4Px) && !defined(STM32G031F6Px) && \
+            !defined(STM32G031F8Px) && !defined(STM32G031G4Ux) && !defined(STM32G031G6Ux) && \
+            !defined(STM32G031G8Ux) && !defined(STM32G031J4Mx) && !defined(STM32G031J6Mx) && \
+            !defined(STM32G031K4Tx) && !defined(STM32G031K6Tx) && !defined(STM32G031K8Tx) && \
+            !defined(STM32G031K4Ux) && !defined(STM32G031K6Ux) && !defined(STM32G031K8Ux) && \
+            !defined(STM32G031Y8Yx) && !defined(STM32G041C6Tx) && !defined(STM32G041C8Tx) && \
+            !defined(STM32G041C6Ux) && !defined(STM32G041C8Ux) && !defined(STM32G041F6Px) && \
+            !defined(STM32G041F8Px) && !defined(STM32G041G6Ux) && !defined(STM32G041G8Ux) && \
+            !defined(STM32G041J6Mx) && !defined(STM32G041K6Tx) && !defined(STM32G041K8Tx) && \
+            !defined(STM32G041K6Ux) && !defined(STM32G041K8Ux) && !defined(STM32G041Y8Yx) && \
+            !defined(STM32G071C6Tx) && !defined(STM32G071C8Tx) && !defined(STM32G071CBTx) && \
+            !defined(STM32G071C6Ux) && !defined(STM32G071C8Ux) && !defined(STM32G071CBUx) && \
+            !defined(STM32G071EBYx) && !defined(STM32G071G6Ux) && !defined(STM32G071G8Ux) && \
+            !defined(STM32G071GBUx) && !defined(STM32G071G8UxN) && !defined(STM32G071GBUxN) && \
+            !defined(STM32G071K6Tx) && !defined(STM32G071K8Tx) && !defined(STM32G071KBTx) && \
+            !defined(STM32G071K6Ux) && !defined(STM32G071K8Ux) && !defined(STM32G071KBUx) && \
+            !defined(STM32G071K8TxN) && !defined(STM32G071KBTxN) && !defined(STM32G071K8UxN) && \
+            !defined(STM32G071KBUxN) && !defined(STM32G071R6Tx) && !defined(STM32G071R8Tx) && \
+            !defined(STM32G071RBTx) && !defined(STM32G071RBIx) && !defined(STM32G081CBTx) && \
+            !defined(STM32G081CBUx) && !defined(STM32G081EBYx) && !defined(STM32G081GBUx) && \
+            !defined(STM32G081GBUxN) && !defined(STM32G081KBTx) && !defined(STM32G081KBTxN) && \
+            !defined(STM32G081KBUx) && !defined(STM32G081KBUxN) && !defined(STM32G081RBIx) && \
+            !defined(STM32G081RBTx) && !defined(STM32G0B1CCTx) && !defined(STM32G0B1CETx) && \
+            !defined(STM32G0B1CCUx) && !defined(STM32G0B1CEUx) && !defined(STM32G0B1KCTx) && \
+            !defined(STM32G0B1KETx) && !defined(STM32G0B1KCTxN) && !defined(STM32G0B1KETxN) && \
+            !defined(STM32G0B1KCUx) && !defined(STM32G0B1KEUx) && !defined(STM32G0B1KCUxN) && \
+            !defined(STM32G0B1KEUxN) && !defined(STM32G0B1MCTx) && !defined(STM32G0B1METx) && \
+            !defined(STM32G0B1RCIx) && !defined(STM32G0B1REIx) && !defined(STM32G0B1RCTx) && \
+            !defined(STM32G0B1RETx) && !defined(STM32G0B1VCIx) && !defined(STM32G0B1VEIx) && \
+            !defined(STM32G0B1VCTx) && !defined(STM32G0B1VETx) && !defined(STM32G0C1CCTx) && \
+            !defined(STM32G0C1CETx) && !defined(STM32G0C1CCUx) && !defined(STM32G0C1CEUx) && \
+            !defined(STM32G0C1KCTx) && !defined(STM32G0C1KETx) && !defined(STM32G0C1KCTxN) && \
+            !defined(STM32G0C1KETxN) && !defined(STM32G0C1KCUx) && !defined(STM32G0C1KEUx) && \
+            !defined(STM32G0C1KCUxN) && !defined(STM32G0C1KEUxN) && !defined(STM32G0C1MCTx) && \
+            !defined(STM32G0C1METx) && !defined(STM32G0C1RCIx) && !defined(STM32G0C1REIx) && \
+            !defined(STM32G0C1RCTx) && !defined(STM32G0C1RETx) && !defined(STM32G0C1VCIx) && \
+            !defined(STM32G0C1VEIx) && !defined(STM32G0C1VCTx) && !defined(STM32G0C1VETx)
+                #error Invalid MCU specified
+        #endif
         #if defined(STM32G030C6Tx) || defined(STM32G030C8Tx) || defined(STM32G030F6Px) || \
             defined(STM32G030J6Mx) || defined(STM32G030K6Tx) || defined(STM32G030K8Tx) || \
             defined(STM32G031C4Tx) || defined(STM32G031C6Tx) || defined(STM32G031C8Tx) || \
@@ -334,11 +423,55 @@ namespace detail {
                     return 3;
             }
         #endif
-        assert( false && "Incorrect RX pin" );
-        __builtin_trap();
+        impossible( "Incorrect RX pin" );
     }
 
     int uartAlternateFunCTS( USART_TypeDef *periph, GPIO_TypeDef *port, int pos ) {
+        #if !defined(STM32G030C6Tx) && !defined(STM32G030C8Tx) && !defined(STM32G030F6Px) && \
+            !defined(STM32G030J6Mx) && !defined(STM32G030K6Tx) && !defined(STM32G030K8Tx) && \
+            !defined(STM32G070CBTx) && !defined(STM32G070KBTx) && !defined(STM32G070RBTx) && \
+            !defined(STM32G0B0CETx) && !defined(STM32G0B0KETx) && !defined(STM32G0B0RETx) && \
+            !defined(STM32G0B0VETx) && !defined(STM32G031C4Tx) && !defined(STM32G031C6Tx) && \
+            !defined(STM32G031C8Tx) && !defined(STM32G031C4Ux) && !defined(STM32G031C6Ux) && \
+            !defined(STM32G031C8Ux) && !defined(STM32G031F4Px) && !defined(STM32G031F6Px) && \
+            !defined(STM32G031F8Px) && !defined(STM32G031G4Ux) && !defined(STM32G031G6Ux) && \
+            !defined(STM32G031G8Ux) && !defined(STM32G031J4Mx) && !defined(STM32G031J6Mx) && \
+            !defined(STM32G031K4Tx) && !defined(STM32G031K6Tx) && !defined(STM32G031K8Tx) && \
+            !defined(STM32G031K4Ux) && !defined(STM32G031K6Ux) && !defined(STM32G031K8Ux) && \
+            !defined(STM32G031Y8Yx) && !defined(STM32G041C6Tx) && !defined(STM32G041C8Tx) && \
+            !defined(STM32G041C6Ux) && !defined(STM32G041C8Ux) && !defined(STM32G041F6Px) && \
+            !defined(STM32G041F8Px) && !defined(STM32G041G6Ux) && !defined(STM32G041G8Ux) && \
+            !defined(STM32G041J6Mx) && !defined(STM32G041K6Tx) && !defined(STM32G041K8Tx) && \
+            !defined(STM32G041K6Ux) && !defined(STM32G041K8Ux) && !defined(STM32G041Y8Yx) && \
+            !defined(STM32G071C6Tx) && !defined(STM32G071C8Tx) && !defined(STM32G071CBTx) && \
+            !defined(STM32G071C6Ux) && !defined(STM32G071C8Ux) && !defined(STM32G071CBUx) && \
+            !defined(STM32G071EBYx) && !defined(STM32G071G6Ux) && !defined(STM32G071G8Ux) && \
+            !defined(STM32G071GBUx) && !defined(STM32G071G8UxN) && !defined(STM32G071GBUxN) && \
+            !defined(STM32G071K6Tx) && !defined(STM32G071K8Tx) && !defined(STM32G071KBTx) && \
+            !defined(STM32G071K6Ux) && !defined(STM32G071K8Ux) && !defined(STM32G071KBUx) && \
+            !defined(STM32G071K8TxN) && !defined(STM32G071KBTxN) && !defined(STM32G071K8UxN) && \
+            !defined(STM32G071KBUxN) && !defined(STM32G071R6Tx) && !defined(STM32G071R8Tx) && \
+            !defined(STM32G071RBTx) && !defined(STM32G071RBIx) && !defined(STM32G081CBTx) && \
+            !defined(STM32G081CBUx) && !defined(STM32G081EBYx) && !defined(STM32G081GBUx) && \
+            !defined(STM32G081GBUxN) && !defined(STM32G081KBTx) && !defined(STM32G081KBTxN) && \
+            !defined(STM32G081KBUx) && !defined(STM32G081KBUxN) && !defined(STM32G081RBIx) && \
+            !defined(STM32G081RBTx) && !defined(STM32G0B1CCTx) && !defined(STM32G0B1CETx) && \
+            !defined(STM32G0B1CCUx) && !defined(STM32G0B1CEUx) && !defined(STM32G0B1KCTx) && \
+            !defined(STM32G0B1KETx) && !defined(STM32G0B1KCTxN) && !defined(STM32G0B1KETxN) && \
+            !defined(STM32G0B1KCUx) && !defined(STM32G0B1KEUx) && !defined(STM32G0B1KCUxN) && \
+            !defined(STM32G0B1KEUxN) && !defined(STM32G0B1MCTx) && !defined(STM32G0B1METx) && \
+            !defined(STM32G0B1RCIx) && !defined(STM32G0B1REIx) && !defined(STM32G0B1RCTx) && \
+            !defined(STM32G0B1RETx) && !defined(STM32G0B1VCIx) && !defined(STM32G0B1VEIx) && \
+            !defined(STM32G0B1VCTx) && !defined(STM32G0B1VETx) && !defined(STM32G0C1CCTx) && \
+            !defined(STM32G0C1CETx) && !defined(STM32G0C1CCUx) && !defined(STM32G0C1CEUx) && \
+            !defined(STM32G0C1KCTx) && !defined(STM32G0C1KETx) && !defined(STM32G0C1KCTxN) && \
+            !defined(STM32G0C1KETxN) && !defined(STM32G0C1KCUx) && !defined(STM32G0C1KEUx) && \
+            !defined(STM32G0C1KCUxN) && !defined(STM32G0C1KEUxN) && !defined(STM32G0C1MCTx) && \
+            !defined(STM32G0C1METx) && !defined(STM32G0C1RCIx) && !defined(STM32G0C1REIx) && \
+            !defined(STM32G0C1RCTx) && !defined(STM32G0C1RETx) && !defined(STM32G0C1VCIx) && \
+            !defined(STM32G0C1VEIx) && !defined(STM32G0C1VCTx) && !defined(STM32G0C1VETx)
+                #error Invalid MCU specified
+        #endif
         #if defined(STM32G030C6Tx) || defined(STM32G030C8Tx) || defined(STM32G030F6Px) || \
             defined(STM32G030J6Mx) || defined(STM32G030K6Tx) || defined(STM32G030K8Tx) || \
             defined(STM32G031C4Tx) || defined(STM32G031C6Tx) || defined(STM32G031C8Tx) || \
@@ -460,11 +593,55 @@ namespace detail {
                     return 3;
             }
         #endif
-        assert( false && "Incorrect CTS pin" );
-        __builtin_trap();
+        impossible( "Incorrect CTS pin" );
     }
 
     int uartAlternateFunRTS( USART_TypeDef *periph, GPIO_TypeDef *port, int pos ) {
+        #if !defined(STM32G030C6Tx) && !defined(STM32G030C8Tx) && !defined(STM32G030F6Px) && \
+            !defined(STM32G030J6Mx) && !defined(STM32G030K6Tx) && !defined(STM32G030K8Tx) && \
+            !defined(STM32G070CBTx) && !defined(STM32G070KBTx) && !defined(STM32G070RBTx) && \
+            !defined(STM32G0B0CETx) && !defined(STM32G0B0KETx) && !defined(STM32G0B0RETx) && \
+            !defined(STM32G0B0VETx) && !defined(STM32G031C4Tx) && !defined(STM32G031C6Tx) && \
+            !defined(STM32G031C8Tx) && !defined(STM32G031C4Ux) && !defined(STM32G031C6Ux) && \
+            !defined(STM32G031C8Ux) && !defined(STM32G031F4Px) && !defined(STM32G031F6Px) && \
+            !defined(STM32G031F8Px) && !defined(STM32G031G4Ux) && !defined(STM32G031G6Ux) && \
+            !defined(STM32G031G8Ux) && !defined(STM32G031J4Mx) && !defined(STM32G031J6Mx) && \
+            !defined(STM32G031K4Tx) && !defined(STM32G031K6Tx) && !defined(STM32G031K8Tx) && \
+            !defined(STM32G031K4Ux) && !defined(STM32G031K6Ux) && !defined(STM32G031K8Ux) && \
+            !defined(STM32G031Y8Yx) && !defined(STM32G041C6Tx) && !defined(STM32G041C8Tx) && \
+            !defined(STM32G041C6Ux) && !defined(STM32G041C8Ux) && !defined(STM32G041F6Px) && \
+            !defined(STM32G041F8Px) && !defined(STM32G041G6Ux) && !defined(STM32G041G8Ux) && \
+            !defined(STM32G041J6Mx) && !defined(STM32G041K6Tx) && !defined(STM32G041K8Tx) && \
+            !defined(STM32G041K6Ux) && !defined(STM32G041K8Ux) && !defined(STM32G041Y8Yx) && \
+            !defined(STM32G071C6Tx) && !defined(STM32G071C8Tx) && !defined(STM32G071CBTx) && \
+            !defined(STM32G071C6Ux) && !defined(STM32G071C8Ux) && !defined(STM32G071CBUx) && \
+            !defined(STM32G071EBYx) && !defined(STM32G071G6Ux) && !defined(STM32G071G8Ux) && \
+            !defined(STM32G071GBUx) && !defined(STM32G071G8UxN) && !defined(STM32G071GBUxN) && \
+            !defined(STM32G071K6Tx) && !defined(STM32G071K8Tx) && !defined(STM32G071KBTx) && \
+            !defined(STM32G071K6Ux) && !defined(STM32G071K8Ux) && !defined(STM32G071KBUx) && \
+            !defined(STM32G071K8TxN) && !defined(STM32G071KBTxN) && !defined(STM32G071K8UxN) && \
+            !defined(STM32G071KBUxN) && !defined(STM32G071R6Tx) && !defined(STM32G071R8Tx) && \
+            !defined(STM32G071RBTx) && !defined(STM32G071RBIx) && !defined(STM32G081CBTx) && \
+            !defined(STM32G081CBUx) && !defined(STM32G081EBYx) && !defined(STM32G081GBUx) && \
+            !defined(STM32G081GBUxN) && !defined(STM32G081KBTx) && !defined(STM32G081KBTxN) && \
+            !defined(STM32G081KBUx) && !defined(STM32G081KBUxN) && !defined(STM32G081RBIx) && \
+            !defined(STM32G081RBTx) && !defined(STM32G0B1CCTx) && !defined(STM32G0B1CETx) && \
+            !defined(STM32G0B1CCUx) && !defined(STM32G0B1CEUx) && !defined(STM32G0B1KCTx) && \
+            !defined(STM32G0B1KETx) && !defined(STM32G0B1KCTxN) && !defined(STM32G0B1KETxN) && \
+            !defined(STM32G0B1KCUx) && !defined(STM32G0B1KEUx) && !defined(STM32G0B1KCUxN) && \
+            !defined(STM32G0B1KEUxN) && !defined(STM32G0B1MCTx) && !defined(STM32G0B1METx) && \
+            !defined(STM32G0B1RCIx) && !defined(STM32G0B1REIx) && !defined(STM32G0B1RCTx) && \
+            !defined(STM32G0B1RETx) && !defined(STM32G0B1VCIx) && !defined(STM32G0B1VEIx) && \
+            !defined(STM32G0B1VCTx) && !defined(STM32G0B1VETx) && !defined(STM32G0C1CCTx) && \
+            !defined(STM32G0C1CETx) && !defined(STM32G0C1CCUx) && !defined(STM32G0C1CEUx) && \
+            !defined(STM32G0C1KCTx) && !defined(STM32G0C1KETx) && !defined(STM32G0C1KCTxN) && \
+            !defined(STM32G0C1KETxN) && !defined(STM32G0C1KCUx) && !defined(STM32G0C1KEUx) && \
+            !defined(STM32G0C1KCUxN) && !defined(STM32G0C1KEUxN) && !defined(STM32G0C1MCTx) && \
+            !defined(STM32G0C1METx) && !defined(STM32G0C1RCIx) && !defined(STM32G0C1REIx) && \
+            !defined(STM32G0C1RCTx) && !defined(STM32G0C1RETx) && !defined(STM32G0C1VCIx) && \
+            !defined(STM32G0C1VEIx) && !defined(STM32G0C1VCTx) && !defined(STM32G0C1VETx)
+                #error Invalid MCU specified
+        #endif
         #if defined(STM32G030C6Tx) || defined(STM32G030C8Tx) || defined(STM32G030F6Px) || \
             defined(STM32G030J6Mx) || defined(STM32G030K6Tx) || defined(STM32G030K8Tx) || \
             defined(STM32G031C4Tx) || defined(STM32G031C6Tx) || defined(STM32G031C8Tx) || \
@@ -594,11 +771,55 @@ namespace detail {
                     return 3;
             }
         #endif
-        assert( false && "Incorrect RTS pin" );
-        __builtin_trap();
+        impossible( "Incorrect RTS pin" );
     }
 
     int uartAlternateFunDE( USART_TypeDef *periph, GPIO_TypeDef *port, int pos ) {
+        #if !defined(STM32G030C6Tx) && !defined(STM32G030C8Tx) && !defined(STM32G030F6Px) && \
+            !defined(STM32G030J6Mx) && !defined(STM32G030K6Tx) && !defined(STM32G030K8Tx) && \
+            !defined(STM32G070CBTx) && !defined(STM32G070KBTx) && !defined(STM32G070RBTx) && \
+            !defined(STM32G0B0CETx) && !defined(STM32G0B0KETx) && !defined(STM32G0B0RETx) && \
+            !defined(STM32G0B0VETx) && !defined(STM32G031C4Tx) && !defined(STM32G031C6Tx) && \
+            !defined(STM32G031C8Tx) && !defined(STM32G031C4Ux) && !defined(STM32G031C6Ux) && \
+            !defined(STM32G031C8Ux) && !defined(STM32G031F4Px) && !defined(STM32G031F6Px) && \
+            !defined(STM32G031F8Px) && !defined(STM32G031G4Ux) && !defined(STM32G031G6Ux) && \
+            !defined(STM32G031G8Ux) && !defined(STM32G031J4Mx) && !defined(STM32G031J6Mx) && \
+            !defined(STM32G031K4Tx) && !defined(STM32G031K6Tx) && !defined(STM32G031K8Tx) && \
+            !defined(STM32G031K4Ux) && !defined(STM32G031K6Ux) && !defined(STM32G031K8Ux) && \
+            !defined(STM32G031Y8Yx) && !defined(STM32G041C6Tx) && !defined(STM32G041C8Tx) && \
+            !defined(STM32G041C6Ux) && !defined(STM32G041C8Ux) && !defined(STM32G041F6Px) && \
+            !defined(STM32G041F8Px) && !defined(STM32G041G6Ux) && !defined(STM32G041G8Ux) && \
+            !defined(STM32G041J6Mx) && !defined(STM32G041K6Tx) && !defined(STM32G041K8Tx) && \
+            !defined(STM32G041K6Ux) && !defined(STM32G041K8Ux) && !defined(STM32G041Y8Yx) && \
+            !defined(STM32G071C6Tx) && !defined(STM32G071C8Tx) && !defined(STM32G071CBTx) && \
+            !defined(STM32G071C6Ux) && !defined(STM32G071C8Ux) && !defined(STM32G071CBUx) && \
+            !defined(STM32G071EBYx) && !defined(STM32G071G6Ux) && !defined(STM32G071G8Ux) && \
+            !defined(STM32G071GBUx) && !defined(STM32G071G8UxN) && !defined(STM32G071GBUxN) && \
+            !defined(STM32G071K6Tx) && !defined(STM32G071K8Tx) && !defined(STM32G071KBTx) && \
+            !defined(STM32G071K6Ux) && !defined(STM32G071K8Ux) && !defined(STM32G071KBUx) && \
+            !defined(STM32G071K8TxN) && !defined(STM32G071KBTxN) && !defined(STM32G071K8UxN) && \
+            !defined(STM32G071KBUxN) && !defined(STM32G071R6Tx) && !defined(STM32G071R8Tx) && \
+            !defined(STM32G071RBTx) && !defined(STM32G071RBIx) && !defined(STM32G081CBTx) && \
+            !defined(STM32G081CBUx) && !defined(STM32G081EBYx) && !defined(STM32G081GBUx) && \
+            !defined(STM32G081GBUxN) && !defined(STM32G081KBTx) && !defined(STM32G081KBTxN) && \
+            !defined(STM32G081KBUx) && !defined(STM32G081KBUxN) && !defined(STM32G081RBIx) && \
+            !defined(STM32G081RBTx) && !defined(STM32G0B1CCTx) && !defined(STM32G0B1CETx) && \
+            !defined(STM32G0B1CCUx) && !defined(STM32G0B1CEUx) && !defined(STM32G0B1KCTx) && \
+            !defined(STM32G0B1KETx) && !defined(STM32G0B1KCTxN) && !defined(STM32G0B1KETxN) && \
+            !defined(STM32G0B1KCUx) && !defined(STM32G0B1KEUx) && !defined(STM32G0B1KCUxN) && \
+            !defined(STM32G0B1KEUxN) && !defined(STM32G0B1MCTx) && !defined(STM32G0B1METx) && \
+            !defined(STM32G0B1RCIx) && !defined(STM32G0B1REIx) && !defined(STM32G0B1RCTx) && \
+            !defined(STM32G0B1RETx) && !defined(STM32G0B1VCIx) && !defined(STM32G0B1VEIx) && \
+            !defined(STM32G0B1VCTx) && !defined(STM32G0B1VETx) && !defined(STM32G0C1CCTx) && \
+            !defined(STM32G0C1CETx) && !defined(STM32G0C1CCUx) && !defined(STM32G0C1CEUx) && \
+            !defined(STM32G0C1KCTx) && !defined(STM32G0C1KETx) && !defined(STM32G0C1KCTxN) && \
+            !defined(STM32G0C1KETxN) && !defined(STM32G0C1KCUx) && !defined(STM32G0C1KEUx) && \
+            !defined(STM32G0C1KCUxN) && !defined(STM32G0C1KEUxN) && !defined(STM32G0C1MCTx) && \
+            !defined(STM32G0C1METx) && !defined(STM32G0C1RCIx) && !defined(STM32G0C1REIx) && \
+            !defined(STM32G0C1RCTx) && !defined(STM32G0C1RETx) && !defined(STM32G0C1VCIx) && \
+            !defined(STM32G0C1VEIx) && !defined(STM32G0C1VCTx) && !defined(STM32G0C1VETx)
+                #error Invalid MCU specified
+        #endif
         #if defined(STM32G030C6Tx) || defined(STM32G030C8Tx) || defined(STM32G030F6Px) || \
             defined(STM32G030J6Mx) || defined(STM32G030K6Tx) || defined(STM32G030K8Tx) || \
             defined(STM32G031C4Tx) || defined(STM32G031C6Tx) || defined(STM32G031C8Tx) || \
@@ -728,8 +949,7 @@ namespace detail {
                     return 3;
             }
         #endif
-        assert( false && "Incorrect DE pin" );
-        __builtin_trap();
+        impossible( "Incorrect DE pin" );
     }
 
 } // namespace detail
