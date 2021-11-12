@@ -78,12 +78,20 @@ public:
     }
 
 
-    void updateToNextIteration()
+    std::shared_ptr< const rofi::configuration::Rofibot > updateToNextIteration()
     {
         auto new_configuration = computeNextIteration();
-        _physicalModulesConfiguration->swap( new_configuration );
+        assert( new_configuration );
 
-        _configurationHistory->push_back( std::move( new_configuration ) );
+        auto old_configuration = _physicalModulesConfiguration.visit(
+                [ &new_configuration ]( auto & configuration ) {
+                    auto old_configuration = std::move( configuration );
+                    configuration = new_configuration;
+                    return old_configuration;
+                } );
+
+        _configurationHistory->push_back( std::move( old_configuration ) );
+        return new_configuration;
     }
 
 
