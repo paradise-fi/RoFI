@@ -38,7 +38,7 @@ determined.
 
 * * *
 
-# The Original Configuration
+# The Legacy Configuration
 
 Library for the old configuration representation.
 

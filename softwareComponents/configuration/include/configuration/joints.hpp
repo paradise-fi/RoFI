@@ -33,7 +33,7 @@ using JointVisitor = atoms::Visits<
  */
 struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
     using Positions = tcb::span< float >;
-    explicit Joint( size_t s ) : _positions( s, 0 ) {}
+    explicit Joint( size_t positionsSize ) : _positions( positionsSize, 0 ) {}
     virtual ~Joint() = default;
 
     ATOMS_CLONEABLE_BASE( Joint );
@@ -55,16 +55,6 @@ struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
     virtual Matrix destToSource() const {
         return arma::inv( sourceToDest() );
     };
-
-    Matrix sourceToDest( const Positions& pos ) {
-        std::copy( pos.begin(), pos.end(), _positions.begin() );
-        return sourceToDest();
-    }
-
-    Matrix destToSource( const Positions& pos ) {
-        std::copy( pos.begin(), pos.end(), _positions.begin() );
-        return destToSource();
-    }
 
     friend std::ostream& operator<<( std::ostream& out, Joint& j );
 private:
