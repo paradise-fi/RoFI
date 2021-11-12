@@ -1,12 +1,12 @@
 #pragma once
 
+#include <algorithm>
 #include <stdexcept>
 #include <iostream>
 #include <cassert>
 #include <optional>
 #include <ranges>
-
-#include <tcb/span.hpp>
+#include <span>
 
 #include <atoms/patterns.hpp>
 #include <atoms/units.hpp>
@@ -32,22 +32,23 @@ using JointVisitor = atoms::Visits<
  * in Joint::position. These params are, e.g., angle for rotation joint.
  */
 struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
-    using Positions = tcb::span< float >;
-    explicit Joint( size_t positionsSize ) : _positions( positionsSize, 0 ) {}
+    explicit Joint( std::vector< std::pair< float, float > > jointLimits )
+            : _jointLimits( std::move( jointLimits ) ), _positions( _jointLimits.size(), 0 )  {}
     virtual ~Joint() = default;
 
     ATOMS_CLONEABLE_BASE( Joint );
 
-    size_t positionCount() const { return _positions.size(); }
-    virtual std::pair< Angle, Angle > jointLimits( int paramIdx ) const = 0;
+    std::span< const std::pair< float, float > > jointLimits() const {
+        return _jointLimits;
+    }
 
-    tcb::span< const float > getPositions() const {
+    std::span< const float > positions() const {
         return _positions;
     }
 
-    void setPositions( const Positions& pos ) {
+    void setPositions( std::span< const float > pos ) {
         assert( pos.size() == _positions.size() && "Positions have to preserve given size" );
-        std::ranges::copy( pos.begin(), pos.end(), _positions.begin() );
+        std::copy( pos.begin(), pos.end(), _positions.begin() );
     }
 
     virtual Matrix sourceToDest() const = 0;
@@ -58,6 +59,7 @@ struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
 
     friend std::ostream& operator<<( std::ostream& out, Joint& j );
 private:
+    std::vector< std::pair< float, float > > _jointLimits;
     std::vector< float > _positions;
 };
 
@@ -68,7 +70,10 @@ struct RigidJoint: public atoms::Visitable< Joint, RigidJoint > {
      * Example usage: `RigidJoint( rotate( M_PI/2, { 1, 0, 0, 1 } ) * translate( { 20, 0, 0 } ) )`
      */
     RigidJoint( const Matrix& sToDest )
-    : Visitable( 0 ), _sourceToDest( sToDest ), _destToSource( arma::inv( sToDest ) ) {}
+        : Visitable( std::vector< std::pair< float, float > >{} ),
+          _sourceToDest( sToDest ),
+          _destToSource( arma::inv( sToDest ) )
+    {}
 
     Matrix sourceToDest() const override {
         return _sourceToDest;
@@ -78,12 +83,9 @@ struct RigidJoint: public atoms::Visitable< Joint, RigidJoint > {
         return _destToSource; // ToDo: Find out if the precomputing is effective or not
     }
 
-    std::pair< Angle, Angle > jointLimits( int /*paramIdx*/ ) const override {
-        throw std::logic_error( "Rigid joint has no parameters" );
-    }
-
     ATOMS_CLONEABLE( RigidJoint );
 
+private:
     Matrix _sourceToDest;
     Matrix _destToSource;
 };
@@ -95,12 +97,9 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
      */
     RotationJoint( Vector sourceOrigin, Vector sourceAxis, Vector destOrigin,
                    Vector desAxis, Angle min, Angle max )
-        : Visitable( 1 ), _limits( { min, max } )
-    {
-        _pre  = translate( sourceOrigin );
-        _post = translate( destOrigin );
-        _axis = desAxis - sourceAxis;
-    }
+        : RotationJoint( translate( sourceOrigin ), desAxis - sourceAxis,
+                         translate( destOrigin ), min, max )
+    {}
 
     /**
      * Construct rotation joint by specifying transformation before rotation,
@@ -108,29 +107,38 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
      * transformation.
      */
     RotationJoint( Matrix pre, Vector axis, Matrix post, Angle min, Angle max )
-        : Visitable( 1 ), _limits( { min, max } ),
+        : Visitable( std::vector{ std::pair{ min.rad(), max.rad() } } ),
           _axis( axis ),
           _pre( pre ),
           _post( post )
     {}
 
     Matrix sourceToDest() const override {
-        return _pre * rotate( getPositions()[ 0 ], _axis ) * _post;
+        return _pre * rotate( position().rad(), _axis ) * _post;
     }
 
     Matrix destToSource() const override {
         return arma::inv( sourceToDest() ); // ToDo: Find out if this is effective enough
     }
 
-    std::pair< Angle, Angle > jointLimits( int paramIdx ) const override {
-        if ( paramIdx != 0 )
-            throw std::logic_error( "RotationJoint joint has only parameter 0" );
-        return _limits;
+    Angle position() const {
+        return Angle::rad( positions()[ 0 ] );
+    }
+
+    void setPosition( Angle pos ) {
+        auto positions = std::array{ pos.rad() };
+        return setPositions( positions );
+    }
+
+    std::pair< Angle, Angle > jointLimit() const {
+        auto limits = jointLimits()[ 0 ];
+        return std::pair( Angle::rad( limits.first ), Angle::rad( limits.second ) );
     }
 
     ATOMS_CLONEABLE( RotationJoint );
 
-    std::pair< Angle, Angle > _limits; ///< minimal and maximal parameter limit
+    friend std::ostream& operator<<( std::ostream& out, Joint& j );
+private:
     Vector _axis; ///< axis of rotation around with origin in point (0, 0, 0)
     Matrix _pre; ///< transformation to apply before rotating
     Matrix _post; ///< transformation to apply after rotating
