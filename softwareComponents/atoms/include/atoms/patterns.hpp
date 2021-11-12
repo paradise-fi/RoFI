@@ -239,8 +239,8 @@ struct VisitableBase {
  */
 template < typename Base, typename Self >
 struct Visitable: public Base {
-    template < typename ... T >
-    Visitable( T ... ts ) : Base( ts ... ) {}
+    template < typename ... Ts >
+    Visitable( Ts &&... ts ) : Base( std::forward< Ts >( ts )... ) {}
 
     void accept( typename Base::VisitorType& visitor ) override {
         visitor( static_cast< Self & >( *this ) );
