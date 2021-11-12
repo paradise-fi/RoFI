@@ -172,6 +172,10 @@ endif()
 if (${BUILD_GAZEBO})
   add_tool(gazebosimTools)
   add_tool(simplesimServer)
+
+  if (NOT ${BUILD_HEADLESS})
+    add_tool(simplesim)
+  endif()
 endif()
 
 
