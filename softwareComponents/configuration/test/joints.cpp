@@ -53,7 +53,8 @@ TEST_CASE( "Base RotationJoint" ) {
         REQUIRE( j.getPositions().size() == 1 );
         auto* jj = static_cast< Joint* >( &j );
         tmp = { A_PI.rad() };
-        jj->sourceToDest( tmp );
+        jj->setPositions( tmp );
+        jj->sourceToDest();
         REQUIRE( !j.getPositions().empty() );
         CHECK( j.getPositions()[ 0 ] == A_PI.rad() );
     }

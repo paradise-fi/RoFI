@@ -41,16 +41,16 @@ public:
     }
 
     void setAlpha( Angle a ) {
-        std::vector< float > tmp{ a.rad() };
-        setJointPositions( 0, { tmp } );
+        std::array tmp{ a.rad() };
+        setJointPositions( 0, tmp );
     }
 
     void setBeta( Angle a ) {
-        std::vector< float > tmp{ a.rad() };
+        std::array tmp{ a.rad() };
         setJointPositions( 1, { tmp } );
     }
     void setGamma( Angle a ) {
-        std::vector< float > tmp{ a.rad() };
+        std::array tmp{ a.rad() };
         setJointPositions( 2, { tmp } );
     }
 };
@@ -58,7 +58,7 @@ public:
 
 /**
  * Given a stream read a configuration from the old "Viki" format. Unlike the
- * original parser, supports only a single configuration per file.
+ * legacy parser, supports only a single configuration per file.
  */
 Rofibot readOldConfigurationFormat( std::istream& s );
 
