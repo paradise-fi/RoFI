@@ -186,6 +186,10 @@ private:
         // TODO
 
         new_configuration->prepare();
+        if ( auto [ ok, err ] = new_configuration->isValid( rofi::configuration::SimpleColision{} );
+             !ok ) {
+            throw std::runtime_error( err );
+        }
         return new_configuration;
     }
 
