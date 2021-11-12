@@ -4,6 +4,7 @@
 #include <chrono>
 #include <optional>
 #include <shared_mutex>
+#include <utility>
 
 #include "command_handler.hpp"
 #include "module_states.hpp"
@@ -24,8 +25,9 @@ public:
     using RofiResp = rofi::messages::RofiResp;
 
 
-    explicit Simulation( configuration::Rofibot && rofibotConfiguration )
-            : _moduleStates( std::make_shared< ModuleStates >( std::move( rofibotConfiguration   ) ) )
+    explicit Simulation(
+            std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration )
+            : _moduleStates( std::make_shared< ModuleStates >( std::move( rofibotConfiguration ) ) )
             , _commandHandler( std::make_shared< CommandHandler >( this->_moduleStates ) )
     {
         assert( _moduleStates );

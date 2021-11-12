@@ -27,15 +27,20 @@ public:
     using JointControl = JointInnerState::Control;
 
 
-    explicit ModuleStates( configuration::Rofibot && rofibotConfiguration )
-            : _physicalModulesConfiguration( std::make_unique< configuration::Rofibot >(
-                    std::move( rofibotConfiguration ) ) )
+    explicit ModuleStates(
+            std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration )
+            : _physicalModulesConfiguration(
+                    rofibotConfiguration
+                            ? std::move( rofibotConfiguration )
+                            : std::make_shared< const rofi::configuration::Rofibot >() )
             , _moduleInnerStates(
                       this->_physicalModulesConfiguration.visit( []( auto & configPtr ) {
                           assert( configPtr );
                           return innerStatesFromConfiguration( *configPtr );
                       } ) )
-    {}
+    {
+        // assert( _physicalModulesConfiguration->isValid() ); // TODO `isValid` should be const
+    }
 
     // Returns rofi description if module with moduleId exists
     std::optional< RofiDescription > getDescription( ModuleId moduleId ) const;
@@ -163,15 +168,16 @@ private:
     }
 
 
-    std::unique_ptr< configuration::Rofibot > computeNextIteration() const
+    std::shared_ptr< const rofi::configuration::Rofibot > computeNextIteration() const
     {
-        auto new_configuration = _physicalModulesConfiguration.visit( []( auto & configPtr ) {
+        auto new_configuration = _physicalModulesConfiguration.visit( []( const auto & configPtr ) {
             assert( configPtr );
-            return std::make_unique< configuration::Rofibot >( *configPtr );
+            return std::make_shared< rofi::configuration::Rofibot >( *configPtr );
         } );
 
         // TODO
 
+        new_configuration->prepare();
         return new_configuration;
     }
 
@@ -180,10 +186,11 @@ private:
             const rofi::configuration::Rofibot & rofibotConfiguration );
 
 private:
-    atoms::Guarded< std::unique_ptr< rofi::configuration::Rofibot > > _physicalModulesConfiguration;
+    atoms::Guarded< std::shared_ptr< const rofi::configuration::Rofibot > >
+            _physicalModulesConfiguration;
     std::map< ModuleId, ModuleInnerState > _moduleInnerStates;
 
-    atoms::Guarded< std::vector< std::unique_ptr< configuration::Rofibot > > >
+    atoms::Guarded< std::vector< std::shared_ptr< const rofi::configuration::Rofibot > > >
             _configurationHistory;
 };
 

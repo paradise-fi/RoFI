@@ -6,5 +6,5 @@ set (FILES
 )
 
 add_library(simplesimModuleStates ${FILES})
-target_link_libraries(simplesimModuleStates PUBLIC rofisimMessages configuration)
+target_link_libraries(simplesimModuleStates PUBLIC rofisimMessages configuration atoms)
 target_include_directories(simplesimModuleStates INTERFACE ${CMAKE_CURRENT_LIST_DIR})
