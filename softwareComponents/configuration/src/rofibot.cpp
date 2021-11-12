@@ -29,10 +29,10 @@ bool Module::setId( ModuleId newId ) {
     return true;
 }
 
-void Module::setJointPositions( int idx, const Joint::Positions& p ) {
+void Module::setJointPositions( int idx, std::span< const float > p ) {
     // Currently we invalidate all positions; ToDo: think if we can improve it
     assert( idx < _joints.size() && idx >= 0 );
-    assert( _joints[ idx ].joint->positionCount() == p.size() );
+    assert( _joints[ idx ].joint->positions().size() == p.size() );
     _joints[ idx ].joint->setPositions( p );
     _componentPosition = std::nullopt;
     if ( parent )

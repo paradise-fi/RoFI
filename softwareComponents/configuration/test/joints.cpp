@@ -50,13 +50,13 @@ TEST_CASE( "Base RotationJoint" ) {
 
     SECTION( "sourceToDest on a ptr of type Joint" ) {
         auto j = RotationJoint( identity, { 1, 0, 0 }, translate( { 42, 42, 42 } ), A_PI_2_neg, A_PI_2 );
-        REQUIRE( j.getPositions().size() == 1 );
+        REQUIRE( j.positions().size() == 1 );
         auto* jj = static_cast< Joint* >( &j );
         tmp = { A_PI.rad() };
         jj->setPositions( tmp );
         jj->sourceToDest();
-        REQUIRE( !j.getPositions().empty() );
-        CHECK( j.getPositions()[ 0 ] == A_PI.rad() );
+        REQUIRE( j.positions().size() == 1 );
+        CHECK( j.positions()[ 0 ] == A_PI.rad() );
     }
 }
 
@@ -100,15 +100,14 @@ TEST_CASE( "sourceToDest and destToSource" ) {
 TEST_CASE( "joint limits" ) {
     SECTION( "RigidJoint" ) {
         auto j = RigidJoint( identity );
-        CHECK( j.positionCount() == 0 );
-        CHECK_THROWS( j.jointLimits( 10 ) );
+        CHECK( j.positions().size() == 0 );
+        CHECK( j.jointLimits().size() == 0 );
     }
 
     SECTION( "RotationJoint" ) {
         auto j = RotationJoint( identity, { 0, 2, 1 }, identity, A_PI_neg, A_PI );
-        CHECK( j.positionCount() == 1 );
-        CHECK_THROWS( j.jointLimits( 1 ) );
-        CHECK_NOTHROW( j.jointLimits( 0 ) );
+        CHECK( j.positions().size() == 1 );
+        CHECK( j.jointLimits().size() == 1 );
     }
 }
 

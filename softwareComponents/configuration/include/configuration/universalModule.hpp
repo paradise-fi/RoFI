@@ -8,7 +8,7 @@ namespace rofi::configuration {
 
 class UniversalModule : public Module {
     Angle _getJointAngle( int i ) const {
-        return Angle::rad( joints()[ i ].joint->getPositions()[ 0 ] );
+        return Angle::rad( joints()[ i ].joint->positions()[ 0 ] );
     }
 
     static std::vector< Component > _initComponents();
