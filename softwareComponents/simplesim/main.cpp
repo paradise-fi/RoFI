@@ -46,7 +46,8 @@ std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
     auto simulation = std::make_shared< Simulation >( std::move( rofibotConfiguration ) );
     auto communication = std::make_shared< Communication >( simulation->commandHandler() );
 
-    return Controller::runRofiController( std::move( simulation ), std::move( communication ) );
+    // TODO add callback
+    return Controller::runRofiController( std::move( simulation ), std::move( communication ), {} );
 }
 
 

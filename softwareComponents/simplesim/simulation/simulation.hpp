@@ -36,16 +36,18 @@ public:
 
     // Moves each rofi module based on the inner state
     // Returns the responses that happen inside RoFIs
-    std::vector< RofiResp > simulateOneIteration()
+    std::pair< std::vector< RofiResp >, std::shared_ptr< const rofi::configuration::Rofibot > >
+            simulateOneIteration()
     {
         assert( _moduleStates );
 
-        _moduleStates->updateToNextIteration();
         auto responses = processRofiCommands();
+        auto new_configuration = _moduleStates->updateToNextIteration();
+        assert( new_configuration );
 
         // TODO check for callbacks (position reached, connector events, waiting ended)
 
-        return responses;
+        return std::make_pair( std::move( responses ), std::move( new_configuration ) );
     }
 
     std::shared_ptr< CommandHandler > commandHandler()
