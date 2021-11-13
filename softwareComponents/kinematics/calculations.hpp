@@ -29,8 +29,8 @@ inline double rotz( const Vector& a, const Vector& b ){
     return std::atan2( a[ 0 ] * b[ 1 ] - a[ 1 ] * b[ 0 ], a[ 0 ] * b[ 0 ] + a[ 1 ] * b[ 1 ] );
 }
 
-inline double eq( const double a, const double b ){
-    return a - b < 0.001;
+inline double equals( const double a, const double b ){
+    return std::fabs( a - b ) < 0.001;
 }
 
 inline double mod( const double a, const double b ){
@@ -41,25 +41,25 @@ inline double mod( const double a, const double b ){
     return res;
 }
 
-inline Vector operator*( double num, const Vector& vec ){
-    return Vector({ vec[ 0 ] * num,
-                    vec[ 1 ] * num,
-                    vec[ 2 ] * num,
-                    vec[ 3 ] });
-}
-inline Vector operator+( const Vector& a, const Vector& b ){
-    return Vector({ a[ 0 ] + b[ 0 ],
-                    a[ 1 ] + b[ 1 ],
-                    a[ 2 ] + b[ 2 ],
-                    1.0 });
-}
+// inline Vector operator*( double num, const Vector& vec ){
+//     return Vector({ vec[ 0 ] * num,
+//                     vec[ 1 ] * num,
+//                     vec[ 2 ] * num,
+//                     vec[ 3 ] });
+// }
+// inline Vector operator+( const Vector& a, const Vector& b ){
+//     return Vector({ a[ 0 ] + b[ 0 ],
+//                     a[ 1 ] + b[ 1 ],
+//                     a[ 2 ] + b[ 2 ],
+//                     1.0 });
+// }
 
-inline Vector operator-( const Vector& a, const Vector& b ){
-    return Vector({ a[ 0 ] - b[ 0 ],
-                    a[ 1 ] - b[ 1 ],
-                    a[ 2 ] - b[ 2 ],
-                    1.0 });
-}
+// inline Vector operator-( const Vector& a, const Vector& b ){
+//     return Vector({ a[ 0 ] - b[ 0 ],
+//                     a[ 1 ] - b[ 1 ],
+//                     a[ 2 ] - b[ 2 ],
+//                     1.0 });
+// }
 
 inline Vector operator/( const Vector& vec, double num ){
     return Vector({ vec[ 0 ] / num,
@@ -72,7 +72,7 @@ inline Vector cross_product( const Vector& a, const Vector& b ){
     return Vector({ a[ 1 ] * b[ 2 ] - a[ 2 ] * b[ 1 ],
                     a[ 2 ] * b[ 0 ] - a[ 0 ] * b[ 2 ],
                     a[ 0 ] * b[ 1 ] - a[ 1 ] * b[ 0 ],
-                    1.0 } );
+                    0.0 } );
 }
 
 inline double magnitude( const Vector& vector ){
@@ -95,7 +95,7 @@ inline double operator*( const Vector& a, const Vector& b ){
 }
 
 inline Vector operator-( const Vector& a ){
-    return { -a[ 0 ], -a[ 1 ], -a[ 2 ], 1.0 };
+    return { -a[ 0 ], -a[ 1 ], -a[ 2 ], a[ 3 ] };
 }
 
 /* projects a point onto a plane defined by normal and a point */
@@ -122,21 +122,57 @@ inline Matrix inverse( Matrix m ){
 }
 
 /* Rotational part of a matrix */
-arma::mat33 get_rotation( const Matrix& matrix ){
-    arma::mat33 result;
-    for( int i = 0; i < 3; ++i ){
-        for( int j = 0; j < 3; ++j ){
-            result.at( i, j ) = matrix.at( i, j );
-        }
-    }
-    return result;
+// arma::mat33 get_rotation( const Matrix& matrix ){
+//     arma::mat33 result;
+//     for( int i = 0; i < 3; ++i ){
+//         for( int j = 0; j < 3; ++j ){
+//             result.at( i, j ) = matrix.at( i, j );
+//         }
+//     }
+//     return result;
+// }
+
+// /* Translational part */
+// arma::vec3 get_translation( const Matrix& matrix ){
+//     arma::vec3 result;
+//     for( int i = 0; i < 3; ++i ){
+//         result[ i ] = matrix.at( i, 3 );
+//     }
+//     return result;
+// }
+
+template <typename T> int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
 }
 
-/* Translational part */
-arma::vec3 get_translation( const Matrix& matrix ){
-    arma::vec3 result;
-    for( int i = 0; i < 3; ++i ){
-        result[ i ] = matrix.at( i, 3 );
-    }
-    return result;
+inline double radial( const Vector& point ){
+    return sqrt( point[ 0 ] * point[ 0 ] +
+                 point[ 1 ] * point[ 1 ] +
+                 point[ 2 ] * point[ 2 ] );
+}
+
+inline double polar( const Vector& point ){
+    return acos( point[ 2 ] / radial( point ) );
+}
+
+inline double azimuth( const Vector& point ){
+    return equals( point[ 0 ], 0.0 ) && equals( point[ 1 ], 0.0 )
+        ? 0.0
+        : atan2( point[ 0 ], -point[ 1 ] );
+}
+
+inline double xFromSphere( double radial, double polar, double azimuth ){
+    return radial * sin( polar ) * cos( azimuth );
+}
+
+inline double yFromSphere( double radial, double polar, double azimuth ){
+    return radial * sin( polar ) * sin( azimuth );
+}
+
+inline double zFromSphere( double radial, double polar, double azimuth ){
+    return radial * cos( polar );
+}
+
+inline double roundToPi( double value ){
+    return value - M_PI_2 <= 0 ? 0.0 : M_PI;
 }
