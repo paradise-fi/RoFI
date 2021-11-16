@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include <drivers/usb.hpp>
 #include <drivers/uart.hpp>
 #include <usb_cdc.h>
@@ -135,8 +137,6 @@ public:
     void send( const uint8_t *buff, int size ) {
         if ( isConfigured() )
             _txEp->write( buff, size );
-        else
-            Dbg::error("Unconfigured");
     }
 
     void send( memory::Pool::Block b, int size ) {

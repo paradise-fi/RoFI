@@ -2,7 +2,6 @@
 
 #include <system/memory.hpp>
 
-
 template < typename T, typename AllocatorT = memory::Pool >
 class RingBuffer {
 public:

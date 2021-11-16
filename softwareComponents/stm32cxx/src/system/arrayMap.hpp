@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <functional>
+#include <algorithm>
 
 template < typename Key, typename Val, typename Compare = std::less< Key >,
            typename Container = std::vector< std::pair< Key, Val > > >

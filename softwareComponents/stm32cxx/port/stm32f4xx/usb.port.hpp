@@ -35,6 +35,10 @@ protected:
         NVIC_EnableIRQ( OTG_FS_IRQn );
     }
 
+    void _setIrqPriority( int priority ) {
+        NVIC_SetPriority( OTG_FS_IRQn, priority );
+    }
+
     void _disableInterrupt() {
         NVIC_DisableIRQ( OTG_FS_IRQn );
     }

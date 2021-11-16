@@ -35,6 +35,10 @@ protected:
         NVIC_EnableIRQ( USB_LP_IRQn );
     }
 
+    void _setIrqPriority( int priority ) {
+        NVIC_SetPriority( USB_LP_IRQn, priority );
+    }
+
     void _disableInterrupt() {
         NVIC_DisableIRQ( USB_LP_IRQn );
     }

@@ -100,7 +100,7 @@ public:
 
         ( configs.post( _periph ), ... );
 
-        _enableInterrupt( 0 );
+        _enableInterrupt( 5 );
     }
 
     using Handler = std::function< void() >;
@@ -112,6 +112,10 @@ public:
 
     void disable() {
         LL_USART_Disable( _periph );
+    }
+
+    void setIrqPriority( int priority ) {
+        _enableInterrupt( priority );
     }
 
     USART_TypeDef *periph() {

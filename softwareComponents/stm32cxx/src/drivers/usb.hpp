@@ -274,7 +274,7 @@ public:
     void unstall();
 
 private:
-     UsbEndpoint( UsbDevice *parent ): _parent( parent ), _txChainSize( 8 ) {
+     UsbEndpoint( UsbDevice *parent ): _parent( parent ), _txChainSize( 128 ) {
         _descriptor.bLength = sizeof( _descriptor );
         _descriptor.bDescriptorType = USB_DTYPE_ENDPOINT;
         _descriptor.bInterval = 0xFF;
@@ -464,6 +464,11 @@ public:
     static UsbDevice& instance() {
         static UsbDevice device;
         return device;
+    }
+
+    UsbDevice& setIrqPriority( int priority ) {
+        _setIrqPriority( priority );
+        return *this;
     }
 
     UsbDevice& setControlpacketSize( uint8_t size ) {

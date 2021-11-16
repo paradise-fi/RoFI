@@ -1,4 +1,5 @@
 #include <drivers/usb.hpp>
+#include <system/irq.hpp>
 
 void UsbEndpoint::setup() {
     bool res = usbd_ep_config( &_parent->_device, _descriptor.bEndpointAddress,
@@ -28,7 +29,9 @@ int UsbEndpoint::read( void *buff, int maxLength ) {
 }
 
 void UsbEndpoint::write( memory::Pool::Block block, int length ) {
+    assert( length <= _descriptor.wMaxPacketSize );
     assert( isDevToHost() );
+    IrqMask guard;
     if ( _txChain.size() == 0 ) {
         // Try send a packet
         int res = usbd_ep_write(
@@ -36,8 +39,10 @@ void UsbEndpoint::write( memory::Pool::Block block, int length ) {
             _descriptor.bEndpointAddress,
             const_cast< unsigned char * >( block.get() ),
             length );
-        if ( res >= 0 )
+        if ( res >= 0 ) {
+            assert( res == length );
             return; // Success, we can return
+        }
     }
     // There is a TX in progress
     _txChain.push_back_force( { std::move( block ), length } );
@@ -52,17 +57,20 @@ void UsbEndpoint::unstall() {
 }
 
 void UsbEndpoint::_handleTx() {
-    if ( _onTx )
-        _onTx( *this );
     if ( !_txChain.empty() ) {
+        IrqMask guard;
         auto [ block, length ] = _txChain.pop_front();
+        guard.give();
         int res = usbd_ep_write(
             &_parent->_device,
             _descriptor.bEndpointAddress,
             const_cast< unsigned char * >( block.get() ),
             length );
         assert( res >= 0 );
+        assert( res == length );
     }
+    if ( _onTx )
+        _onTx( *this );
 }
 
 void UsbEndpoint::_handleRx() {
