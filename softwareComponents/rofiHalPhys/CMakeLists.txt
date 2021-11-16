@@ -9,7 +9,7 @@ idf_component_register(SRCS ${SRC}
 set_property(TARGET ${COMPONENT_LIB} PROPERTY CXX_STANDARD 17)
 target_compile_options(${COMPONENT_LIB} PUBLIC -mtext-section-literals -mlongcalls)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../RoFIDriver/atoms ${CMAKE_CURRENT_BINARY_DIR}/atoms)
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../RoFIDriver/lwip++ ${CMAKE_CURRENT_BINARY_DIR}/lwip++)
+add_subdirectory($ENV{ROFI_ROOT}/softwareComponents/atoms ${CMAKE_CURRENT_BINARY_DIR}/atoms)
+add_subdirectory($ENV{ROFI_ROOT}/softwareComponents/lwip++ ${CMAKE_CURRENT_BINARY_DIR}/lwip++)
 
 target_link_libraries(${COMPONENT_LIB} PUBLIC atoms lwip++)

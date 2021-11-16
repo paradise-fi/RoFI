@@ -34,6 +34,8 @@ target_link_libraries(atoms-heavy INTERFACE "stdc++fs")
 # We use C++ tmpname - which triggers warning
 target_link_options(atoms-heavy INTERFACE -Wno-deprecated-declarations)
 
-file(GLOB TEST_SRC test/*.cpp)
-add_executable(test-atoms ${TEST_SRC})
-target_link_libraries(test-atoms PRIVATE Catch2::Catch2 atoms atoms-heavy)
+if(TARGET Catch2::Catch2)
+  file(GLOB TEST_SRC test/*.cpp)
+  add_executable(test-atoms ${TEST_SRC})
+  target_link_libraries(test-atoms PRIVATE Catch2::Catch2 atoms atoms-heavy)
+endif()
