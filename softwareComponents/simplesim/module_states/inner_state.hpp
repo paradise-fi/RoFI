@@ -1,10 +1,12 @@
 #pragma once
 
+#include <chrono>
 #include <optional>
 #include <span>
 #include <variant>
 #include <vector>
 
+#include "atoms/util.hpp"
 #include "configuration/rofibot.hpp"
 
 #include <connectorState.pb.h>
@@ -21,7 +23,7 @@ public:
     {
     public:
         float position = 0.f;
-        float speed = 0.f;
+        float velocity = 0.f;
     };
     struct VelocityControl
     {
@@ -35,13 +37,42 @@ public:
         return _control;
     }
 
+    float velocity() const
+    {
+        return std::visit( overload{ []( const VelocityControl & velControl ) {
+                                        return velControl.velocity;
+                                    },
+                                     []( const PositionControl & posControl ) {
+                                         return posControl.velocity;
+                                     } },
+                           _control );
+    }
+
+    float computeNewPosition( float currentPosition, std::chrono::duration< float > duration ) const
+    {
+        return std::visit( overload{ [ & ]( const VelocityControl & velControl ) {
+                                        return currentPosition
+                                             + velControl.velocity * duration.count();
+                                    },
+                                     [ & ]( const PositionControl & posControl ) {
+                                         auto newPosition = currentPosition
+                                                          + posControl.velocity * duration.count();
+                                         if ( posControl.velocity < 0 ) {
+                                             return std::max( newPosition, posControl.position );
+                                         }
+                                         else {
+                                             return std::min( newPosition, posControl.position );
+                                         }
+                                     } },
+                           _control );
+    }
+
     void setVelocityControl( VelocityControl velocityControl )
     {
         _control = { velocityControl };
     }
     void setPositionControl( PositionControl positionControl )
     {
-        assert( positionControl.speed >= 0.f );
         _control = { positionControl };
     }
 

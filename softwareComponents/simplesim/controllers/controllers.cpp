@@ -29,7 +29,8 @@ void Controller::rofiControllerThread( std::stop_token stopToken,
     while ( !stopToken.stop_requested() ) {
         auto startTime = std::chrono::steady_clock::now();
 
-        auto [ responses, new_configuration ] = simulation.simulateOneIteration();
+        auto [ responses,
+               new_configuration ] = simulation.simulateOneIteration( Controller::updateDuration );
 
         if ( onConfigurationUpdate ) {
             onConfigurationUpdate( std::move( new_configuration ) );

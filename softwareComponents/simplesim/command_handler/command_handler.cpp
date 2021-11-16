@@ -44,10 +44,14 @@ std::optional< RofiResp > getJointCapabilities( const ModuleStates & moduleState
     ModuleId moduleId = rofiCmd.rofiid();
     int joint = rofiCmd.jointcmd().joint();
 
-    // TODO get from configuration
-    auto resp = getJointResp( moduleId, joint, JointCmd::GET_CAPABILITIES );
-    *resp.mutable_jointresp()->mutable_capabilities() = {}; // TODO
-    return resp;
+    if ( auto capabilities = moduleStates.getJointCapabilities( moduleId, joint ) ) {
+        auto resp = getJointResp( moduleId, joint, JointCmd::GET_CAPABILITIES );
+        *resp.mutable_jointresp()->mutable_capabilities() = *capabilities;
+        return resp;
+    }
+    std::cerr << "Rofi " << moduleId << " doesn't exist or does not have joint " << joint
+              << " (joint command type: " << JointCmd::GET_CAPABILITIES << ")\n";
+    return std::nullopt;
 }
 
 std::optional< RofiResp > getJointPosition( const ModuleStates & moduleStates,
@@ -59,9 +63,12 @@ std::optional< RofiResp > getJointPosition( const ModuleStates & moduleStates,
     ModuleId moduleId = rofiCmd.rofiid();
     int joint = rofiCmd.jointcmd().joint();
 
-    // TODO get from configuration
-    auto position = 0.f; // TODO
-    return getJointResp( moduleId, joint, JointCmd::GET_POSITION, position );
+    if ( auto position = moduleStates.getJointPosition( moduleId, joint ) ) {
+        return getJointResp( moduleId, joint, JointCmd::GET_POSITION, *position );
+    }
+    std::cerr << "Rofi " << moduleId << " doesn't exist or does not have joint " << joint
+              << " (joint command type: " << JointCmd::GET_POSITION << ")\n";
+    return std::nullopt;
 }
 
 std::optional< RofiResp > getJointVelocity( const ModuleStates & moduleStates,
@@ -73,9 +80,12 @@ std::optional< RofiResp > getJointVelocity( const ModuleStates & moduleStates,
     ModuleId moduleId = rofiCmd.rofiid();
     int joint = rofiCmd.jointcmd().joint();
 
-    // TODO get from configuration
-    auto velocity = 0.f; // TODO
-    return getJointResp( moduleId, joint, JointCmd::GET_VELOCITY, velocity );
+    if ( auto velocity = moduleStates.getJointVelocity( moduleId, joint ) ) {
+        return getJointResp( moduleId, joint, JointCmd::GET_VELOCITY, *velocity );
+    }
+    std::cerr << "Rofi " << moduleId << " doesn't exist or does not have joint " << joint
+              << " (joint command type: " << JointCmd::GET_VELOCITY << ")\n";
+    return std::nullopt;
 }
 
 std::nullopt_t setJointPosWithSpeed( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
@@ -89,17 +99,21 @@ std::nullopt_t setJointPosWithSpeed( ModuleStates & moduleStates, const RofiCmd 
     const auto & setPosWithSpeed = rofiCmd.jointcmd().setposwithspeed();
     auto pos = setPosWithSpeed.position();
     auto speed = setPosWithSpeed.speed();
-    if ( speed < 0.f ) {
-        std::cerr << "Got set position command with negative speed. Setting to zero.\n";
-        speed = 0.f;
-    }
-    auto control = ModuleStates::JointPositionControl{ .position = pos, .speed = speed };
+    if ( auto currentPosition = moduleStates.getJointPosition( moduleId, joint ) ) {
+        if ( speed < 0.f ) {
+            std::cerr << "Got set position command with negative speed. Setting to zero.\n";
+            speed = 0.f;
+        }
+        auto velocity = std::copysign( speed, pos - *currentPosition );
 
-    // TODO clamp pos and speed
-    if ( !moduleStates.setPositionControl( moduleId, joint, control ) ) {
-        std::cerr << "Rofi " << moduleId << " doesn't exist or does not have joint " << joint
-                  << " (joint command type: " << JointCmd::SET_POS_WITH_SPEED << ")\n";
+        // TODO clamp pos and speed
+        auto control = ModuleStates::JointPositionControl{ .position = pos, .velocity = velocity };
+        if ( moduleStates.setPositionControl( moduleId, joint, control ) ) {
+            return std::nullopt;
+        }
     }
+    std::cerr << "Rofi " << moduleId << " doesn't exist or does not have joint " << joint
+              << " (joint command type: " << JointCmd::SET_POS_WITH_SPEED << ")\n";
     return std::nullopt;
 }
 
@@ -115,10 +129,11 @@ std::nullopt_t setJointVelocity( ModuleStates & moduleStates, const RofiCmd & ro
     auto control = ModuleStates::JointVelocityControl{ .velocity = velocity };
 
     // TODO clamp velocity
-    if ( !moduleStates.setVelocityControl( moduleId, joint, control ) ) {
-        std::cerr << "Rofi " << moduleId << " doesn't exist or does not have joint " << joint
-                  << " (joint command type: " << JointCmd::SET_VELOCITY << ")\n";
+    if ( moduleStates.setVelocityControl( moduleId, joint, control ) ) {
+        return std::nullopt;
     }
+    std::cerr << "Rofi " << moduleId << " doesn't exist or does not have joint " << joint
+              << " (joint command type: " << JointCmd::SET_VELOCITY << ")\n";
     return std::nullopt;
 }
 
@@ -151,10 +166,11 @@ std::nullopt_t extendConnector( ModuleStates & moduleStates, const RofiCmd & rof
     int connector = rofiCmd.connectorcmd().connector();
 
     // TODO check somewhere for new connections
-    if ( !moduleStates.extendConnector( moduleId, connector ) ) {
-        std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
-                  << connector << " (connector command type: " << ConnectorCmd::CONNECT << ")\n";
+    if ( moduleStates.extendConnector( moduleId, connector ) ) {
+        return std::nullopt;
     }
+    std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector " << connector
+              << " (connector command type: " << ConnectorCmd::CONNECT << ")\n";
     return std::nullopt;
 }
 
@@ -169,10 +185,11 @@ std::nullopt_t retractConnector( ModuleStates & moduleStates, const RofiCmd & ro
     // TODO can you get a message after disconnect command?
 
     // TODO send disconnect event to both sides
-    if ( !moduleStates.retractConnector( moduleId, connector ) ) {
-        std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
-                  << connector << " (connector command type: " << ConnectorCmd::DISCONNECT << ")\n";
+    if ( moduleStates.retractConnector( moduleId, connector ) ) {
+        return std::nullopt;
     }
+    std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector " << connector
+              << " (connector command type: " << ConnectorCmd::DISCONNECT << ")\n";
     return std::nullopt;
 }
 
@@ -214,11 +231,11 @@ std::optional< RofiResp > setConnectorPower( ModuleStates & moduleStates, const 
     int connector = rofiCmd.connectorcmd().connector();
     ConnectorCmd::Line line = rofiCmd.connectorcmd().line();
 
-    if ( !moduleStates.setConnectorPower( moduleId, connector, line, true ) ) {
-        std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
-                  << connector << " (connector command type: " << ConnectorCmd::CONNECT_POWER
-                  << ")\n";
+    if ( moduleStates.setConnectorPower( moduleId, connector, line, true ) ) {
+        return std::nullopt;
     }
+    std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector " << connector
+              << " (connector command type: " << ConnectorCmd::CONNECT_POWER << ")\n";
     return std::nullopt;
 }
 
@@ -232,11 +249,11 @@ std::optional< RofiResp > setDisconnectorPower( ModuleStates & moduleStates,
     int connector = rofiCmd.connectorcmd().connector();
     ConnectorCmd::Line line = rofiCmd.connectorcmd().line();
 
-    if ( !moduleStates.setConnectorPower( moduleId, connector, line, false ) ) {
-        std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector "
-                  << connector << " (connector command type: " << ConnectorCmd::DISCONNECT_POWER
-                  << ")\n";
+    if ( moduleStates.setConnectorPower( moduleId, connector, line, false ) ) {
+        return std::nullopt;
     }
+    std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector " << connector
+              << " (connector command type: " << ConnectorCmd::DISCONNECT_POWER << ")\n";
     return std::nullopt;
 }
 
