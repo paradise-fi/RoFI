@@ -10,6 +10,7 @@
 #include "inner_state.hpp"
 
 #include <connectorCmd.pb.h>
+#include <jointCapabilities.pb.h>
 #include <rofiDescription.pb.h>
 
 
@@ -17,14 +18,16 @@ namespace rofi::simplesim
 {
 class ModuleStates
 {
+    static constexpr float maxJointSpeed = 1.;
+
 public:
     using RofiDescription = rofi::messages::RofiDescription;
     using ConnectorState = ConnectorInnerState::ConnectorState;
     using ConnectorLine = rofi::messages::ConnectorCmd::Line;
     using ConnectedTo = std::optional< ConnectorInnerState::OtherConnector >;
+    using JointCapabilities = rofi::messages::JointCapabilities;
     using JointVelocityControl = JointInnerState::VelocityControl;
     using JointPositionControl = JointInnerState::PositionControl;
-    using JointControl = JointInnerState::Control;
 
 
     explicit ModuleStates(
@@ -46,12 +49,19 @@ public:
     std::optional< RofiDescription > getDescription( ModuleId moduleId ) const;
 
 
-    // Returns velocity if module with moduleId exists and has given joint
-    std::optional< JointControl > getJointControl( ModuleId moduleId, int joint ) const;
+    // Returns joint position limits if module with moduleId exists and has given joint
+    std::optional< std::pair< float, float > > getJointPositionLimits( ModuleId moduleId,
+                                                                       int joint ) const;
+    // Returns joint capabilities if module with moduleId exists and has given joint
+    std::optional< JointCapabilities > getJointCapabilities( ModuleId moduleId, int joint ) const;
+    // Returns joint position if module with moduleId exists and has given joint
+    std::optional< float > getJointPosition( ModuleId moduleId, int joint ) const;
+    // Returns joint velocity if module with moduleId exists and has given joint
+    std::optional< float > getJointVelocity( ModuleId moduleId, int joint ) const;
 
-    // Sets position control and returns true if module with moduleId exists and has given joint
+    // Sets joint position control and returns true if module with moduleId exists and has given joint
     bool setPositionControl( ModuleId moduleId, int joint, JointPositionControl positionControl );
-    // Sets velocity control and returns true if module with moduleId exists and has given joint
+    // Sets joint velocity control and returns true if module with moduleId exists and has given joint
     bool setVelocityControl( ModuleId moduleId, int joint, JointVelocityControl velocityControl );
 
 
@@ -64,7 +74,7 @@ public:
     bool extendConnector( ModuleId moduleId, int connector );
     // Retracts connector and returns true if module with moduleId exists and has given connector
     bool retractConnector( ModuleId moduleId, int connector );
-    // Sets given power line and returns true if module with moduleId exists and has given connector
+    // Sets given power line in connector and returns true if module with moduleId exists and has given connector
     bool setConnectorPower( ModuleId moduleId, int connector, ConnectorLine line, bool connect );
 
     std::set< ModuleId > getModuleIds() const
@@ -78,9 +88,10 @@ public:
     }
 
 
-    std::shared_ptr< const rofi::configuration::Rofibot > updateToNextIteration()
+    std::shared_ptr< const rofi::configuration::Rofibot > updateToNextIteration(
+            std::chrono::duration< float > duration )
     {
-        auto new_configuration = computeNextIteration();
+        auto new_configuration = computeNextIteration( duration );
         assert( new_configuration );
 
         auto old_configuration = _physicalModulesConfiguration.visit(
@@ -96,7 +107,7 @@ public:
 
 
 private:
-    std::optional< std::reference_wrapper< const ModuleInnerState > > findModuleInnerState(
+    std::optional< std::reference_wrapper< const ModuleInnerState > > getModuleInnerState(
             ModuleId moduleId ) const
     {
         auto innerState = _moduleInnerStates.find( moduleId );
@@ -106,7 +117,7 @@ private:
 
         return innerState->second;
     }
-    std::optional< std::reference_wrapper< ModuleInnerState > > findModuleInnerState(
+    std::optional< std::reference_wrapper< ModuleInnerState > > getModuleInnerState(
             ModuleId moduleId )
     {
         auto innerState = _moduleInnerStates.find( moduleId );
@@ -117,11 +128,11 @@ private:
         return innerState->second;
     }
 
-    std::optional< std::reference_wrapper< const ConnectorInnerState > > findConnectorInnerState(
+    std::optional< std::reference_wrapper< const ConnectorInnerState > > getConnectorInnerState(
             ModuleId moduleId,
             int connector ) const
     {
-        auto moduleInnerState = findModuleInnerState( moduleId );
+        auto moduleInnerState = getModuleInnerState( moduleId );
         if ( !moduleInnerState ) {
             return {};
         }
@@ -131,11 +142,11 @@ private:
         }
         return connectorInnerStates[ connector ];
     }
-    std::optional< std::reference_wrapper< ConnectorInnerState > > findConnectorInnerState(
+    std::optional< std::reference_wrapper< ConnectorInnerState > > getConnectorInnerState(
             ModuleId moduleId,
             int connector )
     {
-        auto moduleInnerState = findModuleInnerState( moduleId );
+        auto moduleInnerState = getModuleInnerState( moduleId );
         if ( !moduleInnerState ) {
             return {};
         }
@@ -146,11 +157,11 @@ private:
         return connectorInnerStates[ connector ];
     }
 
-    std::optional< std::reference_wrapper< const JointInnerState > > findJointInnerState(
+    std::optional< std::reference_wrapper< const JointInnerState > > getJointInnerState(
             ModuleId moduleId,
             int joint ) const
     {
-        auto moduleInnerState = findModuleInnerState( moduleId );
+        auto moduleInnerState = getModuleInnerState( moduleId );
         if ( !moduleInnerState ) {
             return {};
         }
@@ -160,11 +171,11 @@ private:
         }
         return jointInnerStates[ joint ];
     }
-    std::optional< std::reference_wrapper< JointInnerState > > findJointInnerState(
+    std::optional< std::reference_wrapper< JointInnerState > > getJointInnerState(
             ModuleId moduleId,
             int joint )
     {
-        auto moduleInnerState = findModuleInnerState( moduleId );
+        auto moduleInnerState = getModuleInnerState( moduleId );
         if ( !moduleInnerState ) {
             return {};
         }
@@ -176,14 +187,50 @@ private:
     }
 
 
-    std::shared_ptr< const rofi::configuration::Rofibot > computeNextIteration() const
+    std::shared_ptr< const rofi::configuration::Rofibot > computeNextIteration(
+            std::chrono::duration< float > duration ) const
     {
         auto new_configuration = _physicalModulesConfiguration.visit( []( const auto & configPtr ) {
             assert( configPtr );
             return std::make_shared< rofi::configuration::Rofibot >( *configPtr );
         } );
 
-        // TODO
+        assert( new_configuration );
+        for ( auto & moduleInfo : new_configuration->modules() ) {
+            assert( moduleInfo.module.get() );
+            auto & module_ = moduleInfo.module;
+
+            auto moduleInnerStateOpt = getModuleInnerState( module_->getId() );
+            assert( moduleInnerStateOpt );
+            auto & moduleInnerState = moduleInnerStateOpt->get();
+
+            std::span jointInnerStates = moduleInnerState.joints();
+            tcb::span jointConfigurations = module_->joints();
+            assert( jointInnerStates.size() == jointConfigurations.size() );
+            for ( size_t i = 0; i < jointInnerStates.size(); i++ ) {
+                assert( jointConfigurations[ i ].joint.get() );
+                auto & jointConfiguration = *jointConfigurations[ i ].joint;
+                const auto & jointInnerState = jointInnerStates[ i ];
+
+                if ( jointConfiguration.positions().size() != 1 ) {
+                    // TODO resolve by getting only user-configurable joints
+                    continue;
+                }
+                assert( jointConfiguration.positions().size() == 1 );
+                assert( jointConfiguration.jointLimits().size() == 1 );
+                auto currentPosition = jointConfiguration.positions().front();
+                auto jointLimits = jointConfiguration.jointLimits().front();
+
+                assert( jointLimits.first <= jointLimits.second );
+                auto newPosition = std::clamp( jointInnerState.computeNewPosition( currentPosition,
+                                                                                   duration ),
+                                               jointLimits.first,
+                                               jointLimits.second );
+
+                jointConfiguration.setPositions( std::array{ newPosition } );
+            }
+        }
+        // TODO connectors
 
         new_configuration->prepare();
         if ( auto [ ok, err ] = new_configuration->isValid( rofi::configuration::SimpleColision{} );
@@ -194,6 +241,13 @@ private:
     }
 
 private:
+    std::shared_ptr< const rofi::configuration::Rofibot > currentConfiguration() const
+    {
+        auto result = _physicalModulesConfiguration.visit( []( auto copy ) { return copy; } );
+        assert( result );
+        return result;
+    }
+
     static std::map< ModuleId, ModuleInnerState > innerStatesFromConfiguration(
             const rofi::configuration::Rofibot & rofibotConfiguration );
 
