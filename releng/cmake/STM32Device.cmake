@@ -35,8 +35,8 @@ function(add_stm32_compiler_flags)
     setup_mcu_details(${A_MCU})
 
     set(DMCU_SPEC "")
-    if (${A_MCU_SPEC})
-        set(DMCU_SPEC "-D{A_MCU_SPEC}")
+    if (NOT "${A_MCU_SPEC} " STREQUAL " ")
+        set(DMCU_SPEC "-D${A_MCU_SPEC}")
     endif()
 
     set(BUILD_FLAGS "-D${A_MCU} -D${MCU_FAMILY} ${DMCU_SPEC}\

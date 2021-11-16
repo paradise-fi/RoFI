@@ -107,7 +107,7 @@ function(setup_stm32cxx PREFIX MCU)
         target_sources(${PREFIX}_stm32cxx_${NAME} INTERFACE ${L_SRC})
         target_link_libraries(${PREFIX}_stm32cxx_${NAME} INTERFACE
             ${PREFIX}_stm32cxx ${A_LINK_HAL} ${LINK})
-        if (NOT "${MCU_SPEC}" EQUAL "")
+        if (NOT "${MCU_SPEC} " STREQUAL " ")
             target_compile_options(${PREFIX}_stm32cxx_${NAME} INTERFACE -D${MCU_SPEC})
         endif()
     endfunction()
