@@ -144,6 +144,14 @@ public:
             _txEp->write( std::move( b ), size );
     }
 
+    int sendRaw( const unsigned char *buff, int size ) {
+        if ( !isConfigured() )
+            return 0;
+        size = std::min( size, _txEp->getPacketSize() );
+        int written = _txEp->writeRaw( buff, size );
+        return std::max( 0, written );
+    }
+
     int read( uint8_t * buff, int maxSize ) {
         return _rxEp->read( buff, maxSize );
     }

@@ -91,10 +91,30 @@ public:
     }
 
     // Notify the ring buffer about newly inserted elements
-    void advance( int pos ) {
+    void advanceWrite( int pos ) {
         _tail += pos;
         if ( _tail >= _storageCapacity )
             _tail -= _storageCapacity;
+    }
+
+    // Return longest continuous segment of available elements
+    std::pair< T*, int > readPosition() {
+        if ( _head == _storageCapacity )
+            return { _data(), _tail };
+        if ( _head > _tail )
+            return { _data() + _head, _storageCapacity - _head };
+        return { _data() + _head, _tail - _head };
+    }
+
+    // Notify the ring buffer about popped elements
+    void advanceRead( int pos ) {
+        _head += pos;
+        if ( _head >= _storageCapacity )
+            _head -= _storageCapacity;
+    }
+
+    void clear() {
+        _head = _tail = 0;
     }
 
 private:

@@ -224,6 +224,10 @@ public:
         return *this;
     }
 
+    int getPacketSize() const {
+        return _descriptor.wMaxPacketSize;
+    }
+
     UsbEndpoint& setInterval( uint8_t interval ) {
         _descriptor.bInterval = interval;
         return *this;
@@ -259,22 +263,24 @@ public:
     }
 
     int read( void *buff, int maxLength );
-    void write( memory::Pool::Block b, int size );
 
-    void write( const void *buff, int length ) {
+    bool write( memory::Pool::Block b, int size );
+    bool write( const void *buff, int length ) {
         assert( length != 0 );
         auto block = memory::Pool::allocate( length );
 
         assert( block.get() );
         memcpy( block.get(), buff, length );
-        write( std::move( block ), length );
+        return write( std::move( block ), length );
     }
+
+    int writeRaw( const unsigned char *buff, int length );
 
     void stall();
     void unstall();
 
 private:
-     UsbEndpoint( UsbDevice *parent ): _parent( parent ), _txChainSize( 128 ) {
+     UsbEndpoint( UsbDevice *parent ): _parent( parent ), _txChainSize( 8 ) {
         _descriptor.bLength = sizeof( _descriptor );
         _descriptor.bDescriptorType = USB_DTYPE_ENDPOINT;
         _descriptor.bInterval = 0xFF;

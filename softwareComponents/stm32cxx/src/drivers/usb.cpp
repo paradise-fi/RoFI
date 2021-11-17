@@ -28,7 +28,7 @@ int UsbEndpoint::read( void *buff, int maxLength ) {
         buff, maxLength );
 }
 
-void UsbEndpoint::write( memory::Pool::Block block, int length ) {
+bool UsbEndpoint::write( memory::Pool::Block block, int length ) {
     assert( length <= _descriptor.wMaxPacketSize );
     assert( isDevToHost() );
     IrqMask guard;
@@ -41,11 +41,19 @@ void UsbEndpoint::write( memory::Pool::Block block, int length ) {
             length );
         if ( res >= 0 ) {
             assert( res == length );
-            return; // Success, we can return
+            return true; // Success, we can return
         }
     }
     // There is a TX in progress
-    _txChain.push_back_force( { std::move( block ), length } );
+    return _txChain.push_back_force( { std::move( block ), length } );
+}
+
+int UsbEndpoint::writeRaw( const unsigned char *buff, int length ) {
+    return usbd_ep_write(
+            &_parent->_device,
+            _descriptor.bEndpointAddress,
+            const_cast< unsigned char * >( buff ),
+            length );
 }
 
 void UsbEndpoint::stall() {

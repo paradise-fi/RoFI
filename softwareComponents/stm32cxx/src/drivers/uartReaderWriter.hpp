@@ -131,13 +131,45 @@ public:
         _channel.enable();
     }
 
+    void startCircularReading( int bufferSize, int bitTimeout ) {
+        assert( !_channel.isEnabled() );
+
+        _block = Allocator::allocate( bufferSize );
+        assert( _block );
+
+        LL_DMA_SetMode( _channel, _channel, LL_DMA_MODE_CIRCULAR );
+        LL_DMA_SetMemoryAddress( _channel, _channel, uint32_t( _block.get() ) );
+        LL_DMA_SetDataLength( _channel, _channel, bufferSize );
+
+        _lastPos = 0;
+        _bufferSize = bufferSize;
+        _channel.onHalf( []{} );
+        _channel.onComplete( []{} );
+        _onTimeout( bitTimeout, []{} );
+
+        _channel.enable();
+    }
+
+    std::pair< const unsigned char *, int > getAvailableCircular() {
+        int end = _bufferSize - LL_DMA_GetDataLength( _channel, _channel );
+        int begin = _lastPos;
+        if ( _lastPos > end ) { // We moved pass the buffer boundary
+            int size = _bufferSize - _lastPos;
+            _lastPos = 0;
+            return { &_block[ begin ], size };
+        }
+        int size = end - _lastPos;
+        _lastPos = end;
+        return { &_block[ begin ], size };
+    }
+
     void stopCircularReading() {
         _channel.disable();
     }
 
 private:
     void _updateBuffer( int read ) {
-        _buffer.advance( read );
+        _buffer.advanceWrite( read );
         auto [ location, size ] = _buffer.insertPosition();
         int requested = std::min( size, 32 );
         LL_DMA_SetMode( _channel, _channel, LL_DMA_MODE_NORMAL );
@@ -300,8 +332,26 @@ public:
         _channel.enable();
     }
 
+    template < typename Callback >
+    void write( const uint8_t* mem, int size, Callback callback ) {
+        assert( !_channel.isEnabled() );
+        LL_DMA_SetMemoryAddress( _channel, _channel, uint32_t( mem ) );
+        LL_DMA_SetDataLength( _channel, _channel, size );
+
+        _channel.onComplete( [&, callback]() {
+            _channel.disable();
+            callback();
+        } );
+
+        _channel.enable();
+    }
+
     void abort() {
         _channel.disable();
+    }
+
+    bool busy() {
+        return _channel.isEnabled();
     }
 
 private:
