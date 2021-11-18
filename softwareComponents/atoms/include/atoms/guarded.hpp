@@ -2,6 +2,7 @@
 
 #include <mutex>
 #include <shared_mutex>
+#include <type_traits>
 
 
 namespace atoms
@@ -10,10 +11,17 @@ template < class T, class Mutex = std::mutex >
 class Guarded
 {
 private:
+    template < bool IsConst >
     class GuardedHandle
     {
+        using GuardedType = std::conditional_t< IsConst, const Guarded, Guarded >;
+        using DataPointer = std::conditional_t< IsConst, const T *, T * >;
+
     public:
-        T * operator->()
+        GuardedHandle( const GuardedHandle & ) = delete;
+        GuardedHandle & operator=( const GuardedHandle & ) = delete;
+
+        DataPointer operator->() const noexcept
         {
             return _data;
         }
@@ -21,10 +29,10 @@ private:
     private:
         friend class Guarded;
 
-        GuardedHandle( Guarded & guarded ) : _lock( guarded._mutex ), _data( &guarded._data ) {}
+        GuardedHandle( GuardedType & guarded ) : _lock( guarded._mutex ), _data( &guarded._data ) {}
 
         std::lock_guard< Mutex > _lock;
-        T * _data;
+        DataPointer _data;
     };
 
 public:
@@ -32,7 +40,11 @@ public:
     Guarded( Args &&... args ) : _data( std::forward< Args >( args )... )
     {}
 
-    GuardedHandle operator->()
+    GuardedHandle< true > operator->() const
+    {
+        return { *this };
+    }
+    GuardedHandle< false > operator->()
     {
         return { *this };
     }
