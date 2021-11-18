@@ -25,11 +25,12 @@ public:
 
     ~LockedModuleCommunication()
     {
+        assert( _sub );
         _sub->Unsubscribe();
     }
 
     LockedModuleCommunication( const LockedModuleCommunication & ) = delete;
-    LockedModuleCommunication( LockedModuleCommunication && ) = default;
+    LockedModuleCommunication( LockedModuleCommunication && ) = delete;
     LockedModuleCommunication & operator=( const LockedModuleCommunication & ) = delete;
     LockedModuleCommunication & operator=( LockedModuleCommunication && ) = delete;
 

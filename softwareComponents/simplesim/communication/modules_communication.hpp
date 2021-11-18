@@ -1,4 +1,5 @@
 #pragma once
+
 #include <atomic>
 #include <map>
 #include <memory>
@@ -22,6 +23,8 @@ namespace rofi::simplesim
 {
 class ModulesCommunication
 {
+    using LockedModuleCommunicationPtr = std::unique_ptr< LockedModuleCommunication >;
+
 public:
     using RofiId = CommandHandler::RofiId;
 
@@ -29,11 +32,16 @@ public:
                           gazebo::transport::NodePtr node )
             : _commandHandler( std::move( commandHandler ) )
             , _node( std::move( node ) )
-            , _freeModules( this->_commandHandler->getModuleIds() )
             , _distributor( *this->_node, *this )
     {
         assert( _node );
         assert( _commandHandler );
+        _modules.visit( [ moduleIds = _commandHandler->getModuleIds() ]( auto & modules ) {
+            for ( auto rofiId : moduleIds ) {
+                [[maybe_unused]] auto result = modules.emplace( rofiId, nullptr );
+                assert( result.second );
+            }
+        } );
     }
 
     ModulesCommunication( const ModulesCommunication & ) = delete;
@@ -45,7 +53,7 @@ public:
 
     std::optional< RofiId > lockFreeRofi();
     bool tryLockRofi( RofiId rofiId );
-    bool unlockRofi( RofiId rofiId );
+    void unlockRofi( RofiId rofiId );
 
     std::optional< std::string > getTopic( RofiId rofiId ) const;
     bool isLocked( RofiId rofiId ) const;
@@ -53,32 +61,38 @@ public:
     template < typename F >
     void forEachLockedModule( F && function ) const
     {
-        std::shared_lock< std::shared_mutex > lock( _modulesMutex );
-
-        for ( auto & [ rofiId, moduleComm ] : _lockedModules ) {
-            function( rofiId, moduleComm.topic( *_node ) );
-        }
+        _modules.visit_shared(
+                [ &function, &node = std::as_const( *_node ) ]( const auto & modules ) {
+                    for ( auto & [ rofiId, moduleComm ] : modules ) {
+                        if ( moduleComm ) {
+                            function( rofiId, moduleComm->topic( node ) );
+                        }
+                    }
+                } );
     }
 
     template < typename F >
     void forEachFreeModule( F && function ) const
     {
-        std::shared_lock< std::shared_mutex > lock( _modulesMutex );
-
-        for ( auto rofiId : _freeModules ) {
-            function( rofiId );
-        }
+        _modules.visit_shared( [ &function ]( const auto & modules ) {
+            for ( const auto & [ rofiId, moduleComm ] : modules ) {
+                if ( !moduleComm ) {
+                    function( rofiId );
+                }
+            }
+        } );
     }
 
     template < typename ResponsesContainer >
     void sendRofiResponses( ResponsesContainer && responses )
     {
-        std::shared_lock< std::shared_mutex > lock( _modulesMutex );
-
-        for ( auto & resp : responses ) {
-            auto it = _lockedModules.find( resp.rofiid() );
-            it->second.sendResponse( resp );
-        }
+        _modules.visit( [ &responses ]( auto & modules ) {
+            for ( auto & resp : responses ) {
+                if ( auto it = modules.find( resp.rofiid() ); it != modules.end() && it->second ) {
+                    it->second->sendResponse( resp );
+                }
+            }
+        } );
     }
 
 private:
@@ -89,11 +103,15 @@ private:
     }
 
 
-    LockedModuleCommunication getNewLockedModule( RofiId rofiId )
+    LockedModuleCommunicationPtr getNewLockedModule( RofiId rofiId )
     {
+        // Cannot lock any mutexes (in particular cannot access `_modules`)
         assert( _commandHandler );
         assert( _node );
-        return LockedModuleCommunication( *_commandHandler, *_node, getNewTopicName(), rofiId );
+        return std::make_unique< LockedModuleCommunication >( *_commandHandler,
+                                                              *_node,
+                                                              getNewTopicName(),
+                                                              rofiId );
     }
 
 private:
@@ -101,9 +119,7 @@ private:
 
     gazebo::transport::NodePtr _node;
 
-    mutable std::shared_mutex _modulesMutex;
-    std::set< RofiId > _freeModules;
-    std::map< RofiId, LockedModuleCommunication > _lockedModules;
+    atoms::Guarded< std::map< RofiId, LockedModuleCommunicationPtr >, std::shared_mutex > _modules;
 
     Distributor _distributor;
 };

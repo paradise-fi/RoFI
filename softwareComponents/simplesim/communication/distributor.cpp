@@ -137,7 +137,8 @@ rofi::messages::DistributorResp Distributor::onUnlockReq( RofiId rofiId, Session
         return resp;
     }
 
-    info.set_lock( !_modulesCommunication.unlockRofi( rofiId ) );
+    _modulesCommunication.unlockRofi( rofiId );
+    info.set_lock( false );
 
     return resp;
 }

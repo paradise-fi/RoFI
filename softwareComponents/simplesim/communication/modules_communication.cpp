@@ -8,71 +8,58 @@ using RofiId = ModulesCommunication::RofiId;
 
 bool ModulesCommunication::addNewRofi( RofiId rofiId )
 {
-    std::lock_guard< std::shared_mutex > lock( _modulesMutex );
-
-    if ( _lockedModules.find( rofiId ) != _lockedModules.end() ) {
-        return false;
-    }
-    return _freeModules.insert( rofiId ).second;
+    return _modules.visit(
+            [ rofiId ]( auto & modules ) { return modules.emplace( rofiId, nullptr ).second; } );
 }
 
 std::optional< RofiId > ModulesCommunication::lockFreeRofi()
 {
-    std::lock_guard< std::shared_mutex > lock( _modulesMutex );
-
-    auto it = _freeModules.begin();
-    if ( it == _freeModules.end() ) {
-        return {};
-    }
-
-    auto rofiId = *it;
-    _lockedModules.emplace( rofiId, getNewLockedModule( rofiId ) );
-    _freeModules.erase( it );
-    return rofiId;
+    return _modules.visit( [ this ]( auto & modules ) -> std::optional< RofiId > {
+        for ( auto & [ rofiId, moduleComm ] : modules ) {
+            if ( !moduleComm ) {
+                moduleComm = this->getNewLockedModule( rofiId );
+                return rofiId;
+            }
+        }
+        return std::nullopt;
+    } );
 }
 
 bool ModulesCommunication::tryLockRofi( RofiId rofiId )
 {
-    std::lock_guard< std::shared_mutex > lock( _modulesMutex );
-
-    auto it = _freeModules.find( rofiId );
-    if ( it == _freeModules.end() ) {
+    return _modules.visit( [ this, rofiId ]( auto & modules ) {
+        if ( auto it = modules.find( rofiId ); it != modules.end() && it->second == nullptr ) {
+            it->second = this->getNewLockedModule( rofiId );
+            return true;
+        }
         return false;
-    }
-
-    _lockedModules.emplace( rofiId, getNewLockedModule( rofiId ) );
-    _freeModules.erase( it );
-    return true;
+    } );
 }
 
-bool ModulesCommunication::unlockRofi( RofiId rofiId )
+void ModulesCommunication::unlockRofi( RofiId rofiId )
 {
-    std::lock_guard< std::shared_mutex > lock( _modulesMutex );
-
-    auto it = _lockedModules.find( rofiId );
-    if ( it == _lockedModules.end() ) {
-        return true;
-    }
-
-    _lockedModules.erase( it );
-    _freeModules.insert( rofiId );
-    return true;
+    return _modules.visit( [ rofiId ]( auto & modules ) {
+        if ( auto it = modules.find( rofiId ); it != modules.end() ) {
+            it->second.reset();
+        }
+    } );
 }
 
 std::optional< std::string > ModulesCommunication::getTopic( RofiId rofiId ) const
 {
-    std::shared_lock< std::shared_mutex > lock( _modulesMutex );
-
-    auto it = _lockedModules.find( rofiId );
-    if ( it != _lockedModules.end() ) {
-        return it->second.topic( *_node );
-    }
-    return {};
+    return _modules.visit_shared( [ rofiId, &node = std::as_const( *_node ) ](
+                                          const auto & modules ) -> std::optional< std::string > {
+        if ( auto it = modules.find( rofiId ); it != modules.end() && it->second != nullptr ) {
+            return it->second->topic( node );
+        }
+        return std::nullopt;
+    } );
 }
 
 bool ModulesCommunication::isLocked( RofiId rofiId ) const
 {
-    std::shared_lock< std::shared_mutex > lock( _modulesMutex );
-
-    return _lockedModules.find( rofiId ) != _lockedModules.end();
+    return _modules.visit_shared( [ rofiId ]( const auto & modules ) {
+        auto it = modules.find( rofiId );
+        return it != modules.end() && it->second != nullptr;
+    } );
 }
