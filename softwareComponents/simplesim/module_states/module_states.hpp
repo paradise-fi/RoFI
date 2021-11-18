@@ -249,16 +249,13 @@ private:
 
             std::span jointInnerStates = moduleInnerState.joints();
             tcb::span jointConfigurations = module_->joints();
-            assert( jointInnerStates.size() == jointConfigurations.size() );
+            // TODO should be equal when we can get only user-configurable joints
+            assert( jointInnerStates.size() <= jointConfigurations.size() );
             for ( size_t i = 0; i < jointInnerStates.size(); i++ ) {
                 assert( jointConfigurations[ i ].joint.get() );
                 auto & jointConfiguration = *jointConfigurations[ i ].joint;
                 const auto & jointInnerState = jointInnerStates[ i ];
 
-                if ( jointConfiguration.positions().size() != 1 ) {
-                    // TODO resolve by getting only user-configurable joints
-                    continue;
-                }
                 assert( jointConfiguration.positions().size() == 1 );
                 assert( jointConfiguration.jointLimits().size() == 1 );
                 auto currentPosition = jointConfiguration.positions().front();

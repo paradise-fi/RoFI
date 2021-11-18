@@ -169,8 +169,13 @@ std::map< ModuleId, ModuleInnerState > ModuleStates::innerStatesFromConfiguratio
     for ( const auto & moduleInfo : rofibotConfiguration.modules() ) {
         auto & _module = *moduleInfo.module.get();
 
-        // TODO get only user-configurable joints
-        auto jointCount = _module.joints().size();
+        // TODO get only user-configurable joints from roficom
+        size_t jointCount = 0;
+        for ( auto joints = _module.joints(); jointCount < joints.size(); jointCount++ ) {
+            if ( joints[ jointCount ].joint->jointLimits().empty() ) {
+                break;
+            }
+        }
         auto moduleInnerState = ModuleInnerState( jointCount, _module.connectors().size() );
 
         auto [ it, success ] = innerStates.emplace( _module.getId(),
