@@ -326,8 +326,6 @@ private:
             _components[ j.sourceComponent ].outJoints.push_back( i );
             _components[ j.destinationComponent ].inJoints.push_back( i );
         }
-        for ( auto& c: _components )
-            c.parent = this;
     }
 
     /**
@@ -395,6 +393,17 @@ public:
         : _modules( other._modules ),
           _moduleJoints( other._moduleJoints ),
           _spaceJoints( other._spaceJoints ),
+          _idMapping( other._idMapping ),
+          _prepared( other._prepared )
+    {
+        _adoptModules();
+    }
+
+    Rofibot( Rofibot&& other )
+        : _modules( std::move( other._modules ) ),
+          _moduleJoints( std::move( other._moduleJoints ) ),
+          _spaceJoints( std::move( other._spaceJoints ) ),
+          _idMapping( std::move( other._idMapping ) ),
           _prepared( other._prepared )
     {
         _adoptModules();
@@ -405,25 +414,12 @@ public:
         return *this;
     }
 
-    Rofibot( Rofibot&& other )
-        : _modules( std::move( other._modules ) ),
-          _moduleJoints( std::move( other._moduleJoints ) ),
-          _spaceJoints( std::move( other._spaceJoints ) ),
-          _prepared( other._prepared )
-    {
-        _adoptModules();
-    }
-
-    Rofibot& operator=( Rofibot&& other ) {
-        swap( other );
-        return *this;
-    }
-
     void swap( Rofibot& other ) {
         using std::swap;
         swap( _modules, other._modules );
         swap( _moduleJoints, other._moduleJoints );
         swap( _spaceJoints, other._spaceJoints );
+        swap( _idMapping, other._idMapping );
         swap( _prepared, other._prepared );
         _adoptModules();
         other._adoptModules();
