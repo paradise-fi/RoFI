@@ -35,10 +35,11 @@ class HandleSet {
         using reference = typename std::conditional_t< IsConst, T const &, T & >;
         using pointer = typename std::conditional_t< IsConst, T const *, T * >;
 
-        Iterator(): _set( nullptr ) {}
+        Iterator(): _set( nullptr ), _it() {}
         Iterator( HandleSetPtr set, UnderlayingIterator it ):
             _set( set ), _it( it )
         {
+            assert( _set );
             afterIncrement();
         }
 
@@ -69,48 +70,32 @@ class HandleSet {
             return copy;
         }
 
-        template < bool _IsConst = IsConst >
-        std::enable_if_t< _IsConst, reference > operator*() const {
+        reference operator*() const {
             assert( _it->has_value() && "No value held" );
             return _it->value();
         }
 
-        template < bool _IsConst = IsConst >
-        std::enable_if_t< !_IsConst, reference > operator*() const {
-            assert( _it->has_value() && "No value held" );
-            return _it->value();
-        }
-
-         template < bool _IsConst = IsConst >
-        std::enable_if_t< _IsConst, pointer > operator->() const {
+        pointer operator->() const {
             assert( _it->has_value() && "No value held" );
             return &_it->value();
         }
 
-        template < bool _IsConst = IsConst >
-        std::enable_if_t< !_IsConst, pointer > operator->() const {
-            assert( _it->has_value() && "No value held" );
-            return &_it->value();
-        }
-
-        bool operator==( const Iterator& other ) {
+        bool operator==( const Iterator& other ) const noexcept {
             return _it == other._it;
         }
-
-        bool operator!=( const Iterator& other ) {
-            return _it != other._it;
+        bool operator!=( const Iterator& other ) const noexcept {
+            return !( *this == other );
         }
+
     private:
         void afterIncrement() {
-            if ( _set->_elems.empty() )
-                return;
+            assert( _set );
             while ( _it != _set->_elems.end() && !_it->has_value() )
                 _it++;
         }
 
         void afterDecrement() {
-            if ( _set->_elems.empty() )
-                return;
+            assert( _set );
             while( _it != _set->_elems.begin() && !_it->has_value() )
                 _it--;
         }
@@ -131,82 +116,128 @@ public:
 
     enum class handle_type : size_type {};
 
+    /**
+     * \brief Exchange the contents of the container with `other`
+     */
     void swap( HandleSet& other ) {
         using std::swap;
         swap( _elems, other._elems );
         swap( _freeHandles, other._freeHandles );
     }
 
+    /**
+     * \brief Check if the container has no elements
+     */
+    bool empty() const {
+        return size() == 0;
+    }
+
+    /**
+     * \brief Return the number of elements in the container
+     */
     size_type size() const {
         return _elems.size() - _freeHandles.size();
     }
 
+    /**
+     * \brief Request the removal of unused capacity
+     */
     void shrink_to_fit() {
         _elems.shrink_to_fit();
         _freeHandles.shrink_to_fit();
     }
 
     /**
-     * \brief Insert new element and get its handle
+     * \brief Increase capacity so it's greater or equal to `newCapacity`
      */
-    handle_type insert( const T& value ) {
+    void reserve( size_type newCapacity ) {
+        _elems.reserve( newCapacity );
+    }
+
+    /**
+     * \brief Erase all elements from the container
+     */
+    void clear() {
+        _elems.clear();
+        _freeHandles.clear();
+    }
+
+    /**
+     * \brief Emplace new element and get its handle
+     */
+    template< typename... Args >
+    handle_type emplace( Args&&... args ) {
         if ( _freeHandles.empty() ) {
-            _elems.push_back( value );
+            _elems.emplace_back( std::forward< Args >( args )... );
             return static_cast< handle_type >( _elems.size() - 1 );
         }
         handle_type handle = _freeHandles.back();
         _freeHandles.pop_back();
-        _elems[ static_cast< size_type >( handle ) ] = value;
+        _elems[ static_cast< size_type >( handle ) ].emplace( std::forward< Args >( args )... );
         return handle;
     }
 
     /**
      * \brief Insert new element and get its handle
      */
-    template< typename TT = T>
-    auto insert( T&& value )
-        -> std::enable_if_t<
-            std::is_move_constructible_v< TT > && std::is_move_assignable_v< TT >,
-            handle_type >
+    handle_type insert( const T& value ) {
+        return emplace( value );
+    }
+
+    /**
+     * \brief Insert new element and get its handle
+     */
+    handle_type insert( T&& value )
     {
-        if ( _freeHandles.empty() ) {
-            _elems.push_back( std::move( value ) );
-            return static_cast< handle_type >( _elems.size() - 1 );
-        }
-        handle_type handle = _freeHandles.back();
-        _freeHandles.pop_back();
-        _elems[ static_cast< size_type >( handle ) ] = std::move( value );
-        return handle;
+        return emplace( std::move( value ) );
     }
 
     /**
      * \brief Erase element based on its handle
      */
     void erase( handle_type handle ) {
-        _elems[ static_cast< size_type >( handle ) ] = std::nullopt;
+        _elems[ static_cast< size_type >( handle ) ].reset();
         _freeHandles.push_back( handle );
     }
 
+    /**
+     * \brief Return an iterator to the first element
+     */
     iterator begin() noexcept {
         return iterator( this, _elems.begin() );
     }
 
+    /**
+     * \brief Return an iterator to the first element
+     */
     const_iterator begin() const noexcept {
         return const_iterator( this, _elems.begin() );
     }
 
+    /**
+     * \brief Return an iterator to the first element
+     */
     const_iterator cbegin() const noexcept {
         return const_iterator( this, _elems.cbegin() );
     }
 
+    /**
+     * \brief Return the past-the-end iterator
+     */
     iterator end() noexcept {
         return iterator( this, _elems.end() );
     }
 
+    /**
+     * \brief Return the past-the-end iterator
+     */
     const_iterator end() const noexcept {
         return const_iterator( this, _elems.end() );
     }
 
+    /**
+     * \brief Return the past-the-end iterator
+     */
     const_iterator cend() const noexcept {
         return const_iterator( this, _elems.cend() );
     }
@@ -215,6 +246,7 @@ public:
      * \brief Access element based on its handle
      */
     const_reference operator[]( handle_type handle ) const {
+        assert( contains( handle ) );
         return _elems[ static_cast< size_type >( handle ) ].value();
     }
 
@@ -222,7 +254,37 @@ public:
      * \brief Access element based on its handle
      */
     reference operator[]( handle_type handle ) {
+        assert( contains( handle ) );
         return _elems[ static_cast< size_type >( handle ) ].value();
+    }
+
+    /**
+     * \brief Check if the container contains element based on its handle
+     */
+    bool contains( handle_type handle ) const {
+        auto index = static_cast< size_type >( handle );
+        return index < _elems.size() && _elems[ index ].has_value();
+    }
+
+    /**
+     * \brief Return iterator to element based on its handle
+     * Returns past-the-end iterator if no such element exists
+     */
+    iterator find( handle_type handle ) {
+        if ( contains( handle ) ) {
+            return iterator( this, _elems.begin() + static_cast< size_type >( handle ) );
+        }
+        return end();
+    }
+    /**
+     * \brief Return iterator to element based on its handle
+     * Returns past-the-end iterator if no such element exists
+     */
+    const_iterator find( handle_type handle ) const {
+        if ( contains( handle ) ) {
+            return const_iterator( this, _elems.begin() + static_cast< size_type >( handle ) );
+        }
+        return end();
     }
 
 private:
