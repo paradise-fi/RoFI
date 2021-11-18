@@ -3,6 +3,8 @@
 #include <atomic>
 #include <cassert>
 #include <mutex>
+#include <stop_token>
+#include <thread>
 #include <type_traits>
 #include <variant>
 
@@ -10,7 +12,6 @@
 
 #include "atoms/concurrent_queue.hpp"
 #include "gazebo_node_handler.hpp"
-#include "atoms/jthread.hpp"
 #include "rofi_hal.hpp"
 #include "subscriber_wrapper.hpp"
 
@@ -30,8 +31,8 @@ class PublishWorker
     {
         _rofiTopicsSub = subscribe( [ this ]( auto resp ) { updateRofiTopics( resp ); } );
 
-        _workerThread = atoms::jthread(
-                [ this ]( atoms::stop_token stoken ) { this->run( std::move( stoken ) ); } );
+        _workerThread = std::jthread(
+                [ this ]( std::stop_token stoken ) { this->run( std::move( stoken ) ); } );
     }
 
 public:
@@ -152,7 +153,7 @@ private:
         pub->Publish( std::forward< Message >( msg ), true );
     }
 
-    void run( atoms::stop_token stoken )
+    void run( std::stop_token stoken )
     {
         while ( true )
         {
@@ -179,6 +180,6 @@ private:
 
     std::map< std::string, gazebo::transport::PublisherPtr > _pubs;
 
-    atoms::jthread _workerThread;
+    std::jthread _workerThread;
 };
 } // namespace rofi::hal

@@ -2,14 +2,13 @@
 
 #include <chrono>
 #include <functional>
+#include <stop_token>
 #include <thread>
-
-#include "atoms/stop_token.hpp"
 
 
 namespace rofi::networking
 {
-void rofiControllerThread( atoms::stop_token stopToken,
+void rofiControllerThread( std::stop_token stopToken,
                            Simulation & simulation,
                            RofiInterface & rofiInterface )
 {
@@ -42,18 +41,18 @@ void rofiControllerThread( atoms::stop_token stopToken,
     }
 }
 
-atoms::jthread runRofiController( Simulation & simulation, RofiInterface & rofiInterface )
+std::jthread runRofiController( Simulation & simulation, RofiInterface & rofiInterface )
 {
-    return atoms::jthread( &rofiControllerThread, std::ref( simulation ), std::ref( rofiInterface ) );
+    return std::jthread( &rofiControllerThread, std::ref( simulation ), std::ref( rofiInterface ) );
 }
 
 void introspectionControllerThread()
 {
 }
 
-atoms::jthread runIntrospectionController()
+std::jthread runIntrospectionController()
 {
-    return atoms::jthread( &introspectionControllerThread );
+    return std::jthread( &introspectionControllerThread );
 }
 
 } // namespace rofi::networking

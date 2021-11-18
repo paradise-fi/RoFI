@@ -2,12 +2,12 @@
 
 #include <cassert>
 #include <functional>
+#include <stop_token>
 #include <thread>
 #include <type_traits>
 
 #include "callbacks.hpp"
 #include "atoms/concurrent_queue.hpp"
-#include "atoms/jthread.hpp"
 #include "rofi_hal.hpp"
 
 #include <jointResp.pb.h>
@@ -111,8 +111,8 @@ public:
         _rofi = std::move( rofi );
         _callbacks.resize( jointCount );
 
-        _workerThread = atoms::jthread(
-                [ this ]( atoms::stop_token stoken ) { this->run( std::move( stoken ) ); } );
+        _workerThread = std::jthread(
+                [ this ]( std::stop_token stoken ) { this->run( std::move( stoken ) ); } );
     }
 
 
@@ -205,7 +205,7 @@ private:
         }
     }
 
-    void run( atoms::stop_token stoken )
+    void run( std::stop_token stoken )
     {
         while ( true )
         {
@@ -224,7 +224,7 @@ private:
     std::vector< JointCallbacks > _callbacks;
     atoms::ConcurrentQueue< Message > _queue;
 
-    atoms::jthread _workerThread;
+    std::jthread _workerThread;
 };
 
 } // namespace rofi::hal
