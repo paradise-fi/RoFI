@@ -297,33 +297,39 @@ private:
     std::unique_ptr< T > _ptr;
 public:
     ValuePtr() = default;
-    ValuePtr( std::unique_ptr< T > ptr ): _ptr( std::move( ptr ) ) {}
-    ValuePtr( const T& t ): _ptr( std::unique_ptr<T>( t.clone() ) ) {}
-    ValuePtr( const ValuePtr< T >& other ): _ptr( other._ptr->clone() ) {}
-    ValuePtr< T >& operator=( const ValuePtr< T >& other ) {
-        if ( this == &other )
-            return *this;
-        this->_ptr = std::unique_ptr< T >( other._ptr->clone() );
+    explicit ValuePtr( std::unique_ptr< T > ptr ): _ptr( std::move( ptr ) ) {}
+    explicit ValuePtr( const T& t ): _ptr( t.clone() ) {}
+
+    ValuePtr( const ValuePtr& other ): _ptr( other._ptr ? other._ptr->clone() : nullptr ) {}
+    ValuePtr& operator=( const ValuePtr& other ) {
+        if ( this != &other ) {
+            this->_ptr = std::unique_ptr< T >( other._ptr->clone() );
+        }
         return *this;
     }
 
-    ValuePtr( ValuePtr< T >&& other ) noexcept : _ptr( std::move( other._ptr) ) {}
+    ValuePtr( ValuePtr< T >&& other ) noexcept = default;
+    ValuePtr< T >& operator=( ValuePtr< T >&& other ) noexcept = default;
 
-    ValuePtr< T >& operator=( ValuePtr< T >&& other ) {
-        this->_ptr = std::move( other._ptr );
-        return *this;
+    void swap(ValuePtr& other) noexcept {
+        using std::swap;
+        swap( this->_ptr, other._ptr );
     }
 
-    typename std::add_lvalue_reference< T >::type operator *() const {
+    T& operator*() const noexcept {
+        assert( _ptr );
         return *_ptr;
     }
-
-    auto operator->() const {
-        return _ptr.operator->();
+    T* operator->() const noexcept {
+        assert( _ptr );
+        return _ptr.get();
     }
 
-    auto get() const {
+    T* get() const noexcept {
         return _ptr.get();
+    }
+    explicit operator bool() const noexcept {
+        return bool( _ptr );
     }
 };
 

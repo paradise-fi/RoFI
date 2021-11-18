@@ -441,7 +441,7 @@ public:
     Module& insert( const Module& m ) {
         if ( _idMapping.contains( m._id ) )
             throw std::runtime_error( "Module with given id is already present" );
-        auto id = _modules.insert( { m, {}, {}, {}, std::nullopt } );
+        auto id = _modules.insert( { atoms::ValuePtr( m ), {}, {}, {}, std::nullopt } );
         _idMapping.insert( { _modules[ id ].module->_id, id } );
         Module* insertedModule = _modules[ id ].module.get();
         insertedModule->parent = this;
@@ -692,7 +692,7 @@ Rofibot::SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&..
     Rofibot::ModuleInfo& info = bot._modules[ bot._idMapping[ c.parent->getId() ] ];
 
     auto jointId = bot._spaceJoints.insert( SpaceJoint{
-        std::unique_ptr< Joint >( new JointT( ( std::forward< Args >( args ) )... ) ),
+        atoms::ValuePtr( std::unique_ptr< Joint >( new JointT( std::forward< Args >( args )... ) ) ),
         refpoint,
         info.module->getId(),
         info.module->componentIdx( c )
