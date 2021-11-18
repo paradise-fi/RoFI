@@ -1,12 +1,12 @@
 #pragma once
 
 #include <cassert>
+#include <condition_variable>
 #include <deque>
 #include <initializer_list>
 #include <mutex>
 #include <optional>
-
-#include "atoms/condition_variable_any.hpp"
+#include <stop_token>
 
 
 namespace atoms
@@ -26,7 +26,7 @@ public:
     }
 
     // Returns nullopt if stop is requested
-    std::optional< T > pop( atoms::stop_token stoken )
+    std::optional< T > pop( std::stop_token stoken )
     {
         std::unique_lock< std::mutex > lk( _m );
         if ( _popSig.wait( lk, stoken, [ this ] { return !_q.empty(); } ) )
@@ -97,7 +97,7 @@ private:
     std::deque< T > _q;
 
     mutable std::mutex _m;
-    atoms::condition_variable_any _popSig;
+    std::condition_variable_any _popSig;
 };
 
 } // namespace atoms
