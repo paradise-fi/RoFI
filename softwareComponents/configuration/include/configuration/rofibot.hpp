@@ -208,6 +208,10 @@ public:
         return position * _componentPosition.value()[ idx ];
     }
 
+    void clearComponentPositions() {
+        _componentPosition = std::nullopt;
+    }
+
     /**
      * \brief Get a vector of occupied positions relative to module origin
      *
@@ -623,8 +627,10 @@ private:
     }
 
     void _clearModulePositions() {
-        for ( ModuleInfo& m : _modules )
+        for ( ModuleInfo& m : _modules ) {
             m.position = std::nullopt;
+            m.module->clearComponentPositions();
+        }
     }
 
     void _adoptModules() {
