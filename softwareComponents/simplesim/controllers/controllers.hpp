@@ -13,7 +13,8 @@ namespace rofi::simplesim
 class Controller
 {
 public:
-    static constexpr std::chrono::milliseconds updateDuration = std::chrono::milliseconds( 100 );
+    static constexpr std::chrono::milliseconds simulationStepDuration = std::chrono::milliseconds( 100 );
+    static constexpr std::chrono::milliseconds realStepDuration = std::chrono::milliseconds( 100 );
 
 public:
     using OnConfigurationUpdate =
