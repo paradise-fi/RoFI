@@ -31,4 +31,5 @@ target_link_libraries(generators PUBLIC legacy-configuration)
 
 file(GLOB TEST_SRC test/*.cpp)
 add_executable(test-configuration ${TEST_SRC})
-target_link_libraries(test-configuration PRIVATE Catch2::Catch2 configuration atoms)
+target_link_libraries(test-configuration PRIVATE Catch2::Catch2 configuration atoms nlohmann_json::nlohmann_json)
+target_include_directories(test-configuration PRIVATE ${CMAKE_CURRENT_SOURCE_DIR} configuration)

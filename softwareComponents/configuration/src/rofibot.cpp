@@ -18,6 +18,34 @@ double roficom::orientationToAngle( roficom::Orientation o ) {
     return 0; // never reached
 }
 
+std::string roficom::orientationToString( Orientation o ) {
+    switch ( o ) {
+        case Orientation::North:
+            return "North";
+        case Orientation::East:
+            return "East";
+        case Orientation::South:
+            return "South";
+        case Orientation::West:
+            return "West";
+        default:
+            assert( false && "Invalid orientation" );
+    }
+}
+
+roficom::Orientation roficom::stringToOrientation( const std::string& str ) {
+    if ( str == "N" || str == "North" )
+        return Orientation::North;
+    else if ( str == "E" || str == "East" )
+        return Orientation::East;
+    else if ( str == "S" || str == "South" )
+        return Orientation::South;
+    else if ( str == "W" || str == "West" )
+        return Orientation::West;
+    else
+        assert( false && "String does not represent the orientation" );
+}
+
 bool Module::setId( ModuleId newId ) {
     if ( parent ) {
         if ( parent->_idMapping.contains( newId ) )
