@@ -53,6 +53,9 @@ public:
         std::array tmp{ a.rad() };
         setJointPositions( 2, { tmp } );
     }
+
+    static int translateComponent( const std::string& cStr );
+    static std::string translateComponent( int c );
 };
 
 

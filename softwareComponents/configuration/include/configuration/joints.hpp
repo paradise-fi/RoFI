@@ -135,6 +135,11 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
         return std::pair( Angle::rad( limits.first ), Angle::rad( limits.second ) );
     }
 
+    const Matrix pre() const  { return _pre;  }
+    const Matrix post() const { return _post; }
+    const Vector axis() const { return _axis; }
+
+
     ATOMS_CLONEABLE( RotationJoint );
 
     friend std::ostream& operator<<( std::ostream& out, Joint& j );

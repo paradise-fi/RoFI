@@ -143,4 +143,34 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
     return rofibot;
 }
 
+    int UniversalModule::translateComponent( const std::string& cStr ) {
+        if ( cStr == "A-X" ) { return 0; }
+        if ( cStr == "A+X" ) { return 1; }
+        if ( cStr == "A-Z" ) { return 2; }
+        if ( cStr == "B-X" ) { return 3; }
+        if ( cStr == "B+X" ) { return 4; }
+        if ( cStr == "B-Z" ) { return 5; }
+
+        assert( false && "translateComponent got invalid input" );
+    }
+
+    std::string UniversalModule::translateComponent( int c ) {
+        switch ( c ) {
+            case 0:
+                return "A-X";
+            case 1:
+                return "A+X";
+            case 2:
+                return "A-Z";
+            case 3:
+                return "B-X";
+            case 4:
+                return "B+X";
+            case 5:
+                return "B-Z";
+        }
+        assert( false && "translateComponent got invalid input" );
+    }
+
+
 }  // namespace rofi::configuration

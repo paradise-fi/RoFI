@@ -38,6 +38,9 @@ namespace roficom {
      * Return a corresponding angle in radians for a given orientation
      */
     double orientationToAngle( Orientation o = Orientation::North );
+
+    std::string orientationToString( Orientation o );
+    Orientation stringToOrientation( const std::string& str );
 } // namespace roficom
 
 /**
@@ -470,6 +473,10 @@ public:
      */
     const auto& roficoms() const {
         return _moduleJoints;
+    }
+
+    const auto& referencePoints() const {
+        return _spaceJoints;
     }
 
     /**
