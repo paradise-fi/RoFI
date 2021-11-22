@@ -29,15 +29,15 @@ void Controller::rofiControllerThread( std::stop_token stopToken,
     while ( !stopToken.stop_requested() ) {
         auto startTime = std::chrono::steady_clock::now();
 
-        auto [ responses,
-               new_configuration ] = simulation.simulateOneIteration( Controller::updateDuration );
+        auto [ responses, new_configuration ] = simulation.simulateOneIteration(
+                Controller::simulationStepDuration );
 
         if ( onConfigurationUpdate ) {
             onConfigurationUpdate( std::move( new_configuration ) );
         }
         communication.sendRofiResponses( std::move( responses ) );
 
-        std::this_thread::sleep_until( startTime + Controller::updateDuration );
+        std::this_thread::sleep_until( startTime + Controller::realStepDuration );
     }
 }
 
