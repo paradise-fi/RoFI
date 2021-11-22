@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <vector>
 #include <set>
@@ -7,7 +8,6 @@
 #include <ranges>
 
 #include <atoms/containers.hpp>
-#include <atoms/algorithm.hpp>
 #include <atoms/units.hpp>
 #include <tcb/span.hpp>
 #include <fmt/format.h>
@@ -255,7 +255,7 @@ public:
         };
         dfsTraverse( _rootComponent.value(), identity, dfsTraverse );
 
-        if ( !atoms::all( initialized ) )
+        if ( !std::ranges::all_of( initialized, std::identity{} ) )
             throw std::logic_error( "There are components without position" );
         _componentPosition = std::move( positions );
     }
