@@ -33,13 +33,16 @@ class Pad : public Module {
     }
 
 public:
-    Pad( int sizeN, int sizeM )
-    : Module( ModuleType::Pad, _initializeComponents( sizeN * sizeM )
-    , sizeN * sizeM, _initializeJoints( sizeN, sizeM ), 0 ) {
-        assert( sizeN > 0 && sizeM > 0 && "buildPad has to get positive dimensions" );
+    const int width;
+    const int height;
+
+    Pad( ModuleId id, int width, int height )
+    : Module( ModuleType::Pad, _initializeComponents( width * height )
+    , width * height, _initializeJoints( width, height ), id ), width( width ), height( height ) {
+        assert( width > 0 && height > 0 && "buildPad has to get positive dimensions" );
     };
 
-    explicit Pad( int size ) : Pad( size, size ) {};
+    explicit Pad( ModuleId id, int size ) : Pad( id, size, size ) {};
 
     ATOMS_CLONEABLE( Pad );
 };
