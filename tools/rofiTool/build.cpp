@@ -42,12 +42,12 @@ rofi::configuration::Rofibot buildWishedRofibot( BotType botType ) {
             return buildUMpad( n, m );
         case BotType::NPad:
             n = readIntWithMsg( "Dimension: " );
-            rofibot.insert( Pad( n ) );
+            rofibot.insert( Pad( 0, n ) );
             break;
         case BotType::NMPad:
             n = readIntWithMsg( "Dimension n: " );
             m = readIntWithMsg( "Dimension m: " );
-            rofibot.insert( Pad( n, m ) );
+            rofibot.insert( Pad( 0, n, m ) );
             break;
         default:
             throw std::runtime_error( "Unknown model" );
