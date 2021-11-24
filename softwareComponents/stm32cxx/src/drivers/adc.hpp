@@ -19,6 +19,7 @@ struct Adc: public Peripheral< ADC_TypeDef >, public detail::Adc< Adc > {
         ( configs.pre( regInitStruct ), ... );
         LL_ADC_REG_Init( _periph, &regInitStruct );
 
+        platformPostConfiguration();
         setupDefaultScanDirection();
         setupDefaultSampling();
         disableConversionInterrupts();
@@ -32,6 +33,10 @@ struct Adc: public Peripheral< ADC_TypeDef >, public detail::Adc< Adc > {
 
     void disable() {
         LL_ADC_Disable( _periph );
+    }
+
+    uint32_t readResult() {
+        return LL_ADC_REG_ReadConversionData32( _periph );
     }
 };
 
