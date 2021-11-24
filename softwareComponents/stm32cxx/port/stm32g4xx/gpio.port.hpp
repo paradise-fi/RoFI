@@ -5,8 +5,8 @@
 #include <stm32g4xx_ll_exti.h>
 #include <stm32g4xx_ll_system.h>
 
+#include <drivers/adc.hpp>
 #include <system/util.hpp>
-
 #include <system/assert.hpp>
 
 namespace detail {
@@ -158,7 +158,7 @@ protected:
         __builtin_trap();
     }
 
-    static ADC_TypeDef *_getAdcPeriph( GPIO_TypeDef */*port*/, int /*pos*/ ) {
+    static auto& _getAdc( GPIO_TypeDef */*port*/, int /*pos*/ ) {
         assert( false && "Not implemented" );
         __builtin_trap();
     }

@@ -70,6 +70,19 @@ public:
         LL_ADC_DisableIT_EOC( self()._periph );
         LL_ADC_DisableIT_EOS( self()._periph );
     }
+
+    void platformPostConfiguration() {
+        // No post configuration for this platform
+    }
+
+    void startSingleConversion( int channelMask ) {
+        LL_ADC_REG_SetSequencerChannels( self()._peripheral , channelMask );
+        LL_ADC_REG_StartConversion( self()._peripheral );
+    }
+
+    void waitForConversion() {
+        while ( LL_ADC_REG_IsConversionOngoing( adc ) );
+    }
 };
 
 } // namespace detail

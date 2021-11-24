@@ -57,6 +57,19 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
             return *this;
         }
 
+        Pin& setupODOutput( bool pull, bool pull_up = true ) {
+            port().enableClock();
+            LL_GPIO_InitTypeDef cfg{};
+            cfg.Pin = 1 << _pos;
+            cfg.Mode = LL_GPIO_MODE_OUTPUT;
+            cfg.OutputType = LL_GPIO_OUTPUT_OPENDRAIN;
+            cfg.Pull = !pull ?
+                LL_GPIO_PULL_NO :
+                pull_up ? LL_GPIO_PULL_UP : LL_GPIO_PULL_DOWN;
+            LL_GPIO_Init( _periph, &cfg );
+            return *this;
+        }
+
         Pin& setupInput( bool pull, bool pull_up = true ) {
             port().enableClock();
             LL_GPIO_InitTypeDef cfg{};
@@ -78,7 +91,7 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
                 LL_GPIO_PULL_NO :
                 pull_up ? LL_GPIO_PULL_UP : LL_GPIO_PULL_DOWN;
             LL_GPIO_Init( _periph, &cfg );
-            LL_ADC_Enable( Gpio::_getAdcPeriph( _periph, _pos ) );
+            LL_ADC_Enable( Gpio::_getAdc( _periph, _pos )._periph );
             return *this;
         }
 
@@ -117,23 +130,20 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
             return LL_GPIO_IsInputPinSet( _periph, 1 << _pos );
         }
 
-        void write( bool state ) {
+        Pin& write( bool state ) {
             if ( state )
                 LL_GPIO_SetOutputPin( _periph, 1 << _pos );
             else
                 LL_GPIO_ResetOutputPin( _periph, 1 << _pos );
+            return *this;
         }
 
         uint32_t readAnalog() {
-            assert( false );
-            // TBA
-            // auto adc = Gpio::_getAdcPeriph( _periph, _pos );
-            // auto channel = Gpio::_getAdcChannel( _periph, _pos );
-            // LL_ADC_REG_SetSequencerChannels( adc, channel );
-            // LL_ADC_REG_StartConversion( adc );
-            // while ( LL_ADC_REG_IsConversionOngoing( adc ) );
-            // return LL_ADC_REG_ReadConversionData32( adc );
-            __builtin_unreachable();
+            auto& adc = Gpio::_getAdc( _periph, _pos );
+            auto channelMask = Gpio::_getAdcChannel( _periph, _pos );
+            adc.startSingleConversion( channelMask );
+            adc.waitForConversion();
+            return adc.readResult();
         }
 
         int _pos;

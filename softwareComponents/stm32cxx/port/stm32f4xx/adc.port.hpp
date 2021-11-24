@@ -20,9 +20,8 @@ public:
     }
 
     void enableClock() {
-        assert( false );
-        // TBA
-        LL_APB2_GRP1_EnableClock( LL_APB2_GRP1_PERIPH_ADC );
+        assert( self()._periph == ADC1 );
+        LL_APB2_GRP1_EnableClock( LL_APB2_GRP1_PERIPH_ADC1 );
     }
 
     static LL_ADC_InitTypeDef _defaultInitStruct() {
@@ -39,7 +38,7 @@ public:
         regInitStruct.SequencerLength = 1;
         regInitStruct.SequencerDiscont = LL_ADC_REG_SEQ_DISCONT_DISABLE;
         regInitStruct.ContinuousMode = LL_ADC_REG_CONV_SINGLE;
-        regInitStruct.DMATransfer = LL_ADC_REG_DMA_TRANSFER_LIMITED;
+        regInitStruct.DMATransfer = LL_ADC_REG_DMA_TRANSFER_NONE;
         return regInitStruct;
     }
 
@@ -48,7 +47,7 @@ public:
     }
 
     void setupDefaultSampling() {
-        // Not available on this family
+        _samplingRate = LL_ADC_SAMPLINGTIME_144CYCLES;
     }
 
     void calibrate() {
@@ -58,6 +57,28 @@ public:
     void disableConversionInterrupts() {
         LL_ADC_DisableIT_EOCS( self()._periph );
     }
+
+    void platformPostConfiguration() {
+        LL_ADC_CommonInitTypeDef commonInit = { 0 };
+        commonInit.CommonClock = LL_ADC_CLOCK_SYNC_PCLK_DIV2;
+        LL_ADC_CommonInit( __LL_ADC_COMMON_INSTANCE( self().periph ), &commonInit );
+    }
+
+    void startSingleConversion( int channelMask ) {
+        LL_ADC_REG_SetSequencerRanks( self()._periph,
+            LL_ADC_REG_RANK_1, channelMask );
+        LL_ADC_SetChannelSamplingTime( self()._periph,
+            channelMask, _samplingRate );
+        LL_ADC_REG_StartConversionSWStart( self()._periph );
+    }
+
+    void waitForConversion() {
+        while ( !LL_ADC_IsActiveFlag_EOCS( self()._periph ) );
+        LL_ADC_ClearFlag_EOCS( self()._periph );
+    }
+
+private:
+    uint32_t _samplingRate;
 };
 
 } // namespace detail

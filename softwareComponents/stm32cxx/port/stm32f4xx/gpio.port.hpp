@@ -5,8 +5,8 @@
 #include <stm32f4xx_ll_exti.h>
 #include <stm32f4xx_ll_system.h>
 
+#include <drivers/adc.hpp>
 #include <system/util.hpp>
-
 #include <system/assert.hpp>
 
 namespace detail {
@@ -132,13 +132,36 @@ public:
     }
 
 protected:
-    static uint32_t _getAdcChannel( GPIO_TypeDef */*port*/, int /*pos*/ ) {
-        assert( false && "Not implemented" );
+    static uint32_t _getAdcChannel( GPIO_TypeDef *port, int pos ) {
+        if ( port == GPIOA ) {
+            // LL_AD_CHANNEL are magic constants, so we (unfortunatelly) have to switch...
+            switch ( pos ) {
+                case 0: return LL_ADC_CHANNEL_0;
+                case 1: return LL_ADC_CHANNEL_1;
+                case 2: return LL_ADC_CHANNEL_2;
+                case 3: return LL_ADC_CHANNEL_3;
+                case 4: return LL_ADC_CHANNEL_4;
+                case 5: return LL_ADC_CHANNEL_5;
+                case 6: return LL_ADC_CHANNEL_6;
+                case 7: return LL_ADC_CHANNEL_7;
+            }
+        }
+        if ( port == GPIOB ) {
+            switch ( pos ) {
+                case 0: return LL_ADC_CHANNEL_8;
+                case 1: return LL_ADC_CHANNEL_9;
+            }
+        }
+        assert( false && "Invalid pin specified" );
         __builtin_trap();
     }
 
-    static ADC_TypeDef *_getAdcPeriph( GPIO_TypeDef */*port*/, int /*pos*/ ) {
-        assert( false && "Not implemented" );
+    static auto &_getAdc( GPIO_TypeDef *port, int pos ) {
+        if ( port == GPIOA && pos >= 0 && pos <= 7 )
+            return Adc1;
+        if ( port == GPIOB && pos >= 0 && pos <= 1 )
+            return Adc1;
+        assert( false && "Invalid pin specified" );
         __builtin_trap();
     }
 };

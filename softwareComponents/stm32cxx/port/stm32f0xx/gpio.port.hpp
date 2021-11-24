@@ -5,6 +5,7 @@
 #include <stm32f0xx_ll_exti.h>
 #include <stm32f0xx_ll_adc.h>
 
+#include <drivers/adc.hpp>
 #include <system/assert.hpp>
 
 namespace detail {
@@ -56,7 +57,7 @@ protected:
     static uint32_t _getAdcChannel( GPIO_TypeDef *port, int pos ) {
         if ( port == GPIOA ) {
             // LL_AD_CHANNEL are magic constants, so we (unfortunatelly) have to switch...
-            switch ( pos) {
+            switch ( pos ) {
                 case 0: return LL_ADC_CHANNEL_0;
                 case 1: return LL_ADC_CHANNEL_1;
                 case 2: return LL_ADC_CHANNEL_2;
@@ -77,11 +78,11 @@ protected:
         __builtin_trap();
     }
 
-    static ADC_TypeDef *_getAdcPeriph( GPIO_TypeDef *port, int pos ) {
+    static auto &_getAdc( GPIO_TypeDef *port, int pos ) {
         if ( port == GPIOA && pos >= 0 && pos <= 7 )
-            return ADC1;
+            return Adc1;
         if ( port == GPIOB && pos >= 0 && pos <= 1 )
-            return ADC1;
+            return Adc2;
         assert( false && "Invalid pin specified" );
         __builtin_trap();
     }
