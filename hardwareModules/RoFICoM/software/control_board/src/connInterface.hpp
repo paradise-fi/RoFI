@@ -54,7 +54,6 @@ private:
         _reader.readBlock( memory::Pool::allocate( 1 ), 0, 1, 0,
             [&]( Block b, int size ) {
                 if ( size == 0 || b[ 0 ] != 0xAA ) {
-                    Dbg::error("I1");
                     _receiveFrame();
                     return;
                 }
