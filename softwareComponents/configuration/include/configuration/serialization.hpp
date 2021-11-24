@@ -7,6 +7,30 @@
 
 namespace rofi::configuration::serialization {
 
+    std::string componentTypeToString( ComponentType c ) {
+        switch ( c ) {
+            case ComponentType::Roficom:
+                return "roficom";
+            case ComponentType::UmBody:
+                return "UM body";
+            case ComponentType::UmShoe:
+                return "UM shoe";
+            default:
+                assert( false && "Unknown component type" );
+        }
+    }
+
+    ComponentType stringToComponentType( const std::string& str ) {
+        if ( str == "roficom" )
+            return ComponentType::Roficom;
+        else if ( str == "UM body" )
+            return ComponentType::UmBody;
+        else if ( str == "UM shoe" )
+            return ComponentType::UmShoe;
+        else
+            assert( false && "String does not represent a component type" );
+    }
+
     template< typename M >
     M fromJSON( const nlohmann::json& j, ModuleId id );
 
