@@ -72,8 +72,8 @@ namespace rofi::configuration::serialization {
             },
             [ &res ]( RotationJoint& rj ) {
                 res[ "type" ] = "rotational";
-                res[ "limits" ][ "min" ] = rj.jointLimits()[ 0 ].first;
-                res[ "limits" ][ "max" ] = rj.jointLimits()[ 0 ].second;
+                res[ "limits" ][ "min" ] = Angle::rad( rj.jointLimits()[ 0 ].first  ).deg();
+                res[ "limits" ][ "max" ] = Angle::rad( rj.jointLimits()[ 0 ].second ).deg();;
                 res[ "preMatrix" ]  = matrixToJSON( rj.pre() );
                 res[ "postMatrix" ] = matrixToJSON( rj.post() );
                 res[ "axis" ] = rj.axis();
@@ -93,9 +93,9 @@ namespace rofi::configuration::serialization {
         using namespace nlohmann;
         json j;
         j[ "type"  ] = "universal";
-        j[ "alpha" ] = m.getAlpha().rad();
-        j[ "beta"  ] = m.getBeta().rad();
-        j[ "gamma" ] = m.getGamma().rad();
+        j[ "alpha" ] = m.getAlpha().deg();
+        j[ "beta"  ] = m.getBeta().deg();
+        j[ "gamma" ] = m.getGamma().deg();
 
         return { { std::to_string( m.getId() ), j } };
     }
@@ -104,9 +104,9 @@ namespace rofi::configuration::serialization {
     UniversalModule fromJSON( const nlohmann::json& j, ModuleId id ) {
         assert( j[ "type" ] == "universal" );
 
-        Angle alpha = Angle::rad( j[ "alpha" ] );
-        Angle beta  = Angle::rad( j[ "beta"  ] );
-        Angle gamma = Angle::rad( j[ "gamma" ] );
+        Angle alpha = Angle::deg( j[ "alpha" ] );
+        Angle beta  = Angle::deg( j[ "beta"  ] );
+        Angle gamma = Angle::deg( j[ "gamma" ] );
 
         return UniversalModule( id, alpha, beta, gamma );
     } 
@@ -144,7 +144,7 @@ namespace rofi::configuration::serialization {
                 js[ "parent" ] = c.parent->getId();
             else
                 js[ "parent" ] = nullptr;
-            js[ "type" ] = c.type;
+            js[ "type" ] = componentTypeToString( c.type );
 
             j[ "components" ].push_back( js );
         }
@@ -168,12 +168,11 @@ namespace rofi::configuration::serialization {
         std::vector< ComponentJoint > joints;
 
         for ( const auto& c : j[ "components" ] ) {
-            // TODO create component from json c
             std::vector< int > inJoints  = c[ "in" ];
             std::vector< int > outJoints = c[ "out" ];
             // TODO: Is it necessary to set parrent?
             Module* parent  = nullptr;
-            ComponentType t = c[ "type" ];
+            ComponentType t = stringToComponentType( c[ "type" ] );
             components.push_back( Component( t, inJoints, outJoints ) );
         }
 
@@ -195,8 +194,8 @@ namespace rofi::configuration::serialization {
                                                                      , matrixFromJSON( js[ "joint" ][ "preMatrix" ] )
                                                                      , axis
                                                                      , matrixFromJSON( js[ "joint" ][ "postMatrix" ] )
-                                                                     , Angle::rad( js[ "joint" ][ "min" ] )
-                                                                     , Angle::rad( js[ "joint" ][ "max" ] ) ) );
+                                                                     , Angle::deg( js[ "joint" ][ "min" ] )
+                                                                     , Angle::deg( js[ "joint" ][ "max" ] ) ) );
             } else {
                 assert( false && "Unknown module was given an unknown ComponentJoint" );
             }
@@ -208,6 +207,9 @@ namespace rofi::configuration::serialization {
     nlohmann::json toJSON( const Rofibot& bot ) {
         using namespace nlohmann;
         json res;
+        res[ "modules" ] = json::array();
+        res[ "moduleJoints" ] = json::array();
+        res[ "spaceJoints"   ] = json::array();
 
         for ( const auto& m : bot.modules() ) {
             json j;
@@ -257,7 +259,11 @@ namespace rofi::configuration::serialization {
     template<>
     Rofibot fromJSON( const nlohmann::json& j ) {
         Rofibot bot;
-        for ( auto& [ id, jm ] : j[ "modules" ].items() ) {
+
+        for ( int i = 0; i < j[ "modules" ].size(); i++ ) {
+            std::string id = j[ "modules" ][ i ].begin().key(); // great...
+            auto& jm = j[ "modules" ][ i ];
+
             if ( jm[ id ][ "type" ] == "universal" )
                 bot.insert( fromJSON< UniversalModule >( jm ) );
             else if ( jm[ id ][ "type" ] == "pad" )
@@ -296,12 +302,21 @@ namespace rofi::configuration::serialization {
                 connect< RigidJoint >( bot.getModule( destinationModule )->components()[ destinationComponent ]
                                      , fixedPoint, matrixFromJSON( sj[ "joint" ][ "sourceToDestination" ] ) );
             } else if ( sj[ "joint" ][ "type" ] == "rotational" ) {
-                connect< RotationJoint >( bot.getModule( destinationModule )->components()[ destinationComponent ]
-                                        , fixedPoint
-                                        , matrixFromJSON( sj[ "preMatrix" ] )
-                                        , Vector{ sj[ "axis" ][ 0 ], sj[ "axis" ][ 1 ], sj[ "axis" ][ 2 ] } 
-                                        , matrixFromJSON( sj[ "postMatrix" ] )
-                                        , Angle::rad( sj[ "min" ] ), Angle::rad( sj[ "max" ] ) );
+                auto& jj = sj[ "joint" ];
+                std::vector< float > positions = jj[ "positions" ];
+
+                bot.setSpaceJointPosition(
+                    connect< RotationJoint >( bot.getModule( destinationModule )->components()[ destinationComponent ]
+                                            , fixedPoint
+                                            , matrixFromJSON( jj[ "preMatrix" ] )
+                                            , Vector{ jj[ "axis" ][ 0 ]
+                                                    , jj[ "axis" ][ 1 ]
+                                                    , jj[ "axis" ][ 2 ] }
+                                            , matrixFromJSON( jj[ "postMatrix" ] )
+                                            , Angle::deg( jj[ "limits" ][ "min" ] )
+                                            , Angle::deg( jj[ "limits" ][ "max" ] )
+                    ), positions
+                );
             } else {
                 assert( false && "Unknown joint type" );
             }
