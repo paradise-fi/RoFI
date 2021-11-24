@@ -10,7 +10,7 @@
 
 class Defer {
 public:
-    using Job = std::function< void( void ) >;
+    using Job = fu2::unique_function< void( void ) >;
     static void job( Job j ) {
         instance()._schedule( 0, std::move( j ) );
     }

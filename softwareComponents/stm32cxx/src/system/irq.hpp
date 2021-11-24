@@ -2,23 +2,23 @@
 
 #include <drivers/hal.hpp>
 
-struct IrqGuard {
-    IrqGuard( int priority ): _originalPri( __get_BASEPRI() ) {
-        __set_BASEPRI( priority << ( 8 - __NVIC_PRIO_BITS ) );
-    }
-    ~IrqGuard() {
-        give();
-    }
+// struct IrqGuard {
+//     IrqGuard( int priority ): _originalPri( __get_BASEPRI() ) {
+//         __set_BASEPRI( priority << ( 8 - __NVIC_PRIO_BITS ) );
+//     }
+//     ~IrqGuard() {
+//         give();
+//     }
 
-    void give() {
-        if ( _originalPri < 0 )
-            return;
-        __set_BASEPRI( _originalPri );
-        _originalPri = -1;
-    }
+//     void give() {
+//         if ( _originalPri < 0 )
+//             return;
+//         __set_BASEPRI( _originalPri );
+//         _originalPri = -1;
+//     }
 
-    int _originalPri;
-};
+//     int _originalPri;
+// };
 
 struct IrqMask {
     IrqMask() {

@@ -55,6 +55,7 @@ protected:
         return *static_cast< Self * >( this );
     }
 public:
+    static constexpr int firstChannel = 1;
     static constexpr int channelCount = 7;
     static const constexpr bool supportsMuxing = true;
 
