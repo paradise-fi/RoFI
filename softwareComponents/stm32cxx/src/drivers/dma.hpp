@@ -137,10 +137,10 @@ public:
 
         int periphIdx = indexOf( periph, availablePeripherals );
         assert( periphIdx >= 0 );
-        for ( unsigned i = 0; i != _channelData[ periphIdx ].size(); i++ ) {
+        for ( unsigned i = firstChannel; i != _channelData[ periphIdx ].size(); i++ ) {
             if ( !_channelData[ periphIdx ][ i ]._available )
                 continue;
-            return Channel( periph, i + 1 );
+            return Channel( periph, i );
         }
         return Channel();
     }

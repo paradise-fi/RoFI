@@ -63,6 +63,7 @@ public:
         return *static_cast< Self * >( this );
     }
 
+    static constexpr int firstChannel = 0;
     static constexpr int channelCount = 8;
     static constexpr bool supportsMuxing = false;
 
