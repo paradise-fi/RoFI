@@ -19,6 +19,7 @@
 
 #include "board.hpp"
 #include "espTunnel.hpp"
+#include "powerManagement.hpp"
 
 void Error_Handler() { abort(); }
 
@@ -114,6 +115,8 @@ int main() {
     HAL_Init();
     NVIC_SetPriority( SysTick_IRQn, 0 );
 
+    PowerManagement::instance().setup();
+
     EspTunnelManager::instance().setupUsbConfiguration();
     EspTunnelManager::instance().setupTunnel();
 
@@ -122,8 +125,13 @@ int main() {
 
     int i = 0;
     std::function< void(void) > keepAlive = [&](){
-        Dbg::info( "Alive! %d", i );
+        PowerManagement::instance().enableUsbToBus( i % 12 < 6 );
+        PowerManagement::instance().enableCharging( i % 6 < 3 );
+        float usbV = PowerManagement::instance().getUsbVoltage();
+        float busV = PowerManagement::instance().getBusVoltage();
+        Dbg::info( "Alive! %d, %f V, %f V", i % 12, usbV, busV );
         i++;
+
         Defer::schedule( 1000, keepAlive );
     };
     keepAlive();
