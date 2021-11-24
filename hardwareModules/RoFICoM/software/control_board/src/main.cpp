@@ -173,6 +173,7 @@ int main() {
     using Command = SpiInterface::Command;
     SpiInterface spiInterface( std::move( spi ), GpioA[ 4 ],
         [&]( Command cmd, Block b ) {
+            Dbg::error("CMD %d", int( cmd ));
             switch( cmd ) {
             case Command::VERSION:
                 onCmdVersion( spiInterface );
