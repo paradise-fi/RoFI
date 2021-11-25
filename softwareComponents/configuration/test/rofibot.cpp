@@ -204,6 +204,15 @@ TEST_CASE( "Universal Module Test" ) {
                                                         , {  0, 0,  0, 1 } } ) );
         }
     }
+
+    SECTION( "Connector translations" ) {
+        CHECK( UniversalModule::translateComponent( "A-X" ) == 0 );
+        CHECK( UniversalModule::translateComponent( "A+X" ) == 1 );
+        CHECK( UniversalModule::translateComponent( "A-Z" ) == 2 );
+        CHECK( UniversalModule::translateComponent( "B-X" ) == 3 );
+        CHECK( UniversalModule::translateComponent( "B+X" ) == 4 );
+        CHECK( UniversalModule::translateComponent( "B-Z" ) == 5 );
+    }
 }
 
 TEST_CASE( "Two modules next to each other" ) {

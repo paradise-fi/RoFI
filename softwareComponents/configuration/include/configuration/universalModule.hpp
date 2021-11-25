@@ -54,6 +54,10 @@ public:
         setJointPositions( 2, { tmp } );
     }
 
+    const auto& getConnector( const std::string& cStr ) const {
+        return components()[ translateComponent( cStr ) ];
+    }
+
     static int translateComponent( const std::string& cStr );
     static std::string translateComponent( int c );
 };
