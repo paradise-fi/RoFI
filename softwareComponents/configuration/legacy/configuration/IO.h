@@ -9,6 +9,9 @@
 #include <sstream>
 #include <iomanip>
 
+namespace {
+    using namespace rofi::configuration::matrices;
+
 namespace IO
 {
 
@@ -307,5 +310,6 @@ namespace IO
 
 }
 
+} // namespace
 
 #endif //ROFI_IO_H

@@ -1,5 +1,7 @@
 #include "kinematics.hpp"
 
+using namespace rofi::configuration::matrices;
+
 /** Constructors **/
 
 kinematic_rofibot::kinematic_rofibot( Configuration new_config, bool fixed, options opt )

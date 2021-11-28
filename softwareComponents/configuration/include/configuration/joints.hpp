@@ -14,6 +14,9 @@
 
 namespace rofi::configuration {
 
+using rofi::configuration::matrices::Matrix;
+using rofi::configuration::matrices::Vector;
+
 class RigidJoint;
 class RotationJoint;
 
@@ -97,8 +100,10 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
      */
     RotationJoint( Vector sourceOrigin, Vector sourceAxis, Vector destOrigin,
                    Vector desAxis, Angle min, Angle max )
-        : RotationJoint( translate( sourceOrigin ), desAxis - sourceAxis,
-                         translate( destOrigin ), min, max )
+        : RotationJoint( rofi::configuration::matrices::translate( sourceOrigin )
+                       , desAxis - sourceAxis
+                       , rofi::configuration::matrices::translate( destOrigin )
+                       , min, max )
     {}
 
     /**
@@ -114,7 +119,7 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
     {}
 
     Matrix sourceToDest() const override {
-        return _pre * rotate( position().rad(), _axis ) * _post;
+        return _pre * rofi::configuration::matrices::rotate( position().rad(), _axis ) * _post;
     }
 
     Matrix destToSource() const override {

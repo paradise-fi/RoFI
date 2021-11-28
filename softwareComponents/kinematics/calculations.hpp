@@ -6,6 +6,9 @@
 #include <iostream>
 #include <vector>
 
+namespace {
+    using namespace rofi::configuration::matrices;
+
 inline double to_rad( double deg ){
     return ( deg * M_PI ) / 180;
 }
@@ -140,3 +143,5 @@ arma::vec3 get_translation( const Matrix& matrix ){
     }
     return result;
 }
+
+} // namespace

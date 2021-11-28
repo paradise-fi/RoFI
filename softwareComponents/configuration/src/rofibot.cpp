@@ -2,6 +2,8 @@
 
 namespace rofi::configuration {
 
+using namespace rofi::configuration::matrices;
+
 double roficom::orientationToAngle( roficom::Orientation o ) {
     using namespace roficom;
     switch ( o ) {

@@ -2,6 +2,8 @@
 
 namespace rofi::configuration {
 
+using namespace rofi::configuration::matrices;
+
 std::vector< Component > UniversalModule::_initComponents() {
     return std::vector< Component > {
         Component{ ComponentType::Roficom },

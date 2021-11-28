@@ -56,7 +56,7 @@ sdf::SDFPtr loadFromFile( const std::string & filename );
 void addModuleToDistributor( sdf::ElementPtr distributorSdf, ID rofiId );
 void setModulePosition( sdf::ElementPtr moduleStateSdf,
                         const Module & module,
-                        const std::array< Matrix, 2 > & matrices,
+                        const std::array< rofi::configuration::matrices::Matrix, 2 > & matrices,
                         const ignition::math::Pose3d & beginPose );
 void setModulePIDPositionController( sdf::ElementPtr modulePluginSdf, const Module & module );
 void setRoficomExtendedPlugin( sdf::ElementPtr pluginSdf, bool extended );
@@ -120,7 +120,7 @@ inline sdf::ElementPtr getElemByNameOrCreate( sdf::ElementPtr sdf,
     return elem;
 }
 
-ignition::math::Pose3d matrixToPose( const Matrix & matrix );
+ignition::math::Pose3d matrixToPose( const rofi::configuration::matrices::Matrix & matrix );
 
 inline void setPose( sdf::ElementPtr elem, const ignition::math::Pose3d & pose )
 {

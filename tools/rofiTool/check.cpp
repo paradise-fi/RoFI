@@ -14,8 +14,8 @@ int check( Dim::Cli & cli ) {
     auto configuration = rofi::configuration::readOldConfigurationFormat( cfgFile );
     rofi::configuration::connect< rofi::configuration::RigidJoint >(
         configuration.getModule( 0 )->bodies()[ 0 ],
-        Vector( { 0, 0, 0 } ),
-        identity );
+        rofi::configuration::matrices::Vector( { 0, 0, 0 } ),
+        rofi::configuration::matrices::identity );
     auto [ ok, str ] = configuration.isValid( rofi::configuration::SimpleColision() );
     if ( !ok )
         throw std::runtime_error( str );

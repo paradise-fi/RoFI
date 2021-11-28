@@ -18,13 +18,15 @@ class Pad : public Module {
             for ( int j = 0; j < m; j++ ) {
                 if ( i > 0 ) {
                     joints.push_back(
-                        makeComponentJoint< RigidJoint >( (i - 1) * m + j, i * m + j, translate( { 0, 1, 0 } ) )
+                        makeComponentJoint< RigidJoint >( (i - 1) * m + j, i * m + j
+                                                        , rofi::configuration::matrices::translate( { 0, 1, 0 } ) )
                     );
                 }
 
                 if ( j > 0 ) {
                     joints.push_back(
-                        makeComponentJoint< RigidJoint >( i * m + j - 1, i * m + j, translate( { 0, 0, 1 } ) )
+                        makeComponentJoint< RigidJoint >( i * m + j - 1, i * m + j
+                                                        , rofi::configuration::matrices::translate( { 0, 0, 1 } ) )
                     );
                 }
             }

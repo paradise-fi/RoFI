@@ -118,7 +118,7 @@ void addModuleToScene( vtkRenderer* renderer, Module& m,
         auto cPosition = m.getComponentPosition( i, mPosition );
         // make connected RoFICoMs connected visually
         if ( active_cons.count( i ) > 0 )
-            cPosition = cPosition * translate( { -0.05, 0, 0 } );
+            cPosition = cPosition * rofi::configuration::matrices::translate( { -0.05, 0, 0 } );
 
         auto posTrans = vtkSmartPointer< vtkTransform >::New();
         posTrans->SetMatrix( convertMatrix( cPosition ) );

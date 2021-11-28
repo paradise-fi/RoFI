@@ -9,6 +9,7 @@ namespace {
 using namespace rofi::configuration;
 using namespace rofi::configuration::roficom;
 using namespace rofi::configuration::serialization;
+using namespace rofi::configuration::matrices;
 
 
 TEST_CASE( "UniversalModule – Demo" ) {

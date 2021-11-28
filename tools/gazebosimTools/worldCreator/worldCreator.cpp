@@ -11,6 +11,7 @@
 constexpr std::array< const char *, 2 > shoeNames = { "shoeA", "shoeB" };
 
 using namespace gazebo;
+using namespace rofi::configuration::matrices;
 
 
 std::optional< ConfigWithPose > ConfigWithPose::tryReadConfiguration( std::istream & input )

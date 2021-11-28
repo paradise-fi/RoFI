@@ -1,5 +1,7 @@
 #include "Algorithms.h"
 
+using namespace rofi::configuration::matrices;
+
 std::vector<Configuration> BFS(const Configuration& init, const Configuration& goal, 
     unsigned step /*= 90*/, unsigned bound /*= 1*/, AlgorithmStat* stat /*= nullptr*/)
 {

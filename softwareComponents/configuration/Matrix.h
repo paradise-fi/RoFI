@@ -7,6 +7,8 @@
 
 #include <armadillo>
 
+namespace rofi::configuration::matrices {
+
 using Vector = arma::vec4;
 using Matrix = arma::mat44;
 
@@ -181,5 +183,7 @@ inline Matrix translate(const Vector &u)
                          {0, 0, 0, 1} };
     return translate;
 }
+
+} // namespace rofi::configuration::matrices
 
 #endif //ROBOTY_MATRIX_H

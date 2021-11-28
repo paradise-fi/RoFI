@@ -9,6 +9,8 @@
 #include <iostream>
 #include <algorithm>
 
+namespace {
+
 const int COLORS[10][3] = { {255, 255, 255},
                             {0, 255, 0},
                             {0, 0, 255},
@@ -166,5 +168,7 @@ namespace IO {
 
 
 } // namespace IO
+
+} // namespace
 
 #endif //ROFI_COLORS_H
