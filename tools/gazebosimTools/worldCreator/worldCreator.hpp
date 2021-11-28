@@ -5,7 +5,7 @@
 #include <gazebo/gazebo.hh>
 #include <sdf/sdf.hh>
 
-#include "Configuration.h"
+#include <legacy/configuration/Configuration.h>
 #include "utils.hpp"
 
 

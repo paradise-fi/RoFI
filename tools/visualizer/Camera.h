@@ -6,7 +6,7 @@
 #define ROFI_CAMERA_H
 
 #include <array>
-#include <Configuration.h>
+#include <legacy/configuration/Configuration.h>
 
 /**
  * This class have parameters for vtkCamera.

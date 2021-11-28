@@ -5,9 +5,9 @@
 #ifndef ROBOTS_BFS_H
 #define ROBOTS_BFS_H
 
-#include <Configuration.h>
-#include <Generators.h>
-#include <IO.h>
+#include <legacy/configuration/Configuration.h>
+#include <legacy/configuration/Generators.h>
+#include <legacy/configuration/IO.h>
 #include <queue>
 #include <memory>
 
