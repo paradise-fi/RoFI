@@ -3,8 +3,8 @@
 #include <tuple>
 #include <iomanip>
 #include <sstream>
-#include "../configuration/Configuration.h"
-#include "../configuration/IO.h"
+#include <legacy/configuration/Configuration.h>
+#include <legacy/configuration/IO.h>
 #include "Snake_algorithms.h"
 #include <dimcli/cli.h>
 

@@ -1,6 +1,6 @@
 #include <catch2/catch.hpp>
-#include <Configuration.h>
-#include <Generators.h>
+#include <legacy/configuration/Configuration.h>
+#include <legacy/configuration/Generators.h>
 #include "test_rrt.h"
 
 TEST_CASE("Connections")

@@ -14,8 +14,8 @@
 
 
 #include <string.h>
-#include <Configuration.h>
-#include <IO.h>
+#include <legacy/configuration/Configuration.h>
+#include <legacy/configuration/IO.h>
 #include <sstream>
 
 #include <atoms/resources.hpp>

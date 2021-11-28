@@ -28,8 +28,8 @@
 #include <string>
 #include <sstream>
 
-#include <Configuration.h>
-#include <IO.h>
+#include <legacy/configuration/Configuration.h>
+#include <legacy/configuration/IO.h>
 
 #include <atoms/resources.hpp>
 

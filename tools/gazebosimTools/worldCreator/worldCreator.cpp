@@ -4,7 +4,7 @@
 #include <cassert>
 #include <sstream>
 
-#include "IO.h"
+#include <legacy/configuration/IO.h>
 #include "pidLoader.hpp"
 
 

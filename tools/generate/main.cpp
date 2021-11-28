@@ -3,9 +3,9 @@
 //
 
 #include <cassert>
-#include <Configuration.h>
-#include <Generators.h>
-#include <IO.h>
+#include <legacy/configuration/Configuration.h>
+#include <legacy/configuration/Generators.h>
+#include <legacy/configuration/IO.h>
 #include <chrono>
 
 using namespace IO;

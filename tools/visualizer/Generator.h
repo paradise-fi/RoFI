@@ -5,7 +5,7 @@
 #ifndef ROFI_GENERATOR_H
 #define ROFI_GENERATOR_H
 
-#include <Configuration.h>
+#include <legacy/configuration/Configuration.h>
 #include <cmath>
 #include <set>
 
