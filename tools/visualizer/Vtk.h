@@ -35,6 +35,7 @@
 
 
 namespace VtkSupp {
+    using namespace rofi::configuration::matrices;
 
 inline Matrix shoeMatrix()
 {

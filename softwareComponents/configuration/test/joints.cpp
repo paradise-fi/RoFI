@@ -5,6 +5,7 @@
 namespace {
 
 using namespace rofi::configuration;
+using namespace rofi::configuration::matrices;
 
 constexpr Angle A_PI_2     = Angle::rad( Angle::pi / 2 );
 constexpr Angle A_PI       = Angle::rad( Angle::pi );

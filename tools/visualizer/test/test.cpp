@@ -3,6 +3,8 @@
 #include <Generator.h>
 #include <Visualizer.h>
 
+using namespace rofi::configuration::matrices;
+
 TEST_CASE("Interpolate camera"){
     SECTION("Interpolate position"){
         Camera cameraStart;

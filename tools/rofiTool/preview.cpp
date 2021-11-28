@@ -20,8 +20,8 @@ int preview( Dim::Cli & cli ) {
     auto configuration = rofi::configuration::readOldConfigurationFormat( cfgFile );
     rofi::configuration::connect< rofi::configuration::RigidJoint >(
         configuration.modules().begin()->module->bodies()[ 0 ],
-        Vector( { 0, 0, 0 } ),
-        identity );
+        rofi::configuration::matrices::Vector( { 0, 0, 0 } ),
+        rofi::configuration::matrices::identity );
     configuration.prepare();
 
     renderConfiguration( configuration, *inputFile );

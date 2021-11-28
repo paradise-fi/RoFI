@@ -1,6 +1,8 @@
 #include "Generators.h"
 #include <queue>
 
+using namespace rofi::configuration::matrices;
+
 std::optional<Configuration> executeIfValid(const Configuration& config, const Action &action) {
     int steps = 10;
     Configuration next = config;

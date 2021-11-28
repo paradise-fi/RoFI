@@ -79,6 +79,7 @@ struct RoficomJoint: public Joint {
     {}
 
     Matrix sourceToDest() const override {
+        using namespace rofi::configuration::matrices;
         // the "default" roficom is A-X
         return translate( { -1, 0, 0 } ) * rotate( M_PI, { 0, 0, 1 } )
             * rotate( M_PI, { 1, 0, 0 } )
@@ -221,6 +222,7 @@ public:
      * Raises std::logic_error if the components are not prepared
      */
     std::vector< Matrix > getOccupiedPositions() const {
+        using namespace rofi::configuration::matrices;
         if ( !_componentPosition )
             throw std::logic_error( "Module is not prepared" );
 
@@ -240,6 +242,7 @@ public:
      * Raises std::logic_error if the components are inconsistent
      */
     void prepare() {
+        using namespace rofi::configuration::matrices;
         std::vector< Matrix > positions( _components.size() );
         std::vector< bool > initialized( _components.size() );
 
@@ -373,8 +376,9 @@ public:
     bool operator()( const Module& a, const Module& b, Matrix posA, Matrix posB ) {
         for ( auto pA : a.getOccupiedPositions() ) {
             for ( auto pB : b.getOccupiedPositions() ) {
-                if ( equals( static_cast< Matrix >( posA * pA ), posB * pB ) )
+                if ( rofi::configuration::matrices::equals( static_cast< Matrix >( posA * pA ), posB * pB ) ) {
                     return true;
+                }
             }
         }
 
@@ -540,6 +544,7 @@ public:
      * therefore, it cannot be
      */
     void prepare() {
+        using namespace rofi::configuration::matrices;
         _clearModulePositions();
 
         // Setup position of space joints and extract roots

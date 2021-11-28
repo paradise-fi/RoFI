@@ -3,6 +3,9 @@
 #include <cassert>
 #include <math.h>
 
+namespace {
+    using namespace rofi::configuration::matrices;
+
 using chain = std::deque< int >;
 using target = std::tuple< Vector, Vector, Vector, Vector >;
 
@@ -182,3 +185,5 @@ class kinematic_rofibot {
         return inverse( get_matrix( module, shoe ) ) * global;
     }
 };
+
+} // namespace

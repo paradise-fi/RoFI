@@ -2,6 +2,8 @@
 #include <stdexcept>
 #include <queue>
 
+using namespace rofi::configuration::matrices;
+
 static const double threshold = 0.0001;
 
 /* * * * * *

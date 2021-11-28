@@ -9,6 +9,8 @@
 using namespace IO;
 //using Resolution = std::pair<int, int>;
 
+using namespace rofi::configuration::matrices;
+
 struct Parameters{
     bool many = false;
     bool savePicture = false;

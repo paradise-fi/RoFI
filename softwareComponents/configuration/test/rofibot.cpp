@@ -8,6 +8,7 @@ namespace {
 
 using namespace rofi::configuration;
 using namespace rofi::configuration::roficom;
+using namespace rofi::configuration::matrices;
 
 TEST_CASE( "UnknownModule (base Module) Test" ) {
     auto m = UnknownModule( { Component{ ComponentType::Roficom } }, 1, {}, 42 );

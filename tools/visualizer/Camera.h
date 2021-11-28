@@ -8,6 +8,9 @@
 #include <array>
 #include <legacy/configuration/Configuration.h>
 
+namespace {
+    using namespace rofi::configuration::matrices;
+
 /**
  * This class have parameters for vtkCamera.
  * Default values are from documentation. *
@@ -301,5 +304,7 @@ inline void readCameraSettings(std::istream &input, Camera &cameraStart, Camera 
 }
 
 } // namespace IO
+
+} // namespace
 
 #endif //ROFI_CAMERA_H

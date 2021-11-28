@@ -234,9 +234,9 @@ void filter(const std::vector<T>& data, std::vector<T>& res, bool (*pred)(const 
  *
  * */
 
-Matrix transformJoint(double alpha, double beta, double gamma);
+rofi::configuration::matrices::Matrix transformJoint(double alpha, double beta, double gamma);
 
-Matrix transformConnection(ConnectorId d1, int ori, ConnectorId d2);
+rofi::configuration::matrices::Matrix transformConnection(ConnectorId d1, int ori, ConnectorId d2);
 
 /* CONFIGURATION
  *
@@ -245,7 +245,7 @@ Matrix transformConnection(ConnectorId d1, int ori, ConnectorId d2);
 using ModuleMap = std::unordered_map<ID, Module>;
 using EdgeList = std::array<std::optional<Edge>, 6>;
 using EdgeMap = std::unordered_map<ID, EdgeList>;
-using MatrixMap = std::unordered_map<ID, std::array<Matrix, 2>>;
+using MatrixMap = std::unordered_map<ID, std::array<rofi::configuration::matrices::Matrix, 2>>;
 enum Value { True, False, Unknown };
 
 class Configuration
@@ -282,7 +282,7 @@ public:
     bool findEdge(const Edge& edge) const;
     bool findConnection(const Edge& edge) const;
 
-    void setFixed(ID initID, ShoeId initSide, const Matrix& initRotation);
+    void setFixed(ID initID, ShoeId initSide, const rofi::configuration::matrices::Matrix& initRotation);
 
     bool isValid();
 
@@ -313,7 +313,7 @@ public:
      *
      * \return Matrix of the shoe connected to the end of \p edge
      */
-    Matrix computeConnectedMatrix(Edge edge) const;
+    rofi::configuration::matrices::Matrix computeConnectedMatrix(Edge edge) const;
 
     /**
      * \brief Given \p id and \p side computes matrix for the other shoe
@@ -321,7 +321,7 @@ public:
      *
      * \return Matrix of the other shoe of the given module
      */
-    Matrix computeOtherSideMatrix(ID id, ShoeId side) const;
+    rofi::configuration::matrices::Matrix computeOtherSideMatrix(ID id, ShoeId side) const;
 
     bool connected();
     bool connected() const;
@@ -329,9 +329,9 @@ public:
     bool collisionFree();
     bool collisionFree() const;
 
-    Vector massCenter() const;
+    rofi::configuration::matrices::Vector massCenter() const;
 
-    Vector getModuleMass(ID id) const;
+    rofi::configuration::matrices::Vector getModuleMass(ID id) const;
 
     /**
      * \brief Tries to execute given \p action.
@@ -380,7 +380,7 @@ private:
     // Fixed module side: all other modules are rotated with respect to this one.
     ID fixedId = 0;
     ShoeId fixedSide = A;
-    Matrix fixedMatrix = identity;
+    rofi::configuration::matrices::Matrix fixedMatrix = rofi::configuration::matrices::identity;
 
     Value connectedVal = Value::True;
     Value matricesVal = Value::False;
