@@ -3,6 +3,6 @@ project(rofi)
 
 set(CMAKE_CXX_STANDARD 17)
 
-add_executable(rofi-ik executable.cpp)
+add_executable(rofi-ik generator.cpp)
 target_include_directories(rofi-ik INTERFACE .)
 target_link_libraries(rofi-ik PRIVATE kinematics configuration)
