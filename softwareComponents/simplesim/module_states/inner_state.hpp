@@ -48,21 +48,25 @@ public:
                            _control );
     }
 
-    float computeNewPosition( float currentPosition, std::chrono::duration< float > duration ) const
+    /// Returns if position is reached and new position
+    std::pair< bool, float > computeNewPosition( float currentPosition,
+                                                 std::chrono::duration< float > duration ) const
     {
-        return std::visit( overload{ [ & ]( const VelocityControl & velControl ) {
-                                        return currentPosition
-                                             + velControl.velocity * duration.count();
+        auto getNewPosition = [ &currentPosition, &duration ]( float velocity ) {
+            return currentPosition + velocity * duration.count();
+        };
+        return std::visit( overload{ [ &getNewPosition ]( VelocityControl velControl ) {
+                                        return std::pair( false,
+                                                          getNewPosition( velControl.velocity ) );
                                     },
-                                     [ & ]( const PositionControl & posControl ) {
-                                         auto newPosition = currentPosition
-                                                          + posControl.velocity * duration.count();
-                                         if ( posControl.velocity < 0 ) {
-                                             return std::max( newPosition, posControl.position );
+                                     [ &getNewPosition ]( PositionControl posControl ) {
+                                         auto newPosition = getNewPosition( posControl.velocity );
+
+                                         if ( posControl.velocity >= 0
+                                              == posControl.position >= newPosition ) {
+                                             return std::pair( false, newPosition );
                                          }
-                                         else {
-                                             return std::min( newPosition, posControl.position );
-                                         }
+                                         return std::pair( true, posControl.position );
                                      } },
                            _control );
     }
@@ -74,6 +78,10 @@ public:
     void setPositionControl( PositionControl positionControl )
     {
         _control = { positionControl };
+    }
+    void holdCurrentPosition()
+    {
+        setVelocityControl( VelocityControl{ .velocity = 0.f } );
     }
 
 private:

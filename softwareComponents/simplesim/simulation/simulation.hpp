@@ -42,10 +42,13 @@ public:
         assert( _moduleStates );
 
         auto responses = processRofiCommands();
-        auto new_configuration = _moduleStates->updateToNextIteration( duration );
+        auto new_configuration =
+                _moduleStates->updateToNextIteration( duration, [ &responses ]( RofiResp resp ) {
+                    responses.push_back( std::move( resp ) );
+                } );
         assert( new_configuration );
 
-        // TODO check for callbacks (position reached, connector events, waiting ended)
+        // TODO check for waiting ended callbacks
 
         return std::make_pair( std::move( responses ), std::move( new_configuration ) );
     }

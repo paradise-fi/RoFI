@@ -222,7 +222,7 @@ std::optional< RofiResp > sendConnectorPacket( ModuleStates & moduleStates,
     return std::nullopt;
 }
 
-std::optional< RofiResp > setConnectorPower( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
+std::nullopt_t setConnectorPower( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
 {
     assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
     assert( rofiCmd.connectorcmd().cmdtype() == ConnectorCmd::CONNECT_POWER );
@@ -239,7 +239,7 @@ std::optional< RofiResp > setConnectorPower( ModuleStates & moduleStates, const 
     return std::nullopt;
 }
 
-std::optional< RofiResp > setDisconnectorPower( ModuleStates & moduleStates,
+std::nullopt_t setDisconnectorPower( ModuleStates & moduleStates,
                                                 const RofiCmd & rofiCmd )
 {
     assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
