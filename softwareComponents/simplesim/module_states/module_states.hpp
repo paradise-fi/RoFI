@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <functional>
 #include <map>
 #include <memory>
@@ -12,6 +13,7 @@
 #include <connectorCmd.pb.h>
 #include <jointCapabilities.pb.h>
 #include <rofiDescription.pb.h>
+#include <rofiResp.pb.h>
 
 
 namespace rofi::simplesim
@@ -22,6 +24,7 @@ class ModuleStates
 
 public:
     using RofiDescription = rofi::messages::RofiDescription;
+    using RofiResp = rofi::messages::RofiResp;
     using ConnectorState = ConnectorInnerState::ConnectorState;
     using ConnectorLine = rofi::messages::ConnectorCmd::Line;
     using ConnectedTo = std::optional< ConnectorInnerState::OtherConnector >;
@@ -88,10 +91,12 @@ public:
     }
 
 
+    template < std::invocable< RofiResp > Callback >
     std::shared_ptr< const rofi::configuration::Rofibot > updateToNextIteration(
-            std::chrono::duration< float > duration )
+            std::chrono::duration< float > duration,
+            Callback onRespCallback )
     {
-        auto new_configuration = computeNextIteration( duration );
+        auto [ new_configuration, positionsReached ] = computeNextIteration( duration );
         assert( new_configuration );
 
         auto old_configuration = _physicalModulesConfiguration.visit(
@@ -102,7 +107,12 @@ public:
                 } );
 
         _configurationHistory->push_back( std::move( old_configuration ) );
-        return new_configuration;
+
+        for ( const auto & posReached : positionsReached ) {
+            posReached.getInnerState( _moduleInnerStates ).holdCurrentPosition();
+            onRespCallback( posReached.getRofiResp() );
+        }
+        return std::move( new_configuration );
     }
 
 
@@ -187,14 +197,47 @@ private:
     }
 
 
-    std::shared_ptr< const rofi::configuration::Rofibot > computeNextIteration(
-            std::chrono::duration< float > duration ) const
+    class PositionReached
+    {
+    public:
+        ModuleId moduleId;
+        size_t joint;
+        float position;
+
+        JointInnerState & getInnerState(
+                std::map< ModuleId, ModuleInnerState > & moduleInnerStates ) const
+        {
+            auto moduleStateIt = moduleInnerStates.find( moduleId );
+            assert( moduleStateIt != moduleInnerStates.end() );
+
+            std::span joints = moduleStateIt->second.joints();
+            assert( joint < joints.size() );
+            return joints[ joint ];
+        }
+
+        rofi::messages::RofiResp getRofiResp() const
+        {
+            rofi::messages::RofiResp rofiResp;
+            rofiResp.set_rofiid( moduleId );
+            rofiResp.set_resptype( rofi::messages::RofiCmd::JOINT_CMD );
+            auto & jointResp = *rofiResp.mutable_jointresp();
+            jointResp.set_joint( joint );
+            jointResp.set_resptype( rofi::messages::JointCmd::SET_POS_WITH_SPEED );
+            jointResp.set_value( position );
+            return rofiResp;
+        }
+    };
+
+    std::pair< std::shared_ptr< const rofi::configuration::Rofibot >,
+               std::vector< PositionReached > >
+            computeNextIteration( std::chrono::duration< float > duration ) const
     {
         auto new_configuration = _physicalModulesConfiguration.visit( []( const auto & configPtr ) {
             assert( configPtr );
             return std::make_shared< rofi::configuration::Rofibot >( *configPtr );
         } );
 
+        std::vector< PositionReached > positionsReached;
         assert( new_configuration );
         for ( auto & moduleInfo : new_configuration->modules() ) {
             assert( moduleInfo.module.get() );
@@ -221,23 +264,30 @@ private:
                 auto currentPosition = jointConfiguration.positions().front();
                 auto jointLimits = jointConfiguration.jointLimits().front();
 
-                assert( jointLimits.first <= jointLimits.second );
-                auto newPosition = std::clamp( jointInnerState.computeNewPosition( currentPosition,
-                                                                                   duration ),
-                                               jointLimits.first,
-                                               jointLimits.second );
+                auto [ posReached,
+                       newPosition ] = jointInnerState.computeNewPosition( currentPosition,
+                                                                           duration );
+                if ( posReached ) {
+                    positionsReached.push_back( PositionReached{ .moduleId = module_->getId(),
+                                                                 .joint = i,
+                                                                 .position = newPosition } );
+                }
 
-                jointConfiguration.setPositions( std::array{ newPosition } );
+                assert( jointLimits.first <= jointLimits.second );
+                auto clampedNewPosition = std::clamp( newPosition,
+                                                      jointLimits.first,
+                                                      jointLimits.second );
+
+                jointConfiguration.setPositions( std::array{ clampedNewPosition } );
             }
         }
-        // TODO connectors
 
         new_configuration->prepare();
         if ( auto [ ok, err ] = new_configuration->isValid( rofi::configuration::SimpleColision{} );
              !ok ) {
             throw std::runtime_error( err );
         }
-        return new_configuration;
+        return std::pair( new_configuration, std::move( positionsReached ) );
     }
 
 private:
