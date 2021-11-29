@@ -25,6 +25,7 @@ const std::string doubleZZW = root + "/data/configurations/kinematics/2zzW.rofi"
 
 const std::string doubleZXS = root + "/data/configurations/kinematics/2zxS.rofi";
 
+const std::string ZXSXZ = root + "/data/configurations/kinematics/3zxxzS.rofi";
 
 /* Loading configurations */
 
@@ -62,6 +63,27 @@ TEST_CASE( "ZtoX" ){
     CHECK( z.tentacles.front()[ 1 ].nextEdge.value().id2() == 2 );
     CHECK( z.tentacles.front()[ 1 ].nextEdge.value().dock1() == ZMinus );
     CHECK( z.tentacles.front()[ 1 ].nextEdge.value().dock2() == XPlus );
+}
+
+TEST_CASE( "ZXXZ" ){
+    tentacleMonster z( ZXSXZ );
+    REQUIRE( z.tentacles.size() == 2 );
+    REQUIRE( z.tentacles.front().size() == 5 );
+    CHECK( !z.tentacles.front()[ 0 ].nextEdge );
+    CHECK(  z.tentacles.front()[ 1 ].nextEdge );
+    CHECK(  z.tentacles.front()[ 2 ].nextEdge );
+    CHECK( !z.tentacles.front()[ 3 ].nextEdge );
+    CHECK( !z.tentacles.front()[ 4 ].nextEdge );
+    CHECK( z.tentacles.front()[ 0 ].id == 1 );
+    CHECK( z.tentacles.front()[ 0 ].body == A );
+    CHECK( z.tentacles.front()[ 1 ].id == 1 );
+    CHECK( z.tentacles.front()[ 1 ].body == B );
+    CHECK( z.tentacles.front()[ 2 ].id == 2 );
+    CHECK( z.tentacles.front()[ 2 ].body == A );
+    // CHECK( z.tentacles.front()[ 1 ].nextEdge.value().id1() == 1 );
+    // CHECK( z.tentacles.front()[ 1 ].nextEdge.value().id2() == 2 );
+    // CHECK( z.tentacles.front()[ 1 ].nextEdge.value().dock1() == ZMinus );
+    // CHECK( z.tentacles.front()[ 1 ].nextEdge.value().dock2() == XPlus );
 }
 
 void reach( tentacleMonster& monster, double x = 0.0, double y = 0.0, double z = 0.0,
@@ -652,4 +674,22 @@ TEST_CASE( "2zxS 0 0 sqrt5 0 0 0" ){
     test.execute( Action( Action::Rotate( 2, Beta, -63.435 ) ) );
     test.execute( Action( Action::Rotate( 2, Gamma, 90.0003 ) ) );
     CHECK( two.config == test );
+}
+
+/* Static joint test */
+TEST_CASE( "3zxSxz 0 0 2.7071 0 0 0" ){
+    tentacleMonster three( ZXSXZ );
+    //three.debug = true;
+    reach( three, 0.0, 0.0, 2 + 1 / sqrt( 2.0 ) );
+
+    Configuration test;
+    std::ifstream input( doubleZXS );
+    IO::readConfiguration( input, test );
+    test.execute( Action( Action::Rotate( 1, Alpha, -26.565 ) ) );
+    test.execute( Action( Action::Rotate( 1, Beta, 0.000184725 ) ) );
+    test.execute( Action( Action::Rotate( 1, Gamma, 90 ) ) );
+    test.execute( Action( Action::Rotate( 2, Alpha, 0.000184725 ) ) );
+    test.execute( Action( Action::Rotate( 2, Beta, -63.435 ) ) );
+    test.execute( Action( Action::Rotate( 2, Gamma, 90.0003 ) ) );
+    CHECK( three.config == test );
 }

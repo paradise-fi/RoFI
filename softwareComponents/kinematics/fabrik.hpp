@@ -87,7 +87,7 @@ struct tentacleMonster {
 
     void printArm( int arm );
 
-  private:
+  //private:
 
     void findTentacles();
 

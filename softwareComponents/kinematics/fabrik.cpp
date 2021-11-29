@@ -75,7 +75,7 @@ std::pair< double, double > simplify( double pol, double az ){
 }
 
 /* Adjust the module along the same joint ( rotate around X-axis ) */
-void sameModule( tentacle& arm, int index, int direction = 1 /* forward */ ){
+void sameModule( tentacle& arm, int& index, int direction = 1 /* forward */ ){
     Vector pos = project( arm[ index + direction ].trans * X,
                           arm[ index + direction ].position(),
                           arm[ index ].position() );
@@ -98,13 +98,15 @@ void sameModule( tentacle& arm, int index, int direction = 1 /* forward */ ){
         p = std::clamp( p, -M_PI_2, M_PI_2 );
     }
 
-    //if( direction == -1 )
-    arm[ index + direction ].xRot = p;
+    if( direction == -1 )
+        arm[ index + direction ].xRot = p;
 
     arm[ index ].trans =
         arm[ index + direction ].trans *
         rotate( p, X ) *
         translate( Z );
+
+    index -= direction;
 }
 
 /* Match joint rotation with target */
@@ -144,21 +146,22 @@ double oriToAngle( unsigned int ori ){
 }
 
 /* Cover -Z to -Z connections */
-void connected( tentacle& arm, int index, int direction = 1 ){
+void connected( tentacle& arm, int& index, int direction = 1 ){
     Matrix transformation = identity;
     Matrix expectedNext = identity;
     bool flip = false;
-    int count = 1;
+    int count = 0;
     double angle = 0.0;
 
     // TODO: remove duplication
+    //       precompute at load time
     if( direction == 1 ){
-        while( arm[ index - ( direction * ( count - 1 ) ) ].prevEdge ){
+        while( arm[ index + 1 - count ].prevEdge ){
             //TODO: deal with static joints
             ++count;
         }
         for( int i = 0; i < count; ++i ){
-            Edge edge = arm[ index - i ].nextEdge.value();
+            Edge edge = arm[ index + 1 - i ].prevEdge.value();
             if( edge.dock2() == ZMinus ){
                 transformation *= translate( Vector{ 0.0, 0.0, 1.0, 0.0 } );
             } else if( edge.dock2() == XPlus ){
@@ -167,14 +170,16 @@ void connected( tentacle& arm, int index, int direction = 1 ){
                 flip = !flip;
             } else {
                 transformation *= translate( Vector{ 1.0, 0.0, 0.0, 0.0 } );
-                transformation *= rotate( M_PI_2, Y );
+                transformation *= // rotate( M_PI, Z ) *
+                    rotate( M_PI_2, Y );
                 flip = !flip;
             }
 
             if( edge.dock1() == XPlus ){
                 transformation *= rotate( M_PI, Z ) * rotate( M_PI_2, Y );
             } else if( edge.dock1() == XMinus ){
-                transformation *= rotate( M_PI_2, Y );
+                transformation *= // rotate( M_PI, Z ) *
+                    rotate( M_PI_2, Y );
             }//  else if( edge.ori() == East || edge.ori() == West ){
             //     flip = !flip;
             // }
@@ -183,12 +188,12 @@ void connected( tentacle& arm, int index, int direction = 1 ){
             //angle += oriToAngle( edge.ori() );
         }
     } else {
-        while( arm[ index - ( direction * ( count - 1 ) ) ].nextEdge ){
+        while( arm[ index - 1 + count ].nextEdge ){
             //TODO: deal with static joints
             ++count;
         }
         for( int i = 0; i < count; ++i ){
-            Edge edge = arm[ index + i ].prevEdge.value();
+            Edge edge = arm[ index - 1 + i ].nextEdge.value();
             if( edge.dock1() == ZMinus ){
                 transformation *= translate( Vector{ 0.0, 0.0, 1.0, 0.0 } );
             } else if( edge.dock1() == XPlus ){
@@ -197,14 +202,16 @@ void connected( tentacle& arm, int index, int direction = 1 ){
                 flip = !flip;
             } else {
                 transformation *= translate( Vector{ -1.0, 0.0, 0.0, 0.0 } );
-                transformation *= rotate( M_PI_2, Y );
+                transformation *=  //rotate( M_PI, Z ) *
+                    rotate( M_PI_2, Y );
                 flip = !flip;
             }
 
             if( edge.dock2() == XPlus ){
                 transformation *= rotate( M_PI, Z ) * rotate( M_PI_2, Y );
             } else if( edge.dock2() == XMinus ){
-                transformation *= rotate( M_PI_2, Y );
+                transformation *= //rotate( M_PI, Z ) *
+                    rotate( M_PI_2, Y );
             } else if( edge.ori() == East || edge.ori() == West ){
                 flip = !flip;
             }
@@ -224,8 +231,8 @@ void connected( tentacle& arm, int index, int direction = 1 ){
     double aExp = azimuth( expectedNext * Vector{ 0.0, 0.0, 0.0, 1.0 } );
 
 
-    Vector next = localPosition( arm, index + direction, index - direction );
-    Vector current = localPosition( arm, index + direction, index );
+    Vector next = localPosition( arm, index + direction, index - direction * count );
+    Vector current = localPosition( arm, index + direction, index + direction - direction * count );
 
     double pol = 0.0;
     double az = 0.0;
@@ -245,12 +252,13 @@ void connected( tentacle& arm, int index, int direction = 1 ){
     arm[ index + direction ].xRot = p;
     arm[ index + direction ].zRot = a;
 
-    arm[ index ].trans =
+    arm[ index + direction - direction * count ].trans =
         arm[ index + direction ].trans *
         rotate( a, Z ) *
         rotate( p, X ) *
         transformation;
 
+    index -= direction * count;
 }
 
 bool tentacleMonster::fabrik( tentacle& arm, Matrix target )
@@ -266,39 +274,47 @@ bool tentacleMonster::fabrik( tentacle& arm, Matrix target )
         /* Forward reaching */
         arm.back().trans = target;
 
-        for( int i = arm.size() - 2; i >= 0; --i ){
+        for( int i = arm.size() - 2; i >= 0; /*--i*/ ){
             if( arm[ i ].nextEdge ){
-                if( arm[ i ].nextEdge->dock1() == ZMinus ){
+                //if( arm[ i ].nextEdge->dock1() == ZMinus ){
                     connected( arm, i );
-                } else {
-                    assert( false );
-                }
+                //} else {
+                //    assert( false );
+                //}
             } else {
                 sameModule( arm, i );
             }
            if( debug ){
                printArm( 0 );
-               getchar();
+               int c = getchar();
+               if( c == 'q' ){
+                   setArm( arm, target );
+                   return false;
+               }
            }
         }
 
         /* Backward reaching */
         arm.front().trans = base;
 
-        for( size_t i = 1; i <= arm.size() - 1; ++i ){
+        for( int i = 1; i <= arm.size() - 1; /*++i*/ ){
             if( arm[ i ].prevEdge ){
-                if( arm[ i ].prevEdge->dock1() == ZMinus ){
+                //if( arm[ i ].prevEdge->dock1() == ZMinus ){
                     connected( arm, i, -1 );
-                } else {
-                    assert( false );
-                }
+                //} else {
+                //    assert( false );
+                //}
             } else {
                 sameModule( arm, i, -1 );
             }
 
            if( debug ){
                printArm( 0 );
-               getchar();
+               int c = getchar();
+               if( c == 'q' ){
+                   setArm( arm, target );
+                   return false;
+               }
            }
         }
 
@@ -306,9 +322,11 @@ bool tentacleMonster::fabrik( tentacle& arm, Matrix target )
 
         if( ++iterations == 2000 ){
             setArm( arm, target );
-            std::cout << "wanted:\n" << IO::toString( target )
-                << "got:\n";
-            printArm( 0 );
+            if( debug ){
+                std::cout << "wanted:\n" << IO::toString( target )
+                          << "got:\n";
+                printArm( 0 );
+            }
             return false;
         }
     }
@@ -371,10 +389,10 @@ void tentacleMonster::addJoints( ID id, Edge edge, std::optional< Edge > lastEdg
     tentacle& a = tentacles.back();
     joint j1, j2;
     j1.id = j2.id = id;
+    if( id == edge.id1() ){
+        edge = reverse( edge );
+    }
     if( !lastEdge ){
-        if( id == edge.id1() ){
-            edge = reverse( edge );
-        }
         j1.body = edge.side2() == A ? B : A;
         j2.body = j1.body == A ? B : A;
 
