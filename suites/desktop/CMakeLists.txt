@@ -138,8 +138,12 @@ add_component(snake_reconfig)
 if (${BUILD_GAZEBO})
   add_component(rofisimMessages)
   add_component(configurationMessages)
+
+  add_component(message_server)
+
   add_component(rofiHalSim)
   add_component(rofiHalSimPy)
+
   add_component(gazebosim)
   add_component(simplesim)
 endif()
