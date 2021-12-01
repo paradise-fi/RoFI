@@ -7,11 +7,5 @@ add_subdirectory(command_handler)
 add_subdirectory(communication)
 add_subdirectory(controllers)
 
-set (SRC
-    main.cpp
-)
 
-add_executable(rofi-simplesim ${SRC})
-target_link_libraries(rofi-simplesim PUBLIC gzMessageServer)
-target_link_libraries(rofi-simplesim PUBLIC simplesimControllers)
-target_link_libraries(rofi-simplesim PUBLIC configuration dimcli)
+add_library(simplesim ALIAS simplesimControllers)
