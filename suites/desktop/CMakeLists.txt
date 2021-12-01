@@ -145,7 +145,7 @@ if (${BUILD_GAZEBO})
   add_component(rofiHalSimPy)
 
   add_component(gazebosim)
-  add_component(simplesim)
+  add_component(simplesimLib)
 endif()
 
 
