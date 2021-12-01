@@ -5,7 +5,7 @@
 #include "communication.hpp"
 #include "configuration/universalModule.hpp"
 #include "controllers.hpp"
-#include "gazebo_master.hpp"
+#include "message_server.hpp"
 #include "simulation.hpp"
 
 
@@ -64,7 +64,7 @@ int main( int argc, char * argv[] )
     std::cout << "Reading configuration from file" << std::endl;
     auto configuration = readConfigurationFromFile( *inputCfgFileName );
 
-    auto gzMaster = rofi::simplesim::startGazeboMaster();
+    auto gzMaster = rofi::msgs::MessageServer::createAndLoopInThread( "simplesim" );
     std::cout << "Starting simplesim..." << std::endl;
     auto controller = runSimplesim( std::move( configuration ) );
     std::cout << "Simulating..." << std::endl;
