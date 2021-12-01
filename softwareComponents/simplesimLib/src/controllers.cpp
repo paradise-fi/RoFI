@@ -1,4 +1,4 @@
-#include "controllers.hpp"
+#include "simplesim/controllers.hpp"
 
 
 namespace rofi::simplesim

@@ -1,4 +1,4 @@
-#include "modules_communication.hpp"
+#include "simplesim/modules_communication.hpp"
 
 
 using namespace rofi::simplesim;

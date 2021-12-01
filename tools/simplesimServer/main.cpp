@@ -2,11 +2,11 @@
 
 #include <dimcli/cli.h>
 
-#include "communication.hpp"
 #include "configuration/universalModule.hpp"
-#include "controllers.hpp"
 #include "message_server.hpp"
-#include "simulation.hpp"
+#include "simplesim/communication.hpp"
+#include "simplesim/controllers.hpp"
+#include "simplesim/simulation.hpp"
 
 
 std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
