@@ -162,6 +162,7 @@ endif()
 
 if (${BUILD_GAZEBO})
   add_tool(gazebosimTools)
+  add_tool(simplesimServer)
 endif()
 
 
