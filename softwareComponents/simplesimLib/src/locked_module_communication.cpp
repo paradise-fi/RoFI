@@ -1,4 +1,4 @@
-#include "locked_module_communication.hpp"
+#include "simplesim/locked_module_communication.hpp"
 
 
 using namespace rofi::simplesim;

@@ -1,11 +1,16 @@
 cmake_minimum_required(VERSION 3.11)
 
 
-add_subdirectory(module_states)
-add_subdirectory(simulation)
-add_subdirectory(command_handler)
-add_subdirectory(communication)
-add_subdirectory(controllers)
+set(FILES
+    src/command_handler.cpp
+    src/controllers.cpp
+    src/distributor.cpp
+    src/locked_module_communication.cpp
+    src/module_states.cpp
+    src/modules_communication.cpp
+)
 
-
-add_library(simplesim ALIAS simplesimControllers)
+add_library(simplesim ${FILES})
+target_link_libraries(simplesim PUBLIC rofisimMessages configuration atoms ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
+target_include_directories(simplesim PUBLIC ${GAZEBO_INCLUDE_DIRS})
+target_include_directories(simplesim PUBLIC include)

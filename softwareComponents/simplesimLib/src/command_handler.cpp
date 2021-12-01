@@ -1,4 +1,4 @@
-#include "command_handler.hpp"
+#include "simplesim/command_handler.hpp"
 
 
 using namespace rofi::simplesim;
