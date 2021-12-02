@@ -1,59 +1,68 @@
 #pragma once
 
-constexpr double pi = 3.14159265358979323846;
 
 class Angle {
 public:
-    static Angle rad( float r ) { return Angle( 180 * r / pi ); }
-    static Angle deg( float d ) { return Angle( d ); }
+    using underlying_type = float;
 
-    Angle& operator+=( Angle a ) { _degs += a._degs; return *this; }
-    Angle& operator-=( Angle a ) { _degs -= a._degs; return *this; }
-    Angle& operator*=( double c ) { _degs *= c; return *this; }
-    Angle& operator/=( double c ) { _degs /= c; return *this; }
+    static constexpr underlying_type pi = 3.141592653589793238462643383279502884f;
 
-    bool operator==( Angle a ) const { return a._degs == _degs; }
-    bool operator!=( Angle a ) const { return !( a == *this ); }
+    static constexpr Angle rad( underlying_type rads ) noexcept { return Angle( rads ); }
+    static constexpr Angle deg( underlying_type degs ) noexcept { return Angle( pi * degs / 180 ); }
 
-    float deg() const { return _degs; }
-    float rad() const { return _degs / 180.0 * pi; }
+    constexpr Angle& operator+=( Angle other ) noexcept { _rads += other._rads; return *this; }
+    constexpr Angle& operator-=( Angle other ) noexcept { _rads -= other._rads; return *this; }
+    constexpr Angle& operator*=( underlying_type value ) noexcept { _rads *= value; return *this; }
+    constexpr Angle& operator/=( underlying_type value ) noexcept { _rads /= value; return *this; }
+
+    constexpr bool operator==( Angle other ) const noexcept { return _rads == other._rads; }
+    constexpr bool operator!=( Angle other ) const noexcept { return !( *this == other ); }
+
+    constexpr underlying_type deg() const noexcept { return 180 * _rads / pi; }
+    constexpr underlying_type rad() const noexcept { return _rads; }
+
 private:
-    float _degs;
-    Angle( float d ): _degs( d ) {}
+    constexpr explicit Angle( underlying_type rads ): _rads( rads ) {}
+
+    underlying_type _rads;
 };
 
-inline Angle operator+( Angle a, Angle b ) {
-    a += b;
-    return a;
+inline constexpr Angle operator+( Angle lhs, Angle rhs ) noexcept {
+    lhs += rhs;
+    return lhs;
 }
 
-inline Angle operator-( Angle a, Angle b ) {
-    a -= b;
-    return a;
+inline constexpr Angle operator-( Angle lhs, Angle rhs ) noexcept {
+    lhs -= rhs;
+    return lhs;
 }
 
-inline Angle operator*( Angle a, float c ) {
-    a *= c;
-    return a;
+inline constexpr Angle operator*( Angle angle, Angle::underlying_type value ) noexcept {
+    angle *= value;
+    return angle;
 }
 
-inline Angle operator/( Angle a, float c ) {
-    a /= c;
-    return a;
+inline constexpr Angle operator*( Angle::underlying_type value, Angle angle ) noexcept {
+    return angle * value;
 }
 
-inline Angle operator"" _deg ( long double d ) {
-    return Angle::deg( d );
+inline constexpr Angle operator/( Angle angle, Angle::underlying_type value ) noexcept {
+    angle /= value;
+    return angle;
 }
 
-inline Angle operator"" _rad ( long double r ) {
-    return Angle::rad( r );
+inline constexpr Angle operator"" _deg ( long double deg ) noexcept {
+    return Angle::deg( static_cast< Angle::underlying_type >( deg ) );
 }
 
-inline Angle operator"" _deg ( unsigned long long int d ) {
-    return Angle::deg( d );
+inline constexpr Angle operator"" _rad ( long double rad ) noexcept {
+    return Angle::rad( static_cast< Angle::underlying_type >( rad ) );
 }
 
-inline Angle operator"" _rad ( unsigned long long int r ) {
-    return Angle::rad( r );
+inline constexpr Angle operator"" _deg ( unsigned long long deg ) noexcept {
+    return Angle::deg( static_cast< Angle::underlying_type >( deg ) );
+}
+
+inline constexpr Angle operator"" _rad ( unsigned long long rad ) noexcept {
+    return Angle::rad( static_cast< Angle::underlying_type >( rad ) );
 }

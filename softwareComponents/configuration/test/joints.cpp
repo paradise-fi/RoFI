@@ -6,10 +6,10 @@ namespace {
 
 using namespace rofi::configuration;
 
-const Angle A_PI_2     = Angle::rad( pi / 2 );
-const Angle A_PI       = Angle::rad( pi );
-const Angle A_PI_2_neg = Angle::rad( - pi / 2 );
-const Angle A_PI_neg   = Angle::rad( - pi );
+constexpr Angle A_PI_2     = Angle::rad( Angle::pi / 2 );
+constexpr Angle A_PI       = Angle::rad( Angle::pi );
+constexpr Angle A_PI_2_neg = Angle::rad( - Angle::pi / 2 );
+constexpr Angle A_PI_neg   = Angle::rad( - Angle::pi );
 
 TEST_CASE( "Base RigidJoint" ) {
     auto j = RigidJoint( translate( { 42, 42, 42 } ) );
