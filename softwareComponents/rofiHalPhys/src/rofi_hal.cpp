@@ -602,7 +602,7 @@ public:
         using namespace std::chrono_literals;
 
         _poller = rtos::Timer();
-        float maxVelocity = 2 * pi;
+        float maxVelocity = 2 * Angle::pi;
         velocity = std::min( maxVelocity, std::max( -maxVelocity, velocity ) );
         int pwm = velocity / maxVelocity * 1023;
         _servo.torqueOn(); // In case we lost connection
@@ -697,20 +697,20 @@ private:
 
 rofi::hal::Joint::Implementation::Capabilities shoeJointCapability() {
     rofi::hal::Joint::Implementation::Capabilities cap;
-    cap.maxPosition = pi / 2 * 1.1; // rad
-    cap.minPosition = -pi / 2 * 1.1; // rad
-    cap.maxSpeed = 2 * pi; // rad / s
-    cap.minSpeed = 2 * pi; // rad / s
+    cap.maxPosition = Angle::pi / 2 * 1.1; // rad
+    cap.minPosition = -Angle::pi / 2 * 1.1; // rad
+    cap.maxSpeed = 2 * Angle::pi; // rad / s
+    cap.minSpeed = 2 * Angle::pi; // rad / s
     cap.maxTorque = 1.2; // N * m
     return cap;
 }
 
 rofi::hal::Joint::Implementation::Capabilities bodyJointCapability() {
     rofi::hal::Joint::Implementation::Capabilities cap;
-    cap.maxPosition = 0.9 * pi; // rad
-    cap.minPosition = -0.9 * pi; // rad
-    cap.maxSpeed = 2 * pi; // rad / s
-    cap.minSpeed = 2 * pi; // rad / s
+    cap.maxPosition = 0.9 * Angle::pi; // rad
+    cap.minPosition = -0.9 * Angle::pi; // rad
+    cap.maxSpeed = 2 * Angle::pi; // rad / s
+    cap.minSpeed = 2 * Angle::pi; // rad / s
     cap.maxTorque = 1.2; // N * m
     return cap;
 }
