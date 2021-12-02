@@ -14,7 +14,7 @@
  * in the derived classes.
  */
 #define ATOMS_CLONEABLE_BASE( Type ) \
-    virtual Type *clone() const = 0;
+    virtual Type *clone() const = 0
 
 /**
  * \brief Declare derived class as cloneable.
@@ -30,7 +30,8 @@
     virtual Type *clone() const override { \
         static_assert( std::has_virtual_destructor_v< Type > ); \
         return new Type( *this ); \
-    }
+    } \
+    static_assert( true, "requires semicolon" )
 
 namespace atoms::detail {
 
@@ -56,6 +57,7 @@ struct VisitorCallWrapper: public Functor, public Next {
 
     using StrippedArg = typename std::remove_reference< Arg >::type;
 
+    using Next::operator();
     void operator()( StrippedArg& arg ) override {
         if constexpr( std::is_same_v< void, typename FTrait::returnType > )
             Functor::operator()( arg );
@@ -90,10 +92,11 @@ private:
 template < typename R, typename Arg, typename Next >
 struct VisitorCallWrapper< R(*)( Arg ), Next >: public Next {
     template < typename... Extra >
-    VisitorCallWrapper( R ( *fun )( Arg ), Extra...extra ): _fun( fun ), Next( extra... ) {}
+    VisitorCallWrapper( R ( *fun )( Arg ), Extra...extra ): Next( extra... ), _fun( fun ) {}
 
     using StrippedArg = typename std::remove_reference< Arg >::type;
 
+    using Next::operator();
     void operator()( StrippedArg& arg ) override {
         if constexpr( std::is_same_v< void, R > )
             ( *_fun )( arg );
@@ -224,7 +227,7 @@ struct VisitableBase {
     using VisitorType = Visitor;
 
     virtual ~VisitableBase() = default;
-    virtual void accept( VisitorType& visitor ) {
+    virtual void accept( VisitorType& /* visitor */ ) {
         throw std::logic_error( "accept not implemented" );
     };
 };
