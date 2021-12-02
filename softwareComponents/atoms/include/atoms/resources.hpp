@@ -10,7 +10,7 @@
 // create a temporary file from a resource embedded in the binary. Not ideal but
 // probably best we can do.
 
-// The binary embedding is isnspired by:
+// The binary embedding is inspired by:
 // https://beesbuzz.biz/code/4399-Embedding-binary-resources-with-CMake-and-C-11
 
 
@@ -36,7 +36,8 @@ public:
      * If the resource on given address was already added, existing file is
      * returned. The resource is specified by address and its size in bytes.
      */
-    std::filesystem::path add( const char *data, int count ) {
+    std::filesystem::path add( const char *data, std::ptrdiff_t count ) {
+        assert( count > 0 );
         auto entry = _resources.find( data );
         if ( entry != _resources.end() )
             return entry->second;
@@ -62,7 +63,8 @@ private:
         _tmpDir = cTempl.get();
     }
 
-    std::filesystem::path createFile( const char *data, int count ) {
+    std::filesystem::path createFile( const char *data, std::ptrdiff_t count ) {
+        assert( count > 0 );
         auto path = _tmpDir / std::to_string( _resources.size() );
         std::ofstream file( path );
         file.write( data, count );
@@ -85,7 +87,7 @@ public:
         : ResourceFile( start, end - start )
     {}
 
-    ResourceFile( const char *data, int count ) :
+    ResourceFile( const char *data, std::ptrdiff_t count ) :
         _path( ResourceManager::inst().add( data, count ) )
     {}
 

@@ -94,4 +94,4 @@ TEST_CASE( "Basic usage of HandleSet" ) {
     SECTION( "We can delete and reinsert items at the beginning" ) {
         testErasing( hset, static_cast< handle >( 0 ) );
     }
-};
+}

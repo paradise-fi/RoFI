@@ -21,9 +21,6 @@ function(add_resources out_var)
   set(${out_var} "${result}" PARENT_SCOPE)
 endfunction()
 
-set(CMAKE_CXX_STANDARD 17)
-file(GLOB_RECURSE SRC src/*.cpp)
-
 add_library(atoms INTERFACE)
 target_include_directories(atoms INTERFACE include)
 

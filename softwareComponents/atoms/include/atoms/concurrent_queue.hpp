@@ -8,6 +8,8 @@
 #include <optional>
 #include <stop_token>
 
+static_assert( __cpp_lib_jthread >= 201911L, "jthread and stop_token required" );
+
 
 namespace atoms
 {
