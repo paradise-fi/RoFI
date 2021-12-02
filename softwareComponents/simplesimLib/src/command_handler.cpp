@@ -1,7 +1,8 @@
 #include "simplesim/command_handler.hpp"
 
 
-using namespace rofi::simplesim;
+namespace rofi::simplesim
+{
 using namespace rofi::messages;
 using RofiCmdPtr = CommandHandler::RofiCmdPtr;
 
@@ -239,8 +240,7 @@ std::nullopt_t setConnectorPower( ModuleStates & moduleStates, const RofiCmd & r
     return std::nullopt;
 }
 
-std::nullopt_t setDisconnectorPower( ModuleStates & moduleStates,
-                                                const RofiCmd & rofiCmd )
+std::nullopt_t setDisconnectorPower( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
 {
     assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
     assert( rofiCmd.connectorcmd().cmdtype() == ConnectorCmd::DISCONNECT_POWER );
@@ -277,7 +277,7 @@ std::optional< RofiResp > getModuleDescription( const ModuleStates & moduleState
 }
 
 
-CommandHandler::CommandCallbacks CommandHandler::onJointCmdCallbacks( JointCmd::Type cmdType )
+CommandHandler::CommandCallbacks onJointCmdCallbacks( JointCmd::Type cmdType )
 {
     switch ( cmdType ) {
         case JointCmd::NO_CMD:
@@ -313,8 +313,7 @@ CommandHandler::CommandCallbacks CommandHandler::onJointCmdCallbacks( JointCmd::
     }
 }
 
-CommandHandler::CommandCallbacks CommandHandler::onConnectorCmdCallbacks(
-        ConnectorCmd::Type cmdType )
+CommandHandler::CommandCallbacks onConnectorCmdCallbacks( ConnectorCmd::Type cmdType )
 {
     switch ( cmdType ) {
         case ConnectorCmd::NO_CMD:
@@ -344,6 +343,14 @@ CommandHandler::CommandCallbacks CommandHandler::onConnectorCmdCallbacks(
     }
 }
 
+void CommandHandler::onWaitCmd( const RofiCmd & cmd )
+{
+    assert( cmd.cmdtype() == RofiCmd::WAIT_CMD );
+
+    auto waitDuration = std::chrono::milliseconds( cmd.waitcmd().waitms() );
+    _waitHandler->registerWait( cmd.rofiid(), cmd.waitcmd().waitid(), waitDuration );
+}
+
 CommandHandler::CommandCallbacks CommandHandler::onRofiCmdCallbacks( const RofiCmd & cmd )
 {
     switch ( cmd.cmdtype() ) {
@@ -360,8 +367,7 @@ CommandHandler::CommandCallbacks CommandHandler::onRofiCmdCallbacks( const RofiC
             return { .immediate = getModuleDescription };
 
         case RofiCmd::WAIT_CMD:
-            // TODO
-            std::cerr << "Waiting is not yet implemented. Ignoring... (The user code will halt.)\n";
+            this->onWaitCmd( cmd );
             return {};
 
         default:
@@ -369,3 +375,22 @@ CommandHandler::CommandCallbacks CommandHandler::onRofiCmdCallbacks( const RofiC
             return {};
     }
 }
+
+std::optional< RofiResp > CommandHandler::onRofiCmd( const RofiCmdPtr & rofiCmdPtr )
+{
+    assert( rofiCmdPtr );
+    assert( _moduleStates );
+
+    auto callbacks = onRofiCmdCallbacks( *rofiCmdPtr );
+
+    if ( callbacks.delayed ) {
+        _rofiCmdCallbacks->emplace_back( std::move( callbacks.delayed ), rofiCmdPtr );
+    }
+
+    if ( callbacks.immediate ) {
+        return callbacks.immediate( *_moduleStates, *rofiCmdPtr );
+    }
+    return std::nullopt;
+}
+
+} // namespace rofi::simplesim
