@@ -1,13 +1,16 @@
 #pragma once
 
+#include <algorithm>
 #include <atomic>
 #include <chrono>
 #include <optional>
 #include <shared_mutex>
 #include <utility>
 
+#include "atoms/guarded.hpp"
 #include "command_handler.hpp"
 #include "module_states.hpp"
+#include "wait_handler.hpp"
 
 #include <connectorCmd.pb.h>
 #include <jointCmd.pb.h>
@@ -37,7 +40,7 @@ public:
     // Moves each rofi module based on the inner state
     // Returns the responses that happen inside RoFIs
     std::pair< std::vector< RofiResp >, std::shared_ptr< const rofi::configuration::Rofibot > >
-            simulateOneIteration( std::chrono::duration< float > duration )
+            simulateOneIteration( std::chrono::milliseconds duration )
     {
         assert( _moduleStates );
 
@@ -48,7 +51,9 @@ public:
                 } );
         assert( new_configuration );
 
-        // TODO check for waiting ended callbacks
+        std::ranges::transform( _commandHandler->waitHandler()->advanceTime( duration ),
+                                std::back_inserter( responses ),
+                                WaitHandler::getWaitResp );
 
         return std::make_pair( std::move( responses ), std::move( new_configuration ) );
     }
@@ -65,7 +70,7 @@ private:
         assert( _commandHandler );
         assert( _moduleStates );
 
-        auto commandCallbacks = _commandHandler->getCommandCallbacks();
+        auto commandCallbacks = _commandHandler->extractCommandCallbacks();
         std::vector< RofiResp > responses;
         for ( auto & [ callback, rofiCmdPtr ] : commandCallbacks ) {
             assert( callback );

@@ -10,6 +10,7 @@
 
 #include "atoms/guarded.hpp"
 #include "module_states.hpp"
+#include "wait_handler.hpp"
 
 #include <rofiCmd.pb.h>
 #include <rofiResp.pb.h>
@@ -39,28 +40,14 @@ public:
         DelayedCmdCallback delayed;
     };
 
+
     CommandHandler( std::shared_ptr< ModuleStates > moduleStates )
             : _moduleStates( std::move( moduleStates ) )
     {
         assert( _moduleStates );
     }
 
-    std::optional< RofiResp > onRofiCmd( const RofiCmdPtr & rofiCmdPtr )
-    {
-        assert( rofiCmdPtr );
-        assert( _moduleStates );
-
-        auto callbacks = onRofiCmdCallbacks( *rofiCmdPtr );
-
-        if ( callbacks.delayed ) {
-            _rofiCmdCallbacks->emplace_back( std::move( callbacks.delayed ), rofiCmdPtr );
-        }
-
-        if ( callbacks.immediate ) {
-            return callbacks.immediate( *_moduleStates, *rofiCmdPtr );
-        }
-        return std::nullopt;
-    }
+    std::optional< RofiResp > onRofiCmd( const RofiCmdPtr & rofiCmdPtr );
 
     auto getModuleIds()
     {
@@ -68,7 +55,7 @@ public:
         return _moduleStates->getModuleIds();
     }
 
-    std::vector< std::pair< DelayedCmdCallback, RofiCmdPtr > > getCommandCallbacks()
+    std::vector< std::pair< DelayedCmdCallback, RofiCmdPtr > > extractCommandCallbacks()
     {
         return _rofiCmdCallbacks.visit( []( auto & vec ) {
             auto result = std::move( vec );
@@ -77,12 +64,20 @@ public:
         } );
     }
 
+    atoms::Guarded< WaitHandler > & waitHandler()
+    {
+        return _waitHandler;
+    }
+    const atoms::Guarded< WaitHandler > & waitHandler() const
+    {
+        return _waitHandler;
+    }
 
 private:
-    static CommandCallbacks onJointCmdCallbacks( JointCmd::Type cmd_type );
-    static CommandCallbacks onConnectorCmdCallbacks( ConnectorCmd::Type cmd_type );
-    static CommandCallbacks onRofiCmdCallbacks( const RofiCmd & cmd );
+    void onWaitCmd( const RofiCmd & rofiCmd );
+    CommandCallbacks onRofiCmdCallbacks( const RofiCmd & cmd );
 
+    atoms::Guarded< WaitHandler > _waitHandler;
     std::shared_ptr< const ModuleStates > _moduleStates;
 
     atoms::Guarded< std::vector< std::pair< DelayedCmdCallback, RofiCmdPtr > > > _rofiCmdCallbacks;
