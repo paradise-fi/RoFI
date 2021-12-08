@@ -23,7 +23,7 @@ int main()
     const auto maxPos = std::clamp( joint.maxPosition(), 0.f, pi );
 
     const int delayMs = 1000;
-    const int speed = joint.maxSpeed() / 2;
+    const auto speed = joint.maxSpeed() / 2;
 
     while ( true )
     {

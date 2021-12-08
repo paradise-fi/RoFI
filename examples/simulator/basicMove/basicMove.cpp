@@ -19,12 +19,12 @@ constexpr bool useSetPosition = true;
 template < typename Callback >
 void setToLimitPos( Joint joint, bool max, Callback && callback )
 {
-    double speed = joint.maxSpeed() / 4;
+    auto speed = joint.maxSpeed() / 4;
 
     if constexpr ( useSetPosition )
     {
-        double position = max ? joint.maxPosition() : joint.minPosition();
-        assert( std::abs( position ) < 10.0 );
+        auto position = max ? joint.maxPosition() : joint.minPosition();
+        assert( std::abs( position ) < 10.0f );
         joint.setPosition(
                 position,
                 speed,
@@ -37,9 +37,9 @@ void setToLimitPos( Joint joint, bool max, Callback && callback )
     }
 }
 
-void checkConnected( Connector connector )
+void checkConnected( Connector connector_ )
 {
-    RoFI::wait( 2000, [ connectorConst = connector ] {
+    RoFI::wait( 2000, [ connectorConst = connector_ ] {
         Connector connector = connectorConst;
         auto state = connector.getState();
         if ( state.position != ConnectorPosition::Extended || state.connected )
@@ -51,11 +51,11 @@ void checkConnected( Connector connector )
         std::cout << "Retracting\n";
         connector.disconnect();
         RoFI::wait( 2000, [ connectorConst = connector ] {
-            Connector connector = connectorConst;
+            Connector conn = connectorConst;
             std::cout << "Extending\n";
-            connector.connect();
+            conn.connect();
 
-            checkConnected( connector );
+            checkConnected( conn );
         } );
     } );
 }
