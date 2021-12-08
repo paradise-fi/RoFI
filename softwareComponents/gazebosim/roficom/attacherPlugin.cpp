@@ -29,7 +29,7 @@ rofi::messages::ConnectorState::Orientation readOrientation( const std::string &
     std::string lower;
     for ( char c : str )
     {
-        lower.push_back( std::tolower( static_cast< unsigned char >( c ) ) );
+        lower.push_back( static_cast< char >( std::tolower( static_cast< unsigned char >( c ) ) ) );
     }
 
     if ( lower == "0" || lower == "n" || lower == "north" )

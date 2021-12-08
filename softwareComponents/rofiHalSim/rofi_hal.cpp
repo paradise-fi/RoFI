@@ -253,8 +253,8 @@ public:
     RoFI::Descriptor getDescriptor() const override
     {
         RoFI::Descriptor descriptor;
-        descriptor.jointCount = _joints.size();
-        descriptor.connectorCount = _connectors.size();
+        descriptor.jointCount = static_cast< int >( _joints.size() );
+        descriptor.connectorCount = static_cast< int >( _connectors.size() );
         return descriptor;
     }
 
@@ -473,7 +473,7 @@ private:
 class JointSim : public Joint::Implementation
 {
 public:
-    static constexpr float positionPrecision = 1e-3;
+    static constexpr float positionPrecision = 1e-3f;
     static_assert( positionPrecision > 0 );
 
     JointSim( std::weak_ptr< RoFISim > rofi, int jointNumber )
@@ -757,8 +757,8 @@ void RoFISim::onDescriptionResp( const msgs::RofiResp & resp )
         return std::make_shared< ConnectorSim >( weak_from_this(), _connectors.size() );
     } );
 
-    jointWorker.init( weak_from_this(), _joints.size() );
-    connectorWorker.init( weak_from_this(), _connectors.size() );
+    jointWorker.init( weak_from_this(), static_cast< int >( _joints.size() ) );
+    connectorWorker.init( weak_from_this(), static_cast< int >( _connectors.size() ) );
 
     hasDescription = true;
 }

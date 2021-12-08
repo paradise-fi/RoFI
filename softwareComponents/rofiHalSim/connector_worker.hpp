@@ -121,7 +121,8 @@ private:
 
     static std::pair< uint16_t, PBuf > getPacket( const rofi::messages::Packet & packet )
     {
-        PBuf pbufPacket = PBuf::allocate( packet.message().size() );
+        assert( packet.message().size() < INT_MAX );
+        PBuf pbufPacket = PBuf::allocate( static_cast< int >( packet.message().size() ) );
         size_t pos = 0;
         for ( auto it = pbufPacket.chunksBegin(); it != pbufPacket.chunksEnd(); ++it )
         {
