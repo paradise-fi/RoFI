@@ -2,6 +2,8 @@
 #include <lwip/netif.h>
 #include <lwip/ip.h>
 
+#include <cassert>
+#include <cstdint>
 #include <type_traits>
 #include <sstream>
 
@@ -184,7 +186,9 @@ private:
         if ( addReference )
             pbuf_ref( _buff );
     }
-    PBuf( int size ) : _buff( pbuf_alloc( PBUF_RAW, size, PBUF_POOL ) ) {
+    PBuf( int size ) : _buff( pbuf_alloc( PBUF_RAW, static_cast< uint16_t >( size ), PBUF_POOL ) ) {
+        assert( size >= 0 );
+        assert( size <= INT16_MAX );
         if ( !_buff )
             throw std::bad_alloc();
     }

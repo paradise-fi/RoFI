@@ -20,7 +20,7 @@ class PositionCallbackHandle
 public:
     using PositionCallback = std::function< void( Joint ) >;
 
-    static constexpr float positionPrecision = 1e-3;
+    static constexpr float positionPrecision = 1e-3f;
 
     PositionCallbackHandle() = default;
 
@@ -168,9 +168,8 @@ private:
     }
 
     static std::pair< Joint::Error, std::string > readError(
-            const rofi::messages::JointResp & jointResp )
+            const rofi::messages::JointResp & /* jointResp */ )
     {
-        // TODO implement
         assert( false && "not implemented" );
         throw std::runtime_error( "readError not implemented" );
     }

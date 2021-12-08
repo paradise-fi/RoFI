@@ -18,8 +18,8 @@ physics::LinkPtr getLinkByName( physics::ModelPtr roficom, const std::string & l
         for ( auto link : roficom->GetLinks() )
         {
             auto name = link->GetName();
-            int nameSize = name.size();
-            int compareSize = linkName.size() + 2;
+            size_t nameSize = name.size();
+            size_t compareSize = linkName.size() + 2;
 
             if ( nameSize < compareSize )
             {
@@ -55,8 +55,8 @@ physics::JointPtr getJointByName( physics::ModelPtr roficom, const std::string &
         for ( auto joint : roficom->GetJoints() )
         {
             auto name = joint->GetName();
-            int nameSize = name.size();
-            int compareSize = jointName.size() + 2;
+            size_t nameSize = name.size();
+            size_t compareSize = jointName.size() + 2;
 
             if ( nameSize < compareSize )
             {

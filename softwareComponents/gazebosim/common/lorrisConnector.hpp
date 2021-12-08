@@ -92,6 +92,7 @@ public:
     Connector( int port ) : _port( port )
     {
         using namespace std::string_literals;
+        assert( port >= 0 );
 
         _socketFd = socket( AF_INET, SOCK_DGRAM, 0 );
         if ( _socketFd < 0 )
