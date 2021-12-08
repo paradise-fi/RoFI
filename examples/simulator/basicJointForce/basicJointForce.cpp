@@ -11,7 +11,7 @@ int main()
     std::cout << "Starting basic force example\n";
 
     RoFI localRofi = RoFI::getLocalRoFI();
-    auto torque = 0.5 * localRofi.getJoint( 2 ).maxTorque();
+    auto torque = 0.5f * localRofi.getJoint( 2 ).maxTorque();
 
     while ( true )
     {
