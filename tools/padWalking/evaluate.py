@@ -387,7 +387,7 @@ def generateAllData():
                             avgActions = getAvgActions(totalActions, count)
                             avgNonConcuretnActions = getAvgActions(totalNonConcurentActions, count)
                             avgFilename = os.path.join(pathToEvals, mapName, algoName, rofiname, "avg.txt")
-                            printStatisticsToFile(avgFilename, avgActions, avgNonConcuretnActions)
+                            #printStatisticsToFile(avgFilename, avgActions, avgNonConcuretnActions)
                             #avgStatisticsForMap[algoName][rofiname]["all"] = avgActions
                             #avgStatisticsForMap[algoName][rofiname]["nonConcurent"] = avgNonConcuretnActions
                             statisticsForMap[algoName][rofiname] = allActionsCounts
@@ -399,7 +399,7 @@ def generateAllData():
             writeCSVAvgAndSdStatistics(mapName, mapType, "nonConcurent", statisticsForMap, None)
 
 
-#generateAllData()
+generateAllData()
 
 def getCaptionAndLabel(filename, mapType):
     caption = ""
