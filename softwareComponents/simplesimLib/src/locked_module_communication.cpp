@@ -3,15 +3,12 @@
 
 using namespace rofi::simplesim;
 
-using RofiId = LockedModuleCommunication::RofiId;
-
-
 LockedModuleCommunication::LockedModuleCommunication( CommandHandler & commandHandler,
                                                       gazebo::transport::Node & node,
                                                       std::string moduleTopicName,
-                                                      RofiId rofiId )
+                                                      ModuleId moduleId )
         : _commandHandler( commandHandler )
-        , _rofiId( rofiId )
+        , _moduleId( moduleId )
         , _topic( "/gazebo/" + node.GetTopicNamespace() + "/" + moduleTopicName )
         , _pub( node.Advertise< rofi::messages::RofiResp >( "~/" + moduleTopicName + "/response" ) )
         , _sub( node.Subscribe( "~/" + moduleTopicName + "/control",
@@ -27,14 +24,14 @@ void LockedModuleCommunication::onRofiCmd( const LockedModuleCommunication::Rofi
 {
     assert( msg );
 
-    if ( msg->rofiid() != _rofiId ) {
-        std::cerr << "Got a command from Module " << _rofiId << " for Module " << msg->rofiid()
+    if ( msg->rofiid() != _moduleId ) {
+        std::cerr << "Got a command from Module " << _moduleId << " for Module " << msg->rofiid()
                   << ". Ignoring...\n";
         return;
     }
 
     if ( auto resp = _commandHandler.onRofiCmd( msg ) ) {
-        assert( resp->rofiid() == _rofiId && "Immediate responses have to have same rofi id" );
+        assert( resp->rofiid() == _moduleId && "Immediate responses have to have same rofi id" );
         _pub->Publish( *resp );
     }
 }

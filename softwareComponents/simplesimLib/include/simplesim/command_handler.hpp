@@ -20,18 +20,14 @@ namespace rofi::simplesim
 {
 class CommandHandler
 {
-    using RofiCmd = rofi::messages::RofiCmd;
-    using JointCmd = rofi::messages::JointCmd;
-    using ConnectorCmd = rofi::messages::ConnectorCmd;
-
 public:
-    using RofiId = decltype( rofi::messages::RofiCmd().rofiid() );
-    using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
-    using RofiResp = rofi::messages::RofiResp;
-    using ImmediateCmdCallback =
-            std::function< std::optional< RofiResp >( const ModuleStates &, const RofiCmd & ) >;
-    using DelayedCmdCallback =
-            std::function< std::optional< RofiResp >( ModuleStates &, const RofiCmd & ) >;
+    using RofiCmd = rofi::messages::RofiCmd;
+    using RofiCmdPtr = boost::shared_ptr< const RofiCmd >;
+
+    using ImmediateCmdCallback = std::function<
+            std::optional< rofi::messages::RofiResp >( const ModuleStates &, const RofiCmd & ) >;
+    using DelayedCmdCallback = std::function<
+            std::optional< rofi::messages::RofiResp >( ModuleStates &, const RofiCmd & ) >;
 
     class CommandCallbacks
     {
@@ -47,7 +43,7 @@ public:
         assert( _moduleStates );
     }
 
-    std::optional< RofiResp > onRofiCmd( const RofiCmdPtr & rofiCmdPtr );
+    std::optional< rofi::messages::RofiResp > onRofiCmd( const RofiCmdPtr & rofiCmdPtr );
 
     auto getModuleIds()
     {

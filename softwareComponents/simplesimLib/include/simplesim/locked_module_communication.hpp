@@ -15,13 +15,12 @@ namespace rofi::simplesim
 class LockedModuleCommunication
 {
 public:
-    using RofiId = CommandHandler::RofiId;
     using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
 
     LockedModuleCommunication( CommandHandler & commandHandler,
                                gazebo::transport::Node & node,
                                std::string moduleTopicName,
-                               RofiId rofiId );
+                               ModuleId moduleId );
 
     ~LockedModuleCommunication()
     {
@@ -52,7 +51,7 @@ private:
 private:
     CommandHandler & _commandHandler;
 
-    RofiId _rofiId = {};
+    ModuleId _moduleId = {};
     std::string _topic;
 
     gazebo::transport::PublisherPtr _pub;

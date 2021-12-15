@@ -26,8 +26,6 @@ class ModulesCommunication
     using LockedModuleCommunicationPtr = std::unique_ptr< LockedModuleCommunication >;
 
 public:
-    using RofiId = CommandHandler::RofiId;
-
     ModulesCommunication( std::shared_ptr< CommandHandler > commandHandler,
                           gazebo::transport::NodePtr node )
             : _commandHandler( std::move( commandHandler ) )
@@ -37,8 +35,8 @@ public:
         assert( _node );
         assert( _commandHandler );
         _modules.visit( [ moduleIds = _commandHandler->getModuleIds() ]( auto & modules ) {
-            for ( auto rofiId : moduleIds ) {
-                [[maybe_unused]] auto result = modules.emplace( rofiId, nullptr );
+            for ( auto moduleId : moduleIds ) {
+                [[maybe_unused]] auto result = modules.emplace( moduleId, nullptr );
                 assert( result.second );
             }
         } );
@@ -48,24 +46,24 @@ public:
     ModulesCommunication & operator=( const ModulesCommunication & ) = delete;
 
     // Returns true if the insertion was succesful
-    // Returns false if the rofiId was already registered
-    bool addNewRofi( RofiId rofiId );
+    // Returns false if the moduleId was already registered
+    bool addNewModule( ModuleId moduleId );
 
-    std::optional< RofiId > lockFreeRofi();
-    bool tryLockRofi( RofiId rofiId );
-    void unlockRofi( RofiId rofiId );
+    std::optional< ModuleId > lockFreeModule();
+    bool tryLockModule( ModuleId moduleId );
+    void unlockModule( ModuleId moduleId );
 
-    std::optional< std::string > getTopic( RofiId rofiId ) const;
-    bool isLocked( RofiId rofiId ) const;
+    std::optional< std::string > getTopic( ModuleId moduleId ) const;
+    bool isLocked( ModuleId moduleId ) const;
 
     template < typename F >
     void forEachLockedModule( F && function ) const
     {
         _modules.visit_shared(
                 [ &function, &node = std::as_const( *_node ) ]( const auto & modules ) {
-                    for ( auto & [ rofiId, moduleComm ] : modules ) {
+                    for ( auto & [ moduleId, moduleComm ] : modules ) {
                         if ( moduleComm ) {
-                            function( rofiId, moduleComm->topic( node ) );
+                            function( moduleId, moduleComm->topic( node ) );
                         }
                     }
                 } );
@@ -75,9 +73,9 @@ public:
     void forEachFreeModule( F && function ) const
     {
         _modules.visit_shared( [ &function ]( const auto & modules ) {
-            for ( const auto & [ rofiId, moduleComm ] : modules ) {
+            for ( const auto & [ moduleId, moduleComm ] : modules ) {
                 if ( !moduleComm ) {
-                    function( rofiId );
+                    function( moduleId );
                 }
             }
         } );
@@ -103,7 +101,7 @@ private:
     }
 
 
-    LockedModuleCommunicationPtr getNewLockedModule( RofiId rofiId )
+    LockedModuleCommunicationPtr getNewLockedModule( ModuleId moduleId )
     {
         // Cannot lock any mutexes (in particular cannot access `_modules`)
         assert( _commandHandler );
@@ -111,7 +109,7 @@ private:
         return std::make_unique< LockedModuleCommunication >( *_commandHandler,
                                                               *_node,
                                                               getNewTopicName(),
-                                                              rofiId );
+                                                              moduleId );
     }
 
 private:
@@ -119,7 +117,8 @@ private:
 
     gazebo::transport::NodePtr _node;
 
-    atoms::Guarded< std::map< RofiId, LockedModuleCommunicationPtr >, std::shared_mutex > _modules;
+    atoms::Guarded< std::map< ModuleId, LockedModuleCommunicationPtr >, std::shared_mutex >
+            _modules;
 
     Distributor _distributor;
 };
