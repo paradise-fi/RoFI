@@ -124,20 +124,38 @@ std::optional< ModuleStates::ConnectedTo > ModuleStates::getConnectedTo( ModuleI
 bool ModuleStates::extendConnector( ModuleId moduleId, int connector )
 {
     if ( auto connectorInnerState = getConnectorInnerState( moduleId, connector ) ) {
-        connectorInnerState->get().extend();
+        connectorInnerState->get().setExtended();
+        // TODO check if there is a near connector
         return true;
     }
     return false;
 }
 
-bool ModuleStates::retractConnector( ModuleId moduleId, int connector )
+std::optional< ModuleStates::ConnectedTo > ModuleStates::retractConnector( ModuleId moduleId,
+                                                                           int connector )
 {
     if ( auto connectorInnerState = getConnectorInnerState( moduleId, connector ) ) {
-        connectorInnerState->get().retract();
-        // TODO disconnect this and the connectedTo connector
-        return true;
+        auto connectedTo = connectorInnerState->get().resetConnectedTo();
+        connectorInnerState->get().setRetracted();
+
+        if ( connectedTo ) {
+            if ( auto otherConnInner = getConnectorInnerState( connectedTo->moduleId,
+                                                               connectedTo->connector ) ) {
+                [[maybe_unused]] auto otherConnectedTo = otherConnInner->get().resetConnectedTo();
+
+                assert( otherConnectedTo );
+                assert( otherConnectedTo->moduleId == moduleId );
+                assert( otherConnectedTo->connector == connector );
+                assert( otherConnectedTo->orientation == connectedTo->orientation );
+            }
+            else {
+                std::cerr << "Inconsistent state (couldn't find module " << connectedTo->moduleId
+                          << ", connector " << connectedTo->connector << ")\n";
+            }
+        }
+        return { connectedTo };
     }
-    return false;
+    return std::nullopt;
 }
 
 bool ModuleStates::setConnectorPower( ModuleId moduleId,

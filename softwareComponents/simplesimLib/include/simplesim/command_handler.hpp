@@ -4,6 +4,7 @@
 #include <memory>
 #include <optional>
 #include <utility>
+#include <variant>
 #include <vector>
 
 #include <boost/shared_ptr.hpp>
@@ -21,13 +22,35 @@ namespace rofi::simplesim
 class CommandHandler
 {
 public:
+    class Connector
+    {
+    public:
+        rofi::messages::RofiResp getRofiResp( rofi::messages::ConnectorCmd::Type type ) const;
+
+        ModuleId moduleId = {};
+        int connector = {};
+    };
+    class DisconnectEvent
+    {
+    public:
+        Connector first;
+        Connector second;
+    };
+
+    class SendPacketEvent
+    {
+    public:
+        Connector receiver;
+        rofi::messages::Packet packet;
+    };
+
     using RofiCmd = rofi::messages::RofiCmd;
     using RofiCmdPtr = boost::shared_ptr< const RofiCmd >;
 
     using ImmediateCmdCallback = std::function<
             std::optional< rofi::messages::RofiResp >( const ModuleStates &, const RofiCmd & ) >;
-    using DelayedCmdCallback = std::function<
-            std::optional< rofi::messages::RofiResp >( ModuleStates &, const RofiCmd & ) >;
+    using DelayedEvent = std::variant< std::nullopt_t, DisconnectEvent, SendPacketEvent >;
+    using DelayedCmdCallback = std::function< DelayedEvent( ModuleStates &, const RofiCmd & ) >;
 
     class CommandCallbacks
     {
