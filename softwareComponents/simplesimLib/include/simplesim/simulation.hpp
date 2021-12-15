@@ -8,6 +8,7 @@
 #include <utility>
 
 #include "atoms/guarded.hpp"
+#include "atoms/patterns.hpp"
 #include "command_handler.hpp"
 #include "module_states.hpp"
 #include "wait_handler.hpp"
@@ -73,11 +74,27 @@ private:
         auto commandCallbacks = _commandHandler->extractCommandCallbacks();
         std::vector< RofiResp > responses;
         for ( auto & [ callback, rofiCmdPtr ] : commandCallbacks ) {
+            using SendPacketEvent = CommandHandler::SendPacketEvent;
+            using DisconnectEvent = CommandHandler::DisconnectEvent;
+
             assert( callback );
             assert( rofiCmdPtr );
-            if ( auto resp = callback( *_moduleStates, *rofiCmdPtr ) ) {
-                responses.push_back( std::move( *resp ) );
-            }
+            std::visit( overload{ []( std::nullopt_t /* nothing */ ) {},
+                                  [ &responses ]( SendPacketEvent && packet_event ) {
+                                      auto resp = packet_event.receiver.getRofiResp(
+                                              rofi::messages::ConnectorCmd::PACKET );
+                                      *resp.mutable_connectorresp()->mutable_packet() = std::move(
+                                              packet_event.packet );
+                                      // TODO use packet filter
+                                      responses.push_back( std::move( resp ) );
+                                  },
+                                  [ &responses ]( const DisconnectEvent & disconnect_event ) {
+                                      responses.push_back( disconnect_event.first.getRofiResp(
+                                              rofi::messages::ConnectorCmd::DISCONNECT ) );
+                                      responses.push_back( disconnect_event.second.getRofiResp(
+                                              rofi::messages::ConnectorCmd::DISCONNECT ) );
+                                  } },
+                        callback( *_moduleStates, *rofiCmdPtr ) );
         }
         return responses;
     }

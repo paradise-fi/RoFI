@@ -33,6 +33,11 @@ RofiResp getConnectorResp( ModuleId moduleId, int connector, ConnectorCmd::Type 
     return rofiResp;
 }
 
+RofiResp CommandHandler::Connector::getRofiResp( ConnectorCmd::Type type ) const
+{
+    return getConnectorResp( moduleId, connector, type );
+}
+
 
 std::optional< RofiResp > getJointCapabilities( const ModuleStates & moduleStates,
                                                 const RofiCmd & rofiCmd )
@@ -173,7 +178,8 @@ std::nullopt_t extendConnector( ModuleStates & moduleStates, const RofiCmd & rof
     return std::nullopt;
 }
 
-std::nullopt_t retractConnector( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
+CommandHandler::DelayedEvent retractConnector( ModuleStates & moduleStates,
+                                               const RofiCmd & rofiCmd )
 {
     assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
     assert( rofiCmd.connectorcmd().cmdtype() == ConnectorCmd::DISCONNECT );
@@ -181,10 +187,14 @@ std::nullopt_t retractConnector( ModuleStates & moduleStates, const RofiCmd & ro
     ModuleId moduleId = rofiCmd.rofiid();
     int connector = rofiCmd.connectorcmd().connector();
 
-    // TODO can you get a message after disconnect command?
-
-    // TODO send disconnect event to both sides
-    if ( moduleStates.retractConnector( moduleId, connector ) ) {
+    if ( auto connectedTo = moduleStates.retractConnector( moduleId, connector ) ) {
+        if ( auto otherConnector = *connectedTo ) {
+            return CommandHandler::DisconnectEvent{
+                    .first = CommandHandler::Connector{ .moduleId = moduleId,
+                                                        .connector = connector },
+                    .second = CommandHandler::Connector{ .moduleId = otherConnector->moduleId,
+                                                         .connector = otherConnector->connector } };
+        }
         return std::nullopt;
     }
     std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector " << connector
@@ -192,8 +202,8 @@ std::nullopt_t retractConnector( ModuleStates & moduleStates, const RofiCmd & ro
     return std::nullopt;
 }
 
-std::optional< RofiResp > sendConnectorPacket( ModuleStates & moduleStates,
-                                               const RofiCmd & rofiCmd )
+CommandHandler::DelayedEvent sendConnectorPacket( ModuleStates & moduleStates,
+                                                  const RofiCmd & rofiCmd )
 {
     assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
     assert( rofiCmd.connectorcmd().cmdtype() == ConnectorCmd::PACKET );
@@ -201,15 +211,12 @@ std::optional< RofiResp > sendConnectorPacket( ModuleStates & moduleStates,
     ModuleId moduleId = rofiCmd.rofiid();
     int connector = rofiCmd.connectorcmd().connector();
 
-    const Packet & packet = rofiCmd.connectorcmd().packet();
-
     if ( auto connectedToOpt = moduleStates.getConnectedTo( moduleId, connector ) ) {
         if ( auto connectedTo = *connectedToOpt ) {
-            auto resp = getConnectorResp( connectedTo->moduleId,
-                                          connectedTo->connector,
-                                          ConnectorCmd::PACKET );
-            *resp.mutable_connectorresp()->mutable_packet() = packet;
-            return resp;
+            return CommandHandler::SendPacketEvent{
+                    .receiver = CommandHandler::Connector{ .moduleId = connectedTo->moduleId,
+                                                           .connector = connectedTo->connector },
+                    .packet = rofiCmd.connectorcmd().packet() };
         }
 
         std::cerr << "Connector " << connector << "of module " << moduleId
@@ -234,7 +241,8 @@ std::nullopt_t setConnectorPower( ModuleStates & moduleStates, const RofiCmd & r
         return std::nullopt;
     }
     std::cerr << "Rofi " << moduleId << " doesn't exist or does not have connector " << connector
-              << " (connector command type: " << ConnectorCmd::CONNECT_POWER << ")\n";
+              << " (connector command type: " << ConnectorCmd::CONNECT_POWER << ", line: " << line
+              << ")\n";
     return std::nullopt;
 }
 

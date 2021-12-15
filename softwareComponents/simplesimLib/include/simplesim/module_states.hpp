@@ -75,8 +75,8 @@ public:
 
     // Extends connector and returns true if module with moduleId exists and has given connector
     bool extendConnector( ModuleId moduleId, int connector );
-    // Retracts connector and returns true if module with moduleId exists and has given connector
-    bool retractConnector( ModuleId moduleId, int connector );
+    // Retracts connector and returns previously connected to if module with moduleId exists and has given connector
+    std::optional< ConnectedTo > retractConnector( ModuleId moduleId, int connector );
     // Sets given power line in connector and returns true if module with moduleId exists and has given connector
     bool setConnectorPower( ModuleId moduleId, int connector, ConnectorLine line, bool connect );
 

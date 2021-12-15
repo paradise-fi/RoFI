@@ -106,14 +106,13 @@ public:
     };
 
 public:
-    void extend()
+    void setExtended()
     {
         _position = true;
     }
-    void retract()
+    void setRetracted()
     {
         _position = false;
-        resetConnectedTo();
     }
     bool position() const
     {
@@ -124,9 +123,11 @@ public:
     {
         _connectedTo = { moduleId, connector, orientation };
     }
-    void resetConnectedTo()
+    std::optional< OtherConnector > resetConnectedTo()
     {
+        auto prevConnectedTo = std::move( _connectedTo );
         _connectedTo.reset();
+        return prevConnectedTo;
     }
     const std::optional< OtherConnector > & connectedTo() const
     {
