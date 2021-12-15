@@ -3,63 +3,61 @@
 
 using namespace rofi::simplesim;
 
-using RofiId = ModulesCommunication::RofiId;
-
-
-bool ModulesCommunication::addNewRofi( RofiId rofiId )
+bool ModulesCommunication::addNewModule( ModuleId moduleId )
 {
-    return _modules.visit(
-            [ rofiId ]( auto & modules ) { return modules.emplace( rofiId, nullptr ).second; } );
+    return _modules.visit( [ moduleId ]( auto & modules ) {
+        return modules.emplace( moduleId, nullptr ).second;
+    } );
 }
 
-std::optional< RofiId > ModulesCommunication::lockFreeRofi()
+std::optional< ModuleId > ModulesCommunication::lockFreeModule()
 {
-    return _modules.visit( [ this ]( auto & modules ) -> std::optional< RofiId > {
-        for ( auto & [ rofiId, moduleComm ] : modules ) {
+    return _modules.visit( [ this ]( auto & modules ) -> std::optional< ModuleId > {
+        for ( auto & [ moduleId, moduleComm ] : modules ) {
             if ( !moduleComm ) {
-                moduleComm = this->getNewLockedModule( rofiId );
-                return rofiId;
+                moduleComm = this->getNewLockedModule( moduleId );
+                return moduleId;
             }
         }
         return std::nullopt;
     } );
 }
 
-bool ModulesCommunication::tryLockRofi( RofiId rofiId )
+bool ModulesCommunication::tryLockModule( ModuleId moduleId )
 {
-    return _modules.visit( [ this, rofiId ]( auto & modules ) {
-        if ( auto it = modules.find( rofiId ); it != modules.end() && it->second == nullptr ) {
-            it->second = this->getNewLockedModule( rofiId );
+    return _modules.visit( [ this, moduleId ]( auto & modules ) {
+        if ( auto it = modules.find( moduleId ); it != modules.end() && it->second == nullptr ) {
+            it->second = this->getNewLockedModule( moduleId );
             return true;
         }
         return false;
     } );
 }
 
-void ModulesCommunication::unlockRofi( RofiId rofiId )
+void ModulesCommunication::unlockModule( ModuleId moduleId )
 {
-    return _modules.visit( [ rofiId ]( auto & modules ) {
-        if ( auto it = modules.find( rofiId ); it != modules.end() ) {
+    return _modules.visit( [ moduleId ]( auto & modules ) {
+        if ( auto it = modules.find( moduleId ); it != modules.end() ) {
             it->second.reset();
         }
     } );
 }
 
-std::optional< std::string > ModulesCommunication::getTopic( RofiId rofiId ) const
+std::optional< std::string > ModulesCommunication::getTopic( ModuleId moduleId ) const
 {
-    return _modules.visit_shared( [ rofiId, &node = std::as_const( *_node ) ](
+    return _modules.visit_shared( [ moduleId, &node = std::as_const( *_node ) ](
                                           const auto & modules ) -> std::optional< std::string > {
-        if ( auto it = modules.find( rofiId ); it != modules.end() && it->second != nullptr ) {
+        if ( auto it = modules.find( moduleId ); it != modules.end() && it->second != nullptr ) {
             return it->second->topic( node );
         }
         return std::nullopt;
     } );
 }
 
-bool ModulesCommunication::isLocked( RofiId rofiId ) const
+bool ModulesCommunication::isLocked( ModuleId moduleId ) const
 {
-    return _modules.visit_shared( [ rofiId ]( const auto & modules ) {
-        auto it = modules.find( rofiId );
+    return _modules.visit_shared( [ moduleId ]( const auto & modules ) {
+        auto it = modules.find( moduleId );
         return it != modules.end() && it->second != nullptr;
     } );
 }

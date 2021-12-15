@@ -26,10 +26,10 @@ public:
     {}
 
     // Returns true if the insertion was succesful
-    // Returns false if the rofiId was already registered
-    bool addNewRofi( ModulesCommunication::RofiId rofiId )
+    // Returns false if the moduleId was already registered
+    bool addNewModule( ModuleId moduleId )
     {
-        return _modules.addNewRofi( rofiId );
+        return _modules.addNewModule( moduleId );
     }
 
     template < typename ResponsesContainer >

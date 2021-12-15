@@ -4,8 +4,6 @@
 namespace rofi::simplesim
 {
 using namespace rofi::messages;
-using RofiCmdPtr = CommandHandler::RofiCmdPtr;
-
 
 RofiResp getJointResp( ModuleId moduleId,
                        int joint,
@@ -273,7 +271,7 @@ std::optional< RofiResp > getModuleDescription( const ModuleStates & moduleState
         return resp;
     }
     std::cerr << "Could not get RoFI descriptor (RoFI " << moduleId << " doesn't exist)\n";
-    return {};
+    return std::nullopt;
 }
 
 
@@ -376,7 +374,7 @@ CommandHandler::CommandCallbacks CommandHandler::onRofiCmdCallbacks( const RofiC
     }
 }
 
-std::optional< RofiResp > CommandHandler::onRofiCmd( const RofiCmdPtr & rofiCmdPtr )
+std::optional< RofiResp > CommandHandler::onRofiCmd( const CommandHandler::RofiCmdPtr & rofiCmdPtr )
 {
     assert( rofiCmdPtr );
     assert( _moduleStates );

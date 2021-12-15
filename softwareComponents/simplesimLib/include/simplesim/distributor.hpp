@@ -19,7 +19,6 @@ class Distributor
     using remove_cvref_t = std::remove_cv_t< std::remove_reference_t< T > >;
 
 public:
-    using RofiId = CommandHandler::RofiId;
     using SessionId = remove_cvref_t< decltype( rofi::messages::DistributorReq().sessionid() ) >;
 
     // Initializes the Distributor
@@ -39,8 +38,8 @@ private:
 
     rofi::messages::DistributorResp onGetInfoReq();
     rofi::messages::DistributorResp onLockOneReq( SessionId sessionId );
-    rofi::messages::DistributorResp onTryLockReq( RofiId rofiId, SessionId sessionId );
-    rofi::messages::DistributorResp onUnlockReq( RofiId rofiId, SessionId sessionId );
+    rofi::messages::DistributorResp onTryLockReq( ModuleId moduleId, SessionId sessionId );
+    rofi::messages::DistributorResp onUnlockReq( ModuleId moduleId, SessionId sessionId );
 
 
     ModulesCommunication & _modulesCommunication;
