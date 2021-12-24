@@ -124,7 +124,8 @@ function(setup_stm32cube PREFIX MCU)
     endfunction()
 
     add_hallib(HAL
-        REQUIRED hal.c hal_rcc.c hal_cortex.c)
+        REQUIRED hal.c hal_rcc.c hal_cortex.c
+        OPTIONAL hal_rcc_ex.c)
     add_hallib(HAL_Gpio
         REQUIRED hal_gpio.c)
     add_hallib(HAL_ADC
@@ -171,6 +172,15 @@ function(setup_stm32cube PREFIX MCU)
     add_hallib(HAL_Tim
         REQUIRED hal_tim.c
         OPTIONAL hal_tim_ex.c)
+    add_hallib(HAL_UART
+        REQUIRED hal_uart.c
+        OPTIONAL hal_uart_ex.c)
+    add_hallib(HAL_Opamp
+        REQUIRED hal_opamp.c
+        OPTIONAL hal_opamp_ex.c)
+    add_hallib(HAL_Pwr
+        REQUIRED hal_pwr.c
+        OPTIONAL hal_pwr_ex.c)
 
     add_hallib(LL
         REQUIRED ll_utils.c ll_rcc.c)
