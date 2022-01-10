@@ -1,7 +1,9 @@
 #include <iostream>
 
 #include <dimcli/cli.h>
+#include <google/protobuf/wrappers.pb.h>
 
+#include "configuration/serialization.hpp"
 #include "configuration/universalModule.hpp"
 #include "message_server.hpp"
 #include "simplesim/communication.hpp"
@@ -46,8 +48,18 @@ std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
     auto simulation = std::make_shared< Simulation >( std::move( rofibotConfiguration ) );
     auto communication = std::make_shared< Communication >( simulation->commandHandler() );
 
-    // TODO add callback
-    return Controller::runRofiController( std::move( simulation ), std::move( communication ), {} );
+    return Controller::runRofiController(
+            std::move( simulation ),
+            std::move( communication ),
+            [ pub = communication->node()->Advertise< google::protobuf::StringValue >(
+                      "configuration" ) ](
+                    std::shared_ptr< const rofi::configuration::Rofibot > configuration ) {
+                assert( configuration );
+                auto message = google::protobuf::StringValue();
+                message.set_value(
+                        rofi::configuration::serialization::toJSON( *configuration ).dump() );
+                pub->Publish( message );
+            } );
 }
 
 
