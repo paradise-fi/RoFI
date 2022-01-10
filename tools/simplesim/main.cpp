@@ -7,7 +7,7 @@
 #include "configuration/rofibot.hpp"
 #include "configuration/universalModule.hpp"
 #include "message_server.hpp"
-#include "simplesim/controllers.hpp"
+#include "simplesim/simplesim.hpp"
 #include "simplesim_client.hpp"
 
 
@@ -40,21 +40,6 @@ std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
 }
 
 
-[[nodiscard]] rofi::simplesim::Controller runSimplesim(
-        std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration,
-        rofi::simplesim::Controller::OnConfigurationUpdate onConfigurationUpdate )
-{
-    using namespace rofi::simplesim;
-
-    auto simulation = std::make_shared< Simulation >( std::move( rofibotConfiguration ) );
-    auto communication = std::make_shared< Communication >( simulation->commandHandler() );
-
-    return Controller::runRofiController( std::move( simulation ),
-                                          std::move( communication ),
-                                          std::move( onConfigurationUpdate ) );
-}
-
-
 int main( int argc, char * argv[] )
 {
     Dim::Cli cli;
@@ -74,7 +59,7 @@ int main( int argc, char * argv[] )
     auto client = rofi::simplesim::SimplesimClient();
 
     std::cout << "Starting simplesim server..." << std::endl;
-    auto server = runSimplesim( configuration, [ &client ]( auto rofiConfig ) {
+    auto server = rofi::simplesim::runSimplesim( configuration, [ &client ]( auto rofiConfig ) {
         client.onConfigurationUpdate( std::move( rofiConfig ) );
     } );
 
