@@ -6,4 +6,4 @@ set (SRC
 )
 
 add_executable(rofi-simplesimServer ${SRC})
-target_link_libraries(rofi-simplesimServer PUBLIC simplesim gzMessageServer configuration dimcli)
+target_link_libraries(rofi-simplesimServer PUBLIC simplesim gzMessageServer configurationWithJson dimcli)

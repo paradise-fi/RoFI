@@ -38,6 +38,11 @@ public:
         _modules.sendRofiResponses( std::forward< ResponsesContainer >( responses ) );
     }
 
+    gazebo::transport::NodePtr node() const
+    {
+        return _node;
+    }
+
 private:
     const std::string _worldName;
     gazebo::transport::NodePtr _node;
