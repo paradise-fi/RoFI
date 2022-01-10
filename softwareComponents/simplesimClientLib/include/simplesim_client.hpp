@@ -64,6 +64,7 @@ private:
 public:
     SimplesimClient();
 
+    // Blocks until the user closes the window
     void run()
     {
         assert( _renderWindow.Get() != nullptr );
@@ -74,6 +75,7 @@ public:
         _renderWindowInteractor->Start();
     }
 
+    // Can be called from any thread
     void onConfigurationUpdate(
             std::shared_ptr< const rofi::configuration::Rofibot > newConfiguration )
     {

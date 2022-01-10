@@ -10,7 +10,7 @@
 
 namespace rofi::simplesim
 {
-class Controller
+class [[nodiscard]] Controller
 {
 public:
     static constexpr std::chrono::milliseconds simulationStepDuration = std::chrono::milliseconds( 100 );
@@ -20,10 +20,9 @@ public:
     using OnConfigurationUpdate =
             std::function< void( std::shared_ptr< const rofi::configuration::Rofibot > ) >;
 
-    [[nodiscard]] static Controller runRofiController(
-            std::shared_ptr< Simulation > simulation,
-            std::shared_ptr< Communication > communication,
-            OnConfigurationUpdate onConfigurationUpdate );
+    static Controller runRofiController( std::shared_ptr< Simulation > simulation,
+                                         std::shared_ptr< Communication > communication,
+                                         OnConfigurationUpdate onConfigurationUpdate );
 
     void wait()
     {

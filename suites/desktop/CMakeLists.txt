@@ -155,6 +155,7 @@ if (${BUILD_GAZEBO})
 
   add_component(gazebosim)
   add_component(simplesimLib)
+  add_component(simplesimClientLib)
 endif()
 
 
@@ -174,6 +175,7 @@ if (${BUILD_GAZEBO})
   add_tool(simplesimServer)
 
   if (NOT ${BUILD_HEADLESS})
+    add_tool(simplesimClient)
     add_tool(simplesim)
   endif()
 endif()
