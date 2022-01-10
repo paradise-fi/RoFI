@@ -2,25 +2,46 @@
 
 #include <memory>
 #include <string>
+#include <string_view>
 
 #include <gazebo/Master.hh>
+#include <gazebo/gazebo_client.hh>
 
 
 namespace rofi::msgs
 {
-class [[nodiscard]] MessageServer
+class [[nodiscard]] Server
 {
 public:
-    // MessageServer( std::string_view logName = "default" );
-
-    // void poll();
-    // void loop();
-    // void loopInThread();
-
-    static MessageServer createAndLoopInThread( std::string_view logName = "default" );
+    static Server createAndLoopInThread( std::string_view logName = "default" );
 
 private:
     std::unique_ptr< gazebo::Master > _impl;
+};
+
+
+class [[nodiscard]] Client
+{
+public:
+    Client()
+    {
+        if ( !gazebo::client::setup() ) {
+            throw std::runtime_error( "Could not setup client" );
+        }
+    }
+    Client( int argc, char ** argv )
+    {
+        if ( !gazebo::client::setup( argc, argv ) ) {
+            throw std::runtime_error( "Could not setup client" );
+        }
+    }
+    Client( const Client & ) = delete;
+    Client & operator=( const Client & ) = delete;
+
+    ~Client()
+    {
+        gazebo::client::shutdown();
+    }
 };
 
 } // namespace rofi::msgs

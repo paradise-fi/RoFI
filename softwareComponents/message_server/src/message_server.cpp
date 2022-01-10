@@ -1,27 +1,30 @@
-#include <gazebo/gazebo.hh>
-
 #include "message_server.hpp"
+
+#include <gazebo/gazebo.hh>
 
 
 namespace rofi::msgs
 {
-MessageServer MessageServer::createAndLoopInThread( std::string_view /* logName */ )
+Server Server::createAndLoopInThread( std::string_view logName )
 {
     std::string host; // Host is ignored for master
     unsigned port = {};
-    gazebo::transport::get_master_uri( host, port );
+    if ( !gazebo::transport::get_master_uri( host, port ) || port > UINT16_MAX ) {
+        throw std::runtime_error( "Unable to read master uri." );
+    }
 
-    MessageServer result;
+    Server result;
     result._impl = std::make_unique< gazebo::Master >();
-    result._impl->Init( port );
+    assert( port <= UINT16_MAX );
+    result._impl->Init( static_cast< uint16_t >( port ) );
+    // Runs the master in a new thread.
     result._impl->RunThread();
 
 
     gazebo::common::load();
 
-    // TODO: use logName
     // Initialize the informational logger. This will log warnings, and errors.
-    gzLogInit( "simplesim-", "default.log" );
+    gzLogInit( std::string( logName ) + "-", std::string( logName ) + ".log" );
 
     if ( !gazebo::transport::init() ) {
         throw std::runtime_error( "Unable to initialize transport." );

@@ -11,4 +11,4 @@ set (SRC
 )
 
 add_executable(rofi-simplesim ${SRC})
-target_link_libraries(rofi-simplesim simplesim gzMessageServer configuration ${VTK_LIBRARIES} dimcli)
+target_link_libraries(rofi-simplesim simplesim messageServer configuration ${VTK_LIBRARIES} dimcli)
