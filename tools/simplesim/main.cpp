@@ -69,7 +69,7 @@ int main( int argc, char * argv[] )
     auto configuration = readConfigurationFromFile( *inputCfgFileName );
 
     std::cout << "Starting gazebo server" << std::endl;
-    auto msgServer = rofi::msgs::MessageServer::createAndLoopInThread( "simplesim" );
+    auto msgServer = rofi::msgs::Server::createAndLoopInThread( "simplesim" );
 
     auto client = rofi::simplesim::SimplesimClient();
 

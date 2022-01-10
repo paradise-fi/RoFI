@@ -76,7 +76,7 @@ int main( int argc, char * argv[] )
     std::cout << "Reading configuration from file" << std::endl;
     auto configuration = readConfigurationFromFile( *inputCfgFileName );
 
-    auto gzMaster = rofi::msgs::MessageServer::createAndLoopInThread( "simplesim" );
+    auto gzMaster = rofi::msgs::Server::createAndLoopInThread( "simplesim" );
     std::cout << "Starting simplesim..." << std::endl;
     auto controller = runSimplesim( std::move( configuration ) );
     std::cout << "Simulating..." << std::endl;
