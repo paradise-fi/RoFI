@@ -47,11 +47,20 @@ namespace roficom {
  * \brief Joint between two components of the same module
  */
 struct ComponentJoint {
-    ComponentJoint( std::unique_ptr< Joint > joint, int source, int dest ):
+    ComponentJoint( atoms::ValuePtr< Joint > joint, int source, int dest ):
         joint( std::move( joint ) ),
         sourceComponent( source ),
         destinationComponent( dest )
     {}
+    ComponentJoint( ComponentJoint && ) = default;
+    ComponentJoint& operator=( ComponentJoint && ) = default;
+    ComponentJoint( const ComponentJoint & o ):
+        ComponentJoint( o.joint.clone(), o.sourceComponent, o.destinationComponent )
+    {}
+    ComponentJoint& operator=( const ComponentJoint & o ) {
+        *this = ComponentJoint( o );
+        return *this;
+    }
 
     atoms::ValuePtr< Joint > joint;
     int sourceComponent, destinationComponent;
@@ -59,9 +68,9 @@ struct ComponentJoint {
 
 template< typename JointT, typename...Args >
 ComponentJoint makeComponentJoint( int source, int dest, Args&&...args ) {
-    return ComponentJoint{
-        std::make_unique< JointT >( ( std::forward< Args >( args ) )... ),
-        source, dest };
+    return ComponentJoint(
+        atoms::ValuePtr< Joint >( std::make_unique< JointT >( ( std::forward< Args >( args ) )... ) ),
+        source, dest );
 }
 
 /**
@@ -99,6 +108,22 @@ struct RoficomJoint: public Joint {
  * \brief Joint between a fixed point in space and a module
  */
 struct SpaceJoint {
+    SpaceJoint( atoms::ValuePtr< Joint > joint, Vector refPoint, ModuleId destModule, int destComponent ):
+        joint( std::move( joint ) ),
+        refPoint( std::move( refPoint ) ),
+        destModule( destModule ),
+        destComponent( destComponent )
+    {}
+    SpaceJoint( SpaceJoint && ) = default;
+    SpaceJoint& operator=( SpaceJoint && ) = default;
+    SpaceJoint( const SpaceJoint & o ):
+        SpaceJoint( o.joint.clone(), o.refPoint, o.destModule, o.destComponent )
+    {}
+    SpaceJoint& operator=( const SpaceJoint & o ) {
+        *this = SpaceJoint( o );
+        return *this;
+    }
+
     atoms::ValuePtr< Joint > joint;
     Vector refPoint;
     ModuleId destModule;
@@ -654,20 +679,26 @@ private:
     }
 
     struct ModuleInfo {
-        ModuleInfo( const ModuleInfo& ) = default;
-        ModuleInfo( ModuleInfo&& o ) noexcept
-        : module( std::move( o.module ) ), inJointsIdx( std::move( o.inJointsIdx ) ),
-            outJointsIdx( std::move( o.outJointsIdx ) ), spaceJoints( std::move( o.spaceJoints ) ),
-            position( std::move( o.position ) )
+        ModuleInfo( atoms::ValuePtr< Module > m, std::vector< RoficomHandle > i, std::vector< RoficomHandle > o,
+            std::vector< SpaceJointHandle > s, std::optional< Matrix > pos )
+        : module( std::move( m ) ), inJointsIdx( std::move( i ) ), outJointsIdx( std::move( o ) ),
+            spaceJoints( std::move( s ) ), position( std::move( pos ) )
         {}
 
-        ModuleInfo( atoms::ValuePtr< Module >&& m, const std::vector< RoficomHandle >& i, const std::vector< RoficomHandle >& o,
-            const std::vector< SpaceJointHandle >& s, const std::optional< Matrix >& pos )
-        : module( std::move( m ) ), inJointsIdx( i ), outJointsIdx( o ), spaceJoints( s ), position( pos )
-        {}
-
-        ModuleInfo& operator=( const ModuleInfo& ) = default;
+        ModuleInfo( ModuleInfo&& o ) noexcept = default;
         ModuleInfo& operator=( ModuleInfo&& ) = default;
+
+        ModuleInfo( const ModuleInfo& o )
+        : ModuleInfo( o.module.clone(), o.inJointsIdx, o.outJointsIdx, o.spaceJoints, o.position )
+        {}
+        ModuleInfo& operator=( const ModuleInfo& o ) {
+            this->module = o.module.clone();
+            this->inJointsIdx = o.inJointsIdx;
+            this->outJointsIdx = o.outJointsIdx;
+            this->spaceJoints = o.spaceJoints;
+            this->position = o.position;
+            return *this;
+        }
 
         atoms::ValuePtr< Module > module;  // Use value_ptr to make address of modules stable
         std::vector< RoficomHandle > inJointsIdx;
@@ -710,12 +741,13 @@ Rofibot::SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&..
     Rofibot& bot = *c.parent->parent;
     Rofibot::ModuleInfo& info = bot._modules[ bot._idMapping[ c.parent->getId() ] ];
 
-    auto jointId = bot._spaceJoints.insert( SpaceJoint{
-        atoms::ValuePtr( std::unique_ptr< Joint >( new JointT( std::forward< Args >( args )... ) ) ),
+    auto y = std::unique_ptr< Joint >(std::unique_ptr< JointT >());
+    auto jointId = bot._spaceJoints.insert( SpaceJoint(
+        atoms::ValuePtr< Joint >( std::make_unique< JointT >( std::forward< Args >( args )... ) ),
         refpoint,
         info.module->getId(),
         info.module->componentIdx( c )
-    } );
+    ) );
 
     info.spaceJoints.push_back( jointId );
     bot._prepared = false;
