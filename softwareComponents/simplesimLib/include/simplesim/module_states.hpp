@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <concepts>
 #include <functional>
 #include <map>
@@ -248,12 +249,16 @@ private:
             auto & moduleInnerState = moduleInnerStateOpt->get();
 
             std::span jointInnerStates = moduleInnerState.joints();
-            tcb::span jointConfigurations = module_->joints();
-            // TODO should be equal when we can get only user-configurable joints
-            assert( jointInnerStates.size() <= jointConfigurations.size() );
-            for ( size_t i = 0; i < jointInnerStates.size(); i++ ) {
-                assert( jointConfigurations[ i ].joint.get() );
-                auto & jointConfiguration = *jointConfigurations[ i ].joint;
+            std::ranges::view auto jointConfigurations = module_->configurableJoints();
+            assert( std::ssize( jointInnerStates )
+                    == std::ranges::distance( jointConfigurations ) );
+
+            auto enumerated = std::views::transform( [ i = 0UL ]< typename T >( T && value ) mutable {
+                return std::tuple< T, size_t >( std::forward< T >( value ), i++ );
+            } );
+            for ( auto [ jointConfiguration, i ] : jointConfigurations | enumerated ) {
+                static_assert(
+                        std::is_same_v< decltype( jointConfiguration ), configuration::Joint & > );
                 const auto & jointInnerState = jointInnerStates[ i ];
 
                 assert( jointConfiguration.positions().size() == 1 );
