@@ -303,16 +303,16 @@ public:
     explicit ValuePtr( std::unique_ptr< T > ptr ): _ptr( std::move( ptr ) ) {}
     explicit ValuePtr( const T& t ): _ptr( t.clone() ) {}
 
-    ValuePtr( const ValuePtr& other ): _ptr( other._ptr ? other._ptr->clone() : nullptr ) {}
-    ValuePtr& operator=( const ValuePtr& other ) {
-        if ( this != &other ) {
-            this->_ptr = std::unique_ptr< T >( other._ptr->clone() );
-        }
-        return *this;
-    }
+    template< std::derived_from< T > Derived >
+        requires( std::has_virtual_destructor_v< T > && !std::is_same_v< Derived, T > )
+    explicit ValuePtr( std::unique_ptr< T > ptr ): _ptr( std::move( ptr ) ) {}
 
-    ValuePtr( ValuePtr< T >&& other ) noexcept = default;
-    ValuePtr< T >& operator=( ValuePtr< T >&& other ) noexcept = default;
+    ValuePtr( ValuePtr&& ) noexcept = default;
+    ValuePtr& operator=( ValuePtr&& ) noexcept = default;
+
+    ValuePtr clone() const {
+        return _ptr ? ValuePtr( *_ptr ) : ValuePtr();
+    }
 
     void swap(ValuePtr& other) noexcept {
         using std::swap;
