@@ -7,7 +7,7 @@
 
 namespace rofi::configuration::serialization {
 
-    std::string componentTypeToString( ComponentType c ) {
+    inline std::string componentTypeToString( ComponentType c ) {
         switch ( c ) {
             case ComponentType::Roficom:
                 return "roficom";
@@ -20,7 +20,7 @@ namespace rofi::configuration::serialization {
         }
     }
 
-    ComponentType stringToComponentType( const std::string& str ) {
+    inline ComponentType stringToComponentType( const std::string& str ) {
         if ( str == "roficom" )
             return ComponentType::Roficom;
         else if ( str == "UM body" )
@@ -41,7 +41,7 @@ namespace rofi::configuration::serialization {
         return fromJSON< M >( j.begin().value(), stoi( j.begin().key() ) );
     }
 
-    nlohmann::json matrixToJSON( const Matrix& m ) {
+    inline nlohmann::json matrixToJSON( const Matrix& m ) {
         nlohmann::json j = nlohmann::json::array();
         for ( int i = 0; i < 4; i++ )
             j[ i ] = { m( i, 0 ), m( i, 1 ), m( i, 2 ), m( i, 3 ) };
@@ -49,7 +49,7 @@ namespace rofi::configuration::serialization {
         return j;
     }
 
-    Matrix matrixFromJSON( const nlohmann::json& js ) {
+    inline Matrix matrixFromJSON( const nlohmann::json& js ) {
         Matrix m;
         for ( int i = 0; i < 4; i++ ) {
             for ( int j = 0; j < 4; j++ ) {
@@ -59,7 +59,7 @@ namespace rofi::configuration::serialization {
         return m;
     }
 
-    auto jointToJSON( Joint& j ) {
+    inline nlohmann::json jointToJSON( Joint& j ) {
         nlohmann::json res;
         res[ "positions" ] = nlohmann::json::array();
         for ( auto& p : j.positions() )
@@ -82,14 +82,14 @@ namespace rofi::configuration::serialization {
         return res;
     }
 
-    void onUMTranslateDocs( nlohmann::json& j, ModuleType t, int component ) {
+    inline void onUMTranslateDocs( nlohmann::json& j, ModuleType t, int component ) {
         if ( t == ModuleType::Universal && component < 6 )
             j = std::move( UniversalModule::translateComponent( component ) );
         else
             j = component;
     }
 
-    nlohmann::json toJSON( const UniversalModule& m ) {
+    inline nlohmann::json toJSON( const UniversalModule& m ) {
         using namespace nlohmann;
         json j;
         j[ "type"  ] = "universal";
@@ -101,7 +101,7 @@ namespace rofi::configuration::serialization {
     }
 
     template<>
-    UniversalModule fromJSON( const nlohmann::json& j, ModuleId id ) {
+    inline UniversalModule fromJSON( const nlohmann::json& j, ModuleId id ) {
         assert( j[ "type" ] == "universal" );
 
         Angle alpha = Angle::deg( j[ "alpha" ] );
@@ -111,7 +111,7 @@ namespace rofi::configuration::serialization {
         return UniversalModule( id, alpha, beta, gamma );
     } 
 
-    nlohmann::json toJSON( const Pad& m ) {
+    inline nlohmann::json toJSON( const Pad& m ) {
         using namespace nlohmann;
         json j;
         j[ "type"   ] = "pad";
@@ -122,7 +122,7 @@ namespace rofi::configuration::serialization {
     }
 
     template<>
-    Pad fromJSON( const nlohmann::json& j, ModuleId id ) {
+    inline Pad fromJSON( const nlohmann::json& j, ModuleId id ) {
         assert( j[ "type" ] == "pad" );
         
         int width  = j[ "width" ];
@@ -130,7 +130,7 @@ namespace rofi::configuration::serialization {
         return Pad( id, width, height );
     }
 
-    nlohmann::json toJSON( const UnknownModule& m ) {
+    inline nlohmann::json toJSON( const UnknownModule& m ) {
         using namespace nlohmann;
         json j;
 
@@ -161,7 +161,7 @@ namespace rofi::configuration::serialization {
     }
 
     template<>
-    UnknownModule fromJSON( const nlohmann::json& j, ModuleId id ) {
+    inline UnknownModule fromJSON( const nlohmann::json& j, ModuleId id ) {
         assert( j[ "type" ] && "type is not null" );
 
         std::vector< Component > components;
@@ -204,7 +204,7 @@ namespace rofi::configuration::serialization {
         return UnknownModule( components, 0, joints, id, std::nullopt );
     }
 
-    nlohmann::json toJSON( const Rofibot& bot ) {
+    inline nlohmann::json toJSON( const Rofibot& bot ) {
         using namespace nlohmann;
         json res;
         res[ "modules" ] = json::array();
@@ -257,7 +257,7 @@ namespace rofi::configuration::serialization {
     }
 
     template<>
-    Rofibot fromJSON( const nlohmann::json& j ) {
+    inline Rofibot fromJSON( const nlohmann::json& j ) {
         Rofibot bot;
 
         for ( int i = 0; i < j[ "modules" ].size(); i++ ) {
