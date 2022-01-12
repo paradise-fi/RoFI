@@ -415,13 +415,41 @@ TEST_CASE( "Changing modules ID" ) {
     CHECK( m3.getId() == 78 );
 }
 
-TEST_CASE( "configurable joints" ) {
-    auto m = UniversalModule( 42, 0_deg, 0_rad, 0_deg );
-    int i = 0;
-    for ( auto j : m.configurableJoints() ) {
-        i++;
+TEST_CASE( "Configurable joints" ) {
+    SECTION( "default" ) {
+        auto m = UniversalModule( 42, 0_deg, 0_rad, 0_deg );
+        int i = 0;
+        for ( auto& j : m.configurableJoints() ) {
+            static_assert( std::is_same_v< decltype( j ), Joint & > );
+            i++;
+        }
+        REQUIRE( i == 3 );
     }
-    CHECK( i == 3 );
+    SECTION( "const" ) {
+        auto m = UniversalModule( 42, 0_deg, 0_rad, 0_deg );
+        int i = 0;
+        for ( auto& j : std::as_const( m ).configurableJoints() ) {
+            static_assert( std::is_same_v< decltype( j ), const Joint & > );
+            i++;
+        }
+        CHECK( i == 3 );
+    }
+    SECTION( "equality" ) {
+        auto m = UniversalModule( 42, 0_deg, 0_rad, 0_deg );
+
+        auto joints = m.configurableJoints();
+        auto cjoints = std::as_const( m ).configurableJoints();
+
+        auto it = joints.begin();
+        auto cit = cjoints.begin();
+        while ( it != joints.end() && cit != cjoints.end() ) {
+            CHECK( &*it == &*cit ); // Check address
+            ++it;
+            ++cit;
+        }
+        CHECK( it == joints.end() );
+        CHECK( cit == cjoints.end() );
+    }
 }
 
 } // namespace

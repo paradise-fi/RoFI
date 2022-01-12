@@ -4,12 +4,12 @@
 #include <memory>
 #include <vector>
 #include <set>
+#include <span>
 #include <map>
 #include <ranges>
 
 #include <atoms/containers.hpp>
 #include <atoms/units.hpp>
-#include <tcb/span.hpp>
 #include <fmt/format.h>
 
 #include <configuration/joints.hpp>
@@ -267,41 +267,48 @@ public:
     }
 
     auto configurableJoints() {
-        return _joints | std::views::transform( []( ComponentJoint& cj ) { return cj.joint; } )
-                       | std::views::filter( []( const atoms::ValuePtr< Joint >& ptr ) {
-                                                    return ptr->positions().size() > 0;
+        return _joints | std::views::transform( []( ComponentJoint& cj ) -> Joint& { return *cj.joint; } )
+                       | std::views::filter( []( const Joint& joint ) {
+                                                    return joint.positions().size() > 0;
+                                                } );
+    }
+
+    auto configurableJoints() const {
+        return _joints | std::views::transform( []( const ComponentJoint& cj ) -> const Joint& { return *cj.joint; } )
+                       | std::views::filter( []( const Joint& joint ) {
+                                                    return joint.positions().size() > 0;
                                                 } );
     }
 
     /**
      * \brief Get read-only view of the components
      */
-    tcb::span< const Component > components() const {
+    std::span< const Component > components() const {
         return _components;
     }
 
     /**
      * \brief Get read-only view of the bodies
      */
-    tcb::span< const Component > bodies() const {
+    std::span< const Component > bodies() const {
         return components().subspan( _connectorCount );
     }
 
-    tcb::span< const ComponentJoint > joints() const {
+    std::span< const ComponentJoint > joints() const {
         return _joints;
     }
 
     /**
      * \brief Get read-only view of the connectors
      */
-    tcb::span< const Component > connectors() {
+    std::span< const Component > connectors() const {
         return components().subspan( 0, _connectorCount );
     };
 
     /**
      * \brief Get index of a component
      */
-    int componentIdx( const Component& c ) {
+    int componentIdx( const Component& c ) const {
         int idx = 0;
         for ( const Component& x : _components ) {
             if ( x == c )
