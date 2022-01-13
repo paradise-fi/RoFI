@@ -196,7 +196,10 @@ private:
                 auto & posCallbackHandle = _callbacks[ jointIndex ].positionCallbackHandle;
                 auto callback = posCallbackHandle.getAndClearPositionCallback( reachedPosition );
 
-                callback( std::move( joint ) );
+                if ( callback )
+                {
+                    callback( std::move( joint ) );
+                }
                 break;
             }
             default:

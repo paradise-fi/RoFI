@@ -65,6 +65,7 @@ public:
     SubscriberWrapperPtr< rofi::messages::DistributorResp > subscribe(
             std::function< void( const rofi::messages::DistributorResp & ) > callback )
     {
+        assert( callback );
         using SubWrapper = SubscriberWrapper< rofi::messages::DistributorResp >;
         return std::make_unique< SubWrapper >( _node, getDistRespTopic(), std::move( callback ) );
     }
@@ -73,6 +74,7 @@ public:
             rofi::hal::RoFI::Id rofiId,
             std::function< void( const rofi::messages::RofiResp & ) > callback )
     {
+        assert( callback );
         using SubWrapper = SubscriberWrapper< rofi::messages::RofiResp >;
         return std::make_unique< SubWrapper >( _node,
                                                getRofiRespTopic( rofiId ),

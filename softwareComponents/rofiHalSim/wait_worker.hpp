@@ -38,13 +38,23 @@ public:
     {
         assert( callback );
         std::lock_guard< std::mutex > lock( _mutex );
-        _callbacks.try_emplace( waitId, std::move( callback ) );
+        [[maybe_unused]] auto success = _callbacks.try_emplace( waitId, std::move( callback ) );
+        if ( !success.second )
+        {
+            std::cerr << "Already have a wait callback with given id (ID: " << waitId
+                      << "). Ignoring...\n";
+        }
     }
     void registerCallback( int waitId, const Callback & callback )
     {
         assert( callback );
         std::lock_guard< std::mutex > lock( _mutex );
-        _callbacks.try_emplace( waitId, callback );
+        [[maybe_unused]] auto success = _callbacks.try_emplace( waitId, callback );
+        if ( !success.second )
+        {
+            std::cerr << "Already have a wait callback with given id (ID: " << waitId
+                      << "). Ignoring...\n";
+        }
     }
 
     Callback getAndEraseCallback( int waitId )
