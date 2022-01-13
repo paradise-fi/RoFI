@@ -36,5 +36,4 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${msgs})
 
 add_library(rofisimMessages SHARED ${PROTO_SRCS})
 target_link_libraries(rofisimMessages ${PROTOBUF_LIBRARY})
-target_include_directories(rofisimMessages INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
-set_target_properties(rofisimMessages PROPERTIES COMPILE_FLAGS "-Wno-all -Wno-extra -Wno-pedantic")
+target_include_directories(rofisimMessages SYSTEM INTERFACE ${CMAKE_CURRENT_BINARY_DIR})

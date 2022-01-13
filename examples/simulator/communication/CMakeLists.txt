@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.11)
 
 add_executable(communication communication.cpp)
-target_link_libraries(communication rofiHal)
+target_link_libraries(communication rofiHal networking)
 
 add_gazebo_world(communication.world communication.in)
 add_gazebo_world(set_1.world set_1.in)
