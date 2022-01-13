@@ -1,13 +1,10 @@
 cmake_minimum_required(VERSION 3.6)
 project(rofi)
 
-find_package(Armadillo REQUIRED)
-find_package(VTK REQUIRED)
-include(${VTK_USE_FILE})
 
 add_resources(modelResources "model/body.obj" "model/connector.obj" "model/shoe.obj")
 
-message(${modelResources})
+message("Model resources: ${modelResources}")
 
 add_executable(rofi-vis ${modelResources} ${ARMADILLO_LIBRARIES}
     main.cpp Generator.h Camera.h Animator.h)
