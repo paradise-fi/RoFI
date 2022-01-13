@@ -8,9 +8,13 @@ namespace rofi::msgs
 Server Server::createAndLoopInThread( std::string_view logName )
 {
     std::string host; // Host is ignored for master
-    unsigned port = {};
-    if ( !gazebo::transport::get_master_uri( host, port ) || port > UINT16_MAX ) {
-        throw std::runtime_error( "Unable to read master uri." );
+    unsigned port = 0;
+    if ( !gazebo::transport::get_master_uri( host, port ) ) {
+        std::cerr << "Unable to read master uri\n";
+    }
+    if ( port > UINT16_MAX ) {
+        std::cerr << "Port is too high (" << port << ")\n";
+        port = 0;
     }
 
     Server result;
