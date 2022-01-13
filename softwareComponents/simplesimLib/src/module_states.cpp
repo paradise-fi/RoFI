@@ -212,6 +212,12 @@ std::map< ModuleId, ModuleInnerState > ModuleStates::innerStatesFromConfiguratio
                                                           _module.configurableJoints() ),
                                                   _module.connectors().size() );
 
+#ifdef VERBOSE
+        std::cerr << "Module id: " << _module.getId()
+                  << ", joints: " << moduleInnerState.joints().size()
+                  << ", connectors: " << moduleInnerState.connectors().size() << std::endl;
+#endif
+
         auto [ it, success ] = innerStates.emplace( _module.getId(),
                                                     std::move( moduleInnerState ) );
         if ( !success ) {
