@@ -21,5 +21,4 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${msgs})
 
 add_library(configurationMessages SHARED ${PROTO_SRCS})
 target_link_libraries(configurationMessages ${PROTOBUF_LIBRARY})
-target_include_directories(configurationMessages INTERFACE ${CMAKE_CURRENT_BINARY_DIR})
-set_target_properties(configurationMessages PROPERTIES COMPILE_FLAGS "-Wno-all -Wno-extra -Wno-pedantic")
+target_include_directories(configurationMessages SYSTEM PUBLIC ${CMAKE_CURRENT_BINARY_DIR})

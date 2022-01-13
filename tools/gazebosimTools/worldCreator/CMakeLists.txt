@@ -21,7 +21,7 @@ set(ROFI_SDF_MODEL_FILES
 
 add_executable(rofi-worldCreator worldCreatorMain.cpp worldCreator.cpp)
 target_link_libraries(rofi-worldCreator legacy-configuration rofiPluginCommon ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
-target_include_directories(rofi-worldCreator PRIVATE ${GAZEBO_INCLUDE_DIRS})
+target_include_directories(rofi-worldCreator SYSTEM PRIVATE ${GAZEBO_INCLUDE_DIRS})
 target_compile_definitions(rofi-worldCreator PUBLIC WORLD_FILE=${ROFI_EMPTY_WORLD_FILE})
 
 

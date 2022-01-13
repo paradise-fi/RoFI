@@ -15,4 +15,5 @@ add_resources(modelResources ${RESOURCE_FILES})
 
 add_library(simplesimClient ${FILES} ${modelResources})
 target_link_libraries(simplesimClient PUBLIC configuration ${VTK_LIBRARIES})
-target_include_directories(simplesimClient PUBLIC include ${VTK_INCLUDE_DIRS})
+target_include_directories(simplesimClient SYSTEM PUBLIC ${VTK_INCLUDE_DIRS})
+target_include_directories(simplesimClient PUBLIC include)

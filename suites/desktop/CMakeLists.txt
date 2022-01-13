@@ -96,7 +96,7 @@ FetchContent_GetProperties(dimcli)
 if(NOT dimcli_POPULATED)
   FetchContent_Populate(dimcli)
   add_library(dimcli STATIC ${dimcli_SOURCE_DIR}/libs/dimcli/cli.cpp)
-  target_include_directories(dimcli PUBLIC ${dimcli_SOURCE_DIR}/libs)
+  target_include_directories(dimcli SYSTEM PUBLIC ${dimcli_SOURCE_DIR}/libs)
   target_compile_options(dimcli PRIVATE -Wno-unused-but-set-variable -Wno-cast-qual -Wno-parentheses -Wno-pedantic)
 endif()
 
@@ -110,6 +110,7 @@ if(NOT cxxopts_POPULATED)
   FetchContent_Populate(cxxopts)
   add_subdirectory(${cxxopts_SOURCE_DIR} ${cxxopts_BINARY_DIR})
 endif()
+set_target_properties(cxxopts PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:cxxopts,INTERFACE_INCLUDE_DIRECTORIES>)
 
 find_package(Armadillo REQUIRED)
 
@@ -120,6 +121,8 @@ endif()
 if (NOT ${BUILD_HEADLESS})
   find_package(VTK REQUIRED)
   include(${VTK_USE_FILE})
+  # Silences warnings from VTK headers
+  include_directories(SYSTEM ${VTK_INCLUDE_DIRS})
 endif()
 
 
