@@ -131,6 +131,27 @@ bool ModuleStates::extendConnector( ModuleId moduleId, int connector )
     return false;
 }
 
+bool ModuleStates::connectConnectors( ModuleId lhsModuleId,
+                                      int lhsConnector,
+                                      ModuleId rhsModuleId,
+                                      int rhsConnector,
+                                      ConnectorState::Orientation orientation )
+{
+    using rofi::simplesim::ConnectorInnerState;
+
+    if ( auto lhsConnectorInnerStateOpt = getConnectorInnerState( lhsModuleId, lhsConnector ) ) {
+        ConnectorInnerState & lhsConnectorInnerState = *lhsConnectorInnerStateOpt;
+        if ( auto rhsConnectorInnerStateOpt = getConnectorInnerState( rhsModuleId, rhsConnector ) )
+        {
+            ConnectorInnerState & rhsConnectorInnerState = *rhsConnectorInnerStateOpt;
+            lhsConnectorInnerState.setConnectedTo( rhsModuleId, rhsConnector, orientation );
+            rhsConnectorInnerState.setConnectedTo( lhsModuleId, lhsConnector, orientation );
+            return true;
+        }
+    }
+    return false;
+}
+
 std::optional< ModuleStates::ConnectedTo > ModuleStates::retractConnector( ModuleId moduleId,
                                                                            int connector )
 {
