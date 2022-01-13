@@ -46,6 +46,10 @@ private:
         assert( _callback );
         assert( msg );
 
+#ifdef VERBOSE
+        std::cerr << "Got message:\n" << msg->DebugString() << std::endl;
+#endif
+
         auto localMsg = msg;
         assert( localMsg );
         _callback( *localMsg );

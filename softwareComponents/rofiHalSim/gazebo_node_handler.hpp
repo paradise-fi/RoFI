@@ -65,7 +65,7 @@ public:
     }
 
 private:
-    const boost::shared_ptr< gazebo::transport::Node > _node;
+    const gazebo::transport::NodePtr _node;
 };
 
 } // namespace rofi::hal

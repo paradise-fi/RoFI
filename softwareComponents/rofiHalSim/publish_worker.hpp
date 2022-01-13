@@ -152,6 +152,10 @@ private:
         }
         assert( pub );
 
+#ifdef VERBOSE
+        std::cerr << "Sending message:\n" << msg.DebugString() << std::endl;
+#endif
+
         pub->Publish( std::forward< Message >( msg ), true );
     }
 
