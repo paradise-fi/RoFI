@@ -150,7 +150,7 @@ public:
      */
     void setPosition( float pos, float velocity, std::function< void( Joint ) > callback )
     {
-        _impl->setPosition( pos, velocity, callback );
+        _impl->setPosition( pos, velocity, std::move( callback ) );
     }
 
     /**
@@ -180,7 +180,8 @@ public:
      */
     void onError( std::function< void( Joint, Error, const std::string & ) > callback )
     {
-        _impl->onError( callback );
+        assert( callback );
+        _impl->onError( std::move( callback ) );
     }
 
     Joint( std::shared_ptr< Implementation > impl ) : _impl( std::move( impl ) )
@@ -321,7 +322,8 @@ public:
      */
     void onConnectorEvent( std::function< void( Connector, ConnectorEvent ) > callback )
     {
-        _impl->onConnectorEvent( callback );
+        assert( callback );
+        _impl->onConnectorEvent( std::move( callback ) );
     }
 
     /**
@@ -333,7 +335,8 @@ public:
      */
     void onPacket( std::function< void( Connector, uint16_t, PBuf ) > callback )
     {
-        _impl->onPacket( callback );
+        assert( callback );
+        _impl->onPacket( std::move( callback ) );
     }
 
     /**

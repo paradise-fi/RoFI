@@ -44,6 +44,7 @@ public:
         std::lock_guard< std::mutex > lock( _mutex );
         for ( const auto & callback : _callbacks )
         {
+            assert( callback );
             callback( args... );
         }
     }

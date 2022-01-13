@@ -534,7 +534,10 @@ public:
     {
         auto rofi = getRoFI();
 
-        rofi->jointWorker.registerPositionCallback( jointNumber, pos, std::move( callback ) );
+        if ( callback )
+        {
+            rofi->jointWorker.registerPositionCallback( jointNumber, pos, std::move( callback ) );
+        }
 
         auto msg = getCmdMsg( msgs::JointCmd::SET_POS_WITH_SPEED );
         msg.mutable_jointcmd()->mutable_setposwithspeed()->set_position( pos );
