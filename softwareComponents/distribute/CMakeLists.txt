@@ -3,9 +3,6 @@ project(rofi-distribute)
 set(CMAKE_CXX_COMPILER mpic++)
 set(CMAKE_CXX_FLAGS ${MPI_CXX_COMPILE_FLAGS})
 
-find_package(VTK REQUIRED)
-include(${VTK_USE_FILE})
-
 
 set(SOURCES DistributedModuleProperties.h DistributedModule.cpp DistributedModule.h DistributedPrinter.h DistributedReader.h AlgorithmFullConfiguration.cpp AlgorithmFullConfiguration.h AlgorithmPartialConfiguration.cpp AlgorithmPartialConfiguration.h)
 

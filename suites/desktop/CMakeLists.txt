@@ -38,6 +38,7 @@ if(${LIBCXX})
     set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++")
 endif(${LIBCXX})
 
+
 # Specify common dependencies
 FetchContent_Declare(
   catch
@@ -77,21 +78,6 @@ if(NOT pybind11_POPULATED)
 endif()
 
 FetchContent_Declare(
-  dimcli
-  URL https://github.com/gknowles/dimcli/archive/refs/tags/v6.0.0.zip
-)
-FetchContent_GetProperties(dimcli)
-if(NOT dimcli_POPULATED)
-  FetchContent_Populate(dimcli)
-  add_library(dimcli STATIC ${dimcli_SOURCE_DIR}/libs/dimcli/cli.cpp)
-  target_include_directories(dimcli PUBLIC ${dimcli_SOURCE_DIR}/libs)
-  target_compile_options(dimcli PRIVATE -Wno-unused-but-set-variable -Wno-cast-qual -Wno-parentheses -Wno-pedantic)
-endif()
-
-if (${BUILD_GAZEBO})
-  find_package(gazebo REQUIRED)
-endif()
-FetchContent_Declare(
   json
   GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent.git
   GIT_TAG        v3.10.2
@@ -103,6 +89,18 @@ if(NOT json_POPULATED)
 endif()
 
 FetchContent_Declare(
+  dimcli
+  URL https://github.com/gknowles/dimcli/archive/refs/tags/v6.0.0.zip
+)
+FetchContent_GetProperties(dimcli)
+if(NOT dimcli_POPULATED)
+  FetchContent_Populate(dimcli)
+  add_library(dimcli STATIC ${dimcli_SOURCE_DIR}/libs/dimcli/cli.cpp)
+  target_include_directories(dimcli PUBLIC ${dimcli_SOURCE_DIR}/libs)
+  target_compile_options(dimcli PRIVATE -Wno-unused-but-set-variable -Wno-cast-qual -Wno-parentheses -Wno-pedantic)
+endif()
+
+FetchContent_Declare(
   cxxopts
   GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
   GIT_TAG        v2.2.0
@@ -111,6 +109,17 @@ FetchContent_GetProperties(cxxopts)
 if(NOT cxxopts_POPULATED)
   FetchContent_Populate(cxxopts)
   add_subdirectory(${cxxopts_SOURCE_DIR} ${cxxopts_BINARY_DIR})
+endif()
+
+find_package(Armadillo REQUIRED)
+
+if (${BUILD_GAZEBO})
+  find_package(gazebo REQUIRED)
+endif()
+
+if (NOT ${BUILD_HEADLESS})
+  find_package(VTK REQUIRED)
+  include(${VTK_USE_FILE})
 endif()
 
 

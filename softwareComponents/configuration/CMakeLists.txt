@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 project(rofi)
 
-find_package(Armadillo REQUIRED)
 
 file(GLOB LEGACY_CONF_SRC legacy/configuration/*.cpp)
 add_library(legacy-configuration STATIC ${LEGACY_CONF_SRC})

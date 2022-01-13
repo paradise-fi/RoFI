@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.6)
 project(rofi)
 
-find_package(VTK REQUIRED)
-include(${VTK_USE_FILE})
-
 add_resources(modelResources
     "model/body.obj" "model/connector.obj" "model/shoe.obj")
 
