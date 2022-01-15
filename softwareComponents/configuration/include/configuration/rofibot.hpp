@@ -550,20 +550,24 @@ public:
     }
 
     /**
-     * \brief Decided whether the configuration is valid
+     * @brief Return true if the configuration is prepared
+     * 
+     * Configuration can be prepared with `prepare`.
+     */
+    bool isPrepared() const {
+        return _prepared;
+    }
+
+    /**
+     * \brief Decide whether the configuration is valid
      *
      * \return A pair - first item indicates the validity, the second one gives
      * textual description of the reason for invalidity
      */
     template < typename Collision >
-    std::pair< bool, std::string > isValid( Collision collisionModel = Collision() ) {
+    std::pair< bool, std::string > isValid( Collision collisionModel = Collision() ) const {
         if ( !_prepared ) {
-            try {
-                prepare();
-            }
-            catch ( const std::runtime_error& e ) {
-                return { false, e.what() };
-            }
+            return { false, "configuration is not prepared" };
         }
 
         for ( const ModuleInfo& m : _modules ) {
@@ -583,6 +587,24 @@ public:
                         m.module->_id) };
         }
         return { true, "" };
+    }
+
+    /**
+     * \brief Prepare configuration if needed and decide whether it is valid
+     *
+     * \return A pair - first item indicates the validity, the second one gives
+     * textual description of the reason for invalidity
+     */
+    template < typename Collision >
+    [[nodiscard]] std::pair< bool, std::string > validate( Collision collisionModel = Collision() ) {
+        if ( !_prepared ) {
+            try {
+                prepare();
+            } catch ( const std::runtime_error& err ) {
+                return { false, err.what() };
+            }
+        }
+        return isValid( collisionModel );
     }
 
     /**

@@ -61,7 +61,7 @@ TEST_CASE( "Empty" ) {
         CHECK( bot.modules().size() == 0 );
         CHECK( bot.roficoms().size() == 0 );
         CHECK( bot.referencePoints().size() == 0 );
-        CHECK( bot.isValid( SimpleColision() ).first );
+        CHECK( bot.validate( SimpleColision() ).first );
     }
 }
 

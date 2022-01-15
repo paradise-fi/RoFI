@@ -352,9 +352,11 @@ TEST_CASE( "Basic rofibot manipulation" ) {
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
     static_cast< UniversalModule& >( m1 ).setGamma( Angle::rad( M_PI_2 ) );
     auto [ b, str ] = bot.isValid( SimpleColision() );
-    CHECK( b );
-    if ( !b )
-        std::cout << "Error: " << str << "\n";
+    CHECK( !b ); // because the configuration is not prepared
+    auto [ b2, str2 ] = bot.validate( SimpleColision() );
+    CHECK( b2 );
+    if ( !b2 )
+        std::cout << "Error: " << str2 << "\n";
 }
 
 TEST_CASE( "Colliding configuration" ) {
@@ -374,7 +376,7 @@ TEST_CASE( "Colliding configuration" ) {
     connect( m4.connectors()[ 1 ], m5.connectors()[ 2 ], Orientation::North );
     CHECK( bot.roficoms().size() == 4 );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    auto [ b, str ] = bot.isValid( SimpleColision() );
+    auto [ b, str ] = bot.validate( SimpleColision() );
     CHECK( !b );
 }
 
@@ -389,14 +391,14 @@ TEST_CASE( "Changing modules ID" ) {
     connect( m2.connectors()[ 5 ], m3.connectors()[ 2 ], Orientation::North );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
 
-    CHECK( bot.isValid( SimpleColision() ).first );
+    CHECK( bot.validate( SimpleColision() ).first );
 
     CHECK( m1.getId() == 0 );
     CHECK( m2.getId() == 1 );
     CHECK( m3.getId() == 2 );
 
     CHECK( m2.setId( 42 ) );
-    CHECK( bot.isValid( SimpleColision() ).first );
+    CHECK( bot.validate( SimpleColision() ).first );
     CHECK( m1.getId() == 0 );
     CHECK( m2.getId() != 1 );
     CHECK( m2.getId() == 42 );
