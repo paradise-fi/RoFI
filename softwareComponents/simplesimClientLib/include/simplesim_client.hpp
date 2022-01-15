@@ -21,12 +21,22 @@
 
 #include "atoms/guarded.hpp"
 #include "configuration/rofibot.hpp"
+#include "configuration/serialization.hpp"
+#include "legacy/configuration/IO.h"
+
+#include <QMainWindow>
+#include <QTimer>
+#include <QTreeWidgetItem>
 
 #include <simplesim_settings_cmd.pb.h>
 
 
 #define vtkTypeMacro_( thisClass, superClass ) \
     vtkTypeMacro( thisClass, superClass ) static_assert( true, "require semicolon" )
+
+namespace Ui {
+    class SimplesimClient;
+}
 
 namespace rofi::simplesim
 {
@@ -42,10 +52,13 @@ namespace detail
 } // namespace detail
 
 
+constexpr int simSpeed = 10;
 // TODO use the same mapper for all modules
 // TODO use the same property for setting the modules
-class SimplesimClient
+class SimplesimClient : public QMainWindow
 {
+    Q_OBJECT
+
 private:
     class UpdateConfigurationCommand : public vtkCommand
     {
@@ -79,6 +92,8 @@ public:
         _onSettingsCmdCallback = std::move( onSettingsCmdCallback );
     }
 
+    ~SimplesimClient();
+
     // Blocks until the user closes the window
     void run()
     {
@@ -92,7 +107,7 @@ public:
 
         renderCurrentConfiguration();
 
-        _renderWindowInteractor->Start();
+        //_renderWindowInteractor->Start();
     }
 
     // Can be called from any thread
@@ -110,7 +125,20 @@ public:
         _currentSettings.replace( settingsState );
     }
 
+protected:
+    void timerEvent( QTimerEvent *event );
+
+private slots:
+
+    void pauseButton();
+
+    void speedChanged( double speed );
+
 private:
+    Ui::SimplesimClient* ui;
+
+    QTreeWidgetItem* configToQItem( const rofi::configuration::Rofibot& rofibot );
+
     std::shared_ptr< const rofi::configuration::Rofibot > getCurrentConfig() const
     {
         return _currentConfiguration.copy();
@@ -182,8 +210,12 @@ private:
     vtkNew< vtkRenderer > _renderer;
     vtkNew< vtkRenderWindow > _renderWindow;
     vtkNew< vtkInteractorStyleTrackballCamera > _interactorStyle;
-    vtkNew< UpdateConfigurationCommand > _updateConfigurationCommand;
+    //vtkNew< UpdateConfigurationCommand > _updateConfigurationCommand;
     vtkNew< vtkRenderWindowInteractor > _renderWindowInteractor;
+
+    int _timer;
+
+    bool paused = false;
 
     std::map< rofi::configuration::ModuleId, detail::ModuleRenderInfo > _moduleRenderInfos;
 
