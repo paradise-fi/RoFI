@@ -14,6 +14,7 @@
 #include "message_server.hpp"
 #include "simplesim_client.hpp"
 
+#include <QtWidgets/QApplication>
 
 class SimplesimMsgSubscriber {
 public:
@@ -77,6 +78,7 @@ private:
     gazebo::transport::SubscriberPtr _settingsSub;
 };
 
+
 int main( int argc, char * argv[] )
 {
     using rofi::simplesim::SimplesimClient;
@@ -90,6 +92,9 @@ int main( int argc, char * argv[] )
         return cli.printError( std::cerr );
     }
 
+
+    QApplication app( argc, argv );
+    setlocale( LC_NUMERIC, "C" );
 
     auto msgsClient = rofi::msgs::Client( cli.progName(), *clientArgs );
 
@@ -106,8 +111,8 @@ int main( int argc, char * argv[] )
     auto simplesimMsgSub = SimplesimMsgSubscriber( client );
 
     std::cout << "Starting simplesim client..." << std::endl;
-    // Runs until the user closes the window
     client.run();
+    app.exec();
 
     std::cout << "Client ended\n";
 }

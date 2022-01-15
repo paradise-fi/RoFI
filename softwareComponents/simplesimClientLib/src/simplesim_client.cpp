@@ -28,6 +28,7 @@
 #include "atoms/guarded.hpp"
 #include "atoms/resources.hpp"
 
+#include "ui_mainwindow.h"
 
 using rofi::simplesim::SimplesimClient;
 using rofi::simplesim::detail::ModuleRenderInfo;
@@ -293,27 +294,60 @@ void updateConfigurationInRenderer(
 
 
 SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
-        : _onSettingsCmdCallback( std::move( onSettingsCmdCallback ) )
+        : _onSettingsCmdCallback( std::move( onSettingsCmdCallback ) ),
+          ui( new Ui::SimplesimClient )
 {
+    QMainWindow( nullptr );
+    ui->setupUi( this );
+
     _renderer->SetBackground( 1.0, 1.0, 1.0 );
     _renderer->ResetCamera();
     _renderer->GetActiveCamera()->Zoom( 1.5 );
+    _renderer->GetActiveCamera()->SetPosition( 0, 10, 5 );
+    _renderer->GetActiveCamera()->SetViewUp( 0, 0, 1 );
 
-
-    _renderWindow->SetSize( 600, 400 );
+    _renderWindow->SetSize( 1, 1 );
     _renderWindow->SetWindowName( "RoFI simulation" );
     _renderWindow->AddRenderer( _renderer.Get() );
-
 
     _renderWindowInteractor->SetRenderWindow( _renderWindow.Get() );
     _renderWindowInteractor->SetInteractorStyle( _interactorStyle.Get() );
 
     _renderWindowInteractor->Initialize();
 
-    _updateConfigurationCommand->client = this;
-    _renderWindowInteractor->CreateRepeatingTimer( 1 );
-    _renderWindowInteractor->AddObserver( vtkCommand::TimerEvent,
-                                          _updateConfigurationCommand.Get() );
+    ui->widget->SetRenderWindow( _renderWindow.Get() );
+
+    connect( ui->doubleSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( speedChanged( double ) ) );
+    connect( ui->pauseButton, SIGNAL( clicked() ), this, SLOT( pauseButton() ) );
+
+    _timer = startTimer( simSpeed );
+    this->show();
+}
+
+SimplesimClient::~SimplesimClient(){
+    killTimer( _timer );
+    delete ui;
+}
+
+void SimplesimClient::timerEvent( QTimerEvent *event ){
+    renderCurrentConfiguration();
+}
+
+// TODO: pause backend
+void SimplesimClient::pauseButton(){
+    if( paused ){
+        _timer = startTimer( simSpeed );
+        std::cout << "Simulation playing\n";
+    } else {
+        killTimer( _timer );
+        std::cout << "Simulation paused\n";
+    }
+    paused = !paused;
+}
+
+// TODO: change backend simulation speed
+void SimplesimClient::speedChanged( double speed ){
+    std::cout << "Speed changed to " << speed << '\n';
 }
 
 void SimplesimClient::clearRenderer()
@@ -323,6 +357,38 @@ void SimplesimClient::clearRenderer()
     }
     _moduleRenderInfos.clear();
     _lastRenderedConfiguration.reset();
+}
+
+QTreeWidgetItem* SimplesimClient::configToQItem( const rofi::configuration::Rofibot& rofibot ){
+    int i = 0;
+    for( const auto& moduleInfo : rofibot.modules() ){
+        std::string str = "Module " + std::to_string( moduleInfo.module->getId() );
+        QTreeWidgetItem* module = new QTreeWidgetItem( static_cast< QTreeWidget * >( nullptr ),
+                                                       { QString( str.c_str() ) } );
+        QTreeWidgetItem* components = new QTreeWidgetItem( module, { QString( "Components" ) } );
+        for( const auto& c : moduleInfo.module->components() ){
+            std::string comp = rofi::configuration::serialization::componentTypeToString( c.type );
+            QTreeWidgetItem* component = new QTreeWidgetItem( components, { QString( comp.c_str() )} );
+        }
+        if( moduleInfo.absPosition ){
+            std::string pos = "Position:\n" + IO::toString( *moduleInfo.absPosition );
+            QTreeWidgetItem* position = new QTreeWidgetItem( module, { QString( pos.c_str() ) } );
+        }
+        if( ui->treeWidget->topLevelItemCount() <= i ){
+            ui->treeWidget->addTopLevelItem( module );
+        } else {
+            ui->treeWidget->topLevelItem( i )->setText( 0, QString( str.c_str() ) );
+        }
+        ++i;
+    }
+    //std::cout << ui->treeWidget->topLevelItemCount() << '\n';
+
+    QTreeWidgetItem* configuration = new QTreeWidgetItem( static_cast<QTreeWidget *>(nullptr),
+                                                          { "Configuration" } );
+    QTreeWidgetItem* module = new QTreeWidgetItem( configuration,
+                                             { "Module 1" } );
+
+    return configuration;
 }
 
 void SimplesimClient::renderCurrentConfiguration()
@@ -343,4 +409,8 @@ void SimplesimClient::renderCurrentConfiguration()
         _lastRenderedConfiguration = std::move( newConfiguration );
         _renderWindow->Render();
     }
+
+    configToQItem( *getCurrentConfig() );
+    //QTreeWidgetItem* item = configToQItem( *getCurrentConfig() );
+    //ui->treeWidget->addTopLevelItem( item );
 }
