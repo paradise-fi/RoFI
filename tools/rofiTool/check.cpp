@@ -16,7 +16,8 @@ int check( Dim::Cli & /* cli */ ) {
         configuration.getModule( 0 )->bodies()[ 0 ],
         rofi::configuration::matrices::Vector( { 0, 0, 0 } ),
         rofi::configuration::matrices::identity );
-    auto [ ok, str ] = configuration.isValid( rofi::configuration::SimpleColision() );
+
+    auto [ ok, str ] = configuration.validate( rofi::configuration::SimpleColision() );
     if ( !ok )
         throw std::runtime_error( str );
     return 0;
