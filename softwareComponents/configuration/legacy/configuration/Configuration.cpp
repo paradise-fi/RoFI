@@ -597,7 +597,7 @@ Vector Configuration::massCenter() const {
         mass += center(ms[A]);
         mass += center(ms[B]);
     }
-    mass /= modules.size()*2;
+    mass /= static_cast<double>(modules.size()*2);
     return mass;
 }
 

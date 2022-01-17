@@ -23,3 +23,12 @@ template < typename T >
 const T& as( const void* p ) {
     return *reinterpret_cast< const T * >( p );
 }
+
+template < typename T >
+std::make_unsigned_t< T > to_unsigned( T value ) {
+    static_assert( std::is_arithmetic_v< T > );
+    if constexpr ( std::is_signed_v< T > ) {
+        assert( value >= T( 0 ) );
+    }
+    return static_cast< std::make_unsigned_t< T > >( value );
+}

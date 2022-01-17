@@ -10,6 +10,7 @@
 
 #include <atoms/containers.hpp>
 #include <atoms/units.hpp>
+#include <atoms/util.hpp>
 #include <fmt/format.h>
 
 #include <configuration/joints.hpp>
@@ -218,7 +219,8 @@ public:
      * Raises std::logic_error if the components are inconsistent
      */
     Matrix getComponentPosition( int idx ) {
-        assert( idx < _components.size() );
+        assert( idx >= 0 );
+        assert( to_unsigned( idx ) < _components.size() );
         if ( !_componentPosition )
             prepare();
         return _componentPosition.value()[ idx ];
@@ -231,7 +233,8 @@ public:
      * Raises std::logic_error if the components are not prepared
      */
     Matrix getComponentPosition( int idx, Matrix position ) const {
-        assert( idx >= 0 && idx < _components.size() );
+        assert( idx >= 0 );
+        assert( to_unsigned( idx ) < _components.size() );
         if ( !_componentPosition )
             throw std::logic_error( "Module is not prepared" );
         return position * _componentPosition.value()[ idx ];
@@ -363,8 +366,8 @@ private:
             c.inJoints.clear();
             c.parent = this;
         }
-        for ( Component::JointId i = 0; i != _joints.size(); i++ ) {
-            const auto& j = _joints[ i ];
+        for ( Component::JointId i = 0; to_unsigned( i ) < _joints.size(); i++ ) {
+            const auto& j = _joints[ to_unsigned( i ) ];
             _components[ j.sourceComponent ].outJoints.push_back( i );
             _components[ j.destinationComponent ].inJoints.push_back( i );
         }
@@ -374,9 +377,9 @@ private:
      * \brief Get index of root component - component with no ingoing edges
      */
     int _computeRoot() const {
-        for ( int i = 0; i != _components.size(); i++ )
+        for ( size_t i = 0; i < _components.size(); i++ )
             if ( _components[ i ].inJoints.size() == 0 )
-                return i;
+                return static_cast< int >( i );
         throw std::logic_error( "Module does not have a root component" );
     }
 
