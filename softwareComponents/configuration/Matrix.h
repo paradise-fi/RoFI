@@ -6,6 +6,7 @@
 #define ROBOTY_MATRIX_H
 
 #include <armadillo>
+#include <cassert>
 
 namespace rofi::configuration::matrices {
 
@@ -118,7 +119,9 @@ inline unsigned newyorkCenterDistance(const Matrix& a, const Matrix& b)
     unsigned res = 0;
     for (int i = 0; i < 4; ++i)
     {
-        res += std::round(a(i, 3) - b(i, 3));
+        auto distance = std::round(a(i, 3) - b(i, 3));
+        assert(distance >= 0.);
+        res += static_cast<unsigned>(distance);
     }
     return res;
 }
