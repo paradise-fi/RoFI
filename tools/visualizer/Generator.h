@@ -35,7 +35,7 @@ public:
         sortEdges(initConf, goalConf, onlyInitEdges, onlyGoalEdges, sameEdges);
         for (unsigned int i = 1; i < totalSteps; i++){
             Configuration c;
-            generateOneStep(initConf, goalConf, c, moduleSteps, maxPhi, reconnectionPics, totalSteps, i,
+            generateOneStep(initConf, goalConf, c, moduleSteps, maxPhi, reconnectionPics, i,
                             onlyInitEdges, onlyGoalEdges, sameEdges);
             vec.push_back(c);
         }
@@ -159,14 +159,13 @@ private:
      * @param moduleSteps how many steps need to be generated to get angles of all modules to the goal position
      * @param maxPhi maximal angle difference between two consecutive configurations
      * @param reconnectionPics number of steps for reconnection
-     * @param totalSteps number of total steps between initConf and goalConf
      * @param currentStep step number which is now generated
      * @param onlyInitEdges edges to be removed during generated configs - are in initConf, but not in goalConf
      * @param onlyGoalEdges edges to be added during generated configs - are not in initConf, but in goalConf
      * @param sameEdges edges which do not change - are in both initConf and goalConf
      */
     void generateOneStep(const Configuration& initConf, const Configuration& goalConf, Configuration& currConf,
-            unsigned int moduleSteps, double maxPhi, unsigned int reconnectionPics, unsigned int totalSteps,
+            unsigned int moduleSteps, double maxPhi, unsigned int reconnectionPics,
             unsigned int currentStep, const std::vector<Edge>& onlyInitEdges, const std::vector<Edge>& onlyGoalEdges,
             const std::vector<Edge>& sameEdges){
         generateOneModuleStep(initConf, goalConf, currConf, moduleSteps, maxPhi, currentStep);
