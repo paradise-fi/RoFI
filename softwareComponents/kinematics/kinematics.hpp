@@ -90,7 +90,8 @@ class kinematic_rofibot {
 
     /* Move the selected arms so that they can connect */
     bool connect( strategy s, int a = 0, int b = 1 ){
-        if( a >= arms.size() || b >= arms.size() ){
+        if( a < 0 || static_cast< size_t >( a ) >= arms.size()
+         || b < 0 || static_cast< size_t >( b ) >= arms.size() ){
             std::cerr << "Invalid arm index\n";
             return false;
         }
