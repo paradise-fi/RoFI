@@ -31,7 +31,7 @@ std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
                                matrices::identity );
     }
     configuration->prepare();
-    if ( auto [ ok, str ] = configuration->isValid( SimpleColision() ); !ok ) {
+    if ( auto [ ok, str ] = configuration->isValid( SimpleCollision() ); !ok ) {
         throw std::runtime_error( str );
     }
     return configuration;

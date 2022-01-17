@@ -1,3 +1,3 @@
 #include <dimcli/cli.h>
 
-int preview( Dim::Cli & cli );
+int preview( Dim::Cli & /* cli */ );

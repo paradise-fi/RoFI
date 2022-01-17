@@ -54,7 +54,7 @@ private:
                 serialization::fromJSON( nlohmann::json::parse( msg->value() ) ) );
         assert( configuration );
 
-        if ( auto [ ok, err_str ] = configuration->validate( SimpleColision() ); !ok ) {
+        if ( auto [ ok, err_str ] = configuration->validate( SimpleCollision() ); !ok ) {
             std::cerr << "Configuration not valid: '" << err_str << "'" << std::endl;
             return;
         }

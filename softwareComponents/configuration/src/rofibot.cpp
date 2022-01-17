@@ -70,7 +70,7 @@ void Module::setJointPositions( int idx, std::span< const float > p ) {
         parent->onModuleMove();
 }
 
-void connect( const Component& c1, const Component& c2, roficom::Orientation o ) {
+Rofibot::RoficomHandle connect( const Component& c1, const Component& c2, roficom::Orientation o ) {
     if ( c1.parent->parent != c2.parent->parent )
         throw std::logic_error( "Components have to be in the same rofibot" );
     Rofibot& bot = *c1.parent->parent;
@@ -86,6 +86,7 @@ void connect( const Component& c1, const Component& c2, roficom::Orientation o )
     m2info.inJointsIdx.push_back( jointId );
 
     bot._prepared = false;
+    return jointId;
 }
 
 } // namespace rofi::configuration

@@ -6,33 +6,33 @@ using namespace rofi::configuration::matrices;
 
 std::vector< Component > UniversalModule::_initComponents() {
     return std::vector< Component > {
-        Component{ ComponentType::Roficom },
-        Component{ ComponentType::Roficom },
-        Component{ ComponentType::Roficom },
-        Component{ ComponentType::Roficom },
-        Component{ ComponentType::Roficom },
-        Component{ ComponentType::Roficom },
-        Component{ ComponentType::UmShoe },
-        Component{ ComponentType::UmBody },
-        Component{ ComponentType::UmBody },
-        Component{ ComponentType::UmShoe }
+        Component{ ComponentType::Roficom, {}, {}, nullptr },
+        Component{ ComponentType::Roficom, {}, {}, nullptr },
+        Component{ ComponentType::Roficom, {}, {}, nullptr },
+        Component{ ComponentType::Roficom, {}, {}, nullptr },
+        Component{ ComponentType::Roficom, {}, {}, nullptr },
+        Component{ ComponentType::Roficom, {}, {}, nullptr },
+        Component{ ComponentType::UmShoe, {}, {}, nullptr },
+        Component{ ComponentType::UmBody, {}, {}, nullptr },
+        Component{ ComponentType::UmBody, {}, {}, nullptr },
+        Component{ ComponentType::UmShoe, {}, {}, nullptr }
     };
 }
 
 std::vector< ComponentJoint > UniversalModule::_initJoints() {
     std::vector< ComponentJoint > joints = {
         makeComponentJoint< RotationJoint >( 7, 6, // BodyA <-> ShoeA
-            identity, Vector( { 1, 0, 0 } ), identity, Angle::rad( -Angle::pi / 2 ), Angle::rad( Angle::pi / 2 ) ),
+            identity, Vector( { 1, 0, 0 } ), identity, Angle::deg( -90 ), Angle::deg( 90 ) ),
         makeComponentJoint< RotationJoint >( 8, 9 // BodyB <-> ShoeB
             , identity
             , Vector( { 1, 0, 0 } )
             , identity
-            , Angle::rad( -Angle::pi / 2 ), Angle::rad( Angle::pi / 2 ) ),
+            , Angle::deg( -90 ), Angle::deg( 90 ) ),
         makeComponentJoint< RotationJoint >( 7, 8 // BodyA <-> BodyB
             , identity
             , Vector( { 0, 0, 1 } )
-            , translate( { 0, 0, 1 } ) * rotate( Angle::pi, { 0, 1, 0 } )
-            , Angle::rad( -Angle::pi ), Angle::rad( Angle::pi ) ),
+            , translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } )
+            , Angle::deg( -180 ), Angle::deg( 180 ) ),
         makeComponentJoint< RigidJoint >( 6, 0, identity ), // A-X
         makeComponentJoint< RigidJoint >( 6, 1, rotate( Angle::pi, { 0, 1, 0 } ) ), // A+X
         makeComponentJoint< RigidJoint >( 6, 2, rotate( Angle::pi, { 0, 0, 1 } ) * rotate( Angle::pi / 2, { 0, -1, 0 } ) ), // A-Z

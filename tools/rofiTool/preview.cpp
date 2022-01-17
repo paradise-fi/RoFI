@@ -12,7 +12,7 @@ static auto command = Dim::Cli().command( "preview" )
 static auto& inputFile = command.opt< std::string >( "<FILE>" )
     .desc("Specify source file");
 
-int preview( Dim::Cli & cli ) {
+int preview( Dim::Cli & /* cli */ ) {
     auto cfgFile = std::ifstream( *inputFile );
     if ( !cfgFile.is_open() )
         throw std::runtime_error( "Cannot open file '" + *inputFile + "'" );

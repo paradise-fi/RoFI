@@ -1,3 +1,3 @@
 #include <dimcli/cli.h>
 
-int build( Dim::Cli & cli );
+int build( Dim::Cli & /* cli */ );
