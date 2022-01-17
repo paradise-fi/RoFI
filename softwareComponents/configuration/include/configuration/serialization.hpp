@@ -173,7 +173,7 @@ namespace rofi::configuration::serialization {
             // TODO: Is it necessary to set parrent?
             Module* parent  = nullptr;
             ComponentType t = stringToComponentType( c[ "type" ] );
-            components.push_back( Component( t, inJoints, outJoints ) );
+            components.push_back( Component( t, std::move( inJoints ), std::move( outJoints ) ) );
         }
 
         for ( const auto& js : j[ "joints" ] ) {

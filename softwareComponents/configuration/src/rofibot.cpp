@@ -67,7 +67,7 @@ void Module::setJointPositions( int idx, std::span< const float > p ) {
     _joints[ to_unsigned( idx ) ].joint->setPositions( p );
     _componentPosition = std::nullopt;
     if ( parent )
-        parent->onModuleMove( _id );
+        parent->onModuleMove();
 }
 
 void connect( const Component& c1, const Component& c2, roficom::Orientation o ) {

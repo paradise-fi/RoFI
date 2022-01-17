@@ -2,8 +2,8 @@
 
 namespace rofi::configuration {
 
-std::ostream& operator<<( std::ostream& out, Joint& j ) {
-    atoms::visit( j,
+std::ostream& operator<<( std::ostream& out, Joint& j_ ) {
+    atoms::visit( j_,
         [ &out ]( RigidJoint& ) { out << "< RigidJoint >"; },
         [ &out ]( RotationJoint& j ) { out << "< RotationJoint: axis ( "
                                       << j._axis[ 0 ] << ", " << j._axis[ 1 ] << ", "
@@ -11,6 +11,6 @@ std::ostream& operator<<( std::ostream& out, Joint& j ) {
                                       << j.jointLimit().first.deg() << "°, " << j.jointLimit().second.deg()
                                       << "° ] >"; } );
     return out;
-};
+}
 
 } // namespace rofi::configuration

@@ -31,7 +31,7 @@ enum Joint { Alpha, Beta, Gamma };
 class Module {
 public:
     Module(double alpha, double beta, double gamma, ID id) :
-            alpha(alpha), beta(beta), gamma(gamma), id(id) {}
+            id(id), alpha(alpha), beta(beta), gamma(gamma) {}
 
     ID getId() const { return id; }
     double getJoint(Joint a) const;
