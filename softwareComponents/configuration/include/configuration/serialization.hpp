@@ -31,14 +31,14 @@ namespace rofi::configuration::serialization {
             assert( false && "String does not represent a component type" );
     }
 
-    template< typename M >
-    M fromJSON( const nlohmann::json& j, ModuleId id );
+    template< typename M > requires std::derived_from< M, Module >
+    M moduleFromJSON( const nlohmann::json& j, ModuleId id );
 
-    template< typename M >
-    M fromJSON( const nlohmann::json& j ) {
+    template< typename M > requires std::derived_from< M, Module >
+    M moduleFromJSON( const nlohmann::json& j ) {
         assert( j.is_object() && ++j.begin() == j.end() && "json is not a single object" );
 
-        return fromJSON< M >( j.begin().value(), stoi( j.begin().key() ) );
+        return moduleFromJSON< M >( j.begin().value(), stoi( j.begin().key() ) );
     }
 
     inline nlohmann::json matrixToJSON( const Matrix& m ) {
@@ -89,7 +89,7 @@ namespace rofi::configuration::serialization {
             j = component;
     }
 
-    inline nlohmann::json toJSON( const UniversalModule& m ) {
+    inline nlohmann::json moduleToJSON( const UniversalModule& m ) {
         using namespace nlohmann;
         json j;
         j[ "type"  ] = "universal";
@@ -101,7 +101,7 @@ namespace rofi::configuration::serialization {
     }
 
     template<>
-    inline UniversalModule fromJSON( const nlohmann::json& j, ModuleId id ) {
+    inline UniversalModule moduleFromJSON( const nlohmann::json& j, ModuleId id ) {
         assert( j[ "type" ] == "universal" );
 
         Angle alpha = Angle::deg( j[ "alpha" ] );
@@ -111,7 +111,7 @@ namespace rofi::configuration::serialization {
         return UniversalModule( id, alpha, beta, gamma );
     } 
 
-    inline nlohmann::json toJSON( const Pad& m ) {
+    inline nlohmann::json moduleToJSON( const Pad& m ) {
         using namespace nlohmann;
         json j;
         j[ "type"   ] = "pad";
@@ -122,7 +122,7 @@ namespace rofi::configuration::serialization {
     }
 
     template<>
-    inline Pad fromJSON( const nlohmann::json& j, ModuleId id ) {
+    inline Pad moduleFromJSON( const nlohmann::json& j, ModuleId id ) {
         assert( j[ "type" ] == "pad" );
         
         int width  = j[ "width" ];
@@ -130,7 +130,7 @@ namespace rofi::configuration::serialization {
         return Pad( id, width, height );
     }
 
-    inline nlohmann::json toJSON( const UnknownModule& m ) {
+    inline nlohmann::json moduleToJSON( const UnknownModule& m ) {
         using namespace nlohmann;
         json j;
 
@@ -161,7 +161,7 @@ namespace rofi::configuration::serialization {
     }
 
     template<>
-    inline UnknownModule fromJSON( const nlohmann::json& j, ModuleId id ) {
+    inline UnknownModule moduleFromJSON( const nlohmann::json& j, ModuleId id ) {
         assert( j[ "type" ] && "type is not null" );
 
         std::vector< Component > components;
@@ -215,13 +215,13 @@ namespace rofi::configuration::serialization {
             json j;
             switch ( m.module->type ) {
                 case ModuleType::Universal:
-                    j = toJSON( static_cast< const UniversalModule& >( *m.module ) );
+                    j = moduleToJSON( static_cast< const UniversalModule& >( *m.module ) );
                     break;
                 case ModuleType::Pad:
-                    j = toJSON( static_cast< const Pad& >( *m.module ) );
+                    j = moduleToJSON( static_cast< const Pad& >( *m.module ) );
                     break;
                 case ModuleType::Unknown:
-                    j = toJSON( static_cast< const UnknownModule& >( *m.module ) );
+                    j = moduleToJSON( static_cast< const UnknownModule& >( *m.module ) );
                     break;
                 case ModuleType::Cube:
                 default:
@@ -256,7 +256,6 @@ namespace rofi::configuration::serialization {
         return res;
     }
 
-    template<>
     inline Rofibot fromJSON( const nlohmann::json& j ) {
         Rofibot bot;
 
@@ -265,11 +264,11 @@ namespace rofi::configuration::serialization {
             auto& jm = j[ "modules" ][ i ];
 
             if ( jm[ id ][ "type" ] == "universal" )
-                bot.insert( fromJSON< UniversalModule >( jm ) );
+                bot.insert( moduleFromJSON< UniversalModule >( jm ) );
             else if ( jm[ id ][ "type" ] == "pad" )
-                bot.insert( fromJSON< Pad >( jm ) );
+                bot.insert( moduleFromJSON< Pad >( jm ) );
             else if ( jm[ id ][ "type" ] == "unknown" )
-                bot.insert( fromJSON< UnknownModule >( jm ) );
+                bot.insert( moduleFromJSON< UnknownModule >( jm ) );
             else
                 assert( false && "Unknown type of a module" );
         }
