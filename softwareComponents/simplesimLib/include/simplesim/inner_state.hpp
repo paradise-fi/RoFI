@@ -62,8 +62,8 @@ public:
                                      [ &getNewPosition ]( PositionControl posControl ) {
                                          auto newPosition = getNewPosition( posControl.velocity );
 
-                                         if ( posControl.velocity >= 0
-                                              == posControl.position >= newPosition ) {
+                                         if ( ( posControl.velocity >= 0 )
+                                              == ( posControl.position >= newPosition ) ) {
                                              return std::pair( false, newPosition );
                                          }
                                          return std::pair( true, posControl.position );

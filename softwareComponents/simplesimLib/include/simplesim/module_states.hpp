@@ -228,7 +228,8 @@ private:
             rofiResp.set_rofiid( moduleId );
             rofiResp.set_resptype( rofi::messages::RofiCmd::JOINT_CMD );
             auto & jointResp = *rofiResp.mutable_jointresp();
-            jointResp.set_joint( joint );
+            assert( joint <= INT_MAX );
+            jointResp.set_joint( static_cast< int >( joint ) );
             jointResp.set_resptype( rofi::messages::JointCmd::SET_POS_WITH_SPEED );
             jointResp.set_value( position );
             return rofiResp;

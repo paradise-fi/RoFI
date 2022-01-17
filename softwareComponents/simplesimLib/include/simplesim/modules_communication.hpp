@@ -59,14 +59,13 @@ public:
     template < typename F >
     void forEachLockedModule( F && function ) const
     {
-        _modules.visit_shared(
-                [ &function, &node = std::as_const( *_node ) ]( const auto & modules ) {
-                    for ( auto & [ moduleId, moduleComm ] : modules ) {
-                        if ( moduleComm ) {
-                            function( moduleId, moduleComm->topic( node ) );
-                        }
-                    }
-                } );
+        _modules.visit_shared( [ &function ]( const auto & modules ) {
+            for ( auto & [ moduleId, moduleComm ] : modules ) {
+                if ( moduleComm ) {
+                    function( moduleId, moduleComm->topic() );
+                }
+            }
+        } );
     }
 
     template < typename F >
