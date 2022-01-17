@@ -1,3 +1,3 @@
 #include <dimcli/cli.h>
 
-int check( Dim::Cli & cli );
+int check( Dim::Cli & /* cli */ );

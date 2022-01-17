@@ -11,7 +11,7 @@ using namespace rofi::configuration::roficom;
 using namespace rofi::configuration::matrices;
 
 TEST_CASE( "UnknownModule (base Module) Test" ) {
-    auto m = UnknownModule( { Component{ ComponentType::Roficom } }, 1, {}, 42 );
+    auto m = UnknownModule( { Component{ ComponentType::Roficom, {}, {}, nullptr } }, 1, {}, 42 );
     CHECK( m.bodies().size() == 0 );
     CHECK( m.components().size() == 1 );
     CHECK( m.connectors().size() == 1 );
@@ -34,13 +34,13 @@ TEST_CASE( "Universal Module Test" ) {
         auto um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
         CHECK( um.connectors().size() == 6 );
 
-        for ( int i = 0; i < um.connectors().size(); i++ ) {
+        for ( size_t i = 0; i < um.connectors().size(); i++ ) {
             INFO( "Connector number: " << i );
             CHECK( um.connectors()[ i ].type == ComponentType::Roficom );
         }
 
         REQUIRE( um.components().size() >= 6 );
-        for ( int i = 0; i < um.components().size(); i++ ) {
+        for ( size_t i = 0; i < um.components().size(); i++ ) {
             INFO( "Number of connectors: " << um.connectors().size() );
             INFO( "Component number: " << i );
             if ( i < um.connectors().size() ) {
@@ -174,7 +174,7 @@ TEST_CASE( "Universal Module Test" ) {
         }
 
         SECTION( "radians" ) {
-            auto um = UniversalModule( 0, 0_rad, Angle::rad( -1.57079632679489661923 ), 1.57079632679489661923_rad );
+            auto um = UniversalModule( 0, 0_rad, Angle::rad( - Angle::pi / 2 ), Angle::rad( Angle::pi / 2 ) );
             // A part
             CHECK( equals( um.getComponentPosition( 0 ), identity ) );
             CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
@@ -350,10 +350,10 @@ TEST_CASE( "Basic rofibot manipulation" ) {
     connect( m4.connectors()[ 5 ], m5.connectors()[ 2 ], Orientation::North );
     CHECK( bot.roficoms().size() == 4 );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    static_cast< UniversalModule& >( m1 ).setGamma( Angle::rad( M_PI_2 ) );
-    auto [ b, str ] = bot.isValid( SimpleColision() );
+    static_cast< UniversalModule& >( m1 ).setGamma( Angle::deg( 90 ) );
+    auto [ b, str ] = bot.isValid();
     CHECK( !b ); // because the configuration is not prepared
-    auto [ b2, str2 ] = bot.validate( SimpleColision() );
+    auto [ b2, str2 ] = bot.validate();
     CHECK( b2 );
     if ( !b2 )
         std::cout << "Error: " << str2 << "\n";
@@ -376,7 +376,7 @@ TEST_CASE( "Colliding configuration" ) {
     connect( m4.connectors()[ 1 ], m5.connectors()[ 2 ], Orientation::North );
     CHECK( bot.roficoms().size() == 4 );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    auto [ b, str ] = bot.validate( SimpleColision() );
+    auto [ b, str ] = bot.validate();
     CHECK( !b );
 }
 
@@ -391,14 +391,14 @@ TEST_CASE( "Changing modules ID" ) {
     connect( m2.connectors()[ 5 ], m3.connectors()[ 2 ], Orientation::North );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
 
-    CHECK( bot.validate( SimpleColision() ).first );
+    CHECK( bot.validate().first );
 
     CHECK( m1.getId() == 0 );
     CHECK( m2.getId() == 1 );
     CHECK( m3.getId() == 2 );
 
     CHECK( m2.setId( 42 ) );
-    CHECK( bot.validate( SimpleColision() ).first );
+    CHECK( bot.validate().first );
     CHECK( m1.getId() == 0 );
     CHECK( m2.getId() != 1 );
     CHECK( m2.getId() == 42 );

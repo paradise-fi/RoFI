@@ -48,7 +48,7 @@ public:
     {
         assert( _physicalModulesConfiguration->get() );
         assert( _physicalModulesConfiguration->get()
-                        ->isValid( rofi::configuration::SimpleColision() )
+                        ->isValid( rofi::configuration::SimpleCollision() )
                         .first );
     }
 
@@ -295,7 +295,7 @@ private:
         }
 
         new_configuration->prepare();
-        if ( auto [ ok, err ] = new_configuration->isValid( rofi::configuration::SimpleColision{} );
+        if ( auto [ ok, err ] = new_configuration->isValid( rofi::configuration::SimpleCollision{} );
              !ok ) {
             throw std::runtime_error( err );
         }

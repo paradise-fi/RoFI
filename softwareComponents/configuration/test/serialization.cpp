@@ -3,6 +3,9 @@
 #include <configuration/serialization.hpp>
 #include <iostream>
 
+#include <atoms/util.hpp>
+#include <variant>
+
 
 namespace {
 
@@ -61,7 +64,7 @@ TEST_CASE( "Empty" ) {
         CHECK( bot.modules().size() == 0 );
         CHECK( bot.roficoms().size() == 0 );
         CHECK( bot.referencePoints().size() == 0 );
-        CHECK( bot.validate( SimpleColision() ).first );
+        CHECK( bot.validate( SimpleCollision() ).first );
     }
 }
 
@@ -81,9 +84,9 @@ TEST_CASE( "Pad" ) {
     }
 
     SECTION( "Multiple pads" ) {
-        auto& m1 = bot.insert( Pad( idCounter++, 23, 11 ) );
+        bot.insert( Pad( idCounter++, 23, 11 ) );
         auto& m2 = bot.insert( Pad( idCounter++, 5 ) );
-        auto& m3 = bot.insert( Pad( idCounter++, 1, 10 ) );
+        bot.insert( Pad( idCounter++, 1, 10 ) );
         connect< RigidJoint >( m2.components()[ 0 ], { 0, 0, 0 }, identity );
     }
 
@@ -115,7 +118,6 @@ TEST_CASE( "UniversalModule" ) {
         CHECK( js[ "modules" ][ 0 ][ "0" ][ "beta" ]  == 90 );
         CHECK( js[ "modules" ][ 0 ][ "0" ][ "gamma" ] == 180 );
     }
-
 
     SECTION( "Signle With rotational joint" ) {
         auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_rad ) );
@@ -232,11 +234,11 @@ TEST_CASE( "UnknownModule" ) {
     Rofibot bot;
 
     SECTION( "Basic tests" ) {
-        auto& m1 = bot.insert( UnknownModule( { Component{ ComponentType::Roficom }
-                                              , Component{ ComponentType::Roficom } }
-                                              , 2
-                                              , { makeComponentJoint< RigidJoint >( 0, 1, identity ) }
-                                              , idCounter++ ) );
+        bot.insert( UnknownModule( { Component{ ComponentType::Roficom, {}, {}, nullptr }
+                                   , Component{ ComponentType::Roficom, {}, {}, nullptr } }
+                                   , 2
+                                   , { makeComponentJoint< RigidJoint >( 0, 1, identity ) }
+                                   , idCounter++ ) );
 
         auto js = toJSON( bot );
 
@@ -267,6 +269,220 @@ TEST_CASE( "Mixin'" ) {
         CHECK( js[ "moduleJoints" ].size() == 2 );
         CHECK( js == toJSON( fromJSON( js ) ) );
     }
+}
+
+TEST_CASE( "Attributes" ) {
+    Rofibot bot;
+
+    SECTION( "Single Universal Module" ) {
+        auto& m1 = bot.insert( UniversalModule( 0, 90_deg, 90_deg, 180_deg ) );
+        connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
+        auto js = toJSON( bot );
+
+        CHECK( js[ "modules" ][ 0 ][ "0" ][ "alpha" ] == 90 );
+        CHECK( js[ "modules" ][ 0 ][ "0" ][ "beta" ]  == 90 );
+        CHECK( js[ "modules" ][ 0 ][ "0" ][ "gamma" ] == 180 );
+
+        CHECK( !js[ "modules" ][ 0 ][ "0" ].contains( "attributes" ) );
+
+        auto testAttrCallback = overload{
+            []( const UniversalModule& m ) {
+                return nlohmann::json::object( { { "UniversalModule", m.getId() } } );
+            },
+            []( auto ... ) { return nlohmann::json{}; }
+        };
+
+        js = toJSON( bot, testAttrCallback );
+        CHECK( js[ "modules" ][ 0 ][ "0" ].contains( "attributes" ) );
+    }
+
+    SECTION( "Different modules – different messages" ) {
+        auto testAttrCallback = overload{
+            []( const Module& m ) {
+                return nlohmann::json::object( { { "Not an UniversalModule", m.getId() } } );
+            },
+            []( const UniversalModule& m ) { // This will get prioritized in case of the UM before the above
+                return nlohmann::json::object( { { "UniversalModule", m.getId() } } );
+            },
+            []( const ComponentJoint&, int ) { return nlohmann::json{}; },
+            []( const Component&, int )      { return nlohmann::json{}; },
+            []( const RoficomJoint& ) { return nlohmann::json{}; },
+            []( const SpaceJoint&   ) { return nlohmann::json{}; }
+        };
+
+        bot.insert( UniversalModule( 0, 0_deg, 0_deg, 0_deg ) );
+        bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+        bot.insert( Pad( 66, 2, 5 ) );
+
+        auto js = toJSON( bot, testAttrCallback );
+
+        REQUIRE( js[ "modules" ][ 0 ][  "0" ].contains( "attributes" ) );
+        REQUIRE( js[ "modules" ][ 1 ][ "42" ].contains( "attributes" ) );
+        REQUIRE( js[ "modules" ][ 2 ][ "66" ].contains( "attributes" ) );
+        // Todo: This is really ugly. Is there a better way?
+        CHECK( js[ "modules" ][ 0 ][  "0" ][ "attributes" ].items().begin().key() == "UniversalModule" );
+        CHECK( js[ "modules" ][ 0 ][  "0" ][ "attributes" ].items().begin().value() == 0 );
+        CHECK( js[ "modules" ][ 1 ][ "42" ][ "attributes" ].items().begin().key() == "UniversalModule" );
+        CHECK( js[ "modules" ][ 1 ][ "42" ][ "attributes" ].items().begin().value() == 42 );
+        CHECK( js[ "modules" ][ 2 ][ "66" ][ "attributes" ].items().begin().key() == "Not an UniversalModule" );
+        CHECK( js[ "modules" ][ 2 ][ "66" ][ "attributes" ].items().begin().value() == 66 );
+
+        for ( auto j : js[ "moduleJoints" ] )
+            CHECK( !j.contains( "attributes" ) );
+
+        for ( auto s : js[ "spaceJoints" ] )
+            CHECK( !s.contains( "attributes" ) );
+    }
+
+    SECTION( "Everything gets an attribute" ) {
+        auto testAttrCallback = overload{
+            // empty objects or arrays should not be discarded as null should
+            []( const ComponentJoint& ) {
+                return nlohmann::json::array();
+            },
+            []( const SpaceJoint& ) {
+                return nlohmann::json::object();
+            },
+            []( auto ... ) {
+                return "test-attr";
+            }
+        };
+
+        auto& pad = bot.insert( Pad( 42, 10, 8 ) );
+        auto& um1 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) ) );
+        auto& um2 = static_cast< UniversalModule& >( bot.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) ) );
+
+        connect( pad.components()[ 0 ], um1.getConnector( "A-Z" ), Orientation::North );
+        connect( um1.getConnector( "B-Z" ), um2.getConnector( "A+X" ), Orientation::West );
+
+        auto js = toJSON( bot, testAttrCallback );
+
+        for ( auto m : js[ "modules" ] ) {
+            CHECK( m.items().begin().value().contains( "attributes" ) );
+        }
+
+        for ( auto j : js[ "moduleJoints" ] )
+            CHECK( j.contains( "attributes" ) );
+
+        for ( auto s : js[ "spaceJoints" ] )
+            CHECK( s.contains( "attributes" ) );
+    }
+
+    SECTION( "Nothing gets an attribute" ) {
+        auto testAttrCallback = overload{
+            []( auto ... ) {
+                return nlohmann::json{};
+            }
+        };
+
+        auto& pad = bot.insert( Pad( 42, 10, 8 ) );
+        auto& um1 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) ) );
+        auto& um2 = static_cast< UniversalModule& >( bot.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) ) );
+
+        connect( pad.components()[ 0 ], um1.getConnector( "A-Z" ), Orientation::North );
+        connect( um1.getConnector( "B-Z" ), um2.getConnector( "A+X" ), Orientation::West );
+
+        auto js = toJSON( bot, testAttrCallback );
+
+        for ( auto m : js[ "modules" ] ) {
+            CHECK( !m.items().begin().value().contains( "attributes" ) );
+        }
+
+        for ( auto j : js[ "moduleJoints" ] )
+            CHECK( !j.contains( "attributes" ) );
+
+        for ( auto s : js[ "spaceJoints" ] )
+            CHECK( !s.contains( "attributes" ) );
+    }
+}
+
+TEST_CASE( "Working with attributes" ) {
+    Rofibot bot;
+
+    SECTION( "Save and load IDs from attributes" ) {
+        bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+        bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) );
+        bot.insert( UniversalModule( 0,  0_deg, 0_deg, 0_deg ) );
+        bot.insert( UniversalModule( 78, 0_deg, 0_deg, 0_deg ) );
+
+        auto js = toJSON( bot, overload{
+                        []( const Module& m ) {
+                            return nlohmann::json( m.getId() );
+                        },
+                        []( const ComponentJoint&, int ) { return nlohmann::json{}; },
+                        []( const Component&, int )      { return nlohmann::json{}; },
+                        []( const RoficomJoint& ) { return nlohmann::json{}; },
+                        []( const SpaceJoint&   ) { return nlohmann::json{}; }
+        } );
+
+        std::vector< ModuleId > ids;
+
+        auto copy = fromJSON( js, overload{
+                            [ &ids ]( const nlohmann::json& j, const Module& m ) {
+                                CHECK( j.get< ModuleId >() == m.getId() );
+                                ids.push_back( j );
+                            },
+                            []( const nlohmann::json&, const ComponentJoint&, int ) { return; },
+                            []( const nlohmann::json&, const Component&, int )      { return; },
+                            []( const nlohmann::json&, Rofibot::RoficomHandle )     { return; },
+                            []( const nlohmann::json&, Rofibot::SpaceJointHandle )  { return; },
+        } );
+
+        CHECK( ids.size() == 4 );
+        std::sort( ids.begin(), ids.end() );
+        CHECK( ids[ 0 ] == 0  );
+        CHECK( ids[ 1 ] == 42 );
+        CHECK( ids[ 2 ] == 66 );
+        CHECK( ids[ 3 ] == 78 );
+    }
+
+    SECTION( "Sum all attributes" ) {
+        auto js = "{ \"modules\" : [ { \"66\" : {\
+                                            \"type\"  : \"universal\",\
+                                            \"alpha\" : 90, \"beta\"  : 0, \"gamma\" : 180,\
+                                            \"attributes\" : 1\
+                                            }\
+                                      },\
+                                      { \"42\" : {\
+                                            \"type\" : \"universal\",\
+                                            \"alpha\" : 0, \"beta\"  : 90, \"gamma\" : 90,\
+                                            \"attributes\" : 2\
+                                            }\
+                                      }\
+                                ],\
+                     \"moduleJoints\" : [ {\
+                                            \"orientation\" : \"East\",\
+                                            \"from\" : 66, \"fromCon\" : \"A-Z\",\
+                                            \"to\" : 42,   \"toCon\" : \"B-Z\",\
+                                            \"attributes\" : 3\
+                                          }\
+                                        ],\
+                     \"spaceJoints\" : [ {\
+                                        \"point\" : { \"x\" : 0, \"y\" : 0, \"z\" : 0 },\
+                                                    \"to\" : 66, \"toComponent\" : 7,\
+                                                    \"attributes\" : 4,\
+                                                    \"joint\" : {\
+                                                                    \"type\" : \"rigid\",\
+                                                                    \"sourceToDestination\" : [\
+                                                                           [ 1, 0, 0, 0 ]\
+                                                                           , [ 0, 1, 0, 0 ]\
+                                                                           , [ 0, 0, 1, 0 ]\
+                                                                           , [ 0, 0, 0, 1 ]\
+                                                                        ]\
+                    } } ] }"_json;
+
+        int sum = 0;
+        auto copy = fromJSON( js, overload{
+                            [ &sum ]( const nlohmann::json& j, const Module& )    { sum += j.get< int >(); },
+                            [ &sum ]( const nlohmann::json& j, const ComponentJoint&, int ) { sum += j.get< int >(); },
+                            [ &sum ]( const nlohmann::json& j, const Component&, int )      { sum += j.get< int >(); },
+                            [ &sum ]( const nlohmann::json& j, Rofibot::RoficomHandle )     { sum += j.get< int >(); },
+                            [ &sum ]( const nlohmann::json& j, Rofibot::SpaceJointHandle )  { sum += j.get< int >(); },
+        } );
+
+        CHECK( sum == 10 );
+    }
+
 }
 
 } // namespace

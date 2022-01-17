@@ -71,7 +71,7 @@ std::string botTypeToString( BotType b ) {
     return str;
 }
 
-int build( Dim::Cli & cli ) {
+int build( Dim::Cli & /* cli */ ) {
     auto configuration = buildWishedRofibot( static_cast< BotType >( *botType ) );
 
     rofi::configuration::connect< rofi::configuration::RigidJoint >(

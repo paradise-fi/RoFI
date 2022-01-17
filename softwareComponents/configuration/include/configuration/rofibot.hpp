@@ -416,7 +416,7 @@ public:
  * \brief Collision model taking into account only spherical collisions of the
  * shoes
  */
-class SimpleColision {
+class SimpleCollision {
 public:
     /**
      * \brief Decide if two modules collide
@@ -442,9 +442,9 @@ public:
 class Rofibot {
     struct ModuleInfo;
     using ModuleInfoHandle = atoms::HandleSet< ModuleInfo >::handle_type;
+public:
     using RoficomHandle = atoms::HandleSet< RoficomJoint >::handle_type;
     using SpaceJointHandle = atoms::HandleSet< SpaceJoint >::handle_type;
-public:
 
     Rofibot() = default;
 
@@ -564,7 +564,7 @@ public:
      * \return A pair - first item indicates the validity, the second one gives
      * textual description of the reason for invalidity
      */
-    template < typename Collision >
+    template < typename Collision = SimpleCollision >
     std::pair< bool, std::string > isValid( Collision collisionModel = Collision() ) const {
         if ( !_prepared ) {
             return { false, "configuration is not prepared" };
@@ -595,7 +595,7 @@ public:
      * \return A pair - first item indicates the validity, the second one gives
      * textual description of the reason for invalidity
      */
-    template < typename Collision >
+    template < typename Collision = SimpleCollision >
     [[nodiscard]] std::pair< bool, std::string > validate( Collision collisionModel = Collision() ) {
         if ( !_prepared ) {
             try {
@@ -751,7 +751,7 @@ private:
     std::map< ModuleId, ModuleInfoHandle > _idMapping;
     bool _prepared = false;
 
-    friend void connect( const Component& c1, const Component& c2, roficom::Orientation o );
+    friend RoficomHandle connect( const Component& c1, const Component& c2, roficom::Orientation o );
     friend class Module;
     template < typename JointT, typename... Args >
     friend SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&... args );
@@ -764,7 +764,7 @@ private:
  * std::logic_error is thrown.
  *
  */
-void connect( const Component& c1, const Component& c2, roficom::Orientation o );
+Rofibot::RoficomHandle connect( const Component& c1, const Component& c2, roficom::Orientation o );
 
 /**
  * \brief Connect a module's component to a point in space via given joint type
