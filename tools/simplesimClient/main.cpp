@@ -51,7 +51,7 @@ private:
         assert( msg );
 
         auto configuration = std::make_shared< Rofibot >(
-                serialization::fromJSON< Rofibot >( nlohmann::json::parse( msg->value() ) ) );
+                serialization::fromJSON( nlohmann::json::parse( msg->value() ) ) );
         assert( configuration );
 
         if ( auto [ ok, err_str ] = configuration->validate( SimpleColision() ); !ok ) {

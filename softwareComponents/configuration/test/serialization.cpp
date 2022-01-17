@@ -25,7 +25,7 @@ TEST_CASE( "UniversalModule – Demo" ) {
     auto j = serialization::toJSON( bot );
     std::string js_str = j.dump( 4 );
 
-    Rofibot botj = serialization::fromJSON< Rofibot >( j );
+    Rofibot botj = serialization::fromJSON( j );
     auto j_cpy   = serialization::toJSON( botj );
     std::string js_str_cpy = j_cpy.dump( 4 );
 
@@ -56,7 +56,7 @@ TEST_CASE( "Empty" ) {
     SECTION( "fromJSON" ) {
         auto js = "{ \"modules\" : [], \"spaceJoints\" : [], \"moduleJoints\" : [] }"_json;
 
-        Rofibot bot = fromJSON< Rofibot >( js );
+        Rofibot bot = fromJSON( js );
 
         CHECK( bot.modules().size() == 0 );
         CHECK( bot.roficoms().size() == 0 );
@@ -89,7 +89,7 @@ TEST_CASE( "Pad" ) {
 
     auto j = toJSON( bot );
 
-    Rofibot cpy = fromJSON< Rofibot >( j );
+    Rofibot cpy = fromJSON( j );
 
     REQUIRE_NOTHROW( bot.prepare() );
     REQUIRE_NOTHROW( cpy.prepare() );
@@ -196,7 +196,7 @@ TEST_CASE( "UniversalModule" ) {
                             ]\
         }"_json;
 
-        bot = fromJSON< Rofibot >( js );
+        bot = fromJSON( js );
 
         CHECK( bot.modules().size() == 2 );
         idCounter++; // to count inserted bots
@@ -214,7 +214,7 @@ TEST_CASE( "UniversalModule" ) {
 
     auto j = toJSON( bot );
 
-    Rofibot cpy = fromJSON< Rofibot >( j );
+    Rofibot cpy = fromJSON( j );
 
     REQUIRE_NOTHROW( bot.prepare() );
     REQUIRE_NOTHROW( cpy.prepare() );
@@ -265,7 +265,7 @@ TEST_CASE( "Mixin'" ) {
         auto js = toJSON( bot );
         CHECK( js[ "modules" ].size() == 3 );
         CHECK( js[ "moduleJoints" ].size() == 2 );
-        CHECK( js == toJSON( fromJSON< Rofibot >( js ) ) );
+        CHECK( js == toJSON( fromJSON( js ) ) );
     }
 }
 
