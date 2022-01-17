@@ -140,11 +140,22 @@ class Module;
 struct Component {
     using JointId = int;
 
+    Component( ComponentType type,
+               std::vector< JointId > inJoints,
+               std::vector< JointId > outJoints,
+               Module *parent = nullptr ):
+        type( type ),
+        inJoints( std::move( inJoints ) ),
+        outJoints( std::move( outJoints ) ),
+        parent( parent )
+    {}
+    Component( ComponentType type ): Component( type, {}, {} ) {}
+
     ComponentType type;
     std::vector< JointId > inJoints;
     std::vector< JointId > outJoints;
 
-    Module *parent;
+    Module* parent = nullptr;
 
     bool operator==( const Component& o ) const {
         return type == o.type &&
@@ -181,12 +192,14 @@ public:
         std::vector< ComponentJoint > joints,
         ModuleId id,
         std::optional< int > rootComponent = std::nullopt )
-    : type( type ), _id( id ),
+    : type( type ),
+      parent( nullptr ),
+      _id( id ),
       _components( std::move( components ) ),
       _connectorCount( connectorCount ),
       _joints( std::move( joints ) ),
-      parent( nullptr ),
-      _rootComponent( rootComponent )
+      _rootComponent( rootComponent ),
+      _componentPosition( std::nullopt )
     {
         assert( _components.size() > 0 && "Module has to have at least one component" );
         _prepareComponents();
@@ -394,7 +407,7 @@ public:
     /**
      * \brief Decide if two modules collide
      */
-    bool operator()( const Module& a, const Module& b, Matrix posA, Matrix posB ) {
+    bool operator()( const Module& /* a */, const Module& /* b */, Matrix /* posA */, Matrix /* posB */ ) {
         return false;
     }
 };
@@ -665,7 +678,7 @@ public:
     }
 
 private:
-    void onModuleMove( ModuleId mId ) {
+    void onModuleMove() {
         _prepared = false;
     }
 
