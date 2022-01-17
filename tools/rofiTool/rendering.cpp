@@ -54,9 +54,9 @@ vtkAlgorithmOutput *getComponentModel( ComponentType type ) {
         });
     static std::map< ComponentType, vtkSmartPointer< vtkTransformPolyDataFilter > > cache;
 
-    assert( resourceMap.count( type ) == 1 && "Unsupported component type specified" );
+    assert( resourceMap.contains( type ) && "Unsupported component type specified" );
 
-    if ( cache.count( type ) == 0 ) {
+    if ( !cache.contains( type ) ) {
         auto reader = vtkSmartPointer<vtkOBJReader>::New();
         ResourceFile modelFile = resourceMap.find( type )->second();
         reader->SetFileName( modelFile.name().c_str() );
@@ -113,11 +113,11 @@ void addModuleToScene( vtkRenderer* renderer, Module& m,
 {
     auto moduleColor = getModuleColor( moduleIndex );
     const auto& components = m.components();
-    for ( int i = 0; i != components.size(); i++ ) {
-        const auto& component = components[ i ];
+    for ( int i = 0; to_unsigned( i ) < components.size(); i++ ) {
+        const auto& component = components[ to_unsigned( i ) ];
         auto cPosition = m.getComponentPosition( i, mPosition );
         // make connected RoFICoMs connected visually
-        if ( active_cons.count( i ) > 0 )
+        if ( active_cons.contains( i ) )
             cPosition = cPosition * rofi::configuration::matrices::translate( { -0.05, 0, 0 } );
 
         auto posTrans = vtkSmartPointer< vtkTransform >::New();
@@ -154,7 +154,7 @@ void buildConfigurationScene( vtkRenderer* renderer, Rofibot& bot ) {
     int index = 0;
     for ( auto& mInfo : bot.modules() ) {
         assert( mInfo.position && "The configuration has to be prepared" );
-        if ( active_cons.count( mInfo.module->getId() ) == 0 )
+        if ( !active_cons.contains( mInfo.module->getId() ) )
             active_cons[ mInfo.module->getId() ] = {};
         addModuleToScene( renderer, *mInfo.module, *mInfo.position, index, active_cons[ mInfo.module->getId() ] );
         index++;

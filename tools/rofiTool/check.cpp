@@ -6,7 +6,7 @@ static auto command = Dim::Cli().command( "check" )
 static auto& inputFile = command.opt< std::string >( "<FILE>" )
     .desc("Specify configuration file");
 
-int check( Dim::Cli & cli ) {
+int check( Dim::Cli & /* cli */ ) {
     auto cfgFile = std::ifstream( *inputFile );
     if ( !cfgFile.is_open() )
         throw std::runtime_error( "Cannot open file '" + *inputFile + "'" );
