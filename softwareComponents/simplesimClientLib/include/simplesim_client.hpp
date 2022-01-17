@@ -21,6 +21,8 @@
 #include "atoms/guarded.hpp"
 #include "configuration/rofibot.hpp"
 
+#define vtkTypeMacro_( thisClass, superClass ) \
+    vtkTypeMacro( thisClass, superClass ) static_assert( true, "require semicolon" )
 
 namespace rofi::simplesim
 {
@@ -43,9 +45,9 @@ class SimplesimClient
 private:
     class UpdateConfigurationCommand : public vtkCommand
     {
-    public:
-        vtkTypeMacro( UpdateConfigurationCommand, vtkCommand );
+        vtkTypeMacro_( UpdateConfigurationCommand, vtkCommand );
 
+    public:
         static UpdateConfigurationCommand * New()
         {
             return new UpdateConfigurationCommand;

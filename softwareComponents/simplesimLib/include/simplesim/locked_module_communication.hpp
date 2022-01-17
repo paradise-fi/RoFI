@@ -34,7 +34,7 @@ public:
     LockedModuleCommunication & operator=( LockedModuleCommunication && ) = delete;
 
 
-    const std::string & topic( const gazebo::transport::Node & node ) const
+    const std::string & topic() const
     {
         return _topic;
     }

@@ -45,10 +45,10 @@ void ModulesCommunication::unlockModule( ModuleId moduleId )
 
 std::optional< std::string > ModulesCommunication::getTopic( ModuleId moduleId ) const
 {
-    return _modules.visit_shared( [ moduleId, &node = std::as_const( *_node ) ](
+    return _modules.visit_shared( [ moduleId ](
                                           const auto & modules ) -> std::optional< std::string > {
         if ( auto it = modules.find( moduleId ); it != modules.end() && it->second != nullptr ) {
-            return it->second->topic( node );
+            return it->second->topic();
         }
         return std::nullopt;
     } );
