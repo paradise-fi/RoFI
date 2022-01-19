@@ -149,7 +149,6 @@ add_component(snake_reconfig)
 
 if (${BUILD_GAZEBO})
   add_component(rofisimMessages)
-  add_component(configurationMessages)
 
   add_component(message_server)
 
