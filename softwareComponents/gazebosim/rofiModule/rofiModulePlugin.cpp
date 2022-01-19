@@ -1,5 +1,6 @@
 #include "rofiModulePlugin.hpp"
 
+#include <cassert>
 #include <cmath>
 #include <functional>
 
@@ -167,11 +168,12 @@ void RMP::findAndInitJoints()
             continue;
         }
 
+        assert( joints.size() <= INT_MAX );
         joints.emplace_back( std::move( joint ),
                              nullptr,
                              pidValues,
                              std::bind( callback, joints.size(), std::placeholders::_1 ),
-                             joints.size() );
+                             static_cast< int >( joints.size() ) );
         assert( joints.back() );
         assert( joints.back().joint->GetMsgType() == msgs::Joint::REVOLUTE );
     }
