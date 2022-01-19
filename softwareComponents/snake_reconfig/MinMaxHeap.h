@@ -49,7 +49,7 @@ public:
             --_occupied;
             T ret_val = std::move(_odd.value());
             _odd = std::nullopt;
-            return std::move(ret_val);
+            return ret_val;
         }
         if (!_odd) {
             T ret_val = std::move(_max_heap[0]);
@@ -61,20 +61,20 @@ public:
             } else {
                 --_occupied;
             }
-            return std::move(ret_val);
+            return ret_val;
         }
         if (_comp(_max_heap[0], _odd.value())) {
             --_occupied;
             T ret_val = std::move(_odd.value());
             _odd = std::nullopt;
-            return std::move(ret_val);
+            return ret_val;
         }
         T ret_val = std::move(_max_heap[0]);
         if (_occupied == 3) {
             --_occupied;
             _max_heap[0] = std::move(_odd.value());
             _odd = std::nullopt;
-            return std::move(ret_val);
+            return ret_val;
         }
         if (_comp(_max_heap[_last()], _odd.value())) {
             _max_heap[0] = std::move(_odd.value());
@@ -91,7 +91,7 @@ public:
             }
         }
         _odd = std::nullopt;
-        return std::move(ret_val);
+        return ret_val;
     }
 
     T popMin() {
@@ -102,7 +102,7 @@ public:
             --_occupied;
             T ret_val = std::move(_odd.value());
             _odd = std::nullopt;
-            return std::move(ret_val);
+            return ret_val;
         }
         if (!_odd) {
             T ret_val = std::move(_min_heap[0]);
@@ -114,20 +114,20 @@ public:
             } else {
                 --_occupied;
             }
-            return std::move(ret_val);
+            return ret_val;
         }
         if (_comp(_odd.value(), _min_heap[0])) {
             --_occupied;
             T ret_val = std::move(_odd.value());
             _odd = std::nullopt;
-            return std::move(ret_val);
+            return ret_val;
         }
         T ret_val = std::move(_min_heap[0]);
         if (_occupied == 3) {
             --_occupied;
             _min_heap[0] = std::move(_odd.value());
             _odd = std::nullopt;
-            return std::move(ret_val);
+            return ret_val;
         }
         if (_comp(_odd.value(), _min_heap[_last()])) {
             _min_heap[0] = std::move(_odd.value());
@@ -144,7 +144,7 @@ public:
             }
         }
         _odd = std::nullopt;
-        return std::move(ret_val);
+        return ret_val;
     }
 
     bool push(T new_add) {

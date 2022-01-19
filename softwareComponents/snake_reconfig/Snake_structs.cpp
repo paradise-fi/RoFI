@@ -60,7 +60,7 @@ double FurthestPointsScore::operator()(const Configuration& config) {
         }
     }
     return 1/max;
-};
+}
 
 unsigned DistFromConnScore::getPenalty(const Configuration& config, const Matrix& conn, ID ignore) {
     unsigned penalty = 0;
