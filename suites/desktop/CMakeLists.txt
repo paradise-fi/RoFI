@@ -165,6 +165,7 @@ if (${BUILD_GAZEBO})
   add_component(rofiHalSimPy)
 
   add_component(gazebosim)
+  add_component(simplesimConfigMsgs)
   add_component(simplesimLib)
   add_component(simplesimClientLib)
 endif()
