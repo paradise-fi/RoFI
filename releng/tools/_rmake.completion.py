@@ -9,7 +9,8 @@ flags = [
     "--list",
     "--doc",
     "--help",
-    "--test"
+    "--test",
+    "--tidy"
     ]
 
 word = int(sys.argv[1])
@@ -21,10 +22,10 @@ if len(words) > 0 and words[0].startswith("--"):
         candidates = [ s for s in flags if s.startswith(words[0]) ]
         if len(candidates) > 0:
             print("\n".join(candidates))
-    if words[0] != "--test":
+    if words[0] not in ["--test", "--tidy"]:
         sys.exit(0)
     else:
-        test = True
+        test = words[0] == "--test"
 
 candidates = []
 if test and word == 2:
