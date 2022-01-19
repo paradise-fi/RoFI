@@ -105,10 +105,10 @@ int main( int argc, char** argv )
     int cur = 0;
     if( !targets.is_open() ){
         if( reach ){
-            result = bot.reach( goal, rotation, s ) << '\n';
+            result = bot.reach( goal, rotation, s );
         }
         if( connect ){
-            result = bot.connect( s, to_connect.first, to_connect.second ) << '\n';
+            result = bot.connect( s, to_connect.first, to_connect.second );
         }
         for( int i = 0; i < random_targets; ++i ){
             if( opt.random ){
@@ -135,10 +135,10 @@ int main( int argc, char** argv )
             if( method == "r" ){
                 ss >> goal[ 0 ] >> goal[ 1 ] >> goal[ 2 ]
                     >> rotation[ 0 ] >> rotation[ 1 ] >> rotation[ 2 ];
-                result = bot.reach( goal, rotation, s ) << '\n';
+                result = bot.reach( goal, rotation, s );
             } else if( method == "c" ){
                 ss >> to_connect.first >> to_connect.second;
-                result = bot.connect( s, to_connect.first, to_connect.second ) << '\n';
+                result = bot.connect( s, to_connect.first, to_connect.second );
             } else {
                 std::cerr << "Wrong target format\n";
                 return 1;
