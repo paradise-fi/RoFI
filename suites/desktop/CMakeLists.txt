@@ -116,6 +116,15 @@ find_package(Armadillo REQUIRED)
 
 if (${BUILD_GAZEBO})
   find_package(gazebo REQUIRED)
+
+  find_package(Protobuf REQUIRED)
+  # Include Gazebo messages
+  set(PROTOBUF_IMPORT_DIRS)
+  foreach(ITR ${GAZEBO_INCLUDE_DIRS})
+      if(ITR MATCHES ".*gazebo-[0-9.]+$")
+          set(PROTOBUF_IMPORT_DIRS "${ITR}/gazebo/msgs/proto")
+      endif()
+  endforeach()
 endif()
 
 if (NOT ${BUILD_HEADLESS})
