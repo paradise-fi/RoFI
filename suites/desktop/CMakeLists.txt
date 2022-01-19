@@ -212,3 +212,7 @@ add_subdirectory($ENV{ROFI_ROOT}/softwareComponents/rofiHalEsp32/test-logic rofi
 
 
 list_targets()
+list_dependencies()
+list_sources()
+
+

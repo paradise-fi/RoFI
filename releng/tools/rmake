@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from operator import length_hint
 import os
 import sys
 import subprocess
@@ -16,6 +17,11 @@ usage="""Usage:
     rmake <targetName>...        Compile one or multiple targets
     rmake <pathPrefix>...        Compile one or multiple targets in path
     rmake <suitename>...         Compile given suite
+
+    rmake --tidy <targetName>... Run clang-tidy on one or multiple targets
+    rmake --tidy <pathPrefix>... Run clang-tidy on one or multiple targets in path
+    rmake --tidy <suitename>...  Run clang-tidy on given suite
+    rmake --tidy --all           Run clang-tidy on all configured targets
 
     rmake --test --all               Compile and run all configured tests
     rmake --test <testTargetName>... Compile and run test for target
@@ -186,6 +192,100 @@ def test(patterns):
     for t in targetsToCompile:
         runTest(t)
 
+def suiteToSources(suite, targetList, deps, sources):
+    retSources = set()
+    for target in targetList:
+        if target.suite == suite:
+            retSources = retSources.union(targetToSources(target.target, deps, sources))
+    return retSources
+
+def targetToSources(target, deps, sources):
+    retSources = set(sources.get(target, []))
+    for d in deps.get(target, []):
+        retSources = retSources.union(targetToSources(d, deps, sources))
+    return retSources
+
+def runClangTidy(suite, source):
+    columns, _ = os.get_terminal_size()
+    message = f"➡️  "
+    path = f"{os.path.relpath(source)}"
+    if len(path) + len(message) > columns:
+        l = -columns + len(path) + len(message) + 4
+        path = "..." + path[l:]
+    GREEN = "\033[32m"
+    ENDC = "\033[m"
+    BOLD = "\u001b[1m"
+    message += GREEN + BOLD + path + ENDC
+    print(message)
+    print("―" * columns)
+
+    if not os.path.exists(source):
+        print("Warning: file does not exist, skipping.")
+        print("   The source file is probably generated and it has not been generated yet")
+        print("")
+        return True
+    with open(os.path.join(suiteDir, suite, ".clang-tidy")) as f:
+        configuration = f.read()
+    command = ["clang-tidy",
+        "-p", os.path.join(buildDir, suite),
+        "--config", configuration,
+        os.path.relpath(source)]
+    retcode = subprocess.call(command)
+    print("")
+    return retcode == 0
+
+def tidy(patterns):
+    """
+    Run clang-tidy on the given patterns
+    """
+    aSuites = configuredSuites()
+    aTargets = availableTargets()
+    deps = dependencyList()
+    sources = sourceList()
+
+    if len(patterns) == 0:
+        sys.exit("Invalid usage!\n\n" + usage)
+    if patterns[0] == "--all":
+        if len(patterns) != 1:
+            sys.exit("Invalid usage!\n\n" + usage)
+        patterns = [x.target for x in aTargets]
+    if not allAreTargets(patterns):
+        sys.exit("Invalid usage!\n\n" + usage)
+
+    suitesToCheck = set()
+    targetsToCheck = set()
+    suitesToClean = set()
+    for pattern in patterns:
+        matchPattern(pattern, aSuites, aTargets, suitesToCheck,
+            targetsToCheck, suitesToClean)
+    if len(suitesToClean):
+        sys.exit("Cannot specify clean targets in clang-tidy check")
+
+    sourcesToCheck = set()
+    for s in suitesToCheck:
+        for x in suiteToSources(s, aTargets, deps, sources):
+            sourcesToCheck.add((x, s))
+    for t in targetsToCheck:
+        for x in targetToSources(t.target, deps, sources):
+            sourcesToCheck.add((x, t.suite))
+
+    # Make the order deterministic
+    sourcesToCheck = list(sourcesToCheck)
+    sourcesToCheck.sort(key=lambda x: x[0])
+
+    # Run clang-tidy
+    success = True
+    for source, suite in sourcesToCheck:
+        _, extension = os.path.splitext(source)
+        if extension in [".c", ".cc", ".cpp"]:
+            success = success and runClangTidy(suite, source)
+    if success:
+        print("✅ All checks passed")
+        sys.exit(0)
+    else:
+        print("❌ Some checks failed")
+        sys.exit(1)
+
 def main():
     if len(sys.argv) < 2:
         sys.exit("Invalid usage!\n\n" + usage)
@@ -218,6 +318,10 @@ def main():
 
     if command == "--test":
         test(sys.argv[2:])
+        sys.exit(0)
+
+    if command == "--tidy":
+        tidy(sys.argv[2:])
         sys.exit(0)
 
     if command == "--all":
