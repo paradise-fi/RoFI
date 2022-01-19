@@ -1,0 +1,26 @@
+syntax = "proto3";
+package rofi.simplesim.msgs;
+
+
+message SettingsCmd {
+    enum Type {
+        SEND_CONFIGURATION_AND_STATE = 0;
+        PAUSE = 1;
+        RESUME = 2;
+        CHANGE_SPEED_RATIO = 3;
+        CHANGE_SIM_STEP_TIME = 4;
+    }
+
+    Type cmd_type = 1;
+
+    oneof new_value {
+        float sim_speed_ratio = 2;
+        int64 sim_step_time_ms = 3;
+    }
+}
+
+message SettingsState {
+    bool paused = 1;
+    float sim_speed_ratio = 2;
+    int64 sim_step_time_ms = 3;
+}
