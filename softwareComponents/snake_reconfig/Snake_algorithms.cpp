@@ -206,13 +206,13 @@ void appendMapped(std::vector<Configuration>& path1, const std::vector<Configura
 }
 
 std::vector<Configuration> reconfigThroughSnake(const Configuration& from, const Configuration& to) {
-    auto [path1, finished1] = reconfigToSnake(from, []( auto... args ){} );
+    auto [path1, finished1] = reconfigToSnake(from, []( auto... /* args */ ){} );
     if (!finished1) {
         std::cerr << "Couldnt compute reconfig from `from` to snake" << std::endl;
         return {};
     }
 
-    auto [path2, finished2] = reconfigToSnake(to, []( auto... args ){} );
+    auto [path2, finished2] = reconfigToSnake(to, []( auto... /* args */ ){} );
     if (!finished2) {
         std::cerr << "Couldnt compute reconfig from `to` to snake" << std::endl;
         return {};
