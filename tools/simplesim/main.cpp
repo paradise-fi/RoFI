@@ -56,7 +56,7 @@ int main( int argc, char * argv[] )
     std::cout << "Starting gazebo server" << std::endl;
     auto msgServer = rofi::msgs::Server::createAndLoopInThread( "simplesim" );
 
-    auto client = rofi::simplesim::SimplesimClient();
+    auto client = rofi::simplesim::SimplesimClient( []( auto & ) { /* TODO */ } );
 
     std::cout << "Starting simplesim server..." << std::endl;
     auto server = rofi::simplesim::runSimplesim( configuration, [ &client ]( auto rofiConfig ) {
