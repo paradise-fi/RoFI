@@ -81,6 +81,7 @@ public:
     void onConfigurationUpdate(
             std::shared_ptr< const rofi::configuration::Rofibot > newConfiguration )
     {
+        assert( newConfiguration );
         assert( newConfiguration->isValid( rofi::configuration::SimpleColision() ).first );
         _currentConfiguration.visit( [ &newConfiguration ]( auto & currConfig ) {
             currConfig = std::move( newConfiguration );
