@@ -290,7 +290,8 @@ void updateConfigurationInRenderer(
 }
 
 
-SimplesimClient::SimplesimClient()
+SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
+        : _onSettingsCmdCallback( std::move( onSettingsCmdCallback ) )
 {
     _renderer->SetBackground( 1.0, 1.0, 1.0 );
     _renderer->ResetCamera();
