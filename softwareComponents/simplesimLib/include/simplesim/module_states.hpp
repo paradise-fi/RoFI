@@ -46,7 +46,10 @@ public:
                           return innerStatesFromConfiguration( *configPtr );
                       } ) )
     {
-        // assert( _physicalModulesConfiguration->isValid() ); // TODO `isValid` should be const
+        assert( _physicalModulesConfiguration->get() );
+        assert( _physicalModulesConfiguration->get()
+                        ->isValid( rofi::configuration::SimpleColision() )
+                        .first );
     }
 
     // Returns rofi description if module with moduleId exists
