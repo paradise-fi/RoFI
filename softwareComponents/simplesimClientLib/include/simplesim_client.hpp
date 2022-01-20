@@ -50,7 +50,7 @@ private:
     public:
         static UpdateConfigurationCommand * New()
         {
-            return new UpdateConfigurationCommand;
+            return new UpdateConfigurationCommand();
         }
 
         void Execute( vtkObject * /* caller */, unsigned long /* eventId */, void * /* callData */ )
@@ -60,7 +60,7 @@ private:
             client->renderCurrentConfiguration();
         }
 
-        SimplesimClient * client;
+        SimplesimClient * client = {};
     };
 
 public:
