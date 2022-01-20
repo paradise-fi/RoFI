@@ -68,9 +68,9 @@ vtkAlgorithmOutput * getComponentModel( rofi::configuration::ComponentType type 
               { ComponentType::Roficom, LOAD_RESOURCE_FILE_LAZY( model_connector_obj ) } } );
     static std::map< ComponentType, vtkSmartPointer< vtkTransformPolyDataFilter > > cache;
 
-    assert( resourceMap.count( type ) == 1 && "Unsupported component type specified" );
+    assert( resourceMap.contains( type ) && "Unsupported component type specified" );
 
-    if ( cache.count( type ) == 0 ) {
+    if ( !cache.contains( type ) ) {
         auto reader = vtkSmartPointer< vtkOBJReader >::New();
         ResourceFile modelFile = resourceMap.find( type )->second();
         reader->SetFileName( modelFile.name().c_str() );
@@ -113,17 +113,18 @@ vtkSmartPointer< vtkPolyDataMapper > getComponentMapper( const Matrix & cPositio
     auto componentActors = std::vector< vtkSmartPointer< vtkActor > >();
     componentActors.reserve( newModule.components().size() );
     const auto & components = newModule.components();
-    for ( int i = 0; i != components.size(); i++ ) {
+    for ( size_t i = 0; i < components.size(); i++ ) {
         auto frameActor = vtkSmartPointer< vtkActor >::New();
         frameActor->GetProperty()->SetColor( getModuleColor( newModule.getId() ).data() );
         frameActor->GetProperty()->SetOpacity( 1.0 );
         frameActor->GetProperty()->SetFrontfaceCulling( true );
         frameActor->GetProperty()->SetBackfaceCulling( true );
-        frameActor->SetScale( 1 / 95.0 );
+        frameActor->SetScale( 1. / 95. );
 
-        auto cPosition = newModule.getComponentPosition( i, mPosition );
+        assert( i <= INT_MAX );
+        auto cPosition = newModule.getComponentPosition( static_cast< int >( i ), mPosition );
         // make connected RoFICoMs connected visually
-        if ( activeConnectors.count( i ) > 0 ) {
+        if ( activeConnectors.contains( static_cast< int >( i ) ) ) {
             cPosition = cPosition * translate( { -0.05, 0, 0 } );
         }
 
@@ -169,12 +170,13 @@ void updateModulePositionInScene( const rofi::configuration::Module & newModule,
     const auto & components = newModule.components();
     assert( moduleRenderInfo.componentActors.size() == components.size() );
 
-    for ( int i = 0; i != components.size(); i++ ) {
+    for ( size_t i = 0; i < components.size(); i++ ) {
         const auto & componentActor = moduleRenderInfo.componentActors[ i ];
 
-        auto cPosition = newModule.getComponentPosition( i, mPosition );
+        assert( i < INT_MAX );
+        auto cPosition = newModule.getComponentPosition( static_cast< int >( i ), mPosition );
         // make connected RoFICoMs connected visually
-        if ( moduleRenderInfo.activeConnectors.count( i ) > 0 ) {
+        if ( moduleRenderInfo.activeConnectors.contains( static_cast< int >( i ) ) ) {
             cPosition = cPosition * translate( { -0.05, 0, 0 } );
         }
 
