@@ -42,6 +42,9 @@ std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
 
 int main( int argc, char * argv[] )
 {
+    using rofi::configuration::Rofibot;
+    using rofi::simplesim::msgs::SettingsCmd;
+
     Dim::Cli cli;
     auto & inputCfgFileName = cli.opt< std::string >( "<input_cfg_file>" )
                                       .desc( "Input configuration file" );
@@ -56,13 +59,28 @@ int main( int argc, char * argv[] )
     std::cout << "Starting gazebo server" << std::endl;
     auto msgServer = rofi::msgs::Server::createAndLoopInThread( "simplesim" );
 
-    auto client = rofi::simplesim::SimplesimClient( []( auto & ) { /* TODO */ } );
+    // Setup server
+    auto server = rofi::simplesim::Simplesim( configuration );
 
-    std::cout << "Starting simplesim server..." << std::endl;
-    auto server = rofi::simplesim::runSimplesim( configuration, [ &client ]( auto rofiConfig ) {
-        client.onConfigurationUpdate( std::move( rofiConfig ) );
+    // Setup client
+    auto client = rofi::simplesim::SimplesimClient();
+    client.setOnSettingsCmdCallback( [ &server, &client ]( const SettingsCmd & settingsCmd ) {
+        auto settings = server.onSettingsCmd( settingsCmd );
+        client.onSettingsResponse( settings.getStateMsg() );
     } );
 
+    std::cout << "Starting simplesim server..." << std::endl;
+
+    // Run server
+    auto serverThread = std::jthread( [ &server, &client ]( std::stop_token stopToken ) {
+        server.run(
+                [ &client ]( std::shared_ptr< const Rofibot > newConfiguration ) {
+                    client.onConfigurationUpdate( std::move( newConfiguration ) );
+                },
+                stopToken );
+    } );
+
+    // Run client
     std::cout << "Adding configuration to the client" << std::endl;
     client.onConfigurationUpdate( configuration );
     configuration.reset();
