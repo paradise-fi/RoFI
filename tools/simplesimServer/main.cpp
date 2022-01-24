@@ -6,9 +6,7 @@
 #include "configuration/serialization.hpp"
 #include "configuration/universalModule.hpp"
 #include "message_server.hpp"
-#include "simplesim/communication.hpp"
-#include "simplesim/controllers.hpp"
-#include "simplesim/simulation.hpp"
+#include "simplesim/simplesim.hpp"
 
 
 std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
@@ -39,32 +37,60 @@ std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
     return configuration;
 }
 
-
-[[nodiscard]] rofi::simplesim::Controller runSimplesim(
-        std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration )
+class SettingsCmdSubscriber
 {
-    using namespace rofi::simplesim;
+public:
+    using SettingsCmdMsgPtr = boost::shared_ptr< const rofi::simplesim::msgs::SettingsCmd >;
 
-    auto simulation = std::make_shared< Simulation >( std::move( rofibotConfiguration ) );
-    auto communication = std::make_shared< Communication >( simulation->commandHandler() );
+    SettingsCmdSubscriber( rofi::simplesim::Simplesim & simplesim )
+            : _simplesim( simplesim )
+            , _node( _simplesim.communication()->node() )
+            , _pub( _node->Advertise< rofi::simplesim::msgs::SettingsState >( "~/response" ) )
+    {
+        assert( _simplesim.communication() );
+        assert( _node );
 
-    return Controller::runRofiController(
-            std::move( simulation ),
-            std::move( communication ),
-            [ pub = communication->node()->Advertise< google::protobuf::StringValue >(
-                      "configuration" ) ](
-                    std::shared_ptr< const rofi::configuration::Rofibot > configuration ) {
-                assert( configuration );
-                auto message = google::protobuf::StringValue();
-                message.set_value(
-                        rofi::configuration::serialization::toJSON( *configuration ).dump() );
-                pub->Publish( message );
-            } );
-}
+        _sub = _node->Subscribe( "~/control", &SettingsCmdSubscriber::onSettingsCmd, this );
+
+        assert( _pub );
+        assert( _sub );
+
+        std::cout << "Sending settings responses on topic '" << _pub->GetTopic() << "'\n";
+        std::cout << "Listening for settings commands on topic '" << _sub->GetTopic() << "'\n";
+    }
+
+    SettingsCmdSubscriber( const SettingsCmdSubscriber & ) = delete;
+    SettingsCmdSubscriber & operator=( const SettingsCmdSubscriber & ) = delete;
+
+    ~SettingsCmdSubscriber()
+    {
+        assert( _sub );
+        _sub->Unsubscribe();
+    }
+
+private:
+    void onSettingsCmd( const SettingsCmdMsgPtr & cmdPtr )
+    {
+        assert( cmdPtr );
+        auto cmdCopy = cmdPtr;
+
+        auto settingsState = _simplesim.onSettingsCmd( *cmdCopy );
+        _pub->Publish( settingsState.getStateMsg() );
+    }
+
+
+    rofi::simplesim::Simplesim & _simplesim;
+
+    gazebo::transport::NodePtr _node;
+    gazebo::transport::PublisherPtr _pub;
+    gazebo::transport::SubscriberPtr _sub;
+};
 
 
 int main( int argc, char * argv[] )
 {
+    using rofi::configuration::Rofibot;
+
     Dim::Cli cli;
     auto & inputCfgFileName = cli.opt< std::string >( "<input_cfg_file>" )
                                       .desc( "Input configuration file" );
@@ -74,11 +100,29 @@ int main( int argc, char * argv[] )
     }
 
     std::cout << "Reading configuration from file" << std::endl;
-    auto configuration = readConfigurationFromFile( *inputCfgFileName );
+    auto inputConfiguration = readConfigurationFromFile( *inputCfgFileName );
 
     auto gzMaster = rofi::msgs::Server::createAndLoopInThread( "simplesim" );
     std::cout << "Starting simplesim..." << std::endl;
-    auto controller = runSimplesim( std::move( configuration ) );
+
+    // Server setup
+    auto simplesim = rofi::simplesim::Simplesim( std::move( inputConfiguration ) );
+
+    // Listen for settings cmds
+    auto settingsCmdSub = SettingsCmdSubscriber( simplesim );
+
+    // Run the server
+    auto configurationPub =
+            simplesim.communication()->node()->Advertise< google::protobuf::StringValue >(
+                    "~/configuration" );
+    std::cout << "Sending configurations on topic '" << configurationPub->GetTopic() << "'\n";
+
     std::cout << "Simulating..." << std::endl;
-    controller.wait();
+    simplesim.run( [ configurationPub ]( std::shared_ptr< const Rofibot > configuration ) {
+        assert( configurationPub );
+        assert( configuration );
+        auto message = google::protobuf::StringValue();
+        message.set_value( rofi::configuration::serialization::toJSON( *configuration ).dump() );
+        configurationPub->Publish( message );
+    } );
 }

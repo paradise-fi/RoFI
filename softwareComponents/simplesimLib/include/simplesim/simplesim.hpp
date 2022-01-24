@@ -1,20 +1,114 @@
 #pragma once
 
-#include <simplesim/controllers.hpp>
+#include <atomic>
+#include <cassert>
+#include <chrono>
+#include <cstdint>
+#include <functional>
+#include <memory>
+#include <stop_token>
+#include <thread>
+
+#include <atoms/guarded.hpp>
+
+#include "communication.hpp"
+#include "simulation.hpp"
+
+#include <simplesim_settings_cmd.pb.h>
 
 
 namespace rofi::simplesim
 {
-inline Controller runSimplesim(
-        std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration,
-        Controller::OnConfigurationUpdate onConfigurationUpdate )
+class ServerSettings
 {
-    auto simulation = std::make_shared< Simulation >( std::move( rofibotConfiguration ) );
-    auto communication = std::make_shared< Communication >( simulation->commandHandler() );
+public:
+    bool isPaused() const
+    {
+        return _paused;
+    }
+    float getSimSpeedRatio() const
+    {
+        assert( _simSpeedRatio >= 0.f );
+        return _simSpeedRatio;
+    }
+    std::chrono::milliseconds getSimStepTime() const
+    {
+        assert( _simStepTimeMs > 0 );
+        return std::chrono::milliseconds( _simStepTimeMs );
+    }
+    std::chrono::duration< float, std::milli > getRealStepTime() const
+    {
+        if ( getSimSpeedRatio() > 0.f ) {
+            return getSimStepTime() / getSimSpeedRatio();
+        }
+        return {};
+    }
 
-    return Controller::runRofiController( std::move( simulation ),
-                                          std::move( communication ),
-                                          std::move( onConfigurationUpdate ) );
-}
+    void pause()
+    {
+        _paused = true;
+    }
+    void resume()
+    {
+        _paused = false;
+    }
+    void setSimSpeedRatio( float newSpeedRatio )
+    {
+        assert( newSpeedRatio >= 0.f );
+        _simSpeedRatio = newSpeedRatio;
+    }
+    void setSimStepTimeMs( int64_t newStepTimeMs )
+    {
+        assert( newStepTimeMs > 0 );
+        _simStepTimeMs = newStepTimeMs;
+    }
+
+
+    msgs::SettingsState getStateMsg() const
+    {
+        auto msg = msgs::SettingsState();
+        msg.set_paused( _paused );
+        msg.set_sim_speed_ratio( _simSpeedRatio );
+        msg.set_sim_step_time_ms( _simStepTimeMs );
+        return msg;
+    }
+
+private:
+    bool _paused = false;
+    float _simSpeedRatio = 1.f;
+    int64_t _simStepTimeMs = 100; // [ms]
+};
+
+
+class Simplesim
+{
+public:
+    using OnConfigurationUpdate =
+            std::function< void( std::shared_ptr< const rofi::configuration::Rofibot > ) >;
+
+    Simplesim( std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration )
+            : _simulation( std::make_shared< Simulation >( std::move( rofibotConfiguration ) ) )
+            , _communication( std::make_shared< Communication >( _simulation->commandHandler() ) )
+    {
+        assert( _simulation );
+        assert( _communication );
+    }
+
+    std::shared_ptr< Communication > communication() const
+    {
+        return _communication;
+    }
+
+    void run( OnConfigurationUpdate onConfigurationUpdate, std::stop_token stopToken = {} );
+
+    // Can be called from any thread
+    [[nodiscard]] ServerSettings onSettingsCmd( const msgs::SettingsCmd & settingsCmd );
+
+private:
+    atoms::Guarded< ServerSettings > _settings;
+
+    const std::shared_ptr< Simulation > _simulation;
+    const std::shared_ptr< Communication > _communication;
+};
 
 } // namespace rofi::simplesim
