@@ -31,7 +31,7 @@ std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
         const auto & firstModule = modules.begin()->module;
         assert( firstModule.get() );
         assert( !firstModule->bodies().empty() );
-        connect< RigidJoint >( firstModule->bodies().front(),
+        connect< RigidJoint >( firstModule->bodies()[ 1 ],
                                Vector( { 0, 0, 0 } ),
                                matrices::identity );
     }

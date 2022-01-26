@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ChangeColor</class>
+ <widget class="QWidget" name="ChangeColor">
+  <property name="enabled">
+   <bool>true</bool>
+  </property>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>261</width>
+    <height>275</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Change color</string>
+  </property>
+  <widget class="QDialogButtonBox" name="buttonBox">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>210</y>
+     <width>166</width>
+     <height>25</height>
+    </rect>
+   </property>
+   <property name="standardButtons">
+    <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+   </property>
+  </widget>
+  <widget class="QTextEdit" name="textEdit">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>40</y>
+     <width>131</width>
+     <height>31</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QListWidget" name="listWidget">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>70</y>
+     <width>131</width>
+     <height>131</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>Green</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Yellow</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Purple</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Turqoise</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Blue</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Bronze</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>Red</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QToolButton" name="toolButton">
+   <property name="geometry">
+    <rect>
+     <x>200</x>
+     <y>40</y>
+     <width>16</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>?</string>
+   </property>
+  </widget>
+  <widget class="QPlainTextEdit" name="plainTextEdit">
+   <property name="geometry">
+    <rect>
+     <x>150</x>
+     <y>70</y>
+     <width>121</width>
+     <height>121</height>
+    </rect>
+   </property>
+   <property name="readOnly">
+    <bool>true</bool>
+   </property>
+   <property name="plainText">
+    <string>Enter module IDs to color:
+- individual: 1
+- multiple: 1,2,3
+- range: 1..3</string>
+   </property>
+   <property name="textInteractionFlags">
+    <set>Qt::NoTextInteraction</set>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
