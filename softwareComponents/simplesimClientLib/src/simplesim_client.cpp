@@ -29,7 +29,9 @@
 #include "atoms/resources.hpp"
 
 #include "ui_mainwindow.h"
+//#include "ui_changecolor.h"
 
+using rofi::simplesim::ChangeColor;
 using rofi::simplesim::SimplesimClient;
 using rofi::simplesim::detail::ModuleRenderInfo;
 
@@ -319,6 +321,10 @@ SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
 
     connect( ui->doubleSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( speedChanged( double ) ) );
     connect( ui->pauseButton, SIGNAL( clicked() ), this, SLOT( pauseButton() ) );
+    connect( ui->treeWidget, SIGNAL( itemClicked( QTreeWidgetItem*, int ) ), this,
+             SLOT( itemSelected( QTreeWidgetItem* ) ) );
+    connect( ui->changeColor, SIGNAL( triggered() ), this,
+             SLOT( changeColorWindow() ) );
 
     _timer = startTimer( simSpeed );
     this->show();
@@ -333,22 +339,82 @@ void SimplesimClient::timerEvent( QTimerEvent *event ){
     renderCurrentConfiguration();
 }
 
+void SimplesimClient::colorModule( //ModuleRenderInfo& moduleRenderInfo,
+                                  rofi::configuration::ModuleId module,
+                                  double color[ 3 ],
+                                  int component )// = -1 )
+{
+    assert( static_cast< int > componentActors.size() > component );
+
+    if( component == -1 ){
+        for( auto& actor : _moduleRenderInfos[ module ].componentActors ){
+            actor->GetProperty()->SetColor( color );
+        }
+    } else {
+        _moduleRenderInfos[ module ].componentActors[ component ]->GetProperty()->SetColor( color );
+    }
+}
+
+void SimplesimClient::itemSelected( QTreeWidgetItem* selected ){
+    if( _lastModule != -1 ){
+        colorModule( _lastModule, _lastColor );
+    }
+
+    int module;
+    double white[ 3 ] = { 1.0, 1.0, 1.0 };
+
+    if( !selected->parent() ){
+        module = ui->treeWidget->indexOfTopLevelItem( selected );
+        _moduleRenderInfos[ module ].componentActors.front()
+            ->GetProperty()->GetColor( _lastColor );
+        colorModule( module, white );
+    } else if ( selected->parent() && !selected->parent()->parent() ) {
+        module = ui->treeWidget->indexOfTopLevelItem( selected->parent() );
+        _moduleRenderInfos[ module ].componentActors.front()
+            ->GetProperty()->GetColor( _lastColor );
+        colorModule( module, white );
+    } else {
+        module = ui->treeWidget->indexOfTopLevelItem( selected->parent()->parent() );
+        int component =
+            ui->treeWidget->topLevelItem( module )->child( 0 )->indexOfChild( selected );
+        colorModule( module, white, component );
+    }
+    _lastModule = module;
+}
+
 // TODO: pause backend
 void SimplesimClient::pauseButton(){
-    if( paused ){
+    if( _paused ){
         _timer = startTimer( simSpeed );
         std::cout << "Simulation playing\n";
     } else {
         killTimer( _timer );
         std::cout << "Simulation paused\n";
     }
-    paused = !paused;
+    _paused = !_paused;
 }
 
+void SimplesimClient::setColor( int color ){
+    const auto& to_color = _changeColorWindow->to_color;
+    for( int i = 0; i < to_color.size(); ++i ){
+        if( to_color[ i ] ){
+            colorModule( i, getModuleColor( color ).data() );
+        }
+    }
+}
+
+void SimplesimClient::changeColorWindow(){
+    if( !_changeColorWindow ){
+        _changeColorWindow =
+            std::make_unique< ChangeColor >( this, getCurrentConfig()->modules().size() );
+        connect( _changeColorWindow.get(), SIGNAL( pickedColor( int ) ), this, SLOT( setColor( int ) ) );
+    }
+
+    _changeColorWindow->show();
+}
 // TODO: change backend simulation speed
 void SimplesimClient::speedChanged( double speed ){
     std::cout << "Speed changed to " << speed << '\n';
-}
 
 void SimplesimClient::clearRenderer()
 {
@@ -359,36 +425,37 @@ void SimplesimClient::clearRenderer()
     _lastRenderedConfiguration.reset();
 }
 
-QTreeWidgetItem* SimplesimClient::configToQItem( const rofi::configuration::Rofibot& rofibot ){
+void SimplesimClient::initInfoTree( const rofi::configuration::Rofibot& rofibot ){
     int i = 0;
     for( const auto& moduleInfo : rofibot.modules() ){
         std::string str = "Module " + std::to_string( moduleInfo.module->getId() );
         QTreeWidgetItem* module = new QTreeWidgetItem( static_cast< QTreeWidget * >( nullptr ),
                                                        { QString( str.c_str() ) } );
+        if( ui->treeWidget->topLevelItemCount() <= i ){
+            ui->treeWidget->addTopLevelItem( module );
+        }
         QTreeWidgetItem* components = new QTreeWidgetItem( module, { QString( "Components" ) } );
         for( const auto& c : moduleInfo.module->components() ){
             std::string comp = rofi::configuration::serialization::componentTypeToString( c.type );
-            QTreeWidgetItem* component = new QTreeWidgetItem( components, { QString( comp.c_str() )} );
+            new QTreeWidgetItem( components, { QString( comp.c_str() )} );
         }
         if( moduleInfo.absPosition ){
             std::string pos = "Position:\n" + IO::toString( *moduleInfo.absPosition );
-            QTreeWidgetItem* position = new QTreeWidgetItem( module, { QString( pos.c_str() ) } );
-        }
-        if( ui->treeWidget->topLevelItemCount() <= i ){
-            ui->treeWidget->addTopLevelItem( module );
-        } else {
-            ui->treeWidget->topLevelItem( i )->setText( 0, QString( str.c_str() ) );
+            new QTreeWidgetItem( module, { QString( pos.c_str() ) } );
         }
         ++i;
     }
-    //std::cout << ui->treeWidget->topLevelItemCount() << '\n';
+}
 
-    QTreeWidgetItem* configuration = new QTreeWidgetItem( static_cast<QTreeWidget *>(nullptr),
-                                                          { "Configuration" } );
-    QTreeWidgetItem* module = new QTreeWidgetItem( configuration,
-                                             { "Module 1" } );
-
-    return configuration;
+void SimplesimClient::updateInfoTree( const rofi::configuration::Rofibot& rofibot ){
+    int i = 0;
+    for( const auto& moduleInfo : rofibot.modules() ){
+        if( moduleInfo.absPosition ){
+            std::string pos = "Position:\n" + IO::toString( *moduleInfo.absPosition );
+            ui->treeWidget->topLevelItem( i )->child( 1 )->setText( 0, pos.c_str() );
+        }
+        ++i;
+    }
 }
 
 void SimplesimClient::renderCurrentConfiguration()
@@ -410,7 +477,6 @@ void SimplesimClient::renderCurrentConfiguration()
         _renderWindow->Render();
     }
 
-    configToQItem( *getCurrentConfig() );
-    //QTreeWidgetItem* item = configToQItem( *getCurrentConfig() );
-    //ui->treeWidget->addTopLevelItem( item );
+    updateInfoTree( *getCurrentConfig() );
+
 }

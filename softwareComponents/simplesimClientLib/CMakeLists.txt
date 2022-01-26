@@ -11,6 +11,9 @@ set(FILES
     src/simplesim_client.cpp
     include/simplesim_client.hpp
     src/mainwindow.ui
+    src/changecolor.ui
+    src/changecolor.cpp
+    include/changecolor.hpp
 )
 
 set(CMAKE_AUTOMOC ON)
