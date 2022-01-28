@@ -1,9 +1,105 @@
-Checks: '-*,bugprone-*,cert-dcl21-cpp,cert-dcl50-cpp,cert-env33-c,cert-err34-c,cert-err52-cpp,cert-err60-cpp,cert-flp30-c,cert-msc50-cpp,cert-msc51-cpp,cppcoreguidelines-*,-cppcoreguidelines-macro-usage,-cppcoreguidelines-pro-type-reinterpret-cast,-cppcoreguidelines-pro-type-union-access,-cppcoreguidelines-pro-bounds-pointer-arithmetic,-cppcoreguidelines-pro-type-vararg,google-build-using-namespace,google-explicit-constructor,google-global-names-in-headers,google-readability-casting,google-runtime-int,google-runtime-operator,hicpp-*,-hicpp-vararg,misc-*,modernize-*,performance-*,readability-*,-readability-named-parameter,-modernize-use-trailing-return-type,-readability-else-after-return,-hicpp-braces-around-statements,-readability-braces-around-statements'
+Checks:
+  boost-*,bugprone-*,cert-*,clang-analyzer-*,concurrency-*,cppcoreguidelines-*,google-*,-google-objc-*,hicpp-*,misc-*,modernize-*,openmp-*,performance-*,portability-*,readability-*,
+
+  -cert-con36-c,bugprone-spuriously-wake-up-functions,
+  -cert-con54-cpp,bugprone-spuriously-wake-up-functions,
+  -cert-dcl03-c,misc-static-assert,
+  -cert-dcl16-c,readability-uppercase-literal-suffix,
+  -cert-dcl37-c,-cert-dcl51-cpp,bugprone-reserved-identifier,
+  -cert-dcl54-cpp,misc-new-delete-overloads,
+  -cert-dcl59-cpp,google-build-namespaces,
+  -cert-err09-cpp,misc-throw-by-value-catch-by-reference,
+  -cert-err61-cpp,misc-throw-by-value-catch-by-reference,
+  -cert-exp42-c,bugprone-suspicious-memory-comparison,
+  -cert-fio38-c,misc-non-copyable-objects,
+  -cert-flp37-c,bugprone-suspicious-memory-comparison,
+  -cert-msc30-c,cert-msc50-cpp,
+  -cert-msc32-c,cert-msc51-cpp,
+  -cert-oop11-cpp,performance-move-constructor-init,
+  -cert-oop54-cpp,bugprone-unhandled-self-assignment,
+  -cert-pos44-c,bugprone-bad-signal-to-kill-thread,
+  -cert-pos47-c,concurrency-thread-canceltype-asynchronous,
+  -cert-sig30-c,bugprone-signal-handler,
+  -cert-str34-c,bugprone-signed-char-misuse,
+  -cppcoreguidelines-avoid-c-arrays,-hicpp-avoid-c-arrays,modernize-avoid-c-arrays,
+  -cppcoreguidelines-avoid-magic-numbers,readability-magic-numbers,
+  -cppcoreguidelines-c-copy-assignment-signature,misc-unconventional-assign-operator,
+  -cppcoreguidelines-explicit-virtual-functions,modernize-use-override,
+  -cppcoreguidelines-non-private-member-variables-in-classes,misc-non-private-member-variables-in-classes,
+  -google-readability-braces-around-statements,-hicpp-braces-around-statements,readability-braces-around-statements,
+  -google-readability-function-size,-hicpp-function-size,readability-function-size,
+  -hicpp-deprecated-headers,modernize-deprecated-headers,
+  -hicpp-explicit-conversions,google-explicit-constructor,
+  -hicpp-invalid-access-moved,bugprone-use-after-move,
+  -hicpp-member-init,cppcoreguidelines-pro-type-member-init,
+  -hicpp-move-const-arg,performance-move-const-arg,
+  -hicpp-named-parameter,readability-named-parameter,
+  -hicpp-new-delete-operators,misc-new-delete-overloads,
+  -hicpp-no-array-decay,cppcoreguidelines-pro-bounds-array-to-pointer-decay,
+  -hicpp-no-malloc,cppcoreguidelines-no-malloc,
+  -hicpp-noexcept-move,performance-noexcept-move-constructor,
+  -hicpp-special-member-functions,cppcoreguidelines-special-member-functions,
+  -hicpp-static-assert,misc-static-assert,
+  -hicpp-undelegated-constructor,bugprone-undelegated-constructor,
+  -hicpp-uppercase-literal-suffix,readability-uppercase-literal-suffix,
+  -hicpp-use-auto,modernize-use-auto,
+  -hicpp-use-emplace,modernize-use-emplace,
+  -hicpp-use-equals-default,modernize-use-equals-default,
+  -hicpp-use-equals-delete,modernize-use-equals-delete,
+  -hicpp-use-noexcept,modernize-use-noexcept,
+  -hicpp-use-nullptr,modernize-use-nullptr,
+  -hicpp-use-override,modernize-use-override,
+  -hicpp-vararg,cppcoreguidelines-pro-type-vararg,
+
+  -cert-dcl21-cpp,
+  -google-readability-todo,
+  -modernize-use-trailing-return-type,
+  -readability-else-after-return,
+
+WarningsAsErrors: ""
+FormatStyle: file
 CheckOptions:
-    - key: bugprone-argument-comment.StrictMode
-      value: 1
-    - key: bugprone-exception-escape.FunctionsThatShouldNotThrow
-      value: WinMain,SDL_main
-    - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
-      value: 1
-FormatStyle: 'file'
+  - key: bugprone-misplaced-widening-cast.CheckImplicitCasts
+    value: true
+  - key: bugprone-narrowing-conversions.PedanticMode
+    value: true
+  - key: bugprone-narrowing-conversions.WarnWithinTemplateInstantiation
+    value: true
+  - key: bugprone-reserved-identifier.AggressiveDependentMemberLookup
+    value: false
+  - key: bugprone-signed-char-misuse.CharTypdefsToIgnore
+    value: int8_t
+  - key: bugprone-signed-char-misuse.DiagnoseSignedUnsignedCharComparisons
+    value: true
+  - key: bugprone-suspicious-enum-usage.StrictMode
+    value: true
+  - key: bugprone-suspicious-string-compare.WarnOnLogicalNotComparison
+    value: true
+  - key: bugprone-too-small-loop-variable.MagnitudeBitsUpperLimit
+    value: 128
+  - key: cppcoreguidelines-init-variables.MathHeader
+    value: <cmath>
+  - key: cppcoreguidelines-narrowing-conversions.PedanticMode
+    value: true
+  - key: google-readability-namespace-comments.ShortNamespaceLines
+    value: 1
+  - key: google-readability-namespace-comments.SpacesBeforeComments
+    value: 2
+  - key: misc-non-private-member-variables-in-classes.IgnoreClassesWithAllMemberVariablesBeingPublic
+    value: true
+  - key: modernize-make-shared.IgnoreMacros
+    value: false
+  - key: modernize-make-unique.IgnoreMacros
+    value: false
+  - key: modernize-use-bool-literals.IgnoreMacros
+    value: false
+  - key: modernize-use-default-member-init.IgnoreMacros
+    value: true
+  - key: modernize-use-default-member-init.UseAssignment
+    value: true
+  - key: performance-inefficient-vector-operation.EnableProto
+    value: true
+  - key: readability-braces-around-statements.ShortStatementLines
+    value: 2
+  - key: readability-inconsistent-declaration-parameter-name.Strict
+    value: true
