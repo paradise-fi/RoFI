@@ -59,28 +59,17 @@ def availableTargets():
             targets.append(TargetRecord(target, path, suite))
     return targets
 
-def dependencyList():
-    deps = {}
-    for suite in configuredSuites():
-        try:
-            with open(os.path.join(buildDir, suite, "dependencies.txt")) as f:
-                for l in f.readlines():
-                    t, d = tuple(l.split(": "))
-                    d = [x.strip() for x in d.strip().split(";") if len(x.strip()) > 0]
-                    deps[t] = d
-        except Exception as e:
-            pass # Ingore uncofigured targets
-    return deps
-
 def sourceList():
     sources = {}
     for suite in configuredSuites():
         try:
+            targetSources = {}
             with open(os.path.join(buildDir, suite, "sources.txt")) as f:
                 for l in f.readlines():
                     t, s = tuple(l.split(": "))
                     s = [x.strip() for x in s.strip().split(";") if len(x.strip()) > 0]
-                    sources[t] = s
+                    targetSources[t] = s
+            sources[suite] = targetSources
         except Exception as e:
             pass # Ingore uncofigured targets
     return sources

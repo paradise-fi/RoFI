@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-from operator import length_hint
 import os
 import sys
 import subprocess
+import re
 import multiprocessing
+from concurrent.futures import ThreadPoolExecutor
 from common import *
 
 usage="""Usage:
@@ -20,7 +21,6 @@ usage="""Usage:
 
     rmake --tidy <targetName>... Run clang-tidy on one or multiple targets
     rmake --tidy <pathPrefix>... Run clang-tidy on one or multiple targets in path
-    rmake --tidy <suitename>...  Run clang-tidy on given suite
     rmake --tidy --all           Run clang-tidy on all configured targets
 
     rmake --test --all               Compile and run all configured tests
@@ -106,11 +106,14 @@ def expandSuite(suite, targetList):
     return [x for x in targetList if x.suite == suite]
 
 def matchPattern(pattern, allowedSuites, allowedTargets, suitesToCompile,
-    targetsToCompile, suitesToClean):
+    targetsToCompile, sourcesToCompile, suitesToClean):
     """
     Match pattern to allowed suites and targets and add to either
     suitesToCompile, targetsToCompile or suitesToClean
     """
+    if os.path.exists(pattern) and os.path.isfile(pattern):
+        sourcesToCompile.add(pattern)
+        return
     if pattern in allowedSuites:
         suitesToCompile.add(pattern)
         return
@@ -137,11 +140,14 @@ def build(patterns):
 
     suitesToCompile = set()
     targetsToCompile = set()
+    sourcesToCompile = set()
     suitesToClean = set()
 
     for pattern in patterns:
         matchPattern(pattern, aSuites, aTargets, suitesToCompile,
-            targetsToCompile, suitesToClean)
+            targetsToCompile, sourcesToCompile, suitesToClean)
+    if len(sourcesToCompile) > 0:
+        sys.exit("Cannot specify files for test")
     targetsToCompile = list(targetsToCompile)
     targetsToCompile.sort(key=lambda x: x.suite)
 
@@ -173,13 +179,16 @@ def test(patterns):
 
     suitesToCompile = set()
     targetsToCompile = set()
+    sourcesToCompile = set()
     suitesToClean = set()
     for pattern in patterns:
         matchPattern(pattern, aSuites, aTargets, suitesToCompile,
-            targetsToCompile, suitesToClean)
+            targetsToCompile, sourcesToCompile, suitesToClean)
+    if len(sourcesToCompile) > 0:
+        sys.exit("Cannot specify files for test")
 
     for s in suitesToCompile:
-        targetsToCompile.union(expandSuite(s, aTargets))
+        targetsToCompile = targetsToCompile.union(expandSuite(s, aTargets))
 
     targetsToCompile = list(targetsToCompile)
     targetsToCompile.sort(key=lambda x: x.suite)
@@ -192,20 +201,24 @@ def test(patterns):
     for t in targetsToCompile:
         runTest(t)
 
-def suiteToSources(suite, targetList, deps, sources):
+def suiteToSources(suite, targetList, sources):
     retSources = set()
     for target in targetList:
         if target.suite == suite:
-            retSources = retSources.union(targetToSources(target.target, deps, sources))
+            retSources = retSources.union(sources[suite][target.target])
     return retSources
 
-def targetToSources(target, deps, sources):
-    retSources = set(sources.get(target, []))
-    for d in deps.get(target, []):
-        retSources = retSources.union(targetToSources(d, deps, sources))
-    return retSources
+def getClangTidyVersion():
+    output = subprocess.check_output(["clang-tidy", "--version"]).decode("utf-8")
+    match = re.search(r'LLVM version (\d+).(\d+).(\d+)', output)
+    if match is not None:
+        return int(match.group(1)), int(match.group(2)), int(match.group(3))
+    raise RuntimeError(f"Cannot extract version from: {output}")
 
 def runClangTidy(suite, source):
+    """
+    Run clang-tidy in a subprocess. Returns a tuple - success flag and stout
+    """
     columns, _ = os.get_terminal_size()
     message = f"➡️  "
     path = f"{os.path.relpath(source)}"
@@ -215,24 +228,29 @@ def runClangTidy(suite, source):
     GREEN = "\033[32m"
     ENDC = "\033[m"
     BOLD = "\u001b[1m"
-    message += GREEN + BOLD + path + ENDC
-    print(message)
-    print("―" * columns)
+
+    message += GREEN + BOLD + path + ENDC + "\n" + "―" * columns
 
     if not os.path.exists(source):
-        print("Warning: file does not exist, skipping.")
-        print("   The source file is probably generated and it has not been generated yet")
-        print("")
+        message += "\nWarning: file does not exist, skipping."
+        message += "\n   The source file is probably generated and it has not been generated yet\n"
         return True
     with open(os.path.join(suiteDir, suite, ".clang-tidy")) as f:
         configuration = f.read()
-    command = ["clang-tidy",
-        "-p", os.path.join(buildDir, suite),
-        "--config", configuration,
-        os.path.relpath(source)]
-    retcode = subprocess.call(command)
-    print("")
-    return retcode == 0
+    major, _, _ = getClangTidyVersion()
+    command = ["clang-tidy"]
+    if major >= 12:
+        command.append("--use-color")
+    command += ["-p", os.path.join(buildDir, suite),
+                "--config", configuration,
+                os.path.relpath(source)]
+
+    proc = subprocess.run(command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE)
+
+    message += "\n" + proc.stdout.decode("utf-8") + "\n" + proc.stderr.decode("utf-8") + "\n"
+    return proc.returncode == 0, message
 
 def tidy(patterns):
     """
@@ -240,7 +258,6 @@ def tidy(patterns):
     """
     aSuites = configuredSuites()
     aTargets = availableTargets()
-    deps = dependencyList()
     sources = sourceList()
 
     if len(patterns) == 0:
@@ -254,31 +271,50 @@ def tidy(patterns):
 
     suitesToCheck = set()
     targetsToCheck = set()
+    sourcesToCheck = set()
     suitesToClean = set()
     for pattern in patterns:
         matchPattern(pattern, aSuites, aTargets, suitesToCheck,
-            targetsToCheck, suitesToClean)
+            targetsToCheck, sourcesToCheck, suitesToClean)
     if len(suitesToClean):
         sys.exit("Cannot specify clean targets in clang-tidy check")
 
-    sourcesToCheck = set()
-    for s in suitesToCheck:
-        for x in suiteToSources(s, aTargets, deps, sources):
-            sourcesToCheck.add((x, s))
-    for t in targetsToCheck:
-        for x in targetToSources(t.target, deps, sources):
-            sourcesToCheck.add((x, t.suite))
-
-    # Make the order deterministic
-    sourcesToCheck = list(sourcesToCheck)
-    sourcesToCheck.sort(key=lambda x: x[0])
-
-    # Run clang-tidy
     success = True
-    for source, suite in sourcesToCheck:
-        _, extension = os.path.splitext(source)
-        if extension in [".c", ".cc", ".cpp"]:
-            success = success and runClangTidy(suite, source)
+    for currentSuite in aSuites:
+        suiteSources = set()
+        for targetList in sources[currentSuite].values():
+            suiteSources = suiteSources.union(targetList)
+        relevantSources = set()
+        for s in sourcesToCheck:
+            if os.path.realpath(s) in suiteSources:
+                relevantSources.add(s)
+        if currentSuite in suitesToCheck:
+            for x in suiteToSources(s, aTargets, sources):
+                relevantSources.add((x, s))
+        else:
+            for t in targetsToCheck:
+                relevantSources = relevantSources.union(sources[currentSuite][t.target])
+
+        if len(relevantSources) > 0:
+            print(f"Running clang-tidy for suite: {currentSuite}\n")
+
+        # Make the order deterministic
+        relevantSources = list(relevantSources)
+        relevantSources.sort()
+
+        # Run clang-tidy
+        jobs = []
+        for source in relevantSources:
+            _, extension = os.path.splitext(source)
+            if extension in [".c", ".cc", ".cpp"]:
+                jobs.append(source)
+                # success, report = success and runClangTidy(currentSuite, source)
+                # print(report)
+        with ThreadPoolExecutor() as ex:
+            for x in ex.map(lambda s: runClangTidy(currentSuite, s), jobs):
+                valid, report = x
+                success = success and valid
+                print(report)
     if success:
         print("✅ All checks passed")
         sys.exit(0)

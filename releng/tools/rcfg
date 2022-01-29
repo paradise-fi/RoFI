@@ -9,11 +9,12 @@ from common import *
 
 usage="""Usage:
 rcfg suite1 [suite2...] [-- <CMAKE FLAGS>]     Configure or uncofigure suites
-rcfg --help                                    Print this help
-rcfg --list                                    List all available suites
+rcfg --help                                    Print this help rcfg --list
+List all available suites
 
-You can also specify "all" to configure all suites.
-To uncofingure a package, prefix it with "-", e.g., "-desktop"
+You can also specify "all" to configure all suites. To unconfigure a suite,
+prefix it with "-", e.g., "-desktop". To disable a suite, prefix it with ".",
+e.g., ".desktop". To enable it again, configure it without a prefix.
 """
 
 def unconfigure(suite):
@@ -22,54 +23,77 @@ def unconfigure(suite):
         shutil.rmtree(path)
     except FileNotFoundError:
         pass # Ignore already uncofigured packages
-
-if len(sys.argv) == 1:
-    sys.exit("No targets specified\n\n" + usage)
-
-if len(sys.argv) > 1 and sys.argv[1] in ["-h", "--help"]:
-    print(usage)
-    sys.exit(0)
-
-if len(sys.argv) > 1 and sys.argv[1] in ["-l", "--list"]:
-    print("Available suites: ")
-    for s in availableSuites():
-        print(f"  {s}")
-    sys.exit(0)
-
-cmakeFlags = [f"-DCMAKE_BUILD_TYPE={buildCfg}", f"-G{os.environ['ROFI_CMAKE_GENERATOR']}"]
-try:
-    splitIdx = sys.argv.index("--")
-    requestedSuite = sys.argv[1:splitIdx]
-    cmakeFlags += sys.argv[splitIdx + 1:]
-except ValueError:
-    requestedSuite = sys.argv[1:]
-
-suites = availableSuites()
-
-if "all" in requestedSuite:
-    requestedSuite = suites
-
-for t in requestedSuite:
-    x = t
-    if t.startswith("-"):
-        x = t[1:]
-    if x not in suites:
-        sys.exit(f"Invalid suite '{t}' specified.\nAborting\n")
-
-for t in requestedSuite:
-    if t.startswith("-"):
-        unconfigure(t[1:])
-
-for t in requestedSuite:
-    if t.startswith("-"):
-        continue
-    path = Path(buildDir, t)
-    path.mkdir(exist_ok=True, parents=True)
-    source = os.path.join(suiteDir, t)
+    alternativePath = os.path.join(buildDir, suite + ".disabled")
     try:
-        print(f"Configuring suite {t}")
-        subprocess.check_call(["cmake", "-S", source, "-B", str(path)] + cmakeFlags)
-    except subprocess.SubprocessError as e:
-        sys.exit(f"\nCMake invocation for suite {t} failed. See output above\n")
-    except FileNotFoundError as e:
-        sys.exit(f"\n{e}\nCMake invocation for suite {t} failed. See output above\n")
+        shutil.rmtree(alternativePath)
+    except FileNotFoundError:
+        pass # Ignore already uncofigured packages
+
+def disable(suite):
+    path = os.path.join(buildDir, suite)
+    if os.path.exists(path):
+        os.rename(path, path + ".disabled")
+
+def enable(suite):
+    path = os.path.join(buildDir, suite + ".disabled")
+    if os.path.exists(path):
+        os.rename(path, os.path.join(buildDir, suite))
+
+def run():
+    if len(sys.argv) == 1:
+        sys.exit("No targets specified\n\n" + usage)
+
+    if len(sys.argv) > 1 and sys.argv[1] in ["-h", "--help"]:
+        print(usage)
+        sys.exit(0)
+
+    if len(sys.argv) > 1 and sys.argv[1] in ["-l", "--list"]:
+        print("Available suites: ")
+        for s in availableSuites():
+            print(f"  {s}")
+        sys.exit(0)
+
+    cmakeFlags = [f"-DCMAKE_BUILD_TYPE={buildCfg}", f"-G{os.environ['ROFI_CMAKE_GENERATOR']}"]
+    try:
+        splitIdx = sys.argv.index("--")
+        requestedSuite = sys.argv[1:splitIdx]
+        cmakeFlags += sys.argv[splitIdx + 1:]
+    except ValueError:
+        requestedSuite = sys.argv[1:]
+
+    suites = availableSuites()
+
+    if "all" in requestedSuite:
+        requestedSuite = suites
+
+    for t in requestedSuite:
+        x = t
+        if t.startswith("-"):
+            x = t[1:]
+        if x not in suites:
+            sys.exit(f"Invalid suite '{t}' specified.\nAborting\n")
+
+    for t in requestedSuite:
+        if t.startswith("-"):
+            unconfigure(t[1:])
+        if t.startswith("."):
+            disable(t[1:])
+
+    for t in requestedSuite:
+        if t.startswith("-") or t.startswith("."):
+            continue
+        enable(t)
+        path = Path(buildDir, t)
+        path.mkdir(exist_ok=True, parents=True)
+        source = os.path.join(suiteDir, t)
+        try:
+            print(f"Configuring suite {t}")
+            subprocess.check_call(["cmake", "-S", source, "-B", str(path)] + cmakeFlags)
+        except subprocess.SubprocessError as e:
+            sys.exit(f"\nCMake invocation for suite {t} failed. See output above\n")
+        except FileNotFoundError as e:
+            sys.exit(f"\n{e}\nCMake invocation for suite {t} failed. See output above\n")
+
+if __name__ == "__main__":
+    run()
+
