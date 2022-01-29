@@ -101,5 +101,9 @@ CheckOptions:
     value: true
   - key: readability-braces-around-statements.ShortStatementLines
     value: 2
+  - key: readability-function-cognitive-complexity.DescribeBasicIncrements
+    value: false
+  - key: readability-function-cognitive-complexity.IgnoreMacros
+    value: true
   - key: readability-inconsistent-declaration-parameter-name.Strict
     value: true
