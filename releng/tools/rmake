@@ -234,7 +234,7 @@ def runClangTidy(suite, source):
     if not os.path.exists(source):
         message += "\nWarning: file does not exist, skipping."
         message += "\n   The source file is probably generated and it has not been generated yet\n"
-        return True
+        return True, message
     with open(os.path.join(suiteDir, suite, ".clang-tidy")) as f:
         configuration = f.read()
     major, _, _ = getClangTidyVersion()
@@ -258,6 +258,7 @@ def tidy(patterns):
     """
     aSuites = configuredSuites()
     aTargets = availableTargets()
+    aTestTargets = availableTestTargets()
     sources = sourceList()
 
     if len(patterns) == 0:
@@ -282,15 +283,16 @@ def tidy(patterns):
     success = True
     for currentSuite in aSuites:
         suiteSources = set()
-        for targetList in sources[currentSuite].values():
-            suiteSources = suiteSources.union(targetList)
+        for x in sources[currentSuite].values():
+            suiteSources = suiteSources.union(x)
+
         relevantSources = set()
         for s in sourcesToCheck:
             if os.path.realpath(s) in suiteSources:
                 relevantSources.add(s)
         if currentSuite in suitesToCheck:
-            for x in suiteToSources(s, aTargets, sources):
-                relevantSources.add((x, s))
+            for x in suiteToSources(currentSuite, aTargets, sources):
+                relevantSources.add(x)
         else:
             for t in targetsToCheck:
                 relevantSources = relevantSources.union(sources[currentSuite][t.target])
@@ -298,9 +300,15 @@ def tidy(patterns):
         if len(relevantSources) > 0:
             print(f"Running clang-tidy for suite: {currentSuite}\n")
 
+        # Ignore tests
+        ignoredSources = suiteToSources(currentSuite, aTestTargets, sources)
+        relevantSources = relevantSources.difference(ignoredSources)
+
         # Make the order deterministic
         relevantSources = list(relevantSources)
         relevantSources.sort()
+        # Skip build files
+        relevantSources = [x for x in relevantSources if not x.startswith(buildDir)]
 
         # Run clang-tidy
         jobs = []
@@ -308,10 +316,8 @@ def tidy(patterns):
             _, extension = os.path.splitext(source)
             if extension in [".c", ".cc", ".cpp"]:
                 jobs.append(source)
-                # success, report = success and runClangTidy(currentSuite, source)
-                # print(report)
         with ThreadPoolExecutor() as ex:
-            for x in ex.map(lambda s: runClangTidy(currentSuite, s), jobs):
+            for x in ex.map(lambda source: runClangTidy(currentSuite, source), jobs):
                 valid, report = x
                 success = success and valid
                 print(report)
