@@ -131,7 +131,7 @@ public:
     }
 
 protected:
-    void timerEvent( QTimerEvent *event );
+    void timerEvent( QTimerEvent* /* event */ );
 
     void colorModule( rofi::configuration::ModuleId module,
                       double color[ 3 ],

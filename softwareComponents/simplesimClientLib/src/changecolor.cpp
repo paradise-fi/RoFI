@@ -59,7 +59,7 @@ void ChangeColor::parseRange(){
             throw std::exception();
         }
         while( i < source.size() && source[ i ].isDigit() ){
-            buffer += source[ i++ ].unicode();
+            buffer += source[ i++ ].toLatin1();
         }
         return std::stoi( buffer );
     };
@@ -74,7 +74,7 @@ void ChangeColor::parseRange(){
             throw std::exception();
         }
         int upper = parseNum();
-        if( upper >= to_color.size() ){
+        if( upper >= static_cast< int >( to_color.size() ) ){
             throw std::exception();
         }
         for( int j = number; j <= upper; j++ ){
@@ -90,7 +90,7 @@ void ChangeColor::parseRange(){
             parseRange();
         }
     }
-    if( number < 0 || number > to_color.size() ){
+    if( number < 0 || number > static_cast< int >( to_color.size() ) ){
         throw std::exception();
     }
     to_color[ number ] = true;
