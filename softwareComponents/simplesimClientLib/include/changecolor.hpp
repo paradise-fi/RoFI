@@ -15,6 +15,12 @@ struct ChangeColor : public QWidget
 {
     Q_OBJECT
 
+    Ui::ChangeColor* ui;
+
+    QWidget* parent;
+
+    bool showingHelp = false;
+
 public:
     std::vector< bool > to_color;
 
@@ -35,11 +41,6 @@ private:
 
     void parseRange();
 
-    QWidget* parent;
-
-    Ui::ChangeColor* ui;
-
-    bool showingHelp = false;
 };
 
 } // namespace rofi::simplesim
