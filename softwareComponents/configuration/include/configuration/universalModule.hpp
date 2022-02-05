@@ -28,7 +28,7 @@ public:
     UniversalModule( int id, Angle a, Angle b, Angle g )
     : Module( ModuleType::Universal, _initComponents(), 6, _initJoints(), id ) {
         setAlpha( a ); setBeta( b ); setGamma( g );
-    };
+    }
 
     Angle getAlpha() const {
         return _getJointAngle( 0 );
