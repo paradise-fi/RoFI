@@ -58,7 +58,7 @@ private:
         auto templ = ( std::filesystem::temp_directory_path() / "XXXXXX" ).string();
         std::unique_ptr< char[] > cTempl( new char[ templ.size() + 1] );
         strcpy( cTempl.get(), templ.c_str() );
-        if ( !mkdtemp( cTempl.get() ) )
+        if ( mkdtemp( cTempl.get() ) == nullptr )
             throw std::runtime_error( "Cannot create temporary directory" );
         _tmpDir = cTempl.get();
     }

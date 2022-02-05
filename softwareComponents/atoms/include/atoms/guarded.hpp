@@ -29,7 +29,7 @@ private:
     private:
         friend class Guarded;
 
-        GuardedHandle( GuardedType & guarded ) : _lock( guarded._mutex ), _data( &guarded._data ) {}
+        explicit GuardedHandle( GuardedType & guarded ) : _lock( guarded._mutex ), _data( &guarded._data ) {}
 
         std::lock_guard< Mutex > _lock;
         DataPointer _data;
@@ -37,16 +37,16 @@ private:
 
 public:
     template < typename... Args >
-    Guarded( Args &&... args ) : _data( std::forward< Args >( args )... )
+    explicit Guarded( Args &&... args ) : _data( std::forward< Args >( args )... )
     {}
 
     GuardedHandle< true > operator->() const
     {
-        return { *this };
+        return GuardedHandle< true >( *this );
     }
     GuardedHandle< false > operator->()
     {
-        return { *this };
+        return GuardedHandle< false >( *this );
     }
 
     template < typename F >

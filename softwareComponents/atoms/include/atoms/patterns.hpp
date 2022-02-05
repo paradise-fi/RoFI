@@ -49,7 +49,8 @@ namespace atoms::detail {
 template < typename Functor, typename Next >
 struct VisitorCallWrapper: public Functor, public Next {
     template < typename... Extra >
-    VisitorCallWrapper( Functor f, Extra...extra ): Functor( f ), Next( extra... ) {}
+    explicit VisitorCallWrapper( Functor f, Extra&&...extra ):
+        Functor( std::move( f ) ), Next( std::forward< Extra >( extra )... ) {}
 
     using FTrait = FunctionTraits< Functor >;
     static_assert( FTrait::arity == 1 );
@@ -72,7 +73,8 @@ struct VisitorCallWrapper: public Functor, public Next {
 template < typename R, typename Arg, typename Next >
 struct VisitorCallWrapper< R( Arg ), Next >: public Next {
     template < typename... Extra >
-    VisitorCallWrapper( R ( *fun )( Arg ), Extra...extra ): _fun( fun ), Next( extra... ) {}
+    explicit VisitorCallWrapper( R ( *fun )( Arg ), Extra&&...extra ):
+        Next( std::forward< Extra >( extra )... ), _fun( fun ) {}
 
     using StrippedArg = typename std::remove_reference< Arg >::type;
 
@@ -92,7 +94,8 @@ private:
 template < typename R, typename Arg, typename Next >
 struct VisitorCallWrapper< R(*)( Arg ), Next >: public Next {
     template < typename... Extra >
-    VisitorCallWrapper( R ( *fun )( Arg ), Extra...extra ): Next( extra... ), _fun( fun ) {}
+    explicit VisitorCallWrapper( R ( *fun )( Arg ), Extra&&...extra ):
+        Next( std::forward< Extra >( extra )... ), _fun( fun ) {}
 
     using StrippedArg = typename std::remove_reference< Arg >::type;
 
@@ -117,7 +120,7 @@ struct Visits;
 
 template < typename Host >
 struct Visits< Host > {
-    virtual ~Visits() {};
+    virtual ~Visits() = default;
     virtual void operator()( Host& ) = 0;
 };
 
@@ -153,7 +156,7 @@ struct Visitor< Base, Result, F >:
     using Successor = detail::VisitorCallWrapper< F, Visitor< Base, Result > >;
     using Successor::operator();
 
-    Visitor( F f ): Successor( f ) {}
+    explicit Visitor( F f ): Successor( std::move( f ) ) {}
 };
 
 template < typename Base, typename Result, typename F1, typename F2, typename... Fs >
@@ -167,7 +170,7 @@ struct Visitor< Base, Result, F1, F2, Fs... >:
     using F2Trait = FunctionTraits< F2 >;
     static_assert( std::is_same_v< typename F1Trait::returnType, typename F2Trait::returnType > );
 
-    Visitor( F1 f1, F2 f2, Fs... fs ): Successor( f1, f2, fs... ) {}
+    Visitor( F1 f1, F2 f2, Fs... fs ): Successor( std::move( f1 ), std::move( f2 ), std::move( fs )... ) {}
 };
 
 } // namespace atoms::detail
@@ -188,7 +191,7 @@ struct Visitor:
     using ReturnType = typename FunctionTraits< F >::returnType;
     using Successor = detail::Visitor< Base, ReturnType, F, Fs... >;
     using Successor::operator();
-    Visitor( F f, Fs... fs ): Successor( f, fs... ) {}
+    explicit Visitor( F f, Fs... fs ): Successor( std::move( f ), std::move( fs )... ) {}
 };
 
 /**
@@ -209,7 +212,7 @@ struct Visits: public detail::Visits< Hosts... > {
      */
     template <  typename... Fs >
     static auto make( Fs... fs ) {
-        return Visitor< Visits, Fs... >( fs... );
+        return Visitor< Visits, Fs... >( std::move( fs )... );
     }
 };
 
@@ -243,7 +246,7 @@ struct VisitableBase {
 template < typename Base, typename Self >
 struct Visitable: public Base {
     template < typename ... Ts >
-    Visitable( Ts &&... ts ) : Base( std::forward< Ts >( ts )... ) {}
+    explicit Visitable( Ts &&... ts ) : Base( std::forward< Ts >( ts )... ) {}
 
     void accept( typename Base::VisitorType& visitor ) override {
         visitor( static_cast< Self & >( *this ) );
@@ -283,7 +286,7 @@ auto visit( T& object, Visitor visitor ) -> std::enable_if_t<
  */
 template < typename T, typename... Fs >
 auto visit( T& object, Fs... fs ) {
-    return visit( object, T::VisitorType::make( fs... ) );
+    return visit( object, T::VisitorType::make( std::move( fs )... ) );
 }
 
 

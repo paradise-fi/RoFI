@@ -128,7 +128,7 @@ public:
     /**
      * \brief Check if the container has no elements
      */
-    bool empty() const {
+    [[nodiscard]] bool empty() const {
         return size() == 0;
     }
 
