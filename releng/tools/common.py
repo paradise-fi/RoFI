@@ -1,6 +1,13 @@
 import sys
 import os
 from pathlib import Path
+from dataclasses import dataclass
+
+@dataclass
+class Image:
+    name: str
+    suite: str
+    path: str
 
 root = os.environ["ROFI_ROOT"]
 buildCfg = os.environ["ROFI_BUILD_CONFIGURATION"]
@@ -19,6 +26,15 @@ def configuredSuites():
 
 def availableTestTargets():
     return [x for x in availableTargets() if x.target.startswith("test-")]
+
+def collectImages():
+    images = {}
+    for suite in configuredSuites():
+        for root, dirs, files in os.walk(os.path.join(buildDir, suite, "img")):
+            for f in files:
+                images[f] = Image(f, suite, os.path.join(root, f))
+    return images
+
 
 class TargetRecord:
     def __init__(self, target, path, suite):

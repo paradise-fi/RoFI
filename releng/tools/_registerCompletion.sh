@@ -12,6 +12,12 @@ _rmake_completion() {
     _external_completion _rmake.completion.py
 }
 
+_img_completion() {
+    _external_completion _img.completion.py
+}
+
 
 complete -F _rcfg_completion rcfg
 complete -F _rmake_completion rmake
+complete -F _img_completion rflash
+complete -F _img_completion rmonitor
