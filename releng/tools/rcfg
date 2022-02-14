@@ -70,4 +70,6 @@ for t in requestedSuite:
         print(f"Configuring suite {t}")
         subprocess.check_call(["cmake", "-S", source, "-B", str(path)] + cmakeFlags)
     except subprocess.SubprocessError as e:
-        sys.exit(f"CMake invocation for suite {t} failed. See output above\n")
+        sys.exit(f"\nCMake invocation for suite {t} failed. See output above\n")
+    except FileNotFoundError as e:
+        sys.exit(f"\n{e}\nCMake invocation for suite {t} failed. See output above\n")
