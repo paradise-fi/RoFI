@@ -1,0 +1,41 @@
+#!/usr/bin/env python3
+
+from posix import environ
+import sys
+import os
+import subprocess
+from common import *
+
+def monitorEsp32Image(img, extra):
+    monitor = os.path.dirname(os.path.realpath(__file__))
+    monitor = os.path.join(monitor, "_idf_monitor.py")
+
+    env = os.environ.copy()
+    env["ROFI_MONITORED_TARGET"] = img.name
+
+    command = ["python", monitor]
+    command += extra
+    command += [os.path.splitext(img.path)[0] + ".elf"]
+    retcode = subprocess.call(command, env=env)
+    return retcode
+
+def run():
+    if len(sys.argv) < 2 or (len(sys.argv) >= 3 and sys.argv[2] != "--"):
+        sys.exit(
+            "Invalid usage!\n\n"
+            "Invoke as rmonitor <name_of_image> -- <extra monitor parameters>...\n"
+        )
+    extraArgs = sys.argv[3:]
+    imgs = collectImages()
+    try:
+        img = imgs[sys.argv[1]]
+    except KeyError:
+        sys.exit(f"Unknown image {sys.argv[1]}")
+    if img.suite == "rofiFirmware":
+        retcode = monitorEsp32Image(img, extraArgs)
+        sys.exit(retcode)
+    else:
+        sys.exit(f"Unsupported platform {img[0]}")
+
+if __name__ == "__main__":
+    run()

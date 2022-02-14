@@ -83,6 +83,18 @@ setGazeboVariables() {
     source $GAZEBO_SHARE/setup.sh
 }
 
+setupIdf() {
+    mkdir -p build.deps
+    export IDF_PATH=$ROFI_ROOT/build.deps/esp-idf
+    export IDF_TOOLS_PATH=$ROFI_ROOT/build.deps/esp-tools
+    if [ ! -d $IDF_PATH ]; then
+        git clone --depth 1 --branch v4.3.2 --recursive \
+            https://github.com/espressif/esp-idf.git $IDF_PATH
+        $IDF_PATH/install.sh
+    fi
+    source $IDF_PATH/export.sh
+}
+
 print_help() {
     cat << EOF
 Usage:
@@ -94,6 +106,7 @@ Usage:
 Options:
     -f  Alternate prompt to indicate the environment.
     -s  Make the script silent (e.g., when running from CI)
+    -i  Setup tools for rofi firmware development
 EOF
 }
 
@@ -110,7 +123,7 @@ EOF
 run() {
     local OPTIND flag
     local ALTER_PROMPT
-    while getopts "fhs" flag; do
+    while getopts "fhsi" flag; do
         case "$flag" in
             f) ALTER_PROMPT=1;;
             h)
@@ -118,6 +131,7 @@ run() {
                 return 0
                 ;;
             s)  SILENT=1;;
+            i)  SETUP_IDF=1;;
             ?)
                 return 1
                 ;;
@@ -181,13 +195,16 @@ run() {
     export GAZEBO_RESOURCE_PATH="$ROFI_ROOT/data/gazebo:$GAZEBO_RESOURCE_PATH"
     export GAZEBO_RESOURCE_PATH="$ROFI_BUILD_DIR/desktop/data/gazebo:$GAZEBO_RESOURCE_PATH"
 
-
     export PATH="$(realpath releng/tools):$ORIGINAL_PATH"
     ## Add bin directories of the suites to path
     for suite in $(find suites -maxdepth 1 -type d -exec basename {} \;); do
         export PATH="${ROFI_BUILD_DIR}/$suite/bin:$PATH"
         export PYTHONPATH="${ROFI_BUILD_DIR}/$suite/lib:$PYTHONPATH"
     done
+
+    if [ -n "$SETUP_IDF" ]; then
+        setupIdf
+    fi
 
     ## Register tab completion
     if [ -n "$ZSH_VERSION" ]; then

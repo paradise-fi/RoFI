@@ -44,6 +44,10 @@ change the configuration, simply invoke ``source setup.sh -f Debug`` to e.g.,
 switch to a debug configuration. Or invoke ``teardown`` to return your shell to
 original state.
 
+If you would like to also compile the firmware for the physical robots, you
+should invoke the setup command with ``-i``. This will setup ESP-IDF, which is
+necessary to compile suite ``rofiFirmware``.
+
 Once you setup the environment, you have management commands available in your
 shell (e.g., ``rcfg`` and ``rmake``). Then you can proceed to configuration of
 compilation suites and building targets.
@@ -173,6 +177,24 @@ located in the directory ``build.{Configuration}/{suiteName}``.
 
 ``rmake`` also recognizes phony targets ``clean`` and ``clean-<suitename>`` that
 clean all suites or given suite respectively.
+
+.. _flashing:
+
+Flashing robots and hardware modules
+
+The RoFI environment offers two tools: ``rflash`` and ``rmonitor`` that allows
+you to flash images to hardware devices and to monitor their debug outputs. The
+tools are automatically deduced from the image.
+
+Both tools have the same usage:
+
+.. code-block:: sh
+
+    🤖 R $ rflash <image_name> -- <optional extra arguments for the underlying tool>
+    🤖 R $ rmonitor <image_name> -- <optional extra arguments for the underlying tool>
+
+Note that the image is mandatory for the monitor command as it is used to decode
+stack traces and also, to determine the correct connection parameters.
 
 .. _example:
 
