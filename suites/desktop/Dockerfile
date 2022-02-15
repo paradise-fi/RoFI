@@ -1,7 +1,4 @@
-# We target debian:bullsey, however, there is a bug with packaging
-# of gazebo in bullsey that has been fixed in sid. We should revisit this
-# around May 2021 and go back to bullseye
-FROM debian:sid
+FROM debian:bullseye
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
@@ -13,7 +10,7 @@ RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -; \
 RUN env DEBIAN_FRONTEND=noninteractive \
         apt-get update; \
         apt-get install -y --no-install-recommends \
-        cmake make ninja-build git ssh rsync valgrind gdb doxygen graphviz \
+        cmake make ninja-build git ssh rsync valgrind gdb doxygen graphviz python3 python3-pip python3-venv \
         gcc-10 g++-10 \
         clang-11  llvm-11 clang-tidy-11 libc++-11-dev libc++abi-11-dev \
         libarmadillo-dev libvtk7-dev libvtk7-qt-dev qtdeclarative5-dev \
