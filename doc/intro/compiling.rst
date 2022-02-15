@@ -185,6 +185,7 @@ installed.
 .. _flashing:
 
 Flashing robots and hardware modules
+------------------------------------
 
 The RoFI environment offers two tools: ``rflash`` and ``rmonitor`` that allows
 you to flash images to hardware devices and to monitor their debug outputs. The
@@ -199,6 +200,25 @@ Both tools have the same usage:
 
 Note that the image is mandatory for the monitor command as it is used to decode
 stack traces and also, to determine the correct connection parameters.
+
+.. _advanced_config:
+
+Advanced configuration of the build process
+-------------------------------------------
+
+In the case when you need to override the default tools and path used, e.g.,
+when you want to force a particular version of compiler, there are two files
+that are sourced into the environment during invocation of ``source setup.sh``:
+``~/.rofi.pre.env`` and ``~/.rofi.post.env``. If these files exist, they are
+sourced into the environment. Here you can, e.g., enforce a particular compiler
+version:
+
+.. code-block:: sh
+    # .rofi.post.env
+
+    export CC=$(command -v gcc-11)
+    export CXX=$(command -v g++-11)
+
 
 .. _example:
 

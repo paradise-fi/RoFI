@@ -123,6 +123,7 @@ EOF
 run() {
     local OPTIND flag
     local ALTER_PROMPT
+    local SETUP_IDF
     while getopts "fhsi" flag; do
         case "$flag" in
             f) ALTER_PROMPT=1;;
@@ -142,6 +143,12 @@ run() {
     if [ ! -e ${CWD}/setup.sh ] || [ "$(head -n1 ${CWD}/setup.sh)" != "# RoFI environment setup script" ]; then
         >&2 echo "The script needs to be invoked from the root of the project."
         return 1
+    fi
+
+    ## Source user defines
+    if [ -f ~/.rofi.pre.env ]; then
+        echo "Applying extra setting from ~/.rofi.pre.env"
+        source ~/.rofi.pre.env
     fi
 
     export PS1 # Bring shell variable into env, so we can back it up
@@ -220,6 +227,12 @@ run() {
         bashcompinit
     fi
     source releng/tools/_registerCompletion.sh
+
+    ## Source user defines
+    if [ -f ~/.rofi.post.env ]; then
+        echo "Applying extra setting from ~/.rofi.post.env"
+        source ~/.rofi.post.env
+    fi
 }
 
 run $@
