@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Build
+      - name: Build desktop
         uses: addnab/docker-run-action@v2
         with:
           image: yaqwsx/rofi.desktop
@@ -24,6 +24,27 @@ jobs:
             source setup.sh ${{ matrix.environment }}
             rcfg desktop
             rmake desktop
+      - name: Build RoFI firmware
+        uses: addnab/docker-run-action@v2
+        with:
+          image: yaqwsx/rofi.desktop
+          shell: bash
+          options: -v ${{ github.workspace }}:/work -w /work
+          run: |
+            source setup.sh -i ${{ matrix.environment }}
+
+            # Provide secrets
+            export ROFI_SSID="N/A"
+            export ROFI_WIFI_PASS=""
+            export ROFI_WLAN_USER=""
+            export RoFI_WLAN_PASS=""
+
+            # Configure and build
+            rcfg rofiFirmware
+            # ESP-IDF has a bug with Ninja - ld script is built too late, so
+            # let's build it first so we don't miss the dependency.
+            (cd build.${{ matrix.environment }}/rofiFirmware && ninja esp-idf/esp32/ld/esp32.project.ld)
+            rmake rofiFirmware
       - name: Run tests
         uses: addnab/docker-run-action@v2
         with:
