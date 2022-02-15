@@ -31,9 +31,8 @@ function(add_gazebo_world world_file input_file)
             ${CMAKE_BINARY_DIR}/data/gazebo/worlds/${world_file}
         COMMAND
             ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-worldCreator
-        ARGS
-            -i ${CMAKE_CURRENT_SOURCE_DIR}/${input_file}
-            -o ${CMAKE_BINARY_DIR}/data/gazebo/worlds/${world_file}
+                -i ${CMAKE_CURRENT_SOURCE_DIR}/${input_file}
+                -o ${CMAKE_BINARY_DIR}/data/gazebo/worlds/${world_file}
         DEPENDS
             ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-worldCreator
             ${CMAKE_CURRENT_SOURCE_DIR}/${input_file}
@@ -41,13 +40,14 @@ function(add_gazebo_world world_file input_file)
             ${ROFI_SDF_MODEL_FILES}
     )
 
+    # We cannot name the target the same as the file; Ninja will complain
     add_custom_target(
-            ${world_file}
+            gz-world-${world_file}
         ALL
         DEPENDS
             ${CMAKE_BINARY_DIR}/data/gazebo/worlds/${world_file}
     )
-    add_dependencies(createGazeboWorlds ${world_file})
+    add_dependencies(createGazeboWorlds gz-world-${world_file})
 endfunction()
 
 add_custom_target(createGazeboWorlds ALL)
