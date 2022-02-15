@@ -26,6 +26,26 @@ usage="""Usage:
     rmake clean-<suitename>...   Clean given suite
 """
 
+def invokeBuild(wd, targets):
+    """
+    Invoke ninja or make based on the environment for targets in a working
+    directory
+    """
+    generator = os.environ["CMAKE_GENERATOR"]
+    env = os.environ.copy()
+    if generator == "Unix Makefiles":
+        threads = 2 + multiprocessing.cpu_count()
+        subprocess.check_call(["make", f"-j{threads}"] + targets,
+            cwd=wd, env=env)
+        pass
+    elif generator == "Ninja":
+        subprocess.check_call(["ninja"] + targets,
+            cwd=wd, env=env)
+        pass
+    else:
+        raise RuntimeError(f"Invalid CMake generator ({generator}) specified")
+
+
 def compileTargets(targets):
     """
     Compile given targets. Be as parallel as possible
@@ -36,19 +56,16 @@ def compileTargets(targets):
             continue
         print(f"Compiling targets from suite {s}: {', '.join(sTargets)}")
         try:
-            threads = 2 + multiprocessing.cpu_count()
-            subprocess.check_call(["make", f"-j{threads}"] + sTargets,
-                cwd=os.path.join(buildDir, s))
-        except subprocess.SubprocessError as e:
-            sys.exit(f"Build of target {', '.join(sTargets)} failed. See output above\n")
+            invokeBuild(os.path.join(buildDir, s), sTargets)
+        except Exception as e:
+            sys.exit(f"Build of target {', '.join(sTargets)} failed with {e}. See output above\n")
 
 def compileSuite(suite):
     print(f"Compiling suite {suite}")
     try:
-        subprocess.check_call(["make", f"-j{multiprocessing.cpu_count()}"],
-            cwd=os.path.join(buildDir, suite))
-    except subprocess.SubprocessError as e:
-        sys.exit(f"Build of suite {suite} failed. See output above\n")
+        invokeBuild(os.path.join(buildDir, suite), [])
+    except Exception as e:
+        sys.exit(f"Build of suite {suite} failed with {e}. See output above\n")
 
 def cleanSuite(suite):
     print(f"Cleaning suite {suite}")
