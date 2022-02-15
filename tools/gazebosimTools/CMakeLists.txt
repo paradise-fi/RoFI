@@ -10,10 +10,10 @@ target_link_libraries(listener rofisimMessages ${GAZEBO_LIBRARIES} ${Boost_LIBRA
 target_include_directories(listener SYSTEM PRIVATE ${GAZEBO_INCLUDE_DIRS})
 
 add_executable(ping ping.cpp)
-target_link_libraries(ping rofiHal)
+target_link_libraries(ping rofi::hal)
 
 add_executable(commandLine commandLine.cpp)
-target_link_libraries(commandLine PRIVATE rofiHal ${GAZEBO_LIBRARIES})
+target_link_libraries(commandLine PRIVATE rofi::hal ${GAZEBO_LIBRARIES})
 target_include_directories(commandLine SYSTEM PRIVATE ${GAZEBO_INCLUDE_DIRS})
 
 add_executable(roficomCmd roficomCmd.cpp)

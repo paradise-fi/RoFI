@@ -137,21 +137,33 @@ private:
     std::shared_ptr< Implementation > _impl;
 };
 
-enum ConnectorPosition {
-    Retracted = 0,
-    Expanded = 1
+/**
+ * \brief Connector position.
+ */
+enum class ConnectorPosition : bool
+{
+    Retracted = false,
+    Extended = true,
 };
 
-enum ConnectorOrientation {
+/**
+ * \brief Connection orientation.
+ */
+enum class ConnectorOrientation : signed char
+{
     North = 0,
     East = 1,
     South = 2,
-    West = 3
+    West = 3,
 };
 
-enum ConnectorLine {
+/**
+ * \brief Connector power line.
+ */
+enum class ConnectorLine : bool
+{
     Internal = 0,
-    External = 1
+    External = 1,
 };
 
 /**
@@ -167,10 +179,17 @@ struct ConnectorState {
     float externalVoltage, externalCurrent;
 };
 
-enum ConnectorEvent {
-    Connected = 0,
-    Disconnected = 1
+/**
+ * \brief Connector event.
+ */
+enum class ConnectorEvent : signed char
+{
+    Connected, ///< Connection with other Connector started.
+    Disconnected,  ///< Connection with other Connector ended.
+    ConnectedPower,
+    DisconnectedPower,
 };
+
 
 /**
  * \brief Proxy for controlling a single connector of RoFI
@@ -192,7 +211,7 @@ public:
      */
     class Implementation {
     public:
-        virtual ConnectorState getState() const = 0;
+        virtual ConnectorState getState() = 0;
         virtual void connect() = 0;
         virtual void disconnect() = 0;
         virtual void onConnectorEvent(
@@ -207,7 +226,7 @@ public:
     /**
      * \brief Get connector state
      */
-    ConnectorState getState() const { return _impl->getState(); }
+    ConnectorState getState() { return _impl->getState(); }
 
     /**
      * \brief Expand the connector to be ready to accept connection.

@@ -11,8 +11,6 @@
 
 #include <rofi_hal.hpp>
 
-#include "credentials2.hpp"
-
 struct JointController {
     JointController( rofi::hal::Joint j ): j( j ) {
         move();

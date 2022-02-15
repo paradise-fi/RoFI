@@ -2,6 +2,9 @@
 #include <lwip/netif.h>
 #include <lwip/ip.h>
 
+// Temporary work-around
+void mask_to_address(uint8_t mask, ip6_addr_t* m);
+
 #include <cassert>
 #include <cstdint>
 #include <type_traits>

@@ -4,5 +4,5 @@ project(rofidriver)
 file(GLOB_RECURSE SRC src/*.cpp)
 
 add_library(lwip++ INTERFACE)
-target_link_libraries(lwip++ INTERFACE lwipcore)
+target_link_libraries(lwip++ INTERFACE idf::lwip) # lwipcore)
 target_include_directories(lwip++ INTERFACE include)
