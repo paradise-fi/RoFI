@@ -106,7 +106,7 @@ struct ConnectorStateImpl: public ConnectorState {
         uint16_t flags = as< uint16_t >( d );
 
         if ( flags & ConnectorStateFlags::PositionExpanded )
-            s.position = ConnectorPosition::Expanded;
+            s.position = ConnectorPosition::Extended;
         else
             s.position = ConnectorPosition::Retracted;
 
@@ -264,7 +264,7 @@ class ConnectorLocal:
     public std::enable_shared_from_this< ConnectorLocal >
 {
 public:
-    virtual rofi::hal::ConnectorState getState() const override {
+    virtual rofi::hal::ConnectorState getState() override {
         // State is always ready as it is kept up-to-date by interrupts & pollers
         return _status;
     }

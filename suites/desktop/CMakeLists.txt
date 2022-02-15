@@ -145,6 +145,8 @@ add_component(lwip++)
 
 # Libraries for simulators
 add_component(lwipcore)
+# Temporary alias:
+add_library(idf::lwip ALIAS lwipcore)
 add_component(networking)
 add_component(snake_reconfig)
 
@@ -153,6 +155,7 @@ if (${BUILD_GAZEBO})
 
   add_component(message_server)
 
+  add_component(rofiHalInc)
   add_component(rofiHalSim)
   add_component(rofiHalSimPy)
 
@@ -160,6 +163,9 @@ if (${BUILD_GAZEBO})
   add_component(simplesimConfigMsgs)
   add_component(simplesimLib)
   add_component(simplesimClientLib)
+
+  # Introduce alias for the HAL
+  add_library(rofi::hal ALIAS rofi_hal_sim)
 endif()
 
 

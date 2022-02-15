@@ -10,8 +10,22 @@ include(ColoredOutput)
 
 project(rofi)
 
+function(add_rofi_firmware name)
+    add_executable(${name} ${ARGN})
+    idf_build_executable(${name})
+    generate_image_from(${name})
+endfunction()
+
+function(add_component name)
+    add_subdirectory($ENV{ROFI_ROOT}/softwareComponents/${name} ${CMAKE_CURRENT_BINARY_DIR}/${name})
+endfunction()
+
+function(add_application path)
+    add_subdirectory($ENV{ROFI_ROOT}/${path} ${CMAKE_CURRENT_BINARY_DIR}/${path})
+endfunction()
+
 idf_build_process(esp32
-    COMPONENTS idf::esp32 idf::freertos idf::esptool_py
+    COMPONENTS idf::esp32 idf::freertos idf::esptool_py idf::esp_http_client idf::lwip
     SDKCONFIG ${CMAKE_CURRENT_LIST_DIR}/sdkconfig
     BUILD_DIR ${CMAKE_BINARY_DIR})
 
@@ -25,9 +39,17 @@ add_executable(build_hack ${HACK_SOURCE})
 target_link_libraries(build_hack idf::freertos)
 set_target_properties(build_hack PROPERTIES EXCLUDE_FROM_ALL "exclude-NOTFOUND")
 
-# Now we can add our subprojects
-add_subdirectory("$ENV{ROFI_ROOT}/examples/idf/hello_world" "hello_world")
-add_subdirectory("$ENV{ROFI_ROOT}/examples/idf/hello_world2" "hello_world2")
+add_component(atoms)
+add_component(lwip++)
+add_component(lwipcore)
+add_component(rofiHalInc)
+add_component(rofiHalEsp32)
+add_component(libfi)
+# Introduce alias
+add_library(rofi::hal ALIAS rofi_hal_esp32)
+
+# Add the examples
+add_application(examples/hal/wifi)
 
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)

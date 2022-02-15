@@ -24,7 +24,7 @@ There are the following directories:
        the documentation.
     -  ``configuration``: A library for representation of a RoFIBot. See
        :doc:`documentation <../rofilib/configuration>`.
-    -  ``rofiHalSim`` and ``rofiHalPhys``: The hardware abstraction layer for
+    -  ``rofiHalSim`` and ``rofiHalEsp32``: The hardware abstraction layer for
        RoFI modules.
 -  ``tools``: The tools for working with RoFI
 -  ``examples``: A self-contained, easily executable examples demonstrating the

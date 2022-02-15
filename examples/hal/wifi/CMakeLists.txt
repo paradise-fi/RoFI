@@ -1,7 +1,14 @@
-cmake_minimum_required(VERSION 3.6)
+add_rofi_firmware(wifi_example.elf main.cpp)
+target_link_libraries(wifi_example.elf PUBLIC rofi::hal libfi)
 
-set(EXTRA_COMPONENT_DIRS "../../libfi" "../../rofiHal")
+# Load secrets from env
+if ("$ENV{ROFI_SSID}" STREQUAL "")
+    message(FATAL_ERROR "Missing WiFi configuration in the environment"
+        "Please set: ROFI_SSID, ROFI_WIFI_PASS, ROFI_WLAN_USER, ROFI_WLAN_PASS")
+endif()
 
-set(COMPONENTS "")
-include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(wifi)
+target_compile_definitions(wifi_example.elf PRIVATE
+    "SSID=\"$ENV{ROFI_SSID}\""
+    "PASSWORD=\"$ENV{ROFI_WIFI_PASS}\""
+    "WLAN_USER=\"$ENV{ROFI_WLAN_USER}\""
+    "WLAN_PASS=\"$ENV{RoFI_WLAN_PASS}\"")
