@@ -2,15 +2,16 @@ cmake_minimum_required(VERSION 3.12)
 
 project(rofi)
 
-option(FORCE_COLORED_OUTPUT "Always produce ANSI-colored output (GNU/Clang only)." FALSE)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} $ENV{ROFI_ROOT}/releng/cmake)
+
 option(BUILD_SMTRECONFIG "Build SMT-based reconfiguration library." FALSE)
 option(BUILD_HEADLESS "Build only parts of the project, that can run headlessly." FALSE)
 option(BUILD_GAZEBO "Build parts that require gazebo libraries." TRUE)
+include(ColoredOutput)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} $ENV{ROFI_ROOT}/releng/cmake)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
@@ -24,15 +25,6 @@ endfunction()
 function(add_tool toolName)
     add_subdirectory($ENV{ROFI_ROOT}/tools/${toolName} ${toolName})
 endfunction()
-
-
-if (${FORCE_COLORED_OUTPUT})
-    if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
-       add_compile_options (-fdiagnostics-color=always)
-    elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-       add_compile_options (-fcolor-diagnostics)
-    endif ()
-endif ()
 
 if(${LIBCXX})
     set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++")

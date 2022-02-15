@@ -7,6 +7,7 @@ include(FetchContent)
 include(CollectTargets)
 include(STM32Device)
 include(STM32Cube)
+include(ColoredOutput)
 
 set(CMAKE_TOOLCHAIN_FILE STM32Toolchain)
 set(CMAKE_INTERPROCEDURAL_OPTIMIZATION FALSE)

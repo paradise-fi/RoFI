@@ -6,6 +6,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} $ENV{ROFI_ROOT}/releng/cmake)
 include(FetchContent)
 include(CollectTargets)
 include(ESP32)
+include(ColoredOutput)
 
 project(rofi)
 

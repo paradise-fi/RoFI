@@ -149,8 +149,16 @@ run() {
     backup PATH
     backup PYTHONPATH
     backup MAKEFLAGS
+    backup CMAKE_GENERATOR
 
     export MAKEFLAGS="${MAKEFLAGS} --no-print-directory"
+
+    # Use Ninja if it is available as it is faster
+    if [ $(command -v ninja) ]; then
+        export CMAKE_GENERATOR="Ninja"
+    else
+        export CMAKE_GENERATOR="Unix Makefiles"
+    fi
 
     setGazeboVariables
 
