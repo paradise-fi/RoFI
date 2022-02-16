@@ -119,6 +119,8 @@ find_package(Armadillo REQUIRED)
 
 if (${BUILD_GAZEBO})
   find_package(gazebo REQUIRED)
+  # Workaround for bug in gazebo that causes problems on `g++11` with `-std=c++20`
+  set(GAZEBO_INCLUDE_DIRS ${GAZEBO_INCLUDE_DIRS} "$ENV{ROFI_ROOT}/gazebo_include")
 
   find_package(Protobuf REQUIRED)
   # Include Gazebo messages
