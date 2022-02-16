@@ -12,15 +12,23 @@ enum joint_type {
 struct joint {
     ID id = 0;
     ShoeId body = A;
-    // ConnectorId prevCon = ZMinus;
-    // ConnectorId nextCon = ZMinus;
-    //Vector position = { 0.0, 0.0, 0.0, 1.0 };
     Matrix trans = identity;
+
+    std::array< Matrix, 2 > toNext = { { identity, identity } };
+    std::array< int, 2 > nextIndex = { { 1, 1 } };
+    std::array< bool, 2 > flip = { { false, false } };
+    std::array< bool, 2 > xz = { { false, false } };
+    std::array< bool, 2 > zx = { { false, false } };
+
     double xRot = 0.0;
     double zRot = 0.0;
-    // joint_type type = immovable;
+
     std::optional< Edge > nextEdge;
     std::optional< Edge > prevEdge;
+
+    joint() = default;
+
+    joint( ID id, ShoeId body ) : id( id ), body( body ){};
 
     Vector position(){
         return trans * Vector{ 0.0, 0.0, 0.0, 1.0 };
@@ -31,10 +39,6 @@ struct joint {
         trans( 3, 1 ) = position[ 1 ];
         trans( 3, 2 ) = position[ 2 ];
     }
-
-    // inline Matrix get_matrix( int module, int shoe ){
-    //     return config.getMatrices().at( module ).at( shoe );
-    // }
 
     /* Global position of a joint, or a point converted from local
      * coordinates of the joint to global */
@@ -81,19 +85,28 @@ struct tentacleMonster {
         *this = tentacleMonster( conf, l );
     }
 
-    bool connectTentacle( int a, int b );
+    bool connectArms( size_t arm1, size_t arm2 );
 
-    bool reach( int arm, Vector position, double xRot = 0.0, double yRot = 0.0, double zRot = 0.0 );
+    bool reach( size_t arm, Vector position, double xRot = 0.0, double yRot = 0.0, double zRot = 0.0 );
 
-    void printArm( int arm );
+    void printArm( size_t arm );
 
   //private:
 
+    /* Find the arms of a rofibot */
     void findTentacles();
+    void addJoints( ID id, Edge& edge, std::optional< Edge > lastEdge );
 
-    void addJoints( ID id, Edge edge, std::optional< Edge > lastEdge );
+    void initialize();
 
+    /* The core algorithm */
     bool fabrik( tentacle& arm, Matrix target );
+
+    /* Simulate a connection between the arms */
+    tentacle link( size_t arm1, size_t arm2 );
+
+    /* Detach an arm from every other joint */
+    void detach( size_t arm );
 
     void setArm( tentacle& arm, Matrix target );
 
