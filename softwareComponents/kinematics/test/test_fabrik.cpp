@@ -86,10 +86,10 @@ TEST_CASE( "ZXXZ" ){
     // CHECK( z.tentacles.front()[ 1 ].nextEdge.value().dock2() == XPlus );
 }
 
-void reach( tentacleMonster& monster, double x = 0.0, double y = 0.0, double z = 0.0,
+void reach( tentacleMonster& rofibot, double x = 0.0, double y = 0.0, double z = 0.0,
             double xRot = 0.0, double yRot = 0.0, double zRot = 0.0, int arm = 0 )
 {
-    CHECK( monster.reach( arm, Vector{ x, y, z, 1.0 }, xRot, yRot, zRot ) );
+    CHECK( rofibot.reach( arm, Vector{ x, y, z, 1.0 }, xRot, yRot, zRot ) );
     Matrix target =
         translate( x * X ) *
         translate( y * Y ) *
@@ -98,8 +98,12 @@ void reach( tentacleMonster& monster, double x = 0.0, double y = 0.0, double z =
         rotate( yRot, Y ) *
         rotate( xRot, X );
 
-    CHECK( equals( monster.tentacles.front().front().trans, identity ) );
-    CHECK( equals( monster.tentacles.front().back().trans, target ) );
+    CHECK( equals( rofibot.tentacles.front().front().trans, identity ) );
+    CHECK( equals( rofibot.tentacles.front().back().trans, target ) );
+    rofibot.config.computeMatrices();
+    auto matrices = rofibot.config.getMatrices();
+    CHECK( equals( matrices[ matrices.size() ][ 1 ] * rotate( M_PI, Z ) * rotate( M_PI, X ),
+                   target ) );
 };
 
 /* Single module tests */
@@ -637,7 +641,7 @@ TEST_CASE( "2zzW 0 2 1 0 0 0" ){
 /* Z to X connection */
 TEST_CASE( "2zxS -1 0 2 0 0 0" ){
     tentacleMonster two( doubleZXS );
-    reach( two, -1.0, 0.0, 2.0, 0.0, -M_PI_2, M_PI );
+    reach( two, -1.0, 0.0, 2.0, M_PI, M_PI_2 );
 
     Configuration test;
     std::ifstream input( doubleZXS );
@@ -646,23 +650,41 @@ TEST_CASE( "2zxS -1 0 2 0 0 0" ){
     CHECK( two.config == test );
 }
 
+/* Rotation of X-connection currently not covered
 TEST_CASE( "2zxS 1 0 2 0 0 0" ){
     tentacleMonster two( doubleZXS );
-    reach( two, 1.0, 0.0, 2.0, 0.0, 0.0, -M_PI_2 );
+    reach( two, 1.0, 0.0, 2.0, 0.0, M_PI_2, 0.0 );
 
     Configuration test;
     std::ifstream input( doubleZXS );
     IO::readConfiguration( input, test );
     test.execute( Action( Action::Rotate( 1, Gamma, 180 ) ) );
-    test.execute( Action( Action::Rotate( 2, Beta, 90 ) ) );
-    test.execute( Action( Action::Rotate( 2, Gamma, -90 ) ) );
+    //test.execute( Action( Action::Rotate( 2, Beta, 90 ) ) );
+    //test.execute( Action( Action::Rotate( 2, Gamma, -90 ) ) );
     CHECK( two.config == test );
-}
+}*/
 
 TEST_CASE( "2zxS 0 0 sqrt5 0 0 0" ){
     tentacleMonster two( doubleZXS );
     //two.debug = true;
     reach( two, 0.0, 0.0, sqrt( 5.0 ) );
+
+    Configuration test;
+    std::ifstream input( doubleZXS );
+    IO::readConfiguration( input, test );
+    test.execute( Action( Action::Rotate( 1, Alpha, -26.5638 ) ) );
+    test.execute( Action( Action::Rotate( 1, Beta, -0.00190823 ) ) );
+    //test.execute( Action( Action::Rotate( 1, Gamma, 90 ) ) );
+    test.execute( Action( Action::Rotate( 2, Alpha, -90 ) ) );
+    test.execute( Action( Action::Rotate( 2, Beta, -63.4343 ) ) );
+    test.execute( Action( Action::Rotate( 2, Gamma, 90 ) ) );
+    CHECK( two.config == test );
+}
+
+TEST_CASE( "2zxS -0.48 -1.94 1.11 0 0 0" ){
+    tentacleMonster two( doubleZXS );
+ //   two.debug = true;
+    reach( two, -0.62, -0.45, 2.21 );
 
     Configuration test;
     std::ifstream input( doubleZXS );
@@ -677,7 +699,7 @@ TEST_CASE( "2zxS 0 0 sqrt5 0 0 0" ){
 }
 
 /* Static joint test */
-TEST_CASE( "3zxSxz 0 0 2.7071 0 0 0" ){
+/*TEST_CASE( "3zxSxz 0 0 2.7071 0 0 0" ){
     tentacleMonster three( ZXSXZ );
     //three.debug = true;
     reach( three, 0.0, 0.0, 2 + 1 / sqrt( 2.0 ) );
@@ -692,4 +714,4 @@ TEST_CASE( "3zxSxz 0 0 2.7071 0 0 0" ){
     test.execute( Action( Action::Rotate( 2, Beta, -63.435 ) ) );
     test.execute( Action( Action::Rotate( 2, Gamma, 90.0003 ) ) );
     CHECK( three.config == test );
-}
+}*/
