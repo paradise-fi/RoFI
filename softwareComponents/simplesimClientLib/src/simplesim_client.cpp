@@ -296,8 +296,9 @@ void updateConfigurationInRenderer(
 
 
 SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
-        : _onSettingsCmdCallback( std::move( onSettingsCmdCallback ) ),
-          ui( new Ui::SimplesimClient )
+        : ui( new Ui::SimplesimClient ),
+          _onSettingsCmdCallback( std::move( onSettingsCmdCallback ) )
+
 {
     QMainWindow( nullptr );
     ui->setupUi( this );
@@ -384,17 +385,6 @@ void SimplesimClient::itemSelected( QTreeWidgetItem* selected ){
     _lastModule = module;
 }
 
-// TODO: pause backend
-void SimplesimClient::pauseButton(){
-    if( _paused ){
-        _timer = startTimer( simSpeed );
-        std::cout << "Simulation playing\n";
-    } else {
-        killTimer( _timer );
-        std::cout << "Simulation paused\n";
-    }
-    _paused = !_paused;
-}
 
 void SimplesimClient::setColor( int color ){
     const auto& to_color = _changeColorWindow->to_color;
@@ -414,9 +404,22 @@ void SimplesimClient::changeColorWindow(){
 
     _changeColorWindow->show();
 }
-// TODO: change backend simulation speed
+
+void SimplesimClient::pauseButton(){
+    bool paused = getCurrentSettings().paused();
+    if( paused ){
+        resume();
+        std::cout << "Simulation playing\n";
+    } else {
+        pause();
+        std::cout << "Simulation paused\n";
+    }
+}
+
 void SimplesimClient::speedChanged( double speed ){
+    changeSpeedRatio( speed );
     std::cout << "Speed changed to " << speed << '\n';
+}
 
 void SimplesimClient::clearRenderer()
 {
