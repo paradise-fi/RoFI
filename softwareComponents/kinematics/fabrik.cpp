@@ -54,6 +54,73 @@ void tentacleMonster::findTentacles(){
     }
 }
 
+void tentacleMonster::addJoints( ID id, Edge& edge, std::optional< Edge > lastEdge ){
+    tentacle& a = tentacles.back();
+    joint j1, j2;
+    j1.id = j2.id = id;
+    if( id == edge.id1() ){
+        edge = reverse( edge );
+    }
+    if( !lastEdge ){
+        j1.body = edge.side2() == A ? B : A;
+        j2.body = j1.body == A ? B : A;
+
+        j2.prevEdge = edge;
+
+        a.push_front( j1 );
+        a.push_front( j2 );
+    } else {
+        Edge last = lastEdge.value();
+        j1.body = last.id1() == id ? last.side1() : last.side2();
+        j2.body = edge.id1() == id ? edge.side1() : edge.side2();
+        j1.nextEdge = lastEdge;
+        if( j1.body == j2.body ){
+            j1.prevEdge = edge;
+            a.push_front( j1 );
+        } else {
+            j2.prevEdge = edge;
+            a.push_front( j1 );
+            a.push_front( j2 );
+        }
+    }
+}
+
+
+joint closestMass( const Configuration& init ){
+    Vector mass = init.massCenter();
+    ID bestID = 0;
+    ShoeId bestShoe = A;
+    double bestDist = std::numeric_limits<double>::max();
+    for (const auto& [id, ms] : init.getMatrices()) {
+        for (unsigned i = 0; i < 2; ++i) {
+            const auto& matrix = ms[i];
+            double currDist = sqDistVM(matrix, mass);
+            if (currDist < bestDist) {
+                bestDist = currDist;
+                bestID = id;
+                bestShoe = i ? B : A;
+            }
+        }
+    }
+
+    return { bestID, bestShoe };
+}
+
+void tentacleMonster::initialize(){
+    config.computeMatrices();
+    joint center = closestMass( config );
+    leader = center.id;
+
+    std::unordered_set< ID > seen;
+    std::stack< joint > stack;
+
+    stack.push( center );
+
+    while( !stack.empty() ){
+        // TODO: initialize and treefy rofibot
+    }
+}
+
 Vector localPosition( tentacle& arm, int baseIndex, int posIndex ){
     return arm[ baseIndex ].getLocal( arm[ posIndex ].position() );
 }
@@ -123,13 +190,8 @@ void rotateTo( joint& j, Matrix target ){
         rotate( a, Z ) *
         rotate( p, X );
 
-    double c = azimuth( inverse( j.trans ) * target * -Y );
-
     j.xRot = p;
-    j.zRot = a + b + c;
-
-    j.trans *= rotate( c, Z );
-
+    j.zRot = a + b;
 }
 
 double oriToAngle( unsigned int ori ){
@@ -145,16 +207,13 @@ double oriToAngle( unsigned int ori ){
     }
 }
 
-/* Cover -Z to -Z connections */
-void connected( tentacle& arm, int& index, int direction = 1 ){
+void computeTransformation( tentacle& arm, int& index, int direction = 1 ){
     Matrix transformation = identity;
-    Matrix expectedNext = identity;
-    bool flip = false;
+    bool forward = direction == 1;
     int count = 0;
-    double angle = 0.0;
-
-    // TODO: remove duplication
-    //       precompute at load time
+    bool flip = false;
+    bool xz = false;
+    bool zx = false;
     if( direction == 1 ){
         while( arm[ index + 1 - count ].prevEdge ){
             //TODO: deal with static joints
@@ -163,28 +222,34 @@ void connected( tentacle& arm, int& index, int direction = 1 ){
         for( int i = 0; i < count; ++i ){
             Edge edge = arm[ index + 1 - i ].prevEdge.value();
             if( edge.dock2() == ZMinus ){
-                transformation *= translate( Vector{ 0.0, 0.0, 1.0, 0.0 } );
+                transformation *= translate( Z );
             } else if( edge.dock2() == XPlus ){
-                transformation *= translate( Vector{ -1.0, 0.0, 0.0, 0.0 } );
-                transformation *= rotate( M_PI, Z ) * rotate( M_PI_2, Y );
-                flip = !flip;
+                transformation *= rotate( M_PI, Z ) *
+                     rotate( M_PI_2, Y );
+                transformation *= translate( Z );
+                //flip = !flip;
+                zx = true;
             } else {
-                transformation *= translate( Vector{ 1.0, 0.0, 0.0, 0.0 } );
-                transformation *= // rotate( M_PI, Z ) *
-                    rotate( M_PI_2, Y );
-                flip = !flip;
+                transformation *= rotate( M_PI, Z ) *
+                    rotate( -M_PI_2, X );
+                transformation *= translate( Z );
+                //flip = !flip;
+                zx = true;
             }
 
+            transformation *= rotate( oriToAngle( edge.ori() ), Z );
+
             if( edge.dock1() == XPlus ){
-                transformation *= rotate( M_PI, Z ) * rotate( M_PI_2, Y );
+                transformation *= //rotate( M_PI, Z ) *
+                    rotate( -M_PI_2, Y );
+                xz = true;
             } else if( edge.dock1() == XMinus ){
-                transformation *= // rotate( M_PI, Z ) *
+                transformation *= //rotate( M_PI, Z ) *
                     rotate( M_PI_2, Y );
-            }//  else if( edge.ori() == East || edge.ori() == West ){
+                xz = true;
+            } // else if( edge.ori() == East || edge.ori() == West ){
             //     flip = !flip;
             // }
-
-            transformation *= rotate( oriToAngle( edge.ori() ), Z );
             //angle += oriToAngle( edge.ori() );
         }
     } else {
@@ -194,42 +259,59 @@ void connected( tentacle& arm, int& index, int direction = 1 ){
         }
         for( int i = 0; i < count; ++i ){
             Edge edge = arm[ index - 1 + i ].nextEdge.value();
-            if( edge.dock1() == ZMinus ){
-                transformation *= translate( Vector{ 0.0, 0.0, 1.0, 0.0 } );
-            } else if( edge.dock1() == XPlus ){
-                transformation *= translate( Vector{ 1.0, 0.0, 0.0, 0.0 } );
-                transformation *= rotate( M_PI, Z ) * rotate( M_PI_2, Y );
-                flip = !flip;
-            } else {
-                transformation *= translate( Vector{ -1.0, 0.0, 0.0, 0.0 } );
-                transformation *=  //rotate( M_PI, Z ) *
+             if( edge.dock1() == XPlus ){
+                transformation *= rotate( M_PI, Z ) *
                     rotate( M_PI_2, Y );
-                flip = !flip;
+                zx = true;
+            } else if( edge.dock1() == XMinus ){
+                transformation *= rotate( M_PI, Z ) *
+                    rotate( -M_PI_2, Y );
+                //flip = !flip;
+                zx = true;
             }
 
+            transformation *= translate( Z );
+            transformation *= rotate( oriToAngle( edge.ori() ), Z );
+
             if( edge.dock2() == XPlus ){
-                transformation *= rotate( M_PI, Z ) * rotate( M_PI_2, Y );
-            } else if( edge.dock2() == XMinus ){
-                transformation *= //rotate( M_PI, Z ) *
+                transformation *= rotate( M_PI, Z ) *
                     rotate( M_PI_2, Y );
+                //flip = !flip;
+                xz = true;
+                zx = false;
+            } else if( edge.dock2() == XMinus ){
+                transformation *= rotate( M_PI, Z ) *
+                    rotate( -M_PI_2, Y );
+                //flip = !flip;
+                xz = true;
+                zx = false;
             } else if( edge.ori() == East || edge.ori() == West ){
                 flip = !flip;
             }
 
-            transformation *= rotate( oriToAngle( edge.ori() ), Z );
-            angle += oriToAngle( edge.ori() );
+            // angle += oriToAngle( edge.ori() );
         }
+
     }
-    expectedNext = transformation * translate( Vector{ 0.0, 0.0, 1.0, 0.0 } );
+    arm[ index ].toNext[ forward ] = transformation;
+    arm[ index ].nextIndex[ forward ] = count;
+    arm[ index ].flip[ forward ] = flip;
+    arm[ index ].zx[ forward ] = zx;
+    arm[ index ].xz[ forward ] = xz;
+    index -= direction * count;
+}
+
+/* Cover connections */
+void connected( tentacle& arm, int& index, int direction = 1 ){
+    bool forward = direction == 1;
+    const Matrix& transformation = arm[ index ].toNext[ forward ];
+    int count = arm[ index ].nextIndex[ forward ];
+
+    const Matrix& expectedNext = transformation * translate( Vector{ 0.0, 0.0, 1.0, 0.0 } );
 
     Vector position = transformation * Vector{ 0.0, 0.0, 0.0, 1.0 };
-    double pChange = polar( position );
-    double aChange = azimuth( position );
 
     Vector expPos = expectedNext * Vector{ 0.0, 0.0, 0.0, 1.0 };
-    double pExp = polar( expectedNext * Vector{ 0.0, 0.0, 0.0, 1.0 } );
-    double aExp = azimuth( expectedNext * Vector{ 0.0, 0.0, 0.0, 1.0 } );
-
 
     Vector next = localPosition( arm, index + direction, index - direction * count );
     Vector current = localPosition( arm, index + direction, index + direction - direction * count );
@@ -237,12 +319,20 @@ void connected( tentacle& arm, int& index, int direction = 1 ){
     double pol = 0.0;
     double az = 0.0;
 
-    if( !flip ){
-        pol = polar( current ) - pChange;
-        az = azimuth( next ) - aExp;
+    if( !arm[ index ].flip[ forward ] ){
+        pol = polar( current ) - polar( position );
+        az = azimuth( next ) - azimuth( expPos );
     } else {
-        pol = polar( next ) - pExp;
-        az = azimuth( current ) - aChange;
+        pol = polar( next ) - polar( expPos );
+        az = azimuth( current ) - azimuth( position );
+    }
+    if( arm[ index ].xz[ forward ] ){
+        pol = polar( current ) - polar( position );
+        az = azimuth( current ) - azimuth( position );
+    }
+    if( arm[ index ].zx[ forward ] ){
+        pol = 0;
+        az = azimuth( current ) - azimuth( position );
     }
 
     auto [ p, a ] = simplify( pol, az );
@@ -258,7 +348,7 @@ void connected( tentacle& arm, int& index, int direction = 1 ){
         rotate( p, X ) *
         transformation;
 
-    index -= direction * count;
+    index -= direction * arm[ index ].nextIndex[ forward ];
 }
 
 bool tentacleMonster::fabrik( tentacle& arm, Matrix target )
@@ -269,6 +359,20 @@ bool tentacleMonster::fabrik( tentacle& arm, Matrix target )
     double p;
     double a;
 
+    for( int i = arm.size() - 1; i >= 0; ){
+        if( arm[ i ].nextEdge ){
+            computeTransformation( arm, i );
+        } else {
+            --i;
+        }
+    }
+    for( int i = 0; i <= arm.size() - 1; ){
+        if( arm[ i ].prevEdge ){
+            computeTransformation( arm, i, -1 );
+        } else {
+            ++i;
+        }
+    }
     while( !equals( arm.back().trans, target ) ){
 
         /* Forward reaching */
@@ -276,11 +380,7 @@ bool tentacleMonster::fabrik( tentacle& arm, Matrix target )
 
         for( int i = arm.size() - 2; i >= 0; /*--i*/ ){
             if( arm[ i ].nextEdge ){
-                //if( arm[ i ].nextEdge->dock1() == ZMinus ){
-                    connected( arm, i );
-                //} else {
-                //    assert( false );
-                //}
+                connected( arm, i );
             } else {
                 sameModule( arm, i );
             }
@@ -299,17 +399,24 @@ bool tentacleMonster::fabrik( tentacle& arm, Matrix target )
 
         for( int i = 1; i <= arm.size() - 1; /*++i*/ ){
             if( arm[ i ].prevEdge ){
-                //if( arm[ i ].prevEdge->dock1() == ZMinus ){
-                    connected( arm, i, -1 );
-                //} else {
-                //    assert( false );
-                //}
+                connected( arm, i, -1 );
             } else {
                 sameModule( arm, i, -1 );
             }
 
            if( debug ){
-               printArm( 0 );
+               //printArm( 0 );
+               setArm( arm, target );
+               config.computeMatrices();
+               auto mats = config.getMatrices();
+               std::cout << "xrot: " << arm[ i - 2 ].xRot << "zrot: " << arm[ i - 2 ].zRot <<'\n'
+                         << "alpha " <<
+                   config.getModule( ( i / 2 ) ).getJoint( Alpha ) << "beta: " <<
+                   config.getModule( ( i / 2 ) ).getJoint( Beta ) << "gamma " <<
+                   config.getModule( ( i / 2 ) ).getJoint( Gamma ) << '\n';
+               std::cout << "actual:\n" << IO::toString( mats[ (i + 1)/ 2 ][ (1 + i ) % 2 ] ) <<
+                   "internal:\n" << IO::toString( arm[ i - 1 ].trans );
+
                int c = getchar();
                if( c == 'q' ){
                    setArm( arm, target );
@@ -320,7 +427,8 @@ bool tentacleMonster::fabrik( tentacle& arm, Matrix target )
 
         rotateTo( arm.back(), target );
 
-        if( ++iterations == 2000 ){
+        // TODO: number of iterations should adapt to shoulder length and connections
+        if( ++iterations == 3000 ){
             setArm( arm, target );
             if( debug ){
                 std::cout << "wanted:\n" << IO::toString( target )
@@ -357,7 +465,47 @@ void tentacleMonster::setArm( tentacle& arm, Matrix target ){
     config.computeMatrices();
 }
 
-bool tentacleMonster::reach( int arm, Vector position, double xRot,
+
+tentacle tentacleMonster::link( size_t arm1, size_t arm2 ){
+    tentacle result = tentacles[ arm1 ];
+    Edge edge = { tentacles[ arm1 ].back().id,
+                  tentacles[ arm1 ].back().body,
+                  ZMinus, South, ZMinus,
+                  tentacles[ arm2 ].back().body,
+                  tentacles[ arm2 ].back().id
+                };
+    result.back().nextEdge = edge;
+    tentacle reversed = tentacles[ arm2 ];
+    std::reverse( reversed.begin(), reversed.end() );
+    result.front().prevEdge = edge;
+    result.insert( result.end(), reversed.begin(), reversed.end() );
+    return result;
+}
+
+void tentacleMonster::detach( size_t arm ){
+    std::unordered_set< ID > exclude;
+    for( auto joint : tentacles[ arm ] ){
+        exclude.insert( joint.id );
+    }
+    auto edges = config.getEdges( tentacles[ arm ].front().id, exclude );
+    for( auto edge : edges ){
+        config.execute( Action( Action::Reconnect( false, edge ) ) );
+    }
+    findTentacles();
+}
+
+bool tentacleMonster::connectArms( size_t arm1, size_t arm2 ){
+    tentacle arm = link( arm1, arm2 );
+    config.computeMatrices();
+    auto mats = config.getMatrices();
+    Matrix target = tentacles[ arm2 ].front().body == A ?
+        mats[ tentacles[ arm2 ].front().id ][ 0 ] :
+        mats[ tentacles[ arm2 ].front().id ][ 1 ] * rotate( M_PI, Z ) * rotate( M_PI, X );
+
+    std::cout << IO::toString( target );
+    return fabrik( arm, target );
+}
+bool tentacleMonster::reach( size_t arm, Vector position, double xRot,
                              double yRot, double zRot)
 {
     Matrix target =
@@ -370,48 +518,8 @@ bool tentacleMonster::reach( int arm, Vector position, double xRot,
     return fabrik( tentacles[ arm ], target );
 }
 
-void tentacleMonster::printArm( int arm ){
+void tentacleMonster::printArm( size_t arm ){
     for( auto& j : tentacles[ arm ] ){
         std::cout << "\nID: " << j.id << " Body: " << j.body << "\n" << IO::toString( j.trans );
-    }
-}
-
-
-void reposition( tentacle& arm, int index, Vector previous, double length = 1.0 ){
-   // Vector previous = forward ? arm[ index + 1 ].position : arm[ index - 1 ].position;
-    double lambda = length / distance( arm[ index ].position(), previous );
-    Vector pos = ( length - lambda ) * previous + lambda * arm[ index ].position();
-    arm[ index ].setPosition( pos );
-};
-
-
-void tentacleMonster::addJoints( ID id, Edge edge, std::optional< Edge > lastEdge ){
-    tentacle& a = tentacles.back();
-    joint j1, j2;
-    j1.id = j2.id = id;
-    if( id == edge.id1() ){
-        edge = reverse( edge );
-    }
-    if( !lastEdge ){
-        j1.body = edge.side2() == A ? B : A;
-        j2.body = j1.body == A ? B : A;
-
-        j2.prevEdge = edge;
-
-        a.push_front( j1 );
-        a.push_front( j2 );
-    } else {
-        Edge last = lastEdge.value();
-        j1.body = last.id1() == id ? last.side1() : last.side2();
-        j2.body = edge.id1() == id ? edge.side1() : edge.side2();
-        j1.nextEdge = lastEdge;
-        if( j1.body == j2.body ){
-            j1.prevEdge = edge;
-            a.push_front( j1 );
-        } else {
-            j2.prevEdge = edge;
-            a.push_front( j1 );
-            a.push_front( j2 );
-        }
     }
 }
