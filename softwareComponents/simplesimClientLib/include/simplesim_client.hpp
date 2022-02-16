@@ -233,7 +233,7 @@ private:
 
     int _timer;
 
-    bool _paused = false;
+    //bool _paused = false;
 
     int _lastModule = -1;
     double _lastColor[ 3 ];
