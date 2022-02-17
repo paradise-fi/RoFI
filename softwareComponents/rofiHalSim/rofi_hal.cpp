@@ -717,8 +717,7 @@ void RoFISim::onConnectorResp( const msgs::ConnectorResp & resp )
         case msgs::ConnectorCmd::PACKET:
         case msgs::ConnectorCmd::CONNECT:
         case msgs::ConnectorCmd::DISCONNECT:
-        case msgs::ConnectorCmd::CONNECT_POWER:
-        case msgs::ConnectorCmd::DISCONNECT_POWER:
+        case msgs::ConnectorCmd::POWER_CHANGED:
             connectorWorker.processMessage( resp );
             break;
 
