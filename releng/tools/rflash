@@ -1,13 +1,48 @@
 #!/usr/bin/env python3
 
+from multiprocessing.sharedctypes import Value
 import sys
 import os
 import subprocess
 from common import *
 
+def esp32GetTableFile(img):
+    """
+    Locate partition table for the image, if it doesn't exists, return the
+    default one
+    """
+    candidate = os.path.splitext(img.path)[0] + ".table"
+    if os.path.exists(candidate):
+        return candidate
+    return os.path.join(buildDir, img.suite, "partition_table", "partition-table.bin")
+
+def esp32GetAppOffset(tablefile):
+    import gen_esp32part
+    """
+    Read partition file, find the first app partition and return its offset
+    """
+    with open(tablefile, "rb") as f:
+        content = f.read()
+    table = gen_esp32part.PartitionTable.from_binary(content)
+    for partition in table:
+        if partition.type == gen_esp32part.APP_TYPE:
+            return partition.offset
+    raise RuntimeError(f"No APP partition found in {tablefile}")
+
+
 def flashEsp32Image(img, extra):
-    command = [
-        "esptool.py",
+    command = ["esptool.py"]
+    # Adjust baudrate based on extra argument
+    if "-b" not in extra and "--baud" not in extra:
+        command += ["--baud", "921600"]
+    else:
+        try:
+            i = extra.index("-b")
+        except ValueError:
+            i = extra.index("--baud")
+        command += extra[i:i+2]
+        del extra[i:i+2]
+    command += [
         "--chip", "esp32",
         "--before=default_reset",
         "--after=hard_reset",
@@ -15,11 +50,17 @@ def flashEsp32Image(img, extra):
         "--flash_mode", "dio",
         "--flash_freq", "40m"]
     command += extra
+
+    pTable = esp32GetTableFile(img)
+    appOffset = esp32GetAppOffset(pTable)
     command += [
-        "0x8000", os.path.join(buildDir, img.suite, "partition_table", "partition-table.bin"),
+        "0x8000", os.path.join(buildDir, img.suite, "partition_table", pTable),
         "0x1000", os.path.join(buildDir, img.suite, "bootloader", "bootloader.bin"),
-        "0x10000", img.path]
+        f"0x{appOffset:02x}", img.path]
+
     print(f"Flashing image {img.name} from {img.suite}: {img.path}")
+    print(f"Using partition table: {pTable}, app offset: 0x{appOffset:02x}")
+    print(command)
     retcode = subprocess.call(command)
     return retcode
 
