@@ -228,7 +228,7 @@ CommandHandler::DelayedEvent sendConnectorPacket( ModuleStates & moduleStates,
     return std::nullopt;
 }
 
-std::nullopt_t setConnectorPower( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
+std::nullopt_t connectPower( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
 {
     assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
     assert( rofiCmd.connectorcmd().cmdtype() == ConnectorCmd::CONNECT_POWER );
@@ -246,7 +246,7 @@ std::nullopt_t setConnectorPower( ModuleStates & moduleStates, const RofiCmd & r
     return std::nullopt;
 }
 
-std::nullopt_t setDisconnectorPower( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
+std::nullopt_t disconnectPower( ModuleStates & moduleStates, const RofiCmd & rofiCmd )
 {
     assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
     assert( rofiCmd.connectorcmd().cmdtype() == ConnectorCmd::DISCONNECT_POWER );
@@ -338,10 +338,10 @@ CommandHandler::CommandCallbacks onConnectorCmdCallbacks( ConnectorCmd::Type cmd
             return { .immediate = {}, .delayed = sendConnectorPacket };
 
         case ConnectorCmd::CONNECT_POWER:
-            return { .immediate = {}, .delayed = setConnectorPower };
+            return { .immediate = {}, .delayed = connectPower };
 
         case ConnectorCmd::DISCONNECT_POWER:
-            return { .immediate = {}, .delayed = setDisconnectorPower };
+            return { .immediate = {}, .delayed = disconnectPower };
 
         default:
             std::cerr << "Unknown connector command type: " << cmdType << "\n";
