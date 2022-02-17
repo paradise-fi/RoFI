@@ -51,8 +51,7 @@ PYBIND11_MODULE( pyRofiHal, m ) {
     py::enum_< ConnectorEvent >( m, "ConnectorEvent" )
         .value( "Connected", ConnectorEvent::Connected )
         .value( "Disconnected", ConnectorEvent::Disconnected )
-        .value( "ConnectedPower", ConnectorEvent::ConnectedPower )
-        .value( "DisconnectedPower", ConnectorEvent::DisconnectedPower )
+        .value( "PowerChanged", ConnectorEvent::PowerChanged )
         .export_values();
 
     py::class_< ConnectorState >( m, "ConnectorState" )

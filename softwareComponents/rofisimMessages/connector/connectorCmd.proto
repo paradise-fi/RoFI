@@ -12,6 +12,7 @@ message ConnectorCmd {
         PACKET = 4;
         CONNECT_POWER = 5;
         DISCONNECT_POWER = 6;
+        POWER_CHANGED = 7;
     }
 
     enum Line {

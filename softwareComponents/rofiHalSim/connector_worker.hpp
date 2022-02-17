@@ -109,10 +109,8 @@ private:
                 return ConnectorEvent::Connected;
             case ConnectorCmd::DISCONNECT:
                 return ConnectorEvent::Disconnected;
-            case ConnectorCmd::CONNECT_POWER:
-                return ConnectorEvent::ConnectedPower;
-            case ConnectorCmd::DISCONNECT_POWER:
-                return ConnectorEvent::DisconnectedPower;
+            case ConnectorCmd::POWER_CHANGED:
+                return ConnectorEvent::PowerChanged;
             default:
                 assert( false );
                 throw std::invalid_argument( "not an event response" );
@@ -153,8 +151,7 @@ private:
             }
             case rofi::messages::ConnectorCmd::CONNECT:
             case rofi::messages::ConnectorCmd::DISCONNECT:
-            case rofi::messages::ConnectorCmd::CONNECT_POWER:
-            case rofi::messages::ConnectorCmd::DISCONNECT_POWER:
+            case rofi::messages::ConnectorCmd::POWER_CHANGED:
             {
                 auto event = readEvent( message.resptype() );
                 _callbacks[ connectorIndex ].eventCallbacks.callCallbacks( std::move( connector ),
