@@ -36,6 +36,7 @@ set(HACK_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/hack_src.c)
 file(GENERATE OUTPUT ${HACK_SOURCE}
     CONTENT "void app_main() {}\n")
 add_executable(build_hack ${HACK_SOURCE})
+idf_build_executable(build_hack)
 target_link_libraries(build_hack idf::freertos)
 set_target_properties(build_hack PROPERTIES EXCLUDE_FROM_ALL "exclude-NOTFOUND")
 

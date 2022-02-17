@@ -59,9 +59,6 @@ jobs:
 
             # Configure and build
             rcfg rofiFirmware
-            # ESP-IDF has a bug with Ninja - ld script is built too late, so
-            # let's build it first so we don't miss the dependency.
-            (cd build.${{ matrix.environment }}/rofiFirmware && ninja esp-idf/esp32/ld/esp32.project.ld)
             rmake rofiFirmware
   build_doc:
     name: "Build documentation"
