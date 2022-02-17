@@ -24,6 +24,24 @@ jobs:
             source setup.sh ${{ matrix.environment }}
             rcfg desktop
             rmake desktop
+      - name: Run tests
+        uses: addnab/docker-run-action@v2
+        with:
+          image: yaqwsx/rofi.desktop
+          shell: bash
+          options: -v ${{ github.workspace }}:/work -w /work
+          run: |
+            source setup.sh ${{ matrix.environment }}
+            rmake --test --all
+  build_rofiFirmware:
+    name: "Build suite rofiFirmware"
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        environment: [Debug, Release]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
       - name: Build RoFI firmware
         uses: addnab/docker-run-action@v2
         with:
@@ -45,15 +63,6 @@ jobs:
             # let's build it first so we don't miss the dependency.
             (cd build.${{ matrix.environment }}/rofiFirmware && ninja esp-idf/esp32/ld/esp32.project.ld)
             rmake rofiFirmware
-      - name: Run tests
-        uses: addnab/docker-run-action@v2
-        with:
-          image: yaqwsx/rofi.desktop
-          shell: bash
-          options: -v ${{ github.workspace }}:/work -w /work
-          run: |
-            source setup.sh ${{ matrix.environment }}
-            rmake --test --all
   build_doc:
     name: "Build documentation"
     runs-on: ubuntu-20.04
