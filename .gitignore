@@ -2,6 +2,8 @@
 /build*
 __pycache__
 
+sdkconfig.old
+
 # VSCode
 **/.vscode/
 !**/.vscode/launch.json

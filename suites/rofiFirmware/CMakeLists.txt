@@ -49,6 +49,7 @@ add_component(libfi)
 add_library(rofi::hal ALIAS rofi_hal_esp32)
 
 # Add the examples
+add_application(hardwareModules/universalModule/software/esp32/esp_hello_world)
 add_application(examples/hal/wifi)
 
 

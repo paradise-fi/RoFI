@@ -1,5 +1,6 @@
 add_rofi_firmware(wifi_example.elf main.cpp)
 target_link_libraries(wifi_example.elf PUBLIC rofi::hal libfi)
+set_partition_table(wifi_example.elf partitions.csv)
 
 # Load secrets from env
 if ("$ENV{ROFI_SSID}" STREQUAL "")

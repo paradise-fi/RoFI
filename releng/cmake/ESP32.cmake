@@ -24,3 +24,17 @@ function(generate_image_from A_ELF_TARGET)
     add_custom_target("${NAME_BASE}" DEPENDS "${TSTAMP}" "bootloader" "partition_table_bin")
     set_target_properties("${NAME_BASE}" PROPERTIES EXCLUDE_FROM_ALL "exclude-NOTFOUND")
 endfunction()
+
+function(set_partition_table target tablefile)
+    get_filename_component(NAME_BASE "${target}" NAME_WLE)
+    set(TABLE_BIN_NAME "${NAME_BASE}.table")
+    add_custom_command(OUTPUT "${IMG_DIR}/${TABLE_BIN_NAME}"
+        COMMAND python $ENV{IDF_PATH}/components/partition_table/gen_esp32part.py
+                        "${tablefile}" "${IMG_DIR}/${TABLE_BIN_NAME}"
+        DEPENDS "${tablefile}"
+        VERBATIM
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Generating partition table image ${TABLE_BIN_NAME}")
+    add_custom_target("${TABLE_BIN_NAME}" DEPENDS "${IMG_DIR}/${TABLE_BIN_NAME}")
+    add_dependencies("${target}" "${TABLE_BIN_NAME}")
+endfunction()

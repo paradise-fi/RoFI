@@ -87,6 +87,7 @@ setupIdf() {
     mkdir -p build.deps
     export IDF_PATH=$ROFI_ROOT/build.deps/esp-idf
     export IDF_TOOLS_PATH=$ROFI_ROOT/build.deps/esp-tools
+    export PYTHONPATH="${IDF_PATH}/components/partition_table:$PYTHONPATH"
     if [ ! -d $IDF_PATH ]; then
         git clone --depth 1 --branch v4.3.2 --recursive \
             https://github.com/espressif/esp-idf.git $IDF_PATH
