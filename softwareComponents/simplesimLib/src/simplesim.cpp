@@ -16,6 +16,8 @@ void Simplesim::run( Simplesim::OnConfigurationUpdate onConfigurationUpdate,
     auto & simulation = *_simulation;
     auto & communication = *_communication;
 
+    assert( simulation.moduleStates() );
+    auto lastConfiguration = simulation.moduleStates()->currentConfiguration();
 
     while ( !stopToken.stop_requested() ) {
         auto startTime = std::chrono::steady_clock::now();
@@ -23,15 +25,19 @@ void Simplesim::run( Simplesim::OnConfigurationUpdate onConfigurationUpdate,
         auto settings = _settings.copy();
         if ( settings.isPaused() ) {
             // TODO reactive waiting
+            if ( !_configurationProvided.test_and_set() ) {
+                onConfigurationUpdate( lastConfiguration );
+            }
             std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
             continue;
         }
 
         auto [ responses,
-               new_configuration ] = simulation.simulateOneIteration( settings.getSimStepTime() );
+               newConfiguration ] = simulation.simulateOneIteration( settings.getSimStepTime() );
 
+        lastConfiguration = std::move( newConfiguration );
         assert( onConfigurationUpdate );
-        onConfigurationUpdate( std::move( new_configuration ) );
+        onConfigurationUpdate( lastConfiguration );
         communication.sendRofiResponses( std::move( responses ) );
 
         std::this_thread::sleep_until( startTime + settings.getRealStepTime() );
@@ -42,7 +48,7 @@ void Simplesim::run( Simplesim::OnConfigurationUpdate onConfigurationUpdate,
 ServerSettings Simplesim::onSettingsCmd( const msgs::SettingsCmd & settingsCmd )
 {
     if ( settingsCmd.cmd_type() == msgs::SettingsCmd::SEND_CONFIGURATION_AND_STATE ) {
-        // TODO send configuration
+        _configurationProvided.clear();
     }
 
     using NewValueCase = msgs::SettingsCmd::NewValueCase;

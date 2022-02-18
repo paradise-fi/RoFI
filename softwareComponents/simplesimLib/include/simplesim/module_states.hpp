@@ -302,7 +302,7 @@ private:
         return std::pair( new_configuration, std::move( positionsReached ) );
     }
 
-private:
+public:
     std::shared_ptr< const rofi::configuration::Rofibot > currentConfiguration() const
     {
         auto result = _physicalModulesConfiguration.copy();
@@ -310,6 +310,7 @@ private:
         return result;
     }
 
+private:
     static std::map< ModuleId, ModuleInnerState > innerStatesFromConfiguration(
             const rofi::configuration::Rofibot & rofibotConfiguration );
 
