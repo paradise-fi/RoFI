@@ -198,8 +198,6 @@ run() {
     if [ -n "$ALTER_PROMPT" ]
     then
         PS1="🤖 $(configurationDesc $ROFI_BUILD_CONFIGURATION) $ORIGINAL_PS1"
-    else
-        PS1="$ORIGINAL_PS1"
     fi
 
     export ROFI_BUILD_CONFIGURATION
