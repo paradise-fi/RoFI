@@ -65,6 +65,12 @@ public:
         return _commandHandler;
     }
 
+    std::shared_ptr< ModuleStates > moduleStates()
+    {
+        assert( _moduleStates );
+        return _moduleStates;
+    }
+
 private:
     std::vector< RofiResp > processRofiCommands()
     {

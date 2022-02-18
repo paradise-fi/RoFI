@@ -106,6 +106,7 @@ public:
 
 private:
     atoms::Guarded< ServerSettings > _settings;
+    std::atomic_flag _configurationProvided;
 
     const std::shared_ptr< Simulation > _simulation;
     const std::shared_ptr< Communication > _communication;
