@@ -2,6 +2,8 @@
 
 usage="Usage: $0 <projectName> <sourceDir> <destinationDir> [project defines]"
 
+set -e
+
 if [ "$#" -ne 3 ] && [ "$#" -ne 4 ]; then
     echo "Invalid arguments"
     echo $usage
@@ -10,6 +12,10 @@ fi
 
 if ! [ -e "$3" ]; then
     mkdir -p $3
+fi
+
+if [ -z "$DOXYGEN" ]; then
+    DOXYGEN="doxygen"
 fi
 
 cfg=$(cat <<END
@@ -33,5 +39,5 @@ cfg=$(cat <<END
 END
 )
 
-(echo "$cfg";  echo "GENERATE_XML = YES") | doxygen -
-(echo "$cfg";  echo "GENERATE_HTML = YES") | doxygen -
+(echo "$cfg";  echo "GENERATE_XML = YES") | ${DOXYGEN} -
+(echo "$cfg";  echo "GENERATE_HTML = YES") | ${DOXYGEN} -

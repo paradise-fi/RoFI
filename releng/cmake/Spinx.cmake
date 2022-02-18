@@ -1,4 +1,8 @@
-set(extractDoxygen "$ENV{ROFI_ROOT}/releng/doc/extractDoxygen.sh")
+cmake_minimum_required(VERSION 3.10)
+
+find_package(Doxygen REQUIRED)
+
+set(extractDoxygen ${CMAKE_COMMAND} -E env DOXYGEN="$<TARGET_FILE:Doxygen::doxygen>" "$ENV{ROFI_ROOT}/releng/doc/extractDoxygen.sh")
 
 function(add_doxygen_source lib_name source_path)
     file(GLOB_RECURSE src
