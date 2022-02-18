@@ -1,6 +1,31 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.12)
 
 find_package(Doxygen REQUIRED)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
+function(requirePythonModule module)
+    execute_process(
+        COMMAND ${Python3_EXECUTABLE} -c "import ${module}"
+        RESULT_VARIABLE EXIT_CODE
+        OUTPUT_QUIET
+    )
+    if (NOT ${EXIT_CODE} EQUAL 0)
+        message(FATAL_ERROR "Python module ${module} is not available. Please install it.")
+    endif()
+endfunction()
+
+execute_process(
+    COMMAND sphinx-build --help
+    RESULT_VARIABLE EXIT_CODE
+    OUTPUT_QUIET
+)
+if (NOT ${EXIT_CODE} EQUAL 0)
+    message(FATAL_ERROR "sphinx-build not available. Please install sphinx.")
+endif()
+
+requirePythonModule(breathe)
+requirePythonModule(recommonmark)
+requirePythonModule(sphinx_rtd_theme)
 
 set(extractDoxygen ${CMAKE_COMMAND} -E env DOXYGEN="$<TARGET_FILE:Doxygen::doxygen>" "$ENV{ROFI_ROOT}/releng/doc/extractDoxygen.sh")
 

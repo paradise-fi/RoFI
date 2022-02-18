@@ -92,8 +92,15 @@ setupIdf() {
         git clone --depth 1 --branch v4.3.2 --recursive \
             https://github.com/espressif/esp-idf.git $IDF_PATH
         $IDF_PATH/install.sh
+        IDF_POST_INSTALL=1
     fi
     source $IDF_PATH/export.sh
+
+    if [ $IDF_POST_INSTALL ]; then
+        # When we use IDF, it brings python venv; thus if we want to build doc,
+        # we have to install spinx and breathe into the venv
+        pip install sphinx breathe recommonmark sphinx_rtd_theme
+    fi
 }
 
 print_help() {
