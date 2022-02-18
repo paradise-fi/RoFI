@@ -103,8 +103,9 @@ bool ModuleStates::setVelocityControl( ModuleId moduleId,
     return false;
 }
 
-std::optional< ModuleStates::ConnectorState > ModuleStates::getConnectorState( ModuleId moduleId,
-                                                                               int connector ) const
+std::optional< rofi::messages::ConnectorState > ModuleStates::getConnectorState(
+        ModuleId moduleId,
+        int connector ) const
 {
     if ( auto connectorInnerState = getConnectorInnerState( moduleId, connector ) ) {
         return connectorInnerState->get().connectorState();
@@ -124,8 +125,7 @@ std::optional< ModuleStates::ConnectedTo > ModuleStates::getConnectedTo( ModuleI
 bool ModuleStates::extendConnector( ModuleId moduleId, int connector )
 {
     if ( auto connectorInnerState = getConnectorInnerState( moduleId, connector ) ) {
-        connectorInnerState->get().setExtended();
-        // TODO check if there is a near connector
+        connectorInnerState->get().setExtending();
         return true;
     }
     return false;
@@ -135,7 +135,7 @@ bool ModuleStates::connectConnectors( ModuleId lhsModuleId,
                                       int lhsConnector,
                                       ModuleId rhsModuleId,
                                       int rhsConnector,
-                                      ConnectorState::Orientation orientation )
+                                      ConnectorInnerState::Orientation orientation )
 {
     using rofi::simplesim::ConnectorInnerState;
 
@@ -157,7 +157,7 @@ std::optional< ModuleStates::ConnectedTo > ModuleStates::retractConnector( Modul
 {
     if ( auto connectorInnerState = getConnectorInnerState( moduleId, connector ) ) {
         auto connectedTo = connectorInnerState->get().resetConnectedTo();
-        connectorInnerState->get().setRetracted();
+        connectorInnerState->get().setRetracting();
 
         if ( connectedTo ) {
             if ( auto otherConnInner = getConnectorInnerState( connectedTo->moduleId,
