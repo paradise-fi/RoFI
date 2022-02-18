@@ -36,7 +36,7 @@ if len(sys.argv) > 1 and sys.argv[1] in ["-l", "--list"]:
         print(f"  {s}")
     sys.exit(0)
 
-cmakeFlags = [f"-DCMAKE_BUILD_TYPE={buildCfg}", f"-G{os.environ['CMAKE_GENERATOR']}"]
+cmakeFlags = [f"-DCMAKE_BUILD_TYPE={buildCfg}", f"-G{os.environ['ROFI_CMAKE_GENERATOR']}"]
 try:
     splitIdx = sys.argv.index("--")
     requestedSuite = sys.argv[1:splitIdx]

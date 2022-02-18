@@ -31,20 +31,11 @@ def invokeBuild(wd, targets):
     Invoke ninja or make based on the environment for targets in a working
     directory
     """
-    generator = os.environ["CMAKE_GENERATOR"]
-    env = os.environ.copy()
-    if generator == "Unix Makefiles":
-        threads = 2 + multiprocessing.cpu_count()
-        subprocess.check_call(["make", f"-j{threads}"] + targets,
-            cwd=wd, env=env)
-        pass
-    elif generator == "Ninja":
-        subprocess.check_call(["ninja"] + targets,
-            cwd=wd, env=env)
-        pass
-    else:
-        raise RuntimeError(f"Invalid CMake generator ({generator}) specified")
-
+    maxThreads = 2 + multiprocessing.cpu_count()
+    command = ["cmake", "--build", wd, f"-j{maxThreads}"]
+    if len(targets) > 0:
+        command += ["--target"] + targets
+    subprocess.check_call(command, cwd=wd)
 
 def compileTargets(targets):
     """
