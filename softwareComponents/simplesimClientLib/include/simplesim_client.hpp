@@ -55,7 +55,6 @@ namespace detail
 } // namespace detail
 
 
-constexpr int simSpeed = 10;
 // TODO use the same mapper for all modules
 // TODO use the same property for setting the modules
 class SimplesimClient : public QMainWindow
@@ -110,9 +109,10 @@ public:
 
         initInfoTree( *getCurrentConfig() );
 
-        renderCurrentConfiguration();
+        _timerId = startTimer( _simStep );
+        changeSimStepTime( _simStep );
 
-        //_renderWindowInteractor->Start();
+        renderCurrentConfiguration();
     }
 
     // Can be called from any thread
@@ -228,12 +228,10 @@ private:
     vtkNew< vtkRenderer > _renderer;
     vtkNew< vtkRenderWindow > _renderWindow;
     vtkNew< vtkInteractorStyleTrackballCamera > _interactorStyle;
-    //vtkNew< UpdateConfigurationCommand > _updateConfigurationCommand;
     vtkNew< vtkRenderWindowInteractor > _renderWindowInteractor;
 
-    int _timer;
-
-    //bool _paused = false;
+    int _timerId; // ID of the timer that refreshes frames
+    int _simStep = 10; // ms to refresh the frame
 
     int _lastModule = -1;
     double _lastColor[ 3 ];

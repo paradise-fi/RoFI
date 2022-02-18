@@ -294,11 +294,9 @@ void updateConfigurationInRenderer(
     assert( moduleRenderInfos.size() == newConfiguration.modules().size() );
 }
 
-
 SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
         : ui( new Ui::SimplesimClient ),
           _onSettingsCmdCallback( std::move( onSettingsCmdCallback ) )
-
 {
     QMainWindow( nullptr );
     ui->setupUi( this );
@@ -327,12 +325,11 @@ SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
     connect( ui->changeColor, SIGNAL( triggered() ), this,
              SLOT( changeColorWindow() ) );
 
-    _timer = startTimer( simSpeed );
     this->show();
 }
 
 SimplesimClient::~SimplesimClient(){
-    killTimer( _timer );
+    killTimer( _timerId );
     delete ui;
 }
 
@@ -340,12 +337,12 @@ void SimplesimClient::timerEvent( QTimerEvent* /* event */ ){
     renderCurrentConfiguration();
 }
 
-void SimplesimClient::colorModule( //ModuleRenderInfo& moduleRenderInfo,
-                                  rofi::configuration::ModuleId module,
-                                  double color[ 3 ],
-                                  int component )// = -1 )
+void SimplesimClient::colorModule(
+        rofi::configuration::ModuleId module,
+        double color[ 3 ],
+        int component )
 {
-    assert( static_cast< int > componentActors.size() > component );
+    assert( static_cast< int >( _moduleRenderInfos[ module ].componentActors.size() ) > component );
 
     if( component == -1 ){
         for( auto& actor : _moduleRenderInfos[ module ].componentActors ){
@@ -417,7 +414,8 @@ void SimplesimClient::pauseButton(){
 }
 
 void SimplesimClient::speedChanged( double speed ){
-    changeSpeedRatio( speed );
+    assert( speed < std::numeric_limits< float >::max() );
+    changeSpeedRatio( static_cast< float >( speed ) );
     std::cout << "Speed changed to " << speed << '\n';
 }
 
