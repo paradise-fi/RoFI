@@ -84,9 +84,15 @@ setGazeboVariables() {
 }
 
 setupIdf() {
-    mkdir -p build.deps
-    export IDF_PATH=$ROFI_ROOT/build.deps/esp-idf
-    export IDF_TOOLS_PATH=$ROFI_ROOT/build.deps/esp-tools
+    # We allow the user to set a global path to build dependencies that are
+    # fetched autonomously, e.g., in the script ~/rofi.pre.env. If there is no
+    # such path, we put the build tools into the current RoFI worktree.
+    if [ ! $ROFI_TOOLS_PATH ]; then
+        export ROFI_TOOLS_PATH=$ROFI_ROOT/build.deps
+    fi
+    mkdir -p $ROFI_TOOLS_PATH
+    export IDF_PATH=$ROFI_TOOLS_PATH/esp-idf
+    export IDF_TOOLS_PATH=$ROFI_TOOLS_PATH/esp-tools
     export PYTHONPATH="${IDF_PATH}/components/partition_table:$PYTHONPATH"
     if [ ! -d $IDF_PATH ]; then
         git clone --depth 1 --branch v4.3.2 --recursive \
@@ -101,6 +107,7 @@ setupIdf() {
         # we have to install spinx and breathe into the venv
         pip install sphinx breathe recommonmark sphinx_rtd_theme
     fi
+    IDF_POST_INSTALL=
 }
 
 print_help() {
