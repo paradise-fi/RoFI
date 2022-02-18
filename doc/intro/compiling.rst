@@ -175,6 +175,10 @@ located in the directory ``build.{Configuration}/{suiteName}``.
 ``rmake`` also recognizes phony targets ``clean`` and ``clean-<suitename>`` that
 clean all suites or given suite respectively.
 
+In case you would like to run clang-tidy on the sources, you can use ``rmake
+--tidy <pattern>``. The clang-tidy will be invoked on all sources matching the
+pattern.
+
 The ``rmake`` tool internally uses Ninja (with fallback to Make). Since Ninja is
 much faster (especially on incremental builds) we advise you to have it
 installed.
