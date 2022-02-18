@@ -91,36 +91,86 @@ private:
 class ConnectorInnerState
 {
 public:
-    using ConnectorState = rofi::messages::ConnectorState;
+    using Orientation = rofi::configuration::roficom::Orientation;
+
+    enum class Position
+    {
+        Retracted,  ///< Connector is in retracted state.
+        Retracting, ///< Connector is retracting, but can be still connected in configuration.
+        Extending,  ///< Connector is extending and can connect to a near connector.
+        Extended,   ///< Connector is in extended state.
+    };
 
     struct OtherConnector
     {
     public:
-        OtherConnector( ModuleId moduleId, int connector, ConnectorState::Orientation orientation )
+        OtherConnector( ModuleId moduleId, int connector, Orientation orientation )
                 : moduleId( moduleId ), connector( connector ), orientation( orientation )
         {}
 
         ModuleId moduleId = {};
         int connector = {};
-        ConnectorState::Orientation orientation = {};
+        Orientation orientation = {};
+
+        bool operator==( const OtherConnector & ) const = default;
     };
 
 public:
-    void setExtended()
+    void setRetracting()
     {
-        _position = true;
+        switch ( _position ) {
+            case Position::Extending:
+            case Position::Extended:
+                _position = Position::Retracting;
+                return;
+            case Position::Retracted:
+            case Position::Retracting:
+                return;
+        }
+        assert( false );
     }
-    void setRetracted()
+    // Sets position to extending if the connector was retracted.
+    // To set position from `Extended` to `Extending`, set it first to `Retracted`.
+    void setExtending()
     {
-        _position = false;
+        switch ( _position ) {
+            case Position::Retracted:
+            case Position::Retracting:
+                _position = Position::Extending;
+                return;
+            case Position::Extending:
+            case Position::Extended:
+                return;
+        }
+        assert( false );
     }
-    bool position() const
+    void setExtendedWithoutConnecting()
+    {
+        _position = Position::Extended;
+    }
+    Position position() const
     {
         return _position;
     }
-
-    void setConnectedTo( ModuleId moduleId, int connector, ConnectorState::Orientation orientation )
+    void finilizePosition()
     {
+        switch ( _position ) {
+            case Position::Retracted:
+            case Position::Extended:
+                return;
+            case Position::Retracting:
+                _position = Position::Retracted;
+                return;
+            case Position::Extending:
+                _position = Position::Extended;
+                return;
+        }
+        assert( false );
+    }
+
+    void setConnectedTo( ModuleId moduleId, int connector, Orientation orientation )
+    {
+        assert( _connectedTo == std::nullopt );
         _connectedTo = { moduleId, connector, orientation };
     }
     std::optional< OtherConnector > resetConnectedTo()
@@ -151,21 +201,46 @@ public:
         return _external;
     }
 
-    ConnectorState connectorState() const
+    rofi::messages::ConnectorState connectorState() const
     {
-        ConnectorState state;
-        state.set_position( position() );
+        auto posToBool = []( Position pos ) -> bool {
+            switch ( pos ) {
+                case Position::Retracted:
+                case Position::Retracting:
+                    return false;
+                case Position::Extending:
+                case Position::Extended:
+                    return true;
+            }
+            assert( false );
+        };
+        auto toMsgOrientation = []( Orientation o ) {
+            switch ( o ) {
+                case Orientation::North:
+                    return messages::ConnectorState::NORTH;
+                case Orientation::East:
+                    return messages::ConnectorState::EAST;
+                case Orientation::South:
+                    return messages::ConnectorState::SOUTH;
+                case Orientation::West:
+                    return messages::ConnectorState::WEST;
+            }
+            assert( false );
+        };
+
+        messages::ConnectorState state;
+        state.set_position( posToBool( position() ) );
         state.set_internal( internal() );
         state.set_external( external() );
         state.set_connected( connectedTo().has_value() );
         if ( connectedTo().has_value() ) {
-            state.set_orientation( connectedTo()->orientation );
+            state.set_orientation( toMsgOrientation( connectedTo()->orientation ) );
         }
         return state;
     }
 
 private:
-    bool _position = false;
+    Position _position = Position::Retracted;
     bool _internal = false;
     bool _external = false;
     std::optional< OtherConnector > _connectedTo;

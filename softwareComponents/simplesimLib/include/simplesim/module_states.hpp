@@ -26,7 +26,6 @@ class ModuleStates
 public:
     using RofiDescription = rofi::messages::RofiDescription;
     using RofiResp = rofi::messages::RofiResp;
-    using ConnectorState = ConnectorInnerState::ConnectorState;
     using ConnectorLine = rofi::messages::ConnectorCmd::Line;
     using ConnectedTo = std::optional< ConnectorInnerState::OtherConnector >;
     using JointCapabilities = rofi::messages::JointCapabilities;
@@ -73,7 +72,8 @@ public:
 
 
     // Returns connector state if module with moduleId exists and has given connector
-    std::optional< ConnectorState > getConnectorState( ModuleId moduleId, int connector ) const;
+    std::optional< rofi::messages::ConnectorState > getConnectorState( ModuleId moduleId,
+                                                                       int connector ) const;
     // Returns the connectedTo connector if such exists
     std::optional< ConnectedTo > getConnectedTo( ModuleId moduleId, int connector ) const;
 
@@ -84,7 +84,7 @@ public:
                             int lhsConnector,
                             ModuleId rhsModuleId,
                             int rhsConnector,
-                            ConnectorState::Orientation orientation );
+                            ConnectorInnerState::Orientation orientation );
     // Retracts connector and returns previously connected to if module with moduleId exists and has given connector
     std::optional< ConnectedTo > retractConnector( ModuleId moduleId, int connector );
     // Sets given power line in connector and returns true if module with moduleId exists and has given connector
