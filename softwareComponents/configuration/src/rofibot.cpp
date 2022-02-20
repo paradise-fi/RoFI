@@ -70,6 +70,12 @@ void Module::setJointPositions( int idx, std::span< const float > p ) {
         parent->onModuleMove();
 }
 
+void Module::clearComponentPositions() {
+    _componentPosition = std::nullopt;
+    if ( parent )
+        parent->onModuleMove();
+}
+
 void Rofibot::setSpaceJointPosition( SpaceJointHandle jointId, std::span< const float > p ) {
     assert( p.size() == _spaceJoints[ jointId ].joint->positions().size() );
     _spaceJoints[ jointId ].joint->setPositions( p );

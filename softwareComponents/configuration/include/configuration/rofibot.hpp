@@ -199,9 +199,7 @@ public:
         return position * _componentPosition.value()[ idx ];
     }
 
-    void clearComponentPositions() {
-        _componentPosition = std::nullopt;
-    }
+    void clearComponentPositions();
 
     /**
      * \brief Get a vector of occupied positions relative to module origin
@@ -447,6 +445,7 @@ public:
         Module* insertedModule = _modules[ id ].module.get();
         insertedModule->parent = this;
         insertedModule->_prepareComponents();
+        _prepared = false;
         return *insertedModule;
     }
 
@@ -502,6 +501,7 @@ public:
             _spaceJoints.erase( idx );
         _modules.erase( handle );
         _idMapping.erase( id );
+        _prepared = false;
     }
 
     /**
@@ -612,6 +612,7 @@ private:
             m.position = std::nullopt;
             m.module->clearComponentPositions();
         }
+        _prepared = false;
     }
 
     void _adoptModules() {
