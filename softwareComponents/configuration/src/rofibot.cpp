@@ -71,6 +71,8 @@ void Module::setJointPositions( int idx, std::span< const float > p ) {
 }
 
 Rofibot::RoficomHandle connect( const Component& c1, const Component& c2, roficom::Orientation o ) {
+    assert( c1.type == ComponentType::Roficom && c2.type == ComponentType::Roficom && "Components are not RoFICoMs" );
+
     if ( c1.parent->parent != c2.parent->parent )
         throw std::logic_error( "Components have to be in the same rofibot" );
     Rofibot& bot = *c1.parent->parent;
