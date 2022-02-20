@@ -301,8 +301,8 @@ namespace rofi::configuration::serialization {
 
         for ( const RoficomJoint& rj : bot.roficoms() ) {
             json j;
-            j[ "from" ] = rj.sourceModule;
-            j[ "to"   ] = rj.destModule;
+            j[ "from" ] = bot.getModule( rj.sourceModule )->getId();
+            j[ "to"   ] = bot.getModule( rj.destModule )->getId();
             onUMTranslateDocs( j[ "fromCon" ], bot.getModule( rj.sourceModule )->type, rj.sourceConnector );
             onUMTranslateDocs( j[ "toCon" ]  , bot.getModule( rj.destModule )->type  , rj.destConnector );
             j[ "orientation" ] = orientationToString( rj.orientation );
@@ -312,7 +312,7 @@ namespace rofi::configuration::serialization {
 
         for ( const SpaceJoint& sj : bot.referencePoints() ) {
             json j;
-            j[ "to" ] = sj.destModule;
+            j[ "to" ] = bot.getModule( sj.destModule )->getId();
             onUMTranslateDocs( j[ "toComponent" ], bot.getModule( sj.destModule )->type, sj.destComponent );
             j[ "point" ][ "x" ] = sj.refPoint[ 0 ];
             j[ "point" ][ "y" ] = sj.refPoint[ 1 ];

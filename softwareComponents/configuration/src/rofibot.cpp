@@ -70,6 +70,77 @@ void Module::setJointPositions( int idx, std::span< const float > p ) {
         parent->onModuleMove();
 }
 
+void Rofibot::setSpaceJointPosition( SpaceJointHandle jointId, std::span< const float > p ) {
+    assert( p.size() == _spaceJoints[ jointId ].joint->positions().size() );
+    _spaceJoints[ jointId ].joint->setPositions( p );
+    _prepared = false;
+}
+
+void Rofibot::prepare() {
+    using namespace rofi::configuration::matrices;
+    _clearModulePositions();
+
+    // Setup position of space joints and extract roots
+    std::set< ModuleInfoHandle > roots;
+    for ( const SpaceJoint& j : _spaceJoints ) {
+        Matrix jointPosition = translate( j.refPoint ) * j.joint->sourceToDest();
+        ModuleInfo& mInfo = _modules[ j.destModule ];
+        Matrix componentPosition = mInfo.module->getComponentPosition( j.destComponent );
+        // Reverse the comonentPosition to get position of the module origin
+        Matrix modulePosition = jointPosition * arma::inv( componentPosition );
+        if ( mInfo.position ) {
+            if ( !equals( mInfo.position.value(), modulePosition ) )
+                throw std::runtime_error(
+                        fmt::format( "Inconsistent rooting of module {}", mInfo.module->_id ) );
+        } else {
+            mInfo.position = componentPosition;
+        }
+        roots.insert( _idMapping[ mInfo.module->_id ] );
+    }
+
+    auto dfsTraverse = [&]( ModuleInfo& m, Matrix position, auto& self ) {
+        if ( m.position ) {
+            if ( !equals( position, m.position.value() ) )
+                throw std::runtime_error(
+                        fmt::format( "Inconsistent position of module {}", m.module->_id ) );
+            return;
+        }
+
+        m.position = position;
+        // Traverse ignoring edge orientation
+        std::vector< RoficomHandle > joints;
+        std::copy( m.outJointsIdx.begin(), m.outJointsIdx.end(), std::back_inserter( joints ) );
+        std::copy( m.inJointsIdx.begin(), m.inJointsIdx.end(), std::back_inserter( joints ) );
+        for ( auto outJointIdx : joints ) {
+            const RoficomJoint& j = _moduleJoints[ outJointIdx ];
+
+            bool mIsSource = j.sourceModule == _idMapping[ m.module->_id ];
+            Matrix jointTransf = mIsSource ? j.sourceToDest() : j.destToSource();
+            Matrix jointRefPosition = position
+                                    * m.module->getComponentPosition( mIsSource
+                                                                    ? j.sourceConnector
+                                                                    : j.destConnector )
+                                    * jointTransf;
+            ModuleInfo& other = _modules[ mIsSource ? j.destModule : j.sourceModule ];
+            Matrix otherConnectorPosition = other.module->getComponentPosition( mIsSource
+                                                                              ? j.destConnector
+                                                                              : j.sourceConnector );
+            // Reverse the comonentPosition to get position of the module origin
+            Matrix otherPosition = jointRefPosition * arma::inv( otherConnectorPosition );
+            self( other, otherPosition, self );
+        }
+    };
+
+    for ( auto h : roots ) {
+        ModuleInfo& m = _modules[ h ];
+        auto pos = m.position.value();
+        m.position.reset();
+        dfsTraverse( m, pos, dfsTraverse );
+    }
+
+    _prepared = true;
+}
+
 Rofibot::RoficomHandle connect( const Component& c1, const Component& c2, roficom::Orientation o ) {
     assert( c1.type == ComponentType::Roficom && c2.type == ComponentType::Roficom && "Components are not RoFICoMs" );
 
@@ -80,7 +151,7 @@ Rofibot::RoficomHandle connect( const Component& c1, const Component& c2, rofico
     Rofibot::ModuleInfo& m2info = bot._modules[ bot._idMapping[ c2.parent->getId() ] ];
 
     auto jointId = bot._moduleJoints.insert( {
-        o, m1info.module->getId(), m2info.module->getId(),
+        o, bot._idMapping[ m1info.module->getId() ], bot._idMapping[ m2info.module->getId() ],
         m1info.module->componentIdx( c1 ), m2info.module->componentIdx( c2 )
     } );
 

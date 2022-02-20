@@ -74,62 +74,8 @@ ComponentJoint makeComponentJoint( int source, int dest, Args&&...args ) {
         source, dest );
 }
 
-/**
- * \brief Joint between two modules.
- *
- * The joint is created between two components of two modules specified by
- * module ids and corresponding component index.
- */
-struct RoficomJoint: public Joint {
-    RoficomJoint( roficom::Orientation o, ModuleId sourceModule, ModuleId destModule,
-        int sourceConnector, int destConnector)
-    : Joint( std::vector< std::pair< float, float > >{} ),
-      orientation( o ), sourceModule( sourceModule ), destModule( destModule ),
-      sourceConnector( sourceConnector ), destConnector( destConnector )
-    {}
-
-    Matrix sourceToDest() const override {
-        using namespace rofi::configuration::matrices;
-        // the "default" roficom is A-X
-        return translate( { -1, 0, 0 } ) * rotate( M_PI, { 0, 0, 1 } )
-            * rotate( M_PI, { 1, 0, 0 } )
-            * rotate( roficom::orientationToAngle( orientation ), { -1, 0, 0 } );
-    }
-
-    ATOMS_CLONEABLE( RoficomJoint );
-
-    roficom::Orientation orientation;
-    ModuleId sourceModule;
-    ModuleId destModule;
-    int sourceConnector;
-    int destConnector;
-};
-
-/**
- * \brief Joint between a fixed point in space and a module
- */
-struct SpaceJoint {
-    SpaceJoint( atoms::ValuePtr< Joint > joint, Vector refPoint, ModuleId destModule, int destComponent ):
-        joint( std::move( joint ) ),
-        refPoint( std::move( refPoint ) ),
-        destModule( destModule ),
-        destComponent( destComponent )
-    {}
-    SpaceJoint( SpaceJoint && ) = default;
-    SpaceJoint& operator=( SpaceJoint && ) = default;
-    SpaceJoint( const SpaceJoint & o ):
-        SpaceJoint( o.joint.clone(), o.refPoint, o.destModule, o.destComponent )
-    {}
-    SpaceJoint& operator=( const SpaceJoint & o ) {
-        *this = SpaceJoint( o );
-        return *this;
-    }
-
-    atoms::ValuePtr< Joint > joint;
-    Vector refPoint;
-    ModuleId destModule;
-    int destComponent;
-};
+struct RoficomJoint;
+struct SpaceJoint;
 
 class Rofibot;
 class Module;
@@ -441,10 +387,10 @@ public:
  */
 class Rofibot {
     struct ModuleInfo;
-    using ModuleInfoHandle = atoms::HandleSet< ModuleInfo >::handle_type;
 public:
-    using RoficomHandle = atoms::HandleSet< RoficomJoint >::handle_type;
-    using SpaceJointHandle = atoms::HandleSet< SpaceJoint >::handle_type;
+    using ModuleInfoHandle = atoms::HandleSet< ModuleInfo   >::handle_type;
+    using RoficomHandle    = atoms::HandleSet< RoficomJoint >::handle_type;
+    using SpaceJointHandle = atoms::HandleSet< SpaceJoint   >::handle_type;
 
     Rofibot() = default;
 
@@ -511,6 +457,15 @@ public:
         if ( !_idMapping.contains( id ) )
             return nullptr;
         return _modules[ _idMapping.at( id ) ].module.get();
+    }
+
+    /**
+     * \brief Get pointer to module with given id within the Rofibot
+     */
+    Module* getModule( ModuleInfoHandle h ) const {
+        if ( !_modules.contains( h ) )
+            return nullptr;
+        return _modules[ h ].module.get();
     }
 
     /**
@@ -613,80 +568,12 @@ public:
      * Raises std::runtime_error if the configuration is inconsistent, and,
      * therefore, it cannot be
      */
-    void prepare() {
-        using namespace rofi::configuration::matrices;
-        _clearModulePositions();
-
-        // Setup position of space joints and extract roots
-        std::set< ModuleInfoHandle > roots;
-        for ( const SpaceJoint& j : _spaceJoints ) {
-            Matrix jointPosition = translate( j.refPoint ) * j.joint->sourceToDest();
-            ModuleInfo& mInfo = _modules[ _idMapping[ j.destModule ] ];
-            Matrix componentPosition = mInfo.module->getComponentPosition( j.destComponent );
-            // Reverse the comonentPosition to get position of the module origin
-            Matrix modulePosition = jointPosition * arma::inv( componentPosition );
-            if ( mInfo.position ) {
-                if ( !equals( mInfo.position.value(), modulePosition ) )
-                    throw std::runtime_error(
-                        fmt::format( "Inconsistent rooting of module {}", mInfo.module->_id ) );
-            } else {
-                mInfo.position = componentPosition;
-            }
-            roots.insert( _idMapping[ mInfo.module->_id ] );
-        }
-
-        auto dfsTraverse = [&]( ModuleInfo& m, Matrix position, auto& self ) {
-            if ( m.position ) {
-                if ( !equals( position, m.position.value() ) )
-                    throw std::runtime_error(
-                        fmt::format( "Inconsistent position of module {}", m.module->_id ) );
-                return;
-            }
-            m.position = position;
-            // Traverse ignoring edge orientation
-            std::vector< RoficomHandle > joints;
-            std::copy( m.outJointsIdx.begin(), m.outJointsIdx.end(),
-                std::back_inserter( joints ) );
-            std::copy( m.inJointsIdx.begin(), m.inJointsIdx.end(),
-                std::back_inserter( joints ) );
-            for ( auto outJointIdx : joints ) {
-                const RoficomJoint& j = _moduleJoints[ outJointIdx ];
-
-                bool mIsSource = j.sourceModule == m.module->_id;
-                Matrix jointTransf = mIsSource ? j.sourceToDest() : j.destToSource();
-                Matrix jointRefPosition = position
-                                        * m.module->getComponentPosition( mIsSource
-                                                                        ? j.sourceConnector
-                                                                        : j.destConnector )
-                                        * jointTransf;
-                ModuleInfo& other = _modules[ _idMapping[ mIsSource ? j.destModule : j.sourceModule ] ];
-                Matrix otherConnectorPosition = other.module->getComponentPosition( mIsSource
-                                                                                  ? j.destConnector
-                                                                                  : j.sourceConnector );
-                // Reverse the comonentPosition to get position of the module origin
-                Matrix otherPosition = jointRefPosition * arma::inv( otherConnectorPosition );
-                self( other, otherPosition, self );
-            }
-        };
-
-        for ( auto h : roots ) {
-            ModuleInfo& m = _modules[ h ];
-            auto pos = m.position.value();
-            m.position.reset();
-            dfsTraverse( m, pos, dfsTraverse );
-        }
-
-        _prepared = true;
-    }
+    void prepare();
 
     /**
      * \brief Set position of a space joints specified by its id
      */
-    void setSpaceJointPosition( SpaceJointHandle jointId, std::span< const float > p ) {
-        assert( p.size() == _spaceJoints[ jointId ].joint->positions().size() );
-        _spaceJoints[ jointId ].joint->setPositions( p );
-        _prepared = false;
-    }
+    void setSpaceJointPosition( SpaceJointHandle jointId, std::span< const float > p );
 
     /**
      * \brief Get position of a module specified by its id
@@ -757,6 +644,66 @@ private:
     friend SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&... args );
 };
 
+
+
+/**
+ * \brief Joint between two modules.
+ *
+ * The joint is created between two components of two modules specified by
+ * module ids and corresponding component index.
+ */
+struct RoficomJoint : public Joint {
+    RoficomJoint( roficom::Orientation o, Rofibot::ModuleInfoHandle sourceModule, Rofibot::ModuleInfoHandle destModule,
+        int sourceConnector, int destConnector)
+    : Joint( std::vector< std::pair< float, float > >{} ),
+      orientation( o ), sourceModule( sourceModule ), destModule( destModule ),
+      sourceConnector( sourceConnector ), destConnector( destConnector )
+    {}
+
+    Matrix sourceToDest() const override {
+        using namespace rofi::configuration::matrices;
+        // the "default" roficom is A-X
+        return translate( { -1, 0, 0 } ) * rotate( M_PI, { 0, 0, 1 } )
+            * rotate( M_PI, { 1, 0, 0 } )
+            * rotate( roficom::orientationToAngle( orientation ), { -1, 0, 0 } );
+    }
+
+    ATOMS_CLONEABLE( RoficomJoint );
+
+    roficom::Orientation orientation;
+    Rofibot::ModuleInfoHandle sourceModule;
+    Rofibot::ModuleInfoHandle destModule;
+    int sourceConnector;
+    int destConnector;
+};
+
+/**
+ * \brief Joint between a fixed point in space and a module
+ */
+struct SpaceJoint {
+    SpaceJoint( atoms::ValuePtr< Joint > joint, Vector refPoint
+              , Rofibot::ModuleInfoHandle destModule, int destComponent ):
+        joint( std::move( joint ) ),
+        refPoint( std::move( refPoint ) ),
+        destModule( destModule ),
+        destComponent( destComponent )
+    {}
+    SpaceJoint( SpaceJoint && ) = default;
+    SpaceJoint& operator=( SpaceJoint && ) = default;
+    SpaceJoint( const SpaceJoint & o ):
+        SpaceJoint( o.joint.clone(), o.refPoint, o.destModule, o.destComponent )
+    {}
+    SpaceJoint& operator=( const SpaceJoint & o ) {
+        *this = SpaceJoint( o );
+        return *this;
+    }
+
+    atoms::ValuePtr< Joint > joint;
+    Vector refPoint;
+    Rofibot::ModuleInfoHandle destModule;
+    int destComponent;
+};
+
 /**
  * \brief Connect two modules via connector
  *
@@ -783,7 +730,7 @@ Rofibot::SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&..
     auto jointId = bot._spaceJoints.insert( SpaceJoint(
         atoms::ValuePtr< Joint >( std::make_unique< JointT >( std::forward< Args >( args )... ) ),
         refpoint,
-        info.module->getId(),
+        bot._idMapping[ info.module->getId() ],
         info.module->componentIdx( c )
     ) );
 

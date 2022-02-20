@@ -205,17 +205,19 @@ void updateModuleInScene( vtkRenderer * renderer,
 
 void setActiveConnectors(
         const atoms::HandleSet< rofi::configuration::RoficomJoint > & roficomConnections,
-        std::map< rofi::configuration::ModuleId, ModuleRenderInfo > & moduleRenderInfos )
+        std::map< rofi::configuration::ModuleId, ModuleRenderInfo > & moduleRenderInfos,
+        const rofi::configuration::Rofibot & newConfiguration )
 {
     // TODO get from the inner state
     for ( auto & moduleRenderInfo : moduleRenderInfos ) {
         moduleRenderInfo.second.activeConnectors.clear();
     }
     for ( const auto & roficomConnection : roficomConnections ) {
-        moduleRenderInfos[ roficomConnection.sourceModule ].activeConnectors.insert(
-                roficomConnection.sourceConnector );
-        moduleRenderInfos[ roficomConnection.destModule ].activeConnectors.insert(
-                roficomConnection.destConnector );
+        rofi::configuration::ModuleId source = newConfiguration.getModule( roficomConnection.sourceModule )->getId();
+        rofi::configuration::ModuleId dest   = newConfiguration.getModule( roficomConnection.destModule )->getId();
+
+        moduleRenderInfos[ source ].activeConnectors.insert( roficomConnection.sourceConnector );
+        moduleRenderInfos[ dest ].activeConnectors.insert( roficomConnection.destConnector );
     }
 }
 
@@ -227,7 +229,7 @@ std::map< rofi::configuration::ModuleId, ModuleRenderInfo > addConfigurationToRe
     assert( renderer != nullptr );
 
     std::map< rofi::configuration::ModuleId, ModuleRenderInfo > moduleRenderInfos;
-    setActiveConnectors( newConfiguration.roficoms(), moduleRenderInfos );
+    setActiveConnectors( newConfiguration.roficoms(), moduleRenderInfos, newConfiguration );
 
     for ( const auto & moduleInfo : newConfiguration.modules() ) {
         assert( moduleInfo.module.get() );
@@ -251,7 +253,7 @@ void updateConfigurationInRenderer(
 {
     assert( renderer != nullptr );
 
-    setActiveConnectors( newConfiguration.roficoms(), moduleRenderInfos );
+    setActiveConnectors( newConfiguration.roficoms(), moduleRenderInfos, newConfiguration );
 
     auto previousModules =
             std::unordered_map< rofi::configuration::ModuleId,
