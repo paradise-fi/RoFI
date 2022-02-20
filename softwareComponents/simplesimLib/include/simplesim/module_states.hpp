@@ -241,66 +241,7 @@ private:
 
     std::pair< std::shared_ptr< const rofi::configuration::Rofibot >,
                std::vector< PositionReached > >
-            computeNextIteration( std::chrono::duration< float > duration ) const
-    {
-        auto new_configuration = _physicalModulesConfiguration.visit( []( const auto & configPtr ) {
-            assert( configPtr );
-            return std::make_shared< rofi::configuration::Rofibot >( *configPtr );
-        } );
-
-        std::vector< PositionReached > positionsReached;
-        assert( new_configuration );
-        for ( auto & moduleInfo : new_configuration->modules() ) {
-            assert( moduleInfo.module.get() );
-            auto & module_ = moduleInfo.module;
-
-            auto moduleInnerStateOpt = getModuleInnerState( module_->getId() );
-            assert( moduleInnerStateOpt );
-            auto & moduleInnerState = moduleInnerStateOpt->get();
-
-            std::span jointInnerStates = moduleInnerState.joints();
-            std::ranges::view auto jointConfigurations = module_->configurableJoints();
-            assert( std::ssize( jointInnerStates )
-                    == std::ranges::distance( jointConfigurations ) );
-
-            auto enumerated = std::views::transform( [ i = 0UL ]< typename T >( T && value ) mutable {
-                return std::tuple< T, size_t >( std::forward< T >( value ), i++ );
-            } );
-            for ( auto [ jointConfiguration, i ] : jointConfigurations | enumerated ) {
-                static_assert(
-                        std::is_same_v< decltype( jointConfiguration ), configuration::Joint & > );
-                const auto & jointInnerState = jointInnerStates[ i ];
-
-                assert( jointConfiguration.positions().size() == 1 );
-                assert( jointConfiguration.jointLimits().size() == 1 );
-                auto currentPosition = jointConfiguration.positions().front();
-                auto jointLimits = jointConfiguration.jointLimits().front();
-
-                auto [ posReached,
-                       newPosition ] = jointInnerState.computeNewPosition( currentPosition,
-                                                                           duration );
-                if ( posReached ) {
-                    positionsReached.push_back( PositionReached{ .moduleId = module_->getId(),
-                                                                 .joint = i,
-                                                                 .position = newPosition } );
-                }
-
-                assert( jointLimits.first <= jointLimits.second );
-                auto clampedNewPosition = std::clamp( newPosition,
-                                                      jointLimits.first,
-                                                      jointLimits.second );
-
-                jointConfiguration.setPositions( std::array{ clampedNewPosition } );
-            }
-        }
-
-        new_configuration->prepare();
-        if ( auto [ ok, err ] = new_configuration->isValid( rofi::configuration::SimpleCollision{} );
-             !ok ) {
-            throw std::runtime_error( err );
-        }
-        return std::pair( new_configuration, std::move( positionsReached ) );
-    }
+            computeNextIteration( std::chrono::duration< float > duration ) const;
 
 public:
     std::shared_ptr< const rofi::configuration::Rofibot > currentConfiguration() const
