@@ -169,7 +169,6 @@ std::nullopt_t extendConnector( ModuleStates & moduleStates, const RofiCmd & rof
     ModuleId moduleId = rofiCmd.rofiid();
     int connector = rofiCmd.connectorcmd().connector();
 
-    // TODO check somewhere for new connections
     if ( moduleStates.extendConnector( moduleId, connector ) ) {
         return std::nullopt;
     }
