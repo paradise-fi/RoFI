@@ -101,27 +101,24 @@ public:
     {
         assert( newConfiguration );
         assert( newConfiguration->isValid( rofi::configuration::SimpleCollision() ).first );
-        _currentConfiguration.visit( [ &newConfiguration ]( auto & currConfig ) {
-            currConfig = std::move( newConfiguration );
-        } );
+        _currentConfiguration.replace( std::move( newConfiguration ) );
     }
 
     // Can be called from any thread
     void onSettingsResponse( const msgs::SettingsState & settingsState )
     {
-        _currentSettings.visit(
-                [ &settingsState ]( auto & currentSettings ) { currentSettings = settingsState; } );
+        _currentSettings.replace( settingsState );
     }
 
 private:
     std::shared_ptr< const rofi::configuration::Rofibot > getCurrentConfig() const
     {
-        return _currentConfiguration.visit( [ this ]( const auto & config ) { return config; } );
+        return _currentConfiguration.copy();
     }
 
     msgs::SettingsState getCurrentSettings() const
     {
-        return _currentSettings.visit( [ this ]( const auto & settings ) { return settings; } );
+        return _currentSettings.copy();
     }
 
     void clearRenderer();

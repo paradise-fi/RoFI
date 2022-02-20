@@ -46,10 +46,10 @@ public:
                           return innerStatesFromConfiguration( *configPtr );
                       } ) )
     {
-        assert( _physicalModulesConfiguration->get() );
-        assert( _physicalModulesConfiguration->get()
-                        ->isValid( rofi::configuration::SimpleCollision() )
-                        .first );
+        assert( _physicalModulesConfiguration.visit( []( const auto & configuration ) {
+            assert( configuration );
+            return configuration->isValid( rofi::configuration::SimpleCollision() ).first;
+        } ) );
     }
 
     // Returns rofi description if module with moduleId exists
@@ -305,7 +305,7 @@ private:
 private:
     std::shared_ptr< const rofi::configuration::Rofibot > currentConfiguration() const
     {
-        auto result = _physicalModulesConfiguration.visit( []( auto copy ) { return copy; } );
+        auto result = _physicalModulesConfiguration.copy();
         assert( result );
         return result;
     }
