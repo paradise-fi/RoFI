@@ -586,6 +586,22 @@ public:
         return _modules[ _idMapping[ id ] ].position.value();
     }
 
+    void disconnect( RoficomHandle h ) {
+        if ( !_moduleJoints.contains( h ) )
+            return;
+
+        _moduleJoints.erase( h );
+        _prepared = false;
+    }
+
+    void disconnect( SpaceJointHandle h ) {
+        if ( !_spaceJoints.contains( h ) )
+            return;
+
+        _spaceJoints.erase( h );
+        _prepared = false;
+    }
+
 private:
     void onModuleMove() {
         _prepared = false;
@@ -643,8 +659,6 @@ private:
     template < typename JointT, typename... Args >
     friend SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&... args );
 };
-
-
 
 /**
  * \brief Joint between two modules.
