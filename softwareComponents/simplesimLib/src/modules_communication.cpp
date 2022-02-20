@@ -5,9 +5,7 @@ using namespace rofi::simplesim;
 
 bool ModulesCommunication::addNewModule( ModuleId moduleId )
 {
-    return _modules.visit( [ moduleId ]( auto & modules ) {
-        return modules.emplace( moduleId, nullptr ).second;
-    } );
+    return _modules->emplace( moduleId, nullptr ).second;
 }
 
 std::optional< ModuleId > ModulesCommunication::lockFreeModule()

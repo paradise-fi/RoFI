@@ -20,7 +20,7 @@ void Simplesim::run( Simplesim::OnConfigurationUpdate onConfigurationUpdate,
     while ( !stopToken.stop_requested() ) {
         auto startTime = std::chrono::steady_clock::now();
 
-        auto settings = _settings.visit( []( auto settings ) { return settings; } );
+        auto settings = _settings.copy();
         if ( settings.isPaused() ) {
             // TODO reactive waiting
             std::this_thread::sleep_for( std::chrono::milliseconds( 100 ) );
