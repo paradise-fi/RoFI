@@ -52,6 +52,10 @@ public:
     template < typename F >
     auto visit( F && f )
     {
+        using ReturnT = decltype( f( _data ) );
+        static_assert( !std::is_lvalue_reference_v< ReturnT > );
+        static_assert( !std::is_rvalue_reference_v< ReturnT > );
+
         auto _lock = std::lock_guard( _mutex );
         return f( _data );
     }
@@ -59,6 +63,10 @@ public:
     template < typename F >
     auto visit( F && f ) const
     {
+        using ReturnT = decltype( f( _data ) );
+        static_assert( !std::is_lvalue_reference_v< ReturnT > );
+        static_assert( !std::is_rvalue_reference_v< ReturnT > );
+
         auto _lock = std::lock_guard( _mutex );
         return f( _data );
     }
@@ -66,8 +74,23 @@ public:
     template < typename F >
     auto visit_shared( F && f ) const
     {
+        using ReturnT = decltype( f( _data ) );
+        static_assert( !std::is_lvalue_reference_v< ReturnT > );
+        static_assert( !std::is_rvalue_reference_v< ReturnT > );
+
         auto _lock = std::shared_lock( _mutex );
         return f( _data );
+    }
+
+    template < typename... Args >
+    void replace( Args &&... args )
+    {
+        visit( [ & ]( T & value ) { value = T( std::forward< Args >( args )... ); } );
+    }
+
+    T copy() const
+    {
+        return visit( []( T copy ) { return copy; } );
     }
 
 private:
