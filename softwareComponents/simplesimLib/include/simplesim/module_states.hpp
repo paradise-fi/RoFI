@@ -31,10 +31,10 @@ public:
     using JointCapabilities = rofi::messages::JointCapabilities;
     using JointVelocityControl = JointInnerState::VelocityControl;
     using JointPositionControl = JointInnerState::PositionControl;
+    using RofibotConfigurationPtr = std::shared_ptr< const rofi::configuration::Rofibot >;
 
 
-    explicit ModuleStates(
-            std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration )
+    explicit ModuleStates( RofibotConfigurationPtr rofibotConfiguration )
             : _physicalModulesConfiguration(
                     rofibotConfiguration
                             ? std::move( rofibotConfiguration )
@@ -102,110 +102,102 @@ public:
 
 
     template < std::invocable< RofiResp > Callback >
-    std::shared_ptr< const rofi::configuration::Rofibot > updateToNextIteration(
-            std::chrono::duration< float > duration,
-            Callback onRespCallback )
+    auto updateToNextIteration( std::chrono::duration< float > simStepTime,
+                                Callback onRespCallback ) -> RofibotConfigurationPtr
     {
-        auto [ new_configuration, positionsReached ] = computeNextIteration( duration );
-        assert( new_configuration );
+        auto [ newConfiguration, positionsReached ] = computeNextIteration( simStepTime );
+        assert( newConfiguration );
 
-        auto old_configuration = _physicalModulesConfiguration.visit(
-                [ &new_configuration ]( auto & configuration ) {
-                    auto old_configuration = std::move( configuration );
-                    configuration = new_configuration;
-                    return old_configuration;
+        auto oldConfiguration = _physicalModulesConfiguration.visit(
+                [ &newConfiguration ]( auto & configuration ) {
+                    auto oldConfiguration = std::move( configuration );
+                    configuration = newConfiguration;
+                    return oldConfiguration;
                 } );
 
-        _configurationHistory->push_back( std::move( old_configuration ) );
+        _configurationHistory->push_back( std::move( oldConfiguration ) );
 
         for ( const auto & posReached : positionsReached ) {
             posReached.getInnerState( _moduleInnerStates ).holdCurrentPosition();
             onRespCallback( posReached.getRofiResp() );
         }
-        return std::move( new_configuration );
+        return std::move( newConfiguration );
     }
 
+    auto currentConfiguration() const -> RofibotConfigurationPtr
+    {
+        auto result = _physicalModulesConfiguration.copy();
+        assert( result );
+        return result;
+    }
 
 private:
-    std::optional< std::reference_wrapper< const ModuleInnerState > > getModuleInnerState(
-            ModuleId moduleId ) const
+    class PositionReached;
+
+    auto computeNextIteration( std::chrono::duration< float > simStepTime ) const
+            -> std::pair< RofibotConfigurationPtr, std::vector< PositionReached > >;
+
+    auto getModuleInnerState( ModuleId moduleId ) const -> const ModuleInnerState *
     {
         auto innerState = _moduleInnerStates.find( moduleId );
         if ( innerState == _moduleInnerStates.end() ) {
-            return {};
+            return nullptr;
         }
 
-        return innerState->second;
+        return &innerState->second;
     }
-    std::optional< std::reference_wrapper< ModuleInnerState > > getModuleInnerState(
-            ModuleId moduleId )
+    auto getModuleInnerState( ModuleId moduleId ) -> ModuleInnerState *
     {
         auto innerState = _moduleInnerStates.find( moduleId );
         if ( innerState == _moduleInnerStates.end() ) {
-            return {};
+            return nullptr;
         }
 
-        return innerState->second;
+        return &innerState->second;
     }
 
-    std::optional< std::reference_wrapper< const ConnectorInnerState > > getConnectorInnerState(
-            ModuleId moduleId,
-            int connector ) const
+    auto getConnectorInnerState( ModuleId moduleId, int connector ) const
+            -> const ConnectorInnerState *
     {
-        auto moduleInnerState = getModuleInnerState( moduleId );
-        if ( !moduleInnerState ) {
-            return {};
+        if ( auto * moduleInnerState = getModuleInnerState( moduleId ) ) {
+            auto connectorInnerStates = moduleInnerState->connectors();
+            if ( connector >= 0 && to_unsigned( connector ) < connectorInnerStates.size() ) {
+                return &connectorInnerStates[ connector ];
+            }
         }
-        auto connectorInnerStates = moduleInnerState->get().connectors();
-        if ( connector < 0 || size_t( connector ) >= connectorInnerStates.size() ) {
-            return {};
-        }
-        return connectorInnerStates[ connector ];
+        return nullptr;
     }
-    std::optional< std::reference_wrapper< ConnectorInnerState > > getConnectorInnerState(
-            ModuleId moduleId,
-            int connector )
+    auto getConnectorInnerState( ModuleId moduleId, int connector ) -> ConnectorInnerState *
     {
-        auto moduleInnerState = getModuleInnerState( moduleId );
-        if ( !moduleInnerState ) {
-            return {};
+        if ( auto * moduleInnerState = getModuleInnerState( moduleId ) ) {
+            auto connectorInnerStates = moduleInnerState->connectors();
+            if ( connector >= 0 && to_unsigned( connector ) < connectorInnerStates.size() ) {
+                return &connectorInnerStates[ connector ];
+            }
         }
-        auto connectorInnerStates = moduleInnerState->get().connectors();
-        if ( connector < 0 || size_t( connector ) >= connectorInnerStates.size() ) {
-            return {};
-        }
-        return connectorInnerStates[ connector ];
+        return nullptr;
     }
 
-    std::optional< std::reference_wrapper< const JointInnerState > > getJointInnerState(
-            ModuleId moduleId,
-            int joint ) const
+    auto getJointInnerState( ModuleId moduleId, int joint ) const -> const JointInnerState *
     {
-        auto moduleInnerState = getModuleInnerState( moduleId );
-        if ( !moduleInnerState ) {
-            return {};
+        if ( auto * moduleInnerState = getModuleInnerState( moduleId ) ) {
+            auto jointInnerStates = moduleInnerState->joints();
+            if ( joint >= 0 && to_unsigned( joint ) < jointInnerStates.size() ) {
+                return &jointInnerStates[ joint ];
+            }
         }
-        auto jointInnerStates = moduleInnerState->get().joints();
-        if ( joint < 0 || size_t( joint ) >= jointInnerStates.size() ) {
-            return {};
-        }
-        return jointInnerStates[ joint ];
+        return nullptr;
     }
-    std::optional< std::reference_wrapper< JointInnerState > > getJointInnerState(
-            ModuleId moduleId,
-            int joint )
+    auto getJointInnerState( ModuleId moduleId, int joint ) -> JointInnerState *
     {
-        auto moduleInnerState = getModuleInnerState( moduleId );
-        if ( !moduleInnerState ) {
-            return {};
+        if ( auto * moduleInnerState = getModuleInnerState( moduleId ) ) {
+            auto jointInnerStates = moduleInnerState->joints();
+            if ( joint >= 0 && to_unsigned( joint ) < jointInnerStates.size() ) {
+                return &jointInnerStates[ joint ];
+            }
         }
-        auto jointInnerStates = moduleInnerState->get().joints();
-        if ( joint < 0 || size_t( joint ) >= jointInnerStates.size() ) {
-            return {};
-        }
-        return jointInnerStates[ joint ];
+        return nullptr;
     }
-
 
     class PositionReached
     {
@@ -239,29 +231,14 @@ private:
         }
     };
 
-    std::pair< std::shared_ptr< const rofi::configuration::Rofibot >,
-               std::vector< PositionReached > >
-            computeNextIteration( std::chrono::duration< float > duration ) const;
-
-public:
-    std::shared_ptr< const rofi::configuration::Rofibot > currentConfiguration() const
-    {
-        auto result = _physicalModulesConfiguration.copy();
-        assert( result );
-        return result;
-    }
-
-private:
     static std::map< ModuleId, ModuleInnerState > innerStatesFromConfiguration(
             const rofi::configuration::Rofibot & rofibotConfiguration );
 
 private:
-    atoms::Guarded< std::shared_ptr< const rofi::configuration::Rofibot > >
-            _physicalModulesConfiguration;
+    atoms::Guarded< RofibotConfigurationPtr > _physicalModulesConfiguration;
     std::map< ModuleId, ModuleInnerState > _moduleInnerStates;
 
-    atoms::Guarded< std::vector< std::shared_ptr< const rofi::configuration::Rofibot > > >
-            _configurationHistory;
+    atoms::Guarded< std::vector< RofibotConfigurationPtr > > _configurationHistory;
 };
 
 } // namespace rofi::simplesim
