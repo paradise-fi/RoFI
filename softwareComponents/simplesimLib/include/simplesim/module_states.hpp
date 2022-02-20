@@ -19,8 +19,158 @@
 
 namespace rofi::simplesim
 {
-class ModuleStates
+namespace detail
 {
+    struct ConfigurationUpdateEvents {
+        class PositionReached {
+        public:
+            ModuleId moduleId;
+            int joint;
+            float position;
+
+            auto getInnerState( std::map< ModuleId, ModuleInnerState > & moduleInnerStates ) const
+                    -> JointInnerState &
+            {
+                auto moduleStateIt = moduleInnerStates.find( moduleId );
+                assert( moduleStateIt != moduleInnerStates.end() );
+
+                std::span joints = moduleStateIt->second.joints();
+                assert( joint >= 0 && to_unsigned( joint ) < joints.size() );
+                return joints[ joint ];
+            }
+
+            auto getRofiResp() const -> rofi::messages::RofiResp
+            {
+                rofi::messages::RofiResp rofiResp;
+                rofiResp.set_rofiid( moduleId );
+                rofiResp.set_resptype( rofi::messages::RofiCmd::JOINT_CMD );
+                auto & jointResp = *rofiResp.mutable_jointresp();
+                jointResp.set_joint( joint );
+                jointResp.set_resptype( rofi::messages::JointCmd::SET_POS_WITH_SPEED );
+                jointResp.set_value( position );
+                return rofiResp;
+            }
+        };
+
+        struct Connector {
+            ModuleId moduleId;
+            int connIdx;
+
+            bool operator==( const Connector & ) const = default;
+
+            auto getInnerState( std::map< ModuleId, ModuleInnerState > & moduleInnerStates ) const
+                    -> ConnectorInnerState &
+            {
+                auto moduleStateIt = moduleInnerStates.find( moduleId );
+                assert( moduleStateIt != moduleInnerStates.end() );
+
+                std::span connectors = moduleStateIt->second.connectors();
+                assert( connIdx >= 0 && to_unsigned( connIdx ) < connectors.size() );
+                return connectors[ connIdx ];
+            }
+        };
+
+        class ConnectionChanged {
+        public:
+            Connector lhs;
+            Connector rhs;
+            std::optional< rofi::configuration::roficom::Orientation > orientation;
+
+            /// Updates the connection of the inner connector states.
+            ///
+            /// If `orientation` has a value, it connects the connectors with this orientation.
+            /// Otherwise disconnects them.
+            ///
+            /// Requires that `lhs != rhs`.
+            void updateInnerStates(
+                    std::map< ModuleId, ModuleInnerState > & moduleInnerStates ) const
+            {
+                if ( orientation ) {
+                    connectInnerStates( moduleInnerStates );
+                } else {
+                    resetInnerStates( moduleInnerStates );
+                }
+            }
+
+            /// Connects the inner connector states.
+            /// Requires that `lhs != rhs` and that `orientation` has value.
+            void connectInnerStates(
+                    std::map< ModuleId, ModuleInnerState > & moduleInnerStates ) const
+            {
+                assert( lhs != rhs );
+                assert( orientation );
+                auto & lhsInner = lhs.getInnerState( moduleInnerStates );
+                auto & rhsInner = rhs.getInnerState( moduleInnerStates );
+
+                if ( lhsInner.connectedTo().has_value() || rhsInner.connectedTo().has_value() ) {
+                    using ConnectedToValue = ConnectorInnerState::OtherConnector;
+                    assert( lhsInner.connectedTo().has_value() );
+                    assert( rhsInner.connectedTo().has_value() );
+                    assert( lhsInner.connectedTo()
+                            == ConnectedToValue( rhs.moduleId, rhs.connIdx, *orientation ) );
+                    assert( rhsInner.connectedTo()
+                            == ConnectedToValue( lhs.moduleId, lhs.connIdx, *orientation ) );
+                }
+
+                lhsInner.setConnectedTo( rhs.moduleId, rhs.connIdx, *orientation );
+                rhsInner.setConnectedTo( lhs.moduleId, lhs.connIdx, *orientation );
+            }
+            /// Disconnects the inner connector states.
+            /// Requires that `lhs != rhs` and that `orientation` has no value.
+            void resetInnerStates(
+                    std::map< ModuleId, ModuleInnerState > & moduleInnerStates ) const
+            {
+                assert( lhs != rhs );
+                assert( !orientation );
+
+                [[maybe_unused]] auto lhsConnectedTo = lhs.getInnerState( moduleInnerStates )
+                                                               .resetConnectedTo();
+                [[maybe_unused]] auto rhsConnectedTo = rhs.getInnerState( moduleInnerStates )
+                                                               .resetConnectedTo();
+
+                if ( lhsConnectedTo.has_value() || rhsConnectedTo.has_value() ) {
+                    assert( lhsConnectedTo.has_value() );
+                    assert( rhsConnectedTo.has_value() );
+                    assert( lhsConnectedTo->moduleId == rhs.moduleId
+                            && lhsConnectedTo->connector == rhs.connIdx );
+                    assert( rhsConnectedTo->moduleId == lhs.moduleId
+                            && rhsConnectedTo->connector == lhs.connIdx );
+                    assert( lhsConnectedTo->orientation == rhsConnectedTo->orientation );
+                }
+            }
+        };
+
+        std::vector< PositionReached > positionsReached;
+        std::vector< ConnectionChanged > connectionsChanged;
+        std::vector< Connector > connectorsToFinilizePosition;
+    };
+
+    inline auto connectToNearbyConnector( const rofi::configuration::Component & roficom )
+            -> std::optional< ConfigurationUpdateEvents::ConnectionChanged >
+    {
+        using CUE = ConfigurationUpdateEvents;
+        assert( roficom.type == rofi::configuration::ComponentType::Roficom );
+
+        if ( auto nearConnectorPair = roficom.getNearConnector() ) {
+            const auto & [ nearConnector, connectionOrientation ] = *nearConnectorPair;
+            assert( nearConnector.type == rofi::configuration::ComponentType::Roficom );
+            configuration::connect( roficom, nearConnector, connectionOrientation );
+
+            assert( roficom.parent );
+            assert( nearConnector.parent );
+            return CUE::ConnectionChanged{
+                    .lhs = CUE::Connector{ .moduleId = roficom.parent->getId(),
+                                           .connIdx = roficom.getIndexInParent() },
+                    .rhs = CUE::Connector{ .moduleId = nearConnector.parent->getId(),
+                                           .connIdx = nearConnector.getIndexInParent() },
+                    .orientation = { connectionOrientation } };
+        }
+        return std::nullopt;
+    }
+} // namespace detail
+
+
+class ModuleStates {
     static constexpr float maxJointSpeed = 1.;
 
 public:
@@ -79,12 +229,6 @@ public:
 
     // Extends connector and returns true if module with moduleId exists and has given connector
     bool extendConnector( ModuleId moduleId, int connector );
-    // Extends connector and returns true if modules with moduleId exist and have given connectors
-    bool connectConnectors( ModuleId lhsModuleId,
-                            int lhsConnector,
-                            ModuleId rhsModuleId,
-                            int rhsConnector,
-                            ConnectorInnerState::Orientation orientation );
     // Retracts connector and returns previously connected to if module with moduleId exists and has given connector
     std::optional< ConnectedTo > retractConnector( ModuleId moduleId, int connector );
     // Sets given power line in connector and returns true if module with moduleId exists and has given connector
@@ -105,7 +249,7 @@ public:
     auto updateToNextIteration( std::chrono::duration< float > simStepTime,
                                 Callback onRespCallback ) -> RofibotConfigurationPtr
     {
-        auto [ newConfiguration, positionsReached ] = computeNextIteration( simStepTime );
+        auto [ newConfiguration, updateEvents ] = computeNextIteration( simStepTime );
         assert( newConfiguration );
 
         auto oldConfiguration = _physicalModulesConfiguration.visit(
@@ -117,9 +261,15 @@ public:
 
         _configurationHistory->push_back( std::move( oldConfiguration ) );
 
-        for ( const auto & posReached : positionsReached ) {
+        for ( const auto & posReached : updateEvents.positionsReached ) {
             posReached.getInnerState( _moduleInnerStates ).holdCurrentPosition();
             onRespCallback( posReached.getRofiResp() );
+        }
+        for ( const auto & connection : updateEvents.connectionsChanged ) {
+            connection.updateInnerStates( _moduleInnerStates );
+        }
+        for ( const auto & connector : updateEvents.connectorsToFinilizePosition ) {
+            connector.getInnerState( _moduleInnerStates ).finilizePosition();
         }
         return std::move( newConfiguration );
     }
@@ -132,10 +282,8 @@ public:
     }
 
 private:
-    class PositionReached;
-
     auto computeNextIteration( std::chrono::duration< float > simStepTime ) const
-            -> std::pair< RofibotConfigurationPtr, std::vector< PositionReached > >;
+            -> std::pair< RofibotConfigurationPtr, detail::ConfigurationUpdateEvents >;
 
     auto getModuleInnerState( ModuleId moduleId ) const -> const ModuleInnerState *
     {
@@ -198,38 +346,6 @@ private:
         }
         return nullptr;
     }
-
-    class PositionReached
-    {
-    public:
-        ModuleId moduleId;
-        size_t joint;
-        float position;
-
-        JointInnerState & getInnerState(
-                std::map< ModuleId, ModuleInnerState > & moduleInnerStates ) const
-        {
-            auto moduleStateIt = moduleInnerStates.find( moduleId );
-            assert( moduleStateIt != moduleInnerStates.end() );
-
-            std::span joints = moduleStateIt->second.joints();
-            assert( joint < joints.size() );
-            return joints[ joint ];
-        }
-
-        rofi::messages::RofiResp getRofiResp() const
-        {
-            rofi::messages::RofiResp rofiResp;
-            rofiResp.set_rofiid( moduleId );
-            rofiResp.set_resptype( rofi::messages::RofiCmd::JOINT_CMD );
-            auto & jointResp = *rofiResp.mutable_jointresp();
-            assert( joint <= INT_MAX );
-            jointResp.set_joint( static_cast< int >( joint ) );
-            jointResp.set_resptype( rofi::messages::JointCmd::SET_POS_WITH_SPEED );
-            jointResp.set_value( position );
-            return rofiResp;
-        }
-    };
 
     static std::map< ModuleId, ModuleInnerState > innerStatesFromConfiguration(
             const rofi::configuration::Rofibot & rofibotConfiguration );

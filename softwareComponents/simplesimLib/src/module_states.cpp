@@ -5,6 +5,41 @@ using namespace rofi::configuration;
 using namespace rofi::simplesim;
 
 
+auto removeConnection( const rofi::configuration::Component & roficom )
+        -> std::optional< detail::ConfigurationUpdateEvents::ConnectionChanged >
+{
+    using CUE = detail::ConfigurationUpdateEvents;
+
+    assert( roficom.type == ComponentType::Roficom );
+    assert( roficom.parent != nullptr );
+    assert( roficom.parent->parent != nullptr );
+
+    Rofibot & rofibot = *roficom.parent->parent;
+
+    auto thisConnector = CUE::Connector{ .moduleId = roficom.parent->getId(),
+                                         .connIdx = roficom.getIndexInParent() };
+    auto toConnector = [ &rofibot ]( Rofibot::ModuleInfoHandle moduleHandle, int connIdx ) {
+        Module * module_ = rofibot.getModule( moduleHandle );
+        assert( module_ != nullptr );
+        return CUE::Connector{ .moduleId = module_->getId(), .connIdx = connIdx };
+    };
+
+    const auto & connections = rofibot.roficomConnections();
+    for ( auto connIt = connections.begin(); connIt != connections.end(); ++connIt ) {
+        auto sourceConnector = toConnector( connIt->sourceModule, connIt->sourceConnector );
+        auto destConnector = toConnector( connIt->destModule, connIt->destConnector );
+
+        if ( thisConnector == sourceConnector || thisConnector == destConnector ) {
+            rofibot.disconnect( connIt.get_handle() );
+            return CUE::ConnectionChanged{ .lhs = sourceConnector,
+                                           .rhs = destConnector,
+                                           .orientation = std::nullopt };
+        }
+    }
+    return std::nullopt;
+}
+
+
 std::optional< ModuleStates::RofiDescription > ModuleStates::getDescription(
         ModuleId moduleId ) const
 {
@@ -134,27 +169,6 @@ bool ModuleStates::extendConnector( ModuleId moduleId, int connector )
     return false;
 }
 
-bool ModuleStates::connectConnectors( ModuleId lhsModuleId,
-                                      int lhsConnector,
-                                      ModuleId rhsModuleId,
-                                      int rhsConnector,
-                                      ConnectorInnerState::Orientation orientation )
-{
-    using rofi::simplesim::ConnectorInnerState;
-
-    if ( auto lhsConnectorInnerStateOpt = getConnectorInnerState( lhsModuleId, lhsConnector ) ) {
-        ConnectorInnerState & lhsConnectorInnerState = *lhsConnectorInnerStateOpt;
-        if ( auto rhsConnectorInnerStateOpt = getConnectorInnerState( rhsModuleId, rhsConnector ) )
-        {
-            ConnectorInnerState & rhsConnectorInnerState = *rhsConnectorInnerStateOpt;
-            lhsConnectorInnerState.setConnectedTo( rhsModuleId, rhsConnector, orientation );
-            rhsConnectorInnerState.setConnectedTo( lhsModuleId, lhsConnector, orientation );
-            return true;
-        }
-    }
-    return false;
-}
-
 std::optional< ModuleStates::ConnectedTo > ModuleStates::retractConnector( ModuleId moduleId,
                                                                            int connector )
 {
@@ -205,15 +219,16 @@ bool ModuleStates::setConnectorPower( ModuleId moduleId,
 }
 
 auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepTime ) const
-        -> std::pair< ModuleStates::RofibotConfigurationPtr,
-                      std::vector< ModuleStates::PositionReached > >
+        -> std::pair< RofibotConfigurationPtr, detail::ConfigurationUpdateEvents >
 {
+    using CUE = detail::ConfigurationUpdateEvents;
+
     auto currentConfig = currentConfiguration();
     assert( currentConfig );
     auto newConfiguration = std::make_shared< Rofibot >( *currentConfig );
     assert( newConfiguration );
 
-    std::vector< PositionReached > positionsReached;
+    CUE updateEvents;
     for ( auto & moduleInfo : newConfiguration->modules() ) {
         assert( moduleInfo.module.get() );
         auto & module_ = *moduleInfo.module;
@@ -221,16 +236,18 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
         auto * moduleInnerState = getModuleInnerState( module_.getId() );
         assert( moduleInnerState );
 
+        constexpr auto enumerated = [] {
+            return std::views::transform( [ i = 0UL ]< typename T >( T && value ) mutable {
+                return std::tuple< T, size_t >( std::forward< T >( value ), i++ );
+            } );
+        };
 
         // Update joint positions
         std::span jointInnerStates = moduleInnerState->joints();
         std::ranges::view auto jointConfigurations = module_.configurableJoints();
         assert( std::ssize( jointInnerStates ) == std::ranges::distance( jointConfigurations ) );
 
-        auto enumerated = std::views::transform( [ i = 0UL ]< typename T >( T && value ) mutable {
-            return std::tuple< T, size_t >( std::forward< T >( value ), i++ );
-        } );
-        for ( auto [ jointConfiguration, i ] : jointConfigurations | enumerated ) {
+        for ( auto [ jointConfiguration, i ] : jointConfigurations | enumerated() ) {
             static_assert(
                     std::is_same_v< decltype( jointConfiguration ), configuration::Joint & > );
             const auto & jointInnerState = jointInnerStates[ i ];
@@ -244,9 +261,10 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
                                                                                    simStepTime );
             if ( posReached ) {
                 assert( i < INT_MAX );
-                positionsReached.push_back( PositionReached{ .moduleId = module_.getId(),
-                                                             .joint = i,
-                                                             .position = newPosition } );
+                updateEvents.positionsReached.push_back(
+                        CUE::PositionReached{ .moduleId = module_.getId(),
+                                              .joint = static_cast< int >( i ),
+                                              .position = newPosition } );
             }
 
             assert( jointLimits.first <= jointLimits.second );
@@ -256,6 +274,43 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
 
             jointConfiguration.setPositions( std::array{ clampedNewPosition } );
         }
+
+        // Connect close extending connectors
+        std::span connectorInnerStates = moduleInnerState->connectors();
+        std::span connectorConfigurations = module_.connectors();
+        assert( connectorInnerStates.size() == connectorConfigurations.size() );
+
+        for ( auto [ connectorInnerState, i ] : connectorInnerStates | enumerated() ) {
+            switch ( connectorInnerState.position() ) {
+                case ConnectorInnerState::Position::Retracted:
+                case ConnectorInnerState::Position::Extended:
+                    break;
+                case ConnectorInnerState::Position::Retracting:
+                {
+                    assert( i < INT_MAX );
+                    updateEvents.connectorsToFinilizePosition.push_back(
+                            { .moduleId = module_.getId(), .connIdx = static_cast< int >( i ) } );
+
+                    if ( auto removedConnection = removeConnection( connectorConfigurations[ i ] ) )
+                    {
+                        updateEvents.connectionsChanged.push_back( *removedConnection );
+                    }
+                    break;
+                }
+                case ConnectorInnerState::Position::Extending:
+                {
+                    assert( i < INT_MAX );
+                    updateEvents.connectorsToFinilizePosition.push_back(
+                            { .moduleId = module_.getId(), .connIdx = static_cast< int >( i ) } );
+
+                    const auto & connConfiguration = connectorConfigurations[ i ];
+                    if ( auto connection = detail::connectToNearbyConnector( connConfiguration ) ) {
+                        updateEvents.connectionsChanged.push_back( *connection );
+                    }
+                    break;
+                }
+            }
+        }
     }
 
     newConfiguration->prepare();
@@ -263,7 +318,7 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
          !ok ) {
         throw std::runtime_error( err );
     }
-    return std::pair( newConfiguration, std::move( positionsReached ) );
+    return std::pair( newConfiguration, std::move( updateEvents ) );
 }
 
 std::map< ModuleId, ModuleInnerState > ModuleStates::innerStatesFromConfiguration(
