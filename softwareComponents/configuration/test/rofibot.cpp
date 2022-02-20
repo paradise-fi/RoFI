@@ -454,4 +454,36 @@ TEST_CASE( "Configurable joints" ) {
     }
 }
 
+TEST_CASE( "Connect and disconnect" ) {
+    Rofibot bot;
+
+    SECTION( "Disconnect roficoms disconnects two modules" ) {
+        auto& m1 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) ) );
+        auto& m2 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) ) );
+
+        CHECK( bot.roficoms().empty() );
+        auto j = connect( m1.getConnector( "A+X" ), m2.getConnector( "B-Z" ), roficom::Orientation::North );
+        CHECK( bot.roficoms().size() == 1 );
+        bot.prepare();
+        CHECK( bot.isPrepared() );
+        bot.disconnect( j );
+        CHECK( !bot.isPrepared() );
+        CHECK( bot.roficoms().empty() );
+    }
+
+    SECTION( "Disconnect on spaceJoint" ) {
+        auto& m = static_cast< UniversalModule& >( bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) ) );
+
+        CHECK( bot.referencePoints().empty() );
+        auto h = connect< RigidJoint >( m.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
+        CHECK( !bot.referencePoints().empty() );
+
+        bot.prepare();
+        CHECK( bot.isPrepared() );
+        bot.disconnect( h );
+        CHECK( !bot.isPrepared() );
+        CHECK( bot.referencePoints().empty() );
+    }
+}
+
 } // namespace
