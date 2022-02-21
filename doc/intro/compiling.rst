@@ -29,20 +29,12 @@ So whenever you want to work with the project, invoke in your shell:
 
 .. code-block:: sh
 
-    $ source setup.sh -f Release
+    $ source setup.sh Release
 
-This will setup your current shell for RoFI. This is indicated by a robot icon
-prepended to you prompt:
-
-.. code-block:: sh
-
-    🤖 R $
-
-If you don't want to alter you shell, simply omit ``-f``. The letter after the
-robot icon indicates which configuration is currently active. If you want to
-change the configuration, simply invoke ``source setup.sh -f Debug`` to e.g.,
-switch to a debug configuration. Or invoke ``teardown`` to return your shell to
-original state.
+This will setup your current shell for RoFI. If you want to change the
+configuration, simply invoke ``source setup.sh -f Debug`` to e.g., switch to a
+debug configuration. Or invoke ``teardown`` to return your shell to original
+state.
 
 If you would like to also compile the firmware for the physical robots, you
 should invoke the setup command with ``-i``. This will setup ESP-IDF, which is
@@ -54,6 +46,11 @@ compilation suites and building targets.
 
 Note that if you would like to make ``setup.sh`` silent (e.g., when benchmarking
 or running in CI), you can pass the option ``-s`` to make it silent.
+
+Also, if you would like to be able to detect if you are in RoFI-aware shell, you
+can add the environmental variable ``ROFI_SHELL_INDICATOR`` to your prompt. It
+will show and icon of the robot and, also, the marking of currently active
+configuration.
 
 Compilation suites
 ------------------
@@ -214,11 +211,18 @@ sourced into the environment. Here you can, e.g., enforce a particular compiler
 version:
 
 .. code-block:: sh
+
     # .rofi.post.env
 
     export CC=$(command -v gcc-11)
     export CXX=$(command -v g++-11)
 
+
+The extra tools that ``setup.sh`` downloads, are placed in a directory marked by
+the environmental variable ``ROFI_TOOLS_PATH``. If the variable is not set, it
+defaults to ``ROFI_ROOT/build.deps``. You might want to set this variable in the
+case when you work on multiple worktrees to save disk space -- ESP-IDF consumes
+about 2.5 GB of disk space.
 
 .. _example:
 
