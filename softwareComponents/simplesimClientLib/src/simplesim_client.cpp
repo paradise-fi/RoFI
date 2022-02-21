@@ -229,7 +229,7 @@ std::map< rofi::configuration::ModuleId, ModuleRenderInfo > addConfigurationToRe
     assert( renderer != nullptr );
 
     std::map< rofi::configuration::ModuleId, ModuleRenderInfo > moduleRenderInfos;
-    setActiveConnectors( newConfiguration.roficoms(), moduleRenderInfos, newConfiguration );
+    setActiveConnectors( newConfiguration.roficomConnections(), moduleRenderInfos, newConfiguration );
 
     for ( const auto & moduleInfo : newConfiguration.modules() ) {
         assert( moduleInfo.module.get() );
@@ -253,7 +253,7 @@ void updateConfigurationInRenderer(
 {
     assert( renderer != nullptr );
 
-    setActiveConnectors( newConfiguration.roficoms(), moduleRenderInfos, newConfiguration );
+    setActiveConnectors( newConfiguration.roficomConnections(), moduleRenderInfos, newConfiguration );
 
     auto previousModules =
             std::unordered_map< rofi::configuration::ModuleId,
