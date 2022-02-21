@@ -381,5 +381,7 @@ def main():
     build(sys.argv[1:])
 
 if __name__ == "__main__":
-    main()
-
+    try:
+        main()
+    except KeyboardInterrupt:
+        sys.exit("Interrupted.")
