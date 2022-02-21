@@ -1,6 +1,9 @@
 #pragma once
 
-//#include "simplesim_client.hpp"
+#include <cassert>
+#include <memory>
+
+#include <atoms/util.hpp>
 
 #include <QListWidgetItem>
 
@@ -15,18 +18,19 @@ struct ChangeColor : public QWidget
 {
     Q_OBJECT
 
-    Ui::ChangeColor* ui;
+    std::unique_ptr< Ui::ChangeColor > ui;
 
     QWidget* parent;
 
     bool showingHelp = false;
 
 public:
-    std::vector< bool > to_color;
+    std::vector< bool > toColor;
 
     ChangeColor( QWidget* parent = nullptr, size_t size = 0 );
 
     ~ChangeColor();
+
 signals:
 
     void pickedColor( int color );
@@ -39,7 +43,7 @@ private slots:
 
 private:
 
-    void parseRange();
+    void parseInput();
 
 };
 
