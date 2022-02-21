@@ -61,27 +61,6 @@ class SimplesimClient : public QMainWindow
 {
     Q_OBJECT
 
-private:
-    class UpdateConfigurationCommand : public vtkCommand
-    {
-        vtkTypeMacro_( UpdateConfigurationCommand, vtkCommand );
-
-    public:
-        static UpdateConfigurationCommand * New()
-        {
-            return new UpdateConfigurationCommand();
-        }
-
-        void Execute( vtkObject * /* caller */, unsigned long /* eventId */, void * /* callData */ )
-        {
-            assert( client );
-
-            client->renderCurrentConfiguration();
-        }
-
-        SimplesimClient * client = {};
-    };
-
 public:
     using OnSettingsCmdCallback = std::function< void( const msgs::SettingsCmd & ) >;
 
@@ -150,7 +129,6 @@ private slots:
     void speedChanged( double speed );
 
 private:
-    Ui::SimplesimClient* ui;
 
     void initInfoTree( const rofi::configuration::Rofibot& rofibot );
 
@@ -218,6 +196,7 @@ private:
         return settingsCmd;
     }
 
+    std::unique_ptr< Ui::SimplesimClient > ui;
 
     atoms::Guarded< msgs::SettingsState > _currentSettings;
 

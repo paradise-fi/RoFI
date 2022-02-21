@@ -295,7 +295,7 @@ void updateConfigurationInRenderer(
 }
 
 SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
-        : ui( new Ui::SimplesimClient ),
+        : ui( std::make_unique< Ui::SimplesimClient >() ),
           _onSettingsCmdCallback( std::move( onSettingsCmdCallback ) )
 {
     QMainWindow( nullptr );
@@ -330,7 +330,6 @@ SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
 
 SimplesimClient::~SimplesimClient(){
     killTimer( _timerId );
-    delete ui;
 }
 
 void SimplesimClient::timerEvent( QTimerEvent* /* event */ ){
@@ -384,9 +383,9 @@ void SimplesimClient::itemSelected( QTreeWidgetItem* selected ){
 
 
 void SimplesimClient::setColor( int color ){
-    const auto& to_color = _changeColorWindow->to_color;
-    for( int i = 0; i < static_cast< int >( to_color.size() ); ++i ){
-        if( to_color[ i ] ){
+    const auto& toColor = _changeColorWindow->toColor;
+    for( int i = 0; i < static_cast< int >( toColor.size() ); ++i ){
+        if( toColor[ i ] ){
             colorModule( i, getModuleColor( color ).data() );
         }
     }
