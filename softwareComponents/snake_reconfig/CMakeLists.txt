@@ -12,6 +12,6 @@ add_executable(snakeReconfig main.cpp)
 target_link_libraries(snakeReconfig PUBLIC
     configuration generators reconfig snakeStructs snakeAlgorithms dimcli)
 
-add_executable(test-snakeReconfig test/main.cpp test/test.cpp)
-target_link_libraries(test-snakeReconfig PUBLIC configuration generators reconfig Catch2::Catch2 snakeAlgorithms)
+add_executable(test-snakeReconfig test/test.cpp)
+target_link_libraries(test-snakeReconfig PUBLIC configuration generators reconfig Catch2WithMain snakeAlgorithms)
 target_include_directories(test-snakeReconfig PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})

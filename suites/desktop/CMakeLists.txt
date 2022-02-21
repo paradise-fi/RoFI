@@ -45,6 +45,17 @@ if(NOT catch_POPULATED)
   include(Catch)
   include(ParseAndAddCatchTests)
 endif()
+# Adds `Catch2WithMain` target from Catch v3.x and removes warnings about unused variables
+function(add_catch2_with_main)
+  set(TEST_CXX_COMPILE_FLAGS -Wno-unused-but-set-variable -Wno-unused-parameter -Wno-unused-variable)
+  set(CATCH2_MAIN_SOURCE ${CMAKE_CURRENT_BINARY_DIR}/catch2_main.cpp)
+  file(GENERATE OUTPUT ${CATCH2_MAIN_SOURCE}
+      CONTENT "#define CATCH_CONFIG_MAIN\n#include <catch2/catch.hpp>\n")
+  add_library(Catch2WithMain ${CATCH2_MAIN_SOURCE})
+  target_link_libraries(Catch2WithMain PUBLIC Catch2::Catch2)
+  target_compile_options(Catch2WithMain PUBLIC ${TEST_CXX_COMPILE_FLAGS})
+endfunction()
+add_catch2_with_main()
 
 FetchContent_Declare(
   fmt
