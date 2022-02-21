@@ -95,5 +95,7 @@ def run():
             sys.exit(f"\n{e}\nCMake invocation for suite {t} failed. See output above\n")
 
 if __name__ == "__main__":
-    run()
-
+    try:
+        run()
+    except KeyboardInterrupt:
+        sys.exit("Interrupted.")

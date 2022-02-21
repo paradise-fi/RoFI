@@ -84,4 +84,7 @@ def run():
         sys.exit(f"Unsupported platform {img[0]}")
 
 if __name__ == "__main__":
-    run()
+    try:
+        run()
+    except KeyboardInterrupt:
+        sys.exit("Interrupted.")
