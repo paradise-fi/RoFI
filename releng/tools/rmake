@@ -242,6 +242,7 @@ def runClangTidy(suite, source):
     if major >= 12:
         command.append("--use-color")
     command += ["-p", os.path.join(buildDir, suite),
+                "-header-filter=*",
                 "--config", configuration,
                 os.path.relpath(source)]
 
@@ -281,6 +282,7 @@ def tidy(patterns):
         sys.exit("Cannot specify clean targets in clang-tidy check")
 
     success = True
+    filesChecked = 0
     for currentSuite in aSuites:
         suiteSources = set()
         for x in sources[currentSuite].values():
@@ -320,7 +322,11 @@ def tidy(patterns):
             for x in ex.map(lambda source: runClangTidy(currentSuite, source), jobs):
                 valid, report = x
                 success = success and valid
+                filesChecked += 1
                 print(report)
+    if filesChecked == 0:
+        print("No files to check")
+        sys.exit(0)
     if success:
         print("✅ All checks passed")
         sys.exit(0)
