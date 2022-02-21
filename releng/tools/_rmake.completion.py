@@ -32,6 +32,16 @@ if test and word == 2:
     candidates += ["--all"]
 if word == 1:
     candidates += flags
+if "--tidy" in words:
+    for origin, dirs, files in os.walk(root):
+        for f in files:
+            if os.path.splitext(f)[1] not in [".c", ".cpp"]:
+                continue
+            path = os.path.join(origin, f)
+            path = os.path.relpath(path, root)
+            if path.startswith("build"):
+                continue
+            candidates.append(path)
 
 
 if test:
