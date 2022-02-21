@@ -119,7 +119,6 @@ Usage:
         Print help
 
 Options:
-    -f  Alternate prompt to indicate the environment.
     -s  Make the script silent (e.g., when running from CI)
     -i  Setup tools for rofi firmware development
 EOF
@@ -139,9 +138,8 @@ run() {
     local OPTIND flag
     local ALTER_PROMPT
     local SETUP_IDF
-    while getopts "fhsi" flag; do
+    while getopts "hsi" flag; do
         case "$flag" in
-            f) ALTER_PROMPT=1;;
             h)
                 print_help
                 return 0
@@ -162,12 +160,11 @@ run() {
 
     ## Source user defines
     if [ -f ~/.rofi.pre.env ]; then
-        echo "Applying extra setting from ~/.rofi.pre.env"
+        silentEcho "Applying extra setting from ~/.rofi.pre.env"
         source ~/.rofi.pre.env
     fi
 
-    export PS1 # Bring shell variable into env, so we can back it up
-    backup PS1
+    backup ROFI_SHELL_INDICATOR
     backup PATH
     backup PYTHONPATH
     backup MAKEFLAGS
@@ -209,10 +206,8 @@ run() {
     silentEcho "   To go back, invoke teardown"
     silentEcho "   To change the configuration, simply invoke setup again"
 
-    if [ -n "$ALTER_PROMPT" ]
-    then
-        PS1="🤖 $(configurationDesc $ROFI_BUILD_CONFIGURATION) $ORIGINAL_PS1"
-    fi
+
+    export ROFI_SHELL_INDICATOR="🤖 $(configurationDesc $ROFI_BUILD_CONFIGURATION)"
 
     export ROFI_BUILD_CONFIGURATION
     export ROFI_ROOT=$(pwd)
@@ -243,7 +238,7 @@ run() {
 
     ## Source user defines
     if [ -f ~/.rofi.post.env ]; then
-        echo "Applying extra setting from ~/.rofi.post.env"
+        silentEcho "Applying extra setting from ~/.rofi.post.env"
         source ~/.rofi.post.env
     fi
 }
