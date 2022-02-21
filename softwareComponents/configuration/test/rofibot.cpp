@@ -30,7 +30,7 @@ TEST_CASE( "Universal Module Test" ) {
         CHECK( equals( center( um.getOccupiedPositions()[ 1 ] ), { 0, 0, 1, 1 } ) );
     }
 
-    SECTION( "Roficoms" ) {
+    SECTION( "roficomConnections" ) {
         auto um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
         CHECK( um.connectors().size() == 6 );
 
@@ -343,12 +343,12 @@ TEST_CASE( "Basic rofibot manipulation" ) {
     REQUIRE( m5.getId() == 4 );
     CHECK( bot.modules().size() == 5 );
 
-    CHECK( bot.roficoms().size() == 0 );
+    CHECK( bot.roficomConnections().size() == 0 );
     connect( m1.connectors()[ 5 ], m2.connectors()[ 2 ], Orientation::North );
     connect( m2.connectors()[ 5 ], m3.connectors()[ 2 ], Orientation::North );
     connect( m3.connectors()[ 5 ], m4.connectors()[ 2 ], Orientation::North );
     connect( m4.connectors()[ 5 ], m5.connectors()[ 2 ], Orientation::North );
-    CHECK( bot.roficoms().size() == 4 );
+    CHECK( bot.roficomConnections().size() == 4 );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
     static_cast< UniversalModule& >( m1 ).setGamma( Angle::deg( 90 ) );
     auto [ b, str ] = bot.isValid();
@@ -374,7 +374,7 @@ TEST_CASE( "Colliding configuration" ) {
     connect( m2.connectors()[ 1 ], m3.connectors()[ 2 ], Orientation::North );
     connect( m3.connectors()[ 1 ], m4.connectors()[ 2 ], Orientation::North );
     connect( m4.connectors()[ 1 ], m5.connectors()[ 2 ], Orientation::North );
-    CHECK( bot.roficoms().size() == 4 );
+    CHECK( bot.roficomConnections().size() == 4 );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
     auto [ b, str ] = bot.validate();
     CHECK( !b );
@@ -457,18 +457,18 @@ TEST_CASE( "Configurable joints" ) {
 TEST_CASE( "Connect and disconnect" ) {
     Rofibot bot;
 
-    SECTION( "Disconnect roficoms disconnects two modules" ) {
+    SECTION( "Disconnect roficomConnections disconnects two modules" ) {
         auto& m1 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) ) );
         auto& m2 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) ) );
 
-        CHECK( bot.roficoms().empty() );
+        CHECK( bot.roficomConnections().empty() );
         auto j = connect( m1.getConnector( "A+X" ), m2.getConnector( "B-Z" ), roficom::Orientation::North );
-        CHECK( bot.roficoms().size() == 1 );
+        CHECK( bot.roficomConnections().size() == 1 );
         bot.prepare();
         CHECK( bot.isPrepared() );
         bot.disconnect( j );
         CHECK( !bot.isPrepared() );
-        CHECK( bot.roficoms().empty() );
+        CHECK( bot.roficomConnections().empty() );
     }
 
     SECTION( "Disconnect on spaceJoint" ) {

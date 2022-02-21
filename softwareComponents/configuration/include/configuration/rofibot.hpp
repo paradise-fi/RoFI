@@ -386,9 +386,9 @@ public:
 class Rofibot {
     struct ModuleInfo;
 public:
-    using ModuleInfoHandle = atoms::HandleSet< ModuleInfo   >::handle_type;
-    using RoficomHandle    = atoms::HandleSet< RoficomJoint >::handle_type;
-    using SpaceJointHandle = atoms::HandleSet< SpaceJoint   >::handle_type;
+    using ModuleInfoHandle   = atoms::HandleSet< ModuleInfo   >::handle_type;
+    using RoficomJointHandle = atoms::HandleSet< RoficomJoint >::handle_type;
+    using SpaceJointHandle   = atoms::HandleSet< SpaceJoint   >::handle_type;
 
     Rofibot() = default;
 
@@ -477,7 +477,7 @@ public:
     /**
      * \brief Get a container of RoficomJoint
      */
-    const auto& roficoms() const {
+    const auto& roficomConnections() const {
         return _moduleJoints;
     }
 
@@ -586,7 +586,7 @@ public:
         return _modules[ _idMapping[ id ] ].position.value();
     }
 
-    void disconnect( RoficomHandle h ) {
+    void disconnect( RoficomJointHandle h ) {
         if ( !_moduleJoints.contains( h ) )
             return;
 
@@ -621,7 +621,7 @@ private:
     }
 
     struct ModuleInfo {
-        ModuleInfo( atoms::ValuePtr< Module > m, std::vector< RoficomHandle > i, std::vector< RoficomHandle > o,
+        ModuleInfo( atoms::ValuePtr< Module > m, std::vector< RoficomJointHandle > i, std::vector< RoficomJointHandle > o,
             std::vector< SpaceJointHandle > s, std::optional< Matrix > pos )
         : module( std::move( m ) ), inJointsIdx( std::move( i ) ), outJointsIdx( std::move( o ) ),
             spaceJoints( std::move( s ) ), position( std::move( pos ) )
@@ -643,8 +643,8 @@ private:
         }
 
         atoms::ValuePtr< Module > module;  // Use value_ptr to make address of modules stable
-        std::vector< RoficomHandle > inJointsIdx;
-        std::vector< RoficomHandle > outJointsIdx;
+        std::vector< RoficomJointHandle > inJointsIdx;
+        std::vector< RoficomJointHandle > outJointsIdx;
         std::vector< SpaceJointHandle > spaceJoints;
         std::optional< Matrix > position;
     };
@@ -655,7 +655,7 @@ private:
     std::map< ModuleId, ModuleInfoHandle > _idMapping;
     bool _prepared = false;
 
-    friend RoficomHandle connect( const Component& c1, const Component& c2, roficom::Orientation o );
+    friend RoficomJointHandle connect( const Component& c1, const Component& c2, roficom::Orientation o );
     friend class Module;
     template < typename JointT, typename... Args >
     friend SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&... args );
@@ -726,7 +726,7 @@ struct SpaceJoint {
  * std::logic_error is thrown.
  *
  */
-Rofibot::RoficomHandle connect( const Component& c1, const Component& c2, roficom::Orientation o );
+Rofibot::RoficomJointHandle connect( const Component& c1, const Component& c2, roficom::Orientation o );
 
 /**
  * \brief Connect a module's component to a point in space via given joint type

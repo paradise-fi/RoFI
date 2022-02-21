@@ -114,7 +114,7 @@ void Rofibot::prepare() {
 
         m.position = position;
         // Traverse ignoring edge orientation
-        std::vector< RoficomHandle > joints;
+        std::vector< RoficomJointHandle > joints;
         std::copy( m.outJointsIdx.begin(), m.outJointsIdx.end(), std::back_inserter( joints ) );
         std::copy( m.inJointsIdx.begin(), m.inJointsIdx.end(), std::back_inserter( joints ) );
         for ( auto outJointIdx : joints ) {
@@ -147,7 +147,7 @@ void Rofibot::prepare() {
     _prepared = true;
 }
 
-Rofibot::RoficomHandle connect( const Component& c1, const Component& c2, roficom::Orientation o ) {
+Rofibot::RoficomJointHandle connect( const Component& c1, const Component& c2, roficom::Orientation o ) {
     assert( c1.type == ComponentType::Roficom && c2.type == ComponentType::Roficom && "Components are not RoFICoMs" );
 
     if ( c1.parent->parent != c2.parent->parent )

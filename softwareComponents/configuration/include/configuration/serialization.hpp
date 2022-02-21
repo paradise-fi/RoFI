@@ -1,3 +1,4 @@
+#pragma once
 #include <configuration/rofibot.hpp>
 #include <configuration/universalModule.hpp>
 #include <configuration/pad.hpp>
@@ -43,7 +44,7 @@ namespace rofi::configuration::serialization {
 
     template< std::derived_from< Module > M, typename Callback >
     M moduleFromJSON( const nlohmann::json& j, Callback& cbAttr ) {
-        if ( !j.is_object() || ++j.begin() != j.end() )
+        if ( !j.is_object() || j.begin() == j.end() || ++j.begin() != j.end() )
             throw std::runtime_error( "json is not a single object" );
 
         return partial_spec< M, Callback >::moduleFromJSON( j.begin().value(), stoi( j.begin().key() ), cbAttr );
@@ -96,6 +97,7 @@ namespace rofi::configuration::serialization {
      */
     template< typename Callback, typename ...Args >
     inline void processAttributes( const nlohmann::json& js, Callback& cb, Args&& ... args ) {
+        static_assert( std::is_invocable_r_v< void, Callback, nlohmann::json, Args ... > );
         if ( js.contains( "attributes" ) )
             cb( js[ "attributes" ], std::forward< Args >( args )... );
     }
@@ -299,7 +301,7 @@ namespace rofi::configuration::serialization {
             res[ "modules" ].push_back( j );
         }
 
-        for ( const RoficomJoint& rj : bot.roficoms() ) {
+        for ( const RoficomJoint& rj : bot.roficomConnections() ) {
             json j;
             j[ "from" ] = bot.getModule( rj.sourceModule )->getId();
             j[ "to"   ] = bot.getModule( rj.destModule )->getId();
@@ -327,7 +329,7 @@ namespace rofi::configuration::serialization {
     }
 
     inline nlohmann::json toJSON( const Rofibot& bot ) {
-        return toJSON( bot, []( auto ... ){ return nlohmann::json{}; } );
+        return toJSON( bot, []( auto&& ... ){ return nlohmann::json{}; } );
     }
 
     template< typename Callback >
@@ -402,7 +404,7 @@ namespace rofi::configuration::serialization {
     }
 
     inline Rofibot fromJSON( const nlohmann::json& j ) {
-        return fromJSON( j, []( auto ... ) { return; } );
+        return fromJSON( j, []( auto&& ... ) { return; } );
     }
 
 } // namespace rofi::configuration

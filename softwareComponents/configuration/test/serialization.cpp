@@ -36,7 +36,7 @@ TEST_CASE( "UniversalModule – Demo" ) {
     CHECK( js_str == js_str_cpy );
 
     REQUIRE( bot.modules().size() == botj.modules().size() );
-    REQUIRE( bot.roficoms().size() == botj.roficoms().size() );
+    REQUIRE( bot.roficomConnections().size() == botj.roficomConnections().size() );
     REQUIRE( bot.referencePoints().size() == botj.referencePoints().size() );
     REQUIRE_NOTHROW( botj.prepare() );
 
@@ -62,7 +62,7 @@ TEST_CASE( "Empty" ) {
         Rofibot bot = fromJSON( js );
 
         CHECK( bot.modules().size() == 0 );
-        CHECK( bot.roficoms().size() == 0 );
+        CHECK( bot.roficomConnections().size() == 0 );
         CHECK( bot.referencePoints().size() == 0 );
         CHECK( bot.validate( SimpleCollision() ).first );
     }
@@ -97,7 +97,7 @@ TEST_CASE( "Pad" ) {
     REQUIRE_NOTHROW( bot.prepare() );
     REQUIRE_NOTHROW( cpy.prepare() );
 
-    CHECK( bot.roficoms().size() == cpy.roficoms().size() );
+    CHECK( bot.roficomConnections().size() == cpy.roficomConnections().size() );
     CHECK( bot.modules().size()  == idCounter ); // idCounter is equal to number of modules within the bot
     CHECK( bot.modules().size()  == cpy.modules().size()  );
     CHECK( bot.referencePoints().size() == 1 );
@@ -221,7 +221,7 @@ TEST_CASE( "UniversalModule" ) {
     REQUIRE_NOTHROW( bot.prepare() );
     REQUIRE_NOTHROW( cpy.prepare() );
 
-    CHECK( bot.roficoms().size() == cpy.roficoms().size() );
+    CHECK( bot.roficomConnections().size() == cpy.roficomConnections().size() );
     CHECK( bot.modules().size()  == idCounter ); // idCounter is equal to number of modules within the bot
     CHECK( bot.modules().size()  == cpy.modules().size()  );
     CHECK( bot.referencePoints().size() == 1 );
@@ -289,7 +289,7 @@ TEST_CASE( "Attributes" ) {
             []( const UniversalModule& m ) {
                 return nlohmann::json::object( { { "UniversalModule", m.getId() } } );
             },
-            []( auto ... ) { return nlohmann::json{}; }
+            []( auto&& ... ) { return nlohmann::json{}; }
         };
 
         js = toJSON( bot, testAttrCallback );
@@ -343,7 +343,7 @@ TEST_CASE( "Attributes" ) {
             []( const SpaceJoint& ) {
                 return nlohmann::json::object();
             },
-            []( auto ... ) {
+            []( auto&& ... ) {
                 return "test-attr";
             }
         };
@@ -370,7 +370,7 @@ TEST_CASE( "Attributes" ) {
 
     SECTION( "Nothing gets an attribute" ) {
         auto testAttrCallback = overload{
-            []( auto ... ) {
+            []( auto&& ... ) {
                 return nlohmann::json{};
             }
         };
@@ -422,10 +422,10 @@ TEST_CASE( "Working with attributes" ) {
                                 CHECK( j.get< ModuleId >() == m.getId() );
                                 ids.push_back( j );
                             },
-                            []( const nlohmann::json&, const ComponentJoint&, int ) { return; },
-                            []( const nlohmann::json&, const Component&, int )      { return; },
-                            []( const nlohmann::json&, Rofibot::RoficomHandle )     { return; },
-                            []( const nlohmann::json&, Rofibot::SpaceJointHandle )  { return; },
+                            []( const nlohmann::json&, const ComponentJoint&, int )  { return; },
+                            []( const nlohmann::json&, const Component&, int )       { return; },
+                            []( const nlohmann::json&, Rofibot::RoficomJointHandle ) { return; },
+                            []( const nlohmann::json&, Rofibot::SpaceJointHandle )   { return; },
         } );
 
         CHECK( ids.size() == 4 );
@@ -474,10 +474,10 @@ TEST_CASE( "Working with attributes" ) {
         int sum = 0;
         auto copy = fromJSON( js, overload{
                             [ &sum ]( const nlohmann::json& j, const Module& )    { sum += j.get< int >(); },
-                            [ &sum ]( const nlohmann::json& j, const ComponentJoint&, int ) { sum += j.get< int >(); },
-                            [ &sum ]( const nlohmann::json& j, const Component&, int )      { sum += j.get< int >(); },
-                            [ &sum ]( const nlohmann::json& j, Rofibot::RoficomHandle )     { sum += j.get< int >(); },
-                            [ &sum ]( const nlohmann::json& j, Rofibot::SpaceJointHandle )  { sum += j.get< int >(); },
+                            [ &sum ]( const nlohmann::json& j, const ComponentJoint&, int )  { sum += j.get< int >(); },
+                            [ &sum ]( const nlohmann::json& j, const Component&, int )       { sum += j.get< int >(); },
+                            [ &sum ]( const nlohmann::json& j, Rofibot::RoficomJointHandle ) { sum += j.get< int >(); },
+                            [ &sum ]( const nlohmann::json& j, Rofibot::SpaceJointHandle )   { sum += j.get< int >(); },
         } );
 
         CHECK( sum == 10 );

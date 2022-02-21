@@ -146,7 +146,7 @@ void addModuleToScene( vtkRenderer* renderer, Module& m,
 void buildConfigurationScene( vtkRenderer* renderer, Rofibot& bot ) {
     // get active (i.e. connected) connectors for each module within Rofibot
     std::map< ModuleId, std::set< int > > active_cons;
-    for ( const auto& roficom : bot.roficoms() ) {
+    for ( const auto& roficom : bot.roficomConnections() ) {
         active_cons[ bot.getModule( roficom.sourceModule )->getId() ].insert( roficom.sourceConnector );
         active_cons[ bot.getModule( roficom.destModule )->getId()   ].insert( roficom.destConnector );
     }
