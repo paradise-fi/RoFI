@@ -31,8 +31,10 @@ target_link_libraries(atoms-heavy INTERFACE "stdc++fs")
 # We use C++ tmpname - which triggers warning
 target_link_options(atoms-heavy INTERFACE -Wno-deprecated-declarations)
 
-if(TARGET Catch2::Catch2)
+if(TARGET Catch2WithMain)
   file(GLOB TEST_SRC test/*.cpp)
   add_executable(test-atoms ${TEST_SRC})
-  target_link_libraries(test-atoms PRIVATE Catch2::Catch2 atoms atoms-heavy)
+  target_link_libraries(test-atoms PRIVATE Catch2WithMain atoms atoms-heavy)
+elseif(TARGET Catch2::Catch2)
+  message(WARNING "Catch2 available, but not Catch2WithMain. Tests for atoms will not build.")
 endif()

@@ -23,4 +23,4 @@ target_link_libraries(generators PUBLIC legacy-configuration)
 
 file(GLOB TEST_SRC test/*.cpp)
 add_executable(test-configuration ${TEST_SRC})
-target_link_libraries(test-configuration PRIVATE Catch2::Catch2 configurationWithJson atoms)
+target_link_libraries(test-configuration PRIVATE Catch2WithMain configurationWithJson atoms)

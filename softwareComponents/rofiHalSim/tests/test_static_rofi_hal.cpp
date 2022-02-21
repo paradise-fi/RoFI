@@ -24,3 +24,8 @@ static_assert( std::is_copy_constructible_v< Connector > );
 static_assert( std::is_copy_assignable_v< Connector > );
 static_assert( std::is_move_constructible_v< Connector > );
 static_assert( std::is_move_assignable_v< Connector > );
+
+TEST_CASE( "All checks are static" )
+{
+    CHECK( true );
+}
