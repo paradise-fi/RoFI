@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atoms/util.hpp>
 
 class Angle {
 public:
@@ -65,4 +66,8 @@ inline constexpr Angle operator"" _deg ( unsigned long long deg ) noexcept {
 
 inline constexpr Angle operator"" _rad ( unsigned long long rad ) noexcept {
     return Angle::rad( static_cast< Angle::underlying_type >( rad ) );
+}
+
+inline Angle clamp( Angle value, Angle min, Angle max ) {
+    return Angle::rad( clamp( value.rad(), min.rad(), max.rad() ) );
 }

@@ -1,4 +1,5 @@
-#include "rofi_hal.hpp"
+#include <rofi_hal.hpp>
+
 #include <array>
 #include <cassert>
 #include <stdexcept>
@@ -6,6 +7,9 @@
 #include <variant>
 #include <thread>
 #include <atomic>
+#include <cmath>
+#include <type_traits>
+
 #include <freeRTOS.hpp>
 
 #include <driver/spi_master.h>
@@ -16,13 +20,14 @@
 #include <espDriver/gpio.hpp>
 #include <espDriver/spi.hpp>
 
-#include <peripherals/herculex.hpp>
+#include <bsp.hpp>
 #include <atoms/util.hpp>
 #include <logging.hpp>
 
 namespace {
 
 using namespace rofi::hal;
+using namespace std::string_literals;
 
 // Forward declaration
 class ConnectorLocal;
@@ -565,22 +570,19 @@ void ConnectorBus::run( ReceiveCommand c ) {
 }
 
 /**
- * HAL Joint driver implementation for Herculex DRS-0101 Servomotors
+ * HAL Joint driver implementation based on Servomotor abstraction
  */
 class JointLocal :
     public Joint::Implementation,
     public std::enable_shared_from_this< JointLocal >
 {
 public:
-    JointLocal( rofi::herculex::Bus::Servo servo, const Capabilities& cap,
+    JointLocal( bsp::ServoBus::Servo servo, const Capabilities& cap,
                 float gearRatio ):
-        _capabilities( cap ), _servo( std::move( servo ) ), _gearRatio( gearRatio )
+        _capabilities( cap ), _servo( std::move( servo ) ),
+        _gearRatio( gearRatio ), _changedPwmLimit( false )
     {
-        _servo.resetErrors();
-        _servo.torqueOn();
-        _servo.setLimits( Angle::rad( cap.minPosition ) / _gearRatio,
-                          Angle::rad( cap.maxPosition ) / _gearRatio );
-        _servo.setConservativeAcceleration();
+        _rebootServo();
     }
 
     virtual const Capabilities& getCapabilities() override {
@@ -593,103 +595,127 @@ public:
 
     /**
      * \brief set velocity of the joint
-     *
-     * Unfortunately, Herculex does not support velocity control, let's fake it.
-     * We also cannot do proper regulator loop, so fake it by PWM and emulating
-     * rotational limits by a poller.
      */
     virtual void setVelocity( float velocity ) override {
-        using namespace std::chrono_literals;
-
+        // Internally we use position mode - basically we let the servo
+        // go to the positive or negative limit with given speed
         _poller = rtos::Timer();
-        float maxVelocity = 2 * Angle::pi;
-        velocity = std::min( maxVelocity, std::max( -maxVelocity, velocity ) );
-        int pwm = velocity / maxVelocity * 1023;
-        _servo.torqueOn(); // In case we lost connection
-        _servo.rotate( pwm );
-        _poller = rtos::Timer( 20ms, rtos::Timer::Type::Periodic,
-            [this, pwm]() {
-                auto pos = getPosition();
-                if ( pwm < 0 &&
-                     pos < _capabilities.minPosition + Angle::deg( 10 * 0.325 ).rad() )
-                {
-                    this->_servo.move( Angle::rad( _capabilities.minPosition ), 100ms );
-                }
-                else if ( pwm > 0 &&
-                          pos > _capabilities.maxPosition - Angle::deg( 10 * 0.325 ).rad() )
-                {
-                    this->_servo.move( Angle::rad( _capabilities.maxPosition ), 100ms );
-                }
-                else
-                    this->_servo.rotate( pwm );
-            } );
-        _poller.start();
+        Angle target = velocity < 0
+                            ? _getMinMotorLimit()
+                            : _getMaxMotorLimit();
+        Angle v = Angle::rad( fabsf( velocity / _gearRatio ) );
+        _handleExceptions( [&]{
+            _restorePwmLimit();
+            _servo.move( target, v );
+        });
     }
 
     virtual float getPosition() override {
-        return _servo.getPosition().rad() * _gearRatio;
+        return _handleExceptions( [&]{
+            return _servo.getPosition().rad() * _gearRatio;
+        });
     }
 
     virtual void setPosition( float pos, float velocity,
         std::function< void( Joint ) > callback ) override
     {
-        using namespace std::chrono_literals;
+        assert( velocity > 0 );
+        assert( pos >= _capabilities.minPosition && pos <= _capabilities.maxPosition );
 
-        std::cout << "Setting position: " << pos << "\n";
-        std::cout << "    gear ratio: " << _gearRatio << "\n";
+        Angle v      = Angle::rad( velocity / _gearRatio );
+        Angle target = Angle::rad( pos / _gearRatio );
 
-        auto currentPos = getPosition();
-        auto distance = abs( pos - currentPos );
-        auto duration = std::chrono::milliseconds( int( distance / velocity * 1000 ) );
-        std::cout << "Duration: " << duration.count() << "\n";
-        // duration = std::chrono::milliseconds(0);
-        // _poller = rtos::Timer( 20ms, rtos::Timer::Type::Periodic,
-        //     [ this, callback, pos ]() {
-        //         auto currentPos = getPosition();
-        //         if ( abs( currentPos - pos ) < Angle::deg( 4 * 0.325 ).rad() ) {
-        //             callback( rofi::hal::Joint( this->shared_from_this() ) );
-        //             _poller.stop();
-        //         }
-        //     } );
-        std::cout << "   position: " << Angle::rad( pos ).deg() / _gearRatio << "\n";
-        _servo.torqueOn(); // In case we lost connection
-        _servo.move( Angle::rad( pos ) / _gearRatio, duration );
-        // _poller.start();
+        _handleExceptions( [&]{
+            _restorePwmLimit();
+            _servo.move( target, v );
+        });
     }
 
     virtual float getTorque() override {
-        return _servo.getTorque() * _capabilities.maxTorque;
+        return _handleExceptions( [&]{
+            return _servo.getTorque() * _capabilities.maxTorque;
+        });
     }
 
     virtual void setTorque( float torque ) override {
-        torque = std::min( _capabilities.maxTorque, std::max( -_capabilities.maxTorque, torque ) );
-        int pwm = torque / _capabilities.maxTorque * 1023;
-        _servo.torqueOn(); // In case we lost connection
-        _servo.rotate( pwm );
+        // Internally we limit torque and perform movement with maximal
+        // speed to the limit
+        float limit = clamp( fabsf( torque ) / _capabilities.maxTorque, 0.0f, 1.0f );
+        Angle target = torque < 0
+                            ? _getMinMotorLimit()
+                            : _getMaxMotorLimit();
+        _handleExceptions( [&]{
+            _changedPwmLimit = true;
+            _servo.torqueOff();
+            _servo.setTorqueLimit( limit );
+            _servo.torqueOn();
+            _servo.move( target, Angle::rad( 2 * Angle::pi ) );
+        });
     }
 
     virtual void onError(
         std::function< void( Joint, Joint::Error, const std::string& msg ) > callback ) override
     {
+        // Poll for hardware errors
+
         using namespace std::chrono_literals;
         _errorCallback = callback;
         _errorPoller = rtos::Timer( 200ms, rtos::Timer::Type::Periodic,
             [ this ]() {
                 auto flags = _servo.status();
-                if ( !rofi::herculex::containsError( flags ) )
+                if ( flags == 0 )
                     return;
                 _errorCallback(
                     rofi::hal::Joint( this->shared_from_this() ),
                     rofi::hal::Joint::Error::Hardware,
-                    rofi::herculex::errorMessage( flags ) );
-                _servo.resetErrors();
+                    bsp::errorName( flags ) );
+                _rebootServo();
             } );
         _errorPoller.start();
     }
 private:
+    template < typename F >
+    auto _handleExceptions( F f ) -> decltype( f() ) {
+        try {
+            return f();
+        }
+        catch ( const std::runtime_error& e ) {
+            if ( _errorCallback )
+                _errorCallback( rofi::hal::Joint( this->shared_from_this() ),
+                                Joint::Error::Communication,
+                                e.what() );
+        }
+        // Return default value
+        return decltype( f() )();
+    }
+
+    void _restorePwmLimit() {
+        if ( !_changedPwmLimit )
+            return;
+        _servo.torqueOff();
+        _servo.setTorqueLimit( 1.0f );
+        _servo.torqueOn();
+    }
+
+    Angle _getMaxMotorLimit() {
+        return Angle::rad( _capabilities.maxPosition ) / _gearRatio;
+    }
+
+    Angle _getMinMotorLimit() {
+        return Angle::rad( _capabilities.minPosition ) / _gearRatio;
+    }
+
+    void _rebootServo() {
+        _servo.reboot();
+        _servo.setTorqueLimit( 1 );
+        _servo.setExtendedPositionMode();
+        _servo.torqueOn();
+    }
+
     Capabilities _capabilities;
-    rofi::herculex::Bus::Servo _servo;
+    bsp::ServoBus::Servo _servo;
     float _gearRatio;
+    bool _changedPwmLimit;
     rtos::Timer _poller;
     rtos::Timer _errorPoller;
     std::function< void( Joint, Joint::Error, const std::string& msg ) > _errorCallback;
@@ -697,35 +723,41 @@ private:
 
 rofi::hal::Joint::Implementation::Capabilities shoeJointCapability() {
     rofi::hal::Joint::Implementation::Capabilities cap;
-    cap.maxPosition = Angle::pi / 2 * 1.1; // rad
-    cap.minPosition = -Angle::pi / 2 * 1.1; // rad
-    cap.maxSpeed = 2 * Angle::pi; // rad / s
-    cap.minSpeed = 2 * Angle::pi; // rad / s
-    cap.maxTorque = 1.2; // N * m
+    cap.maxPosition = Angle::pi / 2 * 1.1;   // rad
+    cap.minPosition = -Angle::pi / 2 * 1.1;  // rad
+    cap.maxSpeed    = 2 * Angle::pi;         // rad / s
+    cap.minSpeed    = 2 * Angle::pi;         // rad / s
+    cap.maxTorque   = 1.2;                   // N * m
     return cap;
 }
 
 rofi::hal::Joint::Implementation::Capabilities bodyJointCapability() {
     rofi::hal::Joint::Implementation::Capabilities cap;
-    cap.maxPosition = 0.9 * Angle::pi; // rad
-    cap.minPosition = -0.9 * Angle::pi; // rad
-    cap.maxSpeed = 2 * Angle::pi; // rad / s
-    cap.minSpeed = 2 * Angle::pi; // rad / s
-    cap.maxTorque = 1.2; // N * m
+    cap.maxPosition = 0.9 * Angle::pi;   // rad
+    cap.minPosition = -0.9 * Angle::pi;  // rad
+    cap.maxSpeed    = 2 * Angle::pi;     // rad / s
+    cap.minSpeed    = 2 * Angle::pi;     // rad / s
+    cap.maxTorque   = 1.2;               // N * m
     return cap;
 }
 
 class RoFILocal : public RoFI::Implementation {
 public:
-    RoFILocal():
-        _servoBus( UART_NUM_1, GPIO_NUM_4, GPIO_NUM_2 ),
+    RoFILocal() try:
+        _servoBus( bsp::buildServoBus() ),
         _joints( {
             std::make_shared< JointLocal >(
-                _servoBus.getServo( 1 ), shoeJointCapability(), 25.f / 35.f ),
+                _servoBus.getServo( bsp::alphaId ),
+                                    shoeJointCapability(),
+                                    bsp::alphaRatio ),
             std::make_shared< JointLocal >(
-                _servoBus.getServo( 2 ), shoeJointCapability(), 25.f / 35.f  ),
+                _servoBus.getServo( bsp::betaId ),
+                                    shoeJointCapability(),
+                                    bsp::betaRatio ),
             std::make_shared< JointLocal >(
-             _servoBus.getServo( 3 ), bodyJointCapability(), 1.f )
+                _servoBus.getServo( bsp::gammaId ),
+                                    bodyJointCapability(),
+                                    bsp::gammaRatio )
         } ),
         _connectorBus( HSPI_HOST, GPIO_NUM_18, GPIO_NUM_5, 1000000 ),
         _connectors( {
@@ -736,7 +768,9 @@ public:
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_33 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_26 )
         } )
-    {}
+    {} catch ( const std::runtime_error& e ) {
+        throw std::runtime_error( "Cannot intialize local RoFI Driver: "s + e.what() );
+    }
 
     virtual RoFI::Id getId() const override {
         return 0;
@@ -759,7 +793,7 @@ public:
     };
 
 private:
-    rofi::herculex::Bus _servoBus;
+    bsp::ServoBus _servoBus;
     std::array< std::shared_ptr< Joint::Implementation >, 3 > _joints;
 
     ConnectorBus _connectorBus;

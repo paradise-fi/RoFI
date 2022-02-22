@@ -32,3 +32,31 @@ std::make_unsigned_t< T > to_unsigned( T value ) {
     }
     return static_cast< std::make_unsigned_t< T > >( value );
 }
+
+template < typename Container, typename T >
+bool contains( const Container& c, const T& value ) {
+    for ( const auto& x : c )
+        if ( x == value )
+            return true;
+    return false;
+}
+
+/**
+ * Given an iterable list of items, return index of it. If element is not found,
+ * -1 is returned.
+ */
+template < typename T, typename Ts >
+int indexOf( T t, const Ts& source ) {
+    int i = 0;
+    for ( const auto& x : source ) {
+        if ( t == x )
+            return i;
+        i++;
+    }
+    return -1;
+}
+
+template < typename T >
+T clamp( T value, T min, T max ) {
+    return std::max( min, std::min( value, max ) );
+}

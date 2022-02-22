@@ -10,6 +10,31 @@ include(ColoredOutput)
 
 project(rofi)
 
+# Specify common dependencies
+FetchContent_Declare(
+  magic_enum
+  GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
+  GIT_TAG        v0.7.3
+)
+FetchContent_GetProperties(magic_enum)
+if(NOT magic_enum_POPULATED)
+  FetchContent_Populate(magic_enum)
+  add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
+endif()
+
+FetchContent_Declare(
+  lib_fort
+  GIT_REPOSITORY https://github.com/seleznevae/libfort.git
+  GIT_TAG        v0.4.2
+)
+FetchContent_GetProperties(lib_fort)
+if(NOT lib_fort_POPULATED)
+  FetchContent_Populate(lib_fort)
+  option(FORT_ENABLE_TESTING "Enables building tests and examples" OFF)
+  add_subdirectory(${lib_fort_SOURCE_DIR} ${lib_fort_BINARY_DIR})
+endif()
+
+
 function(add_rofi_firmware name)
     cmake_parse_arguments(A "" "FLASH_SIZE" "SOURCES" ${ARGN})
     add_executable(${name} ${A_SOURCES})
@@ -26,7 +51,8 @@ function(add_application path)
 endfunction()
 
 idf_build_process(esp32
-    COMPONENTS idf::esp32 idf::freertos idf::esptool_py idf::esp_http_client idf::lwip
+    COMPONENTS idf::esp32 idf::freertos idf::esptool_py idf::esp_http_client
+               idf::lwip idf::console
     SDKCONFIG ${CMAKE_CURRENT_LIST_DIR}/sdkconfig
     BUILD_DIR ${CMAKE_BINARY_DIR})
 
@@ -50,9 +76,14 @@ add_component(libfi)
 # Introduce alias
 add_library(rofi::hal ALIAS rofi_hal_esp32)
 
+# Add utilities
+add_application(hardwareModules/universalModule/software/esp32/dynamixelConfigurator)
+
 # Add the examples
 add_application(hardwareModules/universalModule/software/esp32/esp_hello_world)
 add_application(examples/hal/wifi)
+add_application(examples/hal/servo)
+
 
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
