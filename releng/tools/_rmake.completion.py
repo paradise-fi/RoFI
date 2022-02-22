@@ -19,7 +19,8 @@ test = False
 if len(words) > 0 and words[0].startswith("--"):
     if word == 1:
         candidates = [ s for s in flags if s.startswith(words[0]) ]
-        print("\n".join(candidates))
+        if len(candidates) > 0:
+            print("\n".join(candidates))
     if words[0] != "--test":
         sys.exit(0)
     else:
