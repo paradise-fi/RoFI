@@ -21,6 +21,28 @@ namespace detail
     template < typename T >
     constexpr bool is_result_v = is_result< T >::value;
 
+    template < typename F, typename ValueT, typename ErrorT >
+    constexpr bool is_invocable_by_common_ref()
+    {
+        if constexpr ( std::common_reference_with< ValueT, ErrorT > ) {
+            return std::is_invocable_v< F, std::common_reference_t< ValueT, ErrorT > >;
+        } else {
+            return false;
+        }
+    }
+
+    template < typename F, typename ValueT, typename ErrorT >
+    concept hint_match_visitor = ( std::is_invocable< F, std::true_type, ValueT >::value
+                                   && std::is_invocable< F, std::false_type, ErrorT >::value
+                                   && !std::is_invocable< F, ValueT >::value
+                                   && !std::is_invocable< F, ErrorT >::value );
+
+    template < typename F, typename ValueT, typename ErrorT >
+    concept no_hint_match_visitor = ( std::is_invocable< F, ValueT >::value
+                                      && std::is_invocable< F, ErrorT >::value
+                                      && !is_invocable_by_common_ref< F, ValueT, ErrorT >()
+                                      && !std::is_invocable< F, std::true_type, ValueT >::value
+                                      && !std::is_invocable< F, std::false_type, ErrorT >::value );
 } // namespace detail
 
 /**
@@ -530,6 +552,133 @@ public:
         return has_value() ? ResultT::value( std::move( assume_value() ) )
                            : ResultT::error( std::invoke( std::forward< F >( f ),
                                                           std::move( assume_error() ) ) );
+    }
+
+    /// Match operations
+
+    /**
+     * \brief Returns the result of invocation of \p f on `std::true_type`
+     * and the contained value if it exists.
+     * Otherwise, returns the result of invocation of \p f on `std::false_type`
+     * and the contained error.
+     *
+     * \p f has to be invocable with `std::true_type, value_type &` and with
+     * `std::false_type, error_type &` and has to have the same return type.
+     *
+     * \p f cannot be invocable just with `value_type &` or just with `error_type &`.
+     *
+     * \param f a suitable function or Callable object
+     *
+     * \returns The result of \p f .
+     */
+    template < detail::hint_match_visitor< value_type &, error_type & > Vis >
+    constexpr auto match( Vis && vis ) &
+    {
+        return has_value() ? std::forward< Vis >( vis )( std::true_type{}, assume_value() )
+                           : std::forward< Vis >( vis )( std::false_type{}, assume_error() );
+    }
+    /**
+     * \brief Returns the result of invocation of \p f on `std::true_type`
+     * and the contained value if it exists.
+     * Otherwise, returns the result of invocation of \p f on `std::false_type`
+     * and the contained error.
+     *
+     * \p f has to be invocable with `std::true_type, const value_type &` and with
+     * `std::false_type, const error_type &` and has to have the same return type.
+     *
+     * \p f cannot be invocable just with `const value_type &` or just with `const error_type &`.
+     *
+     * \param f a suitable function or Callable object
+     *
+     * \returns The result of \p f .
+     */
+    template < detail::hint_match_visitor< const value_type &, const error_type & > Vis >
+    constexpr auto match( Vis && vis ) const &
+    {
+        return has_value() ? std::forward< Vis >( vis )( std::true_type{}, assume_value() )
+                           : std::forward< Vis >( vis )( std::false_type{}, assume_error() );
+    }
+    /**
+     * \brief Returns the result of invocation of \p f on `std::true_type`
+     * and the contained value if it exists.
+     * Otherwise, returns the result of invocation of \p f on `std::false_type`
+     * and the contained error.
+     *
+     * \p f has to be invocable with `std::true_type, value_type &&` and with
+     * `std::false_type, error_type &&` and has to have the same return type.
+     *
+     * \p f cannot be invocable just with `value_type &&` or just with `error_type &&`.
+     *
+     * \param f a suitable function or Callable object
+     *
+     * \returns The result of \p f .
+     */
+    template < detail::hint_match_visitor< value_type &&, error_type && > Vis >
+    constexpr auto match( Vis && vis ) &&
+    {
+        return has_value()
+                     ? std::forward< Vis >( vis )( std::true_type{}, std::move( assume_value() ) )
+                     : std::forward< Vis >( vis )( std::false_type{}, std::move( assume_error() ) );
+    }
+    /**
+     * \brief Returns the result of invocation of \p f on the contained value if it exists.
+     * Otherwise, returns the result of invocation of \p f on the contained error.
+     *
+     * \p f has to be invocable with `value_type &` and with
+     * `error_type &` and has to have the same return type.
+     *
+     * \p f cannot be invocable with `std::true_type, value_type &` or with
+     * `std::false_type, error_type &`.
+     *
+     * \param f a suitable function or Callable object
+     *
+     * \returns The result of \p f .
+     */
+    template < detail::no_hint_match_visitor< value_type &, error_type & > Vis >
+    constexpr auto match( Vis && vis ) &
+    {
+        return has_value() ? std::forward< Vis >( vis )( assume_value() )
+                           : std::forward< Vis >( vis )( assume_error() );
+    }
+    /**
+     * \brief Returns the result of invocation of \p f on the contained value if it exists.
+     * Otherwise, returns the result of invocation of \p f on the contained error.
+     *
+     * \p f has to be invocable with `const value_type &` and with
+     * `const error_type &` and has to have the same return type.
+     *
+     * \p f cannot be invocable with `std::true_type, const value_type &` or with
+     * `std::false_type, const error_type &`.
+     *
+     * \param f a suitable function or Callable object
+     *
+     * \returns The result of \p f .
+     */
+    template < detail::no_hint_match_visitor< const value_type &, const error_type & > Vis >
+    constexpr auto match( Vis && vis ) const &
+    {
+        return has_value() ? std::forward< Vis >( vis )( assume_value() )
+                           : std::forward< Vis >( vis )( assume_error() );
+    }
+    /**
+     * \brief Returns the result of invocation of \p f on the contained value if it exists.
+     * Otherwise, returns the result of invocation of \p f on the contained error.
+     *
+     * \p f has to be invocable with `value_type &&` and with
+     * `error_type &&` and has to have the same return type.
+     *
+     * \p f cannot be invocable with `std::true_type, value_type &&` or with
+     * `std::false_type, error_type &&`.
+     *
+     * \param f a suitable function or Callable object
+     *
+     * \returns The result of \p f .
+     */
+    template < detail::no_hint_match_visitor< value_type &&, error_type && > Vis >
+    constexpr auto match( Vis && vis ) &&
+    {
+        return has_value() ? std::forward< Vis >( vis )( std::move( assume_value() ) )
+                           : std::forward< Vis >( vis )( std::move( assume_error() ) );
     }
 
     /// Comparison operator
