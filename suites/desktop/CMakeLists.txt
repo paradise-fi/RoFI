@@ -207,5 +207,8 @@ if (${BUILD_GAZEBO})
   add_subdirectory($ENV{ROFI_ROOT}/examples/simulator examples/simulator)
 endif()
 
+# Add logic tests for the hardware-related suites
+add_subdirectory($ENV{ROFI_ROOT}/softwareComponents/rofiHalEsp32/test-logic rofiHalEsp32-test)
+
 
 list_targets()

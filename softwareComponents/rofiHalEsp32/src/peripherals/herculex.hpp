@@ -355,7 +355,7 @@ public:
             _data.push_back( byte );
             return false;
         }
-        if ( _data.size() == 0 ) {
+        if ( _data.size() == 1 ) {
             if ( byte != 0xFF ) {
                 _data = {};
                 return false;

@@ -8,6 +8,7 @@
 
 extern "C" void app_main() {
     using namespace std::chrono_literals;
+
     try {
         auto rof = rofi::hal::RoFI::getLocalRoFI();
         auto joint = rof.getJoint( 0 );
