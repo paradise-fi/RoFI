@@ -373,3 +373,87 @@ TEST_CASE( "Monadic operations" )
         static_assert( std::is_same_v< decltype( result2 ), Result< Moveable, int > > );
     }
 }
+
+TEST_CASE( "Match" )
+{
+    SECTION( "basic" )
+    {
+        auto value = Result< int >::value( 11 );
+
+        CHECK( value.match( overload{
+                []( int v ) { return v == 11; },
+                []( const std::string & ) { return false; },
+        } ) );
+
+        auto value2 = Result< int >::value( 10 );
+        CHECK( !value2.match( overload{
+                []( std::true_type, auto && v ) { return v == 11; },
+                []( std::false_type, auto && ) { return true; },
+        } ) );
+
+        auto moveableResult = Result< Moveable >::value( {} );
+        auto moveable = moveableResult.match( overload{
+                []( Moveable & m ) { return std::move( m ); },
+                []( const std::string & str ) -> Moveable { throw std::runtime_error( str ); },
+        } );
+
+        auto moveableResult2 = Result< Moveable >::value( {} );
+        auto moveable2 = std::move( moveableResult2 )
+                                 .match( overload{
+                                         []( Moveable && m ) { return std::move( m ); },
+                                         []( const std::string & str ) -> Moveable {
+                                             throw std::runtime_error( str );
+                                         },
+                                 } );
+
+        auto moveable3 = Result< Moveable >::value( {} ).match( overload{
+                []( Moveable && m ) { return std::move( m ); },
+                []( const std::string & str ) -> Moveable { throw std::runtime_error( str ); },
+        } );
+    }
+    SECTION( "same" )
+    {
+        auto checkValue11CLRef = overload{
+                []( std::true_type, const int & v ) { return v == 11; },
+                []( std::false_type, const int & ) { return false; },
+        };
+        auto checkValue11LRef = overload{
+                []( std::true_type, int & v ) { return v == 11; },
+                []( std::false_type, int & ) { return false; },
+        };
+        auto checkValue11RRef = overload{
+                []( std::true_type, int && v ) { return v == 11; },
+                []( std::false_type, int && ) { return false; },
+        };
+
+        // Have to match exactly the arguments because of the reference
+        auto value11 = Result< int, int >::value( 11 );
+        auto value14 = Result< int, int >::value( 14 );
+        auto error11 = Result< int, int >::error( 11 );
+
+        value11.match( overload{ []( std::true_type, int ) {}, []( std::false_type, int ) {} } );
+        CHECK( value11.match( checkValue11LRef ) );
+        CHECK( !value14.match( checkValue11LRef ) );
+        CHECK( !error11.match( checkValue11LRef ) );
+
+        CHECK( value11.match( checkValue11CLRef ) );
+        CHECK( !value14.match( checkValue11CLRef ) );
+        CHECK( !error11.match( checkValue11CLRef ) );
+
+        const auto cvalue11 = Result< int, int >::value( 11 );
+        const auto cvalue14 = Result< unsigned, long >::value( 14 );
+        const auto cerror11 = Result< long, int >::error( 11 );
+
+        CHECK( cvalue11.match( checkValue11CLRef ) );
+        CHECK( !cvalue14.match( checkValue11CLRef ) );
+        CHECK( !cerror11.match( checkValue11CLRef ) );
+
+        CHECK( Result< int, int >::value( 11 ).match( checkValue11RRef ) );
+        CHECK( !Result< int, long >::value( 14 ).match( checkValue11RRef ) );
+        CHECK( !Result< int, long >::error( 11 ).match( checkValue11RRef ) );
+
+        CHECK( Result< int, int >::value( 11 ).match( checkValue11CLRef ) );
+        CHECK( !Result< int, long >::value( 14 ).match( checkValue11CLRef ) );
+        CHECK( !Result< int, long >::error( 11 ).match( checkValue11CLRef ) );
+    }
+}
