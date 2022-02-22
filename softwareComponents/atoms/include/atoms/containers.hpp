@@ -22,6 +22,10 @@ template < typename T >
 class HandleSet {
     using Container = std::vector< std::optional< T > >;
 
+public:
+    enum class handle_type : typename Container::size_type {};
+
+private:
     template < bool IsConst >
     class Iterator {
         using UnderlayingIterator = typename std::conditional_t< IsConst,
@@ -87,6 +91,11 @@ class HandleSet {
             return !( *this == other );
         }
 
+        handle_type get_handle() const noexcept {
+            assert( _set );
+            return static_cast< handle_type >( _it - _set->_elems.begin() );
+        }
+
     private:
         void afterIncrement() {
             assert( _set );
@@ -103,6 +112,7 @@ class HandleSet {
         HandleSetPtr _set;
         UnderlayingIterator _it;
     };
+
 public:
     using value_type = T;
     using size_type = typename Container::size_type;
@@ -113,8 +123,6 @@ public:
     using const_pointer = const T*;
     using iterator = Iterator< false >;
     using const_iterator = Iterator< true >;
-
-    enum class handle_type : size_type {};
 
     /**
      * \brief Exchange the contents of the container with `other`
