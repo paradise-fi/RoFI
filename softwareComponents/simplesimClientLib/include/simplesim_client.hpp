@@ -113,7 +113,7 @@ protected:
     void timerEvent( QTimerEvent* /* event */ );
 
     void colorModule( rofi::configuration::ModuleId module,
-                      double color[ 3 ],
+                      std::array< double, 3 > color,
                       int component = -1 );
 public slots:
     void setColor( int color );
@@ -213,7 +213,7 @@ private:
     int _simStep = 10; // ms to refresh the frame
 
     int _lastModule = -1;
-    double _lastColor[ 3 ];
+    std::array< double, 3 > _lastColor;
 
     std::map< rofi::configuration::ModuleId, detail::ModuleRenderInfo > _moduleRenderInfos;
 
