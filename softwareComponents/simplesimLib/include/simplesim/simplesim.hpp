@@ -36,10 +36,12 @@ public:
         assert( _simStepTimeMs > 0 );
         return std::chrono::milliseconds( _simStepTimeMs );
     }
-    std::chrono::duration< float, std::milli > getRealStepTime() const
+    std::chrono::nanoseconds getRealStepTime() const
     {
+        static constexpr size_t precision = 65536;
         if ( getSimSpeedRatio() > 0.f ) {
-            return getSimStepTime() / getSimSpeedRatio();
+            return std::chrono::nanoseconds( getSimStepTime() ) * precision
+                 / static_cast< size_t >( getSimSpeedRatio() * precision );
         }
         return {};
     }
