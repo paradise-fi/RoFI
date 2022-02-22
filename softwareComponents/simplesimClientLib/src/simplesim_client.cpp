@@ -338,17 +338,18 @@ void SimplesimClient::timerEvent( QTimerEvent* /* event */ ){
 
 void SimplesimClient::colorModule(
         rofi::configuration::ModuleId module,
-        double color[ 3 ],
+        std::array< double, 3 > color,
         int component )
 {
     assert( static_cast< int >( _moduleRenderInfos[ module ].componentActors.size() ) > component );
 
     if( component == -1 ){
         for( auto& actor : _moduleRenderInfos[ module ].componentActors ){
-            actor->GetProperty()->SetColor( color );
+            actor->GetProperty()->SetColor( color.data() );
         }
     } else {
-        _moduleRenderInfos[ module ].componentActors[ component ]->GetProperty()->SetColor( color );
+        _moduleRenderInfos[ module ].componentActors[ component ]
+            ->GetProperty()->SetColor( color.data() );
     }
 }
 
@@ -358,24 +359,24 @@ void SimplesimClient::itemSelected( QTreeWidgetItem* selected ){
     }
 
     int module;
-    double white[ 3 ] = { 1.0, 1.0, 1.0 };
+    std::array< double, 3 > white = { { 1.0, 1.0, 1.0 } };
 
     if( !selected->parent() ){
         module = ui->treeWidget->indexOfTopLevelItem( selected );
         _moduleRenderInfos[ module ].componentActors.front()
-            ->GetProperty()->GetColor( _lastColor );
+            ->GetProperty()->GetColor( _lastColor.data() );
         colorModule( module, white );
     } else if ( selected->parent() && !selected->parent()->parent() ) {
         module = ui->treeWidget->indexOfTopLevelItem( selected->parent() );
         _moduleRenderInfos[ module ].componentActors.front()
-            ->GetProperty()->GetColor( _lastColor );
+            ->GetProperty()->GetColor( _lastColor.data() );
         colorModule( module, white );
     } else {
         module = ui->treeWidget->indexOfTopLevelItem( selected->parent()->parent() );
         int component =
             ui->treeWidget->topLevelItem( module )->child( 0 )->indexOfChild( selected );
         _moduleRenderInfos[ module ].componentActors[ component ]
-            ->GetProperty()->GetColor( _lastColor );
+            ->GetProperty()->GetColor( _lastColor.data() );
         colorModule( module, white, component );
     }
     _lastModule = module;
@@ -386,7 +387,11 @@ void SimplesimClient::setColor( int color ){
     const auto& toColor = _changeColorWindow->toColor;
     for( int i = 0; i < static_cast< int >( toColor.size() ); ++i ){
         if( toColor[ i ] ){
-            colorModule( i, getModuleColor( color ).data() );
+            if( _lastModule == i ){
+                _lastColor = getModuleColor( color );
+            } else {
+                colorModule( i, getModuleColor( color ) );
+            }
         }
     }
 }
