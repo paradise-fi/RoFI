@@ -24,6 +24,7 @@ _autosave-*
 # Exported BOM files
 *.xml
 *.csv
+!partitions.csv
 
 # Exported 3D models
 *.step
