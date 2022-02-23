@@ -457,3 +457,37 @@ TEST_CASE( "Match" )
         CHECK( !Result< int, long >::error( 11 ).match( checkValue11CLRef ) );
     }
 }
+
+TEST_CASE( "Operator piping" )
+{
+    SECTION( "and then (>>)" )
+    {
+        SECTION( "compute success-success" )
+        {
+            auto checkPositive = []( int idx ) -> Result< size_t > {
+                return idx >= 0 ? Result< size_t >::value( to_unsigned( idx ) )
+                                : Result< size_t >::error( "negative index" );
+            };
+
+            auto result = Result< int >::value( 10 ) >> checkPositive;
+            CHECK( result == Result< size_t >::value( 10 ) );
+        }
+
+        SECTION( "compute success-failure" )
+        {
+            auto result = Result< int >::value( -10 ) >> []( int idx ) {
+                return idx >= 0 ? Result< size_t >::value( to_unsigned( idx ) )
+                                : Result< size_t >::error( "negative index" );
+            };
+            CHECK( result == Result< size_t >::error( "negative index" ) );
+        }
+
+        SECTION( "compute failure" )
+        {
+            auto result = Result< Moveable >::error( "10" ) >> []( auto ) -> Result< int > {
+                throw std::runtime_error( "unexpected run" );
+            };
+            CHECK( result == Result< int >::error( "10" ) );
+        }
+    }
+}

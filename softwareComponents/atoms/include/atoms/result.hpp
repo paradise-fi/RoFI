@@ -704,4 +704,22 @@ private:
     data_type _data;
 };
 
+/**
+ * \brief Returns the result of invocation of \p f on the contained value in \p result if it exists.
+ * Otherwise, returns the contained error in \p result in the return type.
+ *
+ * The return type of \p f must be a specialization of `Result` with the same error type.
+ *
+ * \param result result on whose value to apply \p f
+ * \param f a suitable function or Callable object that returns a `Result`
+ *
+ * \returns The result of \p f on value of \p result or the contained error in \p result .
+ */
+template < typename ResultT, typename F >
+    requires( detail::is_result_v< std::remove_cvref_t< ResultT > > )
+inline constexpr auto operator>>( ResultT && result, F && f )
+{
+    return std::forward< ResultT >( result ).and_then( std::forward< F >( f ) );
+}
+
 } // namespace atoms
