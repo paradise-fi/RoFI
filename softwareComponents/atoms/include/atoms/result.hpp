@@ -1,12 +1,28 @@
 #pragma once
 
 #include <cassert>
+#include <concepts>
+#include <functional>
 #include <string>
 #include <variant>
 
 
 namespace atoms
 {
+template < typename T, typename E >
+class [[nodiscard]] Result;
+
+namespace detail
+{
+    template < typename T >
+    struct is_result : std::false_type {};
+    template < typename T, typename E >
+    struct is_result< Result< T, E > > : std::true_type {};
+    template < typename T >
+    constexpr bool is_result_v = is_result< T >::value;
+
+} // namespace detail
+
 /**
  * \brief A type that holds either a value or an error.
  *
@@ -202,6 +218,318 @@ public:
     constexpr error_type && assume_error() && noexcept
     {
         return std::move( assume_error() );
+    }
+
+    /// Monadic operations
+    ///
+    /// Inspired by and designed to be compatible with
+    /// monadic operations of `std::optional` from C++23.
+
+    /**
+     * \brief Returns the result of invocation of \p f on the contained value if it exists.
+     * Otherwise, returns the contained error in the return type.
+     *
+     * The return type must be a specialization of `Result` with the same error type.
+     *
+     * \param f a suitable function or Callable object that returns a `Result`
+     *
+     * \returns The result of \p f or the contained error.
+     */
+    template < std::invocable< value_type & > F >
+        requires( std::is_copy_constructible_v< error_type > )
+    constexpr auto and_then( F && f ) &
+    {
+        using ResultT = std::remove_cvref_t< std::invoke_result_t< F, value_type & > >;
+        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( std::is_same_v< error_type, typename ResultT::error_type >,
+                       "error types must be the same" );
+
+        return has_value() ? std::invoke( std::forward< F >( f ), assume_value() )
+                           : ResultT::error( assume_error() );
+    }
+    /**
+     * \brief Returns the result of invocation of \p f on the contained value if it exists.
+     * Otherwise, returns the contained error in the return type.
+     *
+     * The return type must be a specialization of `Result` with the same error type.
+     *
+     * \param f a suitable function or Callable object that returns a `Result`
+     *
+     * \returns The result of \p f or the contained error.
+     */
+    template < std::invocable< const value_type & > F >
+        requires( std::is_copy_constructible_v< error_type > )
+    constexpr auto and_then( F && f ) const &
+    {
+        using ResultT = std::remove_cvref_t< std::invoke_result_t< F, const value_type & > >;
+        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( std::is_same_v< error_type, typename ResultT::error_type >,
+                       "error types must be the same" );
+
+        return has_value() ? std::invoke( std::forward< F >( f ), assume_value() )
+                           : ResultT::error( assume_error() );
+    }
+    /**
+     * \brief Returns the result of invocation of \p f on the contained value if it exists.
+     * Otherwise, returns the contained error in the return type.
+     *
+     * The return type must be a specialization of `Result` with the same error type.
+     *
+     * \param f a suitable function or Callable object that returns a `Result`
+     *
+     * \returns The result of \p f or the contained error.
+     */
+    template < std::invocable< value_type && > F >
+        requires( std::is_move_constructible_v< error_type > )
+    constexpr auto and_then( F && f ) &&
+    {
+        using ResultT = std::remove_cvref_t< std::invoke_result_t< F, value_type && > >;
+        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( std::is_same_v< error_type, typename ResultT::error_type >,
+                       "error types must be the same" );
+
+        return has_value() ? std::invoke( std::forward< F >( f ), std::move( assume_value() ) )
+                           : ResultT::error( std::move( assume_error() ) );
+    }
+
+    /**
+     * \brief Returns the contained value in the return type if it contains a value.
+     * Otherwise, returns the result of invocation of \p f on the contained error.
+     *
+     * The return type must be a specialization of `Result` with the same value type.
+     *
+     * \param f a suitable function or Callable object that returns a `Result`
+     *
+     * \returns The contained value or the result of \p f .
+     */
+    template < std::invocable< error_type & > F >
+        requires( std::is_copy_constructible_v< value_type > )
+    constexpr auto or_else( F && f ) &
+    {
+        using ResultT = std::remove_cvref_t< std::invoke_result_t< F, error_type & > >;
+        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( std::is_same_v< value_type, typename ResultT::value_type >,
+                       "value types must be the same" );
+
+        return has_value() ? ResultT::value( assume_value() )
+                           : std::invoke( std::forward< F >( f ), assume_error() );
+    }
+    /**
+     * \brief Returns the contained value in the return type if it contains a value.
+     * Otherwise, returns the result of invocation of \p f on the contained error.
+     *
+     * The return type must be a specialization of `Result` with the same value type.
+     *
+     * \param f a suitable function or Callable object that returns a `Result`
+     *
+     * \returns The contained value or the result of \p f .
+     */
+    template < std::invocable< const error_type & > F >
+        requires( std::is_copy_constructible_v< value_type > )
+    constexpr auto or_else( F && f ) const &
+    {
+        using ResultT = std::remove_cvref_t< std::invoke_result_t< F, const error_type & > >;
+        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( std::is_same_v< value_type, typename ResultT::value_type >,
+                       "value types must be the same" );
+
+        return has_value() ? ResultT::value( assume_value() )
+                           : std::invoke( std::forward< F >( f ), assume_error() );
+    }
+    /**
+     * \brief Returns the contained value in the return type if it contains a value.
+     * Otherwise, returns the result of invocation of \p f on the contained error.
+     *
+     * The return type must be a specialization of `Result` with the same value type.
+     *
+     * \param f a suitable function or Callable object that returns a `Result`
+     *
+     * \returns The contained value or the result of \p f .
+     */
+    template < std::invocable< error_type && > F >
+        requires( std::is_move_constructible_v< value_type > )
+    constexpr auto or_else( F && f ) &&
+    {
+        using ResultT = std::remove_cvref_t< std::invoke_result_t< F, error_type && > >;
+        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( std::is_same_v< value_type, typename ResultT::value_type >,
+                       "value types must be the same" );
+
+        return has_value() ? ResultT::value( std::move( assume_value() ) )
+                           : std::invoke( std::forward< F >( f ), std::move( assume_error() ) );
+    }
+
+    /**
+     * \brief Returns the contained value in the return type if it contains a value.
+     * Otherwise, returns the result of \p f .
+     *
+     * The return type must be a specialization of `Result` with the same value type.
+     *
+     * \param f a suitable function or Callable object that returns a `Result`
+     *
+     * \returns The contained value or the result of \p f .
+     */
+    template < std::invocable<> F >
+        requires( std::is_copy_constructible< value_type >::value
+                  && !std::is_invocable< F, error_type & >::value
+                  && !std::is_invocable< F, const error_type & >::value
+                  && !std::is_invocable< F, error_type && >::value )
+    constexpr auto or_else( F && f ) const
+    {
+        using ResultT = std::remove_cvref_t< std::invoke_result_t< F > >;
+        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( std::is_same_v< value_type, typename ResultT::value_type >,
+                       "value types must be the same" );
+
+        return has_value() ? ResultT::value( assume_value() )
+                           : std::invoke( std::forward< F >( f ) );
+    }
+    /**
+     * \brief Returns the contained value in the return type if it contains a value.
+     * Otherwise, returns the result of \p f .
+     *
+     * The return type must be a specialization of `Result` with the same value type.
+     *
+     * \param f a suitable function or Callable object that returns a `Result`
+     *
+     * \returns The contained value or the result of \p f .
+     */
+    template < std::invocable<> F >
+        requires( std::is_move_constructible< value_type >::value
+                  && !std::is_invocable< F, error_type & >::value
+                  && !std::is_invocable< F, const error_type & >::value
+                  && !std::is_invocable< F, error_type && >::value )
+    constexpr auto or_else( F && f ) &&
+    {
+        using ResultT = std::remove_cvref_t< std::invoke_result_t< F > >;
+        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( std::is_same_v< value_type, typename ResultT::value_type >,
+                       "value types must be the same" );
+
+        return has_value() ? ResultT::value( std::move( assume_value() ) )
+                           : std::invoke( std::forward< F >( f ) );
+    }
+
+    /// Transform operations
+
+    /**
+     * \brief Returns `Result` with the result of invocation of \p f
+     * on the contained value as the new value if it exists.
+     * Otherwise, returns the contained error in the return type.
+     *
+     * The return type of \p f will be the value type of the returned `Result`.
+     *
+     * \param f a suitable function or Callable object that returns the new value type
+     *
+     * \returns The result of \p f or the contained error.
+     */
+    template < std::invocable< value_type & > F >
+    constexpr auto transform( F && f ) &
+    {
+        using ValueT = std::remove_cvref_t< std::invoke_result_t< F, value_type & > >;
+        using ResultT = Result< ValueT, error_type >;
+        return has_value() ? ResultT::value( std::invoke( std::forward< F >( f ), assume_value() ) )
+                           : ResultT::error( assume_error() );
+    }
+    /**
+     * \brief Returns `Result` with the result of invocation of \p f
+     * on the contained value as the new value if it exists.
+     * Otherwise, returns the contained error in the return type.
+     *
+     * The return type of \p f will be the value type of the returned `Result`.
+     *
+     * \param f a suitable function or Callable object that returns the new value type
+     *
+     * \returns The result of \p f or the contained error.
+     */
+    template < std::invocable< const value_type & > F >
+    constexpr auto transform( F && f ) const &
+    {
+        using ValueT = std::remove_cvref_t< std::invoke_result_t< F, const value_type & > >;
+        using ResultT = Result< ValueT, error_type >;
+        return has_value() ? ResultT::value( std::invoke( std::forward< F >( f ), assume_value() ) )
+                           : ResultT::error( assume_error() );
+    }
+    /**
+     * \brief Returns `Result` with the result of invocation of \p f
+     * on the contained value as the new value if it exists.
+     * Otherwise, returns the contained error in the return type.
+     *
+     * The return type of \p f will be the value type of the returned `Result`.
+     *
+     * \param f a suitable function or Callable object that returns the new value type
+     *
+     * \returns The result of \p f or the contained error.
+     */
+    template < std::invocable< value_type && > F >
+    constexpr auto transform( F && f ) &&
+    {
+        using ValueT = std::remove_cvref_t< std::invoke_result_t< F, value_type && > >;
+        using ResultT = Result< ValueT, error_type >;
+        return has_value() ? ResultT::value(
+                       std::invoke( std::forward< F >( f ), std::move( assume_value() ) ) )
+                           : ResultT::error( std::move( assume_error() ) );
+    }
+
+    /**
+     * \brief Returns the contained value in the return type if it contains a value.
+     * Otherwise, returns `Result` with the result of invocation of \p f
+     * on the contained error as the new error.
+     *
+     * The return type of \p f will be the error type of the returned `Result`.
+     *
+     * \param f a suitable function or Callable object that returns a `Result`
+     *
+     * \returns The contained value or the result of \p f .
+     */
+    template < std::invocable< error_type & > F >
+    constexpr auto transform_error( F && f ) &
+    {
+        using ErrorT = std::remove_cvref_t< std::invoke_result_t< F, error_type & > >;
+        using ResultT = Result< value_type, ErrorT >;
+        return has_value()
+                     ? ResultT::value( assume_value() )
+                     : ResultT::error( std::invoke( std::forward< F >( f ), assume_error() ) );
+    }
+    /**
+     * \brief Returns the contained value in the return type if it contains a value.
+     * Otherwise, returns `Result` with the result of invocation of \p f
+     * on the contained error as the new error.
+     *
+     * The return type of \p f will be the error type of the returned `Result`.
+     *
+     * \param f a suitable function or Callable object that returns a `Result`
+     *
+     * \returns The contained value or the result of \p f .
+     */
+    template < std::invocable< const error_type & > F >
+    constexpr auto transform_error( F && f ) const &
+    {
+        using ErrorT = std::remove_cvref_t< std::invoke_result_t< F, const error_type & > >;
+        using ResultT = Result< value_type, ErrorT >;
+        return has_value()
+                     ? ResultT::value( assume_value() )
+                     : ResultT::error( std::invoke( std::forward< F >( f ), assume_error() ) );
+    }
+    /**
+     * \brief Returns the contained value in the return type if it contains a value.
+     * Otherwise, returns `Result` with the result of invocation of \p f
+     * on the contained error as the new error.
+     *
+     * The return type of \p f will be the error type of the returned `Result`.
+     *
+     * \param f a suitable function or Callable object that returns a `Result`
+     *
+     * \returns The contained value or the result of \p f .
+     */
+    template < std::invocable< error_type && > F >
+    constexpr auto transform_error( F && f ) &&
+    {
+        using ErrorT = std::remove_cvref_t< std::invoke_result_t< F, error_type && > >;
+        using ResultT = Result< value_type, ErrorT >;
+        return has_value() ? ResultT::value( std::move( assume_value() ) )
+                           : ResultT::error( std::invoke( std::forward< F >( f ),
+                                                          std::move( assume_error() ) ) );
     }
 
     /// Comparison operator
