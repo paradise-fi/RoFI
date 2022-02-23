@@ -1,4 +1,6 @@
-add_rofi_firmware(wifi_example.elf main.cpp)
+add_rofi_firmware(wifi_example.elf
+    FLASH_SIZE 4MB
+    SOURCES main.cpp)
 target_link_libraries(wifi_example.elf PUBLIC rofi::hal libfi)
 set_partition_table(wifi_example.elf partitions.csv)
 

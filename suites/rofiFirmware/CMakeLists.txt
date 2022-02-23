@@ -11,9 +11,10 @@ include(ColoredOutput)
 project(rofi)
 
 function(add_rofi_firmware name)
-    add_executable(${name} ${ARGN})
+    cmake_parse_arguments(A "" "FLASH_SIZE" "SOURCES" ${ARGN})
+    add_executable(${name} ${A_SOURCES})
     idf_build_executable(${name})
-    generate_image_from(${name})
+    generate_image_from(${name} "${A_FLASH_SIZE}")
 endfunction()
 
 function(add_component name)

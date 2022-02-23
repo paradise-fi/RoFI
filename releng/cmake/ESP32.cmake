@@ -4,14 +4,23 @@ include($ENV{IDF_PATH}/tools/cmake/toolchain-esp32.cmake)
 set(IMG_DIR ${CMAKE_BINARY_DIR}/img)
 file(MAKE_DIRECTORY "${IMG_DIR}")
 
-function(generate_image_from A_ELF_TARGET)
+function(generate_image_from A_ELF_TARGET A_FLASH_SIZE)
     get_filename_component(NAME_BASE "${A_ELF_TARGET}" NAME_WLE)
     set(IMG_NAME "${NAME_BASE}.bin")
     set(ELF_NAME "${NAME_BASE}.elf")
     set(TSTAMP "${A_ELF_TARGET}.bin_timestamp")
 
+    # Set correct flash size
+    set(FLASH_PARAMS ${ESPTOOLPY_FLASH_OPTIONS})
+    list(FIND FLASH_PARAMS "--flash_size" F_IDX)
+    if ( NOT ${F_IDX} EQUAL -1 )
+        MATH(EXPR F_IDX_PP "${F_IDX} + 1")
+        list(REMOVE_AT FLASH_PARAMS ${F_IDX_PP})
+        list(INSERT FLASH_PARAMS ${F_IDX_PP} "${A_FLASH_SIZE}")
+    endif()
+
     add_custom_command(OUTPUT "${TSTAMP}"
-        COMMAND ${ESPTOOLPY} elf2image ${ESPTOOLPY_FLASH_OPTIONS} ${esptool_elf2image_args}
+        COMMAND ${ESPTOOLPY} elf2image ${FLASH_PARAMS} ${esptool_elf2image_args}
             -o "${IMG_DIR}/${IMG_NAME}" "$<TARGET_FILE:${A_ELF_TARGET}>"
         COMMAND ln -s -f "$<TARGET_FILE:${A_ELF_TARGET}>" "${IMG_DIR}/${ELF_NAME}"
         COMMAND ${CMAKE_COMMAND} -E echo "${IMG_DIR}/${IMG_NAME}"
