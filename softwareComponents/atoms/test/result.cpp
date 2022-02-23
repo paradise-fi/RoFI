@@ -63,6 +63,19 @@ struct MyStruct {
 };
 
 
+static_assert( atoms::detail::is_result_v< Result< int > > );
+static_assert( atoms::detail::is_result_v< Result< std::string, int > > );
+static_assert( atoms::detail::is_result_v< Result< std::string, std::string > > );
+
+static_assert( !atoms::detail::is_result_v< int > );
+static_assert( !atoms::detail::is_result_v< std::variant< int, double > > );
+
+static_assert( !atoms::detail::is_result_v< Result< int > & > );
+static_assert( !atoms::detail::is_result_v< const Result< int > & > );
+static_assert( !atoms::detail::is_result_v< Result< int > && > );
+static_assert( !atoms::detail::is_result_v< const Result< int > && > );
+
+
 TEST_CASE( "Result constructors" )
 {
     auto okInt = Result< int, std::string >::value( 10 );
@@ -223,5 +236,140 @@ TEST_CASE( "Method access" )
         CHECK( error.assume_error().refType() == RefType::LValue );
         CHECK( cerror.assume_error().refType() == RefType::CLValue );
         CHECK( std::move( error ).assume_error().refType() == RefType::RValue );
+    }
+}
+
+TEST_CASE( "Monadic operations" )
+{
+    SECTION( "and then" )
+    {
+        auto checkPositive = []( int idx ) -> Result< size_t > {
+            return idx >= 0 ? Result< size_t >::value( to_unsigned( idx ) )
+                            : Result< size_t >::error( "negative index" );
+        };
+
+        SECTION( "compute success-success" )
+        {
+            auto compute10 = [] { return Result< int >::value( 10 ); };
+
+            auto result = compute10().and_then( checkPositive );
+            CHECK( result == Result< size_t >::value( 10 ) );
+        }
+
+        SECTION( "compute success-failure" )
+        {
+            auto computeNeg10 = [] { return Result< int >::value( -10 ); };
+
+            auto result = computeNeg10().and_then( checkPositive );
+            CHECK( result == Result< size_t >::error( "negative index" ) );
+        }
+
+        SECTION( "compute failure" )
+        {
+            auto computeErr = [] { return Result< Moveable >::error( "10" ); };
+            auto dontRun = []( auto ) -> Result< int > {
+                throw std::runtime_error( "unexpected run" );
+            };
+
+            auto result = computeErr().and_then( dontRun );
+            CHECK( result == Result< int >::error( "10" ) );
+        }
+    }
+    SECTION( "or else" )
+    {
+        SECTION( "compute success" )
+        {
+            auto compute10 = [] { return Result< int >::value( 10 ); };
+            auto dontRun = []( auto ) -> Result< int > {
+                throw std::runtime_error( "unexpected run" );
+            };
+
+            auto result = compute10().or_else( dontRun );
+            CHECK( result == Result< int >::value( 10 ) );
+        }
+
+        SECTION( "compute failure-success" )
+        {
+            auto computeErr = [] { return Result< int >::error( "10" ); };
+            auto transformTo10 = []( auto ) { return Result< int >::value( 10 ); };
+
+            auto result = computeErr().or_else( transformTo10 );
+            CHECK( result == Result< int >::value( 10 ) );
+        }
+
+        SECTION( "compute failure-failure" )
+        {
+            auto computeErr = [] { return Result< Moveable >::error( "hello" ); };
+            auto transformErr = []( auto prev ) {
+                return Result< Moveable >::error( prev + " world" );
+            };
+
+            auto result = computeErr().or_else( transformErr );
+            REQUIRE_FALSE( result );
+            CHECK( result.assume_error() == "hello world" );
+        }
+    }
+    SECTION( "or else (no argument)" )
+    {
+        SECTION( "compute success" )
+        {
+            auto compute10 = [] { return Result< int >::value( 10 ); };
+            auto dontRun = []() -> Result< int > { throw std::runtime_error( "unexpected run" ); };
+
+            auto result = compute10().or_else( dontRun );
+            CHECK( result == Result< int >::value( 10 ) );
+        }
+
+        SECTION( "compute failure-success" )
+        {
+            auto computeErr = [] { return Result< int >::error( "10" ); };
+            auto transformTo10 = []() { return Result< int >::value( 10 ); };
+
+            auto result = computeErr().or_else( transformTo10 );
+            CHECK( result == Result< int >::value( 10 ) );
+        }
+
+        SECTION( "compute failure-failure" )
+        {
+            auto computeErr = [] { return Result< Moveable >::error( "hello" ); };
+            auto transformErr = []() { return Result< Moveable >::error( " world" ); };
+
+            auto result = computeErr().or_else( transformErr );
+            REQUIRE_FALSE( result );
+            CHECK( result.assume_error() == " world" );
+        }
+    }
+    SECTION( "transform" )
+    {
+        auto dontRun = []( auto ) -> int { throw std::runtime_error( "unexpected run" ); };
+
+        auto result1 = Result< int >::value( 10 ).transform( []( int v ) { return v + 5; } );
+        CHECK( result1 == Result< size_t >::value( 15 ) );
+
+        auto result2 = Result< int >::value( 10 ).transform( []( auto ) { return Moveable{}; } );
+        CHECK( result2.has_value() );
+        static_assert( std::is_same_v< decltype( result2 ), Result< Moveable > > );
+
+        auto result3 = Result< int, Moveable >::value( 10 ).transform(
+                []( auto ) { return Copyable{}; } );
+        CHECK( result3.has_value() );
+        static_assert( std::is_same_v< decltype( result3 ), Result< Copyable, Moveable > > );
+
+        auto result4 = Result< Moveable, Copyable >::error( Copyable{} ).transform( dontRun );
+        CHECK_FALSE( result4 );
+        static_assert( std::is_same_v< decltype( result4 ), Result< int, Copyable > > );
+    }
+    SECTION( "transform error" )
+    {
+        auto dontRun = []( auto ) -> int { throw std::runtime_error( "unexpected run" ); };
+
+        auto result1 = Result< Moveable >::error( "hello" ).transform_error(
+                []( auto v ) { return v + " world"; } );
+        CHECK( !result1 );
+        CHECK( result1.assume_error() == "hello world" );
+
+        auto result2 = Result< Moveable, Copyable >::value( Moveable{} ).transform_error( dontRun );
+        CHECK( result2 );
+        static_assert( std::is_same_v< decltype( result2 ), Result< Moveable, int > > );
     }
 }
