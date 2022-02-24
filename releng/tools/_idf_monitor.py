@@ -25,8 +25,11 @@ def alternative_run_make(self, target):
         imgTarget = os.path.splitext(img)[0]
         toolsPath = os.path.join(os.environ["ROFI_ROOT"], "releng", "tools")
 
-        subprocess.check_call(["python", os.path.join(toolsPath, "rmake"), imgTarget])
-        subprocess.check_call(["python", os.path.join(toolsPath, "rflash"), img])
+        try:
+            subprocess.check_call(["python", os.path.join(toolsPath, "rmake"), imgTarget])
+            subprocess.check_call(["python", os.path.join(toolsPath, "rflash"), img])
+        except Exception as e:
+            self.prompt_next_action('Build failed')
 
 
 idf_monitor.Monitor.run_make = alternative_run_make
