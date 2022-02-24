@@ -4,6 +4,7 @@ from posix import environ
 import sys
 import os
 import subprocess
+import serial.tools.list_ports as list_ports
 from common import *
 
 def monitorEsp32Image(img, extra):
@@ -12,10 +13,15 @@ def monitorEsp32Image(img, extra):
 
     env = os.environ.copy()
     env["ROFI_MONITORED_TARGET"] = img.name
+    # ESP-IDF uses /dev/ttyUSB by default which is not suitable for RoFI.
+    availablePorts = list_ports.comports()
+    if len(availablePorts):
+        env["ESPTOOL_PORT"] = availablePorts[0].device
 
     command = ["python", monitor]
     command += extra
     command += [os.path.splitext(img.path)[0] + ".elf"]
+    print(command)
     retcode = subprocess.call(command, env=env)
     return retcode
 
