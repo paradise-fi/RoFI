@@ -17,7 +17,7 @@ jobs:
       - name: Build desktop
         uses: addnab/docker-run-action@v2
         with:
-          image: yaqwsx/rofi.desktop
+          image: yaqwsx/rofi
           shell: bash
           options: -v ${{ github.workspace }}:/work -w /work
           run: |
@@ -27,7 +27,7 @@ jobs:
       - name: Run tests
         uses: addnab/docker-run-action@v2
         with:
-          image: yaqwsx/rofi.desktop
+          image: yaqwsx/rofi
           shell: bash
           options: -v ${{ github.workspace }}:/work -w /work
           run: |
@@ -45,7 +45,7 @@ jobs:
       - name: Build RoFI firmware
         uses: addnab/docker-run-action@v2
         with:
-          image: yaqwsx/rofi.desktop
+          image: yaqwsx/rofi
           shell: bash
           options: -v ${{ github.workspace }}:/work -w /work
           run: |
@@ -60,6 +60,27 @@ jobs:
             # Configure and build
             rcfg rofiFirmware
             rmake rofiFirmware
+  build_firmware:
+    name: "Build suite firmware"
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        environment: [Debug, Release]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+      - name: Build firmware
+        uses: addnab/docker-run-action@v2
+        with:
+          image: yaqwsx/rofi
+          shell: bash
+          options: -v ${{ github.workspace }}:/work -w /work
+          run: |
+            source setup.sh ${{ matrix.environment }}
+
+            # Configure and build
+            rcfg firmware
+            rmake firmware
   build_doc:
     name: "Build documentation"
     runs-on: ubuntu-20.04
