@@ -1,6 +1,22 @@
 #pragma once
 
 #include <type_traits>
+#include <atoms/traits.hpp>
+
+namespace detail {
+
+template < typename T >
+using CountKeyT = decltype( std::declval< T >().count( std::declval< T::key_type > ) );
+
+template < typename T >
+using CountValT = decltype( std::declval< T >().count( std::declval< T::value_type > ) );
+
+template < typename T >
+using HasCount = std::disjunction<
+    atoms::detect< T, CountKeyT >,
+    atoms::detect< T, CountValT > >;
+
+} // namespace detail
 
 template < std::size_t... >
 struct sum: std::integral_constant< std::size_t, 0 > {};
@@ -34,7 +50,12 @@ std::make_unsigned_t< T > to_unsigned( T value ) {
 }
 
 template < typename Container, typename T >
-bool contains( const Container& c, const T& value ) {
+bool contains( const Container& c, const T& value )
+{
+    if constexpr( detail::HasCount< Container >::value ) {
+        return c.count( value );
+    }
+
     for ( const auto& x : c )
         if ( x == value )
             return true;

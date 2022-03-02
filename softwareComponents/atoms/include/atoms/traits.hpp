@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include <utility>
 
 namespace atoms {
 
@@ -54,5 +55,20 @@ public:
         using type = typename call_type::template argument< N + 1 >::type;
     };
 };
+
+// For pre-concept era it might be useful to detect if method exists or not.
+// Therefore, we provide an implementation inspired by N4502:
+// https://en.cppreference.com/w/cpp/experimental/is_detected
+
+template <typename...>
+using void_t = void;
+
+// Primary template handles all types not supporting the operation.
+template < typename, template < typename > class, typename = void_t<> >
+struct detect : std::false_type {};
+
+// Specialization recognizes/validates only types supporting the archetype.
+template < typename T, template < typename > class Op >
+struct detect< T, Op, void_t< Op< T > > > : std::true_type {};
 
 } // namespace atoms
