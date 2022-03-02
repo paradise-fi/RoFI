@@ -2,6 +2,13 @@
 #include <system/dbg.hpp>
 #include <unwind.h>
 
+// Default std::terminate handler, default implementation brings in demangling
+// of C++ names, which is big.
+void __gnu_cxx::__verbose_terminate_handler() {
+    __asm__( "BKPT" );
+    std::abort();
+}
+
 extern "C" void __attribute__((__used__)) NMI_Handler() {
     Dbg::error( "NMI occured" );
     while ( true );
