@@ -14,6 +14,8 @@ void PowerManagement::setup() {
     PM_BUS_VOLTAGE_PIN.setupAnalog();
     PM_USB_VOLTAGE_PIN.setupAnalog();
     PM_BATT_VOLTAGE_PIN.setupAnalog();
+
+    _timer.enable();
 }
 
 float PowerManagement::getUsbVoltage() {

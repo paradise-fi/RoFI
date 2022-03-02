@@ -44,6 +44,12 @@ using PrimaryAllocator = memory::Pool;
 #define PM_BUS_R_DIVIDER_TOP  68.0
 #define PM_BUS_R_DIVIDER_BOT  10.0
 
+/* Buzzer */
+#define BUZZER_PIN_A GpioB[ 13 ]
+#define BUZZER_PIN_B GpioA[ 8 ]
+#define BUZZER_TIM   TIM1
+#define BUZZER_CHAN  LL_TIM_CHANNEL_CH1
+
 /* USB QC */
 #define QC_2_M_PIN  GpioB[ 0 ]
 #define QC_10_P_PIN GpioB[ 3 ]

@@ -134,7 +134,7 @@ function(setup_stm32cube PREFIX MCU)
     add_hallib(HAL_CAN
         REQUIRED hal_can.c
         OPTIONAL hal_can_ex.c)
-    add_hallib(HAL_Cec
+    add_hallib(HAL_CEC
         OPTIONAL hal_cec.c)
     add_hallib(HAL_Cortex
         REQUIRED hal_cortex.c)

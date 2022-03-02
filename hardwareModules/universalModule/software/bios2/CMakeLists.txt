@@ -31,6 +31,6 @@ target_link_libraries(umBios2Fw PRIVATE
         f4_startup
         f4_LL f4_HAL f4_HAL_Gpio
         f4_stm32cxx f4_stm32cxx_adc f4_stm32cxx_uart f4_stm32cxx_gpio
-        f4_stm32cxx_system f4_stm32cxx_usb)
+        f4_stm32cxx_system f4_stm32cxx_usb f4_stm32cxx_timer)
 target_compile_definitions(umBios2Fw PUBLIC "-DUSBD_SOF_DISABLED" "-DHSE_VALUE=24000000")
 target_include_directories(umBios2Fw PUBLIC src config)

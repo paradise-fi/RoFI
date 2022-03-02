@@ -125,8 +125,14 @@ int main() {
 
     int i = 0;
     std::function< void(void) > keepAlive = [&](){
-        PowerManagement::instance().enableUsbToBus( i % 12 < 6 );
-        PowerManagement::instance().enableCharging( i % 6 < 3 );
+        if ( i < 2 ) {
+            Dbg::error("Buzz!");
+            PowerManagement::instance().beepStart( 1500, 255 );
+        }
+        else
+            PowerManagement::instance().beepStop();
+        // PowerManagement::instance().enableUsbToBus( i % 12 < 6 );
+        // PowerManagement::instance().enableCharging( i % 6 < 3 );
         float usbV = PowerManagement::instance().getUsbVoltage();
         float busV = PowerManagement::instance().getBusVoltage();
         Dbg::info( "Alive! %d, %f V, %f V", i % 12, usbV, busV );

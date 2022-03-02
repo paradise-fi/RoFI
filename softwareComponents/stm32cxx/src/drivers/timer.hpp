@@ -2,19 +2,22 @@
 
 #include <system/assert.hpp>
 #include <utility>
-
-#include <stm32g0xx_ll_tim.h>
-#include <stm32g0xx_ll_bus.h>
-
 #include <drivers/peripheral.hpp>
 #include <drivers/gpio.hpp>
 
-class Timer: public Peripheral< TIM_TypeDef > {
+#include <timer.port.hpp>
+
+class Timer: public Peripheral< TIM_TypeDef >, public detail::Timer< Timer > {
 public:
     template < typename... Configs >
     Timer( TIM_TypeDef *periph = nullptr, Configs... configs )
         : Peripheral< TIM_TypeDef >( periph )
     {
+        setup(std::forward< Configs >( configs )... );
+    }
+
+    template < typename... Configs >
+    void setup( Configs... configs ) {
         enableClock();
         LL_TIM_EnableARRPreload( _periph );
         ( configs.post( _periph ), ... );
@@ -28,19 +31,10 @@ public:
         LL_TIM_DisableCounter( _periph );
     }
 
-    void enableClock() {
-        if ( _periph == TIM1 )
-            LL_APB2_GRP1_EnableClock(LL_APB2_GRP1_PERIPH_TIM1);
-        else if ( _periph == TIM2 )
-            LL_APB1_GRP1_EnableClock(LL_APB1_GRP1_PERIPH_TIM2);
-        else {
-            // ToDo: missing timers
-            assert( false && "Invalid timer specified " );
-        }
-    }
-
     class Pwm {
     public:
+        Pwm(): _periph( nullptr ), _channel( 0 ) {};
+
         void attachPin( Gpio::Pin pin ) {
             pin.port().enableClock();
 
@@ -50,7 +44,7 @@ public:
             GPIO_InitStruct.Speed = LL_GPIO_SPEED_FREQ_HIGH;
             GPIO_InitStruct.OutputType = LL_GPIO_OUTPUT_PUSHPULL;
             GPIO_InitStruct.Pull = LL_GPIO_PULL_NO;
-            GPIO_InitStruct.Alternate = alternativeFun( pin );
+            GPIO_InitStruct.Alternate = alternativeFun( pin, _periph, _channel );
 
             LL_GPIO_Init( pin._periph, &GPIO_InitStruct );
         }
@@ -90,22 +84,12 @@ public:
             cfg.OCNIdleState = LL_TIM_OCIDLESTATE_LOW;
 
             LL_TIM_OC_Init( _periph, _channel, &cfg );
+            LL_TIM_OC_EnablePreload( _periph, _channel );
             LL_TIM_OC_DisableFast( _periph, _channel );
             LL_TIM_SetTriggerOutput( _periph, LL_TIM_TRGO_RESET );
-            LL_TIM_SetTriggerOutput2( _periph, LL_TIM_TRGO2_RESET );
+            // LL_TIM_SetTriggerOutput2( _periph, LL_TIM_TRGO2_RESET );
             LL_TIM_DisableMasterSlaveMode( _periph );
             LL_TIM_EnableAllOutputs( _periph );
-        }
-
-        int alternativeFun( Gpio::Pin pin ) {
-            if ( _periph == TIM1 && _channel == LL_TIM_CHANNEL_CH1 ) {
-                if ( pin._periph == GPIOA && pin._pos == 8 )
-                    return LL_GPIO_AF_2;
-                assert( false && "Incorrect Output pin pin" );
-            }
-            // ToDo: More configurations
-            assert( false && "Incorrect Output pin pin" );
-            __builtin_trap();
         }
 
         TIM_TypeDef *_periph;
