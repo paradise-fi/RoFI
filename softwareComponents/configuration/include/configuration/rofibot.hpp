@@ -39,6 +39,7 @@ namespace roficom {
      * Return a corresponding angle in radians for a given orientation
      */
     double orientationToAngle( Orientation o = Orientation::North );
+    Matrix orientationToTransform( roficom::Orientation orientation );
 
     std::string orientationToString( Orientation o );
     Orientation stringToOrientation( const std::string& str );
@@ -676,11 +677,7 @@ struct RoficomJoint : public Joint {
     {}
 
     Matrix sourceToDest() const override {
-        using namespace rofi::configuration::matrices;
-        // the "default" roficom is A-X
-        return translate( { -1, 0, 0 } ) * rotate( M_PI, { 0, 0, 1 } )
-            * rotate( M_PI, { 1, 0, 0 } )
-            * rotate( roficom::orientationToAngle( orientation ), { -1, 0, 0 } );
+        return roficom::orientationToTransform( orientation );
     }
 
     ATOMS_CLONEABLE( RoficomJoint );

@@ -20,6 +20,13 @@ double roficom::orientationToAngle( roficom::Orientation o ) {
     return 0; // never reached
 }
 
+Matrix roficom::orientationToTransform( roficom::Orientation orientation ) {
+    // the "default" roficom is A-X
+    return translate( { -1, 0, 0 } ) * rotate( M_PI, { 0, 0, 1 } )
+        * rotate( M_PI, { 1, 0, 0 } )
+        * rotate( roficom::orientationToAngle( orientation ), { -1, 0, 0 } );
+}
+
 std::string roficom::orientationToString( Orientation o ) {
     switch ( o ) {
         case Orientation::North:
