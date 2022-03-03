@@ -38,7 +38,7 @@ state.
 
 If you would like to also compile the firmware for the physical robots, you
 should invoke the setup command with ``-i``. This will setup ESP-IDF, which is
-necessary to compile suite ``rofiFirmware``.
+necessary to compile suite ``esp32``.
 
 Once you setup the environment, you have management commands available in your
 shell (e.g., ``rcfg`` and ``rmake``). Then you can proceed to configuration of
@@ -71,11 +71,11 @@ Currently, there are the following suites:
    target creates e.g., `.stl` files for printing, ZIP packages containing
    gerber files for PCB production, bill-of-materials, etc.
 
--  **firmware**: Firmware for the microcontrollers on hardware modules. This
-   does not include the RoFI programs. Think of this as the part of the
-   hardware, that just have to be build separately.
+-  **stm32**: Firmware for the microcontrollers on hardware modules based on
+   STM32 microcontrollers. This does not include the RoFI programs. Think of
+   this as the part of the hardware, that just have to be build separately.
 
--  **rofiFirmware**: The actual programs that are deployed to the RoFI modules.
+-  **esp32**: The actual programs that are deployed to the RoFI modules.
 
 -  **doc**: This documentation.
 

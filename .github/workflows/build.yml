@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Build desktop
+      - name: Build
         uses: addnab/docker-run-action@v2
         with:
           image: yaqwsx/rofi
@@ -33,8 +33,8 @@ jobs:
           run: |
             source setup.sh ${{ matrix.environment }}
             rmake --test --all
-  build_rofiFirmware:
-    name: "Build suite rofiFirmware"
+  build_esp32:
+    name: "Build suite esp32"
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -42,7 +42,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Build RoFI firmware
+      - name: Build
         uses: addnab/docker-run-action@v2
         with:
           image: yaqwsx/rofi
@@ -58,10 +58,10 @@ jobs:
             export RoFI_WLAN_PASS=""
 
             # Configure and build
-            rcfg rofiFirmware
-            rmake rofiFirmware
-  build_firmware:
-    name: "Build suite firmware"
+            rcfg esp32
+            rmake esp32
+  build_stm32:
+    name: "Build suite stm32"
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -69,7 +69,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
-      - name: Build firmware
+      - name: Build
         uses: addnab/docker-run-action@v2
         with:
           image: yaqwsx/rofi
@@ -79,8 +79,8 @@ jobs:
             source setup.sh ${{ matrix.environment }}
 
             # Configure and build
-            rcfg firmware
-            rmake firmware
+            rcfg stm32
+            rmake stm32
   build_doc:
     name: "Build documentation"
     runs-on: ubuntu-20.04
