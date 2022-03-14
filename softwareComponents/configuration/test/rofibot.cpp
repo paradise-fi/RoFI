@@ -485,6 +485,69 @@ TEST_CASE( "Connect and disconnect" ) {
         CHECK( !bot.isPrepared() );
         CHECK( bot.referencePoints().empty() );
     }
+
+    SECTION( "Reconnect - simple" )
+    {
+        auto & m1 = static_cast< UniversalModule & >(
+                bot.insert( UniversalModule( 42, 90_deg, 0_deg, 0_deg ) ) );
+        auto & m2 = static_cast< UniversalModule & >(
+                bot.insert( UniversalModule( 66, 0_deg, 90_deg, 0_deg ) ) );
+
+        auto h = connect< RigidJoint >( m1.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
+
+        auto j1 = connect( m1.getConnector( "A+X" ),
+                           m2.getConnector( "A-X" ),
+                           roficom::Orientation::South );
+
+        bot.prepare();
+        REQUIRE( bot.isPrepared() );
+        CHECK( bot.isValid().first );
+
+        bot.disconnect( j1 );
+
+        CHECK_THROWS( bot.prepare() );
+    }
+
+    SECTION( "Reconnect" )
+    {
+        auto & m1 = static_cast< UniversalModule & >(
+                bot.insert( UniversalModule( 42, 90_deg, 0_deg, 0_deg ) ) );
+        auto & m2 = static_cast< UniversalModule & >(
+                bot.insert( UniversalModule( 66, 0_deg, 90_deg, 0_deg ) ) );
+
+        auto h = connect< RigidJoint >( m1.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
+
+        auto j1 = connect( m1.getConnector( "A+X" ),
+                           m2.getConnector( "A-X" ),
+                           roficom::Orientation::South );
+
+        bot.prepare();
+        REQUIRE( bot.isPrepared() );
+        CHECK( bot.isValid().first );
+
+        m1.setAlpha( 0_deg );
+        m2.setBeta( 0_deg );
+        auto j2 = connect( m1.getConnector( "B-X" ),
+                           m2.getConnector( "B+X" ),
+                           roficom::Orientation::South );
+
+        bot.prepare();
+        REQUIRE( bot.isPrepared() );
+        CHECK( bot.isValid().first );
+
+        bot.disconnect( j1 );
+
+        bot.prepare();
+        REQUIRE( bot.isPrepared() );
+        CHECK( bot.isValid().first );
+
+        m1.setAlpha( 90_deg );
+        m2.setBeta( 90_deg );
+
+        bot.prepare();
+        REQUIRE( bot.isPrepared() );
+        CHECK( bot.isValid().first );
+    }
 }
 
 TEST_CASE( "Get near connector" ) {
