@@ -104,16 +104,18 @@ struct Component {
 
     Module* parent = nullptr;
 
-    bool operator==( const Component& o ) const {
-        return type == o.type &&
-               inJoints == o.inJoints &&
-               outJoints == o.outJoints &&
-               parent == o.parent;
-    }
+    bool operator==( const Component& o ) const = default;
 
-    bool operator!=( const Component& o ) const {
-        return !( *this == o );
-    }
+    /**
+     * \brief Get the index of component in parent
+     */
+    int getIndexInParent() const;
+    /**
+     * \brief Get the absolute component position
+     *
+     * Raises std::logic_error if the rofibot is not prepared
+     */
+    Matrix getPosition() const;
 };
 
 /**
