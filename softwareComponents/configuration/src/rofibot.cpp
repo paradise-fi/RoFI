@@ -67,6 +67,39 @@ Matrix Component::getPosition() const {
     return moduleAbsPosition * parent->getComponentRelativePosition( getIndexInParent() );
 }
 
+std::optional< std::pair< const Component&, roficom::Orientation > > Component::getNearConnector() const {
+    assert( type == ComponentType::Roficom );
+    assert( parent != nullptr );
+    assert( parent->parent != nullptr );
+
+    Rofibot& rofibot = *parent->parent;
+    if ( !rofibot.isPrepared() )
+        throw std::runtime_error( "rofibot is not prepared" );
+
+    auto thisAbsPosition = getPosition();
+    for ( auto& moduleInfo : rofibot.modules() ) {
+        assert( moduleInfo.module );
+
+        for ( const Component& nearConnector : moduleInfo.module->connectors() ) {
+            assert( nearConnector.type == ComponentType::Roficom );
+
+            static constexpr auto allOrientations = std::array{ roficom::Orientation::North,
+                                                                roficom::Orientation::East,
+                                                                roficom::Orientation::South,
+                                                                roficom::Orientation::West };
+
+            for ( roficom::Orientation o : allOrientations ) {
+                if ( equals( thisAbsPosition * orientationToTransform( o ),
+                             nearConnector.getPosition() ) ) {
+                    return { { nearConnector, o } };
+                }
+            }
+        }
+    }
+
+    return std::nullopt;
+}
+
 bool Module::setId( ModuleId newId ) {
     if ( parent ) {
         if ( parent->_idMapping.contains( newId ) )
