@@ -116,6 +116,17 @@ struct Component {
      * Raises std::logic_error if the rofibot is not prepared
      */
     Matrix getPosition() const;
+
+    /**
+     * \brief Find a connector of another module in the same Rofibot
+     * that can be connected to
+     *
+     * Returns the connector and orientation
+     * Returns `nullopt` if no such connector exists
+     *
+     * Raises std::logic_error if the rofibot is not prepared
+     */
+    std::optional< std::pair< const Component&, roficom::Orientation > > getNearConnector() const;
 };
 
 /**
