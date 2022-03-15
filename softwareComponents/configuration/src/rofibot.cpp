@@ -55,6 +55,18 @@ roficom::Orientation roficom::stringToOrientation( const std::string& str ) {
         assert( false && "String does not represent the orientation" );
 }
 
+int Component::getIndexInParent() const {
+    assert( parent != nullptr );
+    return parent->componentIdx( *this );
+}
+
+Matrix Component::getPosition() const {
+    assert( parent != nullptr );
+    assert( parent->parent != nullptr );
+    auto moduleAbsPosition = parent->parent->getModulePosition( parent->getId() );
+    return moduleAbsPosition * parent->getComponentRelativePosition( getIndexInParent() );
+}
+
 bool Module::setId( ModuleId newId ) {
     if ( parent ) {
         if ( parent->_idMapping.contains( newId ) )
