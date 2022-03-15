@@ -685,6 +685,27 @@ struct RoficomJoint : public Joint {
 
     ATOMS_CLONEABLE( RoficomJoint );
 
+    Module& getSourceModule( Rofibot& rofibot ) const {
+        Module * module_ = rofibot.getModule( sourceModule );
+        assert( module_ );
+        return *module_;
+    }
+    const Module& getSourceModule( const Rofibot& rofibot ) const {
+        const Module * module_ = rofibot.getModule( sourceModule );
+        assert( module_ );
+        return *module_;
+    }
+    Module& getDestModule( Rofibot& rofibot ) const {
+        Module * module_ = rofibot.getModule( destModule );
+        assert( module_ );
+        return *module_;
+    }
+    const Module& getDestModule( const Rofibot& rofibot ) const {
+        const Module * module_ = rofibot.getModule( destModule );
+        assert( module_ );
+        return *module_;
+    }
+
     roficom::Orientation orientation;
     Rofibot::ModuleInfoHandle sourceModule;
     Rofibot::ModuleInfoHandle destModule;
