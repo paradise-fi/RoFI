@@ -487,4 +487,52 @@ TEST_CASE( "Connect and disconnect" ) {
     }
 }
 
+TEST_CASE( "Get near connector" ) {
+    Rofibot bot;
+
+    SECTION( "two straight modules" ) {
+        auto& m1 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) ) );
+        auto& m2 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) ) );
+
+        auto h = connect< RigidJoint >( m1.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
+
+        connect( m1.getConnector( "A+X" ), m2.getConnector( "A+X" ), roficom::Orientation::North );
+
+        bot.prepare();
+        CHECK( bot.isValid().first );
+
+        SECTION( "Works with fixed connection" ) {
+            connect( m1.getConnector( "B-X" ), m2.getConnector( "B-X" ), roficom::Orientation::North );
+
+            bot.prepare();
+            CHECK( bot.isValid().first );
+        }
+
+        SECTION( "Get near connector" ) {
+            auto nearConnector = m1.getConnector( "B-X" ).getNearConnector();
+            REQUIRE( nearConnector.has_value() );
+            CHECK( nearConnector->first == m2.getConnector( "B-X" ) );
+            CHECK( nearConnector->second == roficom::Orientation::North );
+
+            connect( m1.getConnector( "B-X" ), nearConnector->first, nearConnector->second );
+
+            bot.prepare();
+            CHECK( bot.isValid().first );
+        }
+    }
+
+    SECTION( "two straight modules - throws if not prepared in advance" ) {
+        auto& m1 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) ) );
+        auto& m2 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) ) );
+
+        auto h = connect< RigidJoint >( m1.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
+
+        connect( m1.getConnector( "A+X" ), m2.getConnector( "A+X" ), roficom::Orientation::North );
+
+        REQUIRE_FALSE( bot.isPrepared() );
+
+        CHECK_THROWS( m1.getConnector( "B-X" ).getNearConnector() );
+    }
+}
+
 } // namespace
