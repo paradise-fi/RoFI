@@ -3,7 +3,7 @@
 #include <type_traits>
 #include <atoms/traits.hpp>
 
-namespace detail {
+namespace atoms::detail {
 
 template < typename T >
 using CountKeyT = decltype( std::declval< T >().count( std::declval< T::key_type > ) );
@@ -16,7 +16,7 @@ using HasCount = std::disjunction<
     atoms::detect< T, CountKeyT >,
     atoms::detect< T, CountValT > >;
 
-} // namespace detail
+} // namespace atoms::detail
 
 template < std::size_t... >
 struct sum: std::integral_constant< std::size_t, 0 > {};
@@ -52,7 +52,7 @@ std::make_unsigned_t< T > to_unsigned( T value ) {
 template < typename Container, typename T >
 bool contains( const Container& c, const T& value )
 {
-    if constexpr( detail::HasCount< Container >::value ) {
+    if constexpr( atoms::detail::HasCount< Container >::value ) {
         return c.count( value );
     }
 
