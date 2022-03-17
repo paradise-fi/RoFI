@@ -287,5 +287,35 @@ std::map< ModuleId, ModuleInnerState > ModuleStates::innerStatesFromConfiguratio
         }
     }
 
+    for ( auto & connection : rofibotConfiguration.roficomConnections() ) {
+        ModuleId sourceModuleId = connection.getSourceModule( rofibotConfiguration ).getId();
+        ModuleId destModuleId = connection.getDestModule( rofibotConfiguration ).getId();
+
+        assert( innerStates.contains( sourceModuleId ) );
+        std::span sourceConnectors = innerStates.at( sourceModuleId ).connectors();
+
+        assert( to_unsigned( connection.sourceConnector ) < sourceConnectors.size() );
+        auto & sourceConnector = sourceConnectors[ connection.sourceConnector ];
+
+        assert( !sourceConnector.connectedTo().has_value() );
+        sourceConnector.setExtendedWithoutConnecting();
+        sourceConnector.setConnectedTo( destModuleId,
+                                        connection.destConnector,
+                                        connection.orientation );
+
+
+        assert( innerStates.contains( destModuleId ) );
+        std::span destConnectors = innerStates.at( destModuleId ).connectors();
+
+        assert( to_unsigned( connection.destConnector ) < destConnectors.size() );
+        auto & destConnector = destConnectors[ connection.destConnector ];
+
+        assert( !destConnector.connectedTo().has_value() );
+        destConnector.setExtendedWithoutConnecting();
+        destConnector.setConnectedTo( sourceModuleId,
+                                      connection.sourceConnector,
+                                      connection.orientation );
+    }
+
     return innerStates;
 }
