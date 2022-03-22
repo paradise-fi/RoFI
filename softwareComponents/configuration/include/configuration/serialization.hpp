@@ -393,7 +393,7 @@ namespace rofi::configuration::serialization {
                                                     , matrixFromJSON( jj[ "postMatrix" ] )
                                                     , Angle::deg( jj[ "limits" ][ "min" ] )
                                                     , Angle::deg( jj[ "limits" ][ "max" ] ) );
-                bot.setSpaceJointPosition( conn, positions );
+                bot.setSpaceJointPositions( conn, positions );
                 processAttributes( sj, attrCb, conn );
             } else {
                 assert( false && "Unknown joint type" );

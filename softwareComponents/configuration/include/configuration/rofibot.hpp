@@ -96,7 +96,7 @@ struct Component {
         outJoints( std::move( outJoints ) ),
         parent( parent )
     {}
-    Component( ComponentType type ): Component( type, {}, {} ) {}
+    explicit Component( ComponentType type ): Component( type, {}, {} ) {}
 
     ComponentType type;
     std::vector< JointId > inJoints;
@@ -146,7 +146,7 @@ public:
       _connectorCount( connectorCount ),
       _joints( std::move( joints ) ),
       _rootComponent( rootComponent ),
-      _componentPosition( std::nullopt )
+      _componentRelativePositions( std::nullopt )
     {
         assert( _components.size() > 0 && "Module has to have at least one component" );
         _prepareComponents();
@@ -178,26 +178,26 @@ public:
      *
      * Raises std::logic_error if the components are inconsistent
      */
-    Matrix getComponentPosition( int idx ) {
+    Matrix getComponentRelativePosition( int idx ) {
         assert( idx >= 0 );
         assert( to_unsigned( idx ) < _components.size() );
-        if ( !_componentPosition )
+        if ( !_componentRelativePositions )
             prepare();
-        return _componentPosition.value()[ idx ];
+
+        return _componentRelativePositions.value()[ idx ];
     }
 
     /**
-     * \brief Get a component position within coordinate system specified by the
-     * second argument.
+     * \brief Get a component position relative to module origin
      *
      * Raises std::logic_error if the components are not prepared
      */
-    Matrix getComponentPosition( int idx, Matrix position ) const {
+    Matrix getComponentRelativePosition( int idx ) const {
         assert( idx >= 0 );
         assert( to_unsigned( idx ) < _components.size() );
-        if ( !_componentPosition )
+        if ( !_componentRelativePositions )
             throw std::logic_error( "Module is not prepared" );
-        return position * _componentPosition.value()[ idx ];
+        return _componentRelativePositions.value()[ idx ];
     }
 
     void clearComponentPositions();
@@ -207,13 +207,13 @@ public:
      *
      * Raises std::logic_error if the components are not prepared
      */
-    std::vector< Matrix > getOccupiedPositions() const {
+    std::vector< Matrix > getOccupiedRelativePositions() const {
         using namespace rofi::configuration::matrices;
-        if ( !_componentPosition )
+        if ( !_componentRelativePositions )
             throw std::logic_error( "Module is not prepared" );
 
         std::vector< Matrix > res;
-        for ( auto& m : _componentPosition.value() ) {
+        for ( auto& m : _componentRelativePositions.value() ) {
             res.push_back( translate( center( m ) ) );
         }
         std::sort( res.begin(), res.end(), []( auto a, auto b ) { return equals( a, b ); } );
@@ -223,33 +223,33 @@ public:
     }
 
     /**
-     * \brief Precompute component positions
+     * \brief Precompute component relative positions
      *
      * Raises std::logic_error if the components are inconsistent
      */
     void prepare() {
         using namespace rofi::configuration::matrices;
-        std::vector< Matrix > positions( _components.size() );
+        std::vector< Matrix > relPositions( _components.size() );
         std::vector< bool > initialized( _components.size() );
 
-        auto dfsTraverse = [&]( int compIdx, Matrix position, auto& self ) {
+        auto dfsTraverse = [&]( int compIdx, Matrix relPosition, auto& self ) {
             if ( initialized[ compIdx ] ) {
-                if ( !equals( position, positions[ compIdx ] ) )
-                    throw std::logic_error( "Inconsistent component positions" );
+                if ( !equals( relPosition, relPositions[ compIdx ] ) )
+                    throw std::logic_error( "Inconsistent component relative positions" );
                 return;
             }
-            positions[ compIdx ] = position;
+            relPositions[ compIdx ] = relPosition;
             initialized[ compIdx ] = true;
             for ( int outJointIdx : _components[ compIdx ].outJoints ) {
                 const ComponentJoint& j = _joints[ outJointIdx ];
-                self( j.destinationComponent, position * j.joint->sourceToDest(), self );
+                self( j.destinationComponent, relPosition * j.joint->sourceToDest(), self );
             }
         };
         dfsTraverse( _rootComponent.value(), identity, dfsTraverse );
 
         if ( !std::ranges::all_of( initialized, std::identity{} ) )
-            throw std::logic_error( "There are components without position" );
-        _componentPosition = std::move( positions );
+            throw std::logic_error( "There are components without relative position" );
+        _componentRelativePositions = std::move( relPositions );
     }
 
     auto configurableJoints() {
@@ -313,7 +313,7 @@ private:
     std::vector< ComponentJoint > _joints;
     std::optional< int > _rootComponent;
 
-    std::optional< std::vector< Matrix > > _componentPosition;
+    std::optional< std::vector< Matrix > > _componentRelativePositions;
 
     /**
      * \brief computes back references to joints in components
@@ -367,8 +367,8 @@ public:
      * \brief Decide if two modules collide
      */
     bool operator()( const Module& a, const Module& b, Matrix posA, Matrix posB ) {
-        for ( auto pA : a.getOccupiedPositions() ) {
-            for ( auto pB : b.getOccupiedPositions() ) {
+        for ( auto pA : a.getOccupiedRelativePositions() ) {
+            for ( auto pB : b.getOccupiedRelativePositions() ) {
                 if ( rofi::configuration::matrices::equals( static_cast< Matrix >( posA * pA ), posB * pB ) ) {
                     return true;
                 }
@@ -432,7 +432,7 @@ public:
     /**
      * \brief Insert a module from the Rofibot.
      *
-     * The module position is not specify. You should connect the module to
+     * The module position is not specified. You should connect the module to
      * other modules via connect(). The module is assigned a unique id within
      * the rofibot.
      *
@@ -530,7 +530,7 @@ public:
             for ( const ModuleInfo& n : _modules ) {
                 if ( n.module->_id >= m.module->_id ) // Collision is symmetric
                     break;
-                if ( collisionModel( *n.module, *m.module, *n.position, *m.position ) ) {
+                if ( collisionModel( *n.module, *m.module, *n.absPosition, *m.absPosition ) ) {
                     return { false, fmt::format("Modules {} and {} collide",
                         m.module->_id, n.module->_id ) };
                 }
@@ -538,7 +538,7 @@ public:
         }
 
         for ( const ModuleInfo& m : _modules ) {
-            if ( !m.position )
+            if ( !m.absPosition )
                 return { false, fmt::format("Module {} is not rooted",
                         m.module->_id) };
         }
@@ -574,7 +574,7 @@ public:
     /**
      * \brief Set position of a space joints specified by its id
      */
-    void setSpaceJointPosition( SpaceJointHandle jointId, std::span< const float > p );
+    void setSpaceJointPositions( SpaceJointHandle jointId, std::span< const float > p );
 
     /**
      * \brief Get position of a module specified by its id
@@ -584,7 +584,7 @@ public:
             prepare();
         if ( !_idMapping.contains( id ) )
             throw std::runtime_error( "bad access: rofibot does not containt module with such id" );
-        return _modules[ _idMapping[ id ] ].position.value();
+        return _modules[ _idMapping[ id ] ].absPosition.value();
     }
 
     void disconnect( RoficomJointHandle h ) {
@@ -610,44 +610,47 @@ private:
 
     void _clearModulePositions() {
         for ( ModuleInfo& m : _modules ) {
-            m.position = std::nullopt;
+            m.absPosition = std::nullopt;
+            assert( m.module );
             m.module->clearComponentPositions();
         }
         _prepared = false;
     }
 
     void _adoptModules() {
-        for ( ModuleInfo& m : _modules )
+        for ( ModuleInfo& m : _modules ) {
+            assert( m.module );
             m.module->parent = this;
+        }
     }
 
     struct ModuleInfo {
         ModuleInfo( atoms::ValuePtr< Module > m, std::vector< RoficomJointHandle > i, std::vector< RoficomJointHandle > o,
             std::vector< SpaceJointHandle > s, std::optional< Matrix > pos )
         : module( std::move( m ) ), inJointsIdx( std::move( i ) ), outJointsIdx( std::move( o ) ),
-            spaceJoints( std::move( s ) ), position( std::move( pos ) )
+            spaceJoints( std::move( s ) ), absPosition( std::move( pos ) )
         {}
 
         ModuleInfo( ModuleInfo&& o ) noexcept = default;
         ModuleInfo& operator=( ModuleInfo&& ) = default;
 
         ModuleInfo( const ModuleInfo& o )
-        : ModuleInfo( o.module.clone(), o.inJointsIdx, o.outJointsIdx, o.spaceJoints, o.position )
+        : ModuleInfo( o.module.clone(), o.inJointsIdx, o.outJointsIdx, o.spaceJoints, o.absPosition )
         {}
         ModuleInfo& operator=( const ModuleInfo& o ) {
             this->module = o.module.clone();
             this->inJointsIdx = o.inJointsIdx;
             this->outJointsIdx = o.outJointsIdx;
             this->spaceJoints = o.spaceJoints;
-            this->position = o.position;
+            this->absPosition = o.absPosition;
             return *this;
         }
 
-        atoms::ValuePtr< Module > module;  // Use value_ptr to make address of modules stable
+        atoms::ValuePtr< Module > module;  // Use ValuePtr to enable copy and make address of modules stable on move
         std::vector< RoficomJointHandle > inJointsIdx;
         std::vector< RoficomJointHandle > outJointsIdx;
         std::vector< SpaceJointHandle > spaceJoints;
-        std::optional< Matrix > position;
+        std::optional< Matrix > absPosition;
     };
 
     atoms::HandleSet< ModuleInfo > _modules;

@@ -72,18 +72,18 @@ void Module::setJointPositions( int idx, std::span< const float > p ) {
     assert( to_unsigned( idx ) < _joints.size() );
     assert( _joints[ to_unsigned( idx ) ].joint->positions().size() == p.size() );
     _joints[ to_unsigned( idx ) ].joint->setPositions( p );
-    _componentPosition = std::nullopt;
+    _componentRelativePositions = std::nullopt;
     if ( parent )
         parent->onModuleMove();
 }
 
 void Module::clearComponentPositions() {
-    _componentPosition = std::nullopt;
+    _componentRelativePositions = std::nullopt;
     if ( parent )
         parent->onModuleMove();
 }
 
-void Rofibot::setSpaceJointPosition( SpaceJointHandle jointId, std::span< const float > p ) {
+void Rofibot::setSpaceJointPositions( SpaceJointHandle jointId, std::span< const float > p ) {
     assert( p.size() == _spaceJoints[ jointId ].joint->positions().size() );
     _spaceJoints[ jointId ].joint->setPositions( p );
     _prepared = false;
@@ -98,28 +98,28 @@ void Rofibot::prepare() {
     for ( const SpaceJoint& j : _spaceJoints ) {
         Matrix jointPosition = translate( j.refPoint ) * j.joint->sourceToDest();
         ModuleInfo& mInfo = _modules[ j.destModule ];
-        Matrix componentPosition = mInfo.module->getComponentPosition( j.destComponent );
+        Matrix componentPosition = mInfo.module->getComponentRelativePosition( j.destComponent );
         // Reverse the comonentPosition to get position of the module origin
         Matrix modulePosition = jointPosition * arma::inv( componentPosition );
-        if ( mInfo.position ) {
-            if ( !equals( mInfo.position.value(), modulePosition ) )
+        if ( mInfo.absPosition ) {
+            if ( !equals( mInfo.absPosition.value(), modulePosition ) )
                 throw std::runtime_error(
                         fmt::format( "Inconsistent rooting of module {}", mInfo.module->_id ) );
         } else {
-            mInfo.position = componentPosition;
+            mInfo.absPosition = componentPosition;
         }
         roots.insert( _idMapping[ mInfo.module->_id ] );
     }
 
     auto dfsTraverse = [&]( ModuleInfo& m, Matrix position, auto& self ) {
-        if ( m.position ) {
-            if ( !equals( position, m.position.value() ) )
+        if ( m.absPosition ) {
+            if ( !equals( position, m.absPosition.value() ) )
                 throw std::runtime_error(
                         fmt::format( "Inconsistent position of module {}", m.module->_id ) );
             return;
         }
 
-        m.position = position;
+        m.absPosition = position;
         // Traverse ignoring edge orientation
         std::vector< RoficomJointHandle > joints;
         std::copy( m.outJointsIdx.begin(), m.outJointsIdx.end(), std::back_inserter( joints ) );
@@ -130,14 +130,14 @@ void Rofibot::prepare() {
             bool mIsSource = j.sourceModule == _idMapping[ m.module->_id ];
             Matrix jointTransf = mIsSource ? j.sourceToDest() : j.destToSource();
             Matrix jointRefPosition = position
-                                    * m.module->getComponentPosition( mIsSource
-                                                                    ? j.sourceConnector
-                                                                    : j.destConnector )
+                                    * m.module->getComponentRelativePosition( mIsSource
+                                                                            ? j.sourceConnector
+                                                                            : j.destConnector )
                                     * jointTransf;
             ModuleInfo& other = _modules[ mIsSource ? j.destModule : j.sourceModule ];
-            Matrix otherConnectorPosition = other.module->getComponentPosition( mIsSource
-                                                                              ? j.destConnector
-                                                                              : j.sourceConnector );
+            Matrix otherConnectorPosition = other.module->getComponentRelativePosition( mIsSource
+                                                                                      ? j.destConnector
+                                                                                      : j.sourceConnector );
             // Reverse the comonentPosition to get position of the module origin
             Matrix otherPosition = jointRefPosition * arma::inv( otherConnectorPosition );
             self( other, otherPosition, self );
@@ -146,8 +146,8 @@ void Rofibot::prepare() {
 
     for ( auto h : roots ) {
         ModuleInfo& m = _modules[ h ];
-        auto pos = m.position.value();
-        m.position.reset();
+        auto pos = m.absPosition.value();
+        m.absPosition.reset();
         dfsTraverse( m, pos, dfsTraverse );
     }
 
