@@ -122,7 +122,7 @@ vtkSmartPointer< vtkPolyDataMapper > getComponentMapper( const Matrix & cPositio
         frameActor->SetScale( 1. / 95. );
 
         assert( i <= INT_MAX );
-        auto cPosition = newModule.getComponentPosition( static_cast< int >( i ), mPosition );
+        auto cPosition = mPosition * newModule.getComponentRelativePosition( static_cast< int >( i ) );
         // make connected RoFICoMs connected visually
         if ( activeConnectors.contains( static_cast< int >( i ) ) ) {
             cPosition = cPosition * translate( { -0.05, 0, 0 } );
@@ -174,7 +174,7 @@ void updateModulePositionInScene( const rofi::configuration::Module & newModule,
         const auto & componentActor = moduleRenderInfo.componentActors[ i ];
 
         assert( i < INT_MAX );
-        auto cPosition = newModule.getComponentPosition( static_cast< int >( i ), mPosition );
+        auto cPosition = mPosition * newModule.getComponentRelativePosition( static_cast< int >( i ) );
         // make connected RoFICoMs connected visually
         if ( moduleRenderInfo.activeConnectors.contains( static_cast< int >( i ) ) ) {
             cPosition = cPosition * translate( { -0.05, 0, 0 } );
@@ -233,11 +233,11 @@ std::map< rofi::configuration::ModuleId, ModuleRenderInfo > addConfigurationToRe
 
     for ( const auto & moduleInfo : newConfiguration.modules() ) {
         assert( moduleInfo.module.get() );
-        assert( moduleInfo.position && "The configuration has to be prepared" );
+        assert( moduleInfo.absPosition && "The configuration has to be prepared" );
         moduleRenderInfos[ moduleInfo.module->getId() ].componentActors =
                 addModuleToScene( renderer,
                                   *moduleInfo.module,
-                                  *moduleInfo.position,
+                                  *moduleInfo.absPosition,
                                   moduleRenderInfos[ moduleInfo.module->getId() ]
                                           .activeConnectors );
     }
@@ -265,7 +265,7 @@ void updateConfigurationInRenderer(
 
     for ( const auto & newModuleInfo : newConfiguration.modules() ) {
         assert( newModuleInfo.module.get() );
-        assert( newModuleInfo.position && "The configuration has to be prepared" );
+        assert( newModuleInfo.absPosition && "The configuration has to be prepared" );
         auto & newModule = *newModuleInfo.module;
         auto & moduleRenderInfo = moduleRenderInfos[ newModule.getId() ];
 
@@ -275,7 +275,7 @@ void updateConfigurationInRenderer(
             updateModuleInScene( renderer,
                                  newModule,
                                  previousModuleIt->second,
-                                 *newModuleInfo.position,
+                                 *newModuleInfo.absPosition,
                                  moduleRenderInfo );
         }
         else {
@@ -283,7 +283,7 @@ void updateConfigurationInRenderer(
             moduleRenderInfo.componentActors =
                     addModuleToScene( renderer,
                                       newModule,
-                                      *newModuleInfo.position,
+                                      *newModuleInfo.absPosition,
                                       moduleRenderInfo.activeConnectors );
         }
     }

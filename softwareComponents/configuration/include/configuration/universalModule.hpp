@@ -44,14 +44,13 @@ public:
         std::array tmp{ a.rad() };
         setJointPositions( 0, tmp );
     }
-
     void setBeta( Angle a ) {
         std::array tmp{ a.rad() };
-        setJointPositions( 1, { tmp } );
+        setJointPositions( 1, tmp );
     }
     void setGamma( Angle a ) {
         std::array tmp{ a.rad() };
-        setJointPositions( 2, { tmp } );
+        setJointPositions( 2, tmp );
     }
 
     const auto& getConnector( const std::string& cStr ) const {

@@ -115,7 +115,7 @@ void addModuleToScene( vtkRenderer* renderer, Module& m,
     const auto& components = m.components();
     for ( int i = 0; to_unsigned( i ) < components.size(); i++ ) {
         const auto& component = components[ to_unsigned( i ) ];
-        auto cPosition = m.getComponentPosition( i, mPosition );
+        Matrix cPosition = mPosition * m.getComponentRelativePosition( i );
         // make connected RoFICoMs connected visually
         if ( active_cons.contains( i ) )
             cPosition = cPosition * rofi::configuration::matrices::translate( { -0.05, 0, 0 } );
@@ -153,10 +153,10 @@ void buildConfigurationScene( vtkRenderer* renderer, Rofibot& bot ) {
 
     int index = 0;
     for ( auto& mInfo : bot.modules() ) {
-        assert( mInfo.position && "The configuration has to be prepared" );
+        assert( mInfo.absPosition && "The configuration has to be prepared" );
         if ( !active_cons.contains( mInfo.module->getId() ) )
             active_cons[ mInfo.module->getId() ] = {};
-        addModuleToScene( renderer, *mInfo.module, *mInfo.position, index, active_cons[ mInfo.module->getId() ] );
+        addModuleToScene( renderer, *mInfo.module, *mInfo.absPosition, index, active_cons[ mInfo.module->getId() ] );
         index++;
     }
 }

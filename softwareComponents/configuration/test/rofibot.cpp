@@ -25,9 +25,9 @@ TEST_CASE( "Universal Module Test" ) {
         auto um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
         CHECK( um.components().size() == 10 );
         um.prepare();
-        REQUIRE( um.getOccupiedPositions().size() == 2 );
-        CHECK( equals( um.getOccupiedPositions()[ 0 ], identity ) );
-        CHECK( equals( center( um.getOccupiedPositions()[ 1 ] ), { 0, 0, 1, 1 } ) );
+        REQUIRE( um.getOccupiedRelativePositions().size() == 2 );
+        CHECK( equals( um.getOccupiedRelativePositions()[ 0 ], identity ) );
+        CHECK( equals( center( um.getOccupiedRelativePositions()[ 1 ] ), { 0, 0, 1, 1 } ) );
     }
 
     SECTION( "roficomConnections" ) {
@@ -54,25 +54,25 @@ TEST_CASE( "Universal Module Test" ) {
     SECTION( "Position - default" ) {
         auto um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
         // A part
-        CHECK( equals( um.getComponentPosition( 0 ), identity ) );
-        CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
-        CHECK( equals( um.getComponentPosition( 2 ), rotate( - M_PI_2, { 0, 1, 0 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
-        CHECK( equals( um.getComponentPosition( 6 ), identity ) );
-        CHECK( equals( um.getComponentPosition( 7 ), identity ) );
+        CHECK( equals( um.getComponentRelativePosition( 0 ), identity ) );
+        CHECK( equals( um.getComponentRelativePosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
+        CHECK( equals( um.getComponentRelativePosition( 2 ), rotate( - M_PI_2, { 0, 1, 0 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
+        CHECK( equals( um.getComponentRelativePosition( 6 ), identity ) );
+        CHECK( equals( um.getComponentRelativePosition( 7 ), identity ) );
         // B part
         // -X
-        CHECK( equals( um.getComponentPosition( 3 ), translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 0, 1 } )
+        CHECK( equals( um.getComponentRelativePosition( 3 ), translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 0, 1 } )
                                                    * rotate( M_PI, { 1, 0, 0 } ) ) );
         // +X
-        CHECK( equals( um.getComponentPosition( 4 ), translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } )
+        CHECK( equals( um.getComponentRelativePosition( 4 ), translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } )
                                                    * rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
         // -Z
-        CHECK( equals( um.getComponentPosition( 5 ), translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } )
+        CHECK( equals( um.getComponentRelativePosition( 5 ), translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } )
                                                    * rotate( - M_PI_2, { 0, 1, 0 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
         // Body
-        CHECK( equals( um.getComponentPosition( 8 ), translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } ) ) );
+        CHECK( equals( um.getComponentRelativePosition( 8 ), translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } ) ) );
         // Shoe
-        CHECK( equals( um.getComponentPosition( 9 ), { { -1, 0,  0, 0 }
+        CHECK( equals( um.getComponentRelativePosition( 9 ), { { -1, 0,  0, 0 }
                                                      , {  0, 1,  0, 0 }
                                                      , {  0, 0, -1, 1 }
                                                      , {  0, 0,  0, 1 } } ) );
@@ -82,28 +82,28 @@ TEST_CASE( "Universal Module Test" ) {
         SECTION( "degrees" ) {
             auto um = UniversalModule( 0, 0_deg, 0_deg, 90_deg );
             // A part
-            CHECK( equals( um.getComponentPosition( 0 ), identity ) );
-            CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
-            CHECK( equals( um.getComponentPosition( 2 ), rotate( - M_PI_2, { 0, 1, 0 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
-            CHECK( equals( um.getComponentPosition( 6 ), identity ) );
-            CHECK( equals( um.getComponentPosition( 7 ), identity ) );
+            CHECK( equals( um.getComponentRelativePosition( 0 ), identity ) );
+            CHECK( equals( um.getComponentRelativePosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
+            CHECK( equals( um.getComponentRelativePosition( 2 ), rotate( - M_PI_2, { 0, 1, 0 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
+            CHECK( equals( um.getComponentRelativePosition( 6 ), identity ) );
+            CHECK( equals( um.getComponentRelativePosition( 7 ), identity ) );
             // B part
             // -X
-            CHECK( equals( um.getComponentPosition( 3 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+            CHECK( equals( um.getComponentRelativePosition( 3 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                         * rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
             // +X
-            CHECK( equals( um.getComponentPosition( 4 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+            CHECK( equals( um.getComponentRelativePosition( 4 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                     * rotate( M_PI, { 0, 1, 0 } ) * rotate( M_PI, { 0, 0, 1 } )
                                                     * rotate( M_PI, { 1, 0, 0 } ) ) );
             // -Z
-            CHECK( equals( um.getComponentPosition( 5 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+            CHECK( equals( um.getComponentRelativePosition( 5 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                         * rotate( M_PI, { 0, 1, 0 } ) * rotate( - M_PI_2, { 0, 1, 0 } )
                                                         * rotate( M_PI, { 1, 0, 0 } ) ) );
             // Body
-            CHECK( equals( um.getComponentPosition( 8 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+            CHECK( equals( um.getComponentRelativePosition( 8 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                     * rotate( M_PI, { 0, 1, 0 } ) ) );
             // Shoe
-            CHECK( equals( um.getComponentPosition( 9 ), { {  0, -1,  0, 0 } // shoeB
+            CHECK( equals( um.getComponentRelativePosition( 9 ), { {  0, -1,  0, 0 } // shoeB
                                                         , { -1,  0,  0, 0 }
                                                         , {  0,  0, -1, 1 }
                                                         , {  0,  0,  0, 1 } } ) );
@@ -113,28 +113,28 @@ TEST_CASE( "Universal Module Test" ) {
     SECTION( "radians" ) {
         auto um = UniversalModule( 0, 0_rad, 0_rad, 1.57079632679489661923_rad ); // 0, 0, M_PI_2
         // A part
-        CHECK( equals( um.getComponentPosition( 0 ), identity ) );
-        CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
-        CHECK( equals( um.getComponentPosition( 2 ), rotate( - M_PI_2, { 0, 1, 0 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
-        CHECK( equals( um.getComponentPosition( 6 ), identity ) );
-        CHECK( equals( um.getComponentPosition( 7 ), identity ) );
+        CHECK( equals( um.getComponentRelativePosition( 0 ), identity ) );
+        CHECK( equals( um.getComponentRelativePosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
+        CHECK( equals( um.getComponentRelativePosition( 2 ), rotate( - M_PI_2, { 0, 1, 0 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
+        CHECK( equals( um.getComponentRelativePosition( 6 ), identity ) );
+        CHECK( equals( um.getComponentRelativePosition( 7 ), identity ) );
         // B part
         // -X
-        CHECK( equals( um.getComponentPosition( 3 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+        CHECK( equals( um.getComponentRelativePosition( 3 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                     * rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
         // +X
-        CHECK( equals( um.getComponentPosition( 4 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+        CHECK( equals( um.getComponentRelativePosition( 4 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                    * rotate( M_PI, { 0, 1, 0 } ) * rotate( M_PI, { 0, 0, 1 } )
                                                    * rotate( M_PI, { 1, 0, 0 } ) ) );
         // -Z
-        CHECK( equals( um.getComponentPosition( 5 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+        CHECK( equals( um.getComponentRelativePosition( 5 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                     * rotate( M_PI, { 0, 1, 0 } ) * rotate( - M_PI_2, { 0, 1, 0 } )
                                                     * rotate( M_PI, { 1, 0, 0 } ) ) );
         // Body
-        CHECK( equals( um.getComponentPosition( 8 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+        CHECK( equals( um.getComponentRelativePosition( 8 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                    * rotate( M_PI, { 0, 1, 0 } ) ) );
         // Shoe
-        CHECK( equals( um.getComponentPosition( 9 ), { {  0, -1,  0, 0 } // shoeB
+        CHECK( equals( um.getComponentRelativePosition( 9 ), { {  0, -1,  0, 0 } // shoeB
                                                      , { -1,  0,  0, 0 }
                                                      , {  0,  0, -1, 1 }
                                                      , {  0,  0,  0, 1 } } ) );
@@ -144,30 +144,30 @@ TEST_CASE( "Universal Module Test" ) {
         SECTION( "degrees" ) {
             auto um = UniversalModule( 0, 0_deg, Angle::deg( -90 ), 90_deg );
             // A part
-            CHECK( equals( um.getComponentPosition( 0 ), identity ) );
-            CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
-            CHECK( equals( um.getComponentPosition( 2 ), rotate( - M_PI_2, { 0, 1, 0 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
-            CHECK( equals( um.getComponentPosition( 6 ), identity ) );
-            CHECK( equals( um.getComponentPosition( 7 ), identity ) );
+            CHECK( equals( um.getComponentRelativePosition( 0 ), identity ) );
+            CHECK( equals( um.getComponentRelativePosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
+            CHECK( equals( um.getComponentRelativePosition( 2 ), rotate( - M_PI_2, { 0, 1, 0 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
+            CHECK( equals( um.getComponentRelativePosition( 6 ), identity ) );
+            CHECK( equals( um.getComponentRelativePosition( 7 ), identity ) );
             // B part
             // -X
-            CHECK( equals( um.getComponentPosition( 3 ), rotate( M_PI_2, { 0, 0, 1 } )
+            CHECK( equals( um.getComponentRelativePosition( 3 ), rotate( M_PI_2, { 0, 0, 1 } )
                                                         * translate( { 0, 0, 1 } )
                                                         * rotate( M_PI, { 0, 1, 0 } )
                                                         * rotate( - M_PI_2, { 1, 0, 0 } ) ) );
             // +X
-            CHECK( equals( um.getComponentPosition( 4 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+            CHECK( equals( um.getComponentRelativePosition( 4 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                         * rotate( M_PI, { 0, 1, 0 } )  * rotate( - M_PI_2, { 1, 0, 0 } )
                                                         * rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
             // -Z
-            CHECK( equals( um.getComponentPosition( 5 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+            CHECK( equals( um.getComponentRelativePosition( 5 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                         * rotate( M_PI, { 0, 1, 0 } )  * rotate( - M_PI_2, { 1, 0, 0 } )
                                                         * rotate( - M_PI_2, { 0, 1, 0 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
             // Body
-            CHECK( equals( um.getComponentPosition( 8 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+            CHECK( equals( um.getComponentRelativePosition( 8 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                         * rotate( M_PI, { 0, 1, 0 } ) ) );
             // Shoe
-            CHECK( equals( um.getComponentPosition( 9 ), { {  0, 0, -1, 0 }
+            CHECK( equals( um.getComponentRelativePosition( 9 ), { {  0, 0, -1, 0 }
                                                         , { -1, 0,  0, 0 }
                                                         , {  0, 1,  0, 1 }
                                                         , {  0, 0,  0, 1 } } ) );
@@ -176,30 +176,30 @@ TEST_CASE( "Universal Module Test" ) {
         SECTION( "radians" ) {
             auto um = UniversalModule( 0, 0_rad, Angle::rad( - Angle::pi / 2 ), Angle::rad( Angle::pi / 2 ) );
             // A part
-            CHECK( equals( um.getComponentPosition( 0 ), identity ) );
-            CHECK( equals( um.getComponentPosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
-            CHECK( equals( um.getComponentPosition( 2 ), rotate( - M_PI_2, { 0, 1, 0 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
-            CHECK( equals( um.getComponentPosition( 6 ), identity ) );
-            CHECK( equals( um.getComponentPosition( 7 ), identity ) );
+            CHECK( equals( um.getComponentRelativePosition( 0 ), identity ) );
+            CHECK( equals( um.getComponentRelativePosition( 1 ), rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
+            CHECK( equals( um.getComponentRelativePosition( 2 ), rotate( - M_PI_2, { 0, 1, 0 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
+            CHECK( equals( um.getComponentRelativePosition( 6 ), identity ) );
+            CHECK( equals( um.getComponentRelativePosition( 7 ), identity ) );
             // B part
             // -X
-            CHECK( equals( um.getComponentPosition( 3 ), rotate( M_PI_2, { 0, 0, 1 } )
+            CHECK( equals( um.getComponentRelativePosition( 3 ), rotate( M_PI_2, { 0, 0, 1 } )
                                                         * translate( { 0, 0, 1 } )
                                                         * rotate( M_PI, { 0, 1, 0 } )
                                                         * rotate( - M_PI_2, { 1, 0, 0 } ) ) );
             // +X
-            CHECK( equals( um.getComponentPosition( 4 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+            CHECK( equals( um.getComponentRelativePosition( 4 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                         * rotate( M_PI, { 0, 1, 0 } )  * rotate( - M_PI_2, { 1, 0, 0 } )
                                                         * rotate( M_PI, { 0, 0, 1 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
             // -Z
-            CHECK( equals( um.getComponentPosition( 5 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+            CHECK( equals( um.getComponentRelativePosition( 5 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                         * rotate( M_PI, { 0, 1, 0 } )  * rotate( - M_PI_2, { 1, 0, 0 } )
                                                         * rotate( - M_PI_2, { 0, 1, 0 } ) * rotate( M_PI, { 1, 0, 0 } ) ) );
             // Body
-            CHECK( equals( um.getComponentPosition( 8 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
+            CHECK( equals( um.getComponentRelativePosition( 8 ), rotate( M_PI_2, { 0, 0, 1 } ) * translate( { 0, 0, 1 } )
                                                         * rotate( M_PI, { 0, 1, 0 } ) ) );
             // Shoe
-            CHECK( equals( um.getComponentPosition( 9 ), { {  0, 0, -1, 0 }
+            CHECK( equals( um.getComponentRelativePosition( 9 ), { {  0, 0, -1, 0 }
                                                         , { -1, 0,  0, 0 }
                                                         , {  0, 1,  0, 1 }
                                                         , {  0, 0,  0, 1 } } ) );
@@ -230,34 +230,34 @@ TEST_CASE( "Two modules next to each other" ) {
         Matrix new_origin = identity * translate( { -1, 0, 0 } );
         REQUIRE( !equals( identity, new_origin ) );
         Matrix mat = identity;
-        CHECK( equals( center( m2.getComponentPosition( 0, bot.getModulePosition( m2.getId() ) ) )
+        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 0 ) )
                      , center( new_origin ) ) );
 
         mat = new_origin * rotate( M_PI, { 0, 0, 1 } );
-        CHECK( equals( center( m2.getComponentPosition( 1, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
+        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 1 ) ), center( mat ) ) );
 
         mat = new_origin * rotate( - M_PI_2, { 0, 1, 0 } );
-        CHECK( equals( center( m2.getComponentPosition( 2, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
-        CHECK( equals( center( m2.getComponentPosition( 6, bot.getModulePosition( m2.getId() ) ) ), center( new_origin ) ) );
-        CHECK( equals( center( m2.getComponentPosition( 7, bot.getModulePosition( m2.getId() ) ) ), center( new_origin ) ) );
+        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 2 ) ), center( mat ) ) );
+        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 6 ) ), center( new_origin ) ) );
+        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 7 ) ), center( new_origin ) ) );
 
-        mat =  new_origin * m1.getComponentPosition( 3 );
-        CHECK( equals( center( m2.getComponentPosition( 3, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
+        mat =  new_origin * m1.getComponentRelativePosition( 3 );
+        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 3 ) ), center( mat ) ) );
 
-        mat = new_origin * m1.getComponentPosition( 4 );
-        CHECK( equals( center( m2.getComponentPosition( 4, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
+        mat = new_origin * m1.getComponentRelativePosition( 4 );
+        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 4 ) ), center( mat ) ) );
 
-        mat = new_origin * m1.getComponentPosition( 5 );
-        CHECK( equals( center( m2.getComponentPosition( 5, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
+        mat = new_origin * m1.getComponentRelativePosition( 5 );
+        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 5 ) ), center( mat ) ) );
 
-        mat = new_origin * m1.getComponentPosition( 8 );
-        CHECK( equals( center( m2.getComponentPosition( 8, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
+        mat = new_origin * m1.getComponentRelativePosition( 8 );
+        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 8 ) ), center( mat ) ) );
 
         mat = { { -1, 0, 0, -1 }, { 0, 1, 0, 0 }, { 0, 0, -1, 1 }, { 0, 0, 0, 1 } };
-        CHECK( equals( center( m2.getComponentPosition( 9, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
+        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 9 ) ), center( mat ) ) );
 
-        mat = new_origin * m1.getComponentPosition( 9 );
-        CHECK( equals( center( m2.getComponentPosition( 9, bot.getModulePosition( m2.getId() ) ) ), center( mat ) ) );
+        mat = new_origin * m1.getComponentRelativePosition( 9 );
+        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 9 ) ), center( mat ) ) );
     }
 }
 
@@ -276,8 +276,8 @@ TEST_CASE( "Two modules - different angles" ) {
     }
 
     SECTION( "BodyB" ) {
-    Matrix m1shoeB = m1.getComponentPosition( 9 );
-    Matrix m2shoeB = m2.getComponentPosition( 9, bot.getModulePosition( m2.getId() ) );
+    Matrix m1shoeB = m1.getComponentRelativePosition( 9 );
+    Matrix m2shoeB = bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 9 );
     CHECK( equals( m1shoeB, { { -1, 0,  0, 0 }
                             , {  0, 1,  0, 0 }
                             , {  0, 0, -1, 1 }
@@ -304,17 +304,18 @@ TEST_CASE( "Three modules -- connect docks 3 to 0s " ) {
     }
 
     SECTION( "Shoes A" ) {
-        CHECK( equals( m1.getComponentPosition( 6, bot.getModulePosition( m1.getId() ) ), identity ) );
-        CHECK( equals( m2.getComponentPosition( 6, bot.getModulePosition( m2.getId() ) ), translate( { 1, 0, 1 } ) ) );
-        CHECK( equals( m3.getComponentPosition( 6, bot.getModulePosition( m3.getId() ) ), translate( { 2, 0, 2 } ) ) );
+        CHECK( equals( bot.getModulePosition( m1.getId() ) * m1.getComponentRelativePosition( 6 ), identity ) );
+        CHECK( equals( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 6 ), translate( { 1, 0, 1 } ) ) );
+        CHECK( equals( bot.getModulePosition( m3.getId() ) * m3.getComponentRelativePosition( 6 ), translate( { 2, 0, 2 } ) ) );
     }
 
     SECTION( "Shoes B" ) {
-        CHECK( equals( m1.getComponentPosition( 9, bot.getModulePosition( m1.getId() ) )
+        Matrix x = bot.getModulePosition( m1.getId() ) * m1.getComponentRelativePosition( 9 );
+        CHECK( equals( bot.getModulePosition( m1.getId() ) * m1.getComponentRelativePosition( 9 )
                      , translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } ) ) );
-        CHECK( equals( m2.getComponentPosition( 9, bot.getModulePosition( m2.getId() ) )
+        CHECK( equals( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 9 )
                      , translate( { 1, 0, 2 } ) * rotate( M_PI, { 0, 1, 0 } ) ) );
-        CHECK( equals( m3.getComponentPosition( 9, bot.getModulePosition( m3.getId() ) )
+        CHECK( equals( bot.getModulePosition( m3.getId() ) * m3.getComponentRelativePosition( 9 )
                      , translate( { 2, 0, 3 } ) * rotate( M_PI, { 0, 1, 0 } ) ) );
     }
 }
