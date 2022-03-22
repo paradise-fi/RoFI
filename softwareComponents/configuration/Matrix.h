@@ -187,6 +187,33 @@ inline Matrix translate(const Vector &u)
     return translate;
 }
 
+/// Operators for automatic type deduction,
+/// because armadillo returns an opaque type that can be converted
+/// to both Matrix and Vector
+///
+/// Explicitly call operators from `::arma`, so it doesn't call itself
+inline Matrix operator*( const Matrix & lhs, const Matrix & rhs ) {
+    return ::arma::operator*( lhs, rhs );
+}
+inline Vector operator*( const Vector & lhs, const Vector & rhs ) {
+    return ::arma::operator*( lhs, rhs );
+}
+inline Vector operator*( const Matrix & lhs, const Vector & rhs ) {
+    return ::arma::operator*( lhs, rhs );
+}
+inline Matrix operator+( const Matrix & lhs, const Matrix & rhs ) {
+    return ::arma::operator+( lhs, rhs );
+}
+inline Vector operator+( const Vector & lhs, const Vector & rhs ) {
+    return ::arma::operator+( lhs, rhs );
+}
+inline Matrix operator-( const Matrix & lhs, const Matrix & rhs ) {
+    return ::arma::operator-( lhs, rhs );
+}
+inline Vector operator-( const Vector & lhs, const Vector & rhs ) {
+    return ::arma::operator-( lhs, rhs );
+}
+
 } // namespace rofi::configuration::matrices
 
 #endif //ROBOTY_MATRIX_H
