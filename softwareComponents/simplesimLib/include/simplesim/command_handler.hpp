@@ -1,5 +1,6 @@
 #pragma once
 
+#include <concepts>
 #include <functional>
 #include <memory>
 #include <optional>
@@ -11,7 +12,7 @@
 
 #include "atoms/guarded.hpp"
 #include "module_states.hpp"
-#include "wait_handler.hpp"
+#include "delayed_data_handler.hpp"
 
 #include <rofiCmd.pb.h>
 #include <rofiResp.pb.h>
@@ -30,6 +31,7 @@ public:
         ModuleId moduleId = {};
         int connector = {};
     };
+
     class DisconnectEvent
     {
     public:
@@ -44,6 +46,16 @@ public:
         rofi::messages::Packet packet;
     };
 
+    class WaitEvent
+    {
+    public:
+        rofi::messages::RofiResp getRofiResp() const;
+
+        ModuleId moduleId;
+        int waitId;
+        int waitMs;
+    };
+
     using RofiCmd = rofi::messages::RofiCmd;
     using RofiCmdPtr = boost::shared_ptr< const RofiCmd >;
 
@@ -51,12 +63,14 @@ public:
             std::optional< rofi::messages::RofiResp >( const ModuleStates &, const RofiCmd & ) >;
     using DelayedEvent = std::variant< std::nullopt_t, DisconnectEvent, SendPacketEvent >;
     using DelayedCmdCallback = std::function< DelayedEvent( ModuleStates &, const RofiCmd & ) >;
+    using DelayedData = std::optional< WaitEvent >;
 
     class CommandCallbacks
     {
     public:
         ImmediateCmdCallback immediate = {};
         DelayedCmdCallback delayed = {};
+        DelayedData delayedData = std::nullopt;
     };
 
 
@@ -83,20 +97,19 @@ public:
         } );
     }
 
-    atoms::Guarded< WaitHandler > & waitHandler()
+    void advanceTime( std::chrono::milliseconds duration, std::invocable< rofi::messages::RofiResp > auto callback )
     {
-        return _waitHandler;
-    }
-    const atoms::Guarded< WaitHandler > & waitHandler() const
-    {
-        return _waitHandler;
+        auto waitResponses = _waitHandler->advanceTime( duration );
+
+        for ( const WaitEvent & waitEvent : waitResponses ) {
+            callback( waitEvent.getRofiResp() );
+        }
     }
 
 private:
-    void onWaitCmd( const RofiCmd & rofiCmd );
     CommandCallbacks onRofiCmdCallbacks( const RofiCmd & cmd );
 
-    atoms::Guarded< WaitHandler > _waitHandler;
+    atoms::Guarded< DelayedDataHandler< WaitEvent > > _waitHandler;
     std::shared_ptr< const ModuleStates > _moduleStates;
 
     atoms::Guarded< std::vector< std::pair< DelayedCmdCallback, RofiCmdPtr > > > _rofiCmdCallbacks;
