@@ -55,8 +55,8 @@ public:
     class CommandCallbacks
     {
     public:
-        ImmediateCmdCallback immediate;
-        DelayedCmdCallback delayed;
+        ImmediateCmdCallback immediate = {};
+        DelayedCmdCallback delayed = {};
     };
 
 
