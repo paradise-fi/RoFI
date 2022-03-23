@@ -222,6 +222,8 @@ CommandHandler::DelayedEvent sendConnectorPacket( ModuleStates & moduleStates,
     if ( auto connectedToOpt = moduleStates.getConnectedTo( moduleId, connector ) ) {
         if ( auto connectedTo = *connectedToOpt ) {
             return CommandHandler::SendPacketEvent{
+                    .sender = CommandHandler::Connector{ .moduleId = moduleId,
+                                                           .connector = connector },
                     .receiver = CommandHandler::Connector{ .moduleId = connectedTo->moduleId,
                                                            .connector = connectedTo->connector },
                     .packet = rofiCmd.connectorcmd().packet() };
