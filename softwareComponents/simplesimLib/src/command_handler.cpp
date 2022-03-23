@@ -290,19 +290,19 @@ CommandHandler::CommandCallbacks onJointCmdCallbacks( JointCmd::Type cmdType )
             return {};
 
         case JointCmd::GET_CAPABILITIES:
-            return { .immediate = getJointCapabilities, .delayed = {} };
+            return { .immediate = getJointCapabilities };
 
         case JointCmd::GET_POSITION:
-            return { .immediate = getJointPosition, .delayed = {} };
+            return { .immediate = getJointPosition };
 
         case JointCmd::GET_VELOCITY:
-            return { .immediate = getJointVelocity, .delayed = {} };
+            return { .immediate = getJointVelocity };
 
         case JointCmd::SET_POS_WITH_SPEED:
-            return { .immediate = {}, .delayed = setJointPosWithSpeed };
+            return { .delayed = setJointPosWithSpeed };
 
         case JointCmd::SET_VELOCITY:
-            return { .immediate = {}, .delayed = setJointVelocity };
+            return { .delayed = setJointVelocity };
 
         case JointCmd::GET_TORQUE:
         case JointCmd::SET_TORQUE:
@@ -326,22 +326,22 @@ CommandHandler::CommandCallbacks onConnectorCmdCallbacks( ConnectorCmd::Type cmd
             return {};
 
         case ConnectorCmd::GET_STATE:
-            return { .immediate = getConnectorState, .delayed = {} };
+            return { .immediate = getConnectorState };
 
         case ConnectorCmd::CONNECT:
-            return { .immediate = {}, .delayed = extendConnector };
+            return { .delayed = extendConnector };
 
         case ConnectorCmd::DISCONNECT:
-            return { .immediate = {}, .delayed = retractConnector };
+            return { .delayed = retractConnector };
 
         case ConnectorCmd::PACKET:
-            return { .immediate = {}, .delayed = sendConnectorPacket };
+            return { .delayed = sendConnectorPacket };
 
         case ConnectorCmd::CONNECT_POWER:
-            return { .immediate = {}, .delayed = connectPower };
+            return { .delayed = connectPower };
 
         case ConnectorCmd::DISCONNECT_POWER:
-            return { .immediate = {}, .delayed = disconnectPower };
+            return { .delayed = disconnectPower };
 
         default:
             std::cerr << "Unknown connector command type: " << cmdType << "\n";
@@ -370,7 +370,7 @@ CommandHandler::CommandCallbacks CommandHandler::onRofiCmdCallbacks( const RofiC
             return onConnectorCmdCallbacks( cmd.connectorcmd().cmdtype() );
 
         case RofiCmd::DESCRIPTION:
-            return { .immediate = getModuleDescription, .delayed = {} };
+            return { .immediate = getModuleDescription };
 
         case RofiCmd::WAIT_CMD:
             this->onWaitCmd( cmd );
