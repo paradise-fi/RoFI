@@ -16,18 +16,15 @@ auto removeConnection( const rofi::configuration::Component & roficom )
 
     Rofibot & rofibot = *roficom.parent->parent;
 
-    auto thisConnector = CUE::Connector{ .moduleId = roficom.parent->getId(),
-                                         .connIdx = roficom.getIndexInParent() };
-    auto toConnector = [ &rofibot ]( Rofibot::ModuleInfoHandle moduleHandle, int connIdx ) {
-        Module * module_ = rofibot.getModule( moduleHandle );
-        assert( module_ != nullptr );
-        return CUE::Connector{ .moduleId = module_->getId(), .connIdx = connIdx };
-    };
+    auto thisConnector = Connector{ .moduleId = roficom.parent->getId(),
+                                    .connIdx = roficom.getIndexInParent() };
 
     const auto & connections = rofibot.roficomConnections();
     for ( auto connIt = connections.begin(); connIt != connections.end(); ++connIt ) {
-        auto sourceConnector = toConnector( connIt->sourceModule, connIt->sourceConnector );
-        auto destConnector = toConnector( connIt->destModule, connIt->destConnector );
+        auto sourceConnector = Connector{ .moduleId = connIt->getSourceModule( rofibot ).getId(),
+                                          .connIdx = connIt->sourceConnector };
+        auto destConnector = Connector{ .moduleId = connIt->getDestModule( rofibot ).getId(),
+                                        .connIdx = connIt->destConnector };
 
         if ( thisConnector == sourceConnector || thisConnector == destConnector ) {
             rofibot.disconnect( connIt.get_handle() );
@@ -43,7 +40,7 @@ auto removeConnection( const rofi::configuration::Component & roficom )
 std::optional< ModuleStates::RofiDescription > ModuleStates::getDescription(
         ModuleId moduleId ) const
 {
-    if ( auto * moduleInnerState = getModuleInnerState( moduleId ) ) {
+    if ( auto * moduleInnerState = detail::getModuleInnerState( _moduleInnerStates, moduleId ) ) {
         RofiDescription description;
         size_t jointCount = moduleInnerState->joints().size();
         size_t connectorCount = moduleInnerState->connectors().size();
@@ -57,30 +54,25 @@ std::optional< ModuleStates::RofiDescription > ModuleStates::getDescription(
 }
 
 // Returns joint position limits if module with moduleId exists and has given joint
-std::optional< std::pair< float, float > > ModuleStates::getJointPositionLimits( ModuleId moduleId,
-                                                                                 int joint ) const
+std::optional< std::pair< float, float > > ModuleStates::getJointPositionLimits( Joint joint ) const
 {
     auto currentConfig = currentConfiguration();
     assert( currentConfig );
 
-    if ( auto modulePtr = currentConfig->getModule( moduleId ) ) {
-        const auto & joints = modulePtr->joints();
-        if ( joint >= 0 && static_cast< size_t >( joint ) < joints.size() ) {
-            const auto & jointLimits = joints[ joint ].joint->jointLimits();
-            if ( !jointLimits.empty() ) {
-                assert( jointLimits.size() == 1 );
-                return jointLimits.front();
-            }
+    if ( auto jointConfig = detail::getJointConfig( *currentConfig, joint ) ) {
+        std::span jointLimits = jointConfig->jointLimits();
+        if ( !jointLimits.empty() ) {
+            assert( jointLimits.size() == 1 );
+            return jointLimits.front();
         }
     }
     return {};
 }
 
 std::optional< ModuleStates::JointCapabilities > ModuleStates::getJointCapabilities(
-        ModuleId moduleId,
-        int joint ) const
+        Joint joint ) const
 {
-    if ( auto jointLimits = getJointPositionLimits( moduleId, joint ) ) {
+    if ( auto jointLimits = getJointPositionLimits( joint ) ) {
         JointCapabilities capabilities;
         capabilities.set_minposition( jointLimits->first );
         capabilities.set_maxposition( jointLimits->second );
@@ -93,48 +85,43 @@ std::optional< ModuleStates::JointCapabilities > ModuleStates::getJointCapabilit
     return {};
 }
 
-std::optional< float > ModuleStates::getJointPosition( ModuleId moduleId, int joint ) const
+std::optional< float > ModuleStates::getJointPosition( Joint joint ) const
 {
     auto currentConfig = currentConfiguration();
     assert( currentConfig );
 
-    if ( auto modulePtr = currentConfig->getModule( moduleId ) ) {
-        const auto & joints = modulePtr->joints();
-        if ( joint >= 0 && static_cast< size_t >( joint ) < joints.size() ) {
-            const auto & positions = joints[ joint ].joint->positions();
-            if ( !positions.empty() ) {
-                assert( positions.size() == 1 );
-                return positions.front();
-            }
+    if ( auto jointConfig = detail::getJointConfig( *currentConfig, joint ) ) {
+        std::span positions = jointConfig->positions();
+        if ( !positions.empty() ) {
+            assert( positions.size() == 1 );
+            return positions.front();
         }
     }
     return {};
 }
 
-std::optional< float > ModuleStates::getJointVelocity( ModuleId moduleId, int joint ) const
+std::optional< float > ModuleStates::getJointVelocity( Joint joint ) const
 {
-    if ( auto * jointInnerState = getJointInnerState( moduleId, joint ) ) {
+    if ( auto * jointInnerState = detail::getJointInnerState( _moduleInnerStates, joint ) ) {
         return jointInnerState->velocity();
     }
     return std::nullopt;
 }
 
-bool ModuleStates::setPositionControl( ModuleId moduleId,
-                                       int joint,
+bool ModuleStates::setPositionControl( Joint joint,
                                        ModuleStates::JointPositionControl positionControl )
 {
-    if ( auto * jointInnerState = getJointInnerState( moduleId, joint ) ) {
+    if ( auto * jointInnerState = detail::getJointInnerState( _moduleInnerStates, joint ) ) {
         jointInnerState->setPositionControl( std::move( positionControl ) );
         return true;
     }
     return false;
 }
 
-bool ModuleStates::setVelocityControl( ModuleId moduleId,
-                                       int joint,
+bool ModuleStates::setVelocityControl( Joint joint,
                                        ModuleStates::JointVelocityControl velocityControl )
 {
-    if ( auto * jointInnerState = getJointInnerState( moduleId, joint ) ) {
+    if ( auto * jointInnerState = detail::getJointInnerState( _moduleInnerStates, joint ) ) {
         jointInnerState->setVelocityControl( std::move( velocityControl ) );
         return true;
     }
@@ -142,53 +129,50 @@ bool ModuleStates::setVelocityControl( ModuleId moduleId,
 }
 
 std::optional< rofi::messages::ConnectorState > ModuleStates::getConnectorState(
-        ModuleId moduleId,
-        int connector ) const
+        Connector connector ) const
 {
-    if ( auto * connectorInnerState = getConnectorInnerState( moduleId, connector ) ) {
-        return connectorInnerState->connectorState();
+    if ( auto * connInnerState = detail::getConnectorInnerState( _moduleInnerStates, connector ) ) {
+        return connInnerState->connectorState();
     }
     return {};
 }
 
-std::optional< ModuleStates::ConnectedTo > ModuleStates::getConnectedTo( ModuleId moduleId,
-                                                                         int connector ) const
+std::optional< ModuleStates::ConnectedTo > ModuleStates::getConnectedTo( Connector connector ) const
 {
-    if ( auto * connectorInnerState = getConnectorInnerState( moduleId, connector ) ) {
-        return connectorInnerState->connectedTo();
+    if ( auto * connInnerState = detail::getConnectorInnerState( _moduleInnerStates, connector ) ) {
+        return connInnerState->connectedTo();
     }
     return {};
 }
 
-bool ModuleStates::extendConnector( ModuleId moduleId, int connector )
+bool ModuleStates::extendConnector( Connector connector )
 {
-    if ( auto * connectorInnerState = getConnectorInnerState( moduleId, connector ) ) {
-        connectorInnerState->setExtending();
+    if ( auto * connInnerState = detail::getConnectorInnerState( _moduleInnerStates, connector ) ) {
+        connInnerState->setExtending();
         return true;
     }
     return false;
 }
 
-std::optional< ModuleStates::ConnectedTo > ModuleStates::retractConnector( ModuleId moduleId,
-                                                                           int connector )
+std::optional< ModuleStates::ConnectedTo > ModuleStates::retractConnector( Connector connector )
 {
-    if ( auto * connectorInnerState = getConnectorInnerState( moduleId, connector ) ) {
-        auto connectedTo = connectorInnerState->resetConnectedTo();
-        connectorInnerState->setRetracting();
+    if ( auto * connInnerState = detail::getConnectorInnerState( _moduleInnerStates, connector ) ) {
+        auto connectedTo = connInnerState->resetConnectedTo();
+        connInnerState->setRetracting();
 
         if ( connectedTo ) {
-            if ( auto * otherConnInner = getConnectorInnerState( connectedTo->moduleId,
-                                                                 connectedTo->connector ) )
+            if ( auto * otherConnInner = detail::getConnectorInnerState( _moduleInnerStates,
+                                                                         connectedTo->connector ) )
             {
                 [[maybe_unused]] auto otherConnectedTo = otherConnInner->resetConnectedTo();
 
                 assert( otherConnectedTo );
-                assert( otherConnectedTo->moduleId == moduleId );
                 assert( otherConnectedTo->connector == connector );
                 assert( otherConnectedTo->orientation == connectedTo->orientation );
             } else {
-                std::cerr << "Inconsistent state (couldn't find module " << connectedTo->moduleId
-                          << ", connector " << connectedTo->connector << ")\n";
+                std::cerr << "Inconsistent state (couldn't find module "
+                          << connectedTo->connector.moduleId << ", connector "
+                          << connectedTo->connector.connIdx << ")\n";
             }
         }
         return { connectedTo };
@@ -196,20 +180,17 @@ std::optional< ModuleStates::ConnectedTo > ModuleStates::retractConnector( Modul
     return std::nullopt;
 }
 
-bool ModuleStates::setConnectorPower( ModuleId moduleId,
-                                      int connector,
-                                      ConnectorLine line,
-                                      bool connect )
+bool ModuleStates::setConnectorPower( Connector connector, ConnectorLine line, bool connect )
 {
     using ConnectorCmd = rofi::messages::ConnectorCmd;
 
-    if ( auto * connectorInnerState = getConnectorInnerState( moduleId, connector ) ) {
+    if ( auto * connInnerState = detail::getConnectorInnerState( _moduleInnerStates, connector ) ) {
         switch ( line ) {
             case ConnectorCmd::INT_LINE:
-                connectorInnerState->internal() = connect;
+                connInnerState->internal() = connect;
                 return true;
             case ConnectorCmd::EXT_LINE:
-                connectorInnerState->external() = connect;
+                connInnerState->external() = connect;
                 return true;
             default:
                 return false;
@@ -233,7 +214,8 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
         assert( moduleInfo.module.get() );
         auto & module_ = *moduleInfo.module;
 
-        auto * moduleInnerState = getModuleInnerState( module_.getId() );
+        auto * moduleInnerState = detail::getModuleInnerState( _moduleInnerStates,
+                                                               module_.getId() );
         assert( moduleInnerState );
 
         constexpr auto enumerated = [] {
@@ -262,8 +244,8 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
             if ( posReached ) {
                 assert( i < INT_MAX );
                 updateEvents.positionsReached.push_back(
-                        CUE::PositionReached{ .moduleId = module_.getId(),
-                                              .joint = static_cast< int >( i ),
+                        CUE::PositionReached{ .joint = { .moduleId = module_.getId(),
+                                                         .jointIdx = static_cast< int >( i ) },
                                               .position = newPosition } );
             }
 
@@ -321,7 +303,7 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
     return std::pair( newConfiguration, std::move( updateEvents ) );
 }
 
-std::map< ModuleId, ModuleInnerState > ModuleStates::innerStatesFromConfiguration(
+std::map< ModuleId, ModuleInnerState > ModuleStates::initInnerStatesFromConfiguration(
         const Rofibot & rofibotConfiguration )
 {
     auto innerStates = std::map< ModuleId, ModuleInnerState >();
@@ -349,33 +331,25 @@ std::map< ModuleId, ModuleInnerState > ModuleStates::innerStatesFromConfiguratio
     }
 
     for ( auto & connection : rofibotConfiguration.roficomConnections() ) {
-        ModuleId sourceModuleId = connection.getSourceModule( rofibotConfiguration ).getId();
-        ModuleId destModuleId = connection.getDestModule( rofibotConfiguration ).getId();
+        auto sourceConnector =
+                Connector{ .moduleId = connection.getSourceModule( rofibotConfiguration ).getId(),
+                           .connIdx = connection.sourceConnector };
+        auto destConnector =
+                Connector{ .moduleId = connection.getDestModule( rofibotConfiguration ).getId(),
+                           .connIdx = connection.destConnector };
 
-        assert( innerStates.contains( sourceModuleId ) );
-        std::span sourceConnectors = innerStates.at( sourceModuleId ).connectors();
+        auto * sourceConnState = detail::getConnectorInnerState( innerStates, sourceConnector );
+        assert( sourceConnState );
+        auto * destConnState = detail::getConnectorInnerState( innerStates, destConnector );
+        assert( destConnState );
 
-        assert( to_unsigned( connection.sourceConnector ) < sourceConnectors.size() );
-        auto & sourceConnector = sourceConnectors[ connection.sourceConnector ];
+        assert( !sourceConnState->connectedTo().has_value() );
+        sourceConnState->setExtendedWithoutConnecting();
+        sourceConnState->setConnectedTo( destConnector, connection.orientation );
 
-        assert( !sourceConnector.connectedTo().has_value() );
-        sourceConnector.setExtendedWithoutConnecting();
-        sourceConnector.setConnectedTo( destModuleId,
-                                        connection.destConnector,
-                                        connection.orientation );
-
-
-        assert( innerStates.contains( destModuleId ) );
-        std::span destConnectors = innerStates.at( destModuleId ).connectors();
-
-        assert( to_unsigned( connection.destConnector ) < destConnectors.size() );
-        auto & destConnector = destConnectors[ connection.destConnector ];
-
-        assert( !destConnector.connectedTo().has_value() );
-        destConnector.setExtendedWithoutConnecting();
-        destConnector.setConnectedTo( sourceModuleId,
-                                      connection.sourceConnector,
-                                      connection.orientation );
+        assert( !destConnState->connectedTo().has_value() );
+        destConnState->setExtendedWithoutConnecting();
+        destConnState->setConnectedTo( sourceConnector, connection.orientation );
     }
 
     return innerStates;
