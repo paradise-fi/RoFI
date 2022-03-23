@@ -42,6 +42,7 @@ public:
     class SendPacketEvent
     {
     public:
+        Connector sender;
         Connector receiver;
         rofi::messages::Packet packet;
     };
