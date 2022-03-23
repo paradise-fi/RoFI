@@ -23,38 +23,33 @@ namespace rofi::simplesim
 class CommandHandler
 {
 public:
-    class Connector
+    struct DisconnectEvent
     {
-    public:
-        rofi::messages::RofiResp getRofiResp( rofi::messages::ConnectorCmd::Type type ) const;
-
-        ModuleId moduleId = {};
-        int connector = {};
-    };
-
-    class DisconnectEvent
-    {
-    public:
         Connector first;
         Connector second;
     };
 
-    class SendPacketEvent
+    struct SendPacketEvent
     {
-    public:
         Connector sender;
         Connector receiver;
         rofi::messages::Packet packet;
     };
 
-    class WaitEvent
+    struct WaitEvent
     {
-    public:
-        rofi::messages::RofiResp getRofiResp() const;
-
         ModuleId moduleId;
         int waitId;
         int waitMs;
+
+        rofi::messages::RofiResp getRofiResp() const
+        {
+            rofi::messages::RofiResp rofiResp;
+            rofiResp.set_rofiid( this->moduleId );
+            rofiResp.set_resptype( rofi::messages::RofiCmd::WAIT_CMD );
+            rofiResp.set_waitid( this->waitId );
+            return rofiResp;
+        }
     };
 
     using RofiCmd = rofi::messages::RofiCmd;
@@ -66,9 +61,8 @@ public:
     using DelayedCmdCallback = std::function< DelayedEvent( ModuleStates &, const RofiCmd & ) >;
     using DelayedData = std::optional< WaitEvent >;
 
-    class CommandCallbacks
+    struct CommandCallbacks
     {
-    public:
         ImmediateCmdCallback immediate = {};
         DelayedCmdCallback delayed = {};
         DelayedData delayedData = std::nullopt;

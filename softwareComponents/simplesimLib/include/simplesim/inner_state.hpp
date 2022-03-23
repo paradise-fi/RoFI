@@ -10,23 +10,58 @@
 #include "configuration/rofibot.hpp"
 
 #include <connectorState.pb.h>
+#include <rofiResp.pb.h>
 
 
 namespace rofi::simplesim
 {
 using ModuleId = rofi::configuration::ModuleId;
 
-class JointInnerState
-{
-public:
-    struct PositionControl
+struct Joint {
+    ModuleId moduleId;
+    int jointIdx;
+
+    bool operator==( const Joint & ) const = default;
+    rofi::messages::RofiResp getRofiResp( rofi::messages::JointCmd::Type type,
+                                          std::optional< float > value = {} ) const
     {
+        rofi::messages::RofiResp rofiResp;
+        rofiResp.set_rofiid( this->moduleId );
+        rofiResp.set_resptype( rofi::messages::RofiCmd::JOINT_CMD );
+        auto & jointResp = *rofiResp.mutable_jointresp();
+        jointResp.set_joint( this->jointIdx );
+        jointResp.set_resptype( type );
+        if ( value ) {
+            jointResp.set_value( *value );
+        }
+        return rofiResp;
+    }
+};
+struct Connector {
+    ModuleId moduleId;
+    int connIdx;
+
+    bool operator==( const Connector & ) const = default;
+    rofi::messages::RofiResp getRofiResp( rofi::messages::ConnectorCmd::Type type ) const
+    {
+        rofi::messages::RofiResp rofiResp;
+        rofiResp.set_rofiid( this->moduleId );
+        rofiResp.set_resptype( rofi::messages::RofiCmd::CONNECTOR_CMD );
+        auto & connectorResp = *rofiResp.mutable_connectorresp();
+        connectorResp.set_connector( this->connIdx );
+        connectorResp.set_resptype( type );
+        return rofiResp;
+    }
+};
+
+class JointInnerState {
+public:
+    struct PositionControl {
     public:
         float position = 0.f;
         float velocity = 0.f;
     };
-    struct VelocityControl
-    {
+    struct VelocityControl {
     public:
         float velocity = 0.f;
     };
@@ -88,8 +123,7 @@ private:
     Control _control = { VelocityControl{ .velocity = 0.f } };
 };
 
-class ConnectorInnerState
-{
+class ConnectorInnerState {
 public:
     using Orientation = rofi::configuration::roficom::Orientation;
 
@@ -101,16 +135,9 @@ public:
         Extended,   ///< Connector is in extended state.
     };
 
-    struct OtherConnector
-    {
-    public:
-        OtherConnector( ModuleId moduleId, int connector, Orientation orientation )
-                : moduleId( moduleId ), connector( connector ), orientation( orientation )
-        {}
-
-        ModuleId moduleId = {};
-        int connector = {};
-        Orientation orientation = {};
+    struct OtherConnector {
+        Connector connector;
+        Orientation orientation;
 
         bool operator==( const OtherConnector & ) const = default;
     };
@@ -168,10 +195,10 @@ public:
         assert( false );
     }
 
-    void setConnectedTo( ModuleId moduleId, int connector, Orientation orientation )
+    void setConnectedTo( Connector connector, Orientation orientation )
     {
         assert( _connectedTo == std::nullopt );
-        _connectedTo = { moduleId, connector, orientation };
+        _connectedTo = { .connector = connector, .orientation = orientation };
     }
     std::optional< OtherConnector > resetConnectedTo()
     {
@@ -246,8 +273,7 @@ private:
     std::optional< OtherConnector > _connectedTo;
 };
 
-class ModuleInnerState
-{
+class ModuleInnerState {
 public:
     ModuleInnerState( int jointsCount, int connectorsCount )
             : _joints( jointsCount ), _connectors( connectorsCount )
