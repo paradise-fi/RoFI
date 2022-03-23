@@ -35,7 +35,16 @@ RofiResp getConnectorResp( ModuleId moduleId, int connector, ConnectorCmd::Type 
 
 RofiResp CommandHandler::Connector::getRofiResp( ConnectorCmd::Type type ) const
 {
-    return getConnectorResp( moduleId, connector, type );
+    return getConnectorResp( this->moduleId, this->connector, type );
+}
+
+RofiResp CommandHandler::WaitEvent::getRofiResp() const
+{
+    rofi::messages::RofiResp rofiResp;
+    rofiResp.set_rofiid( this->moduleId );
+    rofiResp.set_resptype( rofi::messages::RofiCmd::WAIT_CMD );
+    rofiResp.set_waitid( this->waitId );
+    return rofiResp;
 }
 
 
@@ -349,12 +358,12 @@ CommandHandler::CommandCallbacks onConnectorCmdCallbacks( ConnectorCmd::Type cmd
     }
 }
 
-void CommandHandler::onWaitCmd( const RofiCmd & cmd )
+CommandHandler::WaitEvent onWaitCmd( const RofiCmd& cmd )
 {
     assert( cmd.cmdtype() == RofiCmd::WAIT_CMD );
-
-    auto waitDuration = std::chrono::milliseconds( cmd.waitcmd().waitms() );
-    _waitHandler->registerWait( cmd.rofiid(), cmd.waitcmd().waitid(), waitDuration );
+    return { .moduleId = cmd.rofiid(),
+             .waitId = cmd.waitcmd().waitid(),
+             .waitMs = cmd.waitcmd().waitms() };
 }
 
 CommandHandler::CommandCallbacks CommandHandler::onRofiCmdCallbacks( const RofiCmd & cmd )
@@ -373,8 +382,7 @@ CommandHandler::CommandCallbacks CommandHandler::onRofiCmdCallbacks( const RofiC
             return { .immediate = getModuleDescription };
 
         case RofiCmd::WAIT_CMD:
-            this->onWaitCmd( cmd );
-            return {};
+            return { .delayedData = onWaitCmd( cmd ) };
 
         default:
             std::cerr << "Unknown rofi command type: " << cmd.cmdtype() << "\n";
@@ -388,6 +396,11 @@ std::optional< RofiResp > CommandHandler::onRofiCmd( const CommandHandler::RofiC
     assert( _moduleStates );
 
     auto callbacks = onRofiCmdCallbacks( *rofiCmdPtr );
+
+    if ( callbacks.delayedData ) {
+        auto waitTime = std::chrono::milliseconds( callbacks.delayedData->waitMs );
+        _waitHandler->registerDelayedData( std::move( *callbacks.delayedData ), waitTime );
+    }
 
     if ( callbacks.delayed ) {
         _rofiCmdCallbacks->emplace_back( std::move( callbacks.delayed ), rofiCmdPtr );

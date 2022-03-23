@@ -11,7 +11,6 @@
 #include "atoms/patterns.hpp"
 #include "command_handler.hpp"
 #include "module_states.hpp"
-#include "wait_handler.hpp"
 
 #include <connectorCmd.pb.h>
 #include <jointCmd.pb.h>
@@ -43,18 +42,19 @@ public:
     std::pair< std::vector< RofiResp >, std::shared_ptr< const rofi::configuration::Rofibot > >
             simulateOneIteration( std::chrono::milliseconds duration )
     {
+        assert( _commandHandler );
         assert( _moduleStates );
 
-        auto responses = processRofiCommands();
+        auto responses = processRofiCommands( _commandHandler->extractCommandCallbacks(), *_moduleStates );
         auto new_configuration =
                 _moduleStates->updateToNextIteration( duration, [ &responses ]( RofiResp resp ) {
                     responses.push_back( std::move( resp ) );
                 } );
         assert( new_configuration );
 
-        std::ranges::transform( _commandHandler->waitHandler()->advanceTime( duration ),
-                                std::back_inserter( responses ),
-                                WaitHandler::getWaitResp );
+        _commandHandler->advanceTime( duration, [ &responses ]( auto resp ){
+            responses.push_back( std::move( resp ) );
+        } );
 
         return std::make_pair( std::move( responses ), std::move( new_configuration ) );
     }
@@ -66,14 +66,13 @@ public:
     }
 
 private:
-    std::vector< RofiResp > processRofiCommands()
+    static std::vector< RofiResp > processRofiCommands(
+        std::span< const std::pair< CommandHandler::DelayedCmdCallback,
+                                    CommandHandler::RofiCmdPtr > > commandCallbacks,
+        ModuleStates & moduleStates )
     {
-        assert( _commandHandler );
-        assert( _moduleStates );
-
-        auto commandCallbacks = _commandHandler->extractCommandCallbacks();
         std::vector< RofiResp > responses;
-        for ( auto & [ callback, rofiCmdPtr ] : commandCallbacks ) {
+        for ( const auto & [ callback, rofiCmdPtr ] : commandCallbacks ) {
             using SendPacketEvent = CommandHandler::SendPacketEvent;
             using DisconnectEvent = CommandHandler::DisconnectEvent;
 
@@ -94,7 +93,7 @@ private:
                                       responses.push_back( disconnect_event.second.getRofiResp(
                                               rofi::messages::ConnectorCmd::DISCONNECT ) );
                                   } },
-                        callback( *_moduleStates, *rofiCmdPtr ) );
+                        callback( moduleStates, *rofiCmdPtr ) );
         }
         return responses;
     }
