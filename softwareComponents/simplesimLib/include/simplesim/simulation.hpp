@@ -28,10 +28,11 @@ public:
     using RofiResp = rofi::messages::RofiResp;
 
 
-    explicit Simulation(
-            std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration )
+    explicit Simulation( std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration,
+                         PacketFilter::FilterFunction packetFilter )
             : _moduleStates( std::make_shared< ModuleStates >( std::move( rofibotConfiguration ) ) )
-            , _commandHandler( std::make_shared< CommandHandler >( this->_moduleStates ) )
+            , _commandHandler( std::make_shared< CommandHandler >( this->_moduleStates,
+                                                                   std::move( packetFilter ) ) )
     {
         assert( _moduleStates );
         assert( _commandHandler );
@@ -79,20 +80,11 @@ private:
     {
         std::vector< RofiResp > responses;
         for ( const auto & [ callback, rofiCmdPtr ] : commandCallbacks ) {
-            using SendPacketEvent = CommandHandler::SendPacketEvent;
             using DisconnectEvent = CommandHandler::DisconnectEvent;
 
             assert( callback );
             assert( rofiCmdPtr );
             std::visit( overload{ []( std::nullopt_t /* nothing */ ) {},
-                                  [ &responses ]( SendPacketEvent && packet_event ) {
-                                      auto resp = packet_event.receiver.getRofiResp(
-                                              rofi::messages::ConnectorCmd::PACKET );
-                                      *resp.mutable_connectorresp()->mutable_packet() = std::move(
-                                              packet_event.packet );
-                                      // TODO use packet filter
-                                      responses.push_back( std::move( resp ) );
-                                  },
                                   [ &responses ]( const DisconnectEvent & disconnect_event ) {
                                       responses.push_back( disconnect_event.first.getRofiResp(
                                               rofi::messages::ConnectorCmd::DISCONNECT ) );
