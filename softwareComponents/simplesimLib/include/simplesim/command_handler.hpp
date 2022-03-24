@@ -11,8 +11,9 @@
 #include <boost/shared_ptr.hpp>
 
 #include "atoms/guarded.hpp"
-#include "module_states.hpp"
 #include "delayed_data_handler.hpp"
+#include "module_states.hpp"
+#include "packet_filter.hpp"
 
 #include <rofiCmd.pb.h>
 #include <rofiResp.pb.h>
@@ -20,27 +21,16 @@
 
 namespace rofi::simplesim
 {
-class CommandHandler
-{
+class CommandHandler {
 public:
-    struct DisconnectEvent
-    {
+    struct DisconnectEvent {
         Connector first;
         Connector second;
     };
 
-    struct SendPacketEvent
-    {
-        Connector sender;
-        Connector receiver;
-        rofi::messages::Packet packet;
-    };
-
-    struct WaitEvent
-    {
+    struct WaitData {
         ModuleId moduleId;
         int waitId;
-        int waitMs;
 
         rofi::messages::RofiResp getRofiResp() const
         {
@@ -52,25 +42,31 @@ public:
         }
     };
 
+    enum class DelayedDataType
+    {
+        None = 0,
+        Wait,
+        SendPacket
+    };
+
     using RofiCmd = rofi::messages::RofiCmd;
     using RofiCmdPtr = boost::shared_ptr< const RofiCmd >;
 
     using ImmediateCmdCallback = std::function<
             std::optional< rofi::messages::RofiResp >( const ModuleStates &, const RofiCmd & ) >;
-    using DelayedEvent = std::variant< std::nullopt_t, DisconnectEvent, SendPacketEvent >;
+    using DelayedEvent = std::variant< std::nullopt_t, DisconnectEvent >;
     using DelayedCmdCallback = std::function< DelayedEvent( ModuleStates &, const RofiCmd & ) >;
-    using DelayedData = std::optional< WaitEvent >;
 
-    struct CommandCallbacks
-    {
+    struct CommandCallbacks {
         ImmediateCmdCallback immediate = {};
         DelayedCmdCallback delayed = {};
-        DelayedData delayedData = std::nullopt;
+        DelayedDataType delayedDataType = DelayedDataType::None;
     };
 
 
-    CommandHandler( std::shared_ptr< ModuleStates > moduleStates )
-            : _moduleStates( std::move( moduleStates ) )
+    CommandHandler( std::shared_ptr< ModuleStates > moduleStates,
+                    PacketFilter::FilterFunction packetFilter )
+            : _moduleStates( std::move( moduleStates ) ), _packetFilter( std::move( packetFilter ) )
     {
         assert( _moduleStates );
     }
@@ -92,20 +88,27 @@ public:
         } );
     }
 
-    void advanceTime( std::chrono::milliseconds duration, std::invocable< rofi::messages::RofiResp > auto callback )
+    void advanceTime( std::chrono::milliseconds duration,
+                      std::invocable< rofi::messages::RofiResp > auto callback )
     {
         auto waitResponses = _waitHandler->advanceTime( duration );
+        auto packetResponses = _packetFilter->advanceTime( duration );
 
-        for ( const WaitEvent & waitEvent : waitResponses ) {
-            callback( waitEvent.getRofiResp() );
+        for ( const auto & waitData : waitResponses ) {
+            callback( waitData.getRofiResp() );
+        }
+
+        for ( const auto & packetData : packetResponses ) {
+            callback( packetData.getRofiResp() );
         }
     }
 
 private:
-    CommandCallbacks onRofiCmdCallbacks( const RofiCmd & cmd );
+    void onDelayedData( DelayedDataType delayedDataType, const RofiCmd & cmd );
 
-    atoms::Guarded< DelayedDataHandler< WaitEvent > > _waitHandler;
     std::shared_ptr< const ModuleStates > _moduleStates;
+    atoms::Guarded< DelayedDataHandler< WaitData > > _waitHandler;
+    atoms::Guarded< PacketFilter > _packetFilter;
 
     atoms::Guarded< std::vector< std::pair< DelayedCmdCallback, RofiCmdPtr > > > _rofiCmdCallbacks;
 };

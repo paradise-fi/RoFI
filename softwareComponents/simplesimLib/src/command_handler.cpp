@@ -163,8 +163,9 @@ CommandHandler::DelayedEvent retractConnector( ModuleStates & moduleStates,
     return std::nullopt;
 }
 
-CommandHandler::DelayedEvent sendConnectorPacket( ModuleStates & moduleStates,
-                                                  const RofiCmd & rofiCmd )
+std::optional< PacketFilter::SendPacketData > sendConnectorPacket(
+        const ModuleStates & moduleStates,
+        const RofiCmd & rofiCmd )
 {
     assert( rofiCmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
     assert( rofiCmd.connectorcmd().cmdtype() == ConnectorCmd::PACKET );
@@ -174,9 +175,9 @@ CommandHandler::DelayedEvent sendConnectorPacket( ModuleStates & moduleStates,
 
     if ( auto connectedToOpt = moduleStates.getConnectedTo( connector ) ) {
         if ( auto connectedTo = *connectedToOpt ) {
-            return CommandHandler::SendPacketEvent{ .sender = connector,
-                                                    .receiver = connectedTo->connector,
-                                                    .packet = rofiCmd.connectorcmd().packet() };
+            return PacketFilter::SendPacketData{ .sender = connector,
+                                                 .receiver = connectedTo->connector,
+                                                 .packet = rofiCmd.connectorcmd().packet() };
         }
 
         std::cerr << "Connector " << connector.connIdx << "of module " << connector.moduleId
@@ -296,7 +297,7 @@ CommandHandler::CommandCallbacks onConnectorCmdCallbacks( ConnectorCmd::Type cmd
             return { .delayed = retractConnector };
 
         case ConnectorCmd::PACKET:
-            return { .delayed = sendConnectorPacket };
+            return { .delayedDataType = CommandHandler::DelayedDataType::SendPacket };
 
         case ConnectorCmd::CONNECT_POWER:
             return { .delayed = connectPower };
@@ -310,15 +311,7 @@ CommandHandler::CommandCallbacks onConnectorCmdCallbacks( ConnectorCmd::Type cmd
     }
 }
 
-CommandHandler::WaitEvent onWaitCmd( const RofiCmd & cmd )
-{
-    assert( cmd.cmdtype() == RofiCmd::WAIT_CMD );
-    return { .moduleId = cmd.rofiid(),
-             .waitId = cmd.waitcmd().waitid(),
-             .waitMs = cmd.waitcmd().waitms() };
-}
-
-CommandHandler::CommandCallbacks CommandHandler::onRofiCmdCallbacks( const RofiCmd & cmd )
+CommandHandler::CommandCallbacks getOnRofiCmdCallbacks( const RofiCmd & cmd )
 {
     switch ( cmd.cmdtype() ) {
         case RofiCmd::NO_CMD:
@@ -334,7 +327,7 @@ CommandHandler::CommandCallbacks CommandHandler::onRofiCmdCallbacks( const RofiC
             return { .immediate = getModuleDescription };
 
         case RofiCmd::WAIT_CMD:
-            return { .delayedData = onWaitCmd( cmd ) };
+            return { .delayedDataType = CommandHandler::DelayedDataType::Wait };
 
         default:
             std::cerr << "Unknown rofi command type: " << cmd.cmdtype() << "\n";
@@ -342,17 +335,41 @@ CommandHandler::CommandCallbacks CommandHandler::onRofiCmdCallbacks( const RofiC
     }
 }
 
+void CommandHandler::onDelayedData( CommandHandler::DelayedDataType type, const RofiCmd & cmd )
+{
+    switch ( type ) {
+        case CommandHandler::DelayedDataType::None:
+            return;
+        case CommandHandler::DelayedDataType::SendPacket:
+        {
+            assert( cmd.cmdtype() == RofiCmd::CONNECTOR_CMD );
+            assert( cmd.connectorcmd().cmdtype() == ConnectorCmd::PACKET );
+            if ( auto packetData = sendConnectorPacket( std::as_const( *_moduleStates ), cmd ) ) {
+                _packetFilter->registerPacket( std::move( *packetData ) );
+            }
+            return;
+        }
+        case CommandHandler::DelayedDataType::Wait:
+        {
+            assert( cmd.cmdtype() == RofiCmd::WAIT_CMD );
+            using WaitData = CommandHandler::WaitData;
+            auto waitData = WaitData{ .moduleId = cmd.rofiid(), .waitId = cmd.waitcmd().waitid() };
+            auto waitTime = std::chrono::milliseconds( cmd.waitcmd().waitms() );
+            _waitHandler->registerDelayedData( waitData, waitTime );
+            return;
+        }
+    }
+    assert( false );
+}
+
 std::optional< RofiResp > CommandHandler::onRofiCmd( const CommandHandler::RofiCmdPtr & rofiCmdPtr )
 {
     assert( rofiCmdPtr );
     assert( _moduleStates );
 
-    auto callbacks = onRofiCmdCallbacks( *rofiCmdPtr );
+    auto callbacks = getOnRofiCmdCallbacks( *rofiCmdPtr );
 
-    if ( callbacks.delayedData ) {
-        auto waitTime = std::chrono::milliseconds( callbacks.delayedData->waitMs );
-        _waitHandler->registerDelayedData( std::move( *callbacks.delayedData ), waitTime );
-    }
+    onDelayedData( callbacks.delayedDataType, *rofiCmdPtr );
 
     if ( callbacks.delayed ) {
         _rofiCmdCallbacks->emplace_back( std::move( callbacks.delayed ), rofiCmdPtr );

@@ -86,8 +86,10 @@ public:
     using OnConfigurationUpdate =
             std::function< void( std::shared_ptr< const rofi::configuration::Rofibot > ) >;
 
-    Simplesim( std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration )
-            : _simulation( std::make_shared< Simulation >( std::move( rofibotConfiguration ) ) )
+    Simplesim( std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration,
+               PacketFilter::FilterFunction packetFilter = {} )
+            : _simulation( std::make_shared< Simulation >( std::move( rofibotConfiguration ),
+                                                           std::move( packetFilter ) ) )
             , _communication( std::make_shared< Communication >( _simulation->commandHandler() ) )
     {
         assert( _simulation );
