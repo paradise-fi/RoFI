@@ -12,8 +12,8 @@ set_semicolon_safe(SINGLE_PANEL_OPTS
 add_pcb(um_controlBoard
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     PANELIZE --source "annotation\; ref: BODY3\; tolerance: 6mm" ${SINGLE_PANEL_OPTS}
-    FAB jlcpcb --assembly
-    SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.sch
+    FAB jlcpcb --assembly --no-drc
+    SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_sch
 )
 
 add_pcb(um_controlBoard3DModel
@@ -25,8 +25,8 @@ add_pcb(um_controlBoard3DModel
 add_pcb(um_batteryBoard
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     PANELIZE --source "annotation\; ref: BODY1\; tolerance: 6mm" ${SINGLE_PANEL_OPTS}
-    FAB jlcpcb --assembly
-    SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.sch
+    FAB jlcpcb --assembly --no-drc
+    SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_sch
 )
 
 add_pcb(um_batteryBoard3DModel
@@ -38,8 +38,8 @@ add_pcb(um_batteryBoard3DModel
 add_pcb(um_displayBoard
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     PANELIZE --source "annotation\; ref: BODY2\; tolerance: 6mm\;stack: 2layer" ${SINGLE_PANEL_OPTS}
-    FAB jlcpcb --assembly
-    SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.sch
+    FAB jlcpcb --assembly --no-drc
+    SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_sch
 )
 
 add_pcb(um_displayBoard3DModel
@@ -51,7 +51,7 @@ add_pcb(um_displayBoard3DModel
 add_pcb(um_slipRing
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     SEPARATE --source "annotation\; ref: BODY5\; tolerance: 6mm\;stack: 2layer"
-    FAB jlcpcb
+    FAB jlcpcb --no-drc
 )
 
 add_pcb(um_slipRing3DModel
@@ -63,7 +63,7 @@ add_pcb(um_slipRing3DModel
 add_pcb(um_servoBoard
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     SEPARATE --source "annotation\; ref: BODY4\; tolerance: 3mm\;stack: 2layer"
-    FAB jlcpcb
+    FAB jlcpcb --no-drc
 )
 
 add_pcb(um_servoBoard3DModel
@@ -75,13 +75,13 @@ add_pcb(um_servoBoard3DModel
 add_pcb(um_debugBoard
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     SEPARATE --source "annotation\; ref: DEBUG1\; tolerance: 3mm\;stack: 2layer"
-    FAB jlcpcb
+    FAB jlcpcb --no-drc
 )
 
 add_pcb(um_shoeLeft
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     SEPARATE --source "annotation\; ref: SHOE1\; tolerance: 3mm\;stack: 2layer"
-    FAB jlcpcb
+    FAB jlcpcb --no-drc
 )
 
 add_pcb(um_shoeLeft3DModel
@@ -93,7 +93,7 @@ add_pcb(um_shoeLeft3DModel
 add_pcb(um_shoeMid
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     SEPARATE --source "annotation\; ref: SHOE2\; tolerance: 8mm\;stack: 2layer"
-    FAB jlcpcb
+    FAB jlcpcb --no-drc
 )
 
 add_pcb(um_shoeMid3DModel
@@ -105,7 +105,7 @@ add_pcb(um_shoeMid3DModel
 add_pcb(um_shoeRight
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     SEPARATE --source "annotation\; ref: SHOE3\; tolerance: 3mm\;stack: 2layer"
-    FAB jlcpcb
+    FAB jlcpcb --no-drc
 )
 
 add_pcb(um_shoeRight3DModel
@@ -117,11 +117,11 @@ add_pcb(um_shoeRight3DModel
 add_pcb(um_bodyCable
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     SEPARATE --source "annotation\; ref: CABLE2\; tolerance: 3mm\;stack: 2layer"
-    FAB jlcpcb
+    FAB jlcpcb --no-drc
 )
 
 add_pcb(um_shoeCable
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
     SEPARATE --source "annotation\; ref: CABLE1\; tolerance: 3mm\;stack: 2layer"
-    FAB jlcpcb
+    FAB jlcpcb --no-drc
 )

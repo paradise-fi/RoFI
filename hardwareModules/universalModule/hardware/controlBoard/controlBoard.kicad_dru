@@ -1,0 +1,5 @@
+(version 1)
+
+(rule flex
+	(constraint edge_clearance (min -10mm))
+	(condition "A.NetName == '*cable*'"))

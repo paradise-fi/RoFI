@@ -14,7 +14,7 @@ add_pcb(roficom_controlBoard
     PANELIZE --source "annotation\; ref: BOARD1\; tolerance: 6mm"
              ${SINGLE_PANEL_OPTS}
              --layout "grid\; rows: 2\; cols: 2\; rotation: 45deg\; space: 2mm"
-    FAB jlcpcb --assembly
+    FAB jlcpcb --assembly --no-drc
     SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/control_board/control_board.sch
 )
 
@@ -34,7 +34,7 @@ add_pcb(roficom_skirt
              --cuts "mousebites\; drill: 0.3mm\; spacing: 0.6mm\; offset: 0.15mm\; prolong: 0.8mm"
              --tooling "3hole\; hoffset: 2.5mm\; voffset: 2.5mm"
              --post "millradius: 1mm"
-    FAB jlcpcb --assembly
+    FAB jlcpcb --assembly --no-drc
     SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/control_board/control_board.sch
 )
 
@@ -47,5 +47,5 @@ add_pcb(roficom_roficom_skirt3DModel
 add_pcb(roficom_cable
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/control_board/control_board.kicad_pcb
     SEPARATE --source "annotation\; ref: BOARD3\; tolerance: 6mm\; stack: 2layer"
-    FAB jlcpcb
+    FAB jlcpcb --no-drc
 )

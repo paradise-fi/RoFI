@@ -74,7 +74,7 @@ function(add_pcb ADD_PCB_TARGET)
             OUTPUT ${stepModel}
             DEPENDS ${targetBoard}
             COMMENT "Exporting 3D model of ${ADD_PCB_TARGET}"
-            COMMAND kicad2step -f -o ${stepModel} ${targetBoard}
+            COMMAND pcb2step -f -o ${stepModel} ${targetBoard}
         )
     endif()
 

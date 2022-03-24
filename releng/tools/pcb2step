@@ -1,0 +1,60 @@
+#!/usr/bin/env python3
+
+import subprocess
+import sys
+import time
+from typing import Dict, List
+
+from pyvirtualdisplay.smartdisplay import SmartDisplay
+
+
+def xdotool(args: List[any]) -> List[str]:
+    command = ["xdotool"] + [str(x) for x in args]
+    c = subprocess.run(command, capture_output=True)
+    output = c.stdout.decode("utf-8")
+    return [x.strip() for x in output.split("\n") if len(x.strip())]
+
+def listWindows(pid: any) -> Dict[str, int]:
+    windows = xdotool(["search", "--pid", pid])
+    res = {}
+    for winId in windows:
+        name = xdotool(["getwindowname", winId])
+        if len(name):
+            res[name[0]] = int(winId)
+    return res
+
+def maximizeWindow(windowId: int) -> None:
+    xdotool(["windowmove", windowId, "0", "0"])
+    xdotool(["windowsize", windowId, "100%", "100%"])
+    xdotool(["windowactivate", "--sync", windowId])
+
+
+with SmartDisplay(size=(1000, 1000)) as display:
+    command = ["kicad2step"] + sys.argv[1:]
+    p = subprocess.Popen(command)
+
+    windows = listWindows(p.pid)
+    while True:
+        if "Kicad2step" in windows:
+            id = windows["Kicad2step"]
+            break
+        windows = listWindows(p.pid)
+        start = time.time()
+        try:
+            p.wait(0.2)
+            # If everything is OK, we shouldn't get here
+            sys.exit(p.returncode)
+        except subprocess.TimeoutExpired:
+            pass
+    id = windows["Kicad2step"]
+    maximizeWindow(id)
+    start = time.time()
+    while True:
+        xdotool(["mousemove", "--window", id, 1000 - 61, 1000 - 22, "click", "1"])
+        try:
+            p.wait(0.2)
+            # If everything is OK, we shouldn't get here
+            sys.exit(p.returncode)
+        except subprocess.TimeoutExpired:
+            pass
+

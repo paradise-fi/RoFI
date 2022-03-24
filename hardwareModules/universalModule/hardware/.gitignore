@@ -1,4 +1,6 @@
 manu
 controlBoard/biosCubeMx
+controlBoard/*Bios*
+*-backups/
 *.pdf
 bom
