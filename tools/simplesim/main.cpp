@@ -1,3 +1,4 @@
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
@@ -7,18 +8,19 @@
 #include "configuration/rofibot.hpp"
 #include "configuration/universalModule.hpp"
 #include "message_server.hpp"
+#include "simplesim/packet_filters/py_filter.hpp"
 #include "simplesim/simplesim.hpp"
 #include "simplesim_client.hpp"
 
 
 std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
-        const std::string & cfgFileName )
+        const std::filesystem::path & cfgFileName )
 {
     using namespace rofi::configuration;
 
     auto inputCfgFile = std::ifstream( cfgFileName );
     if ( !inputCfgFile.is_open() ) {
-        throw std::runtime_error( "Cannot open file '" + cfgFileName + "'" );
+        throw std::runtime_error( "Cannot open file '" + cfgFileName.generic_string() + "'" );
     }
 
     auto configuration = std::make_shared< Rofibot >( readOldConfigurationFormat( inputCfgFile ) );
@@ -39,6 +41,22 @@ std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
     return configuration;
 }
 
+auto readPyFilterFromFile( const std::filesystem::path & packetFilterFileName )
+        -> std::unique_ptr< rofi::simplesim::packetf::PyFilter >
+{
+    using namespace rofi::simplesim::packetf;
+
+    auto inputFile = std::ifstream( packetFilterFileName );
+    if ( !inputFile.is_open() ) {
+        throw std::runtime_error( "Cannot open file '" + packetFilterFileName.generic_string()
+                                  + "'" );
+    }
+
+    auto fileContent = std::string( std::istreambuf_iterator( inputFile ), {} );
+    inputFile.close();
+
+    return std::make_unique< PyFilter >( fileContent );
+}
 
 int main( int argc, char * argv[] )
 {
@@ -46,8 +64,14 @@ int main( int argc, char * argv[] )
     using rofi::simplesim::msgs::SettingsCmd;
 
     Dim::Cli cli;
-    auto & inputCfgFileName = cli.opt< std::string >( "<input_cfg_file>" )
+    auto & inputCfgFileName = cli.opt< std::filesystem::path >( "<input_cfg_file>" )
+                                      .defaultDesc( {} )
                                       .desc( "Input configuration file" );
+
+    auto & pythonPacketFilterFileName = cli.opt< std::filesystem::path >( "p python" )
+                                                .valueDesc( "PYTHON_FILE" )
+                                                .defaultDesc( {} )
+                                                .desc( "Python packet filter file" );
 
     if ( !cli.parse( argc, argv ) ) {
         return cli.printError( std::cerr );
@@ -56,11 +80,23 @@ int main( int argc, char * argv[] )
     std::cout << "Reading configuration from file" << std::endl;
     auto configuration = readConfigurationFromFile( *inputCfgFileName );
 
+    auto packetFilter = std::unique_ptr< rofi::simplesim::packetf::PyFilter >{};
+    if ( pythonPacketFilterFileName ) {
+        std::cout << "Reading python packet filter from file" << std::endl;
+        packetFilter = readPyFilterFromFile( *pythonPacketFilterFileName );
+    }
+
     std::cout << "Starting gazebo server" << std::endl;
     auto msgServer = rofi::msgs::Server::createAndLoopInThread( "simplesim" );
 
+
     // Setup server
-    auto server = rofi::simplesim::Simplesim( configuration );
+    auto server = rofi::simplesim::Simplesim(
+            configuration,
+            packetFilter
+                    ? [ &packetFilter ](
+                              auto packet ) { return packetFilter->filter( std::move( packet ) ); }
+                    : rofi::simplesim::PacketFilter::FilterFunction{} );
 
     // Setup client
     auto client = rofi::simplesim::SimplesimClient();
