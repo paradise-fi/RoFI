@@ -180,6 +180,7 @@ if (${BUILD_GAZEBO})
   add_component(gazebosim)
   add_component(simplesimConfigMsgs)
   add_component(simplesimLib)
+  add_component(simplesimPacketFilters)
   add_component(simplesimClientLib)
 
   # Introduce alias for the HAL
