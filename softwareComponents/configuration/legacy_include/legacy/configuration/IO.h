@@ -6,6 +6,7 @@
 #define ROFI_IO_H
 
 #include "Configuration.h"
+#include "legacy/configuration/MatrixIO.h"
 #include <sstream>
 #include <iomanip>
 
@@ -283,16 +284,7 @@ namespace IO
 
     inline std::string toString(const Matrix &matrix)
     {
-        std::stringstream out;
-        out << std::fixed << std::setprecision(2);
-        for (int i : {0, 1, 2, 3}) {
-            for (int j : {0, 1, 2, 3}) {
-                out << std::setw(7) << matrix(i, j);
-            }
-            out << std::endl;
-        }
-
-        return out.str();
+        return rofi::configuration::matrices::to_string(matrix);
     }
 
     inline std::string toStringMatrices(const Configuration &config)
