@@ -5,7 +5,7 @@
 #ifndef ROBOTS_CONFIGURATION_H
 #define ROBOTS_CONFIGURATION_H
 
-#include "Matrix.h"
+#include "legacy/configuration/Matrix.h"
 #include <unordered_map>
 #include <unordered_set>
 #include <array>

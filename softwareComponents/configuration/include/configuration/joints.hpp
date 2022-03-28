@@ -10,7 +10,7 @@
 
 #include <atoms/patterns.hpp>
 #include <atoms/units.hpp>
-#include "../Matrix.h"
+#include <configuration/Matrix.h>
 
 namespace rofi::configuration {
 
