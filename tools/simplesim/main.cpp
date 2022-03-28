@@ -14,6 +14,7 @@
 
 #include <QtWidgets/QApplication>
 
+
 std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
         const std::filesystem::path & cfgFileName )
 {

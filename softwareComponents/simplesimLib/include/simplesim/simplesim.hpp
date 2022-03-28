@@ -19,8 +19,7 @@
 
 namespace rofi::simplesim
 {
-class ServerSettings
-{
+class ServerSettings {
 public:
     bool isPaused() const
     {
@@ -82,8 +81,7 @@ private:
 };
 
 
-class Simplesim
-{
+class Simplesim {
 public:
     using OnConfigurationUpdate =
             std::function< void( std::shared_ptr< const rofi::configuration::Rofibot > ) >;

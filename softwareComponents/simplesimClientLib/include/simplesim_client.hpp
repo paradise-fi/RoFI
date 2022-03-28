@@ -20,33 +20,33 @@
 #include <vtkSmartPointer.h>
 
 #include "atoms/guarded.hpp"
+#include "changecolor.hpp"
 #include "configuration/rofibot.hpp"
 #include "configuration/serialization.hpp"
 #include "legacy/configuration/IO.h"
-#include "changecolor.hpp"
+
+#include <simplesim_settings_cmd.pb.h>
 
 #include <QMainWindow>
 #include <QTimer>
 #include <QTreeWidgetItem>
 #include <QWidgetItem>
 
-#include <simplesim_settings_cmd.pb.h>
-
 
 #define vtkTypeMacro_( thisClass, superClass ) \
     vtkTypeMacro( thisClass, superClass ) static_assert( true, "require semicolon" )
 
-namespace Ui {
-    class SimplesimClient;
-    class ChangeColor;
-}
+namespace Ui
+{
+class SimplesimClient;
+class ChangeColor;
+} // namespace Ui
 
 namespace rofi::simplesim
 {
 namespace detail
 {
-    class ModuleRenderInfo
-    {
+    class ModuleRenderInfo {
     public:
         std::vector< vtkSmartPointer< vtkActor > > componentActors;
         std::unordered_set< int > activeConnectors;
@@ -57,8 +57,7 @@ namespace detail
 
 // TODO use the same mapper for all modules
 // TODO use the same property for setting the modules
-class SimplesimClient : public QMainWindow
-{
+class SimplesimClient : public QMainWindow {
     Q_OBJECT
 
 public:
@@ -110,7 +109,7 @@ public:
     }
 
 protected:
-    void timerEvent( QTimerEvent* /* event */ );
+    void timerEvent( QTimerEvent * /* event */ );
 
     void colorModule( rofi::configuration::ModuleId module,
                       std::array< double, 3 > color,
@@ -120,7 +119,7 @@ public slots:
 
 private slots:
 
-    void itemSelected( QTreeWidgetItem* selected );
+    void itemSelected( QTreeWidgetItem * selected );
 
     void changeColorWindow();
 
@@ -129,10 +128,9 @@ private slots:
     void speedChanged( double speed );
 
 private:
+    void initInfoTree( const rofi::configuration::Rofibot & rofibot );
 
-    void initInfoTree( const rofi::configuration::Rofibot& rofibot );
-
-    void updateInfoTree( const rofi::configuration::Rofibot& rofibot );
+    void updateInfoTree( const rofi::configuration::Rofibot & rofibot );
 
     std::shared_ptr< const rofi::configuration::Rofibot > getCurrentConfig() const
     {
@@ -209,7 +207,7 @@ private:
     vtkNew< vtkInteractorStyleTrackballCamera > _interactorStyle;
     vtkNew< vtkRenderWindowInteractor > _renderWindowInteractor;
 
-    int _timerId; // ID of the timer that refreshes frames
+    int _timerId;      // ID of the timer that refreshes frames
     int _simStep = 10; // ms to refresh the frame
 
     int _lastModule = -1;

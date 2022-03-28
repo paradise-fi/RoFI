@@ -27,13 +27,13 @@
 #include "atoms/concurrent_queue.hpp"
 #include "atoms/guarded.hpp"
 #include "atoms/resources.hpp"
-
 #include "ui_mainwindow.h"
 
+
+using rofi::configuration::UniversalModule;
 using rofi::simplesim::ChangeColor;
 using rofi::simplesim::SimplesimClient;
 using rofi::simplesim::detail::ModuleRenderInfo;
-using rofi::configuration::UniversalModule;
 using namespace rofi::configuration::matrices;
 
 vtkSmartPointer< vtkMatrix4x4 > convertMatrix( const Matrix & m )
@@ -124,7 +124,8 @@ vtkSmartPointer< vtkPolyDataMapper > getComponentMapper( const Matrix & cPositio
         frameActor->SetScale( 1. / 95. );
 
         assert( i <= INT_MAX );
-        auto cPosition = mPosition * newModule.getComponentRelativePosition( static_cast< int >( i ) );
+        auto cPosition = mPosition
+                       * newModule.getComponentRelativePosition( static_cast< int >( i ) );
         // make connected RoFICoMs connected visually
         if ( activeConnectors.contains( static_cast< int >( i ) ) ) {
             cPosition = cPosition * translate( { -0.05, 0, 0 } );
@@ -177,7 +178,8 @@ void updateModulePositionInScene( const rofi::configuration::Module & newModule,
         const auto & componentActor = moduleRenderInfo.componentActors[ i ];
 
         assert( i < INT_MAX );
-        auto cPosition = mPosition * newModule.getComponentRelativePosition( static_cast< int >( i ) );
+        auto cPosition = mPosition
+                       * newModule.getComponentRelativePosition( static_cast< int >( i ) );
         // make connected RoFICoMs connected visually
         if ( moduleRenderInfo.activeConnectors.contains( static_cast< int >( i ) ) ) {
             cPosition = cPosition * translate( { -0.05, 0, 0 } );
@@ -216,8 +218,10 @@ void setActiveConnectors(
         moduleRenderInfo.second.activeConnectors.clear();
     }
     for ( const auto & roficomConnection : roficomConnections ) {
-        rofi::configuration::ModuleId source = newConfiguration.getModule( roficomConnection.sourceModule )->getId();
-        rofi::configuration::ModuleId dest   = newConfiguration.getModule( roficomConnection.destModule )->getId();
+        rofi::configuration::ModuleId source =
+                newConfiguration.getModule( roficomConnection.sourceModule )->getId();
+        rofi::configuration::ModuleId dest =
+                newConfiguration.getModule( roficomConnection.destModule )->getId();
 
         moduleRenderInfos[ source ].activeConnectors.insert( roficomConnection.sourceConnector );
         moduleRenderInfos[ dest ].activeConnectors.insert( roficomConnection.destConnector );
@@ -232,7 +236,9 @@ std::map< rofi::configuration::ModuleId, ModuleRenderInfo > addConfigurationToRe
     assert( renderer != nullptr );
 
     std::map< rofi::configuration::ModuleId, ModuleRenderInfo > moduleRenderInfos;
-    setActiveConnectors( newConfiguration.roficomConnections(), moduleRenderInfos, newConfiguration );
+    setActiveConnectors( newConfiguration.roficomConnections(),
+                         moduleRenderInfos,
+                         newConfiguration );
 
     for ( const auto & moduleInfo : newConfiguration.modules() ) {
         assert( moduleInfo.module.get() );
@@ -256,7 +262,9 @@ void updateConfigurationInRenderer(
 {
     assert( renderer != nullptr );
 
-    setActiveConnectors( newConfiguration.roficomConnections(), moduleRenderInfos, newConfiguration );
+    setActiveConnectors( newConfiguration.roficomConnections(),
+                         moduleRenderInfos,
+                         newConfiguration );
 
     auto previousModules =
             std::unordered_map< rofi::configuration::ModuleId,
@@ -280,8 +288,7 @@ void updateConfigurationInRenderer(
                                  previousModuleIt->second,
                                  *newModuleInfo.absPosition,
                                  moduleRenderInfo );
-        }
-        else {
+        } else {
             assert( moduleRenderInfo.componentActors.empty() );
             moduleRenderInfo.componentActors =
                     addModuleToScene( renderer,
@@ -295,8 +302,8 @@ void updateConfigurationInRenderer(
 }
 
 SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
-        : ui( std::make_unique< Ui::SimplesimClient >() ),
-          _onSettingsCmdCallback( std::move( onSettingsCmdCallback ) )
+        : ui( std::make_unique< Ui::SimplesimClient >() )
+        , _onSettingsCmdCallback( std::move( onSettingsCmdCallback ) )
 {
     QMainWindow( nullptr );
     ui->setupUi( this );
@@ -318,76 +325,83 @@ SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
 
     ui->widget->SetRenderWindow( _renderWindow.Get() );
 
-    connect( ui->doubleSpinBox, SIGNAL( valueChanged( double ) ), this, SLOT( speedChanged( double ) ) );
+    connect( ui->doubleSpinBox,
+             SIGNAL( valueChanged( double ) ),
+             this,
+             SLOT( speedChanged( double ) ) );
     connect( ui->pauseButton, SIGNAL( clicked() ), this, SLOT( pauseButton() ) );
-    connect( ui->treeWidget, SIGNAL( itemClicked( QTreeWidgetItem*, int ) ), this,
-             SLOT( itemSelected( QTreeWidgetItem* ) ) );
-    connect( ui->changeColor, SIGNAL( triggered() ), this,
-             SLOT( changeColorWindow() ) );
+    connect( ui->treeWidget,
+             SIGNAL( itemClicked( QTreeWidgetItem *, int ) ),
+             this,
+             SLOT( itemSelected( QTreeWidgetItem * ) ) );
+    connect( ui->changeColor, SIGNAL( triggered() ), this, SLOT( changeColorWindow() ) );
 
     this->show();
 }
 
-SimplesimClient::~SimplesimClient(){
+SimplesimClient::~SimplesimClient()
+{
     killTimer( _timerId );
 }
 
-void SimplesimClient::timerEvent( QTimerEvent* /* event */ ){
+void SimplesimClient::timerEvent( QTimerEvent * /* event */ )
+{
     renderCurrentConfiguration();
 }
 
-void SimplesimClient::colorModule(
-        rofi::configuration::ModuleId module,
-        std::array< double, 3 > color,
-        int component )
+void SimplesimClient::colorModule( rofi::configuration::ModuleId module,
+                                   std::array< double, 3 > color,
+                                   int component )
 {
     assert( static_cast< int >( _moduleRenderInfos[ module ].componentActors.size() ) > component );
 
-    if( component == -1 ){
-        for( auto& actor : _moduleRenderInfos[ module ].componentActors ){
+    if ( component == -1 ) {
+        for ( auto & actor : _moduleRenderInfos[ module ].componentActors ) {
             actor->GetProperty()->SetColor( color.data() );
         }
     } else {
-        _moduleRenderInfos[ module ].componentActors[ component ]
-            ->GetProperty()->SetColor( color.data() );
+        _moduleRenderInfos[ module ].componentActors[ component ]->GetProperty()->SetColor(
+                color.data() );
     }
 }
 
-void SimplesimClient::itemSelected( QTreeWidgetItem* selected ){
-    if( _lastModule != -1 ){
+void SimplesimClient::itemSelected( QTreeWidgetItem * selected )
+{
+    if ( _lastModule != -1 ) {
         colorModule( _lastModule, _lastColor );
     }
 
     int module;
     std::array< double, 3 > white = { { 1.0, 1.0, 1.0 } };
 
-    if( !selected->parent() ){
+    if ( !selected->parent() ) {
         module = ui->treeWidget->indexOfTopLevelItem( selected );
-        _moduleRenderInfos[ module ].componentActors.front()
-            ->GetProperty()->GetColor( _lastColor.data() );
+        _moduleRenderInfos[ module ].componentActors.front()->GetProperty()->GetColor(
+                _lastColor.data() );
         colorModule( module, white );
     } else if ( selected->parent() && !selected->parent()->parent() ) {
         module = ui->treeWidget->indexOfTopLevelItem( selected->parent() );
-        _moduleRenderInfos[ module ].componentActors.front()
-            ->GetProperty()->GetColor( _lastColor.data() );
+        _moduleRenderInfos[ module ].componentActors.front()->GetProperty()->GetColor(
+                _lastColor.data() );
         colorModule( module, white );
     } else {
         module = ui->treeWidget->indexOfTopLevelItem( selected->parent()->parent() );
-        int component =
-            ui->treeWidget->topLevelItem( module )->child( 0 )->indexOfChild( selected );
-        _moduleRenderInfos[ module ].componentActors[ component ]
-            ->GetProperty()->GetColor( _lastColor.data() );
+        int component = ui->treeWidget->topLevelItem( module )->child( 0 )->indexOfChild(
+                selected );
+        _moduleRenderInfos[ module ].componentActors[ component ]->GetProperty()->GetColor(
+                _lastColor.data() );
         colorModule( module, white, component );
     }
     _lastModule = module;
 }
 
 
-void SimplesimClient::setColor( int color ){
-    const auto& toColor = _changeColorWindow->toColor;
-    for( int i = 0; i < static_cast< int >( toColor.size() ); ++i ){
-        if( toColor[ i ] ){
-            if( _lastModule == i ){
+void SimplesimClient::setColor( int color )
+{
+    const auto & toColor = _changeColorWindow->toColor;
+    for ( int i = 0; i < static_cast< int >( toColor.size() ); ++i ) {
+        if ( toColor[ i ] ) {
+            if ( _lastModule == i ) {
                 _lastColor = getModuleColor( color );
             } else {
                 colorModule( i, getModuleColor( color ) );
@@ -396,19 +410,24 @@ void SimplesimClient::setColor( int color ){
     }
 }
 
-void SimplesimClient::changeColorWindow(){
-    if( !_changeColorWindow ){
+void SimplesimClient::changeColorWindow()
+{
+    if ( !_changeColorWindow ) {
         _changeColorWindow =
-            std::make_unique< ChangeColor >( this, getCurrentConfig()->modules().size() );
-        connect( _changeColorWindow.get(), SIGNAL( pickedColor( int ) ), this, SLOT( setColor( int ) ) );
+                std::make_unique< ChangeColor >( this, getCurrentConfig()->modules().size() );
+        connect( _changeColorWindow.get(),
+                 SIGNAL( pickedColor( int ) ),
+                 this,
+                 SLOT( setColor( int ) ) );
     }
 
     _changeColorWindow->show();
 }
 
-void SimplesimClient::pauseButton(){
+void SimplesimClient::pauseButton()
+{
     bool paused = getCurrentSettings().paused();
-    if( paused ){
+    if ( paused ) {
         resume();
         std::cout << "Simulation playing\n";
     } else {
@@ -417,7 +436,8 @@ void SimplesimClient::pauseButton(){
     }
 }
 
-void SimplesimClient::speedChanged( double speed ){
+void SimplesimClient::speedChanged( double speed )
+{
     assert( speed < std::numeric_limits< float >::max() );
     changeSpeedRatio( static_cast< float >( speed ) );
     std::cout << "Speed changed to " << speed << '\n';
@@ -432,30 +452,31 @@ void SimplesimClient::clearRenderer()
     _lastRenderedConfiguration.reset();
 }
 
-void SimplesimClient::initInfoTree( const rofi::configuration::Rofibot& rofibot ){
+void SimplesimClient::initInfoTree( const rofi::configuration::Rofibot & rofibot )
+{
     int i = 0;
-    for( const auto& moduleInfo : rofibot.modules() ){
+    for ( const auto & moduleInfo : rofibot.modules() ) {
         std::string str = "Module " + std::to_string( moduleInfo.module->getId() );
-        QTreeWidgetItem* module = new QTreeWidgetItem( static_cast< QTreeWidget * >( nullptr ),
-                                                       { QString( str.c_str() ) } );
-        if( ui->treeWidget->topLevelItemCount() <= i ){
+        QTreeWidgetItem * module = new QTreeWidgetItem( static_cast< QTreeWidget * >( nullptr ),
+                                                        { QString( str.c_str() ) } );
+        if ( ui->treeWidget->topLevelItemCount() <= i ) {
             ui->treeWidget->addTopLevelItem( module );
         }
-        QTreeWidgetItem* components = new QTreeWidgetItem( module, { QString( "Components" ) } );
-        for( const auto& c : moduleInfo.module->components() ){
+        QTreeWidgetItem * components = new QTreeWidgetItem( module, { QString( "Components" ) } );
+        for ( const auto & c : moduleInfo.module->components() ) {
             std::string comp = rofi::configuration::serialization::componentTypeToString( c.type );
-            new QTreeWidgetItem( components, { QString( comp.c_str() )} );
+            new QTreeWidgetItem( components, { QString( comp.c_str() ) } );
         }
-        if( auto* um = dynamic_cast< UniversalModule* >(
-            moduleInfo.module.get() ) )
-        {
-            for( int j = 0; j < 6; ++j ){
+        if ( auto * um = dynamic_cast< UniversalModule * >( moduleInfo.module.get() ) ) {
+            for ( int j = 0; j < 6; ++j ) {
                 std::string connector = um->translateComponent( j );
-                ui->treeWidget->topLevelItem( i )->child( 0 )->child( j )
-                    ->setText( 0, connector.c_str() );
+                ui->treeWidget->topLevelItem( i )
+                        ->child( 0 )
+                        ->child( j )
+                        ->setText( 0, connector.c_str() );
             }
         }
-        if( moduleInfo.absPosition ){
+        if ( moduleInfo.absPosition ) {
             std::string pos = "Position:\n" + IO::toString( *moduleInfo.absPosition );
             new QTreeWidgetItem( module, { QString( pos.c_str() ) } );
         }
@@ -463,10 +484,11 @@ void SimplesimClient::initInfoTree( const rofi::configuration::Rofibot& rofibot 
     }
 }
 
-void SimplesimClient::updateInfoTree( const rofi::configuration::Rofibot& rofibot ){
+void SimplesimClient::updateInfoTree( const rofi::configuration::Rofibot & rofibot )
+{
     int i = 0;
-    for( const auto& moduleInfo : rofibot.modules() ){
-        if( moduleInfo.absPosition ){
+    for ( const auto & moduleInfo : rofibot.modules() ) {
+        if ( moduleInfo.absPosition ) {
             std::string pos = "Position:\n" + IO::toString( *moduleInfo.absPosition );
             ui->treeWidget->topLevelItem( i )->child( 1 )->setText( 0, pos.c_str() );
         }
@@ -483,8 +505,7 @@ void SimplesimClient::renderCurrentConfiguration()
                                            *newConfiguration,
                                            *_lastRenderedConfiguration,
                                            _moduleRenderInfos );
-        }
-        else {
+        } else {
             assert( _moduleRenderInfos.empty() );
             _moduleRenderInfos = addConfigurationToRenderer( _renderer.Get(), *newConfiguration );
         }
@@ -494,5 +515,4 @@ void SimplesimClient::renderCurrentConfiguration()
     }
 
     updateInfoTree( *getCurrentConfig() );
-
 }
