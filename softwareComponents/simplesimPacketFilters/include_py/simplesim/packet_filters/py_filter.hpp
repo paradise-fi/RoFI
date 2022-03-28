@@ -11,6 +11,17 @@ namespace rofi::simplesim::packetf
 {
 namespace py = pybind11;
 
+/**
+ * \brief Creates a python interpreter guard that can be used in multiple
+ * places at once
+ *
+ * Python interpreter requires only one instance to be present
+ * (multiple calls to init functions is an error).
+ * This class deals with using python interpreter in multiple places without
+ * worrying about other uses.
+ * Also it allows the destruction of the interpreter when it is no longer
+ * needed (by using a weak reference to the instance).
+ */
 class [[nodiscard]] GlobalPyInterpreterGuard {
 private:
     static std::weak_ptr< py::scoped_interpreter > globalInterpreter;
