@@ -4,6 +4,7 @@
 #include <memory>
 #include <stdexcept>
 
+#include <dimcli/cli.h>
 #include <gazebo/gazebo_client.hh>
 #include <gazebo/transport/Node.hh>
 #include <google/protobuf/wrappers.pb.h>
@@ -14,8 +15,7 @@
 #include "simplesim_client.hpp"
 
 
-class SimplesimMsgSubscriber
-{
+class SimplesimMsgSubscriber {
 public:
     using SettingsStateMsgPtr = boost::shared_ptr< const rofi::simplesim::msgs::SettingsState >;
     using ConfigurationMsgPtr = boost::shared_ptr< const google::protobuf::StringValue >;
@@ -82,7 +82,16 @@ int main( int argc, char * argv[] )
     using rofi::simplesim::SimplesimClient;
     using rofi::simplesim::msgs::SettingsCmd;
 
-    auto msgs_client = rofi::msgs::Client( argc, argv );
+    Dim::Cli cli;
+    auto & clientArgs = cli.optVec< std::string >( "[CLIENT_ARGS]" )
+                                .desc( "Optional arguments to pass to the client" );
+
+    if ( !cli.parse( argc, argv ) ) {
+        return cli.printError( std::cerr );
+    }
+
+
+    auto msgsClient = rofi::msgs::Client( cli.progName(), *clientArgs );
 
     auto node = boost::make_shared< gazebo::transport::Node >();
     node->Init();
