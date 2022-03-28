@@ -1,4 +1,4 @@
-#include "Configuration.h"
+#include "legacy/configuration/Configuration.h"
 #include <stdexcept>
 #include <queue>
 

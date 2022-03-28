@@ -1,4 +1,4 @@
-#include "Generators.h"
+#include "legacy/configuration/Generators.h"
 #include <queue>
 
 using namespace rofi::configuration::matrices;
