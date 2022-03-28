@@ -15,7 +15,7 @@ add_pcb(roficom_controlBoard
              ${SINGLE_PANEL_OPTS}
              --layout "grid\; rows: 2\; cols: 2\; rotation: 45deg\; space: 2mm"
     FAB jlcpcb --assembly --no-drc
-    SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/control_board/control_board.sch
+    SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/control_board/control_board.kicad_sch
 )
 
 add_pcb(roficom_controlBoard3DModel
@@ -35,7 +35,7 @@ add_pcb(roficom_skirt
              --tooling "3hole\; hoffset: 2.5mm\; voffset: 2.5mm"
              --post "millradius: 1mm"
     FAB jlcpcb --assembly --no-drc
-    SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/control_board/control_board.sch
+    SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/control_board/control_board.kicad_sch
 )
 
 add_pcb(roficom_roficom_skirt3DModel
