@@ -1,14 +1,14 @@
 #include "changecolor.hpp"
-#include "ui_changecolor.h"
 
 #include <iostream>
 
+#include "ui_changecolor.h"
+
+
 using rofi::simplesim::ChangeColor;
 
-ChangeColor::ChangeColor( QWidget* parent, size_t size ) :
-    ui( std::make_unique< Ui::ChangeColor >() ),
-    parent( parent ),
-    toColor( size, false )
+ChangeColor::ChangeColor( QWidget * parent, size_t size )
+        : ui( std::make_unique< Ui::ChangeColor >() ), parent( parent ), toColor( size, false )
 {
     ui->setupUi( this );
     ui->plainTextEdit->hide();
@@ -18,34 +18,36 @@ ChangeColor::ChangeColor( QWidget* parent, size_t size ) :
     connect( ui->toolButton, SIGNAL( clicked() ), this, SLOT( showHelp() ) );
 }
 
-ChangeColor::~ChangeColor(){}
+ChangeColor::~ChangeColor() {}
 
 struct syntaxError : std::exception {};
 struct rangeError : std::exception {};
 
-void ChangeColor::accept(){
+void ChangeColor::accept()
+{
     hide();
     std::fill( toColor.begin(), toColor.end(), false );
     try {
         parseInput();
-    } catch( syntaxError& e ){
+    } catch ( syntaxError & e ) {
         std::cerr << "Couldn't parse input\n";
-    } catch( rangeError& e ){
+    } catch ( rangeError & e ) {
         std::cerr << "Given module out of range\n";
     }
 
     ui->textEdit->setPlainText( "" );
 
     int color = ui->listWidget->currentRow();
-    if( color == -1 ){
+    if ( color == -1 ) {
         std::cerr << "No color selected\n";
         return;
     }
     emit pickedColor( color );
 }
 
-void ChangeColor::showHelp(){
-    if( showingHelp ){
+void ChangeColor::showHelp()
+{
+    if ( showingHelp ) {
         ui->plainTextEdit->hide();
     } else {
         ui->plainTextEdit->show();
@@ -53,49 +55,50 @@ void ChangeColor::showHelp(){
     showingHelp = !showingHelp;
 }
 
-void ChangeColor::parseInput(){
+void ChangeColor::parseInput()
+{
     QString source = ui->textEdit->toPlainText();
     int i = 0;
     int number = -1;
 
-    auto parseNum = [&](){
+    auto parseNum = [ & ]() {
         std::string buffer;
-        if( !source[ i ].isDigit() ){
+        if ( !source[ i ].isDigit() ) {
             throw syntaxError();
         }
-        while( i < source.size() && source[ i ].isDigit() ){
+        while ( i < source.size() && source[ i ].isDigit() ) {
             buffer += source[ i++ ].toLatin1();
         }
         return std::stoi( buffer );
     };
-    auto parseNext = [&](){
+    auto parseNext = [ & ]() {
         toColor[ number ] = true;
-        if( source[ i++ ] == ',' ){
+        if ( source[ i++ ] == ',' ) {
             number = parseNum();
         }
     };
-    auto parseRange = [&](){
-        if( source[ i++ ] != '.' || source[ i++ ] != '.' ){
+    auto parseRange = [ & ]() {
+        if ( source[ i++ ] != '.' || source[ i++ ] != '.' ) {
             throw syntaxError();
         }
         int upper = parseNum();
-        if( upper >= static_cast< int >( toColor.size() ) ){
+        if ( upper >= static_cast< int >( toColor.size() ) ) {
             throw syntaxError();
         }
-        for( int j = number; j <= upper; j++ ){
+        for ( int j = number; j <= upper; j++ ) {
             toColor[ j ] = true;
         }
     };
     number = parseNum();
-    while( i < source.size() ){
-        if( source[ i ] == ',' ){
+    while ( i < source.size() ) {
+        if ( source[ i ] == ',' ) {
             parseNext();
         }
-        if( source[ i ] == '.' ){
+        if ( source[ i ] == '.' ) {
             parseRange();
         }
     }
-    if( number < 0 || to_unsigned( number ) >= toColor.size() ){
+    if ( number < 0 || to_unsigned( number ) >= toColor.size() ) {
         throw rangeError();
     }
     toColor[ number ] = true;

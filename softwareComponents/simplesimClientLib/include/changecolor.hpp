@@ -7,27 +7,28 @@
 
 #include <QListWidgetItem>
 
-namespace Ui {
-    class ChangeColor;
+
+namespace Ui
+{
+class ChangeColor;
 }
 
 namespace rofi::simplesim
 {
 
-struct ChangeColor : public QWidget
-{
+struct ChangeColor : public QWidget {
     Q_OBJECT
 
     std::unique_ptr< Ui::ChangeColor > ui;
 
-    QWidget* parent;
+    QWidget * parent;
 
     bool showingHelp = false;
 
 public:
     std::vector< bool > toColor;
 
-    ChangeColor( QWidget* parent = nullptr, size_t size = 0 );
+    ChangeColor( QWidget * parent = nullptr, size_t size = 0 );
 
     ~ChangeColor();
 
@@ -42,9 +43,7 @@ private slots:
     void showHelp();
 
 private:
-
     void parseInput();
-
 };
 
 } // namespace rofi::simplesim

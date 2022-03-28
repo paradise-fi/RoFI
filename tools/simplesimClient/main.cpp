@@ -16,6 +16,7 @@
 
 #include <QtWidgets/QApplication>
 
+
 class SimplesimMsgSubscriber {
 public:
     using SettingsStateMsgPtr = boost::shared_ptr< const rofi::simplesim::msgs::SettingsState >;
