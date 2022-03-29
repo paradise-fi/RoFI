@@ -14,6 +14,18 @@
 
 namespace rofi::msgs
 {
+inline std::vector< char * > getCStyleArgs( char * progName, std::span< std::string > args )
+{
+    auto cArgs = std::vector< char * >();
+    cArgs.reserve( args.size() + 1 );
+    cArgs.push_back( progName );
+    std::transform( args.begin(), args.end(), std::back_inserter( cArgs ), []( std::string & str ) {
+        return str.data();
+    } );
+
+    return cArgs;
+}
+
 class [[nodiscard]] Server {
 public:
     static Server createAndLoopInThread( std::string_view logName = "default" );
@@ -45,18 +57,8 @@ public:
      */
     Client( std::string progName, std::span< std::string > args )
     {
-        int argc = static_cast< int >( args.size() ) + 1;
-
-        auto argv = std::vector< char * >();
-        argv.reserve( argc );
-        argv.push_back( progName.data() );
-        std::transform( args.begin(),
-                        args.end(),
-                        std::back_inserter( argv ),
-                        []( std::string & str ) { return str.data(); } );
-
-        assert( args.size() == static_cast< size_t >( argc ) );
-        if ( !gazebo::client::setup( argc, argv.data() ) ) {
+        auto cArgs = getCStyleArgs( progName.data(), args );
+        if ( !gazebo::client::setup( static_cast< int >( cArgs.size() ), cArgs.data() ) ) {
             throw std::runtime_error( "Could not setup client" );
         }
     }

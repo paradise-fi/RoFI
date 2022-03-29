@@ -74,13 +74,17 @@ int main( int argc, char * argv[] )
                                                 .valueDesc( "PYTHON_FILE" )
                                                 .defaultDesc( {} )
                                                 .desc( "Python packet filter file" );
+    auto & qtArgs = cli.optVec< std::string >( "[QT_ARGS]" )
+                            .desc( "Optional arguments to pass to the Qt application" );
 
     if ( !cli.parse( argc, argv ) ) {
         return cli.printError( std::cerr );
     }
 
 
-    QApplication app( argc, argv );
+    auto qtCArgs = rofi::msgs::getCStyleArgs( argv[ 0 ], *qtArgs );
+    auto qtCArgc = static_cast< int >( qtCArgs.size() );
+    auto app = QApplication( qtCArgc, qtCArgs.data() );
     setlocale( LC_NUMERIC, "C" );
 
     std::cout << "Reading configuration from file" << std::endl;
