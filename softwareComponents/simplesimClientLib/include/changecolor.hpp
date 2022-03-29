@@ -16,21 +16,18 @@ class ChangeColor;
 namespace rofi::simplesim
 {
 
-struct ChangeColor : public QWidget {
+class ChangeColor : public QWidget {
     Q_OBJECT
 
-    std::unique_ptr< Ui::ChangeColor > ui;
-
-    QWidget * parent;
-
-    bool showingHelp = false;
-
 public:
-    std::vector< bool > toColor;
-
     ChangeColor( QWidget * parent = nullptr, size_t size = 0 );
 
     ~ChangeColor();
+
+    const std::vector< bool > toColor() const
+    {
+        return _toColor;
+    }
 
 signals:
 
@@ -40,10 +37,18 @@ private slots:
 
     void accept();
 
-    void showHelp();
+    void toggleHelp();
 
 private:
     void parseInput();
+
+    std::unique_ptr< Ui::ChangeColor > _ui;
+
+    QWidget * _parent;
+
+    bool _showingHelp = false;
+
+    std::vector< bool > _toColor;
 };
 
 } // namespace rofi::simplesim
