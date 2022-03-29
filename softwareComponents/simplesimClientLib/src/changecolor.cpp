@@ -8,7 +8,7 @@
 using rofi::simplesim::ChangeColor;
 
 ChangeColor::ChangeColor( QWidget * parent, size_t size )
-        : _ui( std::make_unique< Ui::ChangeColor >() ), _parent( parent ), _toColor( size, false )
+        : QWidget( parent ), _ui( std::make_unique< Ui::ChangeColor >() ), _toColor( size, false )
 {
     _ui->setupUi( this );
     _ui->plainTextEdit->hide();

@@ -44,8 +44,6 @@ private:
 
     std::unique_ptr< Ui::ChangeColor > _ui;
 
-    QWidget * _parent;
-
     bool _showingHelp = false;
 
     std::vector< bool > _toColor;
