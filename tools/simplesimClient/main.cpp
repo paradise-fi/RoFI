@@ -86,15 +86,19 @@ int main( int argc, char * argv[] )
     using rofi::simplesim::msgs::SettingsCmd;
 
     Dim::Cli cli;
-    auto & clientArgs = cli.optVec< std::string >( "[CLIENT_ARGS]" )
+    auto & clientArgs = cli.optVec< std::string >( "c client" )
                                 .desc( "Optional arguments to pass to the client" );
+    auto & qtArgs = cli.optVec< std::string >( "[QT_ARGS]" )
+                            .desc( "Optional arguments to pass to the Qt application" );
 
     if ( !cli.parse( argc, argv ) ) {
         return cli.printError( std::cerr );
     }
 
 
-    QApplication app( argc, argv );
+    auto qtCArgs = rofi::msgs::getCStyleArgs( argv[ 0 ], *qtArgs );
+    auto qtCArgc = static_cast< int >( qtCArgs.size() );
+    auto app = QApplication( qtCArgc, qtCArgs.data() );
     setlocale( LC_NUMERIC, "C" );
 
     auto msgsClient = rofi::msgs::Client( cli.progName(), *clientArgs );
