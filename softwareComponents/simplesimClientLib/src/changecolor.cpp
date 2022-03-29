@@ -25,11 +25,17 @@ void ChangeColor::accept()
     hide();
     std::fill( _toColor.begin(), _toColor.end(), false );
     try {
-        parseInput();
+        auto idxs = parseModuleIdxs( _ui->textEdit->toPlainText() );
+        for ( size_t idx : idxs ) {
+            assert( idx < _toColor.size() );
+            _toColor[ idx ] = true;
+        }
     } catch ( const std::invalid_argument & e ) {
         std::cerr << "Couldn't parse input (" << e.what() << ")\n";
+        return;
     } catch ( const std::out_of_range & e ) {
         std::cerr << "Input out of range (" << e.what() << ")\n";
+        return;
     }
 
     _ui->textEdit->setPlainText( "" );
@@ -52,7 +58,7 @@ void ChangeColor::toggleHelp()
     _showingHelp = !_showingHelp;
 }
 
-void ChangeColor::parseInput()
+std::set< size_t > ChangeColor::parseModuleIdxs( const QString & source ) const
 {
     auto parseUInt = []( QStringRef numStr ) {
         bool ok = true;
@@ -63,7 +69,7 @@ void ChangeColor::parseInput()
         return result;
     };
 
-    QString source = _ui->textEdit->toPlainText();
+    auto result = std::set< size_t >();
     for ( QStringRef part : source.splitRef( ',', QString::SkipEmptyParts ) ) {
         if ( part.contains( ".." ) ) {
             auto numberStrings = part.split( ".." );
@@ -81,14 +87,15 @@ void ChangeColor::parseInput()
             }
 
             for ( auto i = start; i <= end; i++ ) {
-                _toColor[ i ] = true;
+                result.insert( i );
             }
         } else {
             auto idx = parseUInt( part );
             if ( idx >= _toColor.size() ) {
                 throw std::out_of_range( "module out of range" );
             }
-            _toColor[ idx ] = true;
+            result.insert( idx );
         }
     }
+    return result;
 }
