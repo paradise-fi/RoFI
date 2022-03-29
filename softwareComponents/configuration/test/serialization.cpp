@@ -15,7 +15,7 @@ using namespace rofi::configuration::serialization;
 using namespace rofi::configuration::matrices;
 
 
-TEST_CASE( "UniversalModule – Demo" ) {
+TEST_CASE( "UniversalModule - Demo" ) {
     ModuleId idCounter = 0;
     Rofibot bot;
     auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 90_deg,   0_deg ) );
@@ -202,13 +202,15 @@ TEST_CASE( "UniversalModule" ) {
 
         CHECK( bot.modules().size() == 2 );
         idCounter++; // to count inserted bots
-        auto* m = static_cast< UniversalModule* >( bot.getModule( 66 ) );
+        auto* m = dynamic_cast< UniversalModule* >( bot.getModule( 66 ) );
+        REQUIRE( m );
         CHECK( m->getAlpha().deg() == 90  );
         CHECK( m->getBeta().deg()  == 0   );
         CHECK( m->getGamma().deg() == 180 );
 
         idCounter++;
-        m = static_cast< UniversalModule* >( bot.getModule( 42 ) );
+        m = dynamic_cast< UniversalModule* >( bot.getModule( 42 ) );
+        REQUIRE( m );
         CHECK( m->getAlpha().deg() == 0  );
         CHECK( m->getBeta().deg()  == 90 );
         CHECK( m->getGamma().deg() == 90 );
@@ -258,8 +260,8 @@ TEST_CASE( "Mixin'" ) {
 
     SECTION( "pad + UMs" ) {
         auto& pad = bot.insert( Pad( 42, 10, 8 ) );
-        auto& um1 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) ) );
-        auto& um2 = static_cast< UniversalModule& >( bot.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) ) );
+        auto& um1 = bot.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) );
+        auto& um2 = bot.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) );
 
         connect( pad.components()[ 0 ], um1.getConnector( "A-Z" ), Orientation::North );
         connect( um1.getConnector( "B-Z" ), um2.getConnector( "A+X" ), Orientation::West );
@@ -296,7 +298,7 @@ TEST_CASE( "Attributes" ) {
         CHECK( js[ "modules" ][ 0 ][ "0" ].contains( "attributes" ) );
     }
 
-    SECTION( "Different modules – different messages" ) {
+    SECTION( "Different modules - different messages" ) {
         auto testAttrCallback = overload{
             []( const Module& m ) {
                 return nlohmann::json::object( { { "Not an UniversalModule", m.getId() } } );
@@ -349,8 +351,8 @@ TEST_CASE( "Attributes" ) {
         };
 
         auto& pad = bot.insert( Pad( 42, 10, 8 ) );
-        auto& um1 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) ) );
-        auto& um2 = static_cast< UniversalModule& >( bot.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) ) );
+        auto& um1 = bot.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) );
+        auto& um2 = bot.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) );
 
         connect( pad.components()[ 0 ], um1.getConnector( "A-Z" ), Orientation::North );
         connect( um1.getConnector( "B-Z" ), um2.getConnector( "A+X" ), Orientation::West );
@@ -376,8 +378,8 @@ TEST_CASE( "Attributes" ) {
         };
 
         auto& pad = bot.insert( Pad( 42, 10, 8 ) );
-        auto& um1 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) ) );
-        auto& um2 = static_cast< UniversalModule& >( bot.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) ) );
+        auto& um1 = bot.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) );
+        auto& um2 = bot.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) );
 
         connect( pad.components()[ 0 ], um1.getConnector( "A-Z" ), Orientation::North );
         connect( um1.getConnector( "B-Z" ), um2.getConnector( "A+X" ), Orientation::West );
