@@ -27,6 +27,7 @@
 #include "atoms/concurrent_queue.hpp"
 #include "atoms/guarded.hpp"
 #include "atoms/resources.hpp"
+#include "configuration/MatrixIO.h"
 #include "ui_mainwindow.h"
 
 
@@ -302,11 +303,11 @@ void updateConfigurationInRenderer(
 }
 
 SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
-        : ui( std::make_unique< Ui::SimplesimClient >() )
+        : _ui( std::make_unique< Ui::SimplesimClient >() )
         , _onSettingsCmdCallback( std::move( onSettingsCmdCallback ) )
 {
     QMainWindow( nullptr );
-    ui->setupUi( this );
+    _ui->setupUi( this );
 
     _renderer->SetBackground( 1.0, 1.0, 1.0 );
     _renderer->ResetCamera();
@@ -323,18 +324,18 @@ SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
 
     _renderWindowInteractor->Initialize();
 
-    ui->widget->SetRenderWindow( _renderWindow.Get() );
+    _ui->widget->SetRenderWindow( _renderWindow.Get() );
 
-    connect( ui->doubleSpinBox,
+    connect( _ui->doubleSpinBox,
              SIGNAL( valueChanged( double ) ),
              this,
              SLOT( speedChanged( double ) ) );
-    connect( ui->pauseButton, SIGNAL( clicked() ), this, SLOT( pauseButton() ) );
-    connect( ui->treeWidget,
+    connect( _ui->pauseButton, SIGNAL( clicked() ), this, SLOT( pauseButton() ) );
+    connect( _ui->treeWidget,
              SIGNAL( itemClicked( QTreeWidgetItem *, int ) ),
              this,
              SLOT( itemSelected( QTreeWidgetItem * ) ) );
-    connect( ui->changeColor, SIGNAL( triggered() ), this, SLOT( changeColorWindow() ) );
+    connect( _ui->changeColor, SIGNAL( triggered() ), this, SLOT( changeColorWindow() ) );
 
     this->show();
 }
@@ -353,13 +354,12 @@ void SimplesimClient::colorModule( rofi::configuration::ModuleId module,
                                    std::array< double, 3 > color,
                                    int component )
 {
-    assert( static_cast< int >( _moduleRenderInfos[ module ].componentActors.size() ) > component );
-
     if ( component == -1 ) {
         for ( auto & actor : _moduleRenderInfos[ module ].componentActors ) {
             actor->GetProperty()->SetColor( color.data() );
         }
     } else {
+        assert( to_unsigned( component ) < _moduleRenderInfos[ module ].componentActors.size() );
         _moduleRenderInfos[ module ].componentActors[ component ]->GetProperty()->SetColor(
                 color.data() );
     }
@@ -375,18 +375,18 @@ void SimplesimClient::itemSelected( QTreeWidgetItem * selected )
     std::array< double, 3 > white = { { 1.0, 1.0, 1.0 } };
 
     if ( !selected->parent() ) {
-        module = ui->treeWidget->indexOfTopLevelItem( selected );
+        module = _ui->treeWidget->indexOfTopLevelItem( selected );
         _moduleRenderInfos[ module ].componentActors.front()->GetProperty()->GetColor(
                 _lastColor.data() );
         colorModule( module, white );
     } else if ( selected->parent() && !selected->parent()->parent() ) {
-        module = ui->treeWidget->indexOfTopLevelItem( selected->parent() );
+        module = _ui->treeWidget->indexOfTopLevelItem( selected->parent() );
         _moduleRenderInfos[ module ].componentActors.front()->GetProperty()->GetColor(
                 _lastColor.data() );
         colorModule( module, white );
     } else {
-        module = ui->treeWidget->indexOfTopLevelItem( selected->parent()->parent() );
-        int component = ui->treeWidget->topLevelItem( module )->child( 0 )->indexOfChild(
+        module = _ui->treeWidget->indexOfTopLevelItem( selected->parent()->parent() );
+        int component = _ui->treeWidget->topLevelItem( module )->child( 0 )->indexOfChild(
                 selected );
         _moduleRenderInfos[ module ].componentActors[ component ]->GetProperty()->GetColor(
                 _lastColor.data() );
@@ -398,7 +398,7 @@ void SimplesimClient::itemSelected( QTreeWidgetItem * selected )
 
 void SimplesimClient::setColor( int color )
 {
-    const auto & toColor = _changeColorWindow->toColor;
+    const auto & toColor = _changeColorWindow->toColor();
     for ( int i = 0; i < static_cast< int >( toColor.size() ); ++i ) {
         if ( toColor[ i ] ) {
             if ( _lastModule == i ) {
@@ -459,8 +459,8 @@ void SimplesimClient::initInfoTree( const rofi::configuration::Rofibot & rofibot
         std::string str = "Module " + std::to_string( moduleInfo.module->getId() );
         QTreeWidgetItem * module = new QTreeWidgetItem( static_cast< QTreeWidget * >( nullptr ),
                                                         { QString( str.c_str() ) } );
-        if ( ui->treeWidget->topLevelItemCount() <= i ) {
-            ui->treeWidget->addTopLevelItem( module );
+        if ( _ui->treeWidget->topLevelItemCount() <= i ) {
+            _ui->treeWidget->addTopLevelItem( module );
         }
         QTreeWidgetItem * components = new QTreeWidgetItem( module, { QString( "Components" ) } );
         for ( const auto & c : moduleInfo.module->components() ) {
@@ -470,14 +470,14 @@ void SimplesimClient::initInfoTree( const rofi::configuration::Rofibot & rofibot
         if ( auto * um = dynamic_cast< UniversalModule * >( moduleInfo.module.get() ) ) {
             for ( int j = 0; j < 6; ++j ) {
                 std::string connector = um->translateComponent( j );
-                ui->treeWidget->topLevelItem( i )
+                _ui->treeWidget->topLevelItem( i )
                         ->child( 0 )
                         ->child( j )
                         ->setText( 0, connector.c_str() );
             }
         }
         if ( moduleInfo.absPosition ) {
-            std::string pos = "Position:\n" + IO::toString( *moduleInfo.absPosition );
+            std::string pos = "Position:\n" + to_string( *moduleInfo.absPosition );
             new QTreeWidgetItem( module, { QString( pos.c_str() ) } );
         }
         ++i;
@@ -489,8 +489,8 @@ void SimplesimClient::updateInfoTree( const rofi::configuration::Rofibot & rofib
     int i = 0;
     for ( const auto & moduleInfo : rofibot.modules() ) {
         if ( moduleInfo.absPosition ) {
-            std::string pos = "Position:\n" + IO::toString( *moduleInfo.absPosition );
-            ui->treeWidget->topLevelItem( i )->child( 1 )->setText( 0, pos.c_str() );
+            std::string pos = "Position:\n" + to_string( *moduleInfo.absPosition );
+            _ui->treeWidget->topLevelItem( i )->child( 1 )->setText( 0, pos.c_str() );
         }
         ++i;
     }

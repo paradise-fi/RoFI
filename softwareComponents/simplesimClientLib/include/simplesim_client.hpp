@@ -23,7 +23,6 @@
 #include "changecolor.hpp"
 #include "configuration/rofibot.hpp"
 #include "configuration/serialization.hpp"
-#include "legacy/configuration/IO.h"
 
 #include <simplesim_settings_cmd.pb.h>
 
@@ -39,7 +38,6 @@
 namespace Ui
 {
 class SimplesimClient;
-class ChangeColor;
 } // namespace Ui
 
 namespace rofi::simplesim
@@ -194,7 +192,7 @@ private:
         return settingsCmd;
     }
 
-    std::unique_ptr< Ui::SimplesimClient > ui;
+    std::unique_ptr< Ui::SimplesimClient > _ui;
 
     atoms::Guarded< msgs::SettingsState > _currentSettings;
 

@@ -8,14 +8,14 @@
 using rofi::simplesim::ChangeColor;
 
 ChangeColor::ChangeColor( QWidget * parent, size_t size )
-        : ui( std::make_unique< Ui::ChangeColor >() ), parent( parent ), toColor( size, false )
+        : _ui( std::make_unique< Ui::ChangeColor >() ), _parent( parent ), _toColor( size, false )
 {
-    ui->setupUi( this );
-    ui->plainTextEdit->hide();
+    _ui->setupUi( this );
+    _ui->plainTextEdit->hide();
 
-    connect( ui->buttonBox, SIGNAL( rejected() ), this, SLOT( hide() ) );
-    connect( ui->buttonBox, SIGNAL( accepted() ), this, SLOT( accept() ) );
-    connect( ui->toolButton, SIGNAL( clicked() ), this, SLOT( showHelp() ) );
+    connect( _ui->buttonBox, SIGNAL( rejected() ), this, SLOT( hide() ) );
+    connect( _ui->buttonBox, SIGNAL( accepted() ), this, SLOT( accept() ) );
+    connect( _ui->toolButton, SIGNAL( clicked() ), this, SLOT( toggleHelp() ) );
 }
 
 ChangeColor::~ChangeColor() {}
@@ -26,7 +26,7 @@ struct rangeError : std::exception {};
 void ChangeColor::accept()
 {
     hide();
-    std::fill( toColor.begin(), toColor.end(), false );
+    std::fill( _toColor.begin(), _toColor.end(), false );
     try {
         parseInput();
     } catch ( syntaxError & e ) {
@@ -35,9 +35,9 @@ void ChangeColor::accept()
         std::cerr << "Given module out of range\n";
     }
 
-    ui->textEdit->setPlainText( "" );
+    _ui->textEdit->setPlainText( "" );
 
-    int color = ui->listWidget->currentRow();
+    int color = _ui->listWidget->currentRow();
     if ( color == -1 ) {
         std::cerr << "No color selected\n";
         return;
@@ -45,19 +45,19 @@ void ChangeColor::accept()
     emit pickedColor( color );
 }
 
-void ChangeColor::showHelp()
+void ChangeColor::toggleHelp()
 {
-    if ( showingHelp ) {
-        ui->plainTextEdit->hide();
+    if ( _showingHelp ) {
+        _ui->plainTextEdit->hide();
     } else {
-        ui->plainTextEdit->show();
+        _ui->plainTextEdit->show();
     }
-    showingHelp = !showingHelp;
+    _showingHelp = !_showingHelp;
 }
 
 void ChangeColor::parseInput()
 {
-    QString source = ui->textEdit->toPlainText();
+    QString source = _ui->textEdit->toPlainText();
     int i = 0;
     int number = -1;
 
@@ -72,7 +72,7 @@ void ChangeColor::parseInput()
         return std::stoi( buffer );
     };
     auto parseNext = [ & ]() {
-        toColor[ number ] = true;
+        _toColor[ number ] = true;
         if ( source[ i++ ] == ',' ) {
             number = parseNum();
         }
@@ -82,11 +82,11 @@ void ChangeColor::parseInput()
             throw syntaxError();
         }
         int upper = parseNum();
-        if ( upper >= static_cast< int >( toColor.size() ) ) {
+        if ( upper >= static_cast< int >( _toColor.size() ) ) {
             throw syntaxError();
         }
         for ( int j = number; j <= upper; j++ ) {
-            toColor[ j ] = true;
+            _toColor[ j ] = true;
         }
     };
     number = parseNum();
@@ -98,8 +98,8 @@ void ChangeColor::parseInput()
             parseRange();
         }
     }
-    if ( number < 0 || to_unsigned( number ) >= toColor.size() ) {
+    if ( number < 0 || to_unsigned( number ) >= _toColor.size() ) {
         throw rangeError();
     }
-    toColor[ number ] = true;
+    _toColor[ number ] = true;
 }
