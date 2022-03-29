@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <memory>
+#include <set>
 
 #include <atoms/util.hpp>
 
@@ -40,7 +41,7 @@ private slots:
     void toggleHelp();
 
 private:
-    void parseInput();
+    std::set< size_t > parseModuleIdxs( const QString & source ) const;
 
     std::unique_ptr< Ui::ChangeColor > _ui;
 
