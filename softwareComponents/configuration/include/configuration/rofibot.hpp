@@ -1,6 +1,7 @@
 #pragma once
 
 #include <algorithm>
+#include <concepts>
 #include <memory>
 #include <vector>
 #include <set>
@@ -457,10 +458,29 @@ public:
         auto id = _modules.insert( { atoms::ValuePtr( m ), {}, {}, {}, std::nullopt } );
         _idMapping.insert( { _modules[ id ].module->_id, id } );
         Module* insertedModule = _modules[ id ].module.get();
+        assert( insertedModule != nullptr );
         insertedModule->parent = this;
         insertedModule->_prepareComponents();
         _prepared = false;
         return *insertedModule;
+    }
+
+    /**
+     * \brief Insert a module from the Rofibot.
+     *
+     * The module position is not specified. You should connect the module to
+     * other modules via connect(). The module is assigned a unique id within
+     * the rofibot.
+     *
+     * Returns a reference to the newly created module.
+     */
+    template< std::derived_from< Module > ModuleT >
+        requires( !std::is_same_v< ModuleT, Module > )
+    ModuleT& insert( const ModuleT& m ) {
+        const Module& m_ = m;
+        Module& insertedModule = insert( m_ );
+        assert( dynamic_cast< ModuleT* >( &insertedModule ) != nullptr );
+        return static_cast< ModuleT& >( insertedModule );
     }
 
     /**
