@@ -52,10 +52,10 @@ TEST_CASE( "Base RotationJoint" ) {
     SECTION( "sourceToDest on a ptr of type Joint" ) {
         auto j = RotationJoint( identity, { 1, 0, 0 }, translate( { 42, 42, 42 } ), A_PI_2_neg, A_PI_2 );
         REQUIRE( j.positions().size() == 1 );
-        auto* jj = static_cast< Joint* >( &j );
+        Joint& jj = j;
         tmp = { A_PI.rad() };
-        jj->setPositions( tmp );
-        jj->sourceToDest();
+        jj.setPositions( tmp );
+        jj.sourceToDest();
         REQUIRE( j.positions().size() == 1 );
         CHECK( j.positions()[ 0 ] == A_PI.rad() );
     }

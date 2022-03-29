@@ -351,7 +351,7 @@ TEST_CASE( "Basic rofibot manipulation" ) {
     connect( m4.connectors()[ 5 ], m5.connectors()[ 2 ], Orientation::North );
     CHECK( bot.roficomConnections().size() == 4 );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    static_cast< UniversalModule& >( m1 ).setGamma( Angle::deg( 90 ) );
+    m1.setGamma( Angle::deg( 90 ) );
     auto [ b, str ] = bot.isValid();
     CHECK( !b ); // because the configuration is not prepared
     auto [ b2, str2 ] = bot.validate();
@@ -459,8 +459,8 @@ TEST_CASE( "Connect and disconnect" ) {
     Rofibot bot;
 
     SECTION( "Disconnect roficomConnections disconnects two modules" ) {
-        auto& m1 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) ) );
-        auto& m2 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) ) );
+        auto& m1 = bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+        auto& m2 = bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) );
 
         CHECK( bot.roficomConnections().empty() );
         auto j = connect( m1.getConnector( "A+X" ), m2.getConnector( "B-Z" ), roficom::Orientation::North );
@@ -473,7 +473,7 @@ TEST_CASE( "Connect and disconnect" ) {
     }
 
     SECTION( "Disconnect on spaceJoint" ) {
-        auto& m = static_cast< UniversalModule& >( bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) ) );
+        auto& m = bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
 
         CHECK( bot.referencePoints().empty() );
         auto h = connect< RigidJoint >( m.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
@@ -491,8 +491,8 @@ TEST_CASE( "Get near connector" ) {
     Rofibot bot;
 
     SECTION( "two straight modules" ) {
-        auto& m1 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) ) );
-        auto& m2 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) ) );
+        auto& m1 = bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+        auto& m2 = bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) );
 
         auto h = connect< RigidJoint >( m1.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
 
@@ -522,8 +522,8 @@ TEST_CASE( "Get near connector" ) {
     }
 
     SECTION( "two straight modules - throws if not prepared in advance" ) {
-        auto& m1 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) ) );
-        auto& m2 = static_cast< UniversalModule& >( bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) ) );
+        auto& m1 = bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+        auto& m2 = bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) );
 
         auto h = connect< RigidJoint >( m1.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
 
