@@ -204,6 +204,7 @@ public:
      * \brief Erase element based on its handle
      */
     void erase( handle_type handle ) {
+        assert( contains( handle ) );
         _elems[ static_cast< size_type >( handle ) ].reset();
         _freeHandles.push_back( handle );
     }

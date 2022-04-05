@@ -199,6 +199,31 @@ void Rofibot::prepare() {
     _prepared = true;
 }
 
+void Rofibot::disconnect( RoficomJointHandle h ) {
+    assert( _moduleJoints.contains( h ) );
+
+    Rofibot::ModuleInfo& m1info = _modules[ _moduleJoints[ h ].sourceModule ];
+    Rofibot::ModuleInfo& m2info = _modules[ _moduleJoints[ h ].destModule ];
+    [[maybe_unused]] auto erased1 = std::erase( m1info.outJointsIdx, h );
+    [[maybe_unused]] auto erased2 = std::erase( m2info.inJointsIdx, h );
+    assert( erased1 == 1 );
+    assert( erased2 == 1 );
+
+    _moduleJoints.erase( h );
+    _prepared = false;
+}
+
+void Rofibot::disconnect( SpaceJointHandle h ) {
+    assert( _spaceJoints.contains( h ) );
+
+    Rofibot::ModuleInfo& info = _modules[ _spaceJoints[ h ].destModule ];
+    [[maybe_unused]] auto erased = std::erase( info.spaceJoints, h );
+    assert( erased == 1 );
+
+    _spaceJoints.erase( h );
+    _prepared = false;
+}
+
 Rofibot::RoficomJointHandle connect( const Component& c1, const Component& c2, roficom::Orientation o ) {
     assert( c1.type == ComponentType::Roficom && c2.type == ComponentType::Roficom && "Components are not RoFICoMs" );
 
@@ -208,16 +233,16 @@ Rofibot::RoficomJointHandle connect( const Component& c1, const Component& c2, r
     Rofibot::ModuleInfo& m1info = bot._modules[ bot._idMapping[ c1.parent->getId() ] ];
     Rofibot::ModuleInfo& m2info = bot._modules[ bot._idMapping[ c2.parent->getId() ] ];
 
-    auto jointId = bot._moduleJoints.insert( {
+    auto jointHandle = bot._moduleJoints.insert( {
         o, bot._idMapping[ m1info.module->getId() ], bot._idMapping[ m2info.module->getId() ],
         m1info.module->componentIdx( c1 ), m2info.module->componentIdx( c2 )
     } );
 
-    m1info.outJointsIdx.push_back( jointId );
-    m2info.inJointsIdx.push_back( jointId );
+    m1info.outJointsIdx.push_back( jointHandle );
+    m2info.inJointsIdx.push_back( jointHandle );
 
     bot._prepared = false;
-    return jointId;
+    return jointHandle;
 }
 
 } // namespace rofi::configuration

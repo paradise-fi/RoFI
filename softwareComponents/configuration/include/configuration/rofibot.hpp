@@ -620,21 +620,8 @@ public:
         return _modules[ _idMapping[ id ] ].absPosition.value();
     }
 
-    void disconnect( RoficomJointHandle h ) {
-        if ( !_moduleJoints.contains( h ) )
-            return;
-
-        _moduleJoints.erase( h );
-        _prepared = false;
-    }
-
-    void disconnect( SpaceJointHandle h ) {
-        if ( !_spaceJoints.contains( h ) )
-            return;
-
-        _spaceJoints.erase( h );
-        _prepared = false;
-    }
+    void disconnect( RoficomJointHandle h );
+    void disconnect( SpaceJointHandle h );
 
 private:
     void onModuleMove() {
@@ -795,18 +782,17 @@ Rofibot::SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&..
     Rofibot& bot = *c.parent->parent;
     Rofibot::ModuleInfo& info = bot._modules[ bot._idMapping[ c.parent->getId() ] ];
 
-    auto y = std::unique_ptr< Joint >(std::unique_ptr< JointT >());
-    auto jointId = bot._spaceJoints.insert( SpaceJoint(
+    auto jointHandle = bot._spaceJoints.insert( SpaceJoint(
         atoms::ValuePtr< Joint >( std::make_unique< JointT >( std::forward< Args >( args )... ) ),
         refpoint,
         bot._idMapping[ info.module->getId() ],
         info.module->componentIdx( c )
     ) );
 
-    info.spaceJoints.push_back( jointId );
+    info.spaceJoints.push_back( jointHandle );
     bot._prepared = false;
 
-    return jointId;
+    return jointHandle;
 }
 
 } // namespace rofi::configuration
