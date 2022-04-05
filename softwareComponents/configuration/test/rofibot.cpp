@@ -462,6 +462,8 @@ TEST_CASE( "Connect and disconnect" ) {
         auto& m1 = bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
         auto& m2 = bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) );
 
+        auto h = connect< RigidJoint >( m1.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
+
         CHECK( bot.roficomConnections().empty() );
         auto j = connect( m1.getConnector( "A+X" ), m2.getConnector( "B-Z" ), roficom::Orientation::North );
         CHECK( bot.roficomConnections().size() == 1 );
