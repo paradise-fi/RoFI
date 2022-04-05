@@ -80,14 +80,15 @@ TEST_CASE( "Pad" ) {
     SECTION( "Rectangle pad" ) {
         auto& m1 = bot.insert( Pad( idCounter++, 20, 10 ) );
         connect< RigidJoint >( m1.components()[ 0 ], { 0, 0, 0 }, identity );
-
     }
 
     SECTION( "Multiple pads" ) {
-        bot.insert( Pad( idCounter++, 23, 11 ) );
+        auto& m1 = bot.insert( Pad( idCounter++, 23, 11 ) );
         auto& m2 = bot.insert( Pad( idCounter++, 5 ) );
-        bot.insert( Pad( idCounter++, 1, 10 ) );
-        connect< RigidJoint >( m2.components()[ 0 ], { 0, 0, 0 }, identity );
+        auto& m3 = bot.insert( Pad( idCounter++, 1, 10 ) );
+        connect< RigidJoint >( m1.components()[ 0 ], { 0, 0, 0 }, identity );
+        connect< RigidJoint >( m2.components()[ 0 ], { 0, 0, 2 }, identity );
+        connect< RigidJoint >( m3.components()[ 0 ], { 0, 0, 4 }, identity );
     }
 
     auto j = toJSON( bot );
@@ -100,7 +101,6 @@ TEST_CASE( "Pad" ) {
     CHECK( bot.roficomConnections().size() == cpy.roficomConnections().size() );
     CHECK( bot.modules().size()  == idCounter ); // idCounter is equal to number of modules within the bot
     CHECK( bot.modules().size()  == cpy.modules().size()  );
-    CHECK( bot.referencePoints().size() == 1 );
     CHECK( bot.referencePoints().size() == cpy.referencePoints().size() );
     CHECK( j == toJSON( cpy ) );
 }
