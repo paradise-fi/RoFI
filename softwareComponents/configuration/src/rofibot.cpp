@@ -196,6 +196,12 @@ void Rofibot::prepare() {
         dfsTraverse( m, pos, dfsTraverse );
     }
 
+    for ( ModuleInfo& m : _modules ) {
+        if ( !m.absPosition.has_value() )
+            throw std::runtime_error(
+                    fmt::format( "Not fixed position of module {}", m.module->_id ) );
+    }
+
     _prepared = true;
 }
 
