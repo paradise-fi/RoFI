@@ -458,6 +458,75 @@ TEST_CASE( "Match" )
     }
 }
 
+TEST_CASE( "Creating result" )
+{
+    using namespace std::string_literals;
+
+    SECTION( "value" )
+    {
+        auto result1 = atoms::result_value< size_t >( 10 );
+        static_assert( std::is_same_v< typename decltype( result1 )::value_type, size_t > );
+        auto result2 = atoms::result_value( "100"s );
+        static_assert( std::is_same_v< typename decltype( result2 )::value_type, std::string > );
+        auto result3 = atoms::result_value( 100 );
+        static_assert( std::is_same_v< typename decltype( result3 )::value_type, int > );
+
+        Result< int > result4 = atoms::result_value( 100 );
+        Result< int, std::exception > result5 = atoms::result_value( 100 );
+        Result< Copyable > result6 = atoms::result_value( Copyable{} );
+        Result< Moveable > result7 = atoms::result_value( Moveable{} );
+    }
+    SECTION( "value in-place" )
+    {
+        auto result1 = atoms::make_result_value< size_t >( 10 );
+        static_assert( std::is_same_v< typename decltype( result1 )::value_type, size_t > );
+        auto result2 = atoms::make_result_value< std::string >( "100" );
+        static_assert( std::is_same_v< typename decltype( result2 )::value_type, std::string > );
+        auto result3 = atoms::make_result_value< std::pair< std::string, int > >( "41", 42 );
+        static_assert( std::is_same_v< typename decltype( result3 )::value_type,
+                                       std::pair< std::string, int > > );
+        auto result4 = atoms::make_result_value< double >( 10 );
+        static_assert( std::is_same_v< typename decltype( result4 )::value_type, double > );
+
+        Result< std::pair< int, double > > result5 =
+                atoms::make_result_value< std::pair< int, double > >( 2, 5. );
+        Result< int, std::exception > result6 = atoms::make_result_value< int >( 100 );
+        Result< Copyable > result7 = atoms::make_result_value< Copyable >();
+        Result< Moveable > result8 = atoms::make_result_value< Moveable >( Moveable{} );
+    }
+    SECTION( "error" )
+    {
+        auto result1 = atoms::result_error< std::string >( "100" );
+        static_assert( std::is_same_v< typename decltype( result1 )::error_type, std::string > );
+        auto result2 = atoms::result_error( "100"s );
+        static_assert( std::is_same_v< typename decltype( result2 )::error_type, std::string > );
+        auto result3 = atoms::result_error( "100" );
+        static_assert( std::is_same_v< typename decltype( result3 )::error_type, const char * > );
+
+        Result< int > result4 = atoms::result_error( "some error"s );
+        Result< Moveable, int > result5 = atoms::result_error( 100 );
+        Result< int, Copyable > result6 = atoms::result_error( Copyable{} );
+        Result< double, Moveable > result7 = atoms::result_error( Moveable{} );
+    }
+    SECTION( "error in-place" )
+    {
+        auto result1 = atoms::make_result_error< std::string >( "100" );
+        static_assert( std::is_same_v< typename decltype( result1 )::error_type, std::string > );
+        auto result2 = atoms::make_result_error< std::string >( "100"s );
+        static_assert( std::is_same_v< typename decltype( result2 )::error_type, std::string > );
+        auto result3 = atoms::make_result_error< const char * >( "100" );
+        static_assert( std::is_same_v< typename decltype( result3 )::error_type, const char * > );
+        auto result4 = atoms::make_result_error< std::pair< int, double > >( 10, 5. );
+        static_assert( std::is_same_v< typename decltype( result4 )::error_type,
+                                       std::pair< int, double > > );
+
+        Result< int > result5 = atoms::make_result_error< std::string >( "some error" );
+        Result< Moveable, int > result6 = atoms::make_result_error< int >( 100 );
+        Result< int, Copyable > result7 = atoms::make_result_error< Copyable >( Copyable{} );
+        Result< double, Moveable > result8 = atoms::make_result_error< Moveable >();
+    }
+}
+
 TEST_CASE( "Operator piping" )
 {
     SECTION( "and then (>>)" )
