@@ -43,6 +43,19 @@ namespace detail
                                       && !is_invocable_by_common_ref< F, ValueT, ErrorT >()
                                       && !std::is_invocable< F, std::true_type, ValueT >::value
                                       && !std::is_invocable< F, std::false_type, ErrorT >::value );
+
+    /**
+     * \brief Result value/error type placeholder
+     *
+     * Used as a type placeholder so the other type of result doesn't have to
+     * be specified by the user.
+     *
+     * The functionality of `Result` with `TypePlaceholder`
+     * is similar to `std::nullopt_t`.
+     */
+    struct TypePlaceholder {
+        TypePlaceholder() = delete;
+    };
 } // namespace detail
 
 /**
@@ -104,6 +117,46 @@ public:
     static constexpr Result emplace_error( auto &&... args )
     {
         return Result( std::in_place_index_t< 1 >{}, std::forward< decltype( args ) >( args )... );
+    }
+
+    /// Implicit conversion when one of types is `TypePlaceholder`
+
+    /**
+     * \brief Changes the `value_type` from `detail::TypePlaceholder` by copying.
+     */
+    template < typename ValueT >
+        requires( std::is_same_v< value_type, detail::TypePlaceholder > )
+    constexpr operator Result< ValueT, error_type >() const &
+    {
+        return Result< ValueT, error_type >::error( assume_error() );
+    }
+    /**
+     * \brief Changes the `value_type` from `detail::TypePlaceholder` by moving.
+     */
+    template < typename ValueT >
+        requires( std::is_same_v< value_type, detail::TypePlaceholder > )
+    constexpr operator Result< ValueT, error_type >() &&
+    {
+        return Result< ValueT, error_type >::error( std::move( assume_error() ) );
+    }
+
+    /**
+     * \brief Changes the `error_type` from `detail::TypePlaceholder` by copying.
+     */
+    template < typename ErrorT >
+        requires( std::is_same_v< error_type, detail::TypePlaceholder > )
+    constexpr operator Result< value_type, ErrorT >() const &
+    {
+        return Result< value_type, ErrorT >::value( assume_value() );
+    }
+    /**
+     * \brief Changes the `error_type` from `detail::TypePlaceholder` by moving.
+     */
+    template < typename ErrorT >
+        requires( std::is_same_v< error_type, detail::TypePlaceholder > )
+    constexpr operator Result< value_type, ErrorT >() &&
+    {
+        return Result< value_type, ErrorT >::value( std::move( assume_value() ) );
     }
 
     /// Observers
@@ -190,6 +243,7 @@ public:
     constexpr value_type & assume_value() & noexcept
     {
         assert( has_value() );
+        static_assert( !std::is_same_v< value_type, detail::TypePlaceholder > );
         return *std::get_if< 0 >( &_data );
     }
     /**
@@ -200,6 +254,7 @@ public:
     constexpr const value_type & assume_value() const & noexcept
     {
         assert( has_value() );
+        static_assert( !std::is_same_v< value_type, detail::TypePlaceholder > );
         return *std::get_if< 0 >( &_data );
     }
     /**
@@ -209,6 +264,7 @@ public:
      */
     constexpr value_type && assume_value() && noexcept
     {
+        static_assert( !std::is_same_v< value_type, detail::TypePlaceholder > );
         return std::move( assume_value() );
     }
 
@@ -220,6 +276,7 @@ public:
     constexpr error_type & assume_error() & noexcept
     {
         assert( !has_value() );
+        static_assert( !std::is_same_v< error_type, detail::TypePlaceholder > );
         return *std::get_if< 1 >( &_data );
     }
     /**
@@ -230,6 +287,7 @@ public:
     constexpr const error_type & assume_error() const & noexcept
     {
         assert( !has_value() );
+        static_assert( !std::is_same_v< error_type, detail::TypePlaceholder > );
         return *std::get_if< 1 >( &_data );
     }
     /**
@@ -239,6 +297,7 @@ public:
      */
     constexpr error_type && assume_error() && noexcept
     {
+        static_assert( !std::is_same_v< error_type, detail::TypePlaceholder > );
         return std::move( assume_error() );
     }
 
@@ -703,6 +762,69 @@ private:
 
     data_type _data;
 };
+
+
+/**
+ * \brief Creates `Result` from value.
+ *
+ * The created `Result` is implicitly convertible to `Result` with any error type.
+ *
+ * \param value the value to construct the `Result` object with
+ *
+ * \returns the contructed `Result` object.
+ */
+template < typename ValueT >
+inline constexpr auto result_value( ValueT value ) -> Result< ValueT, detail::TypePlaceholder >
+{
+    return Result< ValueT, detail::TypePlaceholder >::value( std::move( value ) );
+}
+/**
+ * \brief Creates `Result` with value constructed in-place from \p args... .
+ *
+ * The created `Result` is implicitly convertible to `Result` with any error type.
+ *
+ * \param args arguments to be passed to the constructor of value
+ *
+ * \returns the contructed `Result` object.
+ */
+template < typename ValueT, typename... Args >
+inline constexpr auto make_result_value( Args &&... args )
+        -> Result< ValueT, detail::TypePlaceholder >
+{
+    return Result< ValueT, detail::TypePlaceholder >::emplace_value(
+            std::forward< Args >( args )... );
+}
+
+/**
+ * \brief Creates `Result` from error.
+ *
+ * The created `Result` is implicitly convertible to `Result` with any value type.
+ *
+ * \param error the error to construct the `Result` object with
+ *
+ * \returns the contructed `Result` object.
+ */
+template < typename ErrorT >
+inline constexpr auto result_error( ErrorT error ) -> Result< detail::TypePlaceholder, ErrorT >
+{
+    return Result< detail::TypePlaceholder, ErrorT >::error( std::move( error ) );
+}
+/**
+ * \brief Creates `Result` with error constructed in-place from \p args... .
+ *
+ * The created `Result` is implicitly convertible to `Result` with any value type.
+ *
+ * \param args arguments to be passed to the constructor of error
+ *
+ * \returns the contructed `Result` object.
+ */
+template < typename ErrorT, typename... Args >
+inline constexpr auto make_result_error( Args &&... args )
+        -> Result< detail::TypePlaceholder, ErrorT >
+{
+    return Result< detail::TypePlaceholder, ErrorT >::emplace_error(
+            std::forward< Args >( args )... );
+}
 
 /**
  * \brief Returns the result of invocation of \p f on the contained value in \p result if it exists.
