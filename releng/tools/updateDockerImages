@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+
+docker build -t yaqwsx/rofi.debian .
+docker build -t yaqwsx/rofi .
+docker build -t yaqwsx/rofi.ubuntu --build-arg BASE=ubuntu:21.10 .
+
+docker push yaqwsx/rofi
+docker push yaqwsx/rofi.debian
+docker push yaqwsx/rofi.ubuntu
