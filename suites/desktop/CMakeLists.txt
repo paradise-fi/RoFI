@@ -119,6 +119,11 @@ find_package(Armadillo REQUIRED)
 
 if (${BUILD_GAZEBO})
   find_package(gazebo REQUIRED)
+
+  if (${gazebo_VERSION_MAJOR} LESS 11)
+    message(WARNING "Old version of gazebo detected")
+  endif()
+
   # Workaround for bug in gazebo that causes problems on `g++11` with `-std=c++20`
   set(GAZEBO_INCLUDE_DIRS "$ENV{ROFI_ROOT}/gazebo_include" ${GAZEBO_INCLUDE_DIRS})
 
