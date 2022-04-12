@@ -11,3 +11,4 @@ Atoms currently provide:
     patterns
     resources
     containers
+    result
