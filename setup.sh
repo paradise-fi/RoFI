@@ -211,7 +211,7 @@ run() {
 
     export ROFI_BUILD_CONFIGURATION
     export ROFI_ROOT=$(pwd)
-    export ROFI_BUILD_DIR="$(pwd)/build.${ROFI_BUILD_CONFIGURATION}"
+    export ROFI_BUILD_DIR="$(pwd)/build.${ROFI_BUILD_PREFIX}${ROFI_BUILD_CONFIGURATION}"
 
     export GAZEBO_MODEL_PATH="$ROFI_ROOT/data/gazebo/models:$GAZEBO_MODEL_PATH"
     export GAZEBO_PLUGIN_PATH="$ROFI_BUILD_DIR/desktop/lib:$GAZEBO_PLUGIN_PATH"
