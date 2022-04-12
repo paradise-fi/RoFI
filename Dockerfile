@@ -1,4 +1,6 @@
-FROM debian:bullseye
+ARG BASE=debian:bullseye
+
+FROM $BASE
 
 # We use bash instead of /bin/sh as ESP-IDF doesn't support /bin/sh
 SHELL ["/bin/bash", "-c"]
@@ -58,6 +60,12 @@ RUN export IDF_PATH=$ROFI_TOOLS_PATH/esp-idf && \
     # we have to install spinx and breathe into the venv
     . $IDF_PATH/export.sh && \
     pip install sphinx breathe recommonmark sphinx_rtd_theme
+
+# Newer Ubuntu (21.10) miss libdl.so which is (probably) required by VTK.
+# This is a temporary work-around until we migrate to VTK 9.
+RUN if [ ! -e /usr/lib/x86_64-linux-gnu/libdl.so ] ; then \
+        ln -s /usr/lib/x86_64-linux-gnu/libdl.so.2 /usr/lib/x86_64-linux-gnu/libdl.so; \
+    fi
 
 RUN ldconfig
 

@@ -11,76 +11,72 @@ jobs:
     strategy:
       matrix:
         environment: [Debug, Release]
+        image: [yaqwsx/rofi.debian, yaqwsx/rofi.ubuntu]
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: ${{ matrix.image }}
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build
-        uses: addnab/docker-run-action@v2
-        with:
-          image: yaqwsx/rofi
-          shell: bash
-          options: -v ${{ github.workspace }}:/work -w /work
-          run: |
-            source setup.sh ${{ matrix.environment }}
-            rcfg desktop
-            rmake desktop
-      - name: Run tests
-        uses: addnab/docker-run-action@v2
-        with:
-          image: yaqwsx/rofi
-          shell: bash
-          options: -v ${{ github.workspace }}:/work -w /work
-          run: |
-            source setup.sh ${{ matrix.environment }}
-            rmake --test --all
+        run: |
+          source setup.sh ${{ matrix.environment }}
+          rcfg desktop
+          rmake desktop
+      - name: Runt tests
+        run: |
+          source setup.sh ${{ matrix.environment }}
+          rmake --test --all
   build_esp32:
     name: "Build suite esp32"
     runs-on: ubuntu-20.04
     strategy:
       matrix:
         environment: [Debug, Release]
+    container:
+      image: yaqwsx/rofi.debian
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build
-        uses: addnab/docker-run-action@v2
-        with:
-          image: yaqwsx/rofi
-          shell: bash
-          options: -v ${{ github.workspace }}:/work -w /work
-          run: |
-            source setup.sh -i ${{ matrix.environment }}
+        run: |
+          source setup.sh -i ${{ matrix.environment }}
 
-            # Provide secrets
-            export ROFI_SSID="N/A"
-            export ROFI_WIFI_PASS=""
-            export ROFI_WLAN_USER=""
-            export RoFI_WLAN_PASS=""
+          # Provide secrets
+          export ROFI_SSID="N/A"
+          export ROFI_WIFI_PASS=""
+          export ROFI_WLAN_USER=""
+          export RoFI_WLAN_PASS=""
 
-            # Configure and build
-            rcfg esp32
-            rmake esp32
+          # Configure and build
+          rcfg esp32
+          rmake esp32
   build_stm32:
     name: "Build suite stm32"
     runs-on: ubuntu-20.04
     strategy:
       matrix:
         environment: [Debug, Release]
+    container:
+      image: yaqwsx/rofi.debian
+    defaults:
+      run:
+        shell: bash
     steps:
       - name: Checkout
         uses: actions/checkout@v2
       - name: Build
-        uses: addnab/docker-run-action@v2
-        with:
-          image: yaqwsx/rofi
-          shell: bash
-          options: -v ${{ github.workspace }}:/work -w /work
-          run: |
-            source setup.sh ${{ matrix.environment }}
+        run: |
+          source setup.sh ${{ matrix.environment }}
 
-            # Configure and build
-            rcfg stm32
-            rmake stm32
+          # Configure and build
+          rcfg stm32
+          rmake stm32
   build_doc:
     name: "Build documentation"
     runs-on: ubuntu-20.04
