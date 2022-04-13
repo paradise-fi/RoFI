@@ -70,10 +70,22 @@ namespace detail
 template < typename T, typename E = std::string >
 class [[nodiscard]] Result {
 public:
+    /**
+     * \name Member types
+     * \{
+     */
+
     using value_type = T;
     using error_type = E;
 
-    /// Constructing static member functions
+    /**
+     * \}
+     */
+
+    /**
+     * \name Constructing static member functions
+     * \{
+     */
 
     /**
      * \brief Constructs the contained value by the copy constructor.
@@ -119,7 +131,16 @@ public:
         return Result( std::in_place_index_t< 1 >{}, std::forward< decltype( args ) >( args )... );
     }
 
-    /// Implicit conversion when one of types is `TypePlaceholder`
+    /**
+     * \}
+     */
+
+    /**
+     * \name Implicit conversions
+     *
+     * Implicit conversions when one of types is `detail::TypePlaceholder`
+     * \{
+     */
 
     /**
      * \brief Changes the `value_type` from `detail::TypePlaceholder` by copying.
@@ -159,7 +180,14 @@ public:
         return Result< value_type, ErrorT >::value( std::move( assume_value() ) );
     }
 
-    /// Observers
+    /**
+     * \}
+     */
+
+    /**
+     * \name Observers
+     * \{
+     */
 
     /**
      * \brief Checks whether `*this` contains a value.
@@ -182,7 +210,14 @@ public:
         return has_value();
     }
 
-    /// Accessors
+    /**
+     * \}
+     */
+
+    /**
+     * \name Accessors
+     * \{
+     */
 
     /**
      * \brief Accesses the contained value.
@@ -301,10 +336,17 @@ public:
         return std::move( assume_error() );
     }
 
-    /// Monadic operations
-    ///
-    /// Inspired by and designed to be compatible with
-    /// monadic operations of `std::optional` from C++23.
+    /**
+     * \}
+     */
+
+    /**
+     * \name Monadic operations
+     *
+     * Inspired by and designed to be compatible with
+     * monadic operations of `std::optional` from C++23.
+     * \{
+     */
 
     /**
      * \brief Returns the result of invocation of \p f on the contained value if it exists.
@@ -491,7 +533,14 @@ public:
                            : std::invoke( std::forward< F >( f ) );
     }
 
-    /// Transform operations
+    /**
+     * \}
+     */
+
+    /**
+     * \name Transform operations
+     * \{
+     */
 
     /**
      * \brief Returns `Result` with the result of invocation of \p f
@@ -613,7 +662,14 @@ public:
                                                           std::move( assume_error() ) ) );
     }
 
-    /// Match operations
+    /**
+     * \}
+     */
+
+    /**
+     * \name Match operations
+     * \{
+     */
 
     /**
      * \brief Returns the result of invocation of \p f on `std::true_type`
@@ -740,7 +796,14 @@ public:
                            : std::forward< Vis >( vis )( std::move( assume_error() ) );
     }
 
-    /// Comparison operator
+    /**
+     * \}
+     */
+
+    /**
+     * \name Comparison operator
+     * \{
+     */
 
     /**
      * \brief Checks equality of two results.
@@ -751,6 +814,10 @@ public:
      * are equal or both contain error and the errors are equal.
      */
     bool operator==( const Result & other ) const = default;
+
+    /**
+     * \}
+     */
 
 private:
     using data_type = std::variant< value_type, error_type >;
@@ -763,6 +830,11 @@ private:
     data_type _data;
 };
 
+
+/**
+ * \name Result creation helper functions
+ * \{
+ */
 
 /**
  * \brief Creates `Result` from value.
@@ -827,6 +899,15 @@ inline constexpr auto make_result_error( Args &&... args )
 }
 
 /**
+ * \}
+ */
+
+/**
+ * \name Monadic operators
+ * \{
+ */
+
+/**
  * \brief Returns the result of invocation of \p f on the contained value in \p result if it exists.
  * Otherwise, returns the contained error in \p result in the return type.
  *
@@ -843,5 +924,9 @@ inline constexpr auto operator>>( ResultT && result, F && f )
 {
     return std::forward< ResultT >( result ).and_then( std::forward< F >( f ) );
 }
+
+/**
+ * \}
+ */
 
 } // namespace atoms
