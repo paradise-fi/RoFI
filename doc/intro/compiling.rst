@@ -52,6 +52,12 @@ can add the environmental variable ``ROFI_SHELL_INDICATOR`` to your prompt. It
 will show and icon of the robot and, also, the marking of currently active
 configuration.
 
+The build directories are constructed as
+``build.${ROFI_BUILD_PREFIX}${SELECTED_COFIGURATION}``. Therefore, if you have a
+need for multiple build directories, you can specify environmental variable
+``ROFI_BUILD_PREFIX`` before invoking ``setup.sh`` to distinguish them.
+
+
 Compilation suites
 ------------------
 
