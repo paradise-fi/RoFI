@@ -99,6 +99,10 @@ jobs:
           source setup.sh Debug
           # Fetch all branches
           git fetch --all
+          git branch -r | grep -v '\->' | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g" | \
+            while read remote
+              do git branch --track "${remote#origin/}" "$remote" | true
+            done
           git pull --all
           releng/doc/buildAllBranches.sh
       - name: Upload artifact
