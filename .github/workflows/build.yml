@@ -96,6 +96,7 @@ jobs:
       - name: Build other branches
         if: github.ref == 'refs/heads/master'
         run: |
+          echo ::group::Setting up repository for building all branches
           source setup.sh Debug
           # Fetch all branches
           git fetch --all
@@ -104,6 +105,8 @@ jobs:
               do git branch --track "${remote#origin/}" "$remote" || true
             done
           git pull --all
+          echo ::endgroup::
+
           releng/doc/buildAllBranches.sh
       - name: Upload artifact
         uses: actions/upload-artifact@v2
