@@ -15,8 +15,8 @@ BODY='
           rcfg doc \
           && rmake doc )
         if [ "$?" ]; then
-            mkdir -p $ROFI_BUILD_DIR/doc/branch/$NAME
-            mv $TMP_DIR/build.Release/doc/web/* $ROFI_BUILD_DIR/doc/branch/$NAME/
+            mkdir -p $ROFI_BUILD_DIR/doc/web/branch/$NAME
+            mv $TMP_DIR/build.Release/doc/web/* $ROFI_BUILD_DIR/doc/web/branch/$NAME/
         else
             echo "Build failed! Ignoring"
         fi
