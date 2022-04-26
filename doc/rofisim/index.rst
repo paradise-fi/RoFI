@@ -1,5 +1,0 @@
-RoFISim
-=========
-
-.. toctree::
-    rofihal

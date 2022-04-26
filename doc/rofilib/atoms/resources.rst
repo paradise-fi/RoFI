@@ -1,5 +1,5 @@
-Embded Resources Management
-===========================
+Embedded Resources Management
+=============================
 
 There are some APIs (e.g., VTK) which can load resources (models, textures) only
 from files specified by a name, not by a file handle or memory location. This

@@ -1,45 +1,45 @@
-========
-RoFI Hal
+RoFI HAL
 ========
 
-This is the same hal as for the physical RoFI.
+RoFI Hardware Abstraction Layer, RoFI HAL for short, allows to use the same
+code for both the physical RoFIs and for the simulated ones.
 
 
 Types and Constants
-===================
+-------------------
 
 .. doxygenenum:: rofi::hal::ConnectorPosition
-    :project: sim
+    :project: hal
 
 .. doxygenenum:: rofi::hal::ConnectorOrientation
-    :project: sim
+    :project: hal
 
 .. doxygenenum:: rofi::hal::ConnectorLine
-    :project: sim
+    :project: hal
 
 .. doxygenenum:: rofi::hal::ConnectorEvent
-    :project: sim
+    :project: hal
 
 
 .. doxygenstruct:: rofi::hal::ConnectorState
-    :project: sim
+    :project: hal
 
 
 Classes
-=======
+-------
 
 .. doxygenclass:: rofi::hal::RoFI
-    :project: sim
+    :project: hal
 
 .. doxygenclass:: rofi::hal::Joint
-   :project: sim
+   :project: hal
 
 .. doxygenclass:: rofi::hal::Connector
-    :project: sim
+    :project: hal
 
 
 Networking
-==========
+----------
 
 .. doxygenclass:: rofi::hal::PBuf
     :project: lib
