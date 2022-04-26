@@ -38,6 +38,7 @@ Note that you can preview the development version of the documentation on
    :caption: Contents:
 
    intro/index
+   tutorials/index
    rofihal/index
    rofilib/index
    roficom/index
