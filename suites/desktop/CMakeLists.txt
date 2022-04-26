@@ -220,6 +220,7 @@ endif()
 if (${BUILD_GAZEBO})
   add_subdirectory($ENV{ROFI_ROOT}/data/gazebo/worlds data/gazebo/worlds)
   add_subdirectory($ENV{ROFI_ROOT}/examples/simulator examples/simulator)
+  add_subdirectory($ENV{ROFI_ROOT}/tutorials/simulator tutorials/simulator)
 endif()
 
 # Add logic tests for the hardware-related suites
