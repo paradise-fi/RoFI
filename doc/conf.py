@@ -30,14 +30,6 @@ extensions = [
     'recommonmark',
 ]
 
-# breathe_sources = {
-#     "driver": "../RoFIDriver/",
-#     "roficom": "../RoFICoM/software/control_board/",
-#     "lib": "../RoFILib/",
-#     "sim": "../RoFISim/",
-# }
-# breathe_projects = { name: "build/doxygen/" + name + "/xml" \
-#     for name in breathe_sources.keys() }
 breathe_default_members = ('members', 'undoc-members')
 
 # Tell sphinx what the primary language being documented is.
@@ -67,43 +59,3 @@ html_theme = 'sphinx_rtd_theme'
 html_static_path = ['_static']
 
 exclude_patterns = ['readme.md']
-
-if __name__ == "__main__":
-    import textwrap
-    import os
-
-    # Generate makefile
-    print(textwrap.dedent(
-        """
-        SPHINXOPTS    ?= sphinx-rtd-theme
-        SPHINXBUILD   ?= sphinx-build
-        DOC_DIR       = .
-        BUILDDIR      = build
-        """
-    ))
-
-    for name, path in breathe_sources.items():
-        print("{}_DEPS = $(realpath $(shell find {} -type f -not -path '*build*'))".format(name, path))
-
-    print(textwrap.dedent(
-        """
-        .PHONY: all clean
-
-        all: sphinx
-
-        build:
-        \tmkdir build
-
-        sphinx: Makefile {doxygens}
-        \t@$(SPHINXBUILD) -M html "$(DOC_DIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-
-        clean:
-        \t@$(SPHINXBUILD) -M clean "$(DOC_DIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
-        \trm -rf "$(BUILDDIR)"
-        """
-    ).format(doxygens = " ".join(breathe_projects.values())))
-
-    for name, path in breathe_projects.items():
-        print("{}: $({}_DEPS)".format(path, name))
-        print("\t./extractDoxygen.sh {} {} {}".format(name, breathe_sources[name],
-            os.path.dirname(path)))
