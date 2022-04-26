@@ -52,7 +52,7 @@ else:
 candidates += [t.target for t in targets]
 candidates += [t.path for t in targets]
 
-suites = availableSuites()
+suites = configuredSuites()
 candidates += suites
 if not test:
     candidates += ["clean-" + s for s in suites]
