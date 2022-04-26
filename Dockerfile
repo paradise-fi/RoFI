@@ -59,7 +59,7 @@ RUN export IDF_PATH=$ROFI_TOOLS_PATH/esp-idf && \
     # When we use IDF, it brings python venv; thus if we want to build doc,
     # we have to install spinx and breathe into the venv
     . $IDF_PATH/export.sh && \
-    pip install sphinx breathe recommonmark sphinx_rtd_theme
+    pip install sphinx breathe myst_parser sphinx_rtd_theme
 
 # Newer Ubuntu (21.10) miss libdl.so which is (probably) required by VTK.
 # This is a temporary work-around until we migrate to VTK 9.

@@ -24,7 +24,7 @@ if (NOT ${EXIT_CODE} EQUAL 0)
 endif()
 
 requirePythonModule(breathe)
-requirePythonModule(recommonmark)
+requirePythonModule(myst_parser)
 requirePythonModule(sphinx_rtd_theme)
 
 set(extractDoxygen ${CMAKE_COMMAND} -E env DOXYGEN="$<TARGET_FILE:Doxygen::doxygen>" "$ENV{ROFI_ROOT}/releng/doc/extractDoxygen.sh")

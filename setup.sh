@@ -105,7 +105,7 @@ setupIdf() {
     if [ $IDF_POST_INSTALL ]; then
         # When we use IDF, it brings python venv; thus if we want to build doc,
         # we have to install spinx and breathe into the venv
-        pip install sphinx breathe recommonmark sphinx_rtd_theme
+        pip install sphinx breathe myst_parser sphinx_rtd_theme
     fi
     IDF_POST_INSTALL=
 }
