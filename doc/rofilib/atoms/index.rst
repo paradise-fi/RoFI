@@ -9,6 +9,6 @@ Atoms currently provide:
 
 .. toctree::
     patterns
-    resources
     containers
     result
+    resources

@@ -14,15 +14,11 @@
 # import sys
 # sys.path.insert(0, os.path.abspath('.'))
 
-import textwrap
-
-
 # -- Project information -----------------------------------------------------
 
 project = 'The RoFI Platform'
 copyright = '2021, Paradise'
 author = 'Paradise'
-
 
 # -- General configuration ---------------------------------------------------
 
@@ -31,8 +27,9 @@ author = 'Paradise'
 # ones.
 extensions = [
     'breathe',
-    'recommonmark'
+    'recommonmark',
 ]
+
 # breathe_sources = {
 #     "driver": "../RoFIDriver/",
 #     "roficom": "../RoFICoM/software/control_board/",
@@ -74,10 +71,11 @@ exclude_patterns = ['readme.md']
 if __name__ == "__main__":
     import textwrap
     import os
+
     # Generate makefile
     print(textwrap.dedent(
         """
-        SPHINXOPTS    ?=sphinx-rtd-theme
+        SPHINXOPTS    ?= sphinx-rtd-theme
         SPHINXBUILD   ?= sphinx-build
         DOC_DIR       = .
         BUILDDIR      = build

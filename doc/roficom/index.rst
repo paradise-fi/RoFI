@@ -1,3 +1,3 @@
-RoFiCoM
+RoFICoM
 =======
 
