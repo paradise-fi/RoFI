@@ -165,8 +165,9 @@ std::string interpretRegisterValue( Register r, int v ) {
             s << std::setprecision( 2 ) << std::to_string( v / 10 ) << " V";
             return s.str();
         }
+        default:
+            return "";
     }
-    return "";
 }
 
 
