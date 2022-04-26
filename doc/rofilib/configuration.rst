@@ -11,32 +11,72 @@ Feel free to add code examples.
 Types and Constants
 -------------------
 
-.. doxygentypedef:: ID
-    :project: lib
+.. doxygentypedef:: rofi::configuration::ModuleId
+    :project: configuration
 
-.. doxygenenum:: Joint
-    :project: lib
+.. doxygenenum:: rofi::configuration::ComponentType
+    :project: configuration
 
-.. doxygenenum:: ShoeId
-    :project: lib
+.. doxygenenum:: rofi::configuration::ModuleType
+    :project: configuration
 
-.. doxygenenum:: ConnectorId
-    :project: lib
-
-.. doxygenenum:: Orientation
-    :project: lib
+.. doxygenenum:: rofi::configuration::roficom::Orientation
+    :project: configuration
 
 Classes
 -------
 
-.. doxygenclass:: Module
-    :project: lib
+.. doxygenclass:: rofi::configuration::Rofibot
+    :project: configuration
 
-.. doxygenclass:: Edge
-   :project: lib
+.. doxygenclass:: rofi::configuration::Module
+    :project: configuration
 
-.. doxygenclass:: Action
-    :project: lib
+.. doxygenstruct:: rofi::configuration::Joint
+    :project: configuration
 
-.. doxygenclass:: Configuration
-   :project: lib
+.. doxygenstruct:: rofi::configuration::RigidJoint
+    :project: configuration
+
+.. doxygenstruct:: rofi::configuration::RotationJoint
+    :project: configuration
+
+.. doxygenstruct:: rofi::configuration::RoficomJoint
+    :project: configuration
+
+.. doxygenstruct:: rofi::configuration::ComponentJoint
+    :project: configuration
+
+.. doxygenstruct:: rofi::configuration::SpaceJoint
+    :project: configuration
+
+
+.. doxygenclass:: rofi::configuration::NoColision
+    :project: configuration
+
+.. doxygenclass:: rofi::configuration::SimpleCollision
+    :project: configuration
+
+Modules
+-------
+
+.. doxygenclass:: rofi::configuration::Pad
+    :project: configuration
+
+.. doxygenclass:: rofi::configuration::UniversalModule
+    :project: configuration
+
+.. doxygenclass:: rofi::configuration::UnknownModule
+    :project: configuration
+
+Functions
+---------
+
+.. doxygenfunction:: rofi::configuration::connect(const Component &c1, const Component &c2, roficom::Orientation o)
+    :project: configuration
+
+.. doxygenfunction:: rofi::configuration::connect(const Component &c, Vector refpoint, Args&&... args)
+    :project: configuration
+
+.. doxygenfunction:: rofi::configuration::makeComponentJoint
+    :project: configuration
