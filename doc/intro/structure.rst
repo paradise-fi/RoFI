@@ -27,6 +27,7 @@ There are the following directories:
     -  ``rofiHalSim`` and ``rofiHalEsp32``: The hardware abstraction layer for
        RoFI modules.
 -  ``tools``: The tools for working with RoFI
+-  ``tutorials``: Tutorials intended to get you familiar with the project.
 -  ``examples``: A self-contained, easily executable examples demonstrating the
    the project. Often referred from this documentation.
 -  ``applications``: RoFI applications (case-studies, programs for the modules)
