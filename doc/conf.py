@@ -27,7 +27,7 @@ author = 'Paradise'
 # ones.
 extensions = [
     'breathe',
-    'recommonmark',
+    'myst_parser',
 ]
 
 breathe_default_members = ('members', 'undoc-members')
