@@ -28,6 +28,10 @@ private:
     underlying_type _rads;
 };
 
+inline constexpr Angle operator-( Angle angle ) noexcept {
+    return Angle::rad( -angle.rad() );
+}
+
 inline constexpr Angle operator+( Angle lhs, Angle rhs ) noexcept {
     lhs += rhs;
     return lhs;
