@@ -80,3 +80,23 @@ Functions
 
 .. doxygenfunction:: rofi::configuration::makeComponentJoint
     :project: configuration
+
+Serialization
+-------------
+
+Add some text about the json configuration options.
+(And options for different module types.)
+
+Ideally also include the grammar for configuration.
+
+.. doxygenfunction:: rofi::configuration::serialization::toJSON( const Rofibot& bot, Callback attrCb )
+    :project: configuration
+
+.. doxygenfunction:: rofi::configuration::serialization::toJSON( const Rofibot& bot )
+    :project: configuration
+
+.. doxygenfunction:: rofi::configuration::serialization::fromJSON( const nlohmann::json& j, Callback attrCb )
+    :project: configuration
+
+.. doxygenfunction:: rofi::configuration::serialization::fromJSON( const nlohmann::json& j )
+    :project: configuration
