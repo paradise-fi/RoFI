@@ -10,7 +10,7 @@ The compilation suites might require additional dependencies; see the suites
 pages in the menu on the left for more details.
 
 If you are interested only in the "step-by-step tutorial" on building, feel free
-to skip to the section :ref:`example`.
+to skip to the section :ref:`quick-start-example`.
 
 .. _environment:
 
@@ -94,9 +94,9 @@ You can setup the compilation units via invoking:
 
 .. code-block:: sh
 
-    🤖 R $ rcfg desktop firmware                 # Setup desktop and firmware suites
-    🤖 R $ rcfg desktop -- -DBUILD_HEADLESS=true # Setup desktop with headless build option
-    🤖 R $ rcfg -desktop                         # Unconfigure the desktop suite
+    $ rcfg desktop firmware                 # Setup desktop and firmware suites
+    $ rcfg desktop -- -DBUILD_HEADLESS=true # Setup desktop with headless build option
+    $ rcfg -desktop                         # Unconfigure the desktop suite
 
 Note that tab-completion works for this command. Once you setup the suites, you
 can proceed to the compilation. You can also pass extra options to the
@@ -168,11 +168,11 @@ target, you can specify one more targets to ``rmake``:
 
 .. code-block:: sh
 
-    🤖 R $ rmake desktop    # Compile all targets from the suite desktop
-    🤖 R $ rmake rofi-vis   # Compile only target rofi-vis (and its dependencies)
-    🤖 R $ rmake tools/     # Compile all targets that are in the source tree under prefix
-    🤖 R $ rmake tools/ doc # You can mix various types of targets
-    🤖 R $ rmake --all      # Compile everything
+    $ rmake desktop    # Compile all targets from the suite desktop
+    $ rmake rofi-vis   # Compile only target rofi-vis (and its dependencies)
+    $ rmake tools/     # Compile all targets that are in the source tree under prefix
+    $ rmake tools/ doc # You can mix various types of targets
+    $ rmake --all      # Compile everything
 
 Note that once you compile a target, you can directly run the binaries as they
 are in ``PATH``. If you would like to inspect the build artifacts, they are
@@ -202,8 +202,8 @@ Both tools have the same usage:
 
 .. code-block:: sh
 
-    🤖 R $ rflash <image_name> -- <optional extra arguments for the underlying tool>
-    🤖 R $ rmonitor <image_name> -- <optional extra arguments for the underlying tool>
+    $ rflash <image_name> -- <optional extra arguments for the underlying tool>
+    $ rmonitor <image_name> -- <optional extra arguments for the underlying tool>
 
 Note that the image is mandatory for the monitor command as it is used to decode
 stack traces and also, to determine the correct connection parameters.
@@ -234,7 +234,7 @@ defaults to ``ROFI_ROOT/build.deps``. You might want to set this variable in the
 case when you work on multiple worktrees to save disk space -- ESP-IDF consumes
 about 2.5 GB of disk space.
 
-.. _example:
+.. _quick-start-example:
 
 Quick start example
 -------------------
@@ -243,37 +243,60 @@ To quickly start with RoFI development, we provide a short step-by-step guide:
 
 .. code-block:: sh
 
-    $ source setup.sh -f Debug # Setup your terminal for compiling RoFI in Debug mode.
-                               # Your prompt will change to indicate the environment
-    🤖 D $ rcfg desktop doc     # Configure the suites you want
-    🤖 D $ rmake --all          # Build everything you have configured
-    🤖 D $ rmake tools/         # ... or build only all tools
-    🤖 D $ rofi-vis             # Run the compiled tool
+    $ source setup.sh Debug # Setup your terminal for compiling RoFI in Debug mode
+    $ rcfg desktop doc      # Configure the suites you want
+    $ rmake --all           # Build everything you have configured
+    $ rmake tools/          # ... or build only all tools
+    $ rofi-vis              # Run the compiled tool
 
 
-Quick start GazeboSim example
+Quick start Simulator example
 ------------------------------
 
-To quickly start with simulating RoFI using GazeboSim, we provide a short step-by-step guide:
+To quickly start with simulating RoFI, we provide a short step-by-step guide.
+
+Compiling and running the RoFI module code for simulators is the same,
+only the setup for simulator changes.
+
+GazeboSim
+~~~~~~~~~
 
 .. code-block:: sh
 
-    $ source setup.sh -f Debug                      # Setup your terminal for compiling RoFI in Debug mode.
-                                                    # This also sets the necessary gazebo variables
-    🤖 D $ rcfg desktop                              # Configure the desktop suite
-    🤖 D $ rmake --all                               # Build everything you have configured
-    🤖 D $ gazebo worlds/two_modules.world --verbose # Run gazebo. We recommend using --verbose for more info
+    $ source setup.sh Debug                     # Setup your terminal in Debug mode
+                                                # This also sets the necessary gazebo paths and variables
+    $ rcfg desktop && rmake desktop             # Configure the desktop suite and build it
+    $ gazebo worlds/two_modules.world --verbose # Run gazebo. We recommend using --verbose for more info
 
-In a different terminal, run the module code for each module that you want to control:
+SimpleSim
+~~~~~~~~~
 
 .. code-block:: sh
 
-    $ source setup.sh -f Debug # Setup your terminal
-    🤖 D $ basicJointPosition   # Run the compiled module code
+    $ source setup.sh Debug                      # Setup your terminal in Debug mode
+    $ rcfg desktop && rmake desktop              # Configure the desktop suite and build it
+    $ rofi-simplesim --help                      # Display help
+    $ rofi-simplesim data/configurations/init.in # Run simplesim
+
+
+Module code
+~~~~~~~~~~~
+
+.. attention::
+    When compiling the module code that you want to run in a simulator, make sure
+    to link it with the correct RoFI HAL library ``rofi_hal_sim``.
+
+In a different terminal then where you run the simulator,
+run the module code for each module that you want to control:
+
+.. code-block:: sh
+
+    $ source setup.sh    # Setup your terminal
+    $ basicJointPosition # Run the compiled module code
 
 If you are interested in controlling the simulation via Python instead of C++,
-you can follow example `examples/simulator/pythonInterface`:
+you can follow example ``examples/simulator/pythonInterface``:
 
 .. code-block:: sh
 
-    🤖 D $ python3 examples/simulator/pythonInterface/oscilate.py
+    $ python3 examples/simulator/pythonInterface/oscilate.py
