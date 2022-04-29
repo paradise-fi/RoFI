@@ -1,0 +1,45 @@
+{
+    "modules": [
+        {
+            "1": {
+                "type": "universal",
+                "alpha": 0,
+                "beta": 0,
+                "gamma": 0
+            }
+        },
+        {
+            "2": {
+                "type": "pad",
+                "width": 1,
+                "height": 1
+            }
+        }
+    ],
+    "spaceJoints": [
+        {
+            "point": { "x": 0, "y": 0, "z": 0 },
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": [
+                    [ 1, 0, 0, 0 ],
+                    [ 0, 1, 0, 0 ],
+                    [ 0, 0, 1, 0 ],
+                    [ 0, 0, 0, 1 ]
+                ],
+                "positions": []
+            },
+            "to": 2,
+            "toComponent": 0
+        }
+    ],
+    "moduleJoints": [
+        {
+            "from": 1,
+            "fromCon": "A-X",
+            "to": 2,
+            "toCon": 0,
+            "orientation": "North"
+        }
+    ]
+}
