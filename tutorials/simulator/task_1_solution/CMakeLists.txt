@@ -1,0 +1,4 @@
+cmake_minimum_required(VERSION 3.11)
+
+add_executable(tutorial-simulation_1_config_solution create_configuration.cpp)
+target_link_libraries(tutorial-simulation_1_config_solution configurationWithJson)
