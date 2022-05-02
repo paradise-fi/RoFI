@@ -65,6 +65,15 @@ def flashEsp32Image(img, extra):
     retcode = subprocess.call(command)
     return retcode
 
+def flashStm32Image(img, extra):
+    if not img.name.endswith(".hex"):
+        raise RuntimeError("Only HEX images are supported")
+    command = ["st-flash", "--format", "ihex", "--freq=3500"]
+    command += extra
+    command += ["write", img.path]
+    retcode = subprocess.call(command)
+    return retcode
+
 def run():
     if len(sys.argv) < 2 or (len(sys.argv) >= 3 and sys.argv[2] != "--"):
         sys.exit(
@@ -77,8 +86,11 @@ def run():
         img = imgs[sys.argv[1]]
     except KeyError:
         sys.exit(f"Unknown image {sys.argv[1]}")
-    if img.suite == "rofiFirmware":
+    if img.suite == "esp32":
         retcode = flashEsp32Image(img, extraArgs)
+        sys.exit(retcode)
+    if img.suite == "stm32":
+        retcode = flashStm32Image(img, extraArgs)
         sys.exit(retcode)
     else:
         sys.exit(f"Unsupported platform {img[0]}")

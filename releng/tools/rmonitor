@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-from posix import environ
 import sys
 import os
 import subprocess
 import serial.tools.list_ports as list_ports
+import argparse
 from common import *
+
 
 def monitorEsp32Image(img, extra):
     monitor = os.path.dirname(os.path.realpath(__file__))
@@ -25,6 +26,29 @@ def monitorEsp32Image(img, extra):
     retcode = subprocess.call(command, env=env)
     return retcode
 
+def monitor(args):
+    parser = argparse.ArgumentParser("monitor")
+    parser.add_argument("-p", "--port", help="Set port", default=None)
+    parser.add_argument("-B", "--monitor-baud", type=int,
+                        help="Set baudrate", default=115200)
+
+    pargs = parser.parse_args(args)
+
+    if pargs.port is None:
+        availablePorts = list_ports.comports()
+        pargs.port = availablePorts[0].device
+
+    command = [sys.executable, "-m", "serial.tools.miniterm", pargs.port, str(pargs.monitor_baud)]
+    print(command)
+    retcode = subprocess.call(command)
+    return retcode
+
+
+def monitorStm32(args):
+    subprocess.call(["st-info", "--probe"])
+    monitor(args)
+
+
 def run():
     if len(sys.argv) < 2 or (len(sys.argv) >= 3 and sys.argv[2] != "--"):
         sys.exit(
@@ -37,11 +61,15 @@ def run():
         img = imgs[sys.argv[1]]
     except KeyError:
         sys.exit(f"Unknown image {sys.argv[1]}")
-    if img.suite == "rofiFirmware":
+    if img.suite == "esp32":
         retcode = monitorEsp32Image(img, extraArgs)
         sys.exit(retcode)
+    if img.suite == "stm32":
+        retcode = monitorStm32(extraArgs)
+        sys.exit(retcode)
     else:
-        sys.exit(f"Unsupported platform {img[0]}")
+        sys.exit(f"Unsupported platform {img.suite}")
+
 
 if __name__ == "__main__":
     run()

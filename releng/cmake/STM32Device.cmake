@@ -28,6 +28,9 @@ macro(setup_mcu_details MCU)
     endif()
 endmacro()
 
+set(IMG_DIR ${CMAKE_BINARY_DIR}/img)
+file(MAKE_DIRECTORY "${IMG_DIR}")
+
 
 function(add_stm32_compiler_flags)
     cmake_parse_arguments(A "" "TARGET;MCU;MCU_SPEC" "" ${ARGN})
@@ -89,14 +92,11 @@ function(add_stm32_target)
             $<$<COMPILE_LANGUAGE:CXX>:${CXX_DEFS} ${CXX_FLAGS}>
             $<$<COMPILE_LANGUAGE:ASM>:-x assembler-with-cpp ${ASM_FLAGS}>
         )
-        set(HEX_FILE ${PROJECT_BINARY_DIR}/${A_TARGET}.hex)
-        set(BIN_FILE ${PROJECT_BINARY_DIR}/${A_TARGET}.bin)
+        set(HEX_FILE ${IMG_DIR}/${A_TARGET}.hex)
         add_custom_command(
             TARGET ${A_TARGET}
             POST_BUILD
             COMMAND ${CMAKE_OBJCOPY} -Oihex $<TARGET_FILE:${A_TARGET}> ${HEX_FILE}
-            COMMAND ${CMAKE_OBJCOPY} -Obinary $<TARGET_FILE:${A_TARGET}>
-                    ${BIN_FILE}
             COMMENT "Building ${HEX_FILE} \nBuilding ${BIN_FILE}")
     endif()
 endfunction()
