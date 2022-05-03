@@ -15,39 +15,39 @@
 #include <QtWidgets/QApplication>
 
 
-std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
+namespace configuration = rofi::configuration;
+namespace simplesim = rofi::simplesim;
+
+std::shared_ptr< const configuration::Rofibot > readConfigurationFromFile(
         const std::filesystem::path & cfgFileName )
 {
-    using namespace rofi::configuration;
-
     auto inputCfgFile = std::ifstream( cfgFileName );
     if ( !inputCfgFile.is_open() ) {
         throw std::runtime_error( "Cannot open file '" + cfgFileName.generic_string() + "'" );
     }
 
-    auto configuration = std::make_shared< Rofibot >( readOldConfigurationFormat( inputCfgFile ) );
-    assert( configuration );
-    auto modules = configuration->modules();
+    auto rofibot = std::make_shared< configuration::Rofibot >(
+            configuration::readOldConfigurationFormat( inputCfgFile ) );
+    assert( rofibot );
+    auto modules = rofibot->modules();
     if ( modules.size() != 0 ) {
         const auto & firstModule = modules.begin()->module;
         assert( firstModule.get() );
         assert( !firstModule->bodies().empty() );
-        connect< RigidJoint >( firstModule->bodies()[ 1 ],
-                               Vector( { 0, 0, 0 } ),
-                               matrices::identity );
+        connect< configuration::RigidJoint >( firstModule->bodies().front(),
+                                              configuration::Vector( { 0, 0, 0 } ),
+                                              configuration::matrices::identity );
     }
-    configuration->prepare();
-    if ( auto [ ok, str ] = configuration->validate( SimpleCollision() ); !ok ) {
+    rofibot->prepare();
+    if ( auto [ ok, str ] = rofibot->isValid( configuration::SimpleCollision() ); !ok ) {
         throw std::runtime_error( str );
     }
-    return configuration;
+    return rofibot;
 }
 
 auto readPyFilterFromFile( const std::filesystem::path & packetFilterFileName )
-        -> std::unique_ptr< rofi::simplesim::packetf::PyFilter >
+        -> std::unique_ptr< simplesim::packetf::PyFilter >
 {
-    using namespace rofi::simplesim::packetf;
-
     auto inputFile = std::ifstream( packetFilterFileName );
     if ( !inputFile.is_open() ) {
         throw std::runtime_error( "Cannot open file '" + packetFilterFileName.generic_string()
@@ -57,14 +57,11 @@ auto readPyFilterFromFile( const std::filesystem::path & packetFilterFileName )
     auto fileContent = std::string( std::istreambuf_iterator( inputFile ), {} );
     inputFile.close();
 
-    return std::make_unique< PyFilter >( fileContent );
+    return std::make_unique< simplesim::packetf::PyFilter >( fileContent );
 }
 
 int main( int argc, char * argv[] )
 {
-    using rofi::configuration::Rofibot;
-    using rofi::simplesim::msgs::SettingsCmd;
-
     Dim::Cli cli;
     auto & inputCfgFileName = cli.opt< std::filesystem::path >( "<input_cfg_file>" )
                                       .defaultDesc( {} )
@@ -91,9 +88,9 @@ int main( int argc, char * argv[] )
     setlocale( LC_NUMERIC, "C" );
 
     std::cout << "Reading configuration from file" << std::endl;
-    auto configuration = readConfigurationFromFile( *inputCfgFileName );
+    auto inputConfiguration = readConfigurationFromFile( *inputCfgFileName );
 
-    auto packetFilter = std::unique_ptr< rofi::simplesim::packetf::PyFilter >{};
+    auto packetFilter = std::unique_ptr< simplesim::packetf::PyFilter >{};
     if ( pythonPacketFilterFileName ) {
         std::cout << "Reading python packet filter from file" << std::endl;
         packetFilter = readPyFilterFromFile( *pythonPacketFilterFileName );
@@ -104,27 +101,28 @@ int main( int argc, char * argv[] )
 
 
     // Setup server
-    auto server = rofi::simplesim::Simplesim(
-            configuration,
+    auto server = simplesim::Simplesim(
+            inputConfiguration,
             packetFilter
                     ? [ &packetFilter ](
                               auto packet ) { return packetFilter->filter( std::move( packet ) ); }
-                    : rofi::simplesim::PacketFilter::FilterFunction{},
+                    : simplesim::PacketFilter::FilterFunction{},
             *verbose );
 
     // Setup client
-    auto client = rofi::simplesim::SimplesimClient();
-    client.setOnSettingsCmdCallback( [ &server, &client ]( const SettingsCmd & settingsCmd ) {
-        auto settings = server.onSettingsCmd( settingsCmd );
-        client.onSettingsResponse( settings.getStateMsg() );
-    } );
+    auto client = simplesim::SimplesimClient();
+    client.setOnSettingsCmdCallback(
+            [ &server, &client ]( const simplesim::msgs::SettingsCmd & settingsCmd ) {
+                auto settings = server.onSettingsCmd( settingsCmd );
+                client.onSettingsResponse( settings.getStateMsg() );
+            } );
 
     std::cout << "Starting simplesim server..." << std::endl;
 
     // Run server
     auto serverThread = std::jthread( [ &server, &client ]( std::stop_token stopToken ) {
         server.run(
-                [ &client ]( std::shared_ptr< const Rofibot > newConfiguration ) {
+                [ &client ]( std::shared_ptr< const configuration::Rofibot > newConfiguration ) {
                     client.onConfigurationUpdate( std::move( newConfiguration ) );
                 },
                 stopToken );
@@ -132,8 +130,8 @@ int main( int argc, char * argv[] )
 
     // Run client
     std::cout << "Adding configuration to the client" << std::endl;
-    client.onConfigurationUpdate( configuration );
-    configuration.reset();
+    client.onConfigurationUpdate( inputConfiguration );
+    inputConfiguration.reset();
 
     std::cout << "Starting simplesim client..." << std::endl;
     client.run();

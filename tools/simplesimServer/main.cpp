@@ -11,39 +11,39 @@
 #include "simplesim/simplesim.hpp"
 
 
-std::shared_ptr< const rofi::configuration::Rofibot > readConfigurationFromFile(
+namespace configuration = rofi::configuration;
+namespace simplesim = rofi::simplesim;
+
+std::shared_ptr< const configuration::Rofibot > readConfigurationFromFile(
         const std::filesystem::path & cfgFileName )
 {
-    using namespace rofi::configuration;
-
     auto inputCfgFile = std::ifstream( cfgFileName );
     if ( !inputCfgFile.is_open() ) {
         throw std::runtime_error( "Cannot open file '" + cfgFileName.generic_string() + "'" );
     }
 
-    auto configuration = std::make_shared< Rofibot >( readOldConfigurationFormat( inputCfgFile ) );
-    assert( configuration );
-    auto modules = configuration->modules();
+    auto rofibot = std::make_shared< configuration::Rofibot >(
+            configuration::readOldConfigurationFormat( inputCfgFile ) );
+    assert( rofibot );
+    auto modules = rofibot->modules();
     if ( modules.size() != 0 ) {
         const auto & firstModule = modules.begin()->module;
         assert( firstModule.get() );
         assert( !firstModule->bodies().empty() );
-        connect< RigidJoint >( firstModule->bodies().front(),
-                               Vector( { 0, 0, 0 } ),
-                               matrices::identity );
+        connect< configuration::RigidJoint >( firstModule->bodies().front(),
+                                              configuration::Vector( { 0, 0, 0 } ),
+                                              configuration::matrices::identity );
     }
-    configuration->prepare();
-    if ( auto [ ok, str ] = configuration->isValid( SimpleCollision() ); !ok ) {
+    rofibot->prepare();
+    if ( auto [ ok, str ] = rofibot->isValid( configuration::SimpleCollision() ); !ok ) {
         throw std::runtime_error( str );
     }
-    return configuration;
+    return rofibot;
 }
 
 auto readPyFilterFromFile( const std::filesystem::path & packetFilterFileName )
-        -> std::unique_ptr< rofi::simplesim::packetf::PyFilter >
+        -> std::unique_ptr< simplesim::packetf::PyFilter >
 {
-    using namespace rofi::simplesim::packetf;
-
     auto inputFile = std::ifstream( packetFilterFileName );
     if ( !inputFile.is_open() ) {
         throw std::runtime_error( "Cannot open file '" + packetFilterFileName.generic_string()
@@ -53,17 +53,17 @@ auto readPyFilterFromFile( const std::filesystem::path & packetFilterFileName )
     auto fileContent = std::string( std::istreambuf_iterator( inputFile ), {} );
     inputFile.close();
 
-    return std::make_unique< PyFilter >( fileContent );
+    return std::make_unique< simplesim::packetf::PyFilter >( fileContent );
 }
 
 class SettingsCmdSubscriber {
 public:
-    using SettingsCmdMsgPtr = boost::shared_ptr< const rofi::simplesim::msgs::SettingsCmd >;
+    using SettingsCmdMsgPtr = boost::shared_ptr< const simplesim::msgs::SettingsCmd >;
 
-    SettingsCmdSubscriber( rofi::simplesim::Simplesim & simplesim )
+    SettingsCmdSubscriber( simplesim::Simplesim & simplesim )
             : _simplesim( simplesim )
             , _node( _simplesim.communication()->node() )
-            , _pub( _node->Advertise< rofi::simplesim::msgs::SettingsState >( "~/response" ) )
+            , _pub( _node->Advertise< simplesim::msgs::SettingsState >( "~/response" ) )
     {
         assert( _simplesim.communication() );
         assert( _node );
@@ -97,7 +97,7 @@ private:
     }
 
 
-    rofi::simplesim::Simplesim & _simplesim;
+    simplesim::Simplesim & _simplesim;
 
     gazebo::transport::NodePtr _node;
     gazebo::transport::PublisherPtr _pub;
@@ -107,12 +107,10 @@ private:
 
 int main( int argc, char * argv[] )
 {
-    using rofi::configuration::Rofibot;
-
     Dim::Cli cli;
     auto & inputCfgFileName = cli.opt< std::filesystem::path >( "<input_cfg_file>" )
                                       .defaultDesc( {} )
-                                      .desc( "Input configuration file" );
+                                      .desc( "Configuration file" );
 
     auto & pythonPacketFilterFileName = cli.opt< std::filesystem::path >( "p python" )
                                                 .valueDesc( "PYTHON_FILE" )
@@ -128,7 +126,7 @@ int main( int argc, char * argv[] )
     std::cout << "Reading configuration from file" << std::endl;
     auto inputConfiguration = readConfigurationFromFile( *inputCfgFileName );
 
-    auto packetFilter = std::unique_ptr< rofi::simplesim::packetf::PyFilter >{};
+    auto packetFilter = std::unique_ptr< simplesim::packetf::PyFilter >{};
     if ( pythonPacketFilterFileName ) {
         std::cout << "Reading python packet filter from file" << std::endl;
         packetFilter = readPyFilterFromFile( *pythonPacketFilterFileName );
@@ -138,12 +136,12 @@ int main( int argc, char * argv[] )
     auto gzMaster = rofi::msgs::Server::createAndLoopInThread( "simplesim" );
 
     // Server setup
-    auto server = rofi::simplesim::Simplesim(
+    auto server = simplesim::Simplesim(
             inputConfiguration,
             packetFilter
                     ? [ &packetFilter ](
                               auto packet ) { return packetFilter->filter( std::move( packet ) ); }
-                    : rofi::simplesim::PacketFilter::FilterFunction{},
+                    : simplesim::PacketFilter::FilterFunction{},
             *verbose );
 
     // Listen for settings cmds
@@ -156,11 +154,11 @@ int main( int argc, char * argv[] )
     std::cout << "Sending configurations on topic '" << configurationPub->GetTopic() << "'\n";
 
     std::cout << "Simulating..." << std::endl;
-    server.run( [ configurationPub ]( std::shared_ptr< const Rofibot > configuration ) {
+    server.run( [ configurationPub ]( std::shared_ptr< const configuration::Rofibot > rofibot ) {
         assert( configurationPub );
-        assert( configuration );
+        assert( rofibot );
         auto message = google::protobuf::StringValue();
-        message.set_value( rofi::configuration::serialization::toJSON( *configuration ).dump() );
+        message.set_value( configuration::serialization::toJSON( *rofibot ).dump() );
         configurationPub->Publish( message );
     } );
 }
