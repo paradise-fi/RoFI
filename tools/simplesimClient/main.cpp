@@ -17,12 +17,15 @@
 #include <QtWidgets/QApplication>
 
 
+namespace configuration = rofi::configuration;
+namespace simplesim = rofi::simplesim;
+
 class SimplesimMsgSubscriber {
 public:
-    using SettingsStateMsgPtr = boost::shared_ptr< const rofi::simplesim::msgs::SettingsState >;
+    using SettingsStateMsgPtr = boost::shared_ptr< const simplesim::msgs::SettingsState >;
     using ConfigurationMsgPtr = boost::shared_ptr< const google::protobuf::StringValue >;
 
-    explicit SimplesimMsgSubscriber( rofi::simplesim::SimplesimClient & client )
+    explicit SimplesimMsgSubscriber( simplesim::SimplesimClient & client )
             : _client( client ), _node( boost::make_shared< gazebo::transport::Node >() )
     {
         assert( _node );
@@ -49,19 +52,18 @@ public:
 private:
     void onConfigurationMsg( const ConfigurationMsgPtr & msg )
     {
-        using namespace rofi::configuration;
         assert( msg );
 
-        auto configuration = std::make_shared< Rofibot >(
-                serialization::fromJSON( nlohmann::json::parse( msg->value() ) ) );
-        assert( configuration );
+        auto rofibot = std::make_shared< configuration::Rofibot >(
+                configuration::serialization::fromJSON( nlohmann::json::parse( msg->value() ) ) );
+        assert( rofibot );
 
-        if ( auto [ ok, err_str ] = configuration->validate( SimpleCollision() ); !ok ) {
+        if ( auto [ ok, err_str ] = rofibot->validate( configuration::SimpleCollision() ); !ok ) {
             std::cerr << "Configuration not valid: '" << err_str << "'" << std::endl;
             return;
         }
 
-        _client.onConfigurationUpdate( std::move( configuration ) );
+        _client.onConfigurationUpdate( std::move( rofibot ) );
     }
 
     void onSettingsResp( const SettingsStateMsgPtr & msgPtr )
@@ -72,7 +74,7 @@ private:
     }
 
 
-    rofi::simplesim::SimplesimClient & _client;
+    simplesim::SimplesimClient & _client;
 
     gazebo::transport::NodePtr _node;
     gazebo::transport::SubscriberPtr _configurationSub;
@@ -82,12 +84,9 @@ private:
 
 int main( int argc, char * argv[] )
 {
-    using rofi::simplesim::SimplesimClient;
-    using rofi::simplesim::msgs::SettingsCmd;
-
     Dim::Cli cli;
     auto & clientArgs = cli.optVec< std::string >( "c client" )
-                                .desc( "Optional arguments to pass to the client" );
+                                .desc( "Optional arguments to pass to the gazebo client" );
     auto & qtArgs = cli.optVec< std::string >( "[QT_ARGS]" )
                             .desc( "Optional arguments to pass to the Qt application" );
 
@@ -106,12 +105,13 @@ int main( int argc, char * argv[] )
     auto node = boost::make_shared< gazebo::transport::Node >();
     node->Init();
 
-    auto settingsCmdPub = node->Advertise< SettingsCmd >( "~/control" );
+    auto settingsCmdPub = node->Advertise< simplesim::msgs::SettingsCmd >( "~/control" );
     std::cout << "Sending settings commands on topic '" << settingsCmdPub->GetTopic() << "'\n";
-    auto client = SimplesimClient( [ settingsCmdPub ]( const SettingsCmd & settingsCmd ) {
-        assert( settingsCmdPub );
-        settingsCmdPub->Publish( settingsCmd );
-    } );
+    auto client = simplesim::SimplesimClient(
+            [ settingsCmdPub ]( const simplesim::msgs::SettingsCmd & settingsCmd ) {
+                assert( settingsCmdPub );
+                settingsCmdPub->Publish( settingsCmd );
+            } );
 
     auto simplesimMsgSub = SimplesimMsgSubscriber( client );
 
