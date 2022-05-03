@@ -33,6 +33,8 @@ namespace rofi::configuration::serialization {
             ROFI_UNREACHABLE( "String does not represent a component type" );
     }
 
+    namespace details {
+
     /* partial specialization on functions is a problem, so this hack uses partial specialization
      * on a struct with a static member function which we want to partialy specialize – the good
      * thing is it is hidden within the next moduleFromJSON function (the one which does not use
@@ -40,15 +42,12 @@ namespace rofi::configuration::serialization {
      */
     template< std::derived_from< Module > M, typename Callback >
     struct partial_spec {
-        static M moduleFromJSON( const nlohmann::json& j, ModuleId id, Callback& cb );
+        static M moduleFromJSON( const nlohmann::json& j, Callback& cb );
     };
 
     template< std::derived_from< Module > M, typename Callback >
     M moduleFromJSON( const nlohmann::json& j, Callback& cbAttr ) {
-        if ( !j.is_object() || j.begin() == j.end() || ++j.begin() != j.end() )
-            throw std::runtime_error( "json is not a single object" );
-
-        return partial_spec< M, Callback >::moduleFromJSON( j.begin().value(), stoi( j.begin().key() ), cbAttr );
+        return partial_spec< M, Callback >::moduleFromJSON( j, cbAttr );
     }
 
     inline nlohmann::json matrixToJSON( const Matrix& m ) {
@@ -60,6 +59,13 @@ namespace rofi::configuration::serialization {
     }
 
     inline Matrix matrixFromJSON( const nlohmann::json& js ) {
+        if ( js.is_string() ) {
+            if ( js == "identity" )
+                return rofi::configuration::matrices::identity;
+
+            throw std::runtime_error( "matrix is a string, but the string does not correspond to a supported matrix" );
+        }
+
         Matrix m;
         for ( int i = 0; i < 4; i++ ) {
             for ( int j = 0; j < 4; j++ ) {
@@ -133,24 +139,55 @@ namespace rofi::configuration::serialization {
             j = component;
     }
 
+    template< bool isConnector = false, typename F >
+    inline std::pair< ModuleId, int > connectionFromJSON( const nlohmann::json& j, const std::string& where
+                                                        , F&& f = []( ModuleId ) { return ModuleType::Unknown; } ) {
+        static_assert( std::is_invocable_r_v< ModuleType, F, ModuleId > );
+        assert( where == "to" || where == "from" );
+
+        ModuleId id = j[ where ][ "id" ];
+        std::string conn( isConnector ? "connector" : "component" );
+        int connId = f( id ) == ModuleType::Universal && isConnector
+                        ? UniversalModule::translateComponent( j[ where ][ conn ].get< std::string >() )
+                        : j[ where ][ conn ].get< int >();
+
+        return std::pair( id, connId );
+    }
+
+    template< typename F >
+    inline std::pair< ModuleId, int > connectorFromJSON( const nlohmann::json& j, const std::string& where, F&& f ) {
+        return connectionFromJSON< true >( j, where, std::forward< F >( f ) );
+    }
+
+    inline void connectionToJSON( nlohmann::json& j, const std::string& where
+                                , const std::string& c, ModuleId id, ModuleType mType, int cId ) {
+        assert( where == "to" || where == "from" );
+        assert( c == "component" || c == "connector" );
+
+        j[ where ][ "id" ] = id;
+        onUMTranslateDocs( j[ where ][ c ], mType, cId );
+    }
+
     template< typename Callback >
     inline nlohmann::json moduleToJSON( const UniversalModule& m, Callback&& attrCb ) {
         using namespace nlohmann;
         json j;
+        j[ "id" ]    = m.getId();
         j[ "type"  ] = "universal";
         j[ "alpha" ] = m.getAlpha().deg();
         j[ "beta"  ] = m.getBeta().deg();
         j[ "gamma" ] = m.getGamma().deg();
 
         addAttributes( j, attrCb, m );
-        return { { std::to_string( m.getId() ), j } };
+        return j;
     }
 
     template< typename Callback >
     struct partial_spec< UniversalModule, Callback > {
-        static inline UniversalModule moduleFromJSON( const nlohmann::json& j, ModuleId id, Callback& cb ) {
+        static inline UniversalModule moduleFromJSON( const nlohmann::json& j, Callback& cb ) {
             assert( j[ "type" ] == "universal" );
 
+            ModuleId id = j[ "id" ];
             Angle alpha = Angle::deg( j[ "alpha" ] );
             Angle beta  = Angle::deg( j[ "beta"  ] );
             Angle gamma = Angle::deg( j[ "gamma" ] );
@@ -165,19 +202,21 @@ namespace rofi::configuration::serialization {
     inline nlohmann::json moduleToJSON( const Pad& m, Callback& attrCb ) {
         using namespace nlohmann;
         json j;
+        j[ "id" ]     = m.getId();
         j[ "type"   ] = "pad";
         j[ "width"  ] = m.width;
         j[ "height" ] = m.height;
 
         addAttributes( j, attrCb, m );
-        return { { std::to_string( m.getId() ), j } };
+        return j;
     }
 
     template< typename Callback >
     struct partial_spec< Pad, Callback > {
-        static inline Pad moduleFromJSON( const nlohmann::json& j, ModuleId id, Callback& cb ) {
+        static inline Pad moduleFromJSON( const nlohmann::json& j, Callback& cb ) {
             assert( j[ "type" ] == "pad" );
 
+            ModuleId id = j[ "id" ];
             int width  = j[ "width" ];
             int height = j[ "height" ];
             Pad m( id, width, height );
@@ -191,6 +230,7 @@ namespace rofi::configuration::serialization {
         using namespace nlohmann;
         json j;
 
+        j[ "id" ]   = m.getId();
         j[ "type" ] = nullptr;
         int i = 0;
         
@@ -220,16 +260,18 @@ namespace rofi::configuration::serialization {
         }
 
         addAttributes( j, attrCb, m );
-        return { { std::to_string( m.getId() ), j } };
+        return j;
     }
 
     template< typename Callback >
     struct partial_spec< UnknownModule, Callback > {
-        static inline UnknownModule moduleFromJSON( const nlohmann::json& j, ModuleId id, Callback& cb ) {
+        static inline UnknownModule moduleFromJSON( const nlohmann::json& j, Callback& cb ) {
             assert( j[ "type" ] && "type is not null" );
 
             std::vector< Component > components;
             std::vector< ComponentJoint > joints;
+
+            ModuleId id = j[ "id" ];
 
             int i = 0;
             for ( const auto& c : j[ "components" ] ) {
@@ -261,7 +303,7 @@ namespace rofi::configuration::serialization {
                                                                         , matrixFromJSON( js[ "joint" ][ "postMatrix" ] )
                                                                         , Angle::deg( js[ "joint" ][ "min" ] )
                                                                         , Angle::deg( js[ "joint" ][ "max" ] ) ) );
-                    processAttributes( j[ "components" ][ i ], cb, joints.back(), i );
+                    details::processAttributes( j[ "joints" ][ i ], cb, joints.back(), i );
                     i++;
                 } else {
                     ROFI_UNREACHABLE( "Unknown module was given an unknown ComponentJoint" );
@@ -273,6 +315,8 @@ namespace rofi::configuration::serialization {
             return m;
         }
     };
+
+    } // namespace details
 
     template< typename Callback >
     inline nlohmann::json toJSON( const Rofibot& bot, Callback attrCb ) {
@@ -286,13 +330,13 @@ namespace rofi::configuration::serialization {
             json j;
             switch ( m.module->type ) {
                 case ModuleType::Universal:
-                    j = moduleToJSON( static_cast< const UniversalModule& >( *m.module ), attrCb );
+                    j = details::moduleToJSON( dynamic_cast< const UniversalModule& >( *m.module ), attrCb );
                     break;
                 case ModuleType::Pad:
-                    j = moduleToJSON( static_cast< const Pad& >( *m.module ), attrCb );
+                    j = details::moduleToJSON( dynamic_cast< const Pad& >( *m.module ), attrCb );
                     break;
                 case ModuleType::Unknown:
-                    j = moduleToJSON( static_cast< const UnknownModule& >( *m.module ), attrCb );
+                    j = details::moduleToJSON( dynamic_cast< const UnknownModule& >( *m.module ), attrCb );
                     break;
                 case ModuleType::Cube:
                 default:
@@ -304,25 +348,26 @@ namespace rofi::configuration::serialization {
 
         for ( const RoficomJoint& rj : bot.roficomConnections() ) {
             json j;
-            j[ "from" ] = bot.getModule( rj.sourceModule )->getId();
-            j[ "to"   ] = bot.getModule( rj.destModule )->getId();
-            onUMTranslateDocs( j[ "fromCon" ], bot.getModule( rj.sourceModule )->type, rj.sourceConnector );
-            onUMTranslateDocs( j[ "toCon" ]  , bot.getModule( rj.destModule )->type  , rj.destConnector );
+            details::connectionToJSON( j, "from", "connector", bot.getModule( rj.sourceModule )->getId()
+                                     , bot.getModule( rj.sourceModule )->type, rj.sourceConnector );
+
+            details::connectionToJSON( j, "to", "connector", bot.getModule( rj.destModule )->getId()
+                                     , bot.getModule( rj.destModule )->type, rj.destConnector );
+
             j[ "orientation" ] = orientationToString( rj.orientation );
-            addAttributes( j, attrCb, rj );
+            details::addAttributes( j, attrCb, rj );
             res[ "moduleJoints" ].push_back( j );
         }
 
         for ( const SpaceJoint& sj : bot.referencePoints() ) {
             json j;
-            j[ "to" ] = bot.getModule( sj.destModule )->getId();
-            onUMTranslateDocs( j[ "toComponent" ], bot.getModule( sj.destModule )->type, sj.destComponent );
-            j[ "point" ][ "x" ] = sj.refPoint[ 0 ];
-            j[ "point" ][ "y" ] = sj.refPoint[ 1 ];
-            j[ "point" ][ "z" ] = sj.refPoint[ 2 ];
+            details::connectionToJSON( j, "to", "component", bot.getModule( sj.destModule )->getId()
+                                     , bot.getModule( sj.destModule )->type, sj.destComponent );
+
+            j[ "point" ] = { sj.refPoint[ 0 ], sj.refPoint[ 1 ], sj.refPoint[ 2 ] };
             assert( sj.joint.get() && "joint is nullptr" );
-            j[ "joint" ] = jointToJSON( *sj.joint );
-            addAttributes( j, attrCb, sj );
+            j[ "joint" ] = details::jointToJSON( *sj.joint );
+            details::addAttributes( j, attrCb, sj );
             res[ "spaceJoints" ].push_back( j );
         }
 
@@ -338,64 +383,58 @@ namespace rofi::configuration::serialization {
         Rofibot bot;
 
         for ( size_t i = 0; i < j[ "modules" ].size(); i++ ) {
-            std::string id = j[ "modules" ][ i ].begin().key(); // great...
             auto& jm = j[ "modules" ][ i ];
 
-            if ( jm[ id ][ "type" ] == "universal" )
-                bot.insert( moduleFromJSON< UniversalModule >( jm, attrCb ) );
-            else if ( jm[ id ][ "type" ] == "pad" )
-                bot.insert( moduleFromJSON< Pad >( jm, attrCb ) );
-            else if ( jm[ id ][ "type" ] == "unknown" )
-                bot.insert( moduleFromJSON< UnknownModule >( jm, attrCb ) );
+            if ( jm[ "type" ] == "universal" )
+                bot.insert( details::moduleFromJSON< UniversalModule >( jm, attrCb ) );
+            else if ( jm[ "type" ] == "pad" )
+                bot.insert( details::moduleFromJSON< Pad >( jm, attrCb ) );
+            else if ( jm[ "type" ] == "unknown" )
+                bot.insert( details::moduleFromJSON< UnknownModule >( jm, attrCb ) );
             else
                 ROFI_UNREACHABLE( "Unknown type of a module" );
         }
 
+        // function for translation of components to docs if necessary
+        auto f = [ &bot ]( ModuleId id ) -> ModuleType { return bot.getModule( id )->type; };
+
         for ( const auto& jj : j[ "moduleJoints" ] ) {
             roficom::Orientation o = roficom::stringToOrientation( jj[ "orientation" ] );
-            ModuleId sourceModule = jj[ "from" ];
-            ModuleId destinationModule = jj[ "to" ];
-            int sourceConnector = bot.getModule( sourceModule )->type == ModuleType::Universal
-                                  ? UniversalModule::translateComponent( jj[ "fromCon" ].get< std::string >() )
-                                  : jj[ "fromCon" ].get< int >();
-            int destinationConnector = bot.getModule( destinationModule )->type == ModuleType::Universal
-                                       ? UniversalModule::translateComponent( jj[ "toCon" ].get< std::string >() )
-                                       : jj[ "toCon" ].get< int >();
+
+            auto [ sourceModule, sourceConnector ] = details::connectorFromJSON( jj, "from", f );
+            auto [ destinationModule, destinationConnector ] = details::connectorFromJSON( jj, "to", f );
 
             auto conn = connect( bot.getModule( sourceModule )->connectors()[ sourceConnector ]
                                , bot.getModule( destinationModule )->connectors()[ destinationConnector ]
                                , o );
 
-            processAttributes( jj, attrCb, conn );
+            details::processAttributes( jj, attrCb, conn );
         }
 
         for ( const auto& sj : j[ "spaceJoints" ] ) {
-            int destinationModule = sj[ "to" ];
-            int destinationComponent =
-                bot.getModule( destinationModule )->type == ModuleType::Universal && !sj[ "toComponent" ].is_number()
-                        ? UniversalModule::translateComponent( sj[ "toComponent" ].get< std::string >() )
-                        : sj[ "toComponent" ].get< int >();
+            auto [ destinationModule, destinationComponent ] = details::connectionFromJSON( sj, "to", f );
 
-            Vector fixedPoint = { sj[ "point" ][ "x" ], sj[ "point" ][ "y" ], sj[ "point" ][ "z" ] };
+            Vector fixedPoint = { sj[ "point" ][ 0 ], sj[ "point" ][ 1 ], sj[ "point" ][ 2 ] };
             if ( sj[ "joint" ][ "type" ] == "rigid" ) {
                 auto conn = connect< RigidJoint >( bot.getModule( destinationModule )->components()[ destinationComponent ]
-                                                 , fixedPoint, matrixFromJSON( sj[ "joint" ][ "sourceToDestination" ] ) );
-                processAttributes( sj, attrCb, conn );
+                                                 , fixedPoint
+                                                 , details::matrixFromJSON( sj[ "joint" ][ "sourceToDestination" ] ) );
+                details::processAttributes( sj, attrCb, conn );
             } else if ( sj[ "joint" ][ "type" ] == "rotational" ) {
                 auto& jj = sj[ "joint" ];
                 std::vector< float > positions = jj[ "positions" ];
 
                 auto conn = connect< RotationJoint >( bot.getModule( destinationModule )->components()[ destinationComponent ]
                                                     , fixedPoint
-                                                    , matrixFromJSON( jj[ "preMatrix" ] )
+                                                    , details::matrixFromJSON( jj[ "preMatrix" ] )
                                                     , Vector{ jj[ "axis" ][ 0 ]
                                                     , jj[ "axis" ][ 1 ]
                                                     , jj[ "axis" ][ 2 ] }
-                                                    , matrixFromJSON( jj[ "postMatrix" ] )
+                                                    , details::matrixFromJSON( jj[ "postMatrix" ] )
                                                     , Angle::deg( jj[ "limits" ][ "min" ] )
                                                     , Angle::deg( jj[ "limits" ][ "max" ] ) );
                 bot.setSpaceJointPositions( conn, positions );
-                processAttributes( sj, attrCb, conn );
+                details::processAttributes( sj, attrCb, conn );
             } else {
                 ROFI_UNREACHABLE( "Unknown joint type" );
             }

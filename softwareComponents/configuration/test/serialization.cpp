@@ -114,9 +114,9 @@ TEST_CASE( "UniversalModule" ) {
         connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
         auto js = toJSON( bot );
 
-        CHECK( js[ "modules" ][ 0 ][ "0" ][ "alpha" ] == 90 );
-        CHECK( js[ "modules" ][ 0 ][ "0" ][ "beta" ]  == 90 );
-        CHECK( js[ "modules" ][ 0 ][ "0" ][ "gamma" ] == 180 );
+        CHECK( js[ "modules" ][ 0 ][ "alpha" ] == 90 );
+        CHECK( js[ "modules" ][ 0 ][ "beta" ]  == 90 );
+        CHECK( js[ "modules" ][ 0 ][ "gamma" ] == 180 );
     }
 
     SECTION( "Signle With rotational joint" ) {
@@ -136,64 +136,61 @@ TEST_CASE( "UniversalModule" ) {
         connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
 
         auto js = toJSON( bot );
-        CHECK( js[ "modules" ][ 0 ][ "0" ][ "alpha" ] == 0  );
-        CHECK( js[ "modules" ][ 0 ][ "0" ][ "beta" ]  == 0  );
-        CHECK( js[ "modules" ][ 0 ][ "0" ][ "gamma" ] == 90 );
+        CHECK( js[ "modules" ][ 0 ][ "alpha" ] == 0  );
+        CHECK( js[ "modules" ][ 0 ][ "beta" ]  == 0  );
+        CHECK( js[ "modules" ][ 0 ][ "gamma" ] == 90 );
 
-        CHECK( js[ "modules" ][ 1 ][ "1" ][ "alpha" ] == 90  );
-        CHECK( js[ "modules" ][ 1 ][ "1" ][ "beta" ]  == 0   );
-        CHECK( js[ "modules" ][ 1 ][ "1" ][ "gamma" ] == 180 );
+        CHECK( js[ "modules" ][ 1 ][ "alpha" ] == 90  );
+        CHECK( js[ "modules" ][ 1 ][ "beta" ]  == 0   );
+        CHECK( js[ "modules" ][ 1 ][ "gamma" ] == 180 );
 
-        CHECK( js[ "modules" ][ 2 ][ "2" ][ "alpha" ] == 35 );
-        CHECK( js[ "modules" ][ 2 ][ "2" ][ "beta" ]  == 0  );
-        CHECK( js[ "modules" ][ 2 ][ "2" ][ "gamma" ] == 90 );
+        CHECK( js[ "modules" ][ 2 ][ "alpha" ] == 35 );
+        CHECK( js[ "modules" ][ 2 ][ "beta" ]  == 0  );
+        CHECK( js[ "modules" ][ 2 ][ "gamma" ] == 90 );
     }
 
     SECTION( "The other way" ) {
-        auto js = "{ \"modules\" : [\
-                                      {\
-                                        \"66\" : {\
-                                                \"type\"  : \"universal\",\
-                                                \"alpha\" : 90,\
-                                                \"beta\"  : 0,\
-                                                \"gamma\" : 180\
-                                            }\
-                                      },\
-                                      {\
-                                        \"42\" : {\
+        auto js = "{\
+                        \"modules\" : [\
+                                        {\
+                                            \"id\" : 66,\
+                                            \"type\"  : \"universal\",\
+                                            \"alpha\" : 90,\
+                                            \"beta\"  : 0,\
+                                            \"gamma\" : 180\
+                                        },\
+                                        {\
+                                            \"id\" : 42,\
                                             \"type\" : \"universal\",\
                                             \"alpha\" : 0,\
                                             \"beta\"  : 90,\
                                             \"gamma\" : 90\
-                                            }\
-                                      }\
-                    ],\
-                          \"moduleJoints\" : [\
+                                        }\
+                        ],\
+                        \"moduleJoints\" : [\
                                           {\
                                             \"orientation\" : \"East\",\
-                                            \"from\" : 66,\
-                                            \"fromCon\" : \"A-Z\",\
-                                            \"to\" : 42,\
-                                            \"toCon\" : \"B-Z\"\
+                                            \"from\" : {\
+                                                        \"id\" : 66,\
+                                                        \"connector\" : \"A-Z\"\
+                                                    },\
+                                            \"to\" :   {\
+                                                        \"id\" : 42,\
+                                                        \"connector\" : \"B-Z\"\
+                                                    }\
                                           }\
-                    ],\
-                            \"spaceJoints\" : [\
-                                                {\
-                                                      \"point\" : { \"x\" : 0\
-                                                                  , \"y\" : 0\
-                                                                  , \"z\" : 0\
-                                                                },\
-                                                      \"to\" : 66,\
-                                                      \"toComponent\" : 7,\
-                                                      \"joint\" : {\
-                                                                       \"type\" : \"rigid\",\
-                                                                       \"sourceToDestination\" : [\
-                                                                                           [ 1, 0, 0, 0 ]\
-                                                                                         , [ 0, 1, 0, 0 ]\
-                                                                                         , [ 0, 0, 1, 0 ]\
-                                                                                         , [ 0, 0, 0, 1 ]\
-                                                                                    ]\
-                                                                }\
+                        ],\
+                        \"spaceJoints\" : [\
+                                            {\
+                                                \"point\" : [0, 0, 0],\
+                                                \"to\" : {\
+                                                            \"id\" : 66,\
+                                                            \"component\" : 7\
+                                                },\
+                                                \"joint\" : {\
+                                                                \"type\" : \"rigid\",\
+                                                                \"sourceToDestination\" : \"identity\"\
+                                                            }\
                                                 }\
                             ]\
         }"_json;
@@ -248,10 +245,10 @@ TEST_CASE( "UnknownModule" ) {
         CHECK( js[ "spaceJoints" ].size()  == 0 );
         CHECK( js[ "moduleJoints" ].size() == 0 );
 
-        CHECK( js[ "modules" ][ 0 ][ "0" ][ "components" ].size() == 2 );
-        CHECK( js[ "modules" ][ 0 ][ "0" ][ "components" ][ 0 ][ "type" ] == "roficom" );
-        CHECK( js[ "modules" ][ 0 ][ "0" ][ "components" ][ 1 ][ "type" ] == "roficom" );
-        CHECK( js[ "modules" ][ 0 ][ "0" ][ "joints" ].size() == 1 );
+        CHECK( js[ "modules" ][ 0 ][ "components" ].size() == 2 );
+        CHECK( js[ "modules" ][ 0 ][ "components" ][ 0 ][ "type" ] == "roficom" );
+        CHECK( js[ "modules" ][ 0 ][ "components" ][ 1 ][ "type" ] == "roficom" );
+        CHECK( js[ "modules" ][ 0 ][ "joints" ].size() == 1 );
     }
 }
 
@@ -281,11 +278,11 @@ TEST_CASE( "Attributes" ) {
         connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
         auto js = toJSON( bot );
 
-        CHECK( js[ "modules" ][ 0 ][ "0" ][ "alpha" ] == 90 );
-        CHECK( js[ "modules" ][ 0 ][ "0" ][ "beta" ]  == 90 );
-        CHECK( js[ "modules" ][ 0 ][ "0" ][ "gamma" ] == 180 );
+        CHECK( js[ "modules" ][ 0 ][ "alpha" ] == 90 );
+        CHECK( js[ "modules" ][ 0 ][ "beta" ]  == 90 );
+        CHECK( js[ "modules" ][ 0 ][ "gamma" ] == 180 );
 
-        CHECK( !js[ "modules" ][ 0 ][ "0" ].contains( "attributes" ) );
+        CHECK( !js[ "modules" ][ 0 ].contains( "attributes" ) );
 
         auto testAttrCallback = overload{
             []( const UniversalModule& m ) {
@@ -295,7 +292,7 @@ TEST_CASE( "Attributes" ) {
         };
 
         js = toJSON( bot, testAttrCallback );
-        CHECK( js[ "modules" ][ 0 ][ "0" ].contains( "attributes" ) );
+        CHECK( js[ "modules" ][ 0 ].contains( "attributes" ) );
     }
 
     SECTION( "Different modules - different messages" ) {
@@ -318,16 +315,16 @@ TEST_CASE( "Attributes" ) {
 
         auto js = toJSON( bot, testAttrCallback );
 
-        REQUIRE( js[ "modules" ][ 0 ][  "0" ].contains( "attributes" ) );
-        REQUIRE( js[ "modules" ][ 1 ][ "42" ].contains( "attributes" ) );
-        REQUIRE( js[ "modules" ][ 2 ][ "66" ].contains( "attributes" ) );
+        REQUIRE( js[ "modules" ][ 0 ].contains( "attributes" ) );
+        REQUIRE( js[ "modules" ][ 1 ].contains( "attributes" ) );
+        REQUIRE( js[ "modules" ][ 2 ].contains( "attributes" ) );
         // Todo: This is really ugly. Is there a better way?
-        CHECK( js[ "modules" ][ 0 ][  "0" ][ "attributes" ].items().begin().key() == "UniversalModule" );
-        CHECK( js[ "modules" ][ 0 ][  "0" ][ "attributes" ].items().begin().value() == 0 );
-        CHECK( js[ "modules" ][ 1 ][ "42" ][ "attributes" ].items().begin().key() == "UniversalModule" );
-        CHECK( js[ "modules" ][ 1 ][ "42" ][ "attributes" ].items().begin().value() == 42 );
-        CHECK( js[ "modules" ][ 2 ][ "66" ][ "attributes" ].items().begin().key() == "Not an UniversalModule" );
-        CHECK( js[ "modules" ][ 2 ][ "66" ][ "attributes" ].items().begin().value() == 66 );
+        CHECK( js[ "modules" ][ 0 ][ "attributes" ].items().begin().key() == "UniversalModule" );
+        CHECK( js[ "modules" ][ 0 ][ "attributes" ].items().begin().value() == 0 );
+        CHECK( js[ "modules" ][ 1 ][ "attributes" ].items().begin().key() == "UniversalModule" );
+        CHECK( js[ "modules" ][ 1 ][ "attributes" ].items().begin().value() == 42 );
+        CHECK( js[ "modules" ][ 2 ][ "attributes" ].items().begin().key() == "Not an UniversalModule" );
+        CHECK( js[ "modules" ][ 2 ][ "attributes" ].items().begin().value() == 66 );
 
         for ( auto j : js[ "moduleJoints" ] )
             CHECK( !j.contains( "attributes" ) );
@@ -360,7 +357,7 @@ TEST_CASE( "Attributes" ) {
         auto js = toJSON( bot, testAttrCallback );
 
         for ( auto m : js[ "modules" ] ) {
-            CHECK( m.items().begin().value().contains( "attributes" ) );
+            CHECK( m.contains( "attributes" ) );
         }
 
         for ( auto j : js[ "moduleJoints" ] )
@@ -439,39 +436,40 @@ TEST_CASE( "Working with attributes" ) {
     }
 
     SECTION( "Sum all attributes" ) {
-        auto js = "{ \"modules\" : [ { \"66\" : {\
-                                            \"type\"  : \"universal\",\
-                                            \"alpha\" : 90, \"beta\"  : 0, \"gamma\" : 180,\
-                                            \"attributes\" : 1\
-                                            }\
-                                      },\
-                                      { \"42\" : {\
-                                            \"type\" : \"universal\",\
-                                            \"alpha\" : 0, \"beta\"  : 90, \"gamma\" : 90,\
-                                            \"attributes\" : 2\
-                                            }\
-                                      }\
+        auto js = "{ \"modules\" : [ { \"id\" : 66,\
+                                       \"type\"  : \"universal\",\
+                                       \"alpha\" : 90, \"beta\"  : 0, \"gamma\" : 180,\
+                                       \"attributes\" : 1\
+                                     },\
+                                     { \"id\" : 42,\
+                                       \"type\" : \"universal\",\
+                                       \"alpha\" : 0, \"beta\"  : 90, \"gamma\" : 90,\
+                                       \"attributes\" : 2\
+                                     }\
                                 ],\
                      \"moduleJoints\" : [ {\
                                             \"orientation\" : \"East\",\
-                                            \"from\" : 66, \"fromCon\" : \"A-Z\",\
-                                            \"to\" : 42,   \"toCon\" : \"B-Z\",\
+                                            \"from\" : { \"id\" : 66, \"connector\" : \"A-Z\" },\
+                                            \"to\" :   { \"id\" : 42, \"connector\" : \"B-Z\" },\
                                             \"attributes\" : 3\
                                           }\
                                         ],\
                      \"spaceJoints\" : [ {\
-                                        \"point\" : { \"x\" : 0, \"y\" : 0, \"z\" : 0 },\
-                                                    \"to\" : 66, \"toComponent\" : 7,\
-                                                    \"attributes\" : 4,\
-                                                    \"joint\" : {\
-                                                                    \"type\" : \"rigid\",\
-                                                                    \"sourceToDestination\" : [\
+                                        \"point\" : [ 0, 0, 0 ],\
+                                        \"to\" : { \"id\" : 66, \"component\" : 7 },\
+                                        \"attributes\" : 4,\
+                                        \"joint\" : {\
+                                                        \"type\" : \"rigid\",\
+                                                        \"sourceToDestination\" : [\
                                                                            [ 1, 0, 0, 0 ]\
                                                                            , [ 0, 1, 0, 0 ]\
                                                                            , [ 0, 0, 1, 0 ]\
                                                                            , [ 0, 0, 0, 1 ]\
-                                                                        ]\
-                    } } ] }"_json;
+                                                        ]\
+                                                    }\
+                                        }\
+                                    ]\
+                    }"_json;
 
         int sum = 0;
         auto copy = fromJSON( js, overload{

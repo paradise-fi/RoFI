@@ -557,7 +557,7 @@ public:
     }
 
     /**
-     * \brief Decide whether the configuration is valid
+     * \brief Decide whether the configuration is valid given the collision model
      *
      * \return A pair - first item indicates the validity, the second one gives
      * textual description of the reason for invalidity
@@ -588,7 +588,7 @@ public:
     }
 
     /**
-     * \brief Prepare configuration if needed and decide whether it is valid
+     * \brief Prepare configuration if needed and decide whether it is valid with given collision model
      *
      * \return A pair - first item indicates the validity, the second one gives
      * textual description of the reason for invalidity
