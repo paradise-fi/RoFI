@@ -370,7 +370,7 @@ private:
 /**
  * \brief Collision model ignoring collision
  */
-class NoColision {
+class NoCollision {
 public:
     /**
      * \brief Decide if two modules collide
