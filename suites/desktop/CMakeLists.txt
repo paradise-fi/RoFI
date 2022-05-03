@@ -187,6 +187,7 @@ if (${BUILD_GAZEBO})
   add_component(simplesimLib)
   add_component(simplesimPacketFilters)
   add_component(simplesimClientLib)
+  add_component(simplesimServerLib)
 
   # Introduce alias for the HAL
   add_library(rofi::hal ALIAS rofi_hal_sim)

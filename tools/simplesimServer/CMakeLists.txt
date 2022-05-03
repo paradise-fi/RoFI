@@ -6,4 +6,4 @@ set (SRC
 )
 
 add_executable(rofi-simplesimServer ${SRC})
-target_link_libraries(rofi-simplesimServer PUBLIC simplesim messageServer configurationWithJson simplesimPyFilter dimcli)
+target_link_libraries(rofi-simplesimServer PUBLIC simplesim simplesimServer messageServer configurationWithJson simplesimPyFilter dimcli)
