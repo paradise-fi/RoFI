@@ -211,6 +211,7 @@ private:
     int _lastModule = -1;
     std::array< double, 3 > _lastColor;
 
+    std::vector< rofi::configuration::ModuleId > _ids;
     std::map< rofi::configuration::ModuleId, detail::ModuleRenderInfo > _moduleRenderInfos;
 
     OnSettingsCmdCallback _onSettingsCmdCallback;

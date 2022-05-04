@@ -371,22 +371,25 @@ void SimplesimClient::itemSelected( QTreeWidgetItem * selected )
         colorModule( _lastModule, _lastColor );
     }
 
+    int treeId;
     int module;
     std::array< double, 3 > white = { { 1.0, 1.0, 1.0 } };
 
     if ( !selected->parent() ) {
-        module = _ui->treeWidget->indexOfTopLevelItem( selected );
-        _moduleRenderInfos[ module ].componentActors.front()->GetProperty()->GetColor(
-                _lastColor.data() );
+        treeId = _ui->treeWidget->indexOfTopLevelItem( selected );
+        module = _ids[ treeId ];
+        _moduleRenderInfos[ module ].componentActors.front()->GetProperty()->GetColor( _lastColor.data() );
         colorModule( module, white );
     } else if ( selected->parent() && !selected->parent()->parent() ) {
-        module = _ui->treeWidget->indexOfTopLevelItem( selected->parent() );
+        treeId = _ui->treeWidget->indexOfTopLevelItem( selected->parent() );
+        module = _ids[ treeId ];
         _moduleRenderInfos[ module ].componentActors.front()->GetProperty()->GetColor(
                 _lastColor.data() );
         colorModule( module, white );
     } else {
-        module = _ui->treeWidget->indexOfTopLevelItem( selected->parent()->parent() );
-        int component = _ui->treeWidget->topLevelItem( module )->child( 0 )->indexOfChild(
+        treeId = _ui->treeWidget->indexOfTopLevelItem( selected->parent()->parent() );
+        module = _ids[ treeId ];
+        int component = _ui->treeWidget->topLevelItem( treeId )->child( 0 )->indexOfChild(
                 selected );
         _moduleRenderInfos[ module ].componentActors[ component ]->GetProperty()->GetColor(
                 _lastColor.data() );
@@ -404,7 +407,7 @@ void SimplesimClient::setColor( int color )
             if ( _lastModule == i ) {
                 _lastColor = getModuleColor( color );
             } else {
-                colorModule( i, getModuleColor( color ) );
+                colorModule( _ids[ i ], getModuleColor( color ) );
             }
         }
     }
@@ -456,6 +459,7 @@ void SimplesimClient::initInfoTree( const rofi::configuration::Rofibot & rofibot
 {
     int i = 0;
     for ( const auto & moduleInfo : rofibot.modules() ) {
+        _ids.push_back( moduleInfo.module->getId() );
         std::string str = "Module " + std::to_string( moduleInfo.module->getId() );
         QTreeWidgetItem * module = new QTreeWidgetItem( static_cast< QTreeWidget * >( nullptr ),
                                                         { QString( str.c_str() ) } );
