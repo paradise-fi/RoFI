@@ -6,17 +6,18 @@
 #include <thread>
 #include <type_traits>
 
+#include <atoms/concurrent_queue.hpp>
+
+#include <rofi_hal.hpp>
+
 #include "callbacks.hpp"
-#include "atoms/concurrent_queue.hpp"
-#include "rofi_hal.hpp"
 
 #include <jointResp.pb.h>
 
 
 namespace rofi::hal
 {
-class PositionCallbackHandle
-{
+class PositionCallbackHandle {
 public:
     using PositionCallback = std::function< void( Joint ) >;
 
@@ -52,8 +53,7 @@ public:
     {
         std::lock_guard< std::mutex > lock( _positionCallbackMutex );
 
-        if ( !checkPositionReached( _desiredPosition, reachedPosition ) )
-        {
+        if ( !checkPositionReached( _desiredPosition, reachedPosition ) ) {
             return {};
         }
 
@@ -75,14 +75,12 @@ private:
 };
 
 
-class JointWorker
-{
+class JointWorker {
     using Message = rofi::messages::JointResp;
     using PositionCallback = PositionCallbackHandle::PositionCallback;
     using ErrorCallback = std::function< void( Joint, Joint::Error, const std::string & ) >;
 
-    struct JointCallbacks
-    {
+    struct JointCallbacks {
         Callbacks< ErrorCallback > errorCallbacks;
         PositionCallbackHandle positionCallbackHandle;
     };
@@ -96,8 +94,7 @@ public:
     ~JointWorker()
     {
         // End thread before destructor ends
-        if ( _workerThread.joinable() )
-        {
+        if ( _workerThread.joinable() ) {
             _workerThread.request_stop();
             _workerThread.join();
         }
@@ -138,11 +135,10 @@ public:
         assert( static_cast< size_t >( jointIndex ) < _callbacks.size() );
         assert( callback );
 
-        auto oldCallback = _callbacks[ jointIndex ].positionCallbackHandle.setPositionCallback(
-                desiredPosition,
-                std::move( callback ) );
-        if ( oldCallback )
-        {
+        auto oldCallback = _callbacks[ jointIndex ]
+                                   .positionCallbackHandle
+                                   .setPositionCallback( desiredPosition, std::move( callback ) );
+        if ( oldCallback ) {
             std::cerr << "Aborting old set position callback\n";
             // TODO abort old callback
         }
@@ -181,8 +177,7 @@ private:
         assert( static_cast< size_t >( jointIndex ) < _callbacks.size() );
 
         auto joint = getJoint( jointIndex );
-        switch ( message.resptype() )
-        {
+        switch ( message.resptype() ) {
             case rofi::messages::JointCmd::ERROR:
             {
                 auto [ errorType, errorStr ] = readError( message );
@@ -196,8 +191,7 @@ private:
                 auto & posCallbackHandle = _callbacks[ jointIndex ].positionCallbackHandle;
                 auto callback = posCallbackHandle.getAndClearPositionCallback( reachedPosition );
 
-                if ( callback )
-                {
+                if ( callback ) {
                     callback( std::move( joint ) );
                 }
                 break;
@@ -209,11 +203,9 @@ private:
 
     void run( std::stop_token stoken )
     {
-        while ( true )
-        {
+        while ( true ) {
             auto message = _queue.pop( stoken );
-            if ( !message )
-            {
+            if ( !message ) {
                 return;
             }
             callCallbacks( *message );

@@ -6,23 +6,23 @@
 #include <thread>
 #include <type_traits>
 
+#include <atoms/concurrent_queue.hpp>
+
+#include <rofi_hal.hpp>
+
 #include "callbacks.hpp"
-#include "atoms/concurrent_queue.hpp"
-#include "rofi_hal.hpp"
 
 #include <connectorResp.pb.h>
 
 
 namespace rofi::hal
 {
-class ConnectorWorker
-{
+class ConnectorWorker {
     using Message = rofi::messages::ConnectorResp;
     using PacketCallback = std::function< void( Connector, uint16_t contentType, PBuf ) >;
     using EventCallback = std::function< void( Connector, ConnectorEvent ) >;
 
-    struct ConnectorCallbacks
-    {
+    struct ConnectorCallbacks {
         Callbacks< EventCallback > eventCallbacks;
         Callbacks< PacketCallback > packetCallbacks;
     };
@@ -36,8 +36,7 @@ public:
     ~ConnectorWorker()
     {
         // End thread before destructor ends
-        if ( _workerThread.joinable() )
-        {
+        if ( _workerThread.joinable() ) {
             _workerThread.request_stop();
             _workerThread.join();
         }
@@ -103,8 +102,7 @@ private:
     {
         using rofi::messages::ConnectorCmd;
 
-        switch ( eventRespType )
-        {
+        switch ( eventRespType ) {
             case ConnectorCmd::CONNECT:
                 return ConnectorEvent::Connected;
             case ConnectorCmd::DISCONNECT:
@@ -122,8 +120,7 @@ private:
         assert( packet.message().size() < INT_MAX );
         PBuf pbufPacket = PBuf::allocate( static_cast< int >( packet.message().size() ) );
         size_t pos = 0;
-        for ( auto it = pbufPacket.chunksBegin(); it != pbufPacket.chunksEnd(); ++it )
-        {
+        for ( auto it = pbufPacket.chunksBegin(); it != pbufPacket.chunksEnd(); ++it ) {
             std::copy_n( packet.message().begin() + pos, it->size(), it->mem() );
             pos += it->size();
         }
@@ -139,8 +136,7 @@ private:
         assert( static_cast< size_t >( connectorIndex ) < _callbacks.size() );
 
         auto connector = getConnector( connectorIndex );
-        switch ( message.resptype() )
-        {
+        switch ( message.resptype() ) {
             case rofi::messages::ConnectorCmd::PACKET:
             {
                 auto [ contentType, packet ] = getPacket( message.packet() );
@@ -165,11 +161,9 @@ private:
 
     void run( std::stop_token stoken )
     {
-        while ( true )
-        {
+        while ( true ) {
             auto message = _queue.pop( stoken );
-            if ( !message )
-            {
+            if ( !message ) {
                 return;
             }
             callCallbacks( *message );

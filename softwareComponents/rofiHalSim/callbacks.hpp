@@ -9,8 +9,7 @@
 namespace rofi::hal
 {
 template < typename Callback >
-class Callbacks
-{
+class Callbacks {
 public:
     Callbacks() = default;
 
@@ -42,8 +41,7 @@ public:
     void callCallbacks( Args &&... args ) const
     {
         std::lock_guard< std::mutex > lock( _mutex );
-        for ( const auto & callback : _callbacks )
-        {
+        for ( const auto & callback : _callbacks ) {
             assert( callback );
             callback( args... );
         }

@@ -8,11 +8,12 @@
 #include <type_traits>
 #include <variant>
 
+#include <atoms/concurrent_queue.hpp>
 #include <gazebo/transport/transport.hh>
 
-#include "atoms/concurrent_queue.hpp"
+#include <rofi_hal.hpp>
+
 #include "gazebo_node_handler.hpp"
-#include "rofi_hal.hpp"
 #include "subscriber_wrapper.hpp"
 
 #include <distributorReq.pb.h>
@@ -23,8 +24,7 @@
 
 namespace rofi::hal
 {
-class PublishWorker
-{
+class PublishWorker {
     using MessageVariant = std::variant< rofi::messages::RofiCmd, rofi::messages::DistributorReq >;
 
     PublishWorker()
@@ -42,8 +42,7 @@ public:
     ~PublishWorker()
     {
         // End thread before destructor ends
-        if ( _workerThread.joinable() )
-        {
+        if ( _workerThread.joinable() ) {
             _workerThread.request_stop();
             _workerThread.join();
         }
@@ -92,8 +91,7 @@ private:
     {
         {
             std::lock_guard< std::mutex > lock( _rofiTopicsMutex );
-            for ( auto & info : resp.rofiinfos() )
-            {
+            for ( auto & info : resp.rofiinfos() ) {
                 _rofiTopics.emplace( info.rofiid(), info.topic() );
             }
         }
@@ -105,8 +103,7 @@ private:
     {
         std::unique_lock< std::mutex > lock( _rofiTopicsMutex );
         auto it = _rofiTopics.find( rofiId );
-        if ( it != _rofiTopics.end() )
-        {
+        if ( it != _rofiTopics.end() ) {
             return it->second;
         }
 
@@ -144,8 +141,7 @@ private:
     void sendMessage( const std::string & topic, Message && msg )
     {
         auto & pub = _pubs[ topic ];
-        if ( !pub )
-        {
+        if ( !pub ) {
             pub = _node->Advertise< std::decay_t< Message > >( topic );
             assert( pub );
             pub->WaitForConnection();
@@ -161,11 +157,9 @@ private:
 
     void run( std::stop_token stoken )
     {
-        while ( true )
-        {
+        while ( true ) {
             auto newMessage = _queue.pop( stoken );
-            if ( !newMessage )
-            {
+            if ( !newMessage ) {
                 return;
             }
             auto & [ topic, msgVariant ] = *newMessage;

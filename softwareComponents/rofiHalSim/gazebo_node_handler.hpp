@@ -6,10 +6,8 @@
 
 namespace rofi::hal
 {
-class GazeboNodeHandler
-{
-    class GazeboClientHolder
-    {
+class GazeboNodeHandler {
+    class GazeboClientHolder {
         GazeboClientHolder()
         {
             gazebo::client::setup();
