@@ -12,17 +12,14 @@
 namespace rofi::hal
 {
 template < typename Message >
-class SubscriberWrapper
-{
+class SubscriberWrapper {
 public:
     SubscriberWrapper( const GazeboNodeHandler & node,
                        const std::string & topic,
                        std::function< void( const Message & ) > callback )
-            : _callback( std::move( callback ) )
-            , _node( node )
+            : _callback( std::move( callback ) ), _node( node )
     {
-        if ( !_callback )
-        {
+        if ( !_callback ) {
             throw std::runtime_error( "empty callback" );
         }
 
@@ -34,8 +31,7 @@ public:
 
     ~SubscriberWrapper()
     {
-        if ( _sub )
-        {
+        if ( _sub ) {
             _sub->Unsubscribe();
         }
     }

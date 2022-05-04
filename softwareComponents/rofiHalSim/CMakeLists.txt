@@ -6,7 +6,6 @@ add_library(rofi_hal_sim SHARED rofi_hal.cpp)
 target_link_libraries(rofi_hal_sim PRIVATE ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES} rofisimMessages atoms)
 target_link_libraries(rofi_hal_sim PUBLIC lwip++ rofi::hal::inc)
 target_include_directories(rofi_hal_sim SYSTEM PRIVATE ${GAZEBO_INCLUDE_DIRS})
-target_include_directories(rofi_hal_sim INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
 
 add_library(rofi::hal::sim ALIAS rofi_hal_sim)
 

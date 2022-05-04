@@ -8,16 +8,16 @@
 #include <thread>
 #include <type_traits>
 
-#include "atoms/concurrent_queue.hpp"
-#include "rofi_hal.hpp"
+#include <atoms/concurrent_queue.hpp>
+
+#include <rofi_hal.hpp>
 
 #include <rofiResp.pb.h>
 
 
 namespace rofi::hal
 {
-class WaitCallbacks
-{
+class WaitCallbacks {
 public:
     using Callback = std::function< void() >;
 
@@ -39,8 +39,7 @@ public:
         assert( callback );
         std::lock_guard< std::mutex > lock( _mutex );
         [[maybe_unused]] auto success = _callbacks.try_emplace( waitId, std::move( callback ) );
-        if ( !success.second )
-        {
+        if ( !success.second ) {
             std::cerr << "Already have a wait callback with given id (ID: " << waitId
                       << "). Ignoring...\n";
         }
@@ -50,8 +49,7 @@ public:
         assert( callback );
         std::lock_guard< std::mutex > lock( _mutex );
         [[maybe_unused]] auto success = _callbacks.try_emplace( waitId, callback );
-        if ( !success.second )
-        {
+        if ( !success.second ) {
             std::cerr << "Already have a wait callback with given id (ID: " << waitId
                       << "). Ignoring...\n";
         }
@@ -76,8 +74,7 @@ private:
 };
 
 
-class WaitWorker
-{
+class WaitWorker {
     using Message = rofi::messages::RofiResp;
     using WaitCallback = WaitCallbacks::Callback;
 
@@ -94,8 +91,7 @@ public:
     ~WaitWorker()
     {
         // End thread before destructor ends
-        if ( _workerThread.joinable() )
-        {
+        if ( _workerThread.joinable() ) {
             _workerThread.request_stop();
             _workerThread.join();
         }
@@ -123,12 +119,9 @@ private:
     void callCallback( int waitId )
     {
         auto callback = _callbacks.getAndEraseCallback( waitId );
-        if ( callback )
-        {
+        if ( callback ) {
             callback();
-        }
-        else
-        {
+        } else {
             std::cerr << "Got wait response without a callback waiting (ID: " << waitId
                       << "). Ignoring...\n";
         }
@@ -136,11 +129,9 @@ private:
 
     void run( std::stop_token stoken )
     {
-        while ( true )
-        {
+        while ( true ) {
             auto waitId = _waitIdsQueue.pop( stoken );
-            if ( !waitId )
-            {
+            if ( !waitId ) {
                 return;
             }
             callCallback( *waitId );
