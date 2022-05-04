@@ -7,10 +7,9 @@
 #include <type_traits>
 
 #include <atoms/concurrent_queue.hpp>
+#include <atoms/guarded.hpp>
 
 #include <rofi_hal.hpp>
-
-#include "callbacks.hpp"
 
 #include <connectorResp.pb.h>
 
@@ -23,8 +22,8 @@ class ConnectorWorker {
     using EventCallback = std::function< void( Connector, ConnectorEvent ) >;
 
     struct ConnectorCallbacks {
-        Callbacks< EventCallback > eventCallbacks;
-        Callbacks< PacketCallback > packetCallbacks;
+        atoms::Guarded< EventCallback > eventCallback;
+        atoms::Guarded< PacketCallback > packetCallback;
     };
 
 public:
@@ -45,10 +44,15 @@ public:
     void init( std::weak_ptr< RoFI::Implementation > rofi, int connectorCount )
     {
         assert( connectorCount >= 0 );
-        assert( rofi.lock() );
+        assert( !rofi.expired() );
+
+        assert( _rofi.expired() );
+        assert( _callbacks.empty() );
+        assert( !_workerThread.joinable() );
 
         _rofi = std::move( rofi );
-        _callbacks.resize( connectorCount );
+        // resize doesn't work because `std::mutex` isn't noexcept move constructible
+        _callbacks = std::vector< ConnectorCallbacks >( connectorCount );
 
         _workerThread = std::jthread(
                 [ this ]( std::stop_token stoken ) { this->run( std::move( stoken ) ); } );
@@ -64,18 +68,16 @@ public:
     {
         assert( connectorIndex >= 0 );
         assert( static_cast< size_t >( connectorIndex ) < _callbacks.size() );
-        assert( callback );
 
-        _callbacks[ connectorIndex ].eventCallbacks.registerCallback( std::move( callback ) );
+        _callbacks[ connectorIndex ].eventCallback.replace( std::move( callback ) );
     }
 
     void registerPacketCallback( int connectorIndex, PacketCallback && callback )
     {
         assert( connectorIndex >= 0 );
         assert( static_cast< size_t >( connectorIndex ) < _callbacks.size() );
-        assert( callback );
 
-        _callbacks[ connectorIndex ].packetCallbacks.registerCallback( std::move( callback ) );
+        _callbacks[ connectorIndex ].packetCallback.replace( std::move( callback ) );
     }
 
 private:
@@ -129,7 +131,7 @@ private:
         return { packet.contenttype(), pbufPacket };
     }
 
-    void callCallbacks( const Message & message )
+    void callCallback( const Message & message )
     {
         auto connectorIndex = message.connector();
         assert( connectorIndex >= 0 );
@@ -140,22 +142,31 @@ private:
             case rofi::messages::ConnectorCmd::PACKET:
             {
                 auto [ contentType, packet ] = getPacket( message.packet() );
-                _callbacks[ connectorIndex ].packetCallbacks.callCallbacks( std::move( connector ),
-                                                                            contentType,
-                                                                            std::move( packet ) );
-                break;
+                _callbacks[ connectorIndex ].packetCallback.visit( [ & ]( auto & callback ) {
+                    if ( callback ) {
+                        std::invoke( callback,
+                                     std::move( connector ),
+                                     contentType,
+                                     std::move( packet ) );
+                    }
+                } );
+                return;
             }
             case rofi::messages::ConnectorCmd::CONNECT:
             case rofi::messages::ConnectorCmd::DISCONNECT:
             case rofi::messages::ConnectorCmd::POWER_CHANGED:
             {
                 auto event = readEvent( message.resptype() );
-                _callbacks[ connectorIndex ].eventCallbacks.callCallbacks( std::move( connector ),
-                                                                           event );
-                break;
+                _callbacks[ connectorIndex ].eventCallback.visit( [ & ]( auto & callback ) {
+                    if ( callback ) {
+                        std::invoke( callback, std::move( connector ), event );
+                    }
+                } );
+                return;
             }
             default:
                 assert( false );
+                return;
         }
     }
 
@@ -166,7 +177,7 @@ private:
             if ( !message ) {
                 return;
             }
-            callCallbacks( *message );
+            callCallback( *message );
         }
     }
 

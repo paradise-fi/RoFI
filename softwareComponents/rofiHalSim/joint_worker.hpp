@@ -7,10 +7,9 @@
 #include <type_traits>
 
 #include <atoms/concurrent_queue.hpp>
+#include <atoms/guarded.hpp>
 
 #include <rofi_hal.hpp>
-
-#include "callbacks.hpp"
 
 #include <jointResp.pb.h>
 
@@ -23,25 +22,13 @@ public:
 
     static constexpr float positionPrecision = 1e-3f;
 
-    PositionCallbackHandle() = default;
-
-    PositionCallbackHandle( const PositionCallbackHandle & ) = delete;
-    PositionCallbackHandle & operator=( const PositionCallbackHandle & ) = delete;
-    PositionCallbackHandle & operator=( PositionCallbackHandle && ) = delete;
-
-    PositionCallbackHandle( PositionCallbackHandle && other )
-    {
-        std::lock_guard< std::mutex > lock( other._positionCallbackMutex );
-        _positionCallback = std::move( other._positionCallback );
-        _desiredPosition = std::move( other._desiredPosition );
-    }
-
 
     // Returns old callback
     PositionCallback setPositionCallback( float desiredPosition,
                                           PositionCallback && positionCallback )
     {
-        std::lock_guard< std::mutex > lock( _positionCallbackMutex );
+        assert( positionCallback );
+
         auto oldCallback = std::move( _positionCallback );
         _positionCallback = std::move( positionCallback );
         _desiredPosition = desiredPosition;
@@ -49,11 +36,17 @@ public:
         return oldCallback;
     }
 
+    // Returns old callback
+    PositionCallback clearPositionCallback()
+    {
+        auto oldCallback = std::move( _positionCallback );
+        _positionCallback = {};
+        return oldCallback;
+    }
+
     PositionCallback getAndClearPositionCallback( float reachedPosition )
     {
-        std::lock_guard< std::mutex > lock( _positionCallbackMutex );
-
-        if ( !checkPositionReached( _desiredPosition, reachedPosition ) ) {
+        if ( std::abs( reachedPosition - _desiredPosition ) > positionPrecision ) {
             return {};
         }
 
@@ -64,12 +57,6 @@ public:
     }
 
 private:
-    static bool checkPositionReached( float desiredPosition, float reachedPosition )
-    {
-        return std::abs( reachedPosition - desiredPosition ) <= positionPrecision;
-    }
-
-    mutable std::mutex _positionCallbackMutex;
     PositionCallback _positionCallback;
     float _desiredPosition = {};
 };
@@ -81,8 +68,8 @@ class JointWorker {
     using ErrorCallback = std::function< void( Joint, Joint::Error, const std::string & ) >;
 
     struct JointCallbacks {
-        Callbacks< ErrorCallback > errorCallbacks;
-        PositionCallbackHandle positionCallbackHandle;
+        atoms::Guarded< ErrorCallback > errorCallback;
+        atoms::Guarded< PositionCallbackHandle > positionCallbackHandle;
     };
 
 public:
@@ -103,10 +90,15 @@ public:
     void init( std::weak_ptr< RoFI::Implementation > rofi, int jointCount )
     {
         assert( jointCount >= 0 );
-        assert( rofi.lock() );
+        assert( !rofi.expired() );
+
+        assert( _rofi.expired() );
+        assert( _callbacks.empty() );
+        assert( !_workerThread.joinable() );
 
         _rofi = std::move( rofi );
-        _callbacks.resize( jointCount );
+        // resize doesn't work because `std::mutex` isn't noexcept move constructible
+        _callbacks = std::vector< JointCallbacks >( jointCount );
 
         _workerThread = std::jthread(
                 [ this ]( std::stop_token stoken ) { this->run( std::move( stoken ) ); } );
@@ -122,9 +114,8 @@ public:
     {
         assert( jointIndex >= 0 );
         assert( static_cast< size_t >( jointIndex ) < _callbacks.size() );
-        assert( callback );
 
-        _callbacks[ jointIndex ].errorCallbacks.registerCallback( std::move( callback ) );
+        _callbacks[ jointIndex ].errorCallback.replace( std::move( callback ) );
     }
 
     void registerPositionCallback( int jointIndex,
@@ -137,14 +128,30 @@ public:
 
         auto oldCallback = _callbacks[ jointIndex ]
                                    .positionCallbackHandle
-                                   .setPositionCallback( desiredPosition, std::move( callback ) );
+                                   ->setPositionCallback( desiredPosition, std::move( callback ) );
         if ( oldCallback ) {
-            std::cerr << "Aborting old set position callback\n";
-            // TODO abort old callback
+            onAbortPositionCallback( std::move( oldCallback ) );
+        }
+    }
+
+    void abortPositionCallback( int jointIndex )
+    {
+        assert( jointIndex >= 0 );
+        assert( static_cast< size_t >( jointIndex ) < _callbacks.size() );
+
+        auto oldCallback = _callbacks[ jointIndex ].positionCallbackHandle->clearPositionCallback();
+        if ( oldCallback ) {
+            onAbortPositionCallback( std::move( oldCallback ) );
         }
     }
 
 private:
+    static void onAbortPositionCallback( [[maybe_unused]] PositionCallback callback )
+    {
+        std::cerr << "Aborting old set position callback\n";
+        // TODO abort old callback
+    }
+
     std::shared_ptr< RoFI::Implementation > getRoFI() const
     {
         auto rofi = _rofi.lock();
@@ -170,7 +177,7 @@ private:
         throw std::runtime_error( "readError not implemented" );
     }
 
-    void callCallbacks( const Message & message )
+    void callCallback( const Message & message )
     {
         auto jointIndex = message.joint();
         assert( jointIndex >= 0 );
@@ -181,23 +188,30 @@ private:
             case rofi::messages::JointCmd::ERROR:
             {
                 auto [ errorType, errorStr ] = readError( message );
-                auto & errCallbacks = _callbacks[ jointIndex ].errorCallbacks;
-                errCallbacks.callCallbacks( std::move( joint ), errorType, std::move( errorStr ) );
-                break;
+                _callbacks[ jointIndex ].errorCallback.visit( [ & ]( auto & callback ) {
+                    if ( callback ) {
+                        std::invoke( callback,
+                                     std::move( joint ),
+                                     errorType,
+                                     std::move( errorStr ) );
+                    }
+                } );
+                return;
             }
             case rofi::messages::JointCmd::SET_POS_WITH_SPEED:
             {
                 float reachedPosition = message.value();
                 auto & posCallbackHandle = _callbacks[ jointIndex ].positionCallbackHandle;
-                auto callback = posCallbackHandle.getAndClearPositionCallback( reachedPosition );
+                auto callback = posCallbackHandle->getAndClearPositionCallback( reachedPosition );
 
                 if ( callback ) {
                     callback( std::move( joint ) );
                 }
-                break;
+                return;
             }
             default:
                 assert( false );
+                return;
         }
     }
 
@@ -208,7 +222,7 @@ private:
             if ( !message ) {
                 return;
             }
-            callCallbacks( *message );
+            callCallback( *message );
         }
     }
 
