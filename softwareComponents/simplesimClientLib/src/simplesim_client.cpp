@@ -371,43 +371,41 @@ void SimplesimClient::itemSelected( QTreeWidgetItem * selected )
         colorModule( _lastModule, _lastColor );
     }
 
-    int treeId;
-    int module;
+    int treeIdx;
+    rofi::configuration::ModuleId moduleId;
     std::array< double, 3 > white = { { 1.0, 1.0, 1.0 } };
 
     if ( !selected->parent() ) {
-        treeId = _ui->treeWidget->indexOfTopLevelItem( selected );
-        module = _ids[ treeId ];
-        _moduleRenderInfos[ module ].componentActors.front()->GetProperty()->GetColor( _lastColor.data() );
-        colorModule( module, white );
+        treeIdx = _ui->treeWidget->indexOfTopLevelItem( selected );
+        moduleId = _treeIdMapping[ treeIdx ];
+        _moduleRenderInfos[ moduleId ].componentActors.front()->GetProperty()->GetColor( _lastColor.data() );
+        colorModule( moduleId, white );
     } else if ( selected->parent() && !selected->parent()->parent() ) {
-        treeId = _ui->treeWidget->indexOfTopLevelItem( selected->parent() );
-        module = _ids[ treeId ];
-        _moduleRenderInfos[ module ].componentActors.front()->GetProperty()->GetColor(
-                _lastColor.data() );
-        colorModule( module, white );
+        treeIdx = _ui->treeWidget->indexOfTopLevelItem( selected->parent() );
+        moduleId = _treeIdMapping[ treeIdx ];
+        _moduleRenderInfos[ moduleId ].componentActors.front()->GetProperty()->GetColor( _lastColor.data() );
+        colorModule( moduleId, white );
     } else {
-        treeId = _ui->treeWidget->indexOfTopLevelItem( selected->parent()->parent() );
-        module = _ids[ treeId ];
-        int component = _ui->treeWidget->topLevelItem( treeId )->child( 0 )->indexOfChild(
-                selected );
-        _moduleRenderInfos[ module ].componentActors[ component ]->GetProperty()->GetColor(
-                _lastColor.data() );
-        colorModule( module, white, component );
+        treeIdx = _ui->treeWidget->indexOfTopLevelItem( selected->parent()->parent() );
+        moduleId = _treeIdMapping[ treeIdx ];
+        int component = _ui->treeWidget->topLevelItem( treeIdx )->child( 0 )->indexOfChild( selected );
+        _moduleRenderInfos[ moduleId ].componentActors[ component ]->GetProperty()->GetColor( _lastColor.data() );
+        colorModule( moduleId, white, component );
     }
-    _lastModule = module;
+    _lastModule = moduleId;
 }
 
 
-void SimplesimClient::setColor( int color )
+void SimplesimClient::setModuleColors( int color )
 {
     const auto & toColor = _changeColorWindow->toColor();
     for ( int i = 0; i < static_cast< int >( toColor.size() ); ++i ) {
         if ( toColor[ i ] ) {
-            if ( _lastModule == i ) {
+            if ( _lastModule == _treeIdMapping[ i ] ) {
                 _lastColor = getModuleColor( color );
+                itemSelected( _ui->treeWidget->currentItem() );
             } else {
-                colorModule( _ids[ i ], getModuleColor( color ) );
+                colorModule( _treeIdMapping[ i ], getModuleColor( color ) );
             }
         }
     }
@@ -421,7 +419,7 @@ void SimplesimClient::changeColorWindow()
         connect( _changeColorWindow.get(),
                  SIGNAL( pickedColor( int ) ),
                  this,
-                 SLOT( setColor( int ) ) );
+                 SLOT( setModuleColors( int ) ) );
     }
 
     _changeColorWindow->show();
@@ -459,7 +457,7 @@ void SimplesimClient::initInfoTree( const rofi::configuration::Rofibot & rofibot
 {
     int i = 0;
     for ( const auto & moduleInfo : rofibot.modules() ) {
-        _ids.push_back( moduleInfo.module->getId() );
+        _treeIdMapping.push_back( moduleInfo.module->getId() );
         std::string str = "Module " + std::to_string( moduleInfo.module->getId() );
         QTreeWidgetItem * module = new QTreeWidgetItem( static_cast< QTreeWidget * >( nullptr ),
                                                         { QString( str.c_str() ) } );

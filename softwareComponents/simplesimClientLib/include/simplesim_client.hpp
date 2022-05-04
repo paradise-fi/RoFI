@@ -113,7 +113,7 @@ protected:
                       std::array< double, 3 > color,
                       int component = -1 );
 public slots:
-    void setColor( int color );
+    void setModuleColors( int color );
 
 private slots:
 
@@ -211,7 +211,7 @@ private:
     int _lastModule = -1;
     std::array< double, 3 > _lastColor;
 
-    std::vector< rofi::configuration::ModuleId > _ids;
+    std::vector< rofi::configuration::ModuleId > _treeIdMapping;
     std::map< rofi::configuration::ModuleId, detail::ModuleRenderInfo > _moduleRenderInfos;
 
     OnSettingsCmdCallback _onSettingsCmdCallback;
