@@ -320,9 +320,6 @@ public:
 
     void onConnectorEvent( std::function< void( Connector, ConnectorEvent ) > callback ) override
     {
-        if ( !callback ) {
-            throw std::invalid_argument( "empty callback" );
-        }
         auto rofi = getRoFI();
         rofi->connectorWorker.registerEventCallback( _connectorNumber, std::move( callback ) );
     }
@@ -330,9 +327,6 @@ public:
     void onPacket(
             std::function< void( Connector, uint16_t contentType, PBuf ) > callback ) override
     {
-        if ( !callback ) {
-            throw std::invalid_argument( "empty callback" );
-        }
         auto rofi = getRoFI();
         rofi->connectorWorker.registerPacketCallback( _connectorNumber, std::move( callback ) );
     }
@@ -491,6 +485,8 @@ public:
     {
         auto rofi = getRoFI();
 
+        rofi->jointWorker.abortPositionCallback( jointNumber );
+
         auto msg = getCmdMsg( msgs::JointCmd::SET_VELOCITY );
         msg.mutable_jointcmd()->mutable_setvelocity()->set_velocity( velocity );
         rofi->publish( msg );
@@ -512,6 +508,8 @@ public:
 
         if ( callback ) {
             rofi->jointWorker.registerPositionCallback( jointNumber, pos, std::move( callback ) );
+        } else {
+            rofi->jointWorker.abortPositionCallback( jointNumber );
         }
 
         auto msg = getCmdMsg( msgs::JointCmd::SET_POS_WITH_SPEED );
@@ -534,6 +532,8 @@ public:
     {
         auto rofi = getRoFI();
 
+        rofi->jointWorker.abortPositionCallback( jointNumber );
+
         auto msg = getCmdMsg( msgs::JointCmd::SET_TORQUE );
         msg.mutable_jointcmd()->mutable_settorque()->set_torque( torque );
         rofi->publish( msg );
@@ -542,10 +542,6 @@ public:
     void onError( std::function< void( Joint, Joint::Error, const std::string & msg ) > callback )
             override
     {
-        if ( !callback ) {
-            throw std::invalid_argument( "empty callback" );
-        }
-
         auto rofi = getRoFI();
         rofi->jointWorker.registerErrorCallback( jointNumber, std::move( callback ) );
     }
