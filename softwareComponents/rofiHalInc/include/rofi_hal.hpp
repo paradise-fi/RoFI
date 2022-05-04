@@ -117,6 +117,9 @@ public:
     /**
      * \brief Change the joint's control mode to position and move to position.
      *
+     * Calling any joint control method  (`Joint::setPosition`,
+     * `Joint::setVelocity` or `Joint::setTorque`) before the position is
+     * reached will result in the \p callback never beeing called.
      * \param pos position setpoint in rad
      * \param velocity velocity limit in rad / s, required to be positive and non-zero
      * \param callback callback to be called once the position is reached
@@ -143,11 +146,13 @@ public:
     /**
      * \brief Set error handling callback.
      *
+     * Calling this method again (on the same `Joint`) will overwrite
+     * the previous `callback`.
+     * You can call this method with empty function to remove the `callback`.
      * \param callback callback to be called on error
      */
     void onError( std::function< void( Joint, Error, const std::string& ) > callback )
     {
-        assert( callback );
         _impl->onError( std::move( callback ) );
     }
 
@@ -281,11 +286,13 @@ public:
     /**
      * \brief Register callback for connector events.
      *
+     * Calling this method again (on the same `Connector`) will overwrite
+     * the previous `callback`.
+     * You can call this method with empty function to remove the `callback`.
      * \param callback callback to be called on connector events
      */
     void onConnectorEvent( std::function< void( Connector, ConnectorEvent ) > callback )
     {
-        assert( callback );
         _impl->onConnectorEvent( std::move( callback ) );
     }
 
@@ -294,11 +301,13 @@ public:
      *
      * The callback takes connector which received the packet, contentType and the packet.
      *
+     * Calling this method again (on the same `Connector`) will overwrite
+     * the previous `callback`.
+     * You can call this method with empty function to remove the `callback`.
      * \param callback callback to be called on a packet
      */
     void onPacket( std::function< void( Connector, uint16_t, PBuf ) > callback )
     {
-        assert( callback );
         _impl->onPacket( std::move( callback ) );
     }
 
@@ -423,8 +432,9 @@ public:
     /**
      * \brief Call callback after given delay.
      *
+     * You can assume that the callback will always be called exactly once.
      * \param ms delay in milliseconds
-     * \param callback callback to be called after the delay
+     * \param callback non-empty callback to be called after the delay
      */
     static void wait( int ms, std::function< void() > callback );
 
