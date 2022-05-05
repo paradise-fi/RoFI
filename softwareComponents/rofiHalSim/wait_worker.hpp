@@ -21,55 +21,28 @@ class WaitCallbacks {
 public:
     using Callback = std::function< void() >;
 
-    WaitCallbacks() = default;
-
-    WaitCallbacks( const WaitCallbacks & ) = delete;
-    WaitCallbacks & operator=( const WaitCallbacks & ) = delete;
-    WaitCallbacks & operator=( WaitCallbacks && ) = delete;
-
-    WaitCallbacks( WaitCallbacks && other )
+    /**
+     * \brief Stores a callback under given wait id
+     *
+     * \param waitId A unique identifier of the expected wait response
+     * \param callback Callback to store
+     *
+     * \retval `true` when the insertion was successful
+     * \retval `false` when there exists a callback with given \p waitId
+     */
+    bool registerWaitCallback( int waitId, Callback && callback )
     {
-        std::lock_guard< std::mutex > lock( other._mutex );
-        _callbacks = std::move( other._callbacks );
-    }
-
-
-    void registerCallback( int waitId, Callback && callback )
-    {
-        assert( callback );
-        std::lock_guard< std::mutex > lock( _mutex );
-        [[maybe_unused]] auto success = _callbacks.try_emplace( waitId, std::move( callback ) );
-        if ( !success.second ) {
-            std::cerr << "Already have a wait callback with given id (ID: " << waitId
-                      << "). Ignoring...\n";
-        }
-    }
-    void registerCallback( int waitId, const Callback & callback )
-    {
-        assert( callback );
-        std::lock_guard< std::mutex > lock( _mutex );
-        [[maybe_unused]] auto success = _callbacks.try_emplace( waitId, callback );
-        if ( !success.second ) {
-            std::cerr << "Already have a wait callback with given id (ID: " << waitId
-                      << "). Ignoring...\n";
-        }
+        return _callbacks.try_emplace( waitId, std::move( callback ) ).second;
     }
 
     Callback getAndEraseCallback( int waitId )
     {
-        Callback oldCallback;
-
-        {
-            std::lock_guard< std::mutex > lock( _mutex );
-            oldCallback = std::move( _callbacks[ waitId ] );
-            _callbacks.erase( waitId );
-        }
-
+        auto oldCallback = std::move( _callbacks[ waitId ] );
+        _callbacks.erase( waitId );
         return oldCallback;
     }
 
 private:
-    mutable std::mutex _mutex;
     std::map< int, Callback > _callbacks;
 };
 
@@ -110,7 +83,9 @@ public:
 
         auto waitId = _nextWaitId.fetch_add( 1 );
 
-        _callbacks.registerCallback( waitId, std::move( callback ) );
+        [[maybe_unused]] auto success = _callbacks->registerWaitCallback( waitId,
+                                                                          std::move( callback ) );
+        assert( success );
 
         return waitId;
     }
@@ -118,7 +93,7 @@ public:
 private:
     void callCallback( int waitId )
     {
-        auto callback = _callbacks.getAndEraseCallback( waitId );
+        auto callback = _callbacks->getAndEraseCallback( waitId );
         if ( callback ) {
             callback();
         } else {
@@ -139,7 +114,7 @@ private:
     }
 
 
-    WaitCallbacks _callbacks;
+    atoms::Guarded< WaitCallbacks > _callbacks;
     atoms::ConcurrentQueue< int > _waitIdsQueue;
     std::atomic_int _nextWaitId = 1;
 
