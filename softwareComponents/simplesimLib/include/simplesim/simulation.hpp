@@ -22,15 +22,16 @@ namespace rofi::simplesim
 {
 /** Class that handles and encapsulates the simulation
  */
-class Simulation
-{
+class Simulation {
 public:
     using RofiResp = rofi::messages::RofiResp;
 
 
     explicit Simulation( std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration,
-                         PacketFilter::FilterFunction packetFilter )
-            : _moduleStates( std::make_shared< ModuleStates >( std::move( rofibotConfiguration ) ) )
+                         PacketFilter::FilterFunction packetFilter,
+                         bool verbose )
+            : _moduleStates(
+                    std::make_shared< ModuleStates >( std::move( rofibotConfiguration ), verbose ) )
             , _commandHandler( std::make_shared< CommandHandler >( this->_moduleStates,
                                                                    std::move( packetFilter ) ) )
     {
@@ -46,14 +47,15 @@ public:
         assert( _commandHandler );
         assert( _moduleStates );
 
-        auto responses = processRofiCommands( _commandHandler->extractCommandCallbacks(), *_moduleStates );
+        auto responses = processRofiCommands( _commandHandler->extractCommandCallbacks(),
+                                              *_moduleStates );
         auto new_configuration =
                 _moduleStates->updateToNextIteration( duration, [ &responses ]( RofiResp resp ) {
                     responses.push_back( std::move( resp ) );
                 } );
         assert( new_configuration );
 
-        _commandHandler->advanceTime( duration, [ &responses ]( auto resp ){
+        _commandHandler->advanceTime( duration, [ &responses ]( auto resp ) {
             responses.push_back( std::move( resp ) );
         } );
 
@@ -74,9 +76,9 @@ public:
 
 private:
     static std::vector< RofiResp > processRofiCommands(
-        std::span< const std::pair< CommandHandler::DelayedCmdCallback,
-                                    CommandHandler::RofiCmdPtr > > commandCallbacks,
-        ModuleStates & moduleStates )
+            std::span< const std::pair< CommandHandler::DelayedCmdCallback,
+                                        CommandHandler::RofiCmdPtr > > commandCallbacks,
+            ModuleStates & moduleStates )
     {
         std::vector< RofiResp > responses;
         for ( const auto & [ callback, rofiCmdPtr ] : commandCallbacks ) {

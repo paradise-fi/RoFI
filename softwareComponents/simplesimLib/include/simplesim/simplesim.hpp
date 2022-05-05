@@ -87,9 +87,11 @@ public:
             std::function< void( std::shared_ptr< const rofi::configuration::Rofibot > ) >;
 
     Simplesim( std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration,
-               PacketFilter::FilterFunction packetFilter = {} )
+               PacketFilter::FilterFunction packetFilter,
+               bool verbose )
             : _simulation( std::make_shared< Simulation >( std::move( rofibotConfiguration ),
-                                                           std::move( packetFilter ) ) )
+                                                           std::move( packetFilter ),
+                                                           verbose ) )
             , _communication( std::make_shared< Communication >( _simulation->commandHandler() ) )
     {
         assert( _simulation );

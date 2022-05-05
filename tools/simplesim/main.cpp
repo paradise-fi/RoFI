@@ -74,6 +74,9 @@ int main( int argc, char * argv[] )
                                                 .valueDesc( "PYTHON_FILE" )
                                                 .defaultDesc( {} )
                                                 .desc( "Python packet filter file" );
+
+    auto & verbose = cli.opt< bool >( "v verbose" ).desc( "Run simulator in verbose mode" );
+
     auto & qtArgs = cli.optVec< std::string >( "[QT_ARGS]" )
                             .desc( "Optional arguments to pass to the Qt application" );
 
@@ -106,7 +109,8 @@ int main( int argc, char * argv[] )
             packetFilter
                     ? [ &packetFilter ](
                               auto packet ) { return packetFilter->filter( std::move( packet ) ); }
-                    : rofi::simplesim::PacketFilter::FilterFunction{} );
+                    : rofi::simplesim::PacketFilter::FilterFunction{},
+            *verbose );
 
     // Setup client
     auto client = rofi::simplesim::SimplesimClient();

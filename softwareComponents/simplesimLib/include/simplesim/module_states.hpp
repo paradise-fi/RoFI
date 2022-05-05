@@ -244,15 +244,15 @@ public:
     using RofibotConfigurationPtr = std::shared_ptr< const rofi::configuration::Rofibot >;
 
 
-    explicit ModuleStates( RofibotConfigurationPtr rofibotConfiguration )
+    explicit ModuleStates( RofibotConfigurationPtr rofibotConfiguration, bool verbose )
             : _physicalModulesConfiguration(
                     rofibotConfiguration
                             ? std::move( rofibotConfiguration )
                             : std::make_shared< const rofi::configuration::Rofibot >() )
             , _moduleInnerStates(
-                      this->_physicalModulesConfiguration.visit( []( auto & configPtr ) {
+                      this->_physicalModulesConfiguration.visit( [ verbose ]( auto & configPtr ) {
                           assert( configPtr );
-                          return initInnerStatesFromConfiguration( *configPtr );
+                          return initInnerStatesFromConfiguration( *configPtr, verbose );
                       } ) )
     {
         assert( _physicalModulesConfiguration.visit( []( const auto & configuration ) {
@@ -350,8 +350,8 @@ private:
             -> std::pair< RofibotConfigurationPtr, detail::ConfigurationUpdateEvents >;
 
     static auto initInnerStatesFromConfiguration(
-            const rofi::configuration::Rofibot & rofibotConfiguration )
-            -> std::map< ModuleId, ModuleInnerState >;
+            const rofi::configuration::Rofibot & rofibotConfiguration,
+            bool verbose ) -> std::map< ModuleId, ModuleInnerState >;
 
 private:
     atoms::Guarded< RofibotConfigurationPtr > _physicalModulesConfiguration;
