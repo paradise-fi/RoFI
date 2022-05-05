@@ -3,6 +3,7 @@
 #include "rofi_hal.hpp"
 #include "routing_table.hpp"
 
+#include <atoms/unreachable.hpp>
 #include <lwip/mld6.h>
 #include <lwip/raw.h>
 #include <lwip/ip6_addr.h>
@@ -132,7 +133,7 @@ private:
     }
 
     static err_t linkOutput( struct netif*, struct pbuf* ) {
-        assert( false && "Link output should not be directly used" );
+        ROFI_UNREACHABLE( "Link output should not be directly used" );
         return ERR_OK;
     }
 
@@ -195,7 +196,7 @@ private:
     void create_rrp_listener() {
         pcb = raw_new_ip6( IP6_NEXTH_ICMP6 );
         if ( pcb == nullptr )
-            assert( false && "raw_new_ip6 failed, pcb is null!");
+            ROFI_UNREACHABLE( "raw_new_ip6 failed, pcb is null!" );
         raw_bind_netif( pcb, &netif );
         raw_recv( pcb, onRRP, this );
     }

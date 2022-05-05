@@ -1,5 +1,7 @@
 #include <configuration/universalModule.hpp>
 
+#include <atoms/unreachable.hpp>
+
 namespace rofi::configuration {
 
 using namespace rofi::configuration::matrices;
@@ -153,7 +155,7 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
         if ( cStr == "B+X" ) { return 4; }
         if ( cStr == "B-Z" ) { return 5; }
 
-        assert( false && "translateComponent got invalid input" );
+        ROFI_UNREACHABLE( "translateComponent got invalid input" );
     }
 
     std::string UniversalModule::translateComponent( int c ) {
@@ -171,7 +173,7 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
             case 5:
                 return "B-Z";
         }
-        assert( false && "translateComponent got invalid input" );
+        ROFI_UNREACHABLE( "translateComponent got invalid input" );
     }
 
 

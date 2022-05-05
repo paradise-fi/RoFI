@@ -8,6 +8,7 @@
 
 #include <atoms/concurrent_queue.hpp>
 #include <atoms/guarded.hpp>
+#include <atoms/unreachable.hpp>
 
 #include <rofi_hal.hpp>
 
@@ -111,10 +112,8 @@ private:
                 return ConnectorEvent::Disconnected;
             case ConnectorCmd::POWER_CHANGED:
                 return ConnectorEvent::PowerChanged;
-            default:
-                assert( false );
-                throw std::invalid_argument( "not an event response" );
         }
+        ROFI_UNREACHABLE( "Unknown connector event type" );
     }
 
     static std::pair< uint16_t, PBuf > getPacket( const rofi::messages::Packet & packet )
@@ -164,10 +163,8 @@ private:
                 } );
                 return;
             }
-            default:
-                assert( false );
-                return;
         }
+        ROFI_UNREACHABLE( "Unknown connector response type" );
     }
 
     void run( std::stop_token stoken )

@@ -1,5 +1,7 @@
 #include <configuration/rofibot.hpp>
 
+#include <atoms/unreachable.hpp>
+
 namespace rofi::configuration {
 
 using namespace rofi::configuration::matrices;
@@ -16,8 +18,7 @@ double roficom::orientationToAngle( roficom::Orientation o ) {
         case Orientation::West:
             return M_PI_2;
     }
-    assert( false && "Orientation was modified" );
-    return 0; // never reached
+    ROFI_UNREACHABLE( "Orientation was modified" );
 }
 
 Matrix roficom::orientationToTransform( roficom::Orientation orientation ) {
@@ -37,9 +38,8 @@ std::string roficom::orientationToString( Orientation o ) {
             return "South";
         case Orientation::West:
             return "West";
-        default:
-            assert( false && "Invalid orientation" );
     }
+    ROFI_UNREACHABLE( "Invalid orientation" );
 }
 
 roficom::Orientation roficom::stringToOrientation( const std::string& str ) {
@@ -52,7 +52,7 @@ roficom::Orientation roficom::stringToOrientation( const std::string& str ) {
     else if ( str == "W" || str == "West" )
         return Orientation::West;
     else
-        assert( false && "String does not represent the orientation" );
+        ROFI_UNREACHABLE( "String does not represent the orientation" );
 }
 
 int Component::getIndexInParent() const {

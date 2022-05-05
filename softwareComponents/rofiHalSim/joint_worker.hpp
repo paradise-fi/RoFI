@@ -173,8 +173,7 @@ private:
     static std::pair< Joint::Error, std::string > readError(
             const rofi::messages::JointResp & /* jointResp */ )
     {
-        assert( false && "not implemented" );
-        throw std::runtime_error( "readError not implemented" );
+        ROFI_UNREACHABLE( "readError not implemented" );
     }
 
     void callCallback( const Message & message )
