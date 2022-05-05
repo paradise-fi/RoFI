@@ -304,7 +304,8 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
 }
 
 std::map< ModuleId, ModuleInnerState > ModuleStates::initInnerStatesFromConfiguration(
-        const Rofibot & rofibotConfiguration )
+        const Rofibot & rofibotConfiguration,
+        bool verbose )
 {
     auto innerStates = std::map< ModuleId, ModuleInnerState >();
     for ( const auto & moduleInfo : rofibotConfiguration.modules() ) {
@@ -317,11 +318,11 @@ std::map< ModuleId, ModuleInnerState > ModuleStates::initInnerStatesFromConfigur
         auto moduleInnerState = ModuleInnerState( static_cast< int >( joints ),
                                                   static_cast< int >( connectors ) );
 
-#ifdef VERBOSE
-        std::cerr << "Module id: " << _module.getId()
-                  << ", joints: " << moduleInnerState.joints().size()
-                  << ", connectors: " << moduleInnerState.connectors().size() << std::endl;
-#endif
+        if ( verbose ) {
+            std::cerr << "Module id: " << _module.getId()
+                      << ", joints: " << moduleInnerState.joints().size()
+                      << ", connectors: " << moduleInnerState.connectors().size() << std::endl;
+        }
 
         auto [ it, success ] = innerStates.emplace( _module.getId(),
                                                     std::move( moduleInnerState ) );

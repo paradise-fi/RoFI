@@ -119,6 +119,8 @@ int main( int argc, char * argv[] )
                                                 .defaultDesc( {} )
                                                 .desc( "Python packet filter file" );
 
+    auto & verbose = cli.opt< bool >( "v verbose" ).desc( "Run simulator in verbose mode" );
+
     if ( !cli.parse( argc, argv ) ) {
         return cli.printError( std::cerr );
     }
@@ -141,7 +143,8 @@ int main( int argc, char * argv[] )
             packetFilter
                     ? [ &packetFilter ](
                               auto packet ) { return packetFilter->filter( std::move( packet ) ); }
-                    : rofi::simplesim::PacketFilter::FilterFunction{} );
+                    : rofi::simplesim::PacketFilter::FilterFunction{},
+            *verbose );
 
     // Listen for settings cmds
     auto settingsCmdSub = SettingsCmdSubscriber( server );
