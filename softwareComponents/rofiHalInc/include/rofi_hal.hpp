@@ -324,12 +324,18 @@ public:
     /**
      * \brief Connect power of mating side to a power line.
      */
-    void connectPower( ConnectorLine line );
+    void connectPower( ConnectorLine line )
+    {
+        _impl->connectPower( line );
+    }
 
     /**
      * \brief Disconnect power of mating side from a power line.
      */
-    void disconnectPower( ConnectorLine line );
+    void disconnectPower( ConnectorLine line )
+    {
+        _impl->disconnectPower( line );
+    }
 
     Connector( std::shared_ptr< Implementation > impl ) : _impl( std::move( impl ) ) {}
 
