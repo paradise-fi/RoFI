@@ -14,6 +14,7 @@
 #include <rofi_hal.hpp>
 
 #include "gazebo_node_handler.hpp"
+#include "message_logger.hpp"
 #include "subscriber_wrapper.hpp"
 
 #include <distributorReq.pb.h>
@@ -148,9 +149,7 @@ private:
         }
         assert( pub );
 
-#ifdef VERBOSE
-        std::cerr << "Sending message:\n" << msg.DebugString() << std::endl;
-#endif
+        logMessage( topic, msg, true );
 
         pub->Publish( std::forward< Message >( msg ), true );
     }
@@ -167,7 +166,6 @@ private:
                         std::move( msgVariant ) );
         }
     }
-
 
     atoms::ConcurrentQueue< std::pair< std::string, MessageVariant > > _queue;
 
