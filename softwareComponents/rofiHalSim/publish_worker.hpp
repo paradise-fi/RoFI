@@ -163,8 +163,8 @@ private:
                 return;
             }
             auto & [ topic, msgVariant ] = *newMessage;
-            std::visit( [ this, &topic = topic ]( auto msg ) { sendMessage( topic, msg ); },
-                        msgVariant );
+            std::visit( [ this, &topic ]( auto msg ) { sendMessage( topic, std::move( msg ) ); },
+                        std::move( msgVariant ) );
         }
     }
 
