@@ -7,6 +7,7 @@
 #include <gazebo/transport/transport.hh>
 
 #include "gazebo_node_handler.hpp"
+#include "message_logger.hpp"
 
 
 namespace rofi::hal
@@ -15,15 +16,15 @@ template < typename Message >
 class SubscriberWrapper {
 public:
     SubscriberWrapper( const GazeboNodeHandler & node,
-                       const std::string & topic,
+                       std::string topic,
                        std::function< void( const Message & ) > callback )
-            : _callback( std::move( callback ) ), _node( node )
+            : _callback( std::move( callback ) ), _node( node ), _topic( std::move( topic ) )
     {
         if ( !_callback ) {
             throw std::runtime_error( "empty callback" );
         }
 
-        _sub = _node->Subscribe( topic, &SubscriberWrapper::onMsg, this );
+        _sub = _node->Subscribe( _topic, &SubscriberWrapper::onMsg, this );
     }
 
     SubscriberWrapper( const SubscriberWrapper & ) = delete;
@@ -42,17 +43,17 @@ private:
         assert( _callback );
         assert( msg );
 
-#ifdef VERBOSE
-        std::cerr << "Got message:\n" << msg->DebugString() << std::endl;
-#endif
-
         auto localMsg = msg;
         assert( localMsg );
+
+        logMessage( _topic, *localMsg, false );
+
         _callback( *localMsg );
     }
 
     const std::function< void( const Message & ) > _callback;
     GazeboNodeHandler _node;
+    std::string _topic;
     gazebo::transport::SubscriberPtr _sub;
 };
 
