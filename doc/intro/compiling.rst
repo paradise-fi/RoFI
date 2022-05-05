@@ -32,7 +32,7 @@ So whenever you want to work with the project, invoke in your shell:
     $ source setup.sh Release
 
 This will setup your current shell for RoFI. If you want to change the
-configuration, simply invoke ``source setup.sh -f Debug`` to e.g., switch to a
+configuration, simply invoke ``source setup.sh Debug`` to e.g., switch to a
 debug configuration. Or invoke ``teardown`` to return your shell to original
 state.
 

@@ -67,10 +67,9 @@ PYBIND11_MODULE( pyRofiHal, m ) {
         .def( "disconnect", &Connector::disconnect )
         .def( "onConnectorEvent", &Connector::onConnectorEvent )
         .def( "onPacket", &Connector::onPacket )
-        .def( "send", &Connector::send );
-        // TODO: This causes undefined symbol at runtime
-        // .def( "connectPower", &Connector::connectPower )
-        // .def( "disconnectPower", &Connector::disconnectPower );
+        .def( "send", &Connector::send )
+        .def( "connectPower", &Connector::connectPower )
+        .def( "disconnectPower", &Connector::disconnectPower );
 
     py::class_< RoFI > rofiC( m, "RoFI" );
     rofiC
