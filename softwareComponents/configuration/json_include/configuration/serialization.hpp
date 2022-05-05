@@ -1,4 +1,6 @@
 #pragma once
+
+#include <atoms/unreachable.hpp>
 #include <configuration/rofibot.hpp>
 #include <configuration/universalModule.hpp>
 #include <configuration/pad.hpp>
@@ -16,9 +18,8 @@ namespace rofi::configuration::serialization {
                 return "UM body";
             case ComponentType::UmShoe:
                 return "UM shoe";
-            default:
-                assert( false && "Unknown component type" );
         }
+        ROFI_UNREACHABLE( "Unknown component type" );
     }
 
     inline ComponentType stringToComponentType( const std::string& str ) {
@@ -29,7 +30,7 @@ namespace rofi::configuration::serialization {
         else if ( str == "UM shoe" )
             return ComponentType::UmShoe;
         else
-            assert( false && "String does not represent a component type" );
+            ROFI_UNREACHABLE( "String does not represent a component type" );
     }
 
     /* partial specialization on functions is a problem, so this hack uses partial specialization
@@ -263,7 +264,7 @@ namespace rofi::configuration::serialization {
                     processAttributes( j[ "components" ][ i ], cb, joints.back(), i );
                     i++;
                 } else {
-                    assert( false && "Unknown module was given an unknown ComponentJoint" );
+                    ROFI_UNREACHABLE( "Unknown module was given an unknown ComponentJoint" );
                 }
             }
 
@@ -295,7 +296,7 @@ namespace rofi::configuration::serialization {
                     break;
                 case ModuleType::Cube:
                 default:
-                    assert( false && "Unknown type of a module" );
+                    ROFI_UNREACHABLE( "Unknown type of a module" );
             }
 
             res[ "modules" ].push_back( j );
@@ -347,7 +348,7 @@ namespace rofi::configuration::serialization {
             else if ( jm[ id ][ "type" ] == "unknown" )
                 bot.insert( moduleFromJSON< UnknownModule >( jm, attrCb ) );
             else
-                assert( false && "Unknown type of a module" );
+                ROFI_UNREACHABLE( "Unknown type of a module" );
         }
 
         for ( const auto& jj : j[ "moduleJoints" ] ) {
@@ -396,7 +397,7 @@ namespace rofi::configuration::serialization {
                 bot.setSpaceJointPositions( conn, positions );
                 processAttributes( sj, attrCb, conn );
             } else {
-                assert( false && "Unknown joint type" );
+                ROFI_UNREACHABLE( "Unknown joint type" );
             }
         }
 

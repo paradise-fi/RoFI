@@ -97,7 +97,7 @@ private:
     }
 
     static err_t linkOutput( struct netif*, struct pbuf* ) {
-        assert( false && "Link output should not be directly used" );
+        ROFI_UNREACHABLE( "Link output should not be directly used" );
         return ERR_OK;
     }
 
