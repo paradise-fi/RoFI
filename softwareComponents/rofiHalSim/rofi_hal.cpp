@@ -36,6 +36,19 @@ using namespace rofi::hal;
 namespace msgs = rofi::messages;
 
 class SessionId {
+public:
+    static const SessionId & get()
+    {
+        static SessionId instance = SessionId( SESSION_ID );
+        return instance;
+    }
+
+    const std::string & bytes() const
+    {
+        return _bytes;
+    }
+
+private:
     template < typename T, std::enable_if_t< std::is_integral_v< T >, int > = 0 >
     constexpr SessionId( T id )
     {
@@ -60,18 +73,6 @@ class SessionId {
 
     SessionId( const SessionId & other ) = delete;
     SessionId & operator=( const SessionId & other ) = delete;
-
-public:
-    static const SessionId & get()
-    {
-        static SessionId instance = SessionId( SESSION_ID );
-        return instance;
-    }
-
-    const std::string & bytes() const
-    {
-        return _bytes;
-    }
 
 private:
     std::string _bytes;
@@ -373,21 +374,24 @@ public:
 
     std::future< msgs::ConnectorResp > registerPromise( msgs::ConnectorCmd::Type type )
     {
-        std::lock_guard< std::mutex > lock( respPromisesMutex );
-        return respPromises.emplace( type, std::promise< msgs::ConnectorResp >() )
-                ->second.get_future();
+        return _respPromises.visit( [ &type ]( auto & respPromises ) {
+            // Use visit, because `emplace` returns an iterator
+            return respPromises.emplace( type, std::promise< msgs::ConnectorResp >() )
+                    ->second.get_future();
+        } );
     }
 
     void setPromises( const msgs::ConnectorResp & resp )
     {
         assert( resp.connector() == _connectorNumber );
 
-        std::lock_guard< std::mutex > lock( respPromisesMutex );
-        auto range = respPromises.equal_range( resp.resptype() );
-        for ( auto it = range.first; it != range.second; it++ ) {
-            it->second.set_value( resp );
-        }
-        respPromises.erase( range.first, range.second );
+        _respPromises.visit( [ &resp ]( auto & respPromises ) {
+            auto range = respPromises.equal_range( resp.resptype() );
+            for ( auto it = range.first; it != range.second; it++ ) {
+                it->second.set_value( resp );
+            }
+            respPromises.erase( range.first, range.second );
+        } );
     }
 
     msgs::RofiCmd getCmdMsg( msgs::ConnectorCmd::Type type ) const
@@ -436,8 +440,10 @@ private:
     const int _connectorNumber;
     std::weak_ptr< RoFISim > _rofi;
 
-    std::mutex respPromisesMutex;
-    std::multimap< msgs::ConnectorCmd::Type, std::promise< msgs::ConnectorResp > > respPromises;
+    using RespPromisesMap =
+            std::multimap< msgs::ConnectorCmd::Type, std::promise< msgs::ConnectorResp > >;
+
+    atoms::Guarded< RespPromisesMap > _respPromises;
 };
 
 /**
@@ -549,20 +555,23 @@ public:
 
     std::future< msgs::JointResp > registerPromise( msgs::JointCmd::Type type )
     {
-        std::lock_guard< std::mutex > lock( respPromisesMutex );
-        return respPromises.emplace( type, std::promise< msgs::JointResp >() )->second.get_future();
+        return _respPromises.visit( [ &type ]( auto & respPromises ) {
+            return respPromises.emplace( type, std::promise< msgs::JointResp >() )
+                    ->second.get_future();
+        } );
     }
 
     void setPromises( const msgs::JointResp & resp )
     {
         assert( resp.joint() == jointNumber );
 
-        std::lock_guard< std::mutex > lock( respPromisesMutex );
-        auto range = respPromises.equal_range( resp.resptype() );
-        for ( auto it = range.first; it != range.second; it++ ) {
-            it->second.set_value( resp );
-        }
-        respPromises.erase( range.first, range.second );
+        _respPromises.visit( [ &resp ]( auto & respPromises ) {
+            auto range = respPromises.equal_range( resp.resptype() );
+            for ( auto it = range.first; it != range.second; it++ ) {
+                it->second.set_value( resp );
+            }
+            respPromises.erase( range.first, range.second );
+        } );
     }
 
     msgs::RofiCmd getCmdMsg( msgs::JointCmd::Type type ) const
@@ -600,8 +609,9 @@ private:
     std::weak_ptr< RoFISim > _rofi;
     Capabilities _capabilities;
 
-    std::mutex respPromisesMutex;
-    std::multimap< msgs::JointCmd::Type, std::promise< msgs::JointResp > > respPromises;
+    using RespPromisesMap = std::multimap< msgs::JointCmd::Type, std::promise< msgs::JointResp > >;
+
+    atoms::Guarded< RespPromisesMap > _respPromises;
 };
 
 
