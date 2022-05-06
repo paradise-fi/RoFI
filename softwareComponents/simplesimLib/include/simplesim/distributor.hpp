@@ -42,6 +42,13 @@ public:
     }
 
 private:
+    void sendResponse( rofi::messages::DistributorResp resp )
+    {
+        assert( _pub );
+        _logger.logSending( _pub->GetTopic(), resp );
+        _pub->Publish( std::move( resp ), true );
+    }
+
     void onRequest( const rofi::messages::DistributorReq & req );
     void onRequestCallback( const boost::shared_ptr< const rofi::messages::DistributorReq > & req )
     {

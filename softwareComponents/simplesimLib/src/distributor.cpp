@@ -34,7 +34,7 @@ void Distributor::onRequest( const rofi::messages::DistributorReq & req )
             if ( req.rofiid() != 0 ) {
                 std::cerr << "Got GET_INFO distributor request with non-zero id\n";
             }
-            _pub->Publish( onGetInfoReq(), true );
+            sendResponse( onGetInfoReq() );
             break;
         }
         case DistributorReq::LOCK_ONE:
@@ -43,17 +43,17 @@ void Distributor::onRequest( const rofi::messages::DistributorReq & req )
                 std::cerr << "Got LOCK_ONE distributor request with non-zero id\n";
             }
 
-            _pub->Publish( onLockOneReq( req.sessionid() ), true );
+            sendResponse( onLockOneReq( req.sessionid() ) );
             break;
         }
         case DistributorReq::TRY_LOCK:
         {
-            _pub->Publish( onTryLockReq( req.rofiid(), req.sessionid() ), true );
+            sendResponse( onTryLockReq( req.rofiid(), req.sessionid() ) );
             break;
         }
         case DistributorReq::UNLOCK:
         {
-            _pub->Publish( onUnlockReq( req.rofiid(), req.sessionid() ), true );
+            sendResponse( onUnlockReq( req.rofiid(), req.sessionid() ) );
             break;
         }
         default:
