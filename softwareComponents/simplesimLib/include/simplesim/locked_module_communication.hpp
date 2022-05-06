@@ -4,6 +4,8 @@
 
 #include <gazebo/transport/transport.hh>
 
+#include <message_logger.hpp>
+
 #include "command_handler.hpp"
 
 #include <rofiCmd.pb.h>
@@ -12,26 +14,26 @@
 
 namespace rofi::simplesim
 {
-class LockedModuleCommunication
-{
+class LockedModuleCommunication {
 public:
     using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
 
     LockedModuleCommunication( CommandHandler & commandHandler,
                                gazebo::transport::Node & node,
                                std::string moduleTopicName,
-                               ModuleId moduleId );
+                               ModuleId moduleId,
+                               bool verbose );
+
+    LockedModuleCommunication( const LockedModuleCommunication & ) = delete;
+    LockedModuleCommunication( LockedModuleCommunication && ) = delete;
+    LockedModuleCommunication & operator=( const LockedModuleCommunication & ) = delete;
+    LockedModuleCommunication & operator=( LockedModuleCommunication && ) = delete;
 
     ~LockedModuleCommunication()
     {
         assert( _sub );
         _sub->Unsubscribe();
     }
-
-    LockedModuleCommunication( const LockedModuleCommunication & ) = delete;
-    LockedModuleCommunication( LockedModuleCommunication && ) = delete;
-    LockedModuleCommunication & operator=( const LockedModuleCommunication & ) = delete;
-    LockedModuleCommunication & operator=( LockedModuleCommunication && ) = delete;
 
 
     const std::string & topic() const
@@ -54,6 +56,7 @@ private:
     ModuleId _moduleId = {};
     std::string _topic;
 
+    msgs::MessageLogger _logger;
     gazebo::transport::PublisherPtr _pub;
     gazebo::transport::SubscriberPtr _sub;
 };

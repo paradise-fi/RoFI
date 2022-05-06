@@ -1,6 +1,10 @@
 #pragma once
 
+#include <cassert>
+
 #include <gazebo/transport/transport.hh>
+
+#include <message_logger.hpp>
 
 #include "command_handler.hpp"
 
@@ -13,8 +17,7 @@ namespace rofi::simplesim
 {
 class ModulesCommunication;
 
-class Distributor
-{
+class Distributor {
     template < typename T >
     using remove_cvref_t = std::remove_cv_t< std::remove_reference_t< T > >;
 
@@ -23,16 +26,31 @@ public:
 
     // Initializes the Distributor
     // Make sure, that Gazebo communication is running before calling this
-    Distributor( gazebo::transport::Node & node, ModulesCommunication & modulesCommunication );
+    Distributor( gazebo::transport::Node & node,
+                 ModulesCommunication & modulesCommunication,
+                 bool verbose );
 
     Distributor( const Distributor & ) = delete;
     Distributor & operator=( const Distributor & ) = delete;
+    Distributor( Distributor && ) = delete;
+    Distributor & operator=( Distributor && ) = delete;
+
+    ~Distributor()
+    {
+        assert( _sub );
+        _sub->Unsubscribe();
+    }
 
 private:
     void onRequest( const rofi::messages::DistributorReq & req );
     void onRequestCallback( const boost::shared_ptr< const rofi::messages::DistributorReq > & req )
     {
+        assert( req );
         auto reqCopy = req;
+        assert( reqCopy );
+
+        _logger.logReceived( _sub->GetTopic(), *reqCopy );
+
         onRequest( *reqCopy );
     }
 
@@ -44,6 +62,7 @@ private:
 
     ModulesCommunication & _modulesCommunication;
 
+    msgs::MessageLogger _logger;
     gazebo::transport::PublisherPtr _pub;
     gazebo::transport::SubscriberPtr _sub;
 };

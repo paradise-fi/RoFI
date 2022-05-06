@@ -21,16 +21,17 @@
 
 namespace rofi::simplesim
 {
-class ModulesCommunication
-{
+class ModulesCommunication {
     using LockedModuleCommunicationPtr = std::unique_ptr< LockedModuleCommunication >;
 
 public:
     ModulesCommunication( std::shared_ptr< CommandHandler > commandHandler,
-                          gazebo::transport::NodePtr node )
+                          gazebo::transport::NodePtr node,
+                          bool verbose )
             : _commandHandler( std::move( commandHandler ) )
             , _node( std::move( node ) )
-            , _distributor( *this->_node, *this )
+            , _verbose( verbose )
+            , _distributor( *this->_node, *this, _verbose )
     {
         assert( _node );
         assert( _commandHandler );
@@ -108,13 +109,15 @@ private:
         return std::make_unique< LockedModuleCommunication >( *_commandHandler,
                                                               *_node,
                                                               getNewTopicName(),
-                                                              moduleId );
+                                                              moduleId,
+                                                              _verbose );
     }
 
 private:
     std::shared_ptr< CommandHandler > _commandHandler;
 
     gazebo::transport::NodePtr _node;
+    bool _verbose;
 
     atoms::Guarded< std::map< ModuleId, LockedModuleCommunicationPtr >, std::shared_mutex >
             _modules;
