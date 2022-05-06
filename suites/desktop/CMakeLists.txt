@@ -176,7 +176,7 @@ add_component(snake_reconfig)
 if (${BUILD_GAZEBO})
   add_component(rofisimMessages)
 
-  add_component(message_server)
+  add_component(messageServer)
 
   add_component(rofiHalInc)
   add_component(rofiHalSim)
