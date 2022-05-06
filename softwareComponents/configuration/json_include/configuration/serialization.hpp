@@ -338,7 +338,6 @@ namespace rofi::configuration::serialization {
                 case ModuleType::Unknown:
                     j = details::moduleToJSON( dynamic_cast< const UnknownModule& >( *m.module ), attrCb );
                     break;
-                case ModuleType::Cube:
                 default:
                     ROFI_UNREACHABLE( "Unknown type of a module" );
             }
