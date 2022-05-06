@@ -29,7 +29,6 @@ enum class ComponentType {
 enum class ModuleType {
     Unknown,
     Universal,
-    Cube,
     Pad,
 };
 
