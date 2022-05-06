@@ -60,7 +60,7 @@ add_catch2_with_main()
 FetchContent_Declare(
   fmt
   GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-  GIT_TAG        6.1.2
+  GIT_TAG        8.1.1
 )
 FetchContent_GetProperties(fmt)
 if(NOT fmt_POPULATED)
