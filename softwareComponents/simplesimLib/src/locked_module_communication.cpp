@@ -40,6 +40,6 @@ void LockedModuleCommunication::onRofiCmd( const LockedModuleCommunication::Rofi
 
     if ( auto resp = _commandHandler.onRofiCmd( std::move( msgCopy ) ) ) {
         assert( resp->rofiid() == _moduleId && "Immediate responses have to have same rofi id" );
-        _pub->Publish( *resp );
+        sendResponse( *resp );
     }
 }

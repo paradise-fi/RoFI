@@ -44,6 +44,7 @@ public:
     void sendResponse( rofi::messages::RofiResp resp )
     {
         assert( _pub );
+        _logger.logSending( _pub->GetTopic(), resp );
         _pub->Publish( std::move( resp ) );
     }
 
