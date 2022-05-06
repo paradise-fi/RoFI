@@ -1,15 +1,18 @@
 #include "simplesim/locked_module_communication.hpp"
 
+#include <fmt/format.h>
 
 using namespace rofi::simplesim;
 
 LockedModuleCommunication::LockedModuleCommunication( CommandHandler & commandHandler,
                                                       gazebo::transport::Node & node,
                                                       std::string moduleTopicName,
-                                                      ModuleId moduleId )
+                                                      ModuleId moduleId,
+                                                      bool verbose )
         : _commandHandler( commandHandler )
         , _moduleId( moduleId )
         , _topic( "/gazebo/" + node.GetTopicNamespace() + "/" + moduleTopicName )
+        , _logger( verbose )
         , _pub( node.Advertise< rofi::messages::RofiResp >( "~/" + moduleTopicName + "/response" ) )
         , _sub( node.Subscribe( "~/" + moduleTopicName + "/control",
                                 &LockedModuleCommunication::onRofiCmd,
@@ -23,14 +26,19 @@ LockedModuleCommunication::LockedModuleCommunication( CommandHandler & commandHa
 void LockedModuleCommunication::onRofiCmd( const LockedModuleCommunication::RofiCmdPtr & msg )
 {
     assert( msg );
+    auto msgCopy = msg;
+    assert( msgCopy );
 
-    if ( msg->rofiid() != _moduleId ) {
-        std::cerr << "Got a command from Module " << _moduleId << " for Module " << msg->rofiid()
-                  << ". Ignoring...\n";
+    _logger.logReceived( _sub->GetTopic(), *msgCopy );
+
+    if ( msgCopy->rofiid() != _moduleId ) {
+        std::cerr << fmt::format( "Got a command in Module {} for Module {}. Ignoring...\n",
+                                  _moduleId,
+                                  msgCopy->rofiid() );
         return;
     }
 
-    if ( auto resp = _commandHandler.onRofiCmd( msg ) ) {
+    if ( auto resp = _commandHandler.onRofiCmd( std::move( msgCopy ) ) ) {
         assert( resp->rofiid() == _moduleId && "Immediate responses have to have same rofi id" );
         _pub->Publish( *resp );
     }

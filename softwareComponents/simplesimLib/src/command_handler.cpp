@@ -362,7 +362,7 @@ void CommandHandler::onDelayedData( CommandHandler::DelayedDataType type, const 
     assert( false );
 }
 
-std::optional< RofiResp > CommandHandler::onRofiCmd( const CommandHandler::RofiCmdPtr & rofiCmdPtr )
+std::optional< RofiResp > CommandHandler::onRofiCmd( CommandHandler::RofiCmdPtr rofiCmdPtr )
 {
     assert( rofiCmdPtr );
     assert( _moduleStates );

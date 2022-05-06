@@ -71,7 +71,7 @@ public:
         assert( _moduleStates );
     }
 
-    std::optional< rofi::messages::RofiResp > onRofiCmd( const RofiCmdPtr & rofiCmdPtr );
+    std::optional< rofi::messages::RofiResp > onRofiCmd( RofiCmdPtr rofiCmdPtr );
 
     auto getModuleIds()
     {

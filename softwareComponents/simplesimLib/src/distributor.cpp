@@ -6,8 +6,9 @@
 using namespace rofi::simplesim;
 
 Distributor::Distributor( gazebo::transport::Node & node,
-                          ModulesCommunication & modulesCommunication )
-        : _modulesCommunication( modulesCommunication )
+                          ModulesCommunication & modulesCommunication,
+                          bool verbose )
+        : _modulesCommunication( modulesCommunication ), _logger( verbose )
 {
     _pub = node.Advertise< rofi::messages::DistributorResp >( "~/distributor/response" );
     if ( !_pub ) {

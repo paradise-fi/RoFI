@@ -10,10 +10,10 @@
 
 namespace rofi::simplesim
 {
-class Communication
-{
+class Communication {
 public:
     Communication( std::shared_ptr< CommandHandler > commandHandler,
+                   bool verbose,
                    std::string worldName = "default" )
             : _worldName( std::move( worldName ) )
             , _node( [ this ] {
@@ -22,7 +22,7 @@ public:
                 node->Init( this->_worldName );
                 return node;
             }() )
-            , _modules( std::move( commandHandler ), _node )
+            , _modules( std::move( commandHandler ), _node, verbose )
     {}
 
     // Returns true if the insertion was succesful

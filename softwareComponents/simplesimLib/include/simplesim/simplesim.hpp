@@ -92,7 +92,8 @@ public:
             : _simulation( std::make_shared< Simulation >( std::move( rofibotConfiguration ),
                                                            std::move( packetFilter ),
                                                            verbose ) )
-            , _communication( std::make_shared< Communication >( _simulation->commandHandler() ) )
+            , _communication(
+                      std::make_shared< Communication >( _simulation->commandHandler(), verbose ) )
     {
         assert( _simulation );
         assert( _communication );
