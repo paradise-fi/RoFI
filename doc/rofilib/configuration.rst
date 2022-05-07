@@ -21,6 +21,8 @@ For example, let us create a small bot with two universal modules.
 
     #include <configuration/rofibot.hpp>
 
+    // ...
+
     Rofibot bot;
     // add universal module with id 42 in the default state
     auto& m1 = bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
@@ -88,9 +90,11 @@ Classes
 .. doxygenstruct:: rofi::configuration::ComponentJoint
     :project: configuration
 
-.. doxygenstruct:: rofi::configuration::SpaceJoint
+.. doxygenstruct:: rofi::configuration::Component
     :project: configuration
 
+.. doxygenstruct:: rofi::configuration::SpaceJoint
+    :project: configuration
 
 .. doxygenclass:: rofi::configuration::NoCollision
     :project: configuration
@@ -307,7 +311,7 @@ type. The possible callback for `toJSON` that stores a `ModuleId` to `"attribute
               []( const SpaceJoint&   ) { return nlohmann::json{}; }
     };
 
-You can see that every function returns a `nlohman::json <https://json.nlohmann.me/>`_ which is then
+You can see that every function returns a `nlohman::json <https://json.nlohmann.me/>`__ which is then
 stored to appropriate `"attributes"` field.
 
 To collect these attributes you can then use this callback

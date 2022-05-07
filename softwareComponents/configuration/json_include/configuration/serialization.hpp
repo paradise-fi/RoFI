@@ -77,10 +77,7 @@ namespace rofi::configuration::serialization {
 
     /** \brief Adds attributes obtained from callback and returns true if some were added, false otherwise.
      *
-     * callback for a module gets: const reference to the Module itself
-     * callback for a joint  gets: const reference to the Joint itself and its index within the module
-     * callback for a component gets: const reference to the Component and an index of the component
-     * callback for a spacejoint or a roficom gets a const reference to the component
+     * see `toJSON` for details about the callback
      */
     template< typename Callback, typename...Args >
     inline bool addAttributes( nlohmann::json& js, Callback& attrCb, Args&& ... args ) {
@@ -94,13 +91,7 @@ namespace rofi::configuration::serialization {
 
     /** \brief Processes attributes if present with the callback
      *
-     * callback for a module gets: const reference for the json[ "attributes" ] and const reference to the Module itself
-     * callback for a joint  gets: const reference for the json[ "attributes" ]
-     *                             and const reference to the Joint itself and its index within the module
-     * callback for a component gets: const reference for the json[ "attributes" ]
-     *                                and a const reference to the Component itself and its index within the module
-     * callback for a spacejoint or a roficom gets a const reference for the json[ "attributes" ]
-     *                                             and a handle for given connection
+     * see `fromJSON` for details about the callback
      */
     template< typename Callback, typename ...Args >
     inline void processAttributes( const nlohmann::json& js, Callback& cb, Args&& ... args ) {
@@ -318,13 +309,26 @@ namespace rofi::configuration::serialization {
 
     } // namespace details
 
+
+    /** \brief Serialize given Rofibot to json.
+     *
+     * \param attrCb a suitable function or Callable object that returns a `nlohmann::json` which is then
+     *               stored into appropriate `"attributes"` field
+     *
+     * Callback for attributes has to cover all of these possible arguments:
+     *
+     * - callback for a module gets: const reference to the Module itself
+     * - callback for a joint  gets: const reference to the Joint itself and its index within the module
+     * - callback for a component gets: const reference to the Component or ComponentJoint and its index
+     * - callback for a SpaceJoint or a RoficomJoint gets a const reference to the appropriate joint
+     */
     template< typename Callback >
     inline nlohmann::json toJSON( const Rofibot& bot, Callback attrCb ) {
         using namespace nlohmann;
         json res;
         res[ "modules" ] = json::array();
         res[ "moduleJoints" ] = json::array();
-        res[ "spaceJoints"   ] = json::array();
+        res[ "spaceJoints"  ] = json::array();
 
         for ( const auto& m : bot.modules() ) {
             json j;
@@ -377,6 +381,24 @@ namespace rofi::configuration::serialization {
         return toJSON( bot, []( auto&& ... ){ return nlohmann::json{}; } );
     }
 
+    /** \brief Load a Rofibot from given json.
+     *
+     * \param j json with a Rofibot
+     * \param attrCb a suitable function or Callable object that process appropriate `"attributes"` fields
+     *
+     * Callback for attributes has to cover all of these possible arguments:
+     *
+     * - callback for a Module gets: const reference for the json[ "attributes" ]
+     *                               and const reference to the Module itself
+     * - callback for a Joint  gets: const reference for the json[ "attributes" ]
+     *                               and const reference to the Joint itself
+     *                               and its index within the module
+     * - callback for a Component and ComponentJoint gets: const reference for the json[ "attributes" ]
+     *                                                     and a const reference to the Component itself
+     *                                                     and its index within the module
+     * - callback for a SpaceJoint or a RoficomJoint gets: const reference for the json[ "attributes" ]
+     *                                                     and a handle for given connection
+     */
     template< typename Callback >
     inline Rofibot fromJSON( const nlohmann::json& j, Callback attrCb ) {
         Rofibot bot;
