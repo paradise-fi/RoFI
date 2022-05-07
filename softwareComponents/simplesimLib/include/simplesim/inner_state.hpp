@@ -157,7 +157,7 @@ public:
         assert( false );
     }
     // Sets position to extending if the connector was retracted.
-    // To set position from `Extended` to `Extending`, set it first to `Retracted`.
+    // To set position from `Extended` to `Extending`, set it first to `Retracting`.
     void setExtending()
     {
         switch ( _position ) {
@@ -170,10 +170,6 @@ public:
                 return;
         }
         assert( false );
-    }
-    void setExtendedWithoutConnecting()
-    {
-        _position = Position::Extended;
     }
     Position position() const
     {
@@ -267,7 +263,7 @@ public:
     }
 
 private:
-    Position _position = Position::Retracted;
+    Position _position = Position::Extended;
     bool _internal = false;
     bool _external = false;
     std::optional< OtherConnector > _connectedTo;

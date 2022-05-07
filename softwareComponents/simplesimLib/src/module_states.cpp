@@ -345,11 +345,25 @@ std::map< ModuleId, ModuleInnerState > ModuleStates::initInnerStatesFromConfigur
         assert( destConnState );
 
         assert( !sourceConnState->connectedTo().has_value() );
-        sourceConnState->setExtendedWithoutConnecting();
+        if ( sourceConnState->position() != ConnectorInnerState::Position::Extended ) {
+            std::cerr << fmt::format(
+                    "Connector {} of module {} connected but not extended. Setting as extended.\n",
+                    sourceConnector.moduleId,
+                    sourceConnector.connIdx );
+            sourceConnState->setExtending();
+            sourceConnState->finilizePosition();
+        }
         sourceConnState->setConnectedTo( destConnector, connection.orientation );
 
         assert( !destConnState->connectedTo().has_value() );
-        destConnState->setExtendedWithoutConnecting();
+        if ( destConnState->position() != ConnectorInnerState::Position::Extended ) {
+            std::cerr << fmt::format(
+                    "Connector {} of module {} connected but not extended. Setting as extended.\n",
+                    destConnector.moduleId,
+                    destConnector.connIdx );
+            destConnState->setExtending();
+            destConnState->finilizePosition();
+        }
         destConnState->setConnectedTo( sourceConnector, connection.orientation );
     }
 
