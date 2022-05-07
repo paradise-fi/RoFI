@@ -1,5 +1,6 @@
 #include <catch2/catch.hpp>
 
+#include <configuration/pad.hpp>
 #include <configuration/rofibot.hpp>
 #include <configuration/universalModule.hpp>
 #include <configuration/unknownModule.hpp>
@@ -28,6 +29,8 @@ TEST_CASE( "Universal Module Test" ) {
         REQUIRE( um.getOccupiedRelativePositions().size() == 2 );
         CHECK( equals( um.getOccupiedRelativePositions()[ 0 ], identity ) );
         CHECK( equals( center( um.getOccupiedRelativePositions()[ 1 ] ), { 0, 0, 1, 1 } ) );
+
+        CHECK( um.getConnector( "A-Z" ).parent == &um );
     }
 
     SECTION( "roficomConnections" ) {
@@ -597,6 +600,64 @@ TEST_CASE( "Get near connector" ) {
         REQUIRE_FALSE( bot.isPrepared() );
 
         CHECK_THROWS( m1.getConnector( "B-X" ).getNearConnector() );
+    }
+
+    SECTION("universal module with pad") {
+        auto um12 = bot.insert( UniversalModule( 12, 90_deg, 90_deg, 0_deg ) );
+        auto pad42 = bot.insert( Pad( 42, 6, 3 ) );
+
+        connect< RigidJoint >( pad42.components().front(),
+                                        matrices::Vector(),
+                                        matrices::identity );
+        connect( um12.getConnector( "A-Z" ),
+                    pad42.connectors()[ 1 ],
+                    roficom::Orientation::North );
+
+        REQUIRE_NOTHROW( bot.prepare() );
+        REQUIRE( bot.isValid().first );
+
+        auto connectorB = um12.getConnector( "B-Z" );
+        auto nearConnector = connectorB.getNearConnector();
+        REQUIRE( nearConnector );
+        CHECK( nearConnector->first.parent->getId() == 42 );
+        CHECK( nearConnector->first.getIndexInParent() == 4 );
+        CHECK( nearConnector->second == roficom::Orientation::South );
+    }
+}
+
+TEST_CASE( "Configuration copying" ) {
+    auto bot = Rofibot();
+
+    SECTION( "Rofibot copy" ) {
+        auto& um12 = bot.insert( UniversalModule( 12, 10_deg, 0_deg, 0_deg ) );
+        um12.setBeta( 40_deg );
+
+        CHECK( um12.getConnector( "A-Z" ).parent == &um12 );
+
+        CHECK( um12.getAlpha() == 10_deg );
+        CHECK( um12.getBeta() == 40_deg );
+        CHECK( um12.getGamma() == 0_deg );
+
+        auto bot_2 = bot;
+
+        auto* um12_2 = dynamic_cast< UniversalModule* >( bot_2.getModule( 12 ) );
+        REQUIRE( um12_2 );
+
+        CAPTURE( &um12 );
+        CHECK( um12_2->getConnector( "A-Z" ).parent == um12_2 );
+
+        CHECK( um12_2->getAlpha().deg() == 10 );
+        CHECK( um12_2->getBeta().deg() == 40 );
+        CHECK( um12_2->getGamma().deg() == 0 );
+
+        um12_2->setGamma( 60_deg );
+
+        CHECK( um12_2->getGamma() == 60_deg );
+
+        CHECK( um12.getGamma() == 0_deg );
+
+        CHECK( um12.parent == &bot );
+        CHECK( um12_2->parent == &bot_2 );
     }
 }
 
