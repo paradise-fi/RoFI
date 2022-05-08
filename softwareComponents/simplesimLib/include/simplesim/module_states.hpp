@@ -148,6 +148,12 @@ namespace detail
                 }
             }
 
+            auto getRespType() const -> rofi::messages::ConnectorCmd::Type
+            {
+                using rofi::messages::ConnectorCmd;
+                return orientation.has_value() ? ConnectorCmd::CONNECT : ConnectorCmd::DISCONNECT;
+            }
+
         private:
             /// Connects the inner connector states.
             /// Requires that `lhs != rhs` and that `orientation` has value.
@@ -328,6 +334,10 @@ public:
         }
         for ( const auto & connection : updateEvents.connectionsChanged ) {
             connection.updateInnerStates( _moduleInnerStates );
+
+            auto respType = connection.getRespType();
+            onRespCallback( connection.lhs.getRofiResp( respType ) );
+            onRespCallback( connection.rhs.getRofiResp( respType ) );
         }
         for ( const auto & connector : updateEvents.connectorsToFinilizePosition ) {
             if ( auto * connInnerState = detail::getConnectorInnerState( _moduleInnerStates,
