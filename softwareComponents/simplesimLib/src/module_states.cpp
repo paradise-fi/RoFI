@@ -209,10 +209,18 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
     auto newConfiguration = std::make_shared< Rofibot >( *currentConfig );
     assert( newConfiguration );
 
+    // Workaround for a bug in configuration (not setting component parent properly)
+    for ( auto & moduleInfo : newConfiguration->modules() ) {
+        for ( auto & component : moduleInfo.module->components() ) {
+            component.parent = moduleInfo.module.get();
+        }
+    }
+
     CUE updateEvents;
     for ( auto & moduleInfo : newConfiguration->modules() ) {
         assert( moduleInfo.module.get() );
         auto & module_ = *moduleInfo.module;
+        assert( module_.parent == newConfiguration.get() );
 
         auto * moduleInnerState = detail::getModuleInnerState( _moduleInnerStates,
                                                                module_.getId() );
@@ -263,6 +271,7 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
         assert( connectorInnerStates.size() == connectorConfigurations.size() );
 
         for ( auto [ connectorInnerState, i ] : connectorInnerStates | enumerated() ) {
+            assert( connectorConfigurations[ i ].parent == &module_ );
             switch ( connectorInnerState.position() ) {
                 case ConnectorInnerState::Position::Retracted:
                 case ConnectorInnerState::Position::Extended:
@@ -286,6 +295,7 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
                             { .moduleId = module_.getId(), .connIdx = static_cast< int >( i ) } );
 
                     const auto & connConfiguration = connectorConfigurations[ i ];
+                    assert( connConfiguration.parent == &module_ );
                     if ( auto connection = detail::connectToNearbyConnector( connConfiguration ) ) {
                         updateEvents.connectionsChanged.push_back( *connection );
                     }
