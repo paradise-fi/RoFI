@@ -286,11 +286,17 @@ public:
     std::span< const Component > components() const {
         return _components;
     }
+    std::span< Component > components() {
+        return _components;
+    }
 
     /**
      * \brief Get read-only view of the bodies
      */
     std::span< const Component > bodies() const {
+        return components().subspan( _connectorCount );
+    }
+    std::span< Component > bodies() {
         return components().subspan( _connectorCount );
     }
 
@@ -302,6 +308,9 @@ public:
      * \brief Get read-only view of the connectors
      */
     std::span< const Component > connectors() const {
+        return components().subspan( 0, _connectorCount );
+    };
+    std::span< Component > connectors() {
         return components().subspan( 0, _connectorCount );
     };
 
