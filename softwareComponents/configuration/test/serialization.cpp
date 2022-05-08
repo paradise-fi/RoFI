@@ -483,6 +483,65 @@ TEST_CASE( "Working with attributes" ) {
         CHECK( sum == 10 );
     }
 
+    SECTION( "Tutorial configuration" )
+    {
+        auto bot = fromJSON( R"""({
+    "modules": [
+        {
+            "id": 12,
+            "type": "universal",
+            "alpha": 90,
+            "beta": 90,
+            "gamma": 0
+        },
+        {
+            "id": 42,
+            "type": "pad",
+            "width": 6,
+            "height": 3
+        }
+    ],
+    "moduleJoints": [
+        {
+            "orientation": "North",
+            "from": {
+                "id": 12,
+                "connector": "A-Z"
+            },
+            "to": {
+                "id": 42,
+                "connector": 1
+            }
+        }
+    ],
+    "spaceJoints": [
+        {
+            "point": [ 0, 0, 0 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity"
+            },
+            "to": {
+                "id": 42,
+                "component": 0
+            }
+        }
+    ]
+})"""_json );
+
+        REQUIRE_NOTHROW( bot.prepare() );
+        REQUIRE( bot.isValid().first );
+
+        auto um12 = dynamic_cast< UniversalModule * >( bot.getModule( 12 ) );
+        REQUIRE( um12 );
+        auto connectorB = um12->getConnector( "B-Z" );
+        auto nearConnector = connectorB.getNearConnector();
+        REQUIRE( nearConnector );
+        CHECK( nearConnector->first.parent->getId() == 42 );
+        CHECK( nearConnector->first.getIndexInParent() == 4 );
+        CHECK( nearConnector->second == roficom::Orientation::South );
+    }
+
 }
 
 } // namespace
