@@ -649,6 +649,9 @@ private:
         for ( ModuleInfo& m : _modules ) {
             assert( m.module );
             m.module->parent = this;
+            for ( auto& c : m.module->_components ) {
+                c.parent = m.module.get();
+            }
         }
     }
 
