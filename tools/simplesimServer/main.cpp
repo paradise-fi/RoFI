@@ -1,5 +1,6 @@
 #include <filesystem>
 #include <iostream>
+#include <thread>
 
 #include <dimcli/cli.h>
 #include <google/protobuf/wrappers.pb.h>
@@ -52,7 +53,11 @@ private:
         auto cmdCopy = cmdPtr;
 
         auto settingsState = _simplesim.onSettingsCmd( *cmdCopy );
-        _pub->Publish( settingsState.getStateMsg() );
+
+        // Workaround for gazebo losing messages
+        std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+
+        _pub->Publish( settingsState.getStateMsg(), true );
     }
 
 
@@ -115,6 +120,6 @@ int main( int argc, char * argv[] )
         assert( rofibot );
         auto message = google::protobuf::StringValue();
         message.set_value( configuration::serialization::toJSON( *rofibot ).dump() );
-        configurationPub->Publish( message );
+        configurationPub->Publish( message, true );
     } );
 }
