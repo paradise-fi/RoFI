@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <stdexcept>
+#include <thread>
 
 #include <dimcli/cli.h>
 #include <gazebo/gazebo_client.hh>
@@ -110,7 +111,11 @@ int main( int argc, char * argv[] )
     auto client = simplesim::SimplesimClient(
             [ settingsCmdPub ]( const simplesim::msgs::SettingsCmd & settingsCmd ) {
                 assert( settingsCmdPub );
-                settingsCmdPub->Publish( settingsCmd );
+
+                // Workaround for gazebo losing messages
+                std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+
+                settingsCmdPub->Publish( settingsCmd, true );
             } );
 
     auto simplesimMsgSub = SimplesimMsgSubscriber( client );

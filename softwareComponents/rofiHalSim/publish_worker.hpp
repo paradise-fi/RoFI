@@ -149,6 +149,9 @@ private:
         }
         assert( pub );
 
+        // Workaround for gazebo losing messages
+        std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+
         logMessage( topic, msg, true );
 
         pub->Publish( std::forward< Message >( msg ), true );

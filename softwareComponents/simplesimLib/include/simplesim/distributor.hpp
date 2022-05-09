@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cassert>
+#include <thread>
 
 #include <gazebo/transport/transport.hh>
 
@@ -45,6 +46,10 @@ private:
     void sendResponse( rofi::messages::DistributorResp resp )
     {
         assert( _pub );
+
+        // Workaround for gazebo losing messages
+        std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
+
         _logger.logSending( _pub->GetTopic(), resp );
         _pub->Publish( std::move( resp ), true );
     }
