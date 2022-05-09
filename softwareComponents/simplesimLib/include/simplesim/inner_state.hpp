@@ -175,7 +175,7 @@ public:
     {
         return _position;
     }
-    void finilizePosition()
+    void finalizePosition()
     {
         switch ( _position ) {
             case Position::Retracted:

@@ -208,7 +208,7 @@ namespace detail
 
         std::vector< PositionReached > positionsReached;
         std::vector< ConnectionChanged > connectionsChanged;
-        std::vector< Connector > connectorsToFinilizePosition;
+        std::vector< Connector > connectorsToFinalizePosition;
     };
 
     inline auto connectToNearbyConnector( const rofi::configuration::Component & roficom )
@@ -339,10 +339,10 @@ public:
             onRespCallback( connection.lhs.getRofiResp( respType ) );
             onRespCallback( connection.rhs.getRofiResp( respType ) );
         }
-        for ( const auto & connector : updateEvents.connectorsToFinilizePosition ) {
+        for ( const auto & connector : updateEvents.connectorsToFinalizePosition ) {
             if ( auto * connInnerState = detail::getConnectorInnerState( _moduleInnerStates,
                                                                          connector ) ) {
-                connInnerState->finilizePosition();
+                connInnerState->finalizePosition();
             }
         }
         return std::move( newConfiguration );
