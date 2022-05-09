@@ -55,8 +55,9 @@ public:
         }
 
         if ( delay < std::chrono::milliseconds::zero() ) {
-            _handler.registerDelayedData( std::move( packetData ), delay );
+            return; // Throw away packet
         }
+        _handler.registerDelayedData( std::move( packetData ), delay );
     }
 
 private:
