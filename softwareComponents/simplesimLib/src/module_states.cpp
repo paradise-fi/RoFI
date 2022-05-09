@@ -204,6 +204,12 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
 {
     using CUE = detail::ConfigurationUpdateEvents;
 
+    constexpr auto enumerated = [] {
+        return std::views::transform( [ i = 0UL ]< typename T >( T && value ) mutable {
+            return std::tuple< T, size_t >( std::forward< T >( value ), i++ );
+        } );
+    };
+
     auto currentConfig = currentConfiguration();
     assert( currentConfig );
     auto newConfiguration = std::make_shared< Rofibot >( *currentConfig );
@@ -217,6 +223,7 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
     }
 
     CUE updateEvents;
+    // Update joint positions
     for ( auto & moduleInfo : newConfiguration->modules() ) {
         assert( moduleInfo.module.get() );
         auto & module_ = *moduleInfo.module;
@@ -226,13 +233,6 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
                                                                module_.getId() );
         assert( moduleInnerState );
 
-        constexpr auto enumerated = [] {
-            return std::views::transform( [ i = 0UL ]< typename T >( T && value ) mutable {
-                return std::tuple< T, size_t >( std::forward< T >( value ), i++ );
-            } );
-        };
-
-        // Update joint positions
         std::span jointInnerStates = moduleInnerState->joints();
         std::ranges::view auto jointConfigurations = module_.configurableJoints();
         assert( std::ssize( jointInnerStates ) == std::ranges::distance( jointConfigurations ) );
@@ -264,8 +264,26 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
 
             jointConfiguration.setPositions( std::array{ clampedNewPosition } );
         }
+    }
 
-        // Connect close extending connectors
+    // Workaround for a bug in configuration (not setting the prepared flag properly)
+    newConfiguration->prepare();
+
+    if ( auto [ ok, err ] = newConfiguration->validate( SimpleCollision{} ); !ok ) {
+        std::cerr << "Error after joint update: '" << err << "'\n";
+        throw std::runtime_error( err );
+    }
+
+    // Disconnect retracting and connect close extending connectors
+    for ( auto & moduleInfo : newConfiguration->modules() ) {
+        assert( moduleInfo.module.get() );
+        auto & module_ = *moduleInfo.module;
+        assert( module_.parent == newConfiguration.get() );
+
+        auto * moduleInnerState = detail::getModuleInnerState( _moduleInnerStates,
+                                                               module_.getId() );
+        assert( moduleInnerState );
+
         std::span connectorInnerStates = moduleInnerState->connectors();
         std::span connectorConfigurations = module_.connectors();
         assert( connectorInnerStates.size() == connectorConfigurations.size() );
@@ -302,20 +320,24 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
                     break;
                 }
             }
+
+            // Workaround for a bug in configuration (not reseting and requiring the prepared flag)
+            if ( !newConfiguration->isPrepared() ) {
+                newConfiguration->prepare();
+            }
         }
     }
 
-    newConfiguration->prepare();
-    if ( auto [ ok, err ] = newConfiguration->isValid( rofi::configuration::SimpleCollision{} );
-         !ok ) {
+    if ( auto [ ok, err ] = newConfiguration->validate( SimpleCollision{} ); !ok ) {
+        std::cerr << "Error after connector update: '" << err << "'\n";
         throw std::runtime_error( err );
     }
     return std::pair( newConfiguration, std::move( updateEvents ) );
 }
 
-std::map< ModuleId, ModuleInnerState > ModuleStates::initInnerStatesFromConfiguration(
-        const Rofibot & rofibotConfiguration,
-        bool verbose )
+auto ModuleStates::initInnerStatesFromConfiguration( const Rofibot & rofibotConfiguration,
+                                                     bool verbose )
+        -> std::map< ModuleId, ModuleInnerState >
 {
     auto innerStates = std::map< ModuleId, ModuleInnerState >();
     for ( const auto & moduleInfo : rofibotConfiguration.modules() ) {
