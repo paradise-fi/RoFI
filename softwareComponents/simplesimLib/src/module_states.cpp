@@ -199,38 +199,27 @@ bool ModuleStates::setConnectorPower( Connector connector, ConnectorLine line, b
     return false;
 }
 
-auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepTime ) const
-        -> std::pair< RofibotConfigurationPtr, detail::ConfigurationUpdateEvents >
+constexpr auto enumerated()
 {
-    using CUE = detail::ConfigurationUpdateEvents;
+    return std::views::transform( [ i = 0UL ]< typename T >( T && value ) mutable {
+        return std::tuple< T, size_t >( std::forward< T >( value ), i++ );
+    } );
+}
 
-    constexpr auto enumerated = [] {
-        return std::views::transform( [ i = 0UL ]< typename T >( T && value ) mutable {
-            return std::tuple< T, size_t >( std::forward< T >( value ), i++ );
-        } );
-    };
+auto updateJointPositions( Rofibot & configuration,
+                           std::chrono::duration< float > simStepTime,
+                           const detail::ModuleInnerStates & moduleInnerStates )
+        -> std::vector< detail::ConfigurationUpdateEvents::PositionReached >
+{
+    using PositionReached = detail::ConfigurationUpdateEvents::PositionReached;
 
-    auto currentConfig = currentConfiguration();
-    assert( currentConfig );
-    auto newConfiguration = std::make_shared< Rofibot >( *currentConfig );
-    assert( newConfiguration );
-
-    // Workaround for a bug in configuration (not setting component parent properly)
-    for ( auto & moduleInfo : newConfiguration->modules() ) {
-        for ( auto & component : moduleInfo.module->components() ) {
-            component.parent = moduleInfo.module.get();
-        }
-    }
-
-    CUE updateEvents;
-    // Update joint positions
-    for ( auto & moduleInfo : newConfiguration->modules() ) {
+    auto positionsReached = std::vector< PositionReached >();
+    for ( auto & moduleInfo : configuration.modules() ) {
         assert( moduleInfo.module.get() );
         auto & module_ = *moduleInfo.module;
-        assert( module_.parent == newConfiguration.get() );
+        assert( module_.parent == &configuration );
 
-        auto * moduleInnerState = detail::getModuleInnerState( _moduleInnerStates,
-                                                               module_.getId() );
+        auto * moduleInnerState = detail::getModuleInnerState( moduleInnerStates, module_.getId() );
         assert( moduleInnerState );
 
         std::span jointInnerStates = moduleInnerState->joints();
@@ -238,8 +227,8 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
         assert( std::ssize( jointInnerStates ) == std::ranges::distance( jointConfigurations ) );
 
         for ( auto [ jointConfiguration, i ] : jointConfigurations | enumerated() ) {
-            static_assert(
-                    std::is_same_v< decltype( jointConfiguration ), configuration::Joint & > );
+            static_assert( std::is_same_v< decltype( jointConfiguration ),
+                                           rofi::configuration::Joint & > );
             const auto & jointInnerState = jointInnerStates[ i ];
 
             assert( jointConfiguration.positions().size() == 1 );
@@ -251,10 +240,10 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
                                                                                    simStepTime );
             if ( posReached ) {
                 assert( i < INT_MAX );
-                updateEvents.positionsReached.push_back(
-                        CUE::PositionReached{ .joint = { .moduleId = module_.getId(),
-                                                         .jointIdx = static_cast< int >( i ) },
-                                              .position = newPosition } );
+                positionsReached.push_back(
+                        PositionReached{ .joint = { .moduleId = module_.getId(),
+                                                    .jointIdx = static_cast< int >( i ) },
+                                         .position = newPosition } );
             }
 
             assert( jointLimits.first <= jointLimits.second );
@@ -265,23 +254,25 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
             jointConfiguration.setPositions( std::array{ clampedNewPosition } );
         }
     }
+    return positionsReached;
+}
 
-    // Workaround for a bug in configuration (not setting the prepared flag properly)
-    newConfiguration->prepare();
+auto updateConnectorStates( Rofibot & configuration,
+                            const detail::ModuleInnerStates & moduleInnerStates )
+{
+    using ConnectionChanged = detail::ConfigurationUpdateEvents::ConnectionChanged;
+    struct ConnectorUpdateEvents {
+        std::vector< Connector > connectorsToFinalizePosition;
+        std::vector< ConnectionChanged > connectionsChanged;
+    };
 
-    if ( auto [ ok, err ] = newConfiguration->validate( SimpleCollision{} ); !ok ) {
-        std::cerr << "Error after joint update: '" << err << "'\n";
-        throw std::runtime_error( err );
-    }
-
-    // Disconnect retracting and connect close extending connectors
-    for ( auto & moduleInfo : newConfiguration->modules() ) {
+    auto connectorUpdateEvents = ConnectorUpdateEvents();
+    for ( auto & moduleInfo : configuration.modules() ) {
         assert( moduleInfo.module.get() );
         auto & module_ = *moduleInfo.module;
-        assert( module_.parent == newConfiguration.get() );
+        assert( module_.parent == &configuration );
 
-        auto * moduleInnerState = detail::getModuleInnerState( _moduleInnerStates,
-                                                               module_.getId() );
+        auto * moduleInnerState = detail::getModuleInnerState( moduleInnerStates, module_.getId() );
         assert( moduleInnerState );
 
         std::span connectorInnerStates = moduleInnerState->connectors();
@@ -297,40 +288,78 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
                 case ConnectorInnerState::Position::Retracting:
                 {
                     assert( i < INT_MAX );
-                    updateEvents.connectorsToFinalizePosition.push_back(
+                    connectorUpdateEvents.connectorsToFinalizePosition.push_back(
                             { .moduleId = module_.getId(), .connIdx = static_cast< int >( i ) } );
 
                     if ( auto removedConnection = removeConnection( connectorConfigurations[ i ] ) )
                     {
-                        updateEvents.connectionsChanged.push_back( *removedConnection );
+                        connectorUpdateEvents.connectionsChanged.push_back( *removedConnection );
                     }
                     break;
                 }
                 case ConnectorInnerState::Position::Extending:
                 {
                     assert( i < INT_MAX );
-                    updateEvents.connectorsToFinalizePosition.push_back(
+                    connectorUpdateEvents.connectorsToFinalizePosition.push_back(
                             { .moduleId = module_.getId(), .connIdx = static_cast< int >( i ) } );
 
                     const auto & connConfiguration = connectorConfigurations[ i ];
                     assert( connConfiguration.parent == &module_ );
                     if ( auto connection = detail::connectToNearbyConnector( connConfiguration ) ) {
-                        updateEvents.connectionsChanged.push_back( *connection );
+                        connectorUpdateEvents.connectionsChanged.push_back( *connection );
                     }
                     break;
                 }
             }
 
             // Workaround for a bug in configuration (not reseting and requiring the prepared flag)
-            if ( !newConfiguration->isPrepared() ) {
-                newConfiguration->prepare();
+            if ( !configuration.isPrepared() ) {
+                configuration.prepare();
             }
         }
     }
 
+    return connectorUpdateEvents;
+}
+
+auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepTime ) const
+        -> std::pair< RofibotConfigurationPtr, detail::ConfigurationUpdateEvents >
+{
+    using CUE = detail::ConfigurationUpdateEvents;
+
+    auto currentConfig = currentConfiguration();
+    assert( currentConfig );
+    auto newConfiguration = std::make_shared< Rofibot >( *currentConfig );
+    assert( newConfiguration );
+
+    // Workaround for a bug in configuration (not setting component parent properly)
+    for ( auto & moduleInfo : newConfiguration->modules() ) {
+        for ( auto & component : moduleInfo.module->components() ) {
+            component.parent = moduleInfo.module.get();
+        }
+    }
+
+    CUE updateEvents;
+    updateEvents.positionsReached = updateJointPositions( *newConfiguration,
+                                                          simStepTime,
+                                                          _moduleInnerStates );
+
+    // Workaround for a bug in configuration (not setting the prepared flag properly)
+    newConfiguration->prepare();
+
+    if ( auto [ ok, err ] = newConfiguration->validate( SimpleCollision{} ); !ok ) {
+        std::cerr << "Error after joint update: '" << err << "'\n";
+        throw std::runtime_error( std::move( err ) );
+    }
+
+    auto connectorUpdateEvents = updateConnectorStates( *newConfiguration, _moduleInnerStates );
+    updateEvents.connectorsToFinalizePosition = std::move(
+            connectorUpdateEvents.connectorsToFinalizePosition );
+    updateEvents.connectionsChanged = std::move( connectorUpdateEvents.connectionsChanged );
+
     if ( auto [ ok, err ] = newConfiguration->validate( SimpleCollision{} ); !ok ) {
         std::cerr << "Error after connector update: '" << err << "'\n";
-        throw std::runtime_error( err );
+        throw std::runtime_error( std::move( err ) );
     }
     return std::pair( newConfiguration, std::move( updateEvents ) );
 }
