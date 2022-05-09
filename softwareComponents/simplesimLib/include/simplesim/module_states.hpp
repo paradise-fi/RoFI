@@ -167,8 +167,11 @@ namespace detail
                 assert( lhsInnerState );
                 assert( rhsInnerState );
 
-                if ( lhsInnerState->connectedTo().has_value()
-                     || rhsInnerState->connectedTo().has_value() ) {
+                if ( !lhsInnerState->connectedTo().has_value()
+                     && !rhsInnerState->connectedTo().has_value() ) {
+                    lhsInnerState->setConnectedTo( rhs, *orientation );
+                    rhsInnerState->setConnectedTo( lhs, *orientation );
+                } else {
                     using ConnectedToValue = ConnectorInnerState::OtherConnector;
                     assert( lhsInnerState->connectedTo().has_value() );
                     assert( rhsInnerState->connectedTo().has_value() );
@@ -177,9 +180,6 @@ namespace detail
                     assert( *rhsInnerState->connectedTo()
                             == ConnectedToValue( lhs, *orientation ) );
                 }
-
-                lhsInnerState->setConnectedTo( rhs, *orientation );
-                rhsInnerState->setConnectedTo( lhs, *orientation );
             }
             /// Disconnects the inner connector states.
             /// Requires that `lhs != rhs` and that `orientation` has no value.
