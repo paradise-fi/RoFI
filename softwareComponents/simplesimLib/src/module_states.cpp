@@ -279,7 +279,7 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
                 case ConnectorInnerState::Position::Retracting:
                 {
                     assert( i < INT_MAX );
-                    updateEvents.connectorsToFinilizePosition.push_back(
+                    updateEvents.connectorsToFinalizePosition.push_back(
                             { .moduleId = module_.getId(), .connIdx = static_cast< int >( i ) } );
 
                     if ( auto removedConnection = removeConnection( connectorConfigurations[ i ] ) )
@@ -291,7 +291,7 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
                 case ConnectorInnerState::Position::Extending:
                 {
                     assert( i < INT_MAX );
-                    updateEvents.connectorsToFinilizePosition.push_back(
+                    updateEvents.connectorsToFinalizePosition.push_back(
                             { .moduleId = module_.getId(), .connIdx = static_cast< int >( i ) } );
 
                     const auto & connConfiguration = connectorConfigurations[ i ];
@@ -361,7 +361,7 @@ std::map< ModuleId, ModuleInnerState > ModuleStates::initInnerStatesFromConfigur
                     sourceConnector.moduleId,
                     sourceConnector.connIdx );
             sourceConnState->setExtending();
-            sourceConnState->finilizePosition();
+            sourceConnState->finalizePosition();
         }
         sourceConnState->setConnectedTo( destConnector, connection.orientation );
 
@@ -372,7 +372,7 @@ std::map< ModuleId, ModuleInnerState > ModuleStates::initInnerStatesFromConfigur
                     destConnector.moduleId,
                     destConnector.connIdx );
             destConnState->setExtending();
-            destConnState->finilizePosition();
+            destConnState->finalizePosition();
         }
         destConnState->setConnectedTo( sourceConnector, connection.orientation );
     }
