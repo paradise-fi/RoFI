@@ -138,7 +138,7 @@ namespace rofi::configuration::serialization {
 
         ModuleId id = j[ where ][ "id" ];
         std::string conn( isConnector ? "connector" : "component" );
-        int connId = f( id ) == ModuleType::Universal && isConnector
+        int connId = f( id ) == ModuleType::Universal && isConnector && j[ where ][ conn ].is_string()
                         ? UniversalModule::translateComponent( j[ where ][ conn ].get< std::string >() )
                         : j[ where ][ conn ].get< int >();
 

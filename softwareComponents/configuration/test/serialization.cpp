@@ -176,7 +176,7 @@ TEST_CASE( "UniversalModule" ) {
                                                     },\
                                             \"to\" :   {\
                                                         \"id\" : 42,\
-                                                        \"connector\" : \"B-Z\"\
+                                                        \"connector\" : 5\
                                                     }\
                                           }\
                         ],\
