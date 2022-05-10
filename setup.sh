@@ -113,7 +113,7 @@ setupIdf() {
 print_help() {
     cat << EOF
 Usage:
-    source setup.sh [-f] <Release|Debug|RelWithDebInfo|MinSizeRel>
+    source setup.sh [-s] [-i] <Release|Debug|RelWithDebInfo|MinSizeRel>
         Setup environment for given configuration. Release is the default one.
     ./setup.sh -h
         Print help
