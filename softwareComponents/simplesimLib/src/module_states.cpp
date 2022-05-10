@@ -332,13 +332,6 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
     auto newConfiguration = std::make_shared< Rofibot >( *currentConfig );
     assert( newConfiguration );
 
-    // Workaround for a bug in configuration (not setting component parent properly)
-    for ( auto & moduleInfo : newConfiguration->modules() ) {
-        for ( auto & component : moduleInfo.module->components() ) {
-            component.parent = moduleInfo.module.get();
-        }
-    }
-
     CUE updateEvents;
     updateEvents.positionsReached = updateJointPositions( *newConfiguration,
                                                           simStepTime,
