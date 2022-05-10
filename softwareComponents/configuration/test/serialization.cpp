@@ -57,7 +57,7 @@ TEST_CASE( "Empty" ) {
     }
 
     SECTION( "fromJSON" ) {
-        auto js = "{ \"modules\" : [], \"spaceJoints\" : [], \"moduleJoints\" : [] }"_json;
+        auto js = R"({ "modules" : [], "spaceJoints" : [], "moduleJoints" : [] })"_json;
 
         Rofibot bot = fromJSON( js );
 
@@ -150,50 +150,50 @@ TEST_CASE( "UniversalModule" ) {
     }
 
     SECTION( "The other way" ) {
-        auto js = "{\
-                        \"modules\" : [\
-                                        {\
-                                            \"id\" : 66,\
-                                            \"type\"  : \"universal\",\
-                                            \"alpha\" : 90,\
-                                            \"beta\"  : 0,\
-                                            \"gamma\" : 180\
-                                        },\
-                                        {\
-                                            \"id\" : 42,\
-                                            \"type\" : \"universal\",\
-                                            \"alpha\" : 0,\
-                                            \"beta\"  : 90,\
-                                            \"gamma\" : 90\
-                                        }\
-                        ],\
-                        \"moduleJoints\" : [\
-                                          {\
-                                            \"orientation\" : \"East\",\
-                                            \"from\" : {\
-                                                        \"id\" : 66,\
-                                                        \"connector\" : \"A-Z\"\
-                                                    },\
-                                            \"to\" :   {\
-                                                        \"id\" : 42,\
-                                                        \"connector\" : 5\
-                                                    }\
-                                          }\
-                        ],\
-                        \"spaceJoints\" : [\
-                                            {\
-                                                \"point\" : [0, 0, 0],\
-                                                \"to\" : {\
-                                                            \"id\" : 66,\
-                                                            \"component\" : 7\
-                                                },\
-                                                \"joint\" : {\
-                                                                \"type\" : \"rigid\",\
-                                                                \"sourceToDestination\" : \"identity\"\
-                                                            }\
-                                                }\
-                            ]\
-        }"_json;
+        auto js = R"({
+                        "modules" : [
+                                        {
+                                            "id" : 66,
+                                            "type"  : "universal",
+                                            "alpha" : 90,
+                                            "beta"  : 0,
+                                            "gamma" : 180
+                                        },
+                                        {
+                                            "id" : 42,
+                                            "type" : "universal",
+                                            "alpha" : 0,
+                                            "beta"  : 90,
+                                            "gamma" : 90
+                                        }
+                        ],
+                        "moduleJoints" : [
+                                            {
+                                                "orientation" : "East",
+                                                "from" : {
+                                                            "id" : 66,
+                                                            "connector" : "A-Z"
+                                                    },
+                                                "to" : {
+                                                            "id" : 42,
+                                                            "connector" : 5
+                                                    }
+                                            }
+                        ],
+                        "spaceJoints" : [
+                                            {
+                                                "point" : [0, 0, 0],
+                                                "to" : {
+                                                            "id" : 66,
+                                                            "component" : 7
+                                                },
+                                                "joint" : {
+                                                            "type" : "rigid",
+                                                            "sourceToDestination" : "identity"
+                                                            }
+                                                }
+                        ]
+        })"_json;
 
         bot = fromJSON( js );
 
@@ -436,40 +436,40 @@ TEST_CASE( "Working with attributes" ) {
     }
 
     SECTION( "Sum all attributes" ) {
-        auto js = "{ \"modules\" : [ { \"id\" : 66,\
-                                       \"type\"  : \"universal\",\
-                                       \"alpha\" : 90, \"beta\"  : 0, \"gamma\" : 180,\
-                                       \"attributes\" : 1\
-                                     },\
-                                     { \"id\" : 42,\
-                                       \"type\" : \"universal\",\
-                                       \"alpha\" : 0, \"beta\"  : 90, \"gamma\" : 90,\
-                                       \"attributes\" : 2\
-                                     }\
-                                ],\
-                     \"moduleJoints\" : [ {\
-                                            \"orientation\" : \"East\",\
-                                            \"from\" : { \"id\" : 66, \"connector\" : \"A-Z\" },\
-                                            \"to\" :   { \"id\" : 42, \"connector\" : \"B-Z\" },\
-                                            \"attributes\" : 3\
-                                          }\
-                                        ],\
-                     \"spaceJoints\" : [ {\
-                                        \"point\" : [ 0, 0, 0 ],\
-                                        \"to\" : { \"id\" : 66, \"component\" : 7 },\
-                                        \"attributes\" : 4,\
-                                        \"joint\" : {\
-                                                        \"type\" : \"rigid\",\
-                                                        \"sourceToDestination\" : [\
-                                                                           [ 1, 0, 0, 0 ]\
-                                                                           , [ 0, 1, 0, 0 ]\
-                                                                           , [ 0, 0, 1, 0 ]\
-                                                                           , [ 0, 0, 0, 1 ]\
-                                                        ]\
-                                                    }\
-                                        }\
-                                    ]\
-                    }"_json;
+        auto js = R"({ "modules" : [ { "id" : 66,
+                                       "type"  : "universal",
+                                       "alpha" : 90, "beta"  : 0, "gamma" : 180,
+                                       "attributes" : 1
+                                     },
+                                     { "id" : 42,
+                                       "type" : "universal",
+                                       "alpha" : 0, "beta"  : 90, "gamma" : 90,
+                                       "attributes" : 2
+                                     }
+                                ],
+                     "moduleJoints" : [ {
+                                            "orientation" : "East",
+                                            "from" : { "id" : 66, "connector" : "A-Z" },
+                                            "to" :   { "id" : 42, "connector" : "B-Z" },
+                                            "attributes" : 3
+                                          }
+                                        ],
+                     "spaceJoints" : [ {
+                                        "point" : [ 0, 0, 0 ],
+                                        "to" : { "id" : 66, "component" : 7 },
+                                        "attributes" : 4,
+                                        "joint" : {
+                                                        "type" : "rigid",
+                                                        "sourceToDestination" : [
+                                                                           [ 1, 0, 0, 0 ]
+                                                                           , [ 0, 1, 0, 0 ]
+                                                                           , [ 0, 0, 1, 0 ]
+                                                                           , [ 0, 0, 0, 1 ]
+                                                        ]
+                                                    }
+                                        }
+                                    ]
+                    })"_json;
 
         int sum = 0;
         auto copy = fromJSON( js, overload{
