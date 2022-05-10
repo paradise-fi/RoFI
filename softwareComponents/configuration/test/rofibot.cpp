@@ -659,6 +659,24 @@ TEST_CASE( "Configuration copying" ) {
         CHECK( um12.parent == &bot );
         CHECK( um12_2->parent == &bot_2 );
     }
+    SECTION( "Universal Module copy" ) {
+        auto um12 = UniversalModule( 12 );
+        auto um13copy = um12;
+        um13copy.setId( 13 );
+
+        auto& um12_ = bot.insert( um12 );
+        auto& um13copy_ = bot.insert( um13copy );
+
+        CAPTURE( &um12 );
+        CAPTURE( &um12_ );
+        CAPTURE( &um13copy );
+        CAPTURE( &um13copy_ );
+
+        CHECK( um12.getConnector( "B-Z" ).parent == &um12 );
+        CHECK( um12_.getConnector( "B-Z" ).parent == &um12_ );
+        // CHECK( um13copy.getConnector( "B-Z" ).parent == &um13copy ); // TODO Issue #199
+        CHECK( um13copy_.getConnector( "B-Z" ).parent == &um13copy_ );
+    }
 }
 
 } // namespace
