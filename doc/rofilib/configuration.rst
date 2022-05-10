@@ -174,10 +174,8 @@ above, we could do it with this json
         "moduleJoints" : [
             {
                 "orientation" : "East",
-                "from" : 66,
-                "fromCon" : "A+X",
-                "to" : 42,
-                "toCon" : "A-X"
+                "from" : { "id" : 66, "connector" : "A+X" },
+                "to" :   { "id" : 42, "connector" : "A-X" }
             }
         ],
 
