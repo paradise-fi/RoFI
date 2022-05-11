@@ -273,10 +273,10 @@ SimpleSim
 
 .. code-block:: sh
 
-    $ source setup.sh Debug                      # Setup your terminal in Debug mode
-    $ rcfg desktop && rmake desktop              # Configure the desktop suite and build it
-    $ rofi-simplesim --help                      # Display help
-    $ rofi-simplesim data/configurations/init.in # Run simplesim
+    $ source setup.sh Debug         # Setup your terminal in Debug mode
+    $ rcfg desktop && rmake desktop # Configure the desktop suite and build it
+    $ rofi-simplesim --help         # Display help
+    $ rofi-simplesim data/configurations/old/init.in # Run simplesim
 
 
 Module code

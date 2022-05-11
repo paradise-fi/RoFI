@@ -17,15 +17,15 @@ TEST_CASE( "Failed inputs" ){
 /* Config paths */
 
 const std::string root = std::getenv( "ROFI_ROOT" );
-const std::string single_path = root + "/data/configurations/kinematics/one_module.rofi";
-const std::string doubleZZ = root + "/data/configurations/kinematics/2zz.rofi";
-const std::string doubleZZN = root + "/data/configurations/kinematics/2zzN.rofi";
-const std::string doubleZZE = root + "/data/configurations/kinematics/2zzE.rofi";
-const std::string doubleZZW = root + "/data/configurations/kinematics/2zzW.rofi";
+const std::string single_path = root + "/data/configurations/old/kinematics/one_module.rofi";
+const std::string doubleZZ = root + "/data/configurations/old/kinematics/2zz.rofi";
+const std::string doubleZZN = root + "/data/configurations/old/kinematics/2zzN.rofi";
+const std::string doubleZZE = root + "/data/configurations/old/kinematics/2zzE.rofi";
+const std::string doubleZZW = root + "/data/configurations/old/kinematics/2zzW.rofi";
 
-const std::string doubleZXS = root + "/data/configurations/kinematics/2zxS.rofi";
+const std::string doubleZXS = root + "/data/configurations/old/kinematics/2zxS.rofi";
 
-const std::string ZXSXZ = root + "/data/configurations/kinematics/3zxxzS.rofi";
+const std::string ZXSXZ = root + "/data/configurations/old/kinematics/3zxxzS.rofi";
 
 /* Loading configurations */
 
