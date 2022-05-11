@@ -276,7 +276,7 @@ SimpleSim
     $ source setup.sh Debug         # Setup your terminal in Debug mode
     $ rcfg desktop && rmake desktop # Configure the desktop suite and build it
     $ rofi-simplesim --help         # Display help
-    $ rofi-simplesim data/configurations/old/init.in # Run simplesim
+    $ rofi-simplesim data/configurations/json/single.json # Run simplesim
 
 
 Module code
