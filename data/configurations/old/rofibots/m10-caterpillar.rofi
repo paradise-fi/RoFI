@@ -1,0 +1,30 @@
+C
+M 0 -45 45 0
+M 1 -45 45 0
+M 2 0 0 0
+M 3 -45 45 0
+M 4 -45 45 0
+M 5 0 0 0
+M 6 -45 45 0
+M 7 -45 45 0
+M 8 0 0 0
+M 9 0 0 0
+
+E 0 B -Z N -Z A 1
+E 0 B +X N -X A 2
+E 1 A +X  S  +X B 2
+E 2 A +X N -X B 3 
+E 2 B -X S -X A 4 
+
+E 3 B -Z N -Z A 4
+E 3 B +X N -X A 5
+E 4 A +X  S  +X B 5
+E 5 A +X N -X B 6 
+E 5 B -X S -X A 7 
+
+E 6 B -Z N -Z A 7
+E 6 B +X N -X A 8
+E 7 A +X  S  +X B 8
+
+E 0 B -X N +X A 9
+E 1 A -X  S  -X B 9

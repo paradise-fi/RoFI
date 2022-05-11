@@ -14,8 +14,8 @@ def getSet(task):
         "tangled_1k": "experiments/snake_reconfig_ik/tangled_1k",
         "tangled_6k": "experiments/snake_reconfig_ik/tangled_6k",
         "tangled_m10": "experiments/snake_reconfig/tangled_m10",
-        "matej": "data/configurations/snakeBench",
-        "hand_crafted": "data/configurations/rofibots"
+        "matej": "data/configurations/old/snakeBench",
+        "hand_crafted": "data/configurations/old/rofibots"
     }
     for name, path in sets.items():
         if path in task["command"]:
