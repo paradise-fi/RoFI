@@ -55,16 +55,16 @@ private:
     {
         assert( msg );
 
-        auto rofibot = std::make_shared< configuration::Rofibot >(
+        auto rofiworld = std::make_shared< configuration::RofiWorld >(
                 configuration::serialization::fromJSON( nlohmann::json::parse( msg->value() ) ) );
-        assert( rofibot );
+        assert( rofiworld );
 
-        if ( auto [ ok, err_str ] = rofibot->validate( configuration::SimpleCollision() ); !ok ) {
+        if ( auto [ ok, err_str ] = rofiworld->validate( configuration::SimpleCollision() ); !ok ) {
             std::cerr << "Configuration not valid: '" << err_str << "'" << std::endl;
             return;
         }
 
-        _client.onConfigurationUpdate( std::move( rofibot ) );
+        _client.onConfigurationUpdate( std::move( rofiworld ) );
     }
 
     void onSettingsResp( const SettingsStateMsgPtr & msgPtr )

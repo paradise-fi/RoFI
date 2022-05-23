@@ -6,9 +6,10 @@ so that we are able to describe various module shapes and
 sizes.
 
 Currently, the user can create and work with the whole
-RoFIbot, which is represented by the class `Rofibot`. The
-bot consists of one or more modules. A module is represented
-by its own class called `Module`.
+world, which is represented by the class `RofiWorld`. The
+world consists of bots, which itself is consisted of one
+or more modules fixed in space. A module is represented by
+its own class called `Module`.
 
 ## Making custom module
 

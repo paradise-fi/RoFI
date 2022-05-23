@@ -6,7 +6,7 @@
 
 #include <magic_enum.hpp>
 
-#include "configuration/rofibot.hpp"
+#include "configuration/rofiworld.hpp"
 
 
 namespace rofi::voxel
@@ -213,10 +213,10 @@ struct Voxel {
 };
 
 struct VoxelWorld {
-    static auto fromRofiWorld( const rofi::configuration::Rofibot & rofiWorld ) -> VoxelWorld
+    static auto fromRofiWorld( const rofi::configuration::RofiWorld & rofiWorld ) -> VoxelWorld
     {
         if ( !rofiWorld.isPrepared() ) {
-            throw std::runtime_error( "Rofibot has to be prepared to convert to voxel json" );
+            throw std::runtime_error( "RofiWorld has to be prepared to convert to voxel json" );
         }
 
         auto subtractPos = []( Position lhs, const Position & rhs ) -> Position {

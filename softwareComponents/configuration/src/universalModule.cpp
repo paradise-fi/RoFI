@@ -110,9 +110,9 @@ auto parseEdge( std::istringstream& line ) {
     return std::make_tuple( id1, id2, side1, side2, dock1, dock2, orientation );
 }
 
-Rofibot readOldConfigurationFormat( std::istream& s ) {
+RofiWorld readOldConfigurationFormat( std::istream& s ) {
     std::string line;
-    Rofibot rofibot;
+    RofiWorld world;
     std::set< ModuleId > knownModules;
     while ( std::getline( s, line ) ) {
         std::istringstream lineStr( line );
@@ -129,7 +129,7 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
             int id;
             lineStr >> id >> alpha >> beta >> gamma;
             auto rModule = UniversalModule( id, Angle::deg( alpha ), Angle::deg( beta ), Angle::deg( gamma ) );
-            rofibot.insert( std::move( rModule ) );
+            world.insert( std::move( rModule ) );
             knownModules.insert( id );
             continue;
         }
@@ -137,14 +137,14 @@ Rofibot readOldConfigurationFormat( std::istream& s ) {
             auto [ id1, id2, side1, side2, dock1, dock2, orientation ] = parseEdge( lineStr );
             if ( !checkOldConfigurationEInput( id1, id2, side1, side2, dock1, dock2, orientation, knownModules ) )
                 throw std::runtime_error( "Invalid edge specification" );
-            auto& component1 = rofibot.getModule( id1 )->connectors()[ side1 * 3 + dock1 ];
-            auto& component2 = rofibot.getModule( id2 )->connectors()[ side2 * 3 + dock2 ];
+            auto& component1 = world.getModule( id1 )->connectors()[ side1 * 3 + dock1 ];
+            auto& component2 = world.getModule( id2 )->connectors()[ side2 * 3 + dock2 ];
             connect( component1, component2, static_cast< roficom::Orientation >( orientation ) );
             continue;
         }
         throw std::runtime_error("Expected a module (M) or edge (E), got " + type + ".");
     }
-    return rofibot;
+    return world;
 }
 
     int UniversalModule::translateComponent( const std::string& cStr ) {

@@ -25,14 +25,14 @@ int readIntWithMsg( const std::string& msg ) {
     return n;
 }
 
-rofi::configuration::Rofibot buildWishedRofibot( BotType botType ) {
+rofi::configuration::RofiWorld buildWishedRofibot( BotType botType ) {
     using namespace rofi::configuration;
-    Rofibot rofibot;
+    RofiWorld world;
     int n, m;
     switch ( botType ) {
         case BotType::UM:
-            rofibot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
-            return rofibot;
+            world.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+            return world;
         case BotType::UMpadN:
             n = readIntWithMsg( "Dimension: " );
             return buildUMpad( n );
@@ -42,17 +42,17 @@ rofi::configuration::Rofibot buildWishedRofibot( BotType botType ) {
             return buildUMpad( n, m );
         case BotType::NPad:
             n = readIntWithMsg( "Dimension: " );
-            rofibot.insert( Pad( 0, n ) );
+            world.insert( Pad( 0, n ) );
             break;
         case BotType::NMPad:
             n = readIntWithMsg( "Dimension n: " );
             m = readIntWithMsg( "Dimension m: " );
-            rofibot.insert( Pad( 0, n, m ) );
+            world.insert( Pad( 0, n, m ) );
             break;
         default:
             throw std::runtime_error( "Unknown model" );
     }
-    return rofibot;
+    return world;
 }
 
 std::string botTypeToString( BotType b ) {
@@ -72,16 +72,16 @@ std::string botTypeToString( BotType b ) {
 }
 
 int build( Dim::Cli & /* cli */ ) {
-    auto configuration = buildWishedRofibot( static_cast< BotType >( *botType ) );
+    auto world = buildWishedRofibot( static_cast< BotType >( *botType ) );
 
     rofi::configuration::connect< rofi::configuration::RigidJoint >(
-        *botType > 2 ? configuration.getModule( 0 )->connectors()[ 0 ] // No body within the pad
-                     : configuration.getModule( 0 )->bodies()[ 0 ],     // UM, so we fix its body
+        *botType > 2 ? world.getModule( 0 )->connectors()[ 0 ] // No body within the pad
+                     : world.getModule( 0 )->bodies()[ 0 ],     // UM, so we fix its body
         rofi::configuration::matrices::Vector( { 0, 0, 0 } ),
         rofi::configuration::matrices::identity );
 
-    configuration.prepare();
-    renderConfiguration( configuration, botTypeToString( static_cast< BotType >( *botType ) ) );
+    world.prepare();
+    renderConfiguration( world, botTypeToString( static_cast< BotType >( *botType ) ) );
 
     return 0;
 }

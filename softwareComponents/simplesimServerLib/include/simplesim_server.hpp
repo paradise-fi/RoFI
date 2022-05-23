@@ -7,7 +7,7 @@
 #include <dimcli/cli.h>
 
 // RoFI headers
-#include <configuration/rofibot.hpp>
+#include <configuration/rofiworld.hpp>
 #include <configuration/serialization.hpp>
 #include <configuration/universalModule.hpp>
 #include <simplesim/packet_filters/py_filter.hpp>
@@ -61,7 +61,7 @@ inline auto pyPacketFilterFilePathCliOpt( Dim::Cli & cli )
 
 auto readAndPrepareConfigurationFromFile( const std::filesystem::path & cfgFilePath,
                                           ConfigurationFormat configFormat )
-        -> std::shared_ptr< const rofi::configuration::Rofibot >;
+        -> std::shared_ptr< const rofi::configuration::RofiWorld >;
 
 auto readPyFilterFromFile( const std::filesystem::path & packetFilterFilePath )
         -> packetf::PyFilter;

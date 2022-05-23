@@ -2,7 +2,7 @@
 
 #include <atoms/result.hpp>
 #include <atoms/unreachable.hpp>
-#include <configuration/rofibot.hpp>
+#include <configuration/rofiworld.hpp>
 #include <configuration/universalModule.hpp>
 #include <configuration/pad.hpp>
 #include <configuration/unknownModule.hpp>
@@ -312,7 +312,7 @@ namespace rofi::configuration::serialization {
     } // namespace details
 
 
-    /** \brief Serialize given Rofibot to json.
+    /** \brief Serialize given RofiWorld to json.
      *
      * \param attrCb a suitable function or Callable object that returns a `nlohmann::json` which is then
      *               stored into appropriate `"attributes"` field
@@ -325,14 +325,14 @@ namespace rofi::configuration::serialization {
      * - callback for a SpaceJoint or a RoficomJoint gets a const reference to the appropriate joint
      */
     template< typename Callback >
-    inline nlohmann::json toJSON( const Rofibot& bot, Callback attrCb ) {
+    inline nlohmann::json toJSON( const RofiWorld& world, Callback attrCb ) {
         using namespace nlohmann;
         json res;
         res[ "modules" ] = json::array();
         res[ "moduleJoints" ] = json::array();
         res[ "spaceJoints"  ] = json::array();
 
-        for ( const auto& m : bot.modules() ) {
+        for ( const auto& m : world.modules() ) {
             json j;
             switch ( m.module->type ) {
                 case ModuleType::Universal:
@@ -351,23 +351,23 @@ namespace rofi::configuration::serialization {
             res[ "modules" ].push_back( j );
         }
 
-        for ( const RoficomJoint& rj : bot.roficomConnections() ) {
+        for ( const RoficomJoint& rj : world.roficomConnections() ) {
             json j;
-            details::connectionToJSON( j, "from", "connector", bot.getModule( rj.sourceModule )->getId()
-                                     , bot.getModule( rj.sourceModule )->type, rj.sourceConnector );
+            details::connectionToJSON( j, "from", "connector", world.getModule( rj.sourceModule )->getId()
+                                     , world.getModule( rj.sourceModule )->type, rj.sourceConnector );
 
-            details::connectionToJSON( j, "to", "connector", bot.getModule( rj.destModule )->getId()
-                                     , bot.getModule( rj.destModule )->type, rj.destConnector );
+            details::connectionToJSON( j, "to", "connector", world.getModule( rj.destModule )->getId()
+                                     , world.getModule( rj.destModule )->type, rj.destConnector );
 
             j[ "orientation" ] = orientationToString( rj.orientation );
             details::addAttributes( j, attrCb, rj );
             res[ "moduleJoints" ].push_back( j );
         }
 
-        for ( const SpaceJoint& sj : bot.referencePoints() ) {
+        for ( const SpaceJoint& sj : world.referencePoints() ) {
             json j;
-            details::connectionToJSON( j, "to", "component", bot.getModule( sj.destModule )->getId()
-                                     , bot.getModule( sj.destModule )->type, sj.destComponent );
+            details::connectionToJSON( j, "to", "component", world.getModule( sj.destModule )->getId()
+                                     , world.getModule( sj.destModule )->type, sj.destComponent );
 
             j[ "point" ] = { sj.refPoint[ 0 ], sj.refPoint[ 1 ], sj.refPoint[ 2 ] };
             assert( sj.joint.get() && "joint is nullptr" );
@@ -379,13 +379,13 @@ namespace rofi::configuration::serialization {
         return res;
     }
 
-    inline nlohmann::json toJSON( const Rofibot& bot ) {
-        return toJSON( bot, []( auto&& ... ){ return nlohmann::json{}; } );
+    inline nlohmann::json toJSON( const RofiWorld& world ) {
+        return toJSON( world, []( auto&& ... ){ return nlohmann::json{}; } );
     }
 
-    /** \brief Load a Rofibot from given json.
+    /** \brief Load a RofiWorld from given json.
      *
-     * \param j json with a Rofibot
+     * \param j json with a RofiWorld
      * \param attrCb a suitable function or Callable object that process appropriate `"attributes"` fields
      *
      * Callback for attributes has to cover all of these possible arguments:
@@ -402,24 +402,24 @@ namespace rofi::configuration::serialization {
      *                                                     and a handle for given connection
      */
     template< typename Callback >
-    inline Rofibot fromJSON( const nlohmann::json& j, Callback attrCb ) {
-        Rofibot bot;
+    inline RofiWorld fromJSON( const nlohmann::json& j, Callback attrCb ) {
+        RofiWorld world;
 
         for ( size_t i = 0; i < j[ "modules" ].size(); i++ ) {
             auto& jm = j[ "modules" ][ i ];
 
             if ( jm[ "type" ] == "universal" )
-                bot.insert( details::moduleFromJSON< UniversalModule >( jm, attrCb ) );
+                world.insert( details::moduleFromJSON< UniversalModule >( jm, attrCb ) );
             else if ( jm[ "type" ] == "pad" )
-                bot.insert( details::moduleFromJSON< Pad >( jm, attrCb ) );
+                world.insert( details::moduleFromJSON< Pad >( jm, attrCb ) );
             else if ( jm[ "type" ] == "unknown" )
-                bot.insert( details::moduleFromJSON< UnknownModule >( jm, attrCb ) );
+                world.insert( details::moduleFromJSON< UnknownModule >( jm, attrCb ) );
             else
                 ROFI_UNREACHABLE( "Unknown type of a module" );
         }
 
         // function for translation of components to docs if necessary
-        auto f = [ &bot ]( ModuleId id ) -> ModuleType { return bot.getModule( id )->type; };
+        auto f = [ &world ]( ModuleId id ) -> ModuleType { return world.getModule( id )->type; };
 
         for ( const auto& jj : j[ "moduleJoints" ] ) {
             roficom::Orientation o = roficom::stringToOrientation( jj[ "orientation" ] );
@@ -427,8 +427,8 @@ namespace rofi::configuration::serialization {
             auto [ sourceModule, sourceConnector ] = details::connectorFromJSON( jj, "from", f );
             auto [ destinationModule, destinationConnector ] = details::connectorFromJSON( jj, "to", f );
 
-            auto conn = connect( bot.getModule( sourceModule )->connectors()[ sourceConnector ]
-                               , bot.getModule( destinationModule )->connectors()[ destinationConnector ]
+            auto conn = connect( world.getModule( sourceModule )->connectors()[ sourceConnector ]
+                               , world.getModule( destinationModule )->connectors()[ destinationConnector ]
                                , o );
 
             details::processAttributes( jj, attrCb, conn );
@@ -439,7 +439,7 @@ namespace rofi::configuration::serialization {
 
             Vector fixedPoint = { sj[ "point" ][ 0 ], sj[ "point" ][ 1 ], sj[ "point" ][ 2 ] };
             if ( sj[ "joint" ][ "type" ] == "rigid" ) {
-                auto conn = connect< RigidJoint >( bot.getModule( destinationModule )->components()[ destinationComponent ]
+                auto conn = connect< RigidJoint >( world.getModule( destinationModule )->components()[ destinationComponent ]
                                                  , fixedPoint
                                                  , details::matrixFromJSON( sj[ "joint" ][ "sourceToDestination" ] ) );
                 details::processAttributes( sj, attrCb, conn );
@@ -447,7 +447,7 @@ namespace rofi::configuration::serialization {
                 auto& jj = sj[ "joint" ];
                 std::vector< float > positions = jj[ "positions" ];
 
-                auto conn = connect< RotationJoint >( bot.getModule( destinationModule )->components()[ destinationComponent ]
+                auto conn = connect< RotationJoint >( world.getModule( destinationModule )->components()[ destinationComponent ]
                                                     , fixedPoint
                                                     , details::matrixFromJSON( jj[ "preMatrix" ] )
                                                     , Vector{ jj[ "axis" ][ 0 ]
@@ -456,17 +456,17 @@ namespace rofi::configuration::serialization {
                                                     , details::matrixFromJSON( jj[ "postMatrix" ] )
                                                     , Angle::deg( jj[ "limits" ][ "min" ] )
                                                     , Angle::deg( jj[ "limits" ][ "max" ] ) );
-                bot.setSpaceJointPositions( conn, positions );
+                world.setSpaceJointPositions( conn, positions );
                 details::processAttributes( sj, attrCb, conn );
             } else {
                 ROFI_UNREACHABLE( "Unknown joint type" );
             }
         }
 
-        return bot;
+        return world;
     }
 
-    inline Rofibot fromJSON( const nlohmann::json& j ) {
+    inline RofiWorld fromJSON( const nlohmann::json& j ) {
         return fromJSON( j, []( auto&& ... ) { return; } );
     }
 

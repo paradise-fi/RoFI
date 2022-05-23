@@ -1,4 +1,4 @@
-#include <configuration/rofibot.hpp>
+#include <configuration/rofiworld.hpp>
 
 #include <atoms/unreachable.hpp>
 
@@ -72,12 +72,12 @@ std::optional< std::pair< const Component&, roficom::Orientation > > Component::
     assert( parent != nullptr );
     assert( parent->parent != nullptr );
 
-    Rofibot& rofibot = *parent->parent;
-    if ( !rofibot.isPrepared() )
-        throw std::runtime_error( "rofibot is not prepared" );
+    RofiWorld& world = *parent->parent;
+    if ( !world.isPrepared() )
+        throw std::runtime_error( "rofiworld is not prepared" );
 
     auto thisAbsPosition = getPosition();
-    for ( auto& moduleInfo : rofibot.modules() ) {
+    for ( auto& moduleInfo : world.modules() ) {
         assert( moduleInfo.module );
 
         for ( const Component& nearConnector : moduleInfo.module->connectors() ) {
@@ -128,13 +128,13 @@ void Module::clearComponentPositions() {
         parent->onModuleMove();
 }
 
-void Rofibot::setSpaceJointPositions( SpaceJointHandle jointId, std::span< const float > p ) {
+void RofiWorld::setSpaceJointPositions( SpaceJointHandle jointId, std::span< const float > p ) {
     assert( p.size() == _spaceJoints[ jointId ].joint->positions().size() );
     _spaceJoints[ jointId ].joint->setPositions( p );
     _prepared = false;
 }
 
-void Rofibot::prepare() {
+void RofiWorld::prepare() {
     using namespace rofi::configuration::matrices;
     _clearModulePositions();
 
@@ -205,11 +205,11 @@ void Rofibot::prepare() {
     _prepared = true;
 }
 
-void Rofibot::disconnect( RoficomJointHandle h ) {
+void RofiWorld::disconnect( RoficomJointHandle h ) {
     assert( _moduleJoints.contains( h ) );
 
-    Rofibot::ModuleInfo& m1info = _modules[ _moduleJoints[ h ].sourceModule ];
-    Rofibot::ModuleInfo& m2info = _modules[ _moduleJoints[ h ].destModule ];
+    RofiWorld::ModuleInfo& m1info = _modules[ _moduleJoints[ h ].sourceModule ];
+    RofiWorld::ModuleInfo& m2info = _modules[ _moduleJoints[ h ].destModule ];
     [[maybe_unused]] auto erased1 = std::erase( m1info.outJointsIdx, h );
     [[maybe_unused]] auto erased2 = std::erase( m2info.inJointsIdx, h );
     assert( erased1 == 1 );
@@ -219,10 +219,10 @@ void Rofibot::disconnect( RoficomJointHandle h ) {
     _prepared = false;
 }
 
-void Rofibot::disconnect( SpaceJointHandle h ) {
+void RofiWorld::disconnect( SpaceJointHandle h ) {
     assert( _spaceJoints.contains( h ) );
 
-    Rofibot::ModuleInfo& info = _modules[ _spaceJoints[ h ].destModule ];
+    RofiWorld::ModuleInfo& info = _modules[ _spaceJoints[ h ].destModule ];
     [[maybe_unused]] auto erased = std::erase( info.spaceJoints, h );
     assert( erased == 1 );
 
@@ -230,24 +230,24 @@ void Rofibot::disconnect( SpaceJointHandle h ) {
     _prepared = false;
 }
 
-Rofibot::RoficomJointHandle connect( const Component& c1, const Component& c2, roficom::Orientation o ) {
+RofiWorld::RoficomJointHandle connect( const Component& c1, const Component& c2, roficom::Orientation o ) {
     assert( c1.type == ComponentType::Roficom && c2.type == ComponentType::Roficom && "Components are not RoFICoMs" );
 
     if ( c1.parent->parent != c2.parent->parent )
-        throw std::logic_error( "Components have to be in the same rofibot" );
-    Rofibot& bot = *c1.parent->parent;
-    Rofibot::ModuleInfo& m1info = bot._modules[ bot._idMapping[ c1.parent->getId() ] ];
-    Rofibot::ModuleInfo& m2info = bot._modules[ bot._idMapping[ c2.parent->getId() ] ];
+        throw std::logic_error( "Components have to be in the same world" );
+    RofiWorld& world = *c1.parent->parent;
+    RofiWorld::ModuleInfo& m1info = world._modules[ world._idMapping[ c1.parent->getId() ] ];
+    RofiWorld::ModuleInfo& m2info = world._modules[ world._idMapping[ c2.parent->getId() ] ];
 
-    auto jointHandle = bot._moduleJoints.insert( {
-        o, bot._idMapping[ m1info.module->getId() ], bot._idMapping[ m2info.module->getId() ],
+    auto jointHandle = world._moduleJoints.insert( {
+        o, world._idMapping[ m1info.module->getId() ], world._idMapping[ m2info.module->getId() ],
         m1info.module->componentIdx( c1 ), m2info.module->componentIdx( c2 )
     } );
 
     m1info.outJointsIdx.push_back( jointHandle );
     m2info.inJointsIdx.push_back( jointHandle );
 
-    bot._prepared = false;
+    world._prepared = false;
     return jointHandle;
 }
 

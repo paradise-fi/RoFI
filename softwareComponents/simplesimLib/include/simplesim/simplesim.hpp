@@ -84,12 +84,12 @@ private:
 class Simplesim {
 public:
     using OnConfigurationUpdate =
-            std::function< void( std::shared_ptr< const rofi::configuration::Rofibot > ) >;
+            std::function< void( std::shared_ptr< const rofi::configuration::RofiWorld > ) >;
 
-    Simplesim( std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration,
+    Simplesim( std::shared_ptr< const rofi::configuration::RofiWorld > worldConfiguration,
                PacketFilter::FilterFunction packetFilter,
                bool verbose )
-            : _simulation( std::make_shared< Simulation >( std::move( rofibotConfiguration ),
+            : _simulation( std::make_shared< Simulation >( std::move( worldConfiguration ),
                                                            std::move( packetFilter ),
                                                            verbose ) )
             , _communication(

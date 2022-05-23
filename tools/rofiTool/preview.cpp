@@ -4,7 +4,7 @@
 #include <fstream>
 #include <stdexcept>
 
-#include <configuration/rofibot.hpp>
+#include <configuration/rofiworld.hpp>
 #include <configuration/universalModule.hpp>
 
 static auto command = Dim::Cli().command( "preview" )

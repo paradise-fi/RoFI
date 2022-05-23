@@ -7,21 +7,21 @@
 
 #include <dimcli/cli.h>
 
-#include "configuration/rofibot.hpp"
+#include "configuration/rofiworld.hpp"
 #include "configuration/serialization.hpp"
 
 
 inline auto readJsonCfgFromStream( std::istream & istr )
-        -> std::shared_ptr< rofi::configuration::Rofibot >
+        -> std::shared_ptr< rofi::configuration::RofiWorld >
 {
-    auto rofibot = rofi::configuration::serialization::fromJSON( nlohmann::json::parse( istr ) );
+    auto rofiWorld = rofi::configuration::serialization::fromJSON( nlohmann::json::parse( istr ) );
 
-    auto rofibotPtr = std::make_shared< rofi::configuration::Rofibot >( std::move( rofibot ) );
-    rofibotPtr->prepare();
-    if ( auto [ ok, str ] = rofibotPtr->isValid( rofi::configuration::SimpleCollision() ); !ok ) {
+    auto rofiWorldPtr = std::make_shared< rofi::configuration::RofiWorld >( std::move( rofiWorld ) );
+    rofiWorldPtr->prepare();
+    if ( auto [ ok, str ] = rofiWorldPtr->isValid( rofi::configuration::SimpleCollision() ); !ok ) {
         throw std::runtime_error( str );
     }
-    return rofibotPtr;
+    return rofiWorldPtr;
 }
 
 

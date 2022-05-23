@@ -7,13 +7,13 @@ namespace rofi::simplesim
 {
 
 auto readConfigurationFromStream( std::istream & istr, ConfigurationFormat configFormat )
-        -> rofi::configuration::Rofibot
+        -> rofi::configuration::RofiWorld
 {
     switch ( configFormat ) {
         case ConfigurationFormat::Old:
         {
-            auto rofibot = configuration::readOldConfigurationFormat( istr );
-            auto modules = rofibot.modules();
+            auto rofiworld = configuration::readOldConfigurationFormat( istr );
+            auto modules = rofiworld.modules();
             if ( modules.size() != 0 ) {
                 const auto & firstModule = modules.begin()->module;
                 assert( firstModule.get() );
@@ -22,7 +22,7 @@ auto readConfigurationFromStream( std::istream & istr, ConfigurationFormat confi
                                                       configuration::Vector( { 0, 0, 0 } ),
                                                       configuration::matrices::identity );
             }
-            return rofibot;
+            return rofiworld;
         }
         case ConfigurationFormat::Json:
             return configuration::serialization::fromJSON( nlohmann::json::parse( istr ) );
@@ -33,21 +33,21 @@ auto readConfigurationFromStream( std::istream & istr, ConfigurationFormat confi
 
 auto readAndPrepareConfigurationFromFile( const std::filesystem::path & cfgFilePath,
                                           ConfigurationFormat configFormat )
-        -> std::shared_ptr< const rofi::configuration::Rofibot >
+        -> std::shared_ptr< const rofi::configuration::RofiWorld >
 {
     auto inputCfgFile = std::ifstream( cfgFilePath );
     if ( !inputCfgFile.is_open() ) {
         throw std::runtime_error( "Cannot open file '" + cfgFilePath.generic_string() + "'" );
     }
 
-    auto rofibot = std::make_shared< configuration::Rofibot >(
+    auto rofiworld = std::make_shared< configuration::RofiWorld >(
             readConfigurationFromStream( inputCfgFile, configFormat ) );
-    assert( rofibot );
-    rofibot->prepare();
-    if ( auto [ ok, str ] = rofibot->isValid( configuration::SimpleCollision() ); !ok ) {
+    assert( rofiworld );
+    rofiworld->prepare();
+    if ( auto [ ok, str ] = rofiworld->isValid( configuration::SimpleCollision() ); !ok ) {
         throw std::runtime_error( str );
     }
-    return rofibot;
+    return rofiworld;
 }
 
 auto readPyFilterFromFile( const std::filesystem::path & packetFilterFilePath ) -> packetf::PyFilter

@@ -1,19 +1,19 @@
 #include <iostream>
 
 #include <configuration/pad.hpp>
-#include <configuration/rofibot.hpp>
+#include <configuration/rofiworld.hpp>
 #include <configuration/serialization.hpp>
 
 /**
  * This code creates the configuration in code and prints the json serialization.
  */
 
-rofi::configuration::Rofibot createConfiguration()
+rofi::configuration::RofiWorld createConfiguration()
 {
-    auto rofibot = rofi::configuration::Rofibot();
+    auto world = rofi::configuration::RofiWorld();
 
-    auto um12 = rofibot.insert( rofi::configuration::UniversalModule( 12 ) );
-    auto pad42 = rofibot.insert( rofi::configuration::Pad( 42, 6, 3 ) );
+    auto um12 = world.insert( rofi::configuration::UniversalModule( 12 ) );
+    auto pad42 = world.insert( rofi::configuration::Pad( 42, 6, 3 ) );
 
     rofi::configuration::connect<
             rofi::configuration::RigidJoint >( pad42.components().front(),
@@ -23,18 +23,18 @@ rofi::configuration::Rofibot createConfiguration()
                                   pad42.connectors()[ 1 ],
                                   rofi::configuration::roficom::Orientation::North );
 
-    return rofibot;
+    return world;
 }
 
 int main()
 {
-    auto rofibot = createConfiguration();
+    auto world = createConfiguration();
 
-    rofibot.prepare();
-    if ( auto result = rofibot.isValid(); !result.first ) {
+    world.prepare();
+    if ( auto result = world.isValid(); !result.first ) {
         std::cerr << "Configuration is not valid (" << result.second << ")\n";
         return 1;
     }
 
-    std::cout << rofi::configuration::serialization::toJSON( rofibot ) << "\n";
+    std::cout << rofi::configuration::serialization::toJSON( world ) << "\n";
 }
