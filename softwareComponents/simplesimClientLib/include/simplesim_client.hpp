@@ -21,7 +21,7 @@
 
 #include "atoms/guarded.hpp"
 #include "changecolor.hpp"
-#include "configuration/rofibot.hpp"
+#include "configuration/rofiworld.hpp"
 #include "configuration/serialization.hpp"
 
 #include <simplesim_settings_cmd.pb.h>
@@ -93,7 +93,7 @@ public:
 
     // Can be called from any thread
     void onConfigurationUpdate(
-            std::shared_ptr< const rofi::configuration::Rofibot > newConfiguration )
+            std::shared_ptr< const rofi::configuration::RofiWorld > newConfiguration )
     {
         assert( newConfiguration );
         assert( newConfiguration->isValid( rofi::configuration::SimpleCollision() ).first );
@@ -126,11 +126,11 @@ private slots:
     void speedChanged( double speed );
 
 private:
-    void initInfoTree( const rofi::configuration::Rofibot & rofibot );
+    void initInfoTree( const rofi::configuration::RofiWorld & rofiworld );
 
-    void updateInfoTree( const rofi::configuration::Rofibot & rofibot );
+    void updateInfoTree( const rofi::configuration::RofiWorld & rofiworld );
 
-    std::shared_ptr< const rofi::configuration::Rofibot > getCurrentConfig() const
+    std::shared_ptr< const rofi::configuration::RofiWorld > getCurrentConfig() const
     {
         return _currentConfiguration.copy();
     }
@@ -196,8 +196,8 @@ private:
 
     atoms::Guarded< msgs::SettingsState > _currentSettings;
 
-    atoms::Guarded< std::shared_ptr< const rofi::configuration::Rofibot > > _currentConfiguration;
-    std::shared_ptr< const rofi::configuration::Rofibot > _lastRenderedConfiguration;
+    atoms::Guarded< std::shared_ptr< const rofi::configuration::RofiWorld > > _currentConfiguration;
+    std::shared_ptr< const rofi::configuration::RofiWorld > _lastRenderedConfiguration;
 
     std::unique_ptr< ChangeColor > _changeColorWindow;
     vtkNew< vtkRenderer > _renderer;

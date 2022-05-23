@@ -2,7 +2,7 @@
 
 #include <array>
 #include <iostream>
-#include <configuration/rofibot.hpp>
+#include <configuration/rofiworld.hpp>
 
 namespace rofi::configuration {
 

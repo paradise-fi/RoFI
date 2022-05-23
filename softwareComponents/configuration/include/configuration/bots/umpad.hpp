@@ -1,10 +1,10 @@
 #pragma once
-#include <configuration/rofibot.hpp>
+#include <configuration/rofiworld.hpp>
 
 namespace rofi::configuration {
 
-Rofibot buildUMpad( int n, int m );
+RofiWorld buildUMpad( int n, int m );
 
-Rofibot buildUMpad( int n );
+RofiWorld buildUMpad( int n );
 
 } // namespace rofi::configuration

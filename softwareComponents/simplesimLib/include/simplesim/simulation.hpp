@@ -27,11 +27,11 @@ public:
     using RofiResp = rofi::messages::RofiResp;
 
 
-    explicit Simulation( std::shared_ptr< const rofi::configuration::Rofibot > rofibotConfiguration,
+    explicit Simulation( std::shared_ptr< const rofi::configuration::RofiWorld > rofiworldConfiguration,
                          PacketFilter::FilterFunction packetFilter,
                          bool verbose )
             : _moduleStates(
-                    std::make_shared< ModuleStates >( std::move( rofibotConfiguration ), verbose ) )
+                    std::make_shared< ModuleStates >( std::move( rofiworldConfiguration ), verbose ) )
             , _commandHandler( std::make_shared< CommandHandler >( this->_moduleStates,
                                                                    std::move( packetFilter ) ) )
     {
@@ -41,7 +41,7 @@ public:
 
     // Moves each rofi module based on the inner state
     // Returns the responses that happen inside RoFIs
-    std::pair< std::vector< RofiResp >, std::shared_ptr< const rofi::configuration::Rofibot > >
+    std::pair< std::vector< RofiResp >, std::shared_ptr< const rofi::configuration::RofiWorld > >
             simulateOneIteration( std::chrono::milliseconds duration )
     {
         assert( _commandHandler );

@@ -1,7 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include <configuration/pad.hpp>
-#include <configuration/rofibot.hpp>
+#include <configuration/rofiworld.hpp>
 #include <configuration/universalModule.hpp>
 #include <configuration/unknownModule.hpp>
 
@@ -221,66 +221,66 @@ TEST_CASE( "Universal Module Test" ) {
 
 TEST_CASE( "Two modules next to each other" ) {
     ModuleId idCounter = 0;
-    Rofibot bot;
-    auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    RofiWorld world;
+    auto& m1 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     auto con = m2.connectors()[ 1 ];
     connect( m1.connectors()[ 0 ], con, Orientation::South );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    REQUIRE_NOTHROW( bot.prepare() );
+    REQUIRE_NOTHROW( world.prepare() );
 
     SECTION( "The second is just moved to left by one" ) {
         Matrix new_origin = identity * translate( { -1, 0, 0 } );
         REQUIRE( !equals( identity, new_origin ) );
         Matrix mat = identity;
-        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 0 ) )
+        CHECK( equals( center( world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 0 ) )
                      , center( new_origin ) ) );
 
         mat = new_origin * rotate( M_PI, { 0, 0, 1 } );
-        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 1 ) ), center( mat ) ) );
+        CHECK( equals( center( world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 1 ) ), center( mat ) ) );
 
         mat = new_origin * rotate( - M_PI_2, { 0, 1, 0 } );
-        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 2 ) ), center( mat ) ) );
-        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 6 ) ), center( new_origin ) ) );
-        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 7 ) ), center( new_origin ) ) );
+        CHECK( equals( center( world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 2 ) ), center( mat ) ) );
+        CHECK( equals( center( world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 6 ) ), center( new_origin ) ) );
+        CHECK( equals( center( world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 7 ) ), center( new_origin ) ) );
 
         mat =  new_origin * m1.getComponentRelativePosition( 3 );
-        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 3 ) ), center( mat ) ) );
+        CHECK( equals( center( world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 3 ) ), center( mat ) ) );
 
         mat = new_origin * m1.getComponentRelativePosition( 4 );
-        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 4 ) ), center( mat ) ) );
+        CHECK( equals( center( world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 4 ) ), center( mat ) ) );
 
         mat = new_origin * m1.getComponentRelativePosition( 5 );
-        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 5 ) ), center( mat ) ) );
+        CHECK( equals( center( world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 5 ) ), center( mat ) ) );
 
         mat = new_origin * m1.getComponentRelativePosition( 8 );
-        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 8 ) ), center( mat ) ) );
+        CHECK( equals( center( world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 8 ) ), center( mat ) ) );
 
         mat = { { -1, 0, 0, -1 }, { 0, 1, 0, 0 }, { 0, 0, -1, 1 }, { 0, 0, 0, 1 } };
-        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 9 ) ), center( mat ) ) );
+        CHECK( equals( center( world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 9 ) ), center( mat ) ) );
 
         mat = new_origin * m1.getComponentRelativePosition( 9 );
-        CHECK( equals( center( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 9 ) ), center( mat ) ) );
+        CHECK( equals( center( world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 9 ) ), center( mat ) ) );
     }
 }
 
 TEST_CASE( "Two modules - different angles" ) {
     int idCounter = 0;
-    Rofibot bot;
-    auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    RofiWorld world;
+    auto& m1 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     connect( m1.connectors()[ 3 ], m2.connectors()[ 0 ], Orientation::South );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    REQUIRE_NOTHROW( bot.prepare() );
+    REQUIRE_NOTHROW( world.prepare() );
 
     SECTION( "BodyA " ) {
-        CHECK( equals( bot.getModulePosition( m1.getId() ), identity ) );
-        CHECK( equals( center( bot.getModulePosition( m2.getId() ) ), center( identity * translate( { 1, 0, 1 } ) ) ) );
+        CHECK( equals( world.getModulePosition( m1.getId() ), identity ) );
+        CHECK( equals( center( world.getModulePosition( m2.getId() ) ), center( identity * translate( { 1, 0, 1 } ) ) ) );
     }
 
     SECTION( "BodyB" ) {
     Matrix m1shoeB = m1.getComponentRelativePosition( 9 );
-    Matrix m2shoeB = bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 9 );
+    Matrix m2shoeB = world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 9 );
     CHECK( equals( m1shoeB, { { -1, 0,  0, 0 }
                             , {  0, 1,  0, 0 }
                             , {  0, 0, -1, 1 }
@@ -291,73 +291,73 @@ TEST_CASE( "Two modules - different angles" ) {
 
 TEST_CASE( "Three modules -- connect docks 3 to 0s " ) {
     int idCounter = 0;
-    Rofibot bot;
-    auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m3 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    RofiWorld world;
+    auto& m1 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m3 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     connect( m1.connectors()[ 3 ], m2.connectors()[ 0 ], Orientation::South );
     connect( m2.connectors()[ 3 ], m3.connectors()[ 0 ], Orientation::South );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    REQUIRE_NOTHROW( bot.prepare() );
+    REQUIRE_NOTHROW( world.prepare() );
 
     SECTION( "Modules are well placed" ) {
-        CHECK( equals( center( bot.getModulePosition( m1.getId() ) ), center( identity ) ) );
-        CHECK( equals( center( bot.getModulePosition( m2.getId() ) ), center( translate( { 1, 0, 1 } ) ) ) );
-        CHECK( equals( center( bot.getModulePosition( m3.getId() ) ), center( translate( { 2, 0, 2 } ) ) ) );
+        CHECK( equals( center( world.getModulePosition( m1.getId() ) ), center( identity ) ) );
+        CHECK( equals( center( world.getModulePosition( m2.getId() ) ), center( translate( { 1, 0, 1 } ) ) ) );
+        CHECK( equals( center( world.getModulePosition( m3.getId() ) ), center( translate( { 2, 0, 2 } ) ) ) );
     }
 
     SECTION( "Shoes A" ) {
-        CHECK( equals( bot.getModulePosition( m1.getId() ) * m1.getComponentRelativePosition( 6 ), identity ) );
-        CHECK( equals( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 6 ), translate( { 1, 0, 1 } ) ) );
-        CHECK( equals( bot.getModulePosition( m3.getId() ) * m3.getComponentRelativePosition( 6 ), translate( { 2, 0, 2 } ) ) );
+        CHECK( equals( world.getModulePosition( m1.getId() ) * m1.getComponentRelativePosition( 6 ), identity ) );
+        CHECK( equals( world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 6 ), translate( { 1, 0, 1 } ) ) );
+        CHECK( equals( world.getModulePosition( m3.getId() ) * m3.getComponentRelativePosition( 6 ), translate( { 2, 0, 2 } ) ) );
     }
 
     SECTION( "Shoes B" ) {
-        Matrix x = bot.getModulePosition( m1.getId() ) * m1.getComponentRelativePosition( 9 );
-        CHECK( equals( bot.getModulePosition( m1.getId() ) * m1.getComponentRelativePosition( 9 )
+        Matrix x = world.getModulePosition( m1.getId() ) * m1.getComponentRelativePosition( 9 );
+        CHECK( equals( world.getModulePosition( m1.getId() ) * m1.getComponentRelativePosition( 9 )
                      , translate( { 0, 0, 1 } ) * rotate( M_PI, { 0, 1, 0 } ) ) );
-        CHECK( equals( bot.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 9 )
+        CHECK( equals( world.getModulePosition( m2.getId() ) * m2.getComponentRelativePosition( 9 )
                      , translate( { 1, 0, 2 } ) * rotate( M_PI, { 0, 1, 0 } ) ) );
-        CHECK( equals( bot.getModulePosition( m3.getId() ) * m3.getComponentRelativePosition( 9 )
+        CHECK( equals( world.getModulePosition( m3.getId() ) * m3.getComponentRelativePosition( 9 )
                      , translate( { 2, 0, 3 } ) * rotate( M_PI, { 0, 1, 0 } ) ) );
     }
 }
 
-TEST_CASE( "Basic rofibot manipulation" ) {
+TEST_CASE( "Basic RofiWorld manipulation" ) {
     using namespace rofi;
     int idCounter = 0;
-    Rofibot bot;
-    auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    RofiWorld world;
+    auto& m1 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     CHECK( m1.getId() == 0 );
-    CHECK( bot.getModule( 0 )->getId() == 0 );
+    CHECK( world.getModule( 0 )->getId() == 0 );
     REQUIRE( m1.getId() == 0 );
-    REQUIRE( m1.parent == &bot );
-    CHECK( &m1 == bot.getModule( 0 ) );
-    auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    REQUIRE( m1.parent == &world );
+    CHECK( &m1 == world.getModule( 0 ) );
+    auto& m2 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     REQUIRE( m2.getId() == 1 );
     CHECK( m1.getId() == 0 );
-    CHECK( bot.getModule( 0 )->getId() == 0 );
-    REQUIRE( &m1 == bot.getModule( 0 ) );
-    auto& m3 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    CHECK( world.getModule( 0 )->getId() == 0 );
+    REQUIRE( &m1 == world.getModule( 0 ) );
+    auto& m3 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     REQUIRE( m3.getId() == 2 );
-    REQUIRE( m1.parent == &bot );
-    auto& m4 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    REQUIRE( m1.parent == &world );
+    auto& m4 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     REQUIRE( m4.getId() == 3 );
-    auto& m5 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m5 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     REQUIRE( m5.getId() == 4 );
-    CHECK( bot.modules().size() == 5 );
+    CHECK( world.modules().size() == 5 );
 
-    CHECK( bot.roficomConnections().size() == 0 );
+    CHECK( world.roficomConnections().size() == 0 );
     connect( m1.connectors()[ 5 ], m2.connectors()[ 2 ], Orientation::North );
     connect( m2.connectors()[ 5 ], m3.connectors()[ 2 ], Orientation::North );
     connect( m3.connectors()[ 5 ], m4.connectors()[ 2 ], Orientation::North );
     connect( m4.connectors()[ 5 ], m5.connectors()[ 2 ], Orientation::North );
-    CHECK( bot.roficomConnections().size() == 4 );
+    CHECK( world.roficomConnections().size() == 4 );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
     m1.setGamma( Angle::deg( 90 ) );
-    auto [ b, str ] = bot.isValid();
+    auto [ b, str ] = world.isValid();
     CHECK( !b ); // because the configuration is not prepared
-    auto [ b2, str2 ] = bot.validate();
+    auto [ b2, str2 ] = world.validate();
     CHECK( b2 );
     if ( !b2 )
         std::cout << "Error: " << str2 << "\n";
@@ -366,43 +366,43 @@ TEST_CASE( "Basic rofibot manipulation" ) {
 TEST_CASE( "Colliding configuration" ) {
     using namespace rofi;
     int idCounter = 0;
-    Rofibot bot;
-    auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m3 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m4 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    auto& m5 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
-    CHECK( bot.modules().size() == 5 );
+    RofiWorld world;
+    auto& m1 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m3 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m4 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    auto& m5 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
+    CHECK( world.modules().size() == 5 );
 
     connect( m1.connectors()[ 1 ], m2.connectors()[ 2 ], Orientation::North );
     connect( m2.connectors()[ 1 ], m3.connectors()[ 2 ], Orientation::North );
     connect( m3.connectors()[ 1 ], m4.connectors()[ 2 ], Orientation::North );
     connect( m4.connectors()[ 1 ], m5.connectors()[ 2 ], Orientation::North );
-    CHECK( bot.roficomConnections().size() == 4 );
+    CHECK( world.roficomConnections().size() == 4 );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    auto [ b, str ] = bot.validate();
+    auto [ b, str ] = world.validate();
     CHECK( !b );
 }
 
 TEST_CASE( "Changing modules ID" ) {
     using namespace rofi;
-    Rofibot bot;
+    RofiWorld world;
 
-    auto& m1 = bot.insert( UniversalModule( 0, 0_deg, 0_deg, 0_deg ) );
-    auto& m2 = bot.insert( UniversalModule( 1, 0_deg, 0_deg, 0_deg ) );
-    auto& m3 = bot.insert( UniversalModule( 2, 0_deg, 0_deg, 0_deg ) );
+    auto& m1 = world.insert( UniversalModule( 0, 0_deg, 0_deg, 0_deg ) );
+    auto& m2 = world.insert( UniversalModule( 1, 0_deg, 0_deg, 0_deg ) );
+    auto& m3 = world.insert( UniversalModule( 2, 0_deg, 0_deg, 0_deg ) );
     connect( m1.connectors()[ 5 ], m2.connectors()[ 2 ], Orientation::North );
     connect( m2.connectors()[ 5 ], m3.connectors()[ 2 ], Orientation::North );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
 
-    CHECK( bot.validate().first );
+    CHECK( world.validate().first );
 
     CHECK( m1.getId() == 0 );
     CHECK( m2.getId() == 1 );
     CHECK( m3.getId() == 2 );
 
     CHECK( m2.setId( 42 ) );
-    CHECK( bot.validate().first );
+    CHECK( world.validate().first );
     CHECK( m1.getId() == 0 );
     CHECK( m2.getId() != 1 );
     CHECK( m2.getId() == 42 );
@@ -459,44 +459,44 @@ TEST_CASE( "Configurable joints" ) {
 }
 
 TEST_CASE( "Connect and disconnect" ) {
-    Rofibot bot;
+    RofiWorld world;
 
     SECTION( "Disconnect roficomConnections disconnects two modules" ) {
-        auto& m1 = bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
-        auto& m2 = bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) );
+        auto& m1 = world.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+        auto& m2 = world.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) );
 
         auto h = connect< RigidJoint >( m1.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
 
-        CHECK( bot.roficomConnections().empty() );
+        CHECK( world.roficomConnections().empty() );
         auto j = connect( m1.getConnector( "A+X" ), m2.getConnector( "B-Z" ), roficom::Orientation::North );
-        CHECK( bot.roficomConnections().size() == 1 );
-        bot.prepare();
-        CHECK( bot.isPrepared() );
-        bot.disconnect( j );
-        CHECK( !bot.isPrepared() );
-        CHECK( bot.roficomConnections().empty() );
+        CHECK( world.roficomConnections().size() == 1 );
+        world.prepare();
+        CHECK( world.isPrepared() );
+        world.disconnect( j );
+        CHECK( !world.isPrepared() );
+        CHECK( world.roficomConnections().empty() );
     }
 
     SECTION( "Disconnect on spaceJoint" ) {
-        auto& m = bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+        auto& m = world.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
 
-        CHECK( bot.referencePoints().empty() );
+        CHECK( world.referencePoints().empty() );
         auto h = connect< RigidJoint >( m.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
-        CHECK( !bot.referencePoints().empty() );
+        CHECK( !world.referencePoints().empty() );
 
-        bot.prepare();
-        CHECK( bot.isPrepared() );
-        bot.disconnect( h );
-        CHECK( !bot.isPrepared() );
-        CHECK( bot.referencePoints().empty() );
+        world.prepare();
+        CHECK( world.isPrepared() );
+        world.disconnect( h );
+        CHECK( !world.isPrepared() );
+        CHECK( world.referencePoints().empty() );
     }
 
     SECTION( "Reconnect - simple" )
     {
         auto & m1 = static_cast< UniversalModule & >(
-                bot.insert( UniversalModule( 42, 90_deg, 0_deg, 0_deg ) ) );
+                world.insert( UniversalModule( 42, 90_deg, 0_deg, 0_deg ) ) );
         auto & m2 = static_cast< UniversalModule & >(
-                bot.insert( UniversalModule( 66, 0_deg, 90_deg, 0_deg ) ) );
+                world.insert( UniversalModule( 66, 0_deg, 90_deg, 0_deg ) ) );
 
         auto h = connect< RigidJoint >( m1.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
 
@@ -504,21 +504,21 @@ TEST_CASE( "Connect and disconnect" ) {
                            m2.getConnector( "A-X" ),
                            roficom::Orientation::South );
 
-        bot.prepare();
-        REQUIRE( bot.isPrepared() );
-        CHECK( bot.isValid().first );
+        world.prepare();
+        REQUIRE( world.isPrepared() );
+        CHECK( world.isValid().first );
 
-        bot.disconnect( j1 );
+        world.disconnect( j1 );
 
-        CHECK_THROWS( bot.prepare() );
+        CHECK_THROWS( world.prepare() );
     }
 
     SECTION( "Reconnect" )
     {
         auto & m1 = static_cast< UniversalModule & >(
-                bot.insert( UniversalModule( 42, 90_deg, 0_deg, 0_deg ) ) );
+                world.insert( UniversalModule( 42, 90_deg, 0_deg, 0_deg ) ) );
         auto & m2 = static_cast< UniversalModule & >(
-                bot.insert( UniversalModule( 66, 0_deg, 90_deg, 0_deg ) ) );
+                world.insert( UniversalModule( 66, 0_deg, 90_deg, 0_deg ) ) );
 
         auto h = connect< RigidJoint >( m1.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
 
@@ -526,9 +526,9 @@ TEST_CASE( "Connect and disconnect" ) {
                            m2.getConnector( "A-X" ),
                            roficom::Orientation::South );
 
-        bot.prepare();
-        REQUIRE( bot.isPrepared() );
-        CHECK( bot.isValid().first );
+        world.prepare();
+        REQUIRE( world.isPrepared() );
+        CHECK( world.isValid().first );
 
         m1.setAlpha( 0_deg );
         m2.setBeta( 0_deg );
@@ -536,44 +536,44 @@ TEST_CASE( "Connect and disconnect" ) {
                            m2.getConnector( "B+X" ),
                            roficom::Orientation::South );
 
-        bot.prepare();
-        REQUIRE( bot.isPrepared() );
-        CHECK( bot.isValid().first );
+        world.prepare();
+        REQUIRE( world.isPrepared() );
+        CHECK( world.isValid().first );
 
-        bot.disconnect( j1 );
+        world.disconnect( j1 );
 
-        bot.prepare();
-        REQUIRE( bot.isPrepared() );
-        CHECK( bot.isValid().first );
+        world.prepare();
+        REQUIRE( world.isPrepared() );
+        CHECK( world.isValid().first );
 
         m1.setAlpha( 90_deg );
         m2.setBeta( 90_deg );
 
-        bot.prepare();
-        REQUIRE( bot.isPrepared() );
-        CHECK( bot.isValid().first );
+        world.prepare();
+        REQUIRE( world.isPrepared() );
+        CHECK( world.isValid().first );
     }
 }
 
 TEST_CASE( "Get near connector" ) {
-    Rofibot bot;
+    RofiWorld world;
 
     SECTION( "two straight modules" ) {
-        auto& m1 = bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
-        auto& m2 = bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) );
+        auto& m1 = world.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+        auto& m2 = world.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) );
 
         auto h = connect< RigidJoint >( m1.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
 
         connect( m1.getConnector( "A+X" ), m2.getConnector( "A+X" ), roficom::Orientation::North );
 
-        bot.prepare();
-        CHECK( bot.isValid().first );
+        world.prepare();
+        CHECK( world.isValid().first );
 
         SECTION( "Works with fixed connection" ) {
             connect( m1.getConnector( "B-X" ), m2.getConnector( "B-X" ), roficom::Orientation::North );
 
-            bot.prepare();
-            CHECK( bot.isValid().first );
+            world.prepare();
+            CHECK( world.isValid().first );
         }
 
         SECTION( "Get near connector" ) {
@@ -584,27 +584,27 @@ TEST_CASE( "Get near connector" ) {
 
             connect( m1.getConnector( "B-X" ), nearConnector->first, nearConnector->second );
 
-            bot.prepare();
-            CHECK( bot.isValid().first );
+            world.prepare();
+            CHECK( world.isValid().first );
         }
     }
 
     SECTION( "two straight modules - throws if not prepared in advance" ) {
-        auto& m1 = bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
-        auto& m2 = bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) );
+        auto& m1 = world.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+        auto& m2 = world.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) );
 
         auto h = connect< RigidJoint >( m1.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
 
         connect( m1.getConnector( "A+X" ), m2.getConnector( "A+X" ), roficom::Orientation::North );
 
-        REQUIRE_FALSE( bot.isPrepared() );
+        REQUIRE_FALSE( world.isPrepared() );
 
         CHECK_THROWS( m1.getConnector( "B-X" ).getNearConnector() );
     }
 
     SECTION("universal module with pad") {
-        auto um12 = bot.insert( UniversalModule( 12, 90_deg, 90_deg, 0_deg ) );
-        auto pad42 = bot.insert( Pad( 42, 6, 3 ) );
+        auto um12 = world.insert( UniversalModule( 12, 90_deg, 90_deg, 0_deg ) );
+        auto pad42 = world.insert( Pad( 42, 6, 3 ) );
 
         connect< RigidJoint >( pad42.components().front(),
                                         matrices::Vector(),
@@ -613,8 +613,8 @@ TEST_CASE( "Get near connector" ) {
                     pad42.connectors()[ 1 ],
                     roficom::Orientation::North );
 
-        REQUIRE_NOTHROW( bot.prepare() );
-        REQUIRE( bot.isValid().first );
+        REQUIRE_NOTHROW( world.prepare() );
+        REQUIRE( world.isValid().first );
 
         auto connectorB = um12.getConnector( "B-Z" );
         auto nearConnector = connectorB.getNearConnector();
@@ -626,10 +626,10 @@ TEST_CASE( "Get near connector" ) {
 }
 
 TEST_CASE( "Configuration copying" ) {
-    auto bot = Rofibot();
+    auto world = RofiWorld();
 
-    SECTION( "Rofibot copy" ) {
-        auto& um12 = bot.insert( UniversalModule( 12, 10_deg, 0_deg, 0_deg ) );
+    SECTION( "RofiWorld copy" ) {
+        auto& um12 = world.insert( UniversalModule( 12, 10_deg, 0_deg, 0_deg ) );
         um12.setBeta( 40_deg );
 
         CHECK( um12.getConnector( "A-Z" ).parent == &um12 );
@@ -638,9 +638,9 @@ TEST_CASE( "Configuration copying" ) {
         CHECK( um12.getBeta() == 40_deg );
         CHECK( um12.getGamma() == 0_deg );
 
-        auto bot_2 = bot;
+        auto world_2 = world;
 
-        auto* um12_2 = dynamic_cast< UniversalModule* >( bot_2.getModule( 12 ) );
+        auto* um12_2 = dynamic_cast< UniversalModule* >( world_2.getModule( 12 ) );
         REQUIRE( um12_2 );
 
         CAPTURE( &um12 );
@@ -656,16 +656,16 @@ TEST_CASE( "Configuration copying" ) {
 
         CHECK( um12.getGamma() == 0_deg );
 
-        CHECK( um12.parent == &bot );
-        CHECK( um12_2->parent == &bot_2 );
+        CHECK( um12.parent == &world );
+        CHECK( um12_2->parent == &world_2 );
     }
     SECTION( "Universal Module copy" ) {
         auto um12 = UniversalModule( 12 );
         auto um13copy = um12;
         um13copy.setId( 13 );
 
-        auto& um12_ = bot.insert( um12 );
-        auto& um13copy_ = bot.insert( um13copy );
+        auto& um12_ = world.insert( um12 );
+        auto& um13copy_ = world.insert( um13copy );
 
         CAPTURE( &um12 );
         CAPTURE( &um12_ );

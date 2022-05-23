@@ -8,7 +8,7 @@
 #include <optional>
 
 #include "atoms/guarded.hpp"
-#include "configuration/rofibot.hpp"
+#include "configuration/rofiworld.hpp"
 #include "inner_state.hpp"
 
 #include <connectorCmd.pb.h>
@@ -89,10 +89,10 @@ namespace detail
         return nullptr;
     }
 
-    inline auto getJointConfig( const rofi::configuration::Rofibot & rofibot, Joint joint )
+    inline auto getJointConfig( const rofi::configuration::RofiWorld & rofiworld, Joint joint )
             -> const rofi::configuration::Joint *
     {
-        if ( auto * moduleConfig = rofibot.getModule( joint.moduleId ) ) {
+        if ( auto * moduleConfig = rofiworld.getModule( joint.moduleId ) ) {
             if ( joint.jointIdx < 0 ) {
                 return nullptr;
             }
@@ -101,10 +101,10 @@ namespace detail
         }
         return nullptr;
     }
-    inline auto getJointConfig( rofi::configuration::Rofibot & rofibot, Joint joint )
+    inline auto getJointConfig( rofi::configuration::RofiWorld & rofiworld, Joint joint )
             -> rofi::configuration::Joint *
     {
-        if ( auto * moduleConfig = rofibot.getModule( joint.moduleId ) ) {
+        if ( auto * moduleConfig = rofiworld.getModule( joint.moduleId ) ) {
             if ( joint.jointIdx < 0 ) {
                 return nullptr;
             }
@@ -247,14 +247,14 @@ public:
     using JointCapabilities = rofi::messages::JointCapabilities;
     using JointVelocityControl = JointInnerState::VelocityControl;
     using JointPositionControl = JointInnerState::PositionControl;
-    using RofibotConfigurationPtr = std::shared_ptr< const rofi::configuration::Rofibot >;
+    using RofiWorldConfigurationPtr = std::shared_ptr< const rofi::configuration::RofiWorld >;
 
 
-    explicit ModuleStates( RofibotConfigurationPtr rofibotConfiguration, bool verbose )
+    explicit ModuleStates( RofiWorldConfigurationPtr rofiworldConfiguration, bool verbose )
             : _physicalModulesConfiguration(
-                    rofibotConfiguration
-                            ? std::move( rofibotConfiguration )
-                            : std::make_shared< const rofi::configuration::Rofibot >() )
+                    rofiworldConfiguration
+                            ? std::move( rofiworldConfiguration )
+                            : std::make_shared< const rofi::configuration::RofiWorld >() )
             , _moduleInnerStates(
                       this->_physicalModulesConfiguration.visit( [ verbose ]( auto & configPtr ) {
                           assert( configPtr );
@@ -311,7 +311,7 @@ public:
 
     template < std::invocable< RofiResp > Callback >
     auto updateToNextIteration( std::chrono::duration< float > simStepTime,
-                                Callback onRespCallback ) -> RofibotConfigurationPtr
+                                Callback onRespCallback ) -> RofiWorldConfigurationPtr
     {
         auto [ newConfiguration, updateEvents ] = computeNextIteration( simStepTime );
         assert( newConfiguration );
@@ -348,7 +348,7 @@ public:
         return std::move( newConfiguration );
     }
 
-    auto currentConfiguration() const -> RofibotConfigurationPtr
+    auto currentConfiguration() const -> RofiWorldConfigurationPtr
     {
         auto result = _physicalModulesConfiguration.copy();
         assert( result );
@@ -357,17 +357,17 @@ public:
 
 private:
     auto computeNextIteration( std::chrono::duration< float > simStepTime ) const
-            -> std::pair< RofibotConfigurationPtr, detail::ConfigurationUpdateEvents >;
+            -> std::pair< RofiWorldConfigurationPtr, detail::ConfigurationUpdateEvents >;
 
     static auto initInnerStatesFromConfiguration(
-            const rofi::configuration::Rofibot & rofibotConfiguration,
+            const rofi::configuration::RofiWorld & rofiworldConfiguration,
             bool verbose ) -> std::map< ModuleId, ModuleInnerState >;
 
 private:
-    atoms::Guarded< RofibotConfigurationPtr > _physicalModulesConfiguration;
+    atoms::Guarded< RofiWorldConfigurationPtr > _physicalModulesConfiguration;
     std::map< ModuleId, ModuleInnerState > _moduleInnerStates;
 
-    atoms::Guarded< std::vector< RofibotConfigurationPtr > > _configurationHistory;
+    atoms::Guarded< std::vector< RofiWorldConfigurationPtr > > _configurationHistory;
 };
 
 } // namespace rofi::simplesim

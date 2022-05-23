@@ -118,7 +118,7 @@ void addModuleToScene( vtkRenderer* renderer, Module& m,
         Matrix cPosition = mPosition * m.getComponentRelativePosition( i );
         // make connected RoFICoMs connected visually
         if ( active_cons.contains( i ) )
-            cPosition = cPosition * rofi::configuration::matrices::translate( { -0.05, 0, 0 } );
+            cPosition = cPosition * matrices::translate( { -0.05, 0, 0 } );
 
         auto posTrans = vtkSmartPointer< vtkTransform >::New();
         posTrans->SetMatrix( convertMatrix( cPosition ) );
@@ -143,16 +143,16 @@ void addModuleToScene( vtkRenderer* renderer, Module& m,
     }
 }
 
-void buildConfigurationScene( vtkRenderer* renderer, Rofibot& bot ) {
-    // get active (i.e. connected) connectors for each module within Rofibot
+void buildConfigurationScene( vtkRenderer* renderer, RofiWorld& world ) {
+    // get active (i.e. connected) connectors for each module within RofiWorld
     std::map< ModuleId, std::set< int > > active_cons;
-    for ( const auto& roficom : bot.roficomConnections() ) {
-        active_cons[ bot.getModule( roficom.sourceModule )->getId() ].insert( roficom.sourceConnector );
-        active_cons[ bot.getModule( roficom.destModule )->getId()   ].insert( roficom.destConnector );
+    for ( const auto& roficom : world.roficomConnections() ) {
+        active_cons[ world.getModule( roficom.sourceModule )->getId() ].insert( roficom.sourceConnector );
+        active_cons[ world.getModule( roficom.destModule )->getId()   ].insert( roficom.destConnector );
     }
 
     int index = 0;
-    for ( auto& mInfo : bot.modules() ) {
+    for ( auto& mInfo : world.modules() ) {
         assert( mInfo.absPosition && "The configuration has to be prepared" );
         if ( !active_cons.contains( mInfo.module->getId() ) )
             active_cons[ mInfo.module->getId() ] = {};
@@ -161,10 +161,10 @@ void buildConfigurationScene( vtkRenderer* renderer, Rofibot& bot ) {
     }
 }
 
-void renderConfiguration( Rofibot configuration, const std::string& configName ) {
+void renderConfiguration( RofiWorld world, const std::string& configName ) {
         vtkNew< vtkRenderer > renderer;
     setupRenderer( renderer.Get() );
-    buildConfigurationScene( renderer.Get(), configuration );
+    buildConfigurationScene( renderer.Get(), world );
 
     vtkNew< vtkRenderWindow > renderWindow;
     renderWindow->AddRenderer( renderer.Get() );

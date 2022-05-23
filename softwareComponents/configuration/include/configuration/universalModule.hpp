@@ -2,7 +2,7 @@
 
 #include <array>
 #include <iostream>
-#include <configuration/rofibot.hpp>
+#include <configuration/rofiworld.hpp>
 
 namespace rofi::configuration {
 
@@ -79,7 +79,7 @@ public:
  * Given a stream read a configuration from the old "Viki" format. Unlike the
  * legacy parser, supports only a single configuration per file.
  */
-Rofibot readOldConfigurationFormat( std::istream& s );
+RofiWorld readOldConfigurationFormat( std::istream& s );
 
 } // namespace rofi::configuration
 

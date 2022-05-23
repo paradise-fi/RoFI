@@ -212,7 +212,7 @@ void updateModuleInScene( vtkRenderer * renderer,
 void setActiveConnectors(
         const atoms::HandleSet< rofi::configuration::RoficomJoint > & roficomConnections,
         std::map< rofi::configuration::ModuleId, ModuleRenderInfo > & moduleRenderInfos,
-        const rofi::configuration::Rofibot & newConfiguration )
+        const rofi::configuration::RofiWorld & newConfiguration )
 {
     // TODO get from the inner state
     for ( auto & moduleRenderInfo : moduleRenderInfos ) {
@@ -232,7 +232,7 @@ void setActiveConnectors(
 
 std::map< rofi::configuration::ModuleId, ModuleRenderInfo > addConfigurationToRenderer(
         vtkRenderer * renderer,
-        const rofi::configuration::Rofibot & newConfiguration )
+        const rofi::configuration::RofiWorld & newConfiguration )
 {
     assert( renderer != nullptr );
 
@@ -257,8 +257,8 @@ std::map< rofi::configuration::ModuleId, ModuleRenderInfo > addConfigurationToRe
 }
 void updateConfigurationInRenderer(
         vtkRenderer * renderer,
-        const rofi::configuration::Rofibot & newConfiguration,
-        const rofi::configuration::Rofibot & previousConfiguration,
+        const rofi::configuration::RofiWorld & newConfiguration,
+        const rofi::configuration::RofiWorld & previousConfiguration,
         std::map< rofi::configuration::ModuleId, ModuleRenderInfo > & moduleRenderInfos )
 {
     assert( renderer != nullptr );
@@ -453,10 +453,10 @@ void SimplesimClient::clearRenderer()
     _lastRenderedConfiguration.reset();
 }
 
-void SimplesimClient::initInfoTree( const rofi::configuration::Rofibot & rofibot )
+void SimplesimClient::initInfoTree( const rofi::configuration::RofiWorld & rofiworld )
 {
     int i = 0;
-    for ( const auto & moduleInfo : rofibot.modules() ) {
+    for ( const auto & moduleInfo : rofiworld.modules() ) {
         _treeIdMapping.push_back( moduleInfo.module->getId() );
         std::string str = "Module " + std::to_string( moduleInfo.module->getId() );
         QTreeWidgetItem * module = new QTreeWidgetItem( static_cast< QTreeWidget * >( nullptr ),
@@ -486,10 +486,10 @@ void SimplesimClient::initInfoTree( const rofi::configuration::Rofibot & rofibot
     }
 }
 
-void SimplesimClient::updateInfoTree( const rofi::configuration::Rofibot & rofibot )
+void SimplesimClient::updateInfoTree( const rofi::configuration::RofiWorld & rofiworld )
 {
     int i = 0;
-    for ( const auto & moduleInfo : rofibot.modules() ) {
+    for ( const auto & moduleInfo : rofiworld.modules() ) {
         if ( moduleInfo.absPosition ) {
             std::string pos = "Position:\n" + to_string( *moduleInfo.absPosition );
             _ui->treeWidget->topLevelItem( i )->child( 1 )->setText( 0, pos.c_str() );

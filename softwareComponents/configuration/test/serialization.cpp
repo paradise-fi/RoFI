@@ -17,39 +17,39 @@ using namespace rofi::configuration::matrices;
 
 TEST_CASE( "UniversalModule - Demo" ) {
     ModuleId idCounter = 0;
-    Rofibot bot;
-    auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 90_deg,   0_deg ) );
-    auto& m2 = bot.insert( UniversalModule( idCounter++, 0_deg,  0_deg, 180_deg ) );
+    RofiWorld world;
+    auto& m1 = world.insert( UniversalModule( idCounter++, 0_deg, 90_deg,   0_deg ) );
+    auto& m2 = world.insert( UniversalModule( idCounter++, 0_deg,  0_deg, 180_deg ) );
     auto con = m2.connectors()[ 1 ];
     connect( m1.connectors()[ 0 ], con, Orientation::South );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    REQUIRE_NOTHROW( bot.prepare() );
+    REQUIRE_NOTHROW( world.prepare() );
 
-    auto j = serialization::toJSON( bot );
+    auto j = serialization::toJSON( world );
     std::string js_str = j.dump( 4 );
 
-    Rofibot botj = serialization::fromJSON( j );
-    auto j_cpy   = serialization::toJSON( botj );
+    RofiWorld worldj = serialization::fromJSON( j );
+    auto j_cpy   = serialization::toJSON( worldj );
     std::string js_str_cpy = j_cpy.dump( 4 );
 
     CHECK( j == j_cpy );
     CHECK( js_str == js_str_cpy );
 
-    REQUIRE( bot.modules().size() == botj.modules().size() );
-    REQUIRE( bot.roficomConnections().size() == botj.roficomConnections().size() );
-    REQUIRE( bot.referencePoints().size() == botj.referencePoints().size() );
-    REQUIRE_NOTHROW( botj.prepare() );
+    REQUIRE( world.modules().size() == worldj.modules().size() );
+    REQUIRE( world.roficomConnections().size() == worldj.roficomConnections().size() );
+    REQUIRE( world.referencePoints().size() == worldj.referencePoints().size() );
+    REQUIRE_NOTHROW( worldj.prepare() );
 
-    for ( auto& m : bot.modules() ) {
+    for ( auto& m : world.modules() ) {
         ModuleId id = m.module->getId();
-        CHECK( equals( bot.getModulePosition( id ), botj.getModulePosition( id ) ) );
+        CHECK( equals( world.getModulePosition( id ), worldj.getModulePosition( id ) ) );
     }
 }
 
 TEST_CASE( "Empty" ) {
     SECTION( "toJSON" ) {
-        Rofibot bot;
-        auto js = toJSON( bot );
+        RofiWorld world;
+        auto js = toJSON( world );
 
         CHECK( js[ "modules" ].size() == 0 );
         CHECK( js[ "spaceJoints" ].size()  == 0 );
@@ -59,60 +59,60 @@ TEST_CASE( "Empty" ) {
     SECTION( "fromJSON" ) {
         auto js = R"({ "modules" : [], "spaceJoints" : [], "moduleJoints" : [] })"_json;
 
-        Rofibot bot = fromJSON( js );
+        RofiWorld world = fromJSON( js );
 
-        CHECK( bot.modules().size() == 0 );
-        CHECK( bot.roficomConnections().size() == 0 );
-        CHECK( bot.referencePoints().size() == 0 );
-        CHECK( bot.validate( SimpleCollision() ).first );
+        CHECK( world.modules().size() == 0 );
+        CHECK( world.roficomConnections().size() == 0 );
+        CHECK( world.referencePoints().size() == 0 );
+        CHECK( world.validate( SimpleCollision() ).first );
     }
 }
 
 TEST_CASE( "Pad" ) {
     ModuleId idCounter = 0;
-    Rofibot bot;
+    RofiWorld world;
 
     SECTION( "Square pad" ) {
-        auto& m1 = bot.insert( Pad( idCounter++, 20 ) );
+        auto& m1 = world.insert( Pad( idCounter++, 20 ) );
         connect< RigidJoint >( m1.components()[ 0 ], { 0, 0, 0 }, identity );
     }
 
     SECTION( "Rectangle pad" ) {
-        auto& m1 = bot.insert( Pad( idCounter++, 20, 10 ) );
+        auto& m1 = world.insert( Pad( idCounter++, 20, 10 ) );
         connect< RigidJoint >( m1.components()[ 0 ], { 0, 0, 0 }, identity );
     }
 
     SECTION( "Multiple pads" ) {
-        auto& m1 = bot.insert( Pad( idCounter++, 23, 11 ) );
-        auto& m2 = bot.insert( Pad( idCounter++, 5 ) );
-        auto& m3 = bot.insert( Pad( idCounter++, 1, 10 ) );
+        auto& m1 = world.insert( Pad( idCounter++, 23, 11 ) );
+        auto& m2 = world.insert( Pad( idCounter++, 5 ) );
+        auto& m3 = world.insert( Pad( idCounter++, 1, 10 ) );
         connect< RigidJoint >( m1.components()[ 0 ], { 0, 0, 0 }, identity );
         connect< RigidJoint >( m2.components()[ 0 ], { 0, 0, 2 }, identity );
         connect< RigidJoint >( m3.components()[ 0 ], { 0, 0, 4 }, identity );
     }
 
-    auto j = toJSON( bot );
+    auto j = toJSON( world );
 
-    Rofibot cpy = fromJSON( j );
+    RofiWorld cpy = fromJSON( j );
 
-    REQUIRE_NOTHROW( bot.prepare() );
+    REQUIRE_NOTHROW( world.prepare() );
     REQUIRE_NOTHROW( cpy.prepare() );
 
-    CHECK( bot.roficomConnections().size() == cpy.roficomConnections().size() );
-    CHECK( bot.modules().size()  == idCounter ); // idCounter is equal to number of modules within the bot
-    CHECK( bot.modules().size()  == cpy.modules().size()  );
-    CHECK( bot.referencePoints().size() == cpy.referencePoints().size() );
+    CHECK( world.roficomConnections().size() == cpy.roficomConnections().size() );
+    CHECK( world.modules().size()  == idCounter ); // idCounter is equal to number of modules within the world
+    CHECK( world.modules().size()  == cpy.modules().size()  );
+    CHECK( world.referencePoints().size() == cpy.referencePoints().size() );
     CHECK( j == toJSON( cpy ) );
 }
 
 TEST_CASE( "UniversalModule" ) {
     ModuleId idCounter = 0;
-    Rofibot bot;
+    RofiWorld world;
 
     SECTION( "Single Module" ) {
-        auto& m1 = bot.insert( UniversalModule( idCounter++, 90_deg, 90_deg, 180_deg ) );
+        auto& m1 = world.insert( UniversalModule( idCounter++, 90_deg, 90_deg, 180_deg ) );
         connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-        auto js = toJSON( bot );
+        auto js = toJSON( world );
 
         CHECK( js[ "modules" ][ 0 ][ "alpha" ] == 90 );
         CHECK( js[ "modules" ][ 0 ][ "beta" ]  == 90 );
@@ -120,22 +120,22 @@ TEST_CASE( "UniversalModule" ) {
     }
 
     SECTION( "Signle With rotational joint" ) {
-        auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_rad ) );
+        auto& m1 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_rad ) );
         connect< RotationJoint >( m1.bodies()[ 0 ], Vector{ 0, 0, 0 }
                                 , identity, Vector{ 1, 0, 0 }, translate( { 0, 0, 1 } )
                                 , Angle::deg( 90 ), Angle::deg( 90 ) );
     }
 
     SECTION( "Multiple Modules" ) {
-        auto& m1 = bot.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 90_deg ) );
-        auto& m2 = bot.insert( UniversalModule( idCounter++, 90_deg, 0_deg, 180_deg ) );
-        auto& m3 = bot.insert( UniversalModule( idCounter++, 35_deg, 0_deg, 90_deg ) );
+        auto& m1 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 90_deg ) );
+        auto& m2 = world.insert( UniversalModule( idCounter++, 90_deg, 0_deg, 180_deg ) );
+        auto& m3 = world.insert( UniversalModule( idCounter++, 35_deg, 0_deg, 90_deg ) );
 
         connect( m1.components()[ 2 ], m2.components()[ 2 ], Orientation::North );
         connect( m3.components()[ 2 ], m2.components()[ 5 ], Orientation::South );
         connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
 
-        auto js = toJSON( bot );
+        auto js = toJSON( world );
         CHECK( js[ "modules" ][ 0 ][ "alpha" ] == 0  );
         CHECK( js[ "modules" ][ 0 ][ "beta" ]  == 0  );
         CHECK( js[ "modules" ][ 0 ][ "gamma" ] == 90 );
@@ -195,51 +195,51 @@ TEST_CASE( "UniversalModule" ) {
                         ]
         })"_json;
 
-        bot = fromJSON( js );
+        world = fromJSON( js );
 
-        CHECK( bot.modules().size() == 2 );
-        idCounter++; // to count inserted bots
-        auto* m = dynamic_cast< UniversalModule* >( bot.getModule( 66 ) );
+        CHECK( world.modules().size() == 2 );
+        idCounter++; // to count inserted worlds
+        auto* m = dynamic_cast< UniversalModule* >( world.getModule( 66 ) );
         REQUIRE( m );
         CHECK( m->getAlpha().deg() == 90  );
         CHECK( m->getBeta().deg()  == 0   );
         CHECK( m->getGamma().deg() == 180 );
 
         idCounter++;
-        m = dynamic_cast< UniversalModule* >( bot.getModule( 42 ) );
+        m = dynamic_cast< UniversalModule* >( world.getModule( 42 ) );
         REQUIRE( m );
         CHECK( m->getAlpha().deg() == 0  );
         CHECK( m->getBeta().deg()  == 90 );
         CHECK( m->getGamma().deg() == 90 );
     }
 
-    auto j = toJSON( bot );
+    auto j = toJSON( world );
 
-    Rofibot cpy = fromJSON( j );
+    RofiWorld cpy = fromJSON( j );
 
-    REQUIRE_NOTHROW( bot.prepare() );
+    REQUIRE_NOTHROW( world.prepare() );
     REQUIRE_NOTHROW( cpy.prepare() );
 
-    CHECK( bot.roficomConnections().size() == cpy.roficomConnections().size() );
-    CHECK( bot.modules().size()  == idCounter ); // idCounter is equal to number of modules within the bot
-    CHECK( bot.modules().size()  == cpy.modules().size()  );
-    CHECK( bot.referencePoints().size() == 1 );
-    CHECK( bot.referencePoints().size() == cpy.referencePoints().size() );
+    CHECK( world.roficomConnections().size() == cpy.roficomConnections().size() );
+    CHECK( world.modules().size()  == idCounter ); // idCounter is equal to number of modules within the world
+    CHECK( world.modules().size()  == cpy.modules().size()  );
+    CHECK( world.referencePoints().size() == 1 );
+    CHECK( world.referencePoints().size() == cpy.referencePoints().size() );
     CHECK( j == toJSON( cpy ) );
 }
 
 TEST_CASE( "UnknownModule" ) {
     ModuleId idCounter = 0;
-    Rofibot bot;
+    RofiWorld world;
 
     SECTION( "Basic tests" ) {
-        bot.insert( UnknownModule( { Component{ ComponentType::Roficom, {}, {}, nullptr }
+        world.insert( UnknownModule( { Component{ ComponentType::Roficom, {}, {}, nullptr }
                                    , Component{ ComponentType::Roficom, {}, {}, nullptr } }
                                    , 2
                                    , { makeComponentJoint< RigidJoint >( 0, 1, identity ) }
                                    , idCounter++ ) );
 
-        auto js = toJSON( bot );
+        auto js = toJSON( world );
 
         CHECK( js[ "modules" ].size() == 1 );
         CHECK( js[ "spaceJoints" ].size()  == 0 );
@@ -253,17 +253,17 @@ TEST_CASE( "UnknownModule" ) {
 }
 
 TEST_CASE( "Mixin'" ) {
-    Rofibot bot;
+    RofiWorld world;
 
     SECTION( "pad + UMs" ) {
-        auto& pad = bot.insert( Pad( 42, 10, 8 ) );
-        auto& um1 = bot.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) );
-        auto& um2 = bot.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) );
+        auto& pad = world.insert( Pad( 42, 10, 8 ) );
+        auto& um1 = world.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) );
+        auto& um2 = world.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) );
 
         connect( pad.components()[ 0 ], um1.getConnector( "A-Z" ), Orientation::North );
         connect( um1.getConnector( "B-Z" ), um2.getConnector( "A+X" ), Orientation::West );
 
-        auto js = toJSON( bot );
+        auto js = toJSON( world );
         CHECK( js[ "modules" ].size() == 3 );
         CHECK( js[ "moduleJoints" ].size() == 2 );
         CHECK( js == toJSON( fromJSON( js ) ) );
@@ -271,12 +271,12 @@ TEST_CASE( "Mixin'" ) {
 }
 
 TEST_CASE( "Attributes" ) {
-    Rofibot bot;
+    RofiWorld world;
 
     SECTION( "Single Universal Module" ) {
-        auto& m1 = bot.insert( UniversalModule( 0, 90_deg, 90_deg, 180_deg ) );
+        auto& m1 = world.insert( UniversalModule( 0, 90_deg, 90_deg, 180_deg ) );
         connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-        auto js = toJSON( bot );
+        auto js = toJSON( world );
 
         CHECK( js[ "modules" ][ 0 ][ "alpha" ] == 90 );
         CHECK( js[ "modules" ][ 0 ][ "beta" ]  == 90 );
@@ -291,7 +291,7 @@ TEST_CASE( "Attributes" ) {
             []( auto&& ... ) { return nlohmann::json{}; }
         };
 
-        js = toJSON( bot, testAttrCallback );
+        js = toJSON( world, testAttrCallback );
         CHECK( js[ "modules" ][ 0 ].contains( "attributes" ) );
     }
 
@@ -309,11 +309,11 @@ TEST_CASE( "Attributes" ) {
             []( const SpaceJoint&   ) { return nlohmann::json{}; }
         };
 
-        bot.insert( UniversalModule( 0, 0_deg, 0_deg, 0_deg ) );
-        bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
-        bot.insert( Pad( 66, 2, 5 ) );
+        world.insert( UniversalModule( 0, 0_deg, 0_deg, 0_deg ) );
+        world.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+        world.insert( Pad( 66, 2, 5 ) );
 
-        auto js = toJSON( bot, testAttrCallback );
+        auto js = toJSON( world, testAttrCallback );
 
         REQUIRE( js[ "modules" ][ 0 ].contains( "attributes" ) );
         REQUIRE( js[ "modules" ][ 1 ].contains( "attributes" ) );
@@ -347,14 +347,14 @@ TEST_CASE( "Attributes" ) {
             }
         };
 
-        auto& pad = bot.insert( Pad( 42, 10, 8 ) );
-        auto& um1 = bot.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) );
-        auto& um2 = bot.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) );
+        auto& pad = world.insert( Pad( 42, 10, 8 ) );
+        auto& um1 = world.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) );
+        auto& um2 = world.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) );
 
         connect( pad.components()[ 0 ], um1.getConnector( "A-Z" ), Orientation::North );
         connect( um1.getConnector( "B-Z" ), um2.getConnector( "A+X" ), Orientation::West );
 
-        auto js = toJSON( bot, testAttrCallback );
+        auto js = toJSON( world, testAttrCallback );
 
         for ( auto m : js[ "modules" ] ) {
             CHECK( m.contains( "attributes" ) );
@@ -374,14 +374,14 @@ TEST_CASE( "Attributes" ) {
             }
         };
 
-        auto& pad = bot.insert( Pad( 42, 10, 8 ) );
-        auto& um1 = bot.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) );
-        auto& um2 = bot.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) );
+        auto& pad = world.insert( Pad( 42, 10, 8 ) );
+        auto& um1 = world.insert( UniversalModule( 66, 0_deg, 0_deg, 180_deg ) );
+        auto& um2 = world.insert( UniversalModule(  0, 0_deg, 0_deg, 0_deg   ) );
 
         connect( pad.components()[ 0 ], um1.getConnector( "A-Z" ), Orientation::North );
         connect( um1.getConnector( "B-Z" ), um2.getConnector( "A+X" ), Orientation::West );
 
-        auto js = toJSON( bot, testAttrCallback );
+        auto js = toJSON( world, testAttrCallback );
 
         for ( auto m : js[ "modules" ] ) {
             CHECK( !m.items().begin().value().contains( "attributes" ) );
@@ -396,15 +396,15 @@ TEST_CASE( "Attributes" ) {
 }
 
 TEST_CASE( "Working with attributes" ) {
-    Rofibot bot;
+    RofiWorld world;
 
     SECTION( "Save and load IDs from attributes" ) {
-        bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
-        bot.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) );
-        bot.insert( UniversalModule( 0,  0_deg, 0_deg, 0_deg ) );
-        bot.insert( UniversalModule( 78, 0_deg, 0_deg, 0_deg ) );
+        world.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+        world.insert( UniversalModule( 66, 0_deg, 0_deg, 0_deg ) );
+        world.insert( UniversalModule( 0,  0_deg, 0_deg, 0_deg ) );
+        world.insert( UniversalModule( 78, 0_deg, 0_deg, 0_deg ) );
 
-        auto js = toJSON( bot, overload{
+        auto js = toJSON( world, overload{
                         []( const Module& m ) {
                             return nlohmann::json( m.getId() );
                         },
@@ -423,8 +423,8 @@ TEST_CASE( "Working with attributes" ) {
                             },
                             []( const nlohmann::json&, const ComponentJoint&, int )  { return; },
                             []( const nlohmann::json&, const Component&, int )       { return; },
-                            []( const nlohmann::json&, Rofibot::RoficomJointHandle ) { return; },
-                            []( const nlohmann::json&, Rofibot::SpaceJointHandle )   { return; },
+                            []( const nlohmann::json&, RofiWorld::RoficomJointHandle ) { return; },
+                            []( const nlohmann::json&, RofiWorld::SpaceJointHandle )   { return; },
         } );
 
         CHECK( ids.size() == 4 );
@@ -476,8 +476,8 @@ TEST_CASE( "Working with attributes" ) {
                             [ &sum ]( const nlohmann::json& j, const Module& )    { sum += j.get< int >(); },
                             [ &sum ]( const nlohmann::json& j, const ComponentJoint&, int )  { sum += j.get< int >(); },
                             [ &sum ]( const nlohmann::json& j, const Component&, int )       { sum += j.get< int >(); },
-                            [ &sum ]( const nlohmann::json& j, Rofibot::RoficomJointHandle ) { sum += j.get< int >(); },
-                            [ &sum ]( const nlohmann::json& j, Rofibot::SpaceJointHandle )   { sum += j.get< int >(); },
+                            [ &sum ]( const nlohmann::json& j, RofiWorld::RoficomJointHandle ) { sum += j.get< int >(); },
+                            [ &sum ]( const nlohmann::json& j, RofiWorld::SpaceJointHandle )   { sum += j.get< int >(); },
         } );
 
         CHECK( sum == 10 );
@@ -485,7 +485,7 @@ TEST_CASE( "Working with attributes" ) {
 
     SECTION( "Tutorial configuration" )
     {
-        auto bot = fromJSON( R"""({
+        auto world = fromJSON( R"""({
     "modules": [
         {
             "id": 12,
@@ -529,10 +529,10 @@ TEST_CASE( "Working with attributes" ) {
     ]
 })"""_json );
 
-        REQUIRE_NOTHROW( bot.prepare() );
-        REQUIRE( bot.isValid().first );
+        REQUIRE_NOTHROW( world.prepare() );
+        REQUIRE( world.isValid().first );
 
-        auto um12 = dynamic_cast< UniversalModule * >( bot.getModule( 12 ) );
+        auto um12 = dynamic_cast< UniversalModule * >( world.getModule( 12 ) );
         REQUIRE( um12 );
         auto connectorB = um12->getConnector( "B-Z" );
         auto nearConnector = connectorB.getNearConnector();

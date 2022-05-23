@@ -7,7 +7,7 @@
 #include <vector>
 
 #include "atoms/util.hpp"
-#include "configuration/rofibot.hpp"
+#include "configuration/rofiworld.hpp"
 
 #include <connectorState.pb.h>
 #include <rofiResp.pb.h>

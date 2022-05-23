@@ -5,7 +5,7 @@
 
 #include <dimcli/cli.h>
 
-#include "configuration/rofibot.hpp"
+#include "configuration/rofiworld.hpp"
 #include "configuration/universalModule.hpp"
 #include "message_server.hpp"
 #include "simplesim/packet_filters/py_filter.hpp"
@@ -41,7 +41,7 @@ int main( int argc, char * argv[] )
     setlocale( LC_NUMERIC, "C" );
 
     std::cout << "Reading configuration from file (" << *cfgFormat << " format)" << std::endl;
-    auto inputRofibot = simplesim::readAndPrepareConfigurationFromFile( *cfgFilePath, *cfgFormat );
+    auto inputWorld = simplesim::readAndPrepareConfigurationFromFile( *cfgFilePath, *cfgFormat );
 
     auto packetFilter = std::optional< simplesim::packetf::PyFilter >();
     if ( pyPacketFilterFilePath ) {
@@ -55,7 +55,7 @@ int main( int argc, char * argv[] )
 
     // Setup server
     auto server = simplesim::Simplesim(
-            inputRofibot,
+            inputWorld,
             packetFilter
                 ? [ packetFilter = std::move( *packetFilter ) ]( auto packet ) mutable {
                     return packetFilter.filter( std::move( packet ) );
@@ -76,16 +76,16 @@ int main( int argc, char * argv[] )
     // Run server
     auto serverThread = std::jthread( [ &server, &client ]( std::stop_token stopToken ) {
         server.run(
-                [ &client ]( std::shared_ptr< const configuration::Rofibot > newConfiguration ) {
-                    client.onConfigurationUpdate( std::move( newConfiguration ) );
+                [ &client ]( std::shared_ptr< const configuration::RofiWorld > newRofiWorld ) {
+                    client.onConfigurationUpdate( std::move( newRofiWorld ) );
                 },
                 stopToken );
     } );
 
     // Run client
     std::cout << "Adding configuration to the client" << std::endl;
-    client.onConfigurationUpdate( inputRofibot );
-    inputRofibot.reset();
+    client.onConfigurationUpdate( inputWorld );
+    inputWorld.reset();
 
     std::cout << "Starting simplesim client..." << std::endl;
     client.run();

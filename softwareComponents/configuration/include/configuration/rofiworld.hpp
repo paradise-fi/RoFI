@@ -78,7 +78,7 @@ ComponentJoint makeComponentJoint( int source, int dest, Args&&...args ) {
 struct RoficomJoint;
 struct SpaceJoint;
 
-class Rofibot;
+class RofiWorld;
 class Module;
 
 /**
@@ -113,18 +113,19 @@ struct Component {
     /**
      * \brief Get the absolute component position
      *
-     * Raises std::logic_error if the rofibot is not prepared
+     * Raises std::logic_error if the world is not prepared
      */
     Matrix getPosition() const;
 
     /**
-     * \brief Find a connector of another module in the same Rofibot
+     * \brief Find a connector of another module in the same RofiWorld
+     *
      * that can be connected to
      *
      * Returns the connector and orientation
      * Returns `nullopt` if no such connector exists
      *
-     * Raises std::logic_error if the rofibot is not prepared
+     * Raises std::logic_error if the world is not prepared
      */
     std::optional< std::pair< const Component&, roficom::Orientation > > getNearConnector() const;
 };
@@ -177,14 +178,15 @@ public:
 
     /** \brief Set ID of the module to the new value
      * 
-     * Checks if the new value is not used within its parental rofibot,
+     * Checks if the new value is not used within its world,
      * if it's in use, the ID is left the same and the method returns
      * False. Otherwise the ID is changed. Returns True on success.
      */
     bool setId( ModuleId newId );
 
     void setJointPositions( int idx, std::span< const float > p );
-    // Implemented in CPP files as it depends on definition of Rofibot
+    // Implemented in CPP files as it depends on definition of RofiWorld
+
 
     /**
      * \brief Get a component position relative to module origin
@@ -327,9 +329,10 @@ public:
     }
 
     ModuleType type; ///< module type
-    Rofibot* parent; ///< pointer to parenting Rofibot
+    RofiWorld* parent; ///< pointer to parenting RofiWorld
+
 private:
-    ModuleId _id = 0; ///< integral identifier unique within a context of a single rofibot
+    ModuleId _id = 0; ///< integral identifier unique within a context of a single module
     std::vector< Component > _components; ///< All module components, first _connectorCount are connectors
     int _connectorCount;
     std::vector< ComponentJoint > _joints;
@@ -363,7 +366,7 @@ private:
         throw std::logic_error( "Module does not have a root component" );
     }
 
-    friend class Rofibot;
+    friend class RofiWorld;
 };
 
 /**
@@ -402,20 +405,20 @@ public:
 };
 
 /**
- * \brief RoFI bot
+ * \brief RoFI world
  *
- * The rofibot is composed out of modules.
+ * The RofiWorld is composed out of modules.
  */
-class Rofibot {
+class RofiWorld {
     struct ModuleInfo;
 public:
     using ModuleInfoHandle   = atoms::HandleSet< ModuleInfo   >::handle_type;
     using RoficomJointHandle = atoms::HandleSet< RoficomJoint >::handle_type;
     using SpaceJointHandle   = atoms::HandleSet< SpaceJoint   >::handle_type;
 
-    Rofibot() = default;
+    RofiWorld() = default;
 
-    Rofibot( const Rofibot& other )
+    RofiWorld( const RofiWorld& other )
         : _modules( other._modules ),
           _moduleJoints( other._moduleJoints ),
           _spaceJoints( other._spaceJoints ),
@@ -425,7 +428,7 @@ public:
         _adoptModules();
     }
 
-    Rofibot( Rofibot&& other )
+    RofiWorld( RofiWorld&& other )
         : _modules( std::move( other._modules ) ),
           _moduleJoints( std::move( other._moduleJoints ) ),
           _spaceJoints( std::move( other._spaceJoints ) ),
@@ -435,12 +438,12 @@ public:
         _adoptModules();
     }
 
-    Rofibot& operator=( Rofibot other ) {
+    RofiWorld& operator=( RofiWorld other ) {
         swap( other );
         return *this;
     }
 
-    void swap( Rofibot& other ) {
+    void swap( RofiWorld& other ) {
         using std::swap;
         swap( _modules, other._modules );
         swap( _moduleJoints, other._moduleJoints );
@@ -452,11 +455,12 @@ public:
     }
 
     /**
-     * \brief Insert a module from the Rofibot.
+     * \brief Insert a module from the RofiWorld
+     *.
      *
      * The module position is not specified. You should connect the module to
      * other modules via connect(). The module is assigned a unique id within
-     * the rofibot.
+     * the world.
      *
      * Returns a reference to the newly created module.
      */
@@ -474,11 +478,12 @@ public:
     }
 
     /**
-     * \brief Insert a module from the Rofibot.
+     * \brief Insert a module from the RofiWorld
+     *.
      *
      * The module position is not specified. You should connect the module to
      * other modules via connect(). The module is assigned a unique id within
-     * the rofibot.
+     * the world.
      *
      * Returns a reference to the newly created module.
      */
@@ -492,7 +497,8 @@ public:
     }
 
     /**
-     * \brief Get pointer to module with given id within the Rofibot
+     * \brief Get pointer to module with given id within the RofiWorld
+     *
      */
     Module* getModule( ModuleId id ) const {
         if ( !_idMapping.contains( id ) )
@@ -501,7 +507,8 @@ public:
     }
 
     /**
-     * \brief Get pointer to module with given id within the Rofibot
+     * \brief Get pointer to module with given id within the RofiWorld
+     *
      */
     Module* getModule( ModuleInfoHandle h ) const {
         if ( !_modules.contains( h ) )
@@ -528,7 +535,8 @@ public:
     }
 
     /**
-     * \brief Remove a module from the Rofibot
+     * \brief Remove a module from the RofiWorld
+     *
      */
     void remove( ModuleId id ) {
         if ( !_idMapping.contains( id ) )
@@ -624,7 +632,7 @@ public:
         if ( !_prepared )
             prepare();
         if ( !_idMapping.contains( id ) )
-            throw std::runtime_error( "bad access: rofibot does not containt module with such id" );
+            throw std::logic_error( "bad access: rofi world does not containt module with such id" );
         return _modules[ _idMapping[ id ] ].absPosition.value();
     }
 
@@ -703,8 +711,8 @@ private:
  * module ids and corresponding component index.
  */
 struct RoficomJoint : public Joint {
-    RoficomJoint( roficom::Orientation o, Rofibot::ModuleInfoHandle sourceModule, Rofibot::ModuleInfoHandle destModule,
-        int sourceConnector, int destConnector)
+    RoficomJoint( roficom::Orientation o, RofiWorld::ModuleInfoHandle sourceModule
+                , RofiWorld::ModuleInfoHandle destModule, int sourceConnector, int destConnector)
     : Joint( std::vector< std::pair< float, float > >{} ),
       orientation( o ), sourceModule( sourceModule ), destModule( destModule ),
       sourceConnector( sourceConnector ), destConnector( destConnector )
@@ -716,30 +724,30 @@ struct RoficomJoint : public Joint {
 
     ATOMS_CLONEABLE( RoficomJoint );
 
-    Module& getSourceModule( Rofibot& rofibot ) const {
-        Module * module_ = rofibot.getModule( sourceModule );
+    Module& getSourceModule( RofiWorld& world ) const {
+        Module * module_ = world.getModule( sourceModule );
         assert( module_ );
         return *module_;
     }
-    const Module& getSourceModule( const Rofibot& rofibot ) const {
-        const Module * module_ = rofibot.getModule( sourceModule );
+    const Module& getSourceModule( const RofiWorld& world ) const {
+        const Module * module_ = world.getModule( sourceModule );
         assert( module_ );
         return *module_;
     }
-    Module& getDestModule( Rofibot& rofibot ) const {
-        Module * module_ = rofibot.getModule( destModule );
+    Module& getDestModule( RofiWorld& world ) const {
+        Module * module_ = world.getModule( destModule );
         assert( module_ );
         return *module_;
     }
-    const Module& getDestModule( const Rofibot& rofibot ) const {
-        const Module * module_ = rofibot.getModule( destModule );
+    const Module& getDestModule( const RofiWorld& world ) const {
+        const Module * module_ = world.getModule( destModule );
         assert( module_ );
         return *module_;
     }
 
     roficom::Orientation orientation;
-    Rofibot::ModuleInfoHandle sourceModule;
-    Rofibot::ModuleInfoHandle destModule;
+    RofiWorld::ModuleInfoHandle sourceModule;
+    RofiWorld::ModuleInfoHandle destModule;
     int sourceConnector;
     int destConnector;
 };
@@ -749,7 +757,7 @@ struct RoficomJoint : public Joint {
  */
 struct SpaceJoint {
     SpaceJoint( atoms::ValuePtr< Joint > joint, Vector refPoint
-              , Rofibot::ModuleInfoHandle destModule, int destComponent ):
+              , RofiWorld::ModuleInfoHandle destModule, int destComponent ):
         joint( std::move( joint ) ),
         refPoint( std::move( refPoint ) ),
         destModule( destModule ),
@@ -767,18 +775,19 @@ struct SpaceJoint {
 
     atoms::ValuePtr< Joint > joint;
     Vector refPoint;
-    Rofibot::ModuleInfoHandle destModule;
+    RofiWorld::ModuleInfoHandle destModule;
     int destComponent;
 };
 
 /**
  * \brief Connect two modules via connector
  *
- * Requires that both modules belong to the same Rofibot, otherwise
+ * Requires that both modules belong to the same RofiWorld
+ *, otherwise
  * std::logic_error is thrown.
  *
  */
-Rofibot::RoficomJointHandle connect( const Component& c1, const Component& c2, roficom::Orientation o );
+RofiWorld::RoficomJointHandle connect( const Component& c1, const Component& c2, roficom::Orientation o );
 
 /**
  * \brief Connect a module's component to a point in space via given joint type
@@ -789,19 +798,19 @@ Rofibot::RoficomJointHandle connect( const Component& c1, const Component& c2, r
  * Returns ID of the joint which can be used for setting parameters of the joint
  */
 template < typename JointT, typename... Args >
-Rofibot::SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&... args ) {
-    Rofibot& bot = *c.parent->parent;
-    Rofibot::ModuleInfo& info = bot._modules[ bot._idMapping[ c.parent->getId() ] ];
+RofiWorld::SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&... args ) {
+    RofiWorld& world = *c.parent->parent;
+    RofiWorld::ModuleInfo& info = world._modules[ world._idMapping[ c.parent->getId() ] ];
 
-    auto jointHandle = bot._spaceJoints.insert( SpaceJoint(
+    auto jointHandle = world._spaceJoints.insert( SpaceJoint(
         atoms::ValuePtr< Joint >( std::make_unique< JointT >( std::forward< Args >( args )... ) ),
         refpoint,
-        bot._idMapping[ info.module->getId() ],
+        world._idMapping[ info.module->getId() ],
         info.module->componentIdx( c )
     ) );
 
     info.spaceJoints.push_back( jointHandle );
-    bot._prepared = false;
+    world._prepared = false;
 
     return jointHandle;
 }

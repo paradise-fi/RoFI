@@ -14,20 +14,20 @@ auto removeConnection( const rofi::configuration::Component & roficom )
     assert( roficom.parent != nullptr );
     assert( roficom.parent->parent != nullptr );
 
-    Rofibot & rofibot = *roficom.parent->parent;
+    RofiWorld & world = *roficom.parent->parent;
 
     auto thisConnector = Connector{ .moduleId = roficom.parent->getId(),
                                     .connIdx = roficom.getIndexInParent() };
 
-    const auto & connections = rofibot.roficomConnections();
+    const auto & connections = world.roficomConnections();
     for ( auto connIt = connections.begin(); connIt != connections.end(); ++connIt ) {
-        auto sourceConnector = Connector{ .moduleId = connIt->getSourceModule( rofibot ).getId(),
+        auto sourceConnector = Connector{ .moduleId = connIt->getSourceModule( world ).getId(),
                                           .connIdx = connIt->sourceConnector };
-        auto destConnector = Connector{ .moduleId = connIt->getDestModule( rofibot ).getId(),
+        auto destConnector = Connector{ .moduleId = connIt->getDestModule( world ).getId(),
                                         .connIdx = connIt->destConnector };
 
         if ( thisConnector == sourceConnector || thisConnector == destConnector ) {
-            rofibot.disconnect( connIt.get_handle() );
+            world.disconnect( connIt.get_handle() );
             return CUE::ConnectionChanged{ .lhs = sourceConnector,
                                            .rhs = destConnector,
                                            .orientation = std::nullopt };
@@ -206,7 +206,7 @@ constexpr auto enumerated()
     } );
 }
 
-auto updateJointPositions( Rofibot & configuration,
+auto updateJointPositions( RofiWorld & configuration,
                            std::chrono::duration< float > simStepTime,
                            const detail::ModuleInnerStates & moduleInnerStates )
         -> std::vector< detail::ConfigurationUpdateEvents::PositionReached >
@@ -257,7 +257,7 @@ auto updateJointPositions( Rofibot & configuration,
     return positionsReached;
 }
 
-auto updateConnectorStates( Rofibot & configuration,
+auto updateConnectorStates( RofiWorld & configuration,
                             const detail::ModuleInnerStates & moduleInnerStates )
 {
     using ConnectionChanged = detail::ConfigurationUpdateEvents::ConnectionChanged;
@@ -323,13 +323,13 @@ auto updateConnectorStates( Rofibot & configuration,
 }
 
 auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepTime ) const
-        -> std::pair< RofibotConfigurationPtr, detail::ConfigurationUpdateEvents >
+        -> std::pair< RofiWorldConfigurationPtr, detail::ConfigurationUpdateEvents >
 {
     using CUE = detail::ConfigurationUpdateEvents;
 
     auto currentConfig = currentConfiguration();
     assert( currentConfig );
-    auto newConfiguration = std::make_shared< Rofibot >( *currentConfig );
+    auto newConfiguration = std::make_shared< RofiWorld >( *currentConfig );
     assert( newConfiguration );
 
     CUE updateEvents;
@@ -357,12 +357,12 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
     return std::pair( newConfiguration, std::move( updateEvents ) );
 }
 
-auto ModuleStates::initInnerStatesFromConfiguration( const Rofibot & rofibotConfiguration,
+auto ModuleStates::initInnerStatesFromConfiguration( const RofiWorld & worldConfiguration,
                                                      bool verbose )
         -> std::map< ModuleId, ModuleInnerState >
 {
     auto innerStates = std::map< ModuleId, ModuleInnerState >();
-    for ( const auto & moduleInfo : rofibotConfiguration.modules() ) {
+    for ( const auto & moduleInfo : worldConfiguration.modules() ) {
         const auto & _module = *moduleInfo.module;
 
         auto joints = std::ranges::distance( _module.configurableJoints() );
@@ -385,12 +385,12 @@ auto ModuleStates::initInnerStatesFromConfiguration( const Rofibot & rofibotConf
         }
     }
 
-    for ( auto & connection : rofibotConfiguration.roficomConnections() ) {
+    for ( auto & connection : worldConfiguration.roficomConnections() ) {
         auto sourceConnector =
-                Connector{ .moduleId = connection.getSourceModule( rofibotConfiguration ).getId(),
+                Connector{ .moduleId = connection.getSourceModule( worldConfiguration ).getId(),
                            .connIdx = connection.sourceConnector };
         auto destConnector =
-                Connector{ .moduleId = connection.getDestModule( rofibotConfiguration ).getId(),
+                Connector{ .moduleId = connection.getDestModule( worldConfiguration ).getId(),
                            .connIdx = connection.destConnector };
 
         auto * sourceConnState = detail::getConnectorInnerState( innerStates, sourceConnector );
