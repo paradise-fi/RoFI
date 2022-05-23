@@ -3,52 +3,54 @@ Configuration
 
 Configuration is a way of representing any bot in an universal manner. It
 contains all building-blocks of the RoFI platform such as various modules
-and joints. Using these blocks, you can specify every rofibot and work
-with it. Configuration computes positions of every component within the bot
-and provides useful functions for manipulation with such rofibot, including
+and joints. Using these blocks, you can specify every RoFI world -- a set
+of rofibots (self-contained bots fixed in space) -- and work with it.
+Configuration computes positions of every component within each bot and
+provides useful functions for manipulation with the whole world, including
 some validity checks (e.g., collision checks).
 
 Using the configuration is pretty straightforward. The main class is
-:cpp:class:`Rofibot <rofi::configuration::Rofibot>` for which you create an
-instance and add all the modules you have within one bot. You have to connect
-them appropriately and if you want to use absolute positions, you have to
-fix one of the bot's components in space (otherwise, the configuration cannot
-figure out its coordinates because everything is kept relative).
+:cpp:class:`RofiWorld <rofi::configuration::RofiWorld>` for which you create an
+instance and add all the modules you want to have in the world. You have to
+connect these modules one to another appropriately to form individual rofibots.
+If you want to use absolute positions, you have to fix one of components of each
+bot in space, otherwise, the configuration cannot figure out its coordinates
+because everything is kept relative.
 
-For example, let us create a small bot with two universal modules.
+For example, let us create a world with a single bot consisted of two universal modules.
 
 .. code-block:: cpp
 
-    #include <configuration/rofibot.hpp>
+    #include <configuration/rofiworld.hpp>
 
     // ...
 
-    Rofibot bot;
+    RofiWorld world;
     // add universal module with id 42 in the default state
-    auto& m1 = bot.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
+    auto& m1 = world.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
     // add universal module with id 42 with beta set to 45 degrees and gamma to 90 degrees
-    auto& m2 = bot.insert( UniversalModule( 66, 0_deg, 45_deg, 90_deg ) );
+    auto& m2 = world.insert( UniversalModule( 66, 0_deg, 45_deg, 90_deg ) );
 
     // connect A+X of the universal module with id = 42 to A-X of UM with id = 66
     connect( m1.connectors()[ 2 ], m2.connectors()[ 0 ], Orientation::North );
     // fix the position of the `shoe A` in { 0, 0, 0 }
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
 
-With the `bot` in hand, you can then prepare it (i.e., compute its positions)
-and check for validity.
+With the `world` in hand, you can then prepare it (i.e., compute positions of each
+part -- bot -- of the world) and check for its validity.
 
 .. code-block:: cpp
 
-    bot.prepare();
-    auto [ ok, err ] = bot.isValid( SimpleCollision() );
+    world.prepare();
+    auto [ ok, err ] = world.isValid( SimpleCollision() );
     if ( !ok )
         std::cerr << "invalid configuration: " << err << "\n";
 
     // or you can shorten the above to
-    auto [ ok, err ] = bot.validate( SimpleCollision() );
+    auto [ ok, err ] = world.validate( SimpleCollision() );
 
     // also, the SimpleCollision model is the default one, so you can ommit it too and get
-    auto [ ok, err ] = bot.validate();
+    auto [ ok, err ] = world.validate();
 
 
 Types and Constants
@@ -69,7 +71,7 @@ Types and Constants
 Classes
 -------
 
-.. doxygenclass:: rofi::configuration::Rofibot
+.. doxygenclass:: rofi::configuration::RofiWorld
     :project: configuration
 
 .. doxygenclass:: rofi::configuration::Module
@@ -145,7 +147,7 @@ The minimal configuration looks like this.
 
     // the json library supports string literals
     auto js = "{ \"modules\" : [], \"spaceJoints\" : [], \"moduleJoints\" : [] }"_json;
-    Rofibot bot = fromJSON( js );
+    RofiWorld world = fromJSON( js );
     // and we can continue as before
 
 If we were to represent the configuration with two universal modules shown
@@ -273,7 +275,7 @@ the identity matrix, you can use a string representation, just write `"identity"
 instead of `[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]`.
 
 
-.. doxygenfunction:: rofi::configuration::serialization::toJSON( const Rofibot& bot, Callback attrCb )
+.. doxygenfunction:: rofi::configuration::serialization::toJSON( const RofiWorld& world, Callback attrCb )
     :project: configuration
 
 The callback is optional. It provides you with the ability to extend the json representation with
@@ -281,7 +283,7 @@ an `"attributes"` property, which can be added to any object within the `json`. 
 metadata you might use when working with and sharing the configuration description. For details, see
 the section below.
 
-.. doxygenfunction:: rofi::configuration::serialization::toJSON( const Rofibot& bot )
+.. doxygenfunction:: rofi::configuration::serialization::toJSON( const RofiWorld& world )
     :project: configuration
 
 .. doxygenfunction:: rofi::configuration::serialization::fromJSON( const nlohmann::json& j, Callback attrCb )
@@ -323,8 +325,8 @@ To collect these attributes you can then use this callback
               },
               []( const nlohmann::json&, const ComponentJoint&, int jointIndex )  { return; },
               []( const nlohmann::json&, const Component&, int componentIndex  )  { return; },
-              []( const nlohmann::json&, Rofibot::RoficomJointHandle ) { return; },
-              []( const nlohmann::json&, Rofibot::SpaceJointHandle )   { return; },
+              []( const nlohmann::json&, RofiWorld::RoficomJointHandle ) { return; },
+              []( const nlohmann::json&, RofiWorld::SpaceJointHandle )   { return; },
     };
 
 See, that the main difference is in the arguments – callback given to `fromJSON` takes a `json` that
