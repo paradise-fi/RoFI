@@ -759,12 +759,12 @@ public:
                                     bodyJointCapability(),
                                     bsp::gammaRatio )
         } ),
-        _connectorBus( HSPI_HOST, GPIO_NUM_18, GPIO_NUM_5, 1000000 ),
+        _connectorBus( HSPI_HOST, GPIO_NUM_19, GPIO_NUM_18, 100000 ),
         _connectors( {
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_27 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_25 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_32 ),
-            std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_0 ),
+            std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_4 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_33 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_26 )
         } )
