@@ -5,6 +5,7 @@ import os
 import subprocess
 import serial.tools.list_ports as list_ports
 import argparse
+from threading import Timer
 from common import *
 
 
@@ -45,7 +46,10 @@ def monitor(args):
 
 
 def monitorStm32(args):
-    subprocess.call(["st-info", "--probe"])
+    def reset():
+        subprocess.call(["st-info", "--probe"])
+    t = Timer(1, reset)
+    t.start()
     monitor(args)
 
 

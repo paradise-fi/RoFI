@@ -218,6 +218,7 @@ int main() {
                 Dbg::error( "DBG received: %c", Dbg::get() );
             }
         }
+        Dbg::error("%d, %d", GpioB[ 4 ].read(), GpioB[ 8 ].read());
         if (Defer::run()) {
             // Dbg::error("D\n");
         }
