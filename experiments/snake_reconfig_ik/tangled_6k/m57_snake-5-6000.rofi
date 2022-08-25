@@ -1,0 +1,119 @@
+C
+M 56 -90 90 -90
+M 55 -90 90 90
+M 54 -90 90 180
+M 53 90 0 90
+M 52 90 90 180
+M 51 0 0 180
+M 50 90 90 180
+M 49 -90 -90 -90
+M 48 -90 -90 90
+M 47 0 90 0
+M 46 -90 90 180
+M 45 -90 90 180
+M 44 0 -90 180
+M 43 90 90 180
+M 42 90 -90 90
+M 41 -90 90 90
+M 40 0 90 0
+M 39 0 90 180
+M 38 -90 90 90
+M 37 90 0 180
+M 36 90 0 0
+M 35 0 -90 180
+M 34 -90 90 90
+M 33 0 0 180
+M 32 0 -90 0
+M 31 0 90 90
+M 30 0 0 180
+M 29 0 0 -90
+M 12 0 90 180
+M 11 0 -90 180
+M 10 0 0 90
+M 9 90 0 90
+M 8 -90 90 90
+M 7 90 -90 90
+M 6 -90 -90 0
+M 5 0 -90 0
+M 4 -90 0 180
+M 3 -90 0 90
+M 2 -90 0 0
+M 1 -90 -90 90
+M 0 -90 90 90
+M 13 -90 90 0
+M 14 -90 90 90
+M 15 90 -90 180
+M 16 0 90 90
+M 17 -90 0 180
+M 18 -90 0 0
+M 19 90 -90 -90
+M 20 0 0 90
+M 21 90 -90 -90
+M 22 -90 -90 180
+M 23 0 0 180
+M 24 0 0 90
+M 25 0 0 0
+M 26 0 -90 0
+M 27 90 90 0
+M 28 90 90 0
+E 53 B -X N -X A 56
+E 52 A -X S -Z B 55
+E 52 B -Z N -Z A 53
+E 49 A +X W -Z B 50
+E 46 A +X S +X B 47
+E 45 A +X S -X B 47
+E 44 A -Z W -Z B 48
+E 43 A -X W -X B 50
+E 42 B -X W +X A 50
+E 36 B -Z E +X A 42
+E 35 A -Z S -X B 40
+E 32 A +X N -Z B 40
+E 32 A -X N -X B 45
+E 32 A -Z W +X B 48
+E 31 A -X S -X B 36
+E 31 B +X W -X A 48
+E 31 B -X E -X A 37
+E 30 B +X N +X A 34
+E 29 A -X N -Z B 30
+E 12 B -Z N -Z A 13
+E 10 A +X W -X B 41
+E 10 A -X E +X B 54
+E 10 B +X W +X A 14
+E 9 B +X W -Z A 40
+E 9 B -X S -X A 53
+E 9 B -Z N -Z A 10
+E 8 A +X N -X B 51
+E 8 A -X E +X B 50
+E 8 B -Z N -Z A 9
+E 7 A +X N -X B 13
+E 7 A -X S +X B 11
+E 6 A +X S -X B 10
+E 5 B -Z S -Z A 56
+E 4 A +X W +X B 35
+E 4 B -X S -X A 33
+E 3 B -X N -X A 12
+E 1 A +X E -Z B 19
+E 1 B +X N -Z A 48
+E 1 B -Z N -X A 2
+E 0 A -Z E -Z B 51
+E 13 B +X N -Z A 54
+E 13 B -Z N -Z A 14
+E 14 B +X S +X A 38
+E 15 B -X E -X A 18
+E 16 A -X W -Z B 18
+E 16 B +X S -X A 39
+E 16 B -Z N -Z A 17
+E 17 A +X S -X B 38
+E 19 B -X W +X A 31
+E 20 A -X W -Z B 21
+E 20 B -Z W -Z A 46
+E 21 A -X W +X B 24
+E 21 B +X W +X A 24
+E 21 B -X E -X A 30
+E 22 B -Z N -Z A 23
+E 23 B +X W +X A 26
+E 25 A +X W -X B 28
+E 25 A -X E +X B 49
+E 25 B -Z N -Z A 26
+E 27 B -Z N -Z A 28
+

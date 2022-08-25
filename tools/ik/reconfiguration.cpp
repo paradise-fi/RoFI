@@ -40,22 +40,66 @@ void visualize( const treeConfig& t, std::string inputFile, std::string outputFi
 
 }
 
+struct inspector: public treeConfigInspection {
+    void onReconfigurationStart() override {
+        globalStart = std::chrono::high_resolution_clock::now();
+    };
+
+    void onReconfigurationEnd() override {
+        globalEnd = std::chrono::high_resolution_clock::now();
+    };
+
+    void onBacktrack() override {
+        backtrackCount++;
+    }
+
+    void onArmConnectionStart() override {
+        armStart = std::chrono::high_resolution_clock::now();
+    }
+
+    void onArmConnectionEnd() override {
+        auto armEnd = std::chrono::high_resolution_clock::now();
+        armConnectionCount++;
+        armConnectionTime += std::chrono::duration_cast< std::chrono::microseconds >(
+            armEnd - armStart );
+    }
+
+    auto reconfigurationTime() const {
+        return std::chrono::duration_cast< std::chrono::milliseconds >( globalEnd - globalStart );
+    }
+
+
+    int backtrackCount = 0;
+    int armConnectionCount = 0;
+    std::chrono::high_resolution_clock::time_point globalStart;
+    std::chrono::high_resolution_clock::time_point globalEnd;
+    std::chrono::high_resolution_clock::time_point armStart;
+    std::chrono::microseconds armConnectionTime;
+};
+
 void reconfigure( std::string inputFile, straightening str, collisionStrategy coll,
                   std::string logFile, std::string outputFile ){
     treeConfig t( inputFile );
+    t.inspector = std::unique_ptr< treeConfigInspection >( new inspector() );
     t.collisions = coll;
     t.straight = str;
 
-    auto start = std::chrono::high_resolution_clock::now();
-    bool result = t.tryConnections();
-    auto end = std::chrono::high_resolution_clock::now();
-    auto duration = std::chrono::duration_cast< std::chrono::milliseconds >( end - start );
+    bool result = t.reconfig();
+
+    auto insp = static_cast< const inspector *>( t.inspector.get() );
 
     if( logFile.empty() ){
         std::cout << "Collision strategy: " << toString( coll ) << "\n"
                   << "Straightening: " << toString( str ) << "\n"
                   << "Result: " << std::boolalpha << result << "\n"
-                  << "Reconfiguration time: " << duration.count() << "ms\n";
+                  << "Reconfiguration time: " << insp->reconfigurationTime().count() << "ms\n"
+                  << "Number of backtracks: " << insp->backtrackCount << "\n"
+                  << "Time spent in arm connections: "
+                        << std::chrono::duration_cast< std::chrono::milliseconds >(
+                            insp->armConnectionTime ).count() << "ms\n"
+                  << "Number of connection attempts: " << insp->armConnectionCount << "\n"
+                  << "Average connection time: " << std::chrono::duration_cast< std::chrono::milliseconds >(
+                            insp->armConnectionTime ).count() / insp->armConnectionCount << "ms\n";
     } else {
         std::ofstream log( logFile );
         if( !log.is_open() ){
@@ -63,8 +107,13 @@ void reconfigure( std::string inputFile, straightening str, collisionStrategy co
         }
         log << "{ \"collisions\": \"" << toString( coll ) << "\""
             << ", \"straightening\": \"" << toString( str ) << "\""
-            << ", \"result\" : " << std::boolalpha << result
-            << ", \"time\" : " << duration.count() << " }";
+            << ", \"result\": " << std::boolalpha << result
+            << ", \"time\": " << insp->reconfigurationTime().count()
+            << ", \"backtracks\": " << insp->backtrackCount
+            << ", \"armConnections\": " << insp->armConnectionCount
+            << ", \"armConnectionsTime\": " << std::chrono::duration_cast< std::chrono::milliseconds >(
+                            insp->armConnectionTime ).count()
+            << " }";
     }
 
     if( !outputFile.empty() ){
