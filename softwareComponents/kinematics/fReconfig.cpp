@@ -1,4 +1,5 @@
 #include "fReconfig.hpp"
+#include <atoms/util.hpp>
 
 const Edge invalidEdge = { -1, A, ZMinus, North, ZMinus, A, -1 };
 
@@ -129,8 +130,10 @@ treeConfig::treeConfig( Configuration c ){
     *this = treeConfig( c, closestMass( c ) );
 }
 
-void treeConfig::makeTree(){
-    std::deque< std::pair< ID, int > > queue;
+treeConfig::treeConfig( Configuration c, ID r ) : config( c ), root( r ),
+                                                  inspector( new treeConfigInspection())
+{
+    std::deque< ID > queue;
     std::unordered_set< ID > seen;
     int depth = 0;
     Configuration treed = config;
@@ -258,6 +261,13 @@ joint treeConfig::getConnected( ID id, ShoeId side, std::unordered_set< ID > exc
     return { -1, A };
 }
 
+bool treeConfig::reconfig() {
+    inspector->onReconfigurationStart();
+    bool result = tryConnections();
+    inspector->onReconfigurationEnd();
+    return result;
+}
+
 bool treeConfig::tryConnections(){
 
     auto arms = getFreeArms();
@@ -293,6 +303,7 @@ bool treeConfig::tryConnections(){
             } else {
                 resetState( old );
             }
+            inspector->onBacktrack();
         }
     }
     return false;
@@ -366,29 +377,6 @@ bool treeConfig::fixConnections( std::vector< joints >& arms ){
 bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
     inspector->onArmConnectionStart();
     ATOMS_DEFER([this]{ inspector->onArmConnectionEnd(); });
-
-    Edge newDisconnect = invalidEdge;
-
-    extend( arm2, arm1 );
-
-    // if possible, disconnect at a non-Z edge
-    joint arm2Root = getPrevious( arm2.front() );
-    if( goodConnections( arm2 ) && arm2Root.id != -1 && find( arm1.begin(), arm1.end(), arm2Root ) == arm1.end()
-    && !badConnection( edgeBetween( arm2.front(), arm2Root ) ) ){
-        if( !goodConnections( arm1 ) ){
-            size_t i = arm1.size() - 1;
-            while( !badConnection( newDisconnect ) ){
-                newDisconnect = edgeBetween( arm1[ i ], arm1[ i - 1 ] );
-                --i;
-            }
-        } else if( getPrevious( arm1.front() ).id != -1
-                && badConnection( edgeBetween( arm1.front(), getPrevious( arm1.front() ) ) ) ){
-            newDisconnect = edgeBetween( arm1.front(), getPrevious( arm1.front() ) );
-        } // else if( getPrevious( arm1.front() ).id != -1
-        //         && !badConnection( edgeBetween( arm1.front(), getPrevious( arm1.front() ) ) ) ){
-        //     return false;
-        // }
-    }
 
     Configuration oldConfig = link( arm1, arm2 );
 
