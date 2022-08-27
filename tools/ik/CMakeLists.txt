@@ -5,3 +5,7 @@ project(rofi)
 add_executable(rofi-ik generator.cpp)
 target_include_directories(rofi-ik INTERFACE .)
 target_link_libraries(rofi-ik PRIVATE kinematics legacy-configuration)
+
+add_executable(rofi-freconfig reconfiguration.cpp)
+target_include_directories(rofi-freconfig INTERFACE .)
+target_link_libraries(rofi-freconfig PRIVATE kinematics legacy-configuration dimcli)

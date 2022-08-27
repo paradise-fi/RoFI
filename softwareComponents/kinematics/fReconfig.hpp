@@ -11,6 +11,7 @@
 
 /* Custom precision for considering matrices equal, more relaxed than Matrix.h/equals */
 bool eq( const Matrix& a, const Matrix& b );
+bool eq( const Vector& a, const Vector& b );
 
 /* Simple representation for arms consisting of joints */
 struct joint {
@@ -43,12 +44,27 @@ reconfigurationStep setRotation( ID id, Joint j, double angle );
 reconfigurationStep setConnection( Edge toConnect );
 reconfigurationStep setDisconnect( Edge toDisconnect );
 
+enum class collisionStrategy {
+    all, none, naive, online
+};
+
+enum class straightening {
+    all, none, onCollision, always
+};
+
+std::string toString( collisionStrategy coll );
+std::string toString( straightening str );
+
 /* Reconfiguration machine */
 struct treeConfig {
 
     /* Configuration and it's center */
     Configuration config;
     ID root;
+
+    /* Flags for reconfiguration */
+    collisionStrategy collisions;
+    straightening straight;
 
     /* Logging of steps taken to reconfigure */
     std::vector< reconfigurationStep > reconfigurationSteps;

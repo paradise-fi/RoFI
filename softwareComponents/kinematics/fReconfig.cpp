@@ -6,6 +6,42 @@ bool eq( const Matrix& a, const Matrix& b ){
     return arma::approx_equal( a, b, "absdiff", 0.02 );
 }
 
+bool eq( const Vector& a, const Vector& b ){
+    return arma::approx_equal( a, b, "absdiff", 0.02 );
+}
+
+std::string toString( collisionStrategy coll ){
+    switch( coll ){
+        case( collisionStrategy::none ):
+            return "none";
+
+        case( collisionStrategy::naive ):
+            return "naive";
+
+        case( collisionStrategy::online ):
+            return "online";
+
+        default:
+            return "";
+    }
+}
+
+std::string toString( straightening str ){
+    switch( str ){
+        case( straightening::none ):
+            return "none";
+
+        case( straightening::onCollision ):
+            return "onCollision";
+
+        case( straightening::always ):
+            return "always";
+
+        default:
+            return "";
+    }
+}
+
 joint otherSide( joint j ){
     return { j.id, j.side == A ? B : A };
 }
