@@ -1,5 +1,7 @@
-#include <legacy/configuration/Configuration.h>
-#include <legacy/configuration/IO.h>
+#pragma once
+
+#include <Configuration.h>
+#include <IO.h>
 
 #include <cassert>
 #include <cmath>
@@ -180,4 +182,18 @@ inline double roundToPi( double value ){
     return value - M_PI_2 <= 0 ? 0.0 : M_PI;
 }
 
-} // namespace
+// https://math.stackexchange.com/a/1367732
+inline std::array< Vector, 2 > xCircleIntersections( const Vector& a, const Vector& b, double r1, double r2 ){
+    double d = std::sqrt( ( a[ 1 ] - b[ 1 ] ) * ( a[ 1 ] - b[ 1 ] ) +
+                          ( a[ 2 ] - b[ 2 ] ) * ( a[ 2 ] - b[ 2 ] ) );
+    double l = ( r1 * r1 - r2 * r2 + d * d ) / 2 * d;
+    double h = std::sqrt( r1 * r1 - l * l );
+    double x1 = ( l / d ) * ( b[ 1 ] - a[ 1 ] ) + ( h / d ) * ( b[ 2 ] - a[ 2 ] ) + a[ 1 ];
+    double x2 = ( l / d ) * ( b[ 1 ] - a[ 1 ] ) - ( h / d ) * ( b[ 2 ] - a[ 2 ] ) + a[ 1 ];
+    double y1 = ( l / d ) * ( b[ 2 ] - a[ 2 ] ) - ( h / d ) * ( b[ 2 ] - a[ 2 ] ) + a[ 2 ];
+    double y2 = ( l / d ) * ( b[ 2 ] - a[ 2 ] ) + ( h / d ) * ( b[ 2 ] - a[ 2 ] ) + a[ 2 ];
+
+    return { Vector{ 0, x1, y1, 1 }, Vector{ 0, x2, y2, 1 } };
+}
+
+}
