@@ -4,6 +4,7 @@
 #include <deque>
 #include <unordered_set>
 #include <map>
+#include <set>
 
 #include <Configuration.h>
 #include <IO.h>
@@ -18,8 +19,12 @@ struct joint {
     ID id;
     ShoeId side;
 
-    bool operator==( joint b ){
+    bool operator==( joint b ) const {
         return id == b.id && side == b.side;
+    }
+
+    bool operator<( joint b ) const {
+        return id < b.id || ( side == A && b.side == B );
     }
 };
 
@@ -86,10 +91,13 @@ struct treeConfig {
 
     /* Find connected modules */
     int connections( ID id, ShoeId side, ID exclude );
-    joint getConnected( ID id, ShoeId side, ID exclude );
+    joint getConnected( ID id, ShoeId side, std::unordered_set< ID > exclude );
 
     /* Simple reconfiguration algorithm - try to connect all arms, backtrack through recursion */
     bool tryConnections();
+
+    /* If a single arm is left but the connections are wrong, fix them up */
+    bool fixConnections();
 
     /* Connect arms by linking them and using FABRIK */
     bool connect( joints arm1, joints arm2, bool straighten = true );
@@ -113,8 +121,7 @@ struct treeConfig {
                                                Configuration& currentConfig,
                                                Configuration& otherConfig,
                                                Matrix currentPos, Matrix otherPos,
-                                               Matrix nextPos, Matrix currentNextPos,
-                                               bool forward );
+                                               Matrix nextPos, bool forward );
 
     std::pair< double, double > computeJoints( const joints& arm, size_t currentJoint,
                                                Configuration& currentConfig,
@@ -127,6 +134,9 @@ struct treeConfig {
 
     void straightenArm( const joints& arm );
 
+    std::set< joint > collidingJoints( joint j );
+    std::pair< Vector, double > intersectionCircle( joint current, joint colliding );
+    void fixCollisions( const joints& arm, size_t currentJoint );
     /* Option for debugging step by step */
     bool debug = false;
 };
