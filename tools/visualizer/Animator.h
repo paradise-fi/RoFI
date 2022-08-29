@@ -13,6 +13,7 @@
 class Animator{
 private:
     unsigned long outCount = 0;
+    Visualizer visualizer;
 public:
     /**
      * This function is used for visualization of main configs. This function
@@ -109,7 +110,6 @@ public:
     void visualizeOneConfig(Configuration& config, const std::string& path, bool savePicture,
             const Camera& camera, const Resolution& resolution,
             int magnify, const std::vector<ColorRule> &colorRules){
-        Visualizer visualizer;
         config.computeMatrices();
         std::string filename = getFilename(path);
         visualizer.drawConfiguration(config, filename, savePicture, camera, resolution, magnify, colorRules);

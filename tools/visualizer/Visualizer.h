@@ -114,6 +114,7 @@ public:
 private:
     void addActor(const std::string &model, const Matrix &matrix, const std::array<int, 3> &color) const;
     vtkSmartPointer<vtkRenderer> renderer;
+    vtkSmartPointer<vtkRenderWindow> renderWindow;
 };
 
 inline vtkSmartPointer<vtkMatrix4x4> convertMatrix( const Matrix& m )
@@ -141,9 +142,14 @@ inline vtkSmartPointer<vtkMatrix4x4> convertMatrix( const Matrix& m )
 void Visualizer::drawConfiguration(const Configuration &config, const std::string& path, bool savePicture,
         const Camera& cameraParams, const Resolution& resolution, int magnify, const std::vector<ColorRule> &colorRules)
 {
-    renderer = vtkSmartPointer<vtkRenderer>::New();
-    vtkSmartPointer<vtkRenderWindow> renderWindow =
-            vtkSmartPointer<vtkRenderWindow>::New();
+    // We postpone the initialization until the window is actually needed.
+    if (!renderer || !renderWindow) {
+        renderer = vtkSmartPointer<vtkRenderer>::New();
+        renderWindow = vtkSmartPointer<vtkRenderWindow>::New();
+    }
+    else {
+        renderer->RemoveAllViewProps();
+    }
 
     for ( const auto& [id, matrices] : config.getMatrices())
     {
