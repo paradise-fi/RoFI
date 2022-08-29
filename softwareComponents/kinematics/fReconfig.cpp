@@ -335,6 +335,8 @@ bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
             straightenArm( arm1 );
     } else {
         config = oldConfig;
+        waitingConnections.clear();
+        waitingDisconnects.clear();
     }
     return result;
 }
