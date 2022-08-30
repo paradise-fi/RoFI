@@ -1,16 +1,16 @@
 FROM debian:bullseye
 
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
+RUN apt-get -qq update && \
+    apt-get -qq -o=Dpkg::Use-Pty=0 install -y --no-install-recommends \
         apt-utils wget software-properties-common gnupg
 
 RUN env DEBIAN_FRONTEND=noninteractive \
-        apt-get update; \
-        apt-get install -y --no-install-recommends \
+        apt-get -qq update; \
+        apt-get -qq -o=Dpkg::Use-Pty=0 install -y --no-install-recommends \
         cmake make git \
         gcc-10 g++-10 \
         libarmadillo-dev libvtk7-dev libvtk7-qt-dev qtdeclarative5-dev \
-        gazebo libgazebo-dev libz3-dev
+        gazebo libgazebo-dev libz3-dev jq moreutils
 
 RUN for i in `dpkg-query -L gcc-10 | cut -d: -f2 | grep '/usr/bin/[^/].*-10'`; do F=`echo $i | sed 's/-10$//'`; test -f $F || { echo $F; ln -s $i $F; }; done
 RUN for i in `dpkg-query -L g++-10 | cut -d: -f2 | grep '/usr/bin/[^/].*-10'`; do F=`echo $i | sed 's/-10$//'`; test -f $F || { echo $F; ln -s $i $F; }; done
