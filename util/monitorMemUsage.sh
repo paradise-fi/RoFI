@@ -12,7 +12,7 @@ TFILE="$(mktemp /tmp/memUsage.XXXXXXXXX)" || exit 1
 
 /usr/bin/time -f '%M' -o ${TFILE} $@
 
-cat $LOGFILE | jq ". |= . + { \"peakMemoryUsage\": $(cat ${TFILE}) }" | sponge > $LOGFILE
+cat $LOGFILE | jq ". |= . + { \"peakMemoryUsage\": $(cat ${TFILE}) }" | sponge $LOGFILE
 
 rm ${TFILE}
 
