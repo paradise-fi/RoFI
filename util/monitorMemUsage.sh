@@ -3,8 +3,12 @@
 # Monitors peak memory usage. Measures only memory resident in the physical
 # memory, ignores swapped pages
 
+set -e
+
 LOGFILE=$1
 shift
+
+echo Running command $@
 
 echo '{}' > $LOGFILE
 
@@ -21,3 +25,4 @@ cat $LOGFILE | jq ". |= . + {
 
 rm ${TFILE}
 
+echo Finished
