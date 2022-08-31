@@ -8,7 +8,7 @@ RUN cd /; \
     git checkout newSnakeExperiments; \
     source ./setup.sh Release; \
     rcfg desktop; \
-    rmake snakeReconfig
+    rmake rofi-freconfig
 
 # Form an entrypoint that setups environment
 RUN echo $'#!/bin/bash\n\
