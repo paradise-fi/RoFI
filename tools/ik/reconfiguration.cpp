@@ -61,8 +61,8 @@ void reconfigure( std::string inputFile, straightening str, collisionStrategy co
         if( !log.is_open() ){
             std::cerr << "Invalid logfile\n";
         }
-        log << "{ \"collisions\" : " << toString( coll )
-            << ", \"straightening\" : " << toString( str )
+        log << "{ \"collisions\": \"" << toString( coll ) << "\""
+            << ", \"straightening\": \"" << toString( str ) << "\""
             << ", \"result\" : " << std::boolalpha << result
             << ", \"time\" : " << duration.count() << " }";
     }
