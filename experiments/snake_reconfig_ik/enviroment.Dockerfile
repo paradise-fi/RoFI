@@ -15,7 +15,7 @@ RUN echo $'#!/bin/bash\n\
     CMD=$1;\n\
     shift;\n\
     source ./setup.sh -s Release;\n\
-    $CMD $@\n' > /bin/rofiInvoke; \
+    util/monitorMemUsage.sh /artefact/results.json $CMD $@\n' > /bin/rofiInvoke; \
     chmod +x /bin/rofiInvoke
 
 WORKDIR /RoFI
