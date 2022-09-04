@@ -1,0 +1,40 @@
+C
+M 18 90 0 90
+M 17 -90 -90 90
+M 16 0 -90 180
+M 15 90 0 0
+M 14 0 -90 180
+M 13 90 0 180
+M 0 0 0 180
+M 1 -90 -90 180
+M 2 -90 -90 -90
+M 3 0 90 90
+M 4 90 90 90
+M 5 -90 90 180
+M 6 -90 0 0
+M 7 90 90 180
+M 8 0 0 180
+M 9 90 -90 90
+M 10 -90 -90 90
+M 11 -90 0 90
+M 12 -90 -90 0
+E 0 A -Z N -Z B 13
+E 1 A -Z W -X B 9
+E 1 B -Z N +X A 17
+E 2 B -Z W -X A 11
+E 3 A +X S -X B 7
+E 3 B -Z E +X A 10
+E 4 A +X W +X B 16
+E 4 A -Z S -Z B 5
+E 4 B -X W +X A 18
+E 6 A +X E +X B 14
+E 6 A -X S -X B 16
+E 6 B +X S -X A 16
+E 6 B -X S -X A 17
+E 7 A -X N -X B 18
+E 8 B +X S -X A 9
+E 9 B -Z E +X A 15
+E 11 A +X S -X B 15
+E 11 B -Z E -Z A 13
+E 12 B +X S -X A 13
+

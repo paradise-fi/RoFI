@@ -11,7 +11,7 @@ mkdir -p ${OUTDIR}
 counter=1
 total=$(ls ${ROFI_ROOT}/data/configurations/snake/ | wc -l)
 
-jobLimit=8
+jobLimit=64
 currentJobs="\j"
 
 for source in ${ROFI_ROOT}/data/configurations/snake/*.rofi; do
@@ -20,7 +20,8 @@ for source in ${ROFI_ROOT}/data/configurations/snake/*.rofi; do
             wait -n
         done
         echo Running ${counter}/$((${total} * ${SAMPLES}))
-        rofi-tangle --steps=${STEPS} ${source} ${OUTDIR}/${source%.rofi}-${i}-${STEPS}.rofi &
+	name=$(basename -- ${source})
+        rofi-tangle --steps=${STEPS} ${source} ${OUTDIR}/${name%.rofi}-${i}-${STEPS}.rofi &
         counter=$(($counter+1));
     done
 done

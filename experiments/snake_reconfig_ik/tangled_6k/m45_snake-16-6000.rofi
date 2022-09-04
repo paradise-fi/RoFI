@@ -1,0 +1,93 @@
+C
+M 44 -90 0 90
+M 43 90 -90 180
+M 42 -90 90 90
+M 41 0 -90 180
+M 40 0 0 90
+M 39 90 0 90
+M 38 0 90 180
+M 37 90 0 0
+M 36 90 90 180
+M 35 -90 90 180
+M 34 0 90 180
+M 33 0 90 0
+M 32 0 -90 180
+M 31 -90 0 180
+M 30 0 -90 0
+M 29 0 90 180
+M 12 -90 0 90
+M 11 90 90 90
+M 10 90 -90 180
+M 9 -90 -90 90
+M 8 0 0 90
+M 7 90 -90 0
+M 6 0 0 180
+M 5 -90 90 90
+M 4 -90 0 -90
+M 3 90 0 0
+M 2 -90 0 90
+M 1 0 -90 180
+M 0 90 0 90
+M 13 0 90 90
+M 14 0 0 -90
+M 15 -90 0 180
+M 16 0 90 90
+M 17 90 90 180
+M 18 0 0 0
+M 19 0 0 180
+M 20 0 90 90
+M 21 -90 -90 180
+M 22 90 90 0
+M 23 0 90 180
+M 24 90 90 180
+M 25 -90 90 0
+M 26 0 90 180
+M 27 0 -90 180
+M 28 0 90 180
+E 43 A -Z S +X B 44
+E 41 B -X W +X A 42
+E 40 A +X W +X B 41
+E 40 A -X W +X B 43
+E 38 B -Z N -Z A 39
+E 35 A -Z N -X B 36
+E 35 B +X E +X A 39
+E 33 A +X N -X B 39
+E 32 A -Z S -Z B 35
+E 31 A -Z S +X B 36
+E 30 A +X E -Z B 34
+E 12 A +X S +X B 21
+E 10 A -X S -Z B 41
+E 10 B -Z W -X A 12
+E 9 A +X S -X B 13
+E 9 B +X N -Z A 29
+E 8 A +X W -Z B 11
+E 8 B +X E +X A 20
+E 8 B -X W +X A 19
+E 7 A +X S -X B 21
+E 6 B -Z N -Z A 7
+E 3 A -X E +X B 5
+E 3 B +X S +X A 6
+E 3 B -Z N -Z A 4
+E 2 A +X N +X B 29
+E 2 B -X E +X A 5
+E 1 B +X N -X A 4
+E 0 A +X N -X B 3
+E 13 A -Z N +X B 39
+E 13 B +X N -Z A 36
+E 13 B -Z N -Z A 14
+E 15 A +X W -X B 18
+E 15 B +X N +X A 18
+E 16 B +X S +X A 28
+E 17 A +X S -X B 19
+E 18 A -Z N -Z B 43
+E 20 B -X W -Z A 41
+E 22 B +X N -X A 33
+E 22 B -X E -X A 34
+E 23 A +X W -Z B 29
+E 24 A +X S +X B 26
+E 25 A +X S -Z B 31
+E 25 A -Z W -X B 37
+E 26 B -Z N -Z A 38
+E 27 A +X W +X B 37
+E 28 A -X S +X B 30
+
