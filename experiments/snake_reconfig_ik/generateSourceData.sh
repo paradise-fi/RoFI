@@ -20,7 +20,7 @@ for source in ${ROFI_ROOT}/data/configurations/snake/*.rofi; do
             wait -n
         done
         echo Running ${counter}/$((${total} * ${SAMPLES}))
-	name=$(basename -- ${source})
+        name=$(basename -- ${source})
         rofi-tangle --steps=${STEPS} ${source} ${OUTDIR}/${name%.rofi}-${i}-${STEPS}.rofi &
         counter=$(($counter+1));
     done
