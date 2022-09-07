@@ -60,6 +60,15 @@ enum class straightening {
 std::string toString( collisionStrategy coll );
 std::string toString( straightening str );
 
+/* Inspection object for the reconfiguration machine */
+struct treeConfigInspection {
+    virtual void onReconfigurationStart() {};
+    virtual void onReconfigurationEnd() {};
+    virtual void onBacktrack() {};
+    virtual void onArmConnectionStart() {};
+    virtual void onArmConnectionEnd() {};
+};
+
 /* Reconfiguration machine */
 struct treeConfig {
 
@@ -75,6 +84,9 @@ struct treeConfig {
     std::vector< reconfigurationStep > reconfigurationSteps;
     std::vector< reconfigurationStep > waitingConnections;
     std::vector< reconfigurationStep > waitingDisconnects;
+
+    /* Inspection object */
+    std::unique_ptr< treeConfigInspection > inspector;
 
     /* Initialize and treefy configuration */
     treeConfig( const std::string& path );
@@ -92,6 +104,9 @@ struct treeConfig {
     /* Find connected modules */
     int connections( ID id, ShoeId side, ID exclude );
     joint getConnected( ID id, ShoeId side, std::unordered_set< ID > exclude );
+
+    /* Main point of reconfiguration invocation */
+    bool reconfig();
 
     /* Simple reconfiguration algorithm - try to connect all arms, backtrack through recursion */
     bool tryConnections();

@@ -1,4 +1,5 @@
 #include "fReconfig.hpp"
+#include <atoms/util.hpp>
 
 /* Helper functions  */
 bool eq( const Matrix& a, const Matrix& b ){
@@ -126,7 +127,9 @@ treeConfig::treeConfig( Configuration c ){
     *this = treeConfig( c, closestMass( c ) );
 }
 
-treeConfig::treeConfig( Configuration c, ID r ) : config( c ), root( r ){
+treeConfig::treeConfig( Configuration c, ID r ) : config( c ), root( r ),
+                                                  inspector( new treeConfigInspection())
+{
     std::deque< ID > queue;
     std::unordered_set< ID > seen;
     Configuration treed = config;
@@ -233,6 +236,13 @@ joint treeConfig::getConnected( ID id, ShoeId side, std::unordered_set< ID > exc
     return { -1, A };
 }
 
+bool treeConfig::reconfig() {
+    inspector->onReconfigurationStart();
+    bool result = tryConnections();
+    inspector->onReconfigurationEnd();
+    return result;
+}
+
 bool treeConfig::tryConnections(){
     auto arms = getFreeArms();
     if( arms.size() == 1 ){
@@ -252,6 +262,7 @@ bool treeConfig::tryConnections(){
                 reconfigurationSteps.resize( stepCount );
                 config = oldConfig;
             }
+            inspector->onBacktrack();
         }
     }
     return false;
@@ -286,6 +297,9 @@ bool treeConfig::fixConnections(){
 }
 
 bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
+    inspector->onArmConnectionStart();
+    ATOMS_DEFER([this]{ inspector->onArmConnectionEnd(); });
+
     Configuration oldConfig = link( arm1, arm2 );
 
     if( !config.connected() ){
