@@ -3,6 +3,7 @@
 #include <cassert>
 #include <type_traits>
 #include <atoms/traits.hpp>
+#include <functional>
 
 namespace atoms::detail {
 
@@ -19,12 +20,13 @@ using HasCount = std::disjunction<
 
 } // namespace atoms::detail
 
+
 template < std::size_t... >
 struct sum: std::integral_constant< std::size_t, 0 > {};
 
 template <std::size_t X, std::size_t... Xs >
 struct sum< X, Xs... > :
-  std::integral_constant< std::size_t, X + sum< Xs... >::value > {};
+    std::integral_constant< std::size_t, X + sum< Xs... >::value > {};
 
 template< class... Ts >
 struct overload : Ts... { using Ts::operator()...; };
@@ -82,3 +84,20 @@ template < typename T >
 T clamp( T value, T min, T max ) {
     return std::max( min, std::min( value, max ) );
 }
+
+/***
+ * Defer execution of a job until end of scope;
+ */
+class Defer {
+private:
+    std::function< void() > _job;
+public:
+    template < typename F >
+    Defer( F&& f ): _job( f ) {}
+    ~Defer() { _job(); }
+};
+
+
+#define CONCAT_( a, b ) a ## b
+#define CONCAT( a, b ) CONCAT_( a, b )
+#define ATOMS_DEFER( fn ) Defer CONCAT( __defer__, __LINE__ )( fn )
