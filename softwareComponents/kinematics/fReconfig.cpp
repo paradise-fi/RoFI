@@ -47,6 +47,7 @@ joint otherSide( joint j ){
 }
 
 ID closestMass( const Configuration& init ){
+    //std::cout << IO::toString( init );
     Vector mass = init.massCenter();
     ID bestID = 0;
     ShoeId bestShoe = A;
@@ -130,16 +131,18 @@ treeConfig::treeConfig( Configuration c ){
 treeConfig::treeConfig( Configuration c, ID r ) : config( c ), root( r ),
                                                   inspector( new treeConfigInspection())
 {
-    std::deque< ID > queue;
+    std::deque< std::pair< ID, int > > queue;
     std::unordered_set< ID > seen;
+    int depth = 0;
     Configuration treed = config;
     treed.clearEdges();
 
-    queue.emplace_back( root );
+    queue.emplace_back( root, depth );
     seen.insert( root );
 
     while( !queue.empty() ){
-        auto id = queue.front();
+        auto [ id, depth ] = queue.front();
+        depths[ id ] = depth;
         queue.pop_front();
 
         auto edges = config.getEdges( id, seen );
@@ -148,7 +151,7 @@ treeConfig::treeConfig( Configuration c, ID r ) : config( c ), root( r ),
             if( treed.getEdges( otherId ).empty() ){
                 treed.addEdge( edge );
             }
-            queue.emplace_back( otherId );
+            queue.emplace_back( otherId, depth + 1 );
             seen.insert( otherId );
         }
 
@@ -201,7 +204,7 @@ std::vector< joints > treeConfig::getFreeArms(){
     for( ID id : config.getIDs() ){
         for( ShoeId side : { A, B } ){
             if( connections( id, side, id ) == 0 && seen.count( id ) == 0 ){
-                arms.push_back( initArm( id, side, seen ) );
+                arms.emplace_back( joints{ { id, side == A ? B : A }, { id, side } } );
             }
         }
     }
@@ -224,7 +227,6 @@ int treeConfig::connections( ID id, ShoeId side, ID exclude ){
 
 joint treeConfig::getConnected( ID id, ShoeId side, std::unordered_set< ID > exclude ){
     auto edges = config.getEdges( id, exclude );
-    int count = 0;
     for( auto edge : edges ){
         if( edge.id1() == id && edge.side1() == side ){
             return { edge.id2(), edge.side2() };
@@ -245,22 +247,26 @@ bool treeConfig::reconfig() {
 
 bool treeConfig::tryConnections(){
     auto arms = getFreeArms();
-    if( arms.size() == 1 ){
+    if( arms.size() <= 2 ){
         return fixConnections();
     }
 
-    for( auto arm1 : arms ){
-        for( auto arm2 : arms ){
+    for( const auto& arm1 : arms ){
+        for( const auto& arm2 : arms ){
             if( arm1 == arm2 )
                 continue;
 
             size_t stepCount = reconfigurationSteps.size();
             Configuration oldConfig = config;
+            ID oldRoot = root;
+            std::map< ID, int > oldDepths = depths;
             if( connect( arm1, arm2, straight == straightening::always ) && tryConnections() ){
                 return true;
             } else {
                 reconfigurationSteps.resize( stepCount );
                 config = oldConfig;
+                root = oldRoot;
+                depths = oldDepths;
             }
             inspector->onBacktrack();
         }
@@ -268,31 +274,62 @@ bool treeConfig::tryConnections(){
     return false;
 }
 
-bool treeConfig::fixConnections(){
-    auto arms = getFreeArms();
-    bool goodConnections = true;
-    Edge rootEdge = config.getEdges( root ).front();
-    if( badConnection( rootEdge ) ){
-        goodConnections = false;
-    }
-    for( size_t i = 1; i < arms.front().size(); ++i ){
-        joint cur = arms.front()[ i ];
-        joint prev = arms.front()[ i - 1 ];
+bool treeConfig::goodConnections( const joints& arm ){
+    for( size_t i = 1; i < arm.size(); ++i ){
+        joint cur = arm[ i ];
+        joint prev = arm[ i - 1 ];
         if( cur.id != prev.id && badConnection( edgeBetween( cur, prev ) ) ){
-            goodConnections = false;
+            return false;
         }
     }
-    if( goodConnections ){
-        straightenArm( getFreeArm() );
+    return true;
+}
+
+bool treeConfig::fixConnections(){
+    auto arms = getFreeArms();
+    auto arm = getFreeArm();
+
+    if( goodConnections( arm ) ){
+        straightenArm( arm );
         return true;
     }
 
-    joints rootArm;
-    rootArm.emplace_back( rootEdge.side1() == A ? joint{ root, A } : joint{ root, B } );
-    rootArm.emplace_back( rootEdge.side1() == A ? joint{ root, B } : joint{ root, A } );
-    if( connect( rootArm, arms.front(), false ) ){
-        return tryConnections();
+    if( arms.size() == 1 ){
+        Edge rootEdge = config.getEdges( root ).front();
+        joints rootArm;
+        rootArm.emplace_back( rootEdge.side1() == A ? joint{ root, A } : joint{ root, B } );
+        rootArm.emplace_back( rootEdge.side1() == A ? joint{ root, B } : joint{ root, A } );
+
+        if( connect( rootArm, arms.front(), false ) ){
+            return fixConnections();
+        }
+        return false;
     }
+
+    extend( arms[ 0 ], arms[ 1 ] );
+
+    auto connectTwo = [&]( int current ){
+        int other = current == 0 ? 1 : 0;
+        auto rootArm = arms[ current ];
+        Edge rootEdge = edgeBetween( rootArm.front(), { root, A } );
+
+        rootArm.emplace_front( rootEdge.id1() != -1 ? joint{ root, A } : joint{ root, B } );
+        rootArm.emplace_front( rootEdge.id1() != -1 ? joint{ root, B } : joint{ root, A } );
+
+        if( connect( rootArm, arms[ other ], false ) ){
+            return true;
+        }
+        return false;
+    };
+
+    if( !goodConnections( arms[ 1 ] ) && connectTwo( 0 ) ){
+        return fixConnections();
+    }
+
+    if( !goodConnections( arms[ 0 ] ) && connectTwo( 1 ) ){
+        return fixConnections();
+    }
+
     return false;
 }
 
@@ -313,8 +350,8 @@ bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
 
     bool result = fabrik( arm1, target );
 
-    auto arms = getFreeArms();
     if( straight == straightening::onCollision ){
+        auto arms = getFreeArms();
         for( auto j : arm1 ){
             auto colliding = collidingJoints( j );
             for( auto coll : colliding ){
@@ -355,6 +392,44 @@ bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
     return result;
 }
 
+joint treeConfig::getPrevious( joint j ){
+    auto edges = config.getEdges( j.id );
+
+    for( const auto& edge : edges ){
+        if( edge.side1() == j.side && depths[ edge.id2() ] < depths[ j.id ] ){
+            return { edge.id2(), edge.side2() };
+        }
+    }
+    return { -1, A };
+}
+
+void treeConfig::extend( joints& arm1, joints& arm2 ){
+    auto pushPrevious = [&]( joints& current ){
+        joint prev = getPrevious( current.front() );
+        if( prev.id != -1 ){
+            current.push_front( prev );
+            if( getPrevious( prev ).id == -1 ){
+                current.emplace_front( joint{ prev.id, prev.side == A ? B : A } );
+            }
+        }
+    };
+
+    auto extendArm = [&]( joints& current, joints& other ){
+        while( depths[ current.front().id ] > depths[ other.front().id ]
+            && getPrevious( current.front() ).id != -1 )
+        {
+            pushPrevious( current );
+        }
+    };
+    extendArm( arm1, arm2 );
+    extendArm( arm2, arm1 );
+
+    while( getPrevious( arm1.front() ).id != getPrevious( arm2.front() ).id ){
+        pushPrevious( arm1 );
+        pushPrevious( arm2 );
+    }
+}
+
 Configuration treeConfig::link( joints& arm1, joints& arm2 ){
     Configuration oldConfig = config;
     Edge newEdge = {
@@ -364,25 +439,14 @@ Configuration treeConfig::link( joints& arm1, joints& arm2 ){
         arm2.back().side,
         arm2.back().id
     };
+    extend( arm1, arm2 );
 
-    size_t i = 0;
-    for( ; i < arm1.size(); ++i ){
-        std::unordered_set< ID > exclude;
-        if( i != 0 )
-            exclude.insert( arm1[ i - 1 ].id );
-        if( i != arm1.size() - 1 )
-            exclude.insert( arm1[ i + 1 ].id );
-        if( getConnected( arm1[ i ].id, arm1[ i ].side, exclude ) == arm2.front() ){
-            break;
-        }
-    }
-    if( i != arm1.size() ){
-        arm1.erase( arm1.begin(), arm1.begin() + i );
-    }
-
-    i = arm2.size() - 1;
+    size_t i = arm2.size() - 1;
     while( i != -1 ){
         arm1.push_back( arm2.back() );
+        if( arm1.back().id != arm1[ arm1.size() - 2 ].id ){
+            depths[ arm1.back().id ] = depths[ arm1[ arm1.size() - 2 ].id ] + 1;
+        }
         if( i != 0 && arm2[ i ].id != arm2[ i - 1 ].id ){
             Edge current = edgeBetween( arm2[ i ], arm2[ i - 1 ] );
             if( badConnection( current ) ){
@@ -393,9 +457,12 @@ Configuration treeConfig::link( joints& arm1, joints& arm2 ){
         arm2.pop_back();
         --i;
     }
-    std::unordered_set< ID > exclude = { arm1[ arm1.size() - 2 ].id, arm1[ arm1.size() - 3 ].id };
-    auto edges = config.getEdges( arm1.back().id, exclude );
+
+    auto edges = config.getEdges( arm1.back().id );
     for( auto edge : edges ){
+        if( edge == edgeBetween( arm1[ arm1.size() - 2 ], arm1[ arm1.size() - 3 ] ) ){
+            continue;
+        }
         config.execute( Action( Action::Reconnect( false, edge ) ) );
         waitingDisconnects.emplace_back( setDisconnect( edge ) );
     }
@@ -461,7 +528,6 @@ void treeConfig::reaching( const joints& arm, Configuration& backArm, const Matr
     }
     if( debug ){
         std::cout << IO::toString( backArm );
-        //std::cout << "root:\n" << IO::toString( backArm.getMatrices().at( 1 ).at( A ) ) << '\n';
     }
 
     for( size_t i = 0; i < arm.size() - 1; ++i ){
@@ -714,14 +780,20 @@ void treeConfig::fixCollisions( const joints& arm, size_t currentJoint )
 {
     Vector Zero = { 0, 0, 0, 1 };
     size_t nextJoint = currentJoint + 1;
-    while( nextJoint < arm.size() && arm[ nextJoint - 1 ].id != arm[ nextJoint ].id
+    while( nextJoint < arm.size() - 1 && arm[ nextJoint - 1 ].id != arm[ nextJoint ].id
            && arm[ nextJoint + 1 ].id != arm[ nextJoint ].id )
     {
         nextJoint++;
     }
 
-    //std::cout << "cur: " << arm[ currentJoint ].id << " " << arm[ currentJoint ].side <<'\n';
+    if( arm[ currentJoint ].id != arm[ nextJoint ].id &&
+        edgeBetween( arm[ currentJoint ], arm[ currentJoint + 1 ] ).dock1() != ZMinus )
+    {
+        return;
+    }
+
     auto colliding = collidingJoints( arm[ nextJoint ] );
+
     if( colliding.empty() ){
         return;
     }
