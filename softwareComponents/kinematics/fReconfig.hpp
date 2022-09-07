@@ -67,6 +67,8 @@ struct treeConfig {
     Configuration config;
     ID root;
 
+    std::map< ID, int > depths;
+
     /* Flags for reconfiguration */
     collisionStrategy collisions;
     straightening straight;
@@ -133,6 +135,12 @@ struct treeConfig {
     void rotateTowards( const joints& arm, size_t currentJoint, const Matrix& target );
 
     void straightenArm( const joints& arm );
+
+    joint getPrevious( joint j );
+
+    void extend( joints& arm1, joints& arm2 );
+
+    bool goodConnections( const joints& arm );
 
     std::set< joint > collidingJoints( joint j );
     std::pair< Vector, double > intersectionCircle( joint current, joint colliding );
