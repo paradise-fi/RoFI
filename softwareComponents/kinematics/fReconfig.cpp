@@ -200,10 +200,9 @@ joints treeConfig::initArm( ID id, ShoeId side, std::unordered_set< ID >& seen )
 
 std::vector< joints > treeConfig::getFreeArms(){
     std::vector< joints > arms;
-    std::unordered_set< ID > seen = { root };
     for( ID id : config.getIDs() ){
         for( ShoeId side : { A, B } ){
-            if( connections( id, side, id ) == 0 && seen.count( id ) == 0 ){
+            if( connections( id, side, id ) == 0 && id != root ){
                 arms.emplace_back( joints{ { id, side == A ? B : A }, { id, side } } );
             }
         }
@@ -246,9 +245,27 @@ bool treeConfig::reconfig() {
 }
 
 bool treeConfig::tryConnections(){
+
     auto arms = getFreeArms();
-    if( arms.size() <= 2 ){
+
+    if( arms.size() == 1 ){
         return fixConnections();
+    }
+
+    if( arms.size() == 2 ){
+        extend( arms[ 0 ], arms[ 1 ] );
+        auto connectedRoot = [&]( const joints& arm ){
+            for( const auto& edge : config.getEdges( arm.front().id ) ){
+                if( edge.id2() == root ){
+                    return true;
+                }
+            }
+            return false;
+        };
+
+        if( connectedRoot( arms[ 0 ] ) && connectedRoot( arms[ 1 ] ) ){
+            return fixConnections();
+        }
     }
 
     for( const auto& arm1 : arms ){
@@ -416,17 +433,20 @@ void treeConfig::extend( joints& arm1, joints& arm2 ){
 
     auto extendArm = [&]( joints& current, joints& other ){
         while( depths[ current.front().id ] > depths[ other.front().id ]
-            && getPrevious( current.front() ).id != -1 )
+            && getPrevious( current.front() ).id != -1 && getPrevious( current.front() ).id != other.front().id )
         {
             pushPrevious( current );
         }
     };
+
     extendArm( arm1, arm2 );
     extendArm( arm2, arm1 );
 
-    while( getPrevious( arm1.front() ).id != getPrevious( arm2.front() ).id ){
-        pushPrevious( arm1 );
-        pushPrevious( arm2 );
+    if( depths[ arm1.front().id ] == depths[ arm2.front().id ] ){
+        while( getPrevious( arm1.front() ).id != getPrevious( arm2.front() ).id ){
+            pushPrevious( arm1 );
+            pushPrevious( arm2 );
+        }
     }
 }
 
@@ -439,6 +459,7 @@ Configuration treeConfig::link( joints& arm1, joints& arm2 ){
         arm2.back().side,
         arm2.back().id
     };
+
     extend( arm1, arm2 );
 
     size_t i = arm2.size() - 1;
@@ -550,11 +571,16 @@ void treeConfig::reaching( const joints& arm, Configuration& backArm, const Matr
 
 Configuration treeConfig::initBackArm( const joints& arm, const Matrix& target ){
     Configuration backArm;
+    // std::cout << IO::toString( config ) << "arm:\n";
+    // for( auto [ id, side ] : arm ){
+    //     std::cout << id << " " << side << "\n";
+    // }
 
     for( size_t i = 0; i < arm.size(); ++i ){
         if( i == 0 || arm[ i - 1 ].id != arm[ i ].id )
             backArm.addModule( 0, 0, 0, arm[ i ].id );
         if( i != 0 && arm[ i ].id != arm[ i - 1 ].id ){
+            //std::cout <<  arm[ i ].id << " " << arm[ i ].side << " : " << arm[ i - 1 ].id << " " << arm[ i - 1 ].side << "\n";
             backArm.addEdge( edgeBetween( arm[ i - 1 ], arm[ i ] ) );
         }
     }
