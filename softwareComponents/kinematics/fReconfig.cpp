@@ -161,8 +161,7 @@ treeConfig::treeConfig( Configuration c, ID r ) : config( c ), root( r ),
 }
 
 treeConfig treeConfig::saveState(){
-    treeConfig old( config );
-    old.root = root;
+    treeConfig old( config, root );
     old.depths = depths;
     return old;
 }
@@ -213,6 +212,10 @@ joints treeConfig::initArm( ID id, ShoeId side, std::unordered_set< ID >& seen )
 
 std::vector< joints > treeConfig::getFreeArms(){
     std::vector< joints > arms;
+    root = closestMass( config );
+    config.setFixed( root, A, identity );
+    config.computeMatrices();
+
     for( ID id : config.getIDs() ){
         for( ShoeId side : { A, B } ){
             if( connections( id, side, id ) == 0 && id != root ){
