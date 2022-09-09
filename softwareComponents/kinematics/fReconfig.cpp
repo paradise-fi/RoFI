@@ -128,9 +128,7 @@ treeConfig::treeConfig( Configuration c ){
     *this = treeConfig( c, closestMass( c ) );
 }
 
-treeConfig::treeConfig( Configuration c, ID r ) : config( c ), root( r ),
-                                                  inspector( new treeConfigInspection())
-{
+void treeConfig::makeTree(){
     std::deque< std::pair< ID, int > > queue;
     std::unordered_set< ID > seen;
     int depth = 0;
@@ -159,6 +157,12 @@ treeConfig::treeConfig( Configuration c, ID r ) : config( c ), root( r ),
     treed.setFixed( root, A, identity );
     treed.computeMatrices();
     config = treed;
+}
+
+treeConfig::treeConfig( Configuration c, ID r ) : config( c ), root( r ),
+                                                  inspector( new treeConfigInspection())
+{
+    makeTree();
 }
 
 treeConfig treeConfig::saveState(){
@@ -214,7 +218,7 @@ joints treeConfig::initArm( ID id, ShoeId side, std::unordered_set< ID >& seen )
 std::vector< joints > treeConfig::getFreeArms(){
     std::vector< joints > arms;
     root = closestMass( config );
-    config.setFixed( root, A, identity );
+    makeTree();
     config.computeMatrices();
 
     for( ID id : config.getIDs() ){
