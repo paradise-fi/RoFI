@@ -160,6 +160,20 @@ treeConfig::treeConfig( Configuration c, ID r ) : config( c ), root( r ),
     config = treed;
 }
 
+treeConfig treeConfig::saveState(){
+    treeConfig old( config );
+    old.root = root;
+    old.depths = depths;
+    return old;
+}
+
+void treeConfig::resetState( const treeConfig& old ){
+    reconfigurationSteps.resize( old.reconfigurationSteps.size() );
+    config = old.config;
+    root = old.root;
+    depths = old.depths;
+}
+
 joints treeConfig::getFreeArm(){
     std::unordered_set< ID > seen = {};
     for( ID id : config.getIDs() ){
@@ -265,17 +279,11 @@ bool treeConfig::tryConnections(){
             if( arm1 == arm2 )
                 continue;
 
-            size_t stepCount = reconfigurationSteps.size();
-            Configuration oldConfig = config;
-            ID oldRoot = root;
-            std::map< ID, int > oldDepths = depths;
+            treeConfig old = saveState();
             if( connect( arm1, arm2, straight == straightening::always ) && tryConnections() ){
                 return true;
             } else {
-                reconfigurationSteps.resize( stepCount );
-                config = oldConfig;
-                root = oldRoot;
-                depths = oldDepths;
+                resetState( old );
             }
         }
     }
@@ -308,9 +316,11 @@ bool treeConfig::fixConnections(){
         rootArm.emplace_back( rootEdge.side1() == A ? joint{ root, A } : joint{ root, B } );
         rootArm.emplace_back( rootEdge.side1() == A ? joint{ root, B } : joint{ root, A } );
 
+        treeConfig old = saveState();
         if( connect( rootArm, arms.front(), false ) ){
             return fixConnections();
         }
+        resetState( old );
         return false;
     }
 
@@ -324,12 +334,15 @@ bool treeConfig::fixConnections(){
         rootArm.emplace_front( rootEdge.id1() != -1 ? joint{ root, A } : joint{ root, B } );
         rootArm.emplace_front( rootEdge.id1() != -1 ? joint{ root, B } : joint{ root, A } );
 
+        treeConfig old = saveState();
         if( connect( rootArm, arms[ other ], false ) ){
             return true;
         }
+        resetState( old );
         return false;
     };
 
+    treeConfig old = saveState();
     if( !goodConnections( arms[ 1 ] ) && connectTwo( 0 ) ){
         return fixConnections();
     }
@@ -338,6 +351,7 @@ bool treeConfig::fixConnections(){
         return fixConnections();
     }
 
+    resetState( old );
     return false;
 }
 
@@ -401,7 +415,7 @@ joint treeConfig::getPrevious( joint j ){
     auto edges = config.getEdges( j.id );
 
     for( const auto& edge : edges ){
-        if( edge.side1() == j.side && depths[ edge.id2() ] < depths[ j.id ] ){
+        if( edge.side1() == j.side && depths[ edge.id2() ] == depths[ j.id ] - 1 ){
             return { edge.id2(), edge.side2() };
         }
     }
@@ -411,6 +425,7 @@ joint treeConfig::getPrevious( joint j ){
 void treeConfig::extend( joints& arm1, joints& arm2 ){
     auto pushPrevious = [&]( joints& current ){
         joint prev = getPrevious( current.front() );
+
         if( prev.id != -1 ){
             current.push_front( prev );
             if( getPrevious( prev ).id == -1 ){
@@ -418,7 +433,6 @@ void treeConfig::extend( joints& arm1, joints& arm2 ){
             }
         }
     };
-
     auto extendArm = [&]( joints& current, joints& other ){
         while( depths[ current.front().id ] > depths[ other.front().id ]
             && getPrevious( current.front() ).id != -1 && getPrevious( current.front() ).id != other.front().id )
@@ -468,6 +482,7 @@ Configuration treeConfig::link( joints& arm1, joints& arm2 ){
     }
 
     auto edges = config.getEdges( arm1.back().id );
+
     for( auto edge : edges ){
         if( edge == edgeBetween( arm1[ arm1.size() - 2 ], arm1[ arm1.size() - 3 ] ) ){
             continue;
@@ -478,6 +493,7 @@ Configuration treeConfig::link( joints& arm1, joints& arm2 ){
 
     config.execute( Action( Action::Reconnect( true, newEdge ) ) );
     waitingConnections.emplace_back( setConnection( newEdge ) );
+
 
     config.setFixed( root, A, identity );
     config.computeMatrices();
@@ -742,10 +758,8 @@ void treeConfig::rotateJoints( const joints& arm, size_t currentJoint, Configura
 Edge treeConfig::edgeBetween( const joint& j1, const joint& j2 ){
     auto edges = config.getEdges( j1.id );
     for( auto edge : edges ){
-        if( edge.id1() == j1.id && edge.id2() == j2.id ){
+        if( edge.id2() == j2.id && edge.side2() == j2.side ){
             return edge;
-        } else if( edge.id2() == j1.id && edge.id1() == j2.id ){
-           return reverse( edge );
         }
     }
     return { -1, A, ZMinus, North, ZMinus, A, -1 };
