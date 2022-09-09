@@ -88,6 +88,7 @@ struct treeConfig {
     treeConfig( const std::string& path, ID r );
     treeConfig( Configuration c );
     treeConfig( Configuration c, ID r );
+    void makeTree();
 
     /* Initialize arm for single arm configurations */
     joints getFreeArm();
