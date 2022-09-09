@@ -67,7 +67,12 @@ struct treeConfig {
     Configuration config;
     ID root;
 
+    /* Distance from root */
     std::map< ID, int > depths;
+
+    /* Save and reset inner state on failure */
+    treeConfig saveState();
+    void resetState( const treeConfig& old );
 
     /* Flags for reconfiguration */
     collisionStrategy collisions;
