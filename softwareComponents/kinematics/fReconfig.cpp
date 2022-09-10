@@ -218,9 +218,9 @@ joints treeConfig::initArm( ID id, ShoeId side, std::unordered_set< ID >& seen )
 
 std::vector< joints > treeConfig::getFreeArms(){
     std::vector< joints > arms;
-    root = closestMass( config );
-    makeTree();
-    config.computeMatrices();
+    // root = closestMass( config );
+    // makeTree();
+    // config.computeMatrices();
 
     for( ID id : config.getIDs() ){
         for( ShoeId side : { A, B } ){
@@ -381,10 +381,6 @@ bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
     if( goodConnections( arm2 ) && getPrevious( arm2.front() ).id != -1
     && !badConnection( edgeBetween( arm2.front(), getPrevious( arm2.front() ) ) ) ){
         if( !goodConnections( arm1 ) ){
-            std::cout << IO::toString( config );
-            for( auto [ id, side ] : arm1 ){
-                std::cout << id << ' ' << side << '\n';
-            }
             size_t i = arm1.size() - 1;
             while( !badConnection( newDisconnect ) ){
                 newDisconnect = edgeBetween( arm1[ i ], arm1[ i - 1 ] );
