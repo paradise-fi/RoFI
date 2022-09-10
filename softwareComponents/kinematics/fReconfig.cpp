@@ -1,6 +1,8 @@
 #include "fReconfig.hpp"
 #include <atoms/util.hpp>
 
+const Edge invalidEdge = { -1, A, ZMinus, North, ZMinus, A, -1 };
+
 /* Helper functions  */
 bool eq( const Matrix& a, const Matrix& b ){
     return arma::approx_equal( a, b, "absdiff", 0.02 );
@@ -142,10 +144,9 @@ void treeConfig::makeTree(){
         auto [ id, depth ] = queue.front();
         depths[ id ] = depth;
         queue.pop_front();
-
         auto edges = config.getEdges( id, seen );
         for( auto edge : edges ){
-            ID otherId = edge.id1() == id ? edge.id2() : edge.id1();
+            ID otherId = edge.id2();
             if( treed.getEdges( otherId ).empty() ){
                 treed.addEdge( edge );
             }
@@ -375,6 +376,26 @@ bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
     inspector->onArmConnectionStart();
     ATOMS_DEFER([this]{ inspector->onArmConnectionEnd(); });
 
+    Edge newDisconnect = invalidEdge;
+
+    if( goodConnections( arm2 ) && getPrevious( arm2.front() ).id != -1
+    && !badConnection( edgeBetween( arm2.front(), getPrevious( arm2.front() ) ) ) ){
+        if( !goodConnections( arm1 ) ){
+            std::cout << IO::toString( config );
+            for( auto [ id, side ] : arm1 ){
+                std::cout << id << ' ' << side << '\n';
+            }
+            size_t i = arm1.size() - 1;
+            while( !badConnection( newDisconnect ) ){
+                newDisconnect = edgeBetween( arm1[ i ], arm1[ i - 1 ] );
+                --i;
+            }
+        } else if( getPrevious( arm1.front() ).id != -1
+                && badConnection( edgeBetween( arm1.front(), getPrevious( arm1.front() ) ) ) ){
+            newDisconnect = edgeBetween( arm1.front(), getPrevious( arm1.front() ) );
+        }
+    }
+
     Configuration oldConfig = link( arm1, arm2 );
 
     if( !config.connected() ){
@@ -407,6 +428,12 @@ bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
     }
 
     if( result ){
+        if( newDisconnect != invalidEdge ){
+            for( const auto& waiting : waitingDisconnects ){
+                config.execute( Action( Action::Reconnect( true, waiting.edge ) ) );
+            }
+            config.execute( Action( Action::Reconnect( false, newDisconnect ) ) );
+        }
         for( auto [ id, side ] : arm1 ){
             for( auto j : { Alpha, Beta, Gamma } ){
                 reconfigurationSteps.push_back( setRotation( id, j, config.getModule( id ).getJoint( j ) ) );
@@ -702,6 +729,9 @@ std::pair< double, double > treeConfig::computeAngles( const joints& arm, size_t
         Vector pos = project( X,
                               Zero,
                               otherPos * Zero );
+        if( eq( pos, Zero ) ){
+            return { 0, 0 };
+        }
         auto [ p1, a1 ] = simplify( polar( pos ), azimuth( pos ) );
         auto [ p2, a2 ] = simplify( polar( currentPos * Zero ), azimuth( currentPos * Zero ) );
         return { p1 - p2, 0 };
