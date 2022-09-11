@@ -105,7 +105,7 @@ struct treeConfig {
     bool tryConnections();
 
     /* If a single arm is left but the connections are wrong, fix them up */
-    bool fixConnections();
+    bool fixConnections( std::vector< joints >& arms );
 
     /* Connect arms by linking them and using FABRIK */
     bool connect( joints arm1, joints arm2, bool straighten = true );
