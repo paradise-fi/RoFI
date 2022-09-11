@@ -370,8 +370,11 @@ bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
     Edge newDisconnect = invalidEdge;
 
     extend( arm2, arm1 );
-    if( goodConnections( arm2 ) && getPrevious( arm2.front() ).id != -1
-    && !badConnection( edgeBetween( arm2.front(), getPrevious( arm2.front() ) ) ) ){
+
+    // if possible, disconnect at a non-Z edge
+    joint arm2Root = getPrevious( arm2.front() );
+    if( goodConnections( arm2 ) && arm2Root.id != -1 && find( arm1.begin(), arm1.end(), arm2Root ) == arm1.end()
+    && !badConnection( edgeBetween( arm2.front(), arm2Root ) ) ){
         if( !goodConnections( arm1 ) ){
             size_t i = arm1.size() - 1;
             while( !badConnection( newDisconnect ) ){
@@ -520,8 +523,6 @@ Configuration treeConfig::link( joints& arm1, joints& arm2 ){
         arm2.pop_back();
         --i;
     }
-
-    auto edges = config.getEdges( arm1.back().id );
 
     config.execute( Action( Action::Reconnect( false, toDisconnect ) ) );
     waitingDisconnects.emplace_back( setDisconnect( toDisconnect ) );
