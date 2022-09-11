@@ -218,9 +218,9 @@ joints treeConfig::initArm( ID id, ShoeId side, std::unordered_set< ID >& seen )
 
 std::vector< joints > treeConfig::getFreeArms(){
     std::vector< joints > arms;
-    // root = closestMass( config );
-    // makeTree();
-    // config.computeMatrices();
+    root = closestMass( config );
+    makeTree();
+    config.computeMatrices();
 
     for( ID id : config.getIDs() ){
         for( ShoeId side : { A, B } ){
@@ -389,6 +389,9 @@ bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
         } else if( getPrevious( arm1.front() ).id != -1
                 && badConnection( edgeBetween( arm1.front(), getPrevious( arm1.front() ) ) ) ){
             newDisconnect = edgeBetween( arm1.front(), getPrevious( arm1.front() ) );
+        } else if( getPrevious( arm1.front() ).id != -1
+                && !badConnection( edgeBetween( arm1.front(), getPrevious( arm1.front() ) ) ) ){
+            return false;
         }
     }
 
@@ -577,6 +580,9 @@ void treeConfig::rotateTowards( const joints& arm, size_t currentJoint, const Ma
 
     auto [ p, a ] = simplify( polar( targetZ ), azimuth( targetZ ) );
 
+    if( std::isnan( p ) ){
+        p = 0;
+    }
     rotateJoints( arm, currentJoint, config, -p, 0 );
 
     if( debug ){
@@ -617,16 +623,11 @@ void treeConfig::reaching( const joints& arm, Configuration& backArm, const Matr
 
 Configuration treeConfig::initBackArm( const joints& arm, const Matrix& target ){
     Configuration backArm;
-    // std::cout << IO::toString( config ) << "arm:\n";
-    // for( auto [ id, side ] : arm ){
-    //     std::cout << id << " " << side << "\n";
-    // }
 
     for( size_t i = 0; i < arm.size(); ++i ){
         if( i == 0 || arm[ i - 1 ].id != arm[ i ].id )
             backArm.addModule( 0, 0, 0, arm[ i ].id );
         if( i != 0 && arm[ i ].id != arm[ i - 1 ].id ){
-            //std::cout <<  arm[ i ].id << " " << arm[ i ].side << " : " << arm[ i - 1 ].id << " " << arm[ i - 1 ].side << "\n";
             backArm.addEdge( edgeBetween( arm[ i - 1 ], arm[ i ] ) );
         }
     }
@@ -771,8 +772,9 @@ std::pair< double, double > treeConfig::computeAngles( const joints& arm, size_t
 void treeConfig::rotateJoints( const joints& arm, size_t currentJoint, Configuration& currentConfig,
                             double polar, double azimuth )
 {
-
     double az = to_deg( azimuth );
+    double pol = to_deg( polar );
+
     double gamma = currentConfig.getModule( arm[ currentJoint ].id ).getJoint( Gamma );
     if( gamma + az > 180 ){
         az -= 360;
@@ -782,21 +784,19 @@ void treeConfig::rotateJoints( const joints& arm, size_t currentJoint, Configura
     }
 
     if( arm[ currentJoint ].side == A ){
-        double pol = to_deg( polar );
-
         double cur = currentConfig.getModule( arm[ currentJoint ].id ).getJoint( Alpha );
         pol = std::clamp( pol , -90.0 - cur, 90.0 - cur );
 
         currentConfig.execute( Action( Action::Rotate( arm[ currentJoint ].id, Alpha, pol ) ) );
         currentConfig.execute( Action( Action::Rotate( arm[ currentJoint ].id, Gamma, az ) ) );
     } else {
-        double pol = to_deg( polar );
         double cur = currentConfig.getModule( arm[ currentJoint ].id ).getJoint( Beta );
         pol = std::clamp( pol, -90.0  - cur, 90.0  - cur );
 
         currentConfig.execute( Action( Action::Rotate( arm[ currentJoint ].id, Beta, pol ) ) );
         currentConfig.execute( Action( Action::Rotate( arm[ currentJoint ].id, Gamma, az ) ) );
     }
+
     currentConfig.computeMatrices();
 }
 
