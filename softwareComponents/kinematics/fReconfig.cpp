@@ -271,7 +271,7 @@ bool treeConfig::tryConnections(){
     auto arms = getFreeArms();
 
     if( arms.size() == 1 ){
-        return fixConnections();
+        return fixConnections( arms );
     }
 
     if( arms.size() == 2 ){
@@ -286,7 +286,7 @@ bool treeConfig::tryConnections(){
         };
 
         if( connectedRoot( arms[ 0 ] ) && connectedRoot( arms[ 1 ] ) ){
-            return fixConnections();
+            return fixConnections( arms );
         }
     }
 
@@ -318,8 +318,8 @@ bool treeConfig::goodConnections( const joints& arm ){
     return true;
 }
 
-bool treeConfig::fixConnections(){
-    auto arms = getFreeArms();
+bool treeConfig::fixConnections( std::vector< joints >& arms ){
+
     auto arm = getFreeArm();
 
     if( goodConnections( arm ) ){
@@ -335,7 +335,7 @@ bool treeConfig::fixConnections(){
 
         treeConfig old = saveState();
         if( connect( rootArm, arms.front(), false ) ){
-            return fixConnections();
+            return tryConnections();
         }
         resetState( old );
         return false;
@@ -360,12 +360,12 @@ bool treeConfig::fixConnections(){
     };
 
     treeConfig old = saveState();
-    if( !goodConnections( arms[ 1 ] ) && connectTwo( 0 ) ){
-        return fixConnections();
+    if( connectTwo( 0 ) ){
+        return tryConnections();
     }
 
-    if( !goodConnections( arms[ 0 ] ) && connectTwo( 1 ) ){
-        return fixConnections();
+    if( connectTwo( 1 ) ){
+        return tryConnections();
     }
 
     resetState( old );
@@ -378,6 +378,7 @@ bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
 
     Edge newDisconnect = invalidEdge;
 
+    extend( arm2, arm1 );
     if( goodConnections( arm2 ) && getPrevious( arm2.front() ).id != -1
     && !badConnection( edgeBetween( arm2.front(), getPrevious( arm2.front() ) ) ) ){
         if( !goodConnections( arm1 ) ){
@@ -389,10 +390,10 @@ bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
         } else if( getPrevious( arm1.front() ).id != -1
                 && badConnection( edgeBetween( arm1.front(), getPrevious( arm1.front() ) ) ) ){
             newDisconnect = edgeBetween( arm1.front(), getPrevious( arm1.front() ) );
-        } else if( getPrevious( arm1.front() ).id != -1
-                && !badConnection( edgeBetween( arm1.front(), getPrevious( arm1.front() ) ) ) ){
-            return false;
-        }
+        } // else if( getPrevious( arm1.front() ).id != -1
+        //         && !badConnection( edgeBetween( arm1.front(), getPrevious( arm1.front() ) ) ) ){
+        //     return false;
+        // }
     }
 
     Configuration oldConfig = link( arm1, arm2 );
@@ -509,6 +510,8 @@ Configuration treeConfig::link( joints& arm1, joints& arm2 ){
 
     extend( arm1, arm2 );
 
+    Edge toDisconnect = edgeBetween( arm2.front(), getPrevious( arm2.front() ) );
+
     size_t i = arm2.size() - 1;
     while( i != -1 ){
         arm1.push_back( arm2.back() );
@@ -519,6 +522,7 @@ Configuration treeConfig::link( joints& arm1, joints& arm2 ){
             Edge current = edgeBetween( arm2[ i ], arm2[ i - 1 ] );
             if( badConnection( current ) ){
                 arm2.pop_back();
+                toDisconnect = current;
                 break;
             }
         }
@@ -528,17 +532,11 @@ Configuration treeConfig::link( joints& arm1, joints& arm2 ){
 
     auto edges = config.getEdges( arm1.back().id );
 
-    for( auto edge : edges ){
-        if( edge == edgeBetween( arm1[ arm1.size() - 2 ], arm1[ arm1.size() - 3 ] ) ){
-            continue;
-        }
-        config.execute( Action( Action::Reconnect( false, edge ) ) );
-        waitingDisconnects.emplace_back( setDisconnect( edge ) );
-    }
+    config.execute( Action( Action::Reconnect( false, toDisconnect ) ) );
+    waitingDisconnects.emplace_back( setDisconnect( toDisconnect ) );
 
     config.execute( Action( Action::Reconnect( true, newEdge ) ) );
     waitingConnections.emplace_back( setConnection( newEdge ) );
-
 
     config.setFixed( root, A, identity );
     config.computeMatrices();
@@ -775,6 +773,9 @@ void treeConfig::rotateJoints( const joints& arm, size_t currentJoint, Configura
     double az = to_deg( azimuth );
     double pol = to_deg( polar );
 
+    if( std::isnan( pol ) ){
+        pol = 0;
+    }
     double gamma = currentConfig.getModule( arm[ currentJoint ].id ).getJoint( Gamma );
     if( gamma + az > 180 ){
         az -= 360;
