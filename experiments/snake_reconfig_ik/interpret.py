@@ -50,7 +50,7 @@ def getStraightening(task):
 def countTasks(tasks):
     res = {}
     for v in VARIANTS:
-        res[v] = {"succ": 0, "fail": 0, "limit": 0, "crash": 0, "time": 0}
+        res[v] = {"succ": 0, "fail": 0, "limit": 0, "crash": 0, "time": 0, "backtracks": 0}
     for t in tasks:
         cat = (getCollisionType(t), getStraightening(t))
         x = res[cat]
@@ -58,6 +58,7 @@ def countTasks(tasks):
             if t["result"]["result"]:
                 x["succ"] += 1
                 x["time"] += t["result"]["time"]
+                x["backtracks"] += t["result"]["backtracks"]
             else:
                 x["fail"] += 1
         else:
@@ -76,6 +77,9 @@ def taskModuleCount(task) -> int:
 def computeAvgTime(res, c):
     return res[c]['time'] // res[c]['succ'] / 1000 if res[c]['succ'] != 0 else "-"
 
+def computeAvgBacktrack(res, c):
+    return res[c]['backtracks'] // res[c]['succ'] if res[c]['succ'] != 0 else "-"
+
 def printResults(sets, taskFilter):
     table = PrettyTable()
     table.field_names = ["Test set"] + [f"{c}-{s}" for c, s in VARIANTS]
@@ -93,7 +97,7 @@ def printResults(sets, taskFilter):
     for name, filteredTasks in sets.items():
         filteredTasks = [t for t in filteredTasks if taskFilter(t)]
         res = countTasks(filteredTasks)
-        table.add_row([name] + [f"{computeAvgTime(res, c)}" for c in VARIANTS])
+        table.add_row([name] + [f"{computeAvgTime(res, c)}/{computeAvgBacktrack(res, c)}" for c in VARIANTS])
     print("\nNumbers represent average solving time in seconds")
     print(table)
 
@@ -116,12 +120,42 @@ def basestats(source):
     print(f"\n=== Exactly 10 =========================================================\n")
     printResults(sets, lambda t: taskModuleCount(t) == 10)
 
+@click.command()
+@click.argument("source", type=click.Path(exists=True, file_okay=True, dir_okay=False), nargs=-1)
+@click.option("--collision", type=click.Choice(["none", "naive", "online"]), default=None, help="Filter given collision type")
+@click.option("--straightening", type=click.Choice(["no", "coll", "yes"]), default=None, help="Filter given straightening type")
+def scatter(source, collision, straightening):
+    TIME_LIMIT = 1000 * 1000
+    tasks = []
+    for s in source:
+        with open(s) as f:
+            data = json.load(f)
+            tasks += data["tasks"]
+    for t in tasks:
+        if collision is not None and getCollisionType(t) != collision:
+            continue
+        if straightening is not None and getStraightening(t) != straightening:
+            continue
+        moduleCount = taskModuleCount(t)
+        if t["exitcode"] != 0:
+            time = TIME_LIMIT
+        else:
+            if not t["result"]["result"]:
+                continue
+            if moduleCount < 5:
+                continue
+            time = t['result']['time']
+            if time > TIME_LIMIT:
+                time = TIME_LIMIT
+        print(f"{moduleCount} {time / 1000}")
+
 
 @click.group()
 def cli():
     pass
 
 cli.add_command(basestats)
+cli.add_command(scatter)
 
 if __name__ == "__main__":
     cli()
