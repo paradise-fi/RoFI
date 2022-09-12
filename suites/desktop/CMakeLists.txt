@@ -198,6 +198,7 @@ if (${BUILD_GAZEBO})
 endif()
 
 
+add_tool(convert)
 add_tool(generate)
 add_tool(emptyDockFill)
 add_tool(topology2dot)
