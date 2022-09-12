@@ -21,7 +21,7 @@ for source in ${ROFI_ROOT}/data/configurations/snake/m1??_snake.rofi; do
         done
         echo Running ${counter}/$((${total} * ${SAMPLES}))
         name=$(basename -- ${source})
-        echo rofi-tangle --steps=${STEPS} ${source} ${OUTDIR}/${name%.rofi}-${i}-${STEPS}.rofi
+        rofi-tangle --steps=${STEPS} ${source} ${OUTDIR}/${name%.rofi}-${i}-${STEPS}.rofi &
         counter=$(($counter+1));
     done
 done
