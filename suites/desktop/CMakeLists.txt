@@ -100,7 +100,7 @@ if(NOT dimcli_POPULATED)
   FetchContent_Populate(dimcli)
   add_library(dimcli STATIC ${dimcli_SOURCE_DIR}/libs/dimcli/cli.cpp)
   target_include_directories(dimcli SYSTEM PUBLIC ${dimcli_SOURCE_DIR}/libs)
-  target_compile_options(dimcli PRIVATE -Wno-unused-but-set-variable -Wno-cast-qual -Wno-parentheses -Wno-pedantic)
+  target_compile_options(dimcli PRIVATE -w)
 endif()
 
 FetchContent_Declare(
