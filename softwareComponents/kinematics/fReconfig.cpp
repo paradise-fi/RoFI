@@ -171,6 +171,7 @@ treeConfig::treeConfig( Configuration c, ID r ) : config( c ), root( r ),
 treeConfig treeConfig::saveState(){
     treeConfig old( config, root );
     old.depths = depths;
+    old.reconfigurationSteps = reconfigurationSteps;
     return old;
 }
 
@@ -298,12 +299,13 @@ bool treeConfig::tryConnections(){
                 continue;
 
             treeConfig old = saveState();
-            if( connect( arm1, arm2, straight == straightening::always ) && tryConnections() ){
-                return true;
-            } else {
-                resetState( old );
+            if( connect( arm1, arm2, straight == straightening::always ) ){
+                if( tryConnections() ){
+                    return true;
+                }
+                inspector->onBacktrack();
             }
-            inspector->onBacktrack();
+            resetState( old );
         }
     }
     return false;
@@ -348,10 +350,13 @@ bool treeConfig::fixConnections( std::vector< joints >& arms ){
     auto connectTwo = [&]( int current ){
         int other = current == 0 ? 1 : 0;
         auto rootArm = arms[ current ];
-        Edge rootEdge = edgeBetween( rootArm.front(), { root, A } );
+        Edge rootEdge = edgeBetween( rootArm.front(), { root, B } );
 
-        rootArm.emplace_front( rootEdge.id1() != -1 ? joint{ root, A } : joint{ root, B } );
-        rootArm.emplace_front( rootEdge.id1() != -1 ? joint{ root, B } : joint{ root, A } );
+        if( rootEdge.id1() != -1 ){
+            rootArm.emplace_front( joint{ root, B } );
+            rootArm.emplace_front( joint{ root, A } );
+        }
+
 
         treeConfig old = saveState();
         if( connect( rootArm, arms[ other ], false ) ){
@@ -414,7 +419,9 @@ bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
             for( const auto& waiting : waitingDisconnects ){
                 config.execute( Action( Action::Reconnect( true, waiting.edge ) ) );
             }
+            waitingDisconnects.clear();
             config.execute( Action( Action::Reconnect( false, newDisconnect ) ) );
+            waitingDisconnects.push_back( setDisconnect( newDisconnect ) );
         }
         for( auto [ id, side ] : arm1 ){
             for( auto j : { Alpha, Beta, Gamma } ){
