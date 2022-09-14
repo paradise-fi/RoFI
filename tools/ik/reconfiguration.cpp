@@ -33,10 +33,11 @@ void visualize( const treeConfig& t, std::string inputFile, std::string outputFi
         if( step.type == actionType::disconnect ){
             current.execute( Action( Action::Reconnect( false, step.edge ) ) );
         }
-        if( current != last )
+        if( current != last && step.type != actionType::rotation )
             output << IO::toString( current );
         last = current;
     }
+    output << IO::toString( current );
 
 }
 
