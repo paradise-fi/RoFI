@@ -9,7 +9,6 @@ import itertools
 from prettytable import PrettyTable
 
 VARIANTS = list(itertools.product(["none", "naive", "online"], ["no", "coll", "yes"]))
-
 def getSet(task):
     sets = {
         "tangled_1k": "experiments/snake_reconfig_ik/tangled_1k",
@@ -113,9 +112,10 @@ def basestats(source):
     sets = splitTasksToSets(tasks)
     print("\n=== Summary ===========================================================\n")
     printResults(sets, lambda t: True)
-    for i in range(0, 100, 10):
-        print(f"\n=== {i}-{i+10} ===========================================================\n")
-        printResults(sets, lambda t: i < taskModuleCount(t) <= i + 10)
+    GROUP_SIZE = 50
+    for i in range(0, 200, GROUP_SIZE):
+        print(f"\n=== {i}-{i+GROUP_SIZE} ===========================================================\n")
+        printResults(sets, lambda t: i < taskModuleCount(t) <= i + GROUP_SIZE)
 
     print(f"\n=== Exactly 10 =========================================================\n")
     printResults(sets, lambda t: taskModuleCount(t) == 10)
@@ -124,8 +124,12 @@ def basestats(source):
 @click.argument("source", type=click.Path(exists=True, file_okay=True, dir_okay=False), nargs=-1)
 @click.option("--collision", type=click.Choice(["none", "naive", "online"]), default=None, help="Filter given collision type")
 @click.option("--straightening", type=click.Choice(["no", "coll", "yes"]), default=None, help="Filter given straightening type")
-def scatter(source, collision, straightening):
-    TIME_LIMIT = 1000 * 1000
+@click.option("--limit", type=int, default=1800)
+@click.option("--result", type=str, default=None)
+def scatter(source, collision, straightening, limit, result):
+    TIME_LIMIT = limit * 1000
+    if result is not None:
+        result = True if result == "true" else False
     tasks = []
     for s in source:
         with open(s) as f:
@@ -140,15 +144,15 @@ def scatter(source, collision, straightening):
         if t["exitcode"] != 0:
             time = TIME_LIMIT
         else:
-            if not t["result"]["result"]:
+            if result is not None and t.get("result", {}).get("result", None) != result:
                 continue
             if moduleCount < 5:
                 continue
             time = t['result']['time']
             if time > TIME_LIMIT:
                 time = TIME_LIMIT
-        print(f"{moduleCount} {time / 1000}")
-
+        if moduleCount != 0:
+            print(f"{moduleCount} {time / 1000}")
 
 @click.group()
 def cli():
