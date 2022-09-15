@@ -6,8 +6,8 @@
 #include <map>
 #include <set>
 
-#include <Configuration.h>
-#include <IO.h>
+#include <legacy/configuration/Configuration.h>
+#include <legacy/configuration/IO.h>
 #include "calculations.hpp"
 
 /* Custom precision for considering matrices equal, more relaxed than Matrix.h/equals */
