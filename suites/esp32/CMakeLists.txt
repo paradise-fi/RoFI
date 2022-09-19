@@ -8,6 +8,8 @@ include(CollectTargets)
 include(ESP32)
 include(ColoredOutput)
 
+option(USE_DUMMY_HAL "Use HAL that communicates via serial line instead of RoFICoMs" FALSE)
+
 project(rofi)
 
 # Specify common dependencies

@@ -745,20 +745,20 @@ class RoFILocal : public RoFI::Implementation {
 public:
     RoFILocal() try:
         _servoBus( bsp::buildServoBus() ),
-        _joints( {
-            std::make_shared< JointLocal >(
-                _servoBus.getServo( bsp::alphaId ),
-                                    shoeJointCapability(),
-                                    bsp::alphaRatio ),
-            std::make_shared< JointLocal >(
-                _servoBus.getServo( bsp::betaId ),
-                                    shoeJointCapability(),
-                                    bsp::betaRatio ),
-            std::make_shared< JointLocal >(
-                _servoBus.getServo( bsp::gammaId ),
-                                    bodyJointCapability(),
-                                    bsp::gammaRatio )
-        } ),
+        // _joints( {
+        //     std::make_shared< JointLocal >(
+        //         _servoBus.getServo( bsp::alphaId ),
+        //                             shoeJointCapability(),
+        //                             bsp::alphaRatio ),
+        //     std::make_shared< JointLocal >(
+        //         _servoBus.getServo( bsp::betaId ),
+        //                             shoeJointCapability(),
+        //                             bsp::betaRatio ),
+        //     std::make_shared< JointLocal >(
+        //         _servoBus.getServo( bsp::gammaId ),
+        //                             bodyJointCapability(),
+        //                             bsp::gammaRatio )
+        // } ),
         _connectorBus( HSPI_HOST, GPIO_NUM_19, GPIO_NUM_18, 100000 ),
         _connectors( {
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_27 ),

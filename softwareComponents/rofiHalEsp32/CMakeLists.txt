@@ -1,4 +1,12 @@
 file(GLOB_RECURSE SRC src/*.cpp src/*.c)
+list(REMOVE_ITEM SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/rofi_hal.cpp
+                     ${CMAKE_CURRENT_SOURCE_DIR}/src/rofi_hal_serial.cpp)
+
+if(${USE_DUMMY_HAL})
+    list(APPEND SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/rofi_hal_serial.cpp)
+else()
+    list(APPEND SRC ${CMAKE_CURRENT_SOURCE_DIR}/src/rofi_hal.cpp)
+endif()
 
 add_library(rofi_hal_esp32 ${SRC})
 target_include_directories(rofi_hal_esp32 PUBLIC src)
