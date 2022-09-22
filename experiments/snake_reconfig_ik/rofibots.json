@@ -1,37 +1,4 @@
 [
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> c5c7a113... experiments: Prepare IK reconfig experiments
-=======
->>>>>>> f7426e80... experiments: Add snake_reconfig_ik experiments
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-puppy.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-spider.5.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-ball.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-rectangle.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-spider.2.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-spider.4.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-dumbbell.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-stool.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-fan.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-chair.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-spider.3.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-column.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-snake.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-circle.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-eight.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-board.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-chain.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-roundrect.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-caterpillar.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-infant.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-spider.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-snake.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-doublewheel.rofi",
-    "snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-chair.rofi"
-<<<<<<< HEAD
-=======
     "util/monitorMemUsage.sh /artefact/results.json rofi-freconfig --log /artefact/results.json data/configurations/old/rofibots/m10-puppy.rofi",
     "util/monitorMemUsage.sh /artefact/results.json rofi-freconfig --log /artefact/results.json data/configurations/old/rofibots/m08-spider.5.rofi",
     "util/monitorMemUsage.sh /artefact/results.json rofi-freconfig --log /artefact/results.json data/configurations/old/rofibots/m10-ball.rofi",
@@ -56,35 +23,4 @@
     "util/monitorMemUsage.sh /artefact/results.json rofi-freconfig --log /artefact/results.json data/configurations/old/rofibots/m10-snake.rofi",
     "util/monitorMemUsage.sh /artefact/results.json rofi-freconfig --log /artefact/results.json data/configurations/old/rofibots/m10-doublewheel.rofi",
     "util/monitorMemUsage.sh /artefact/results.json rofi-freconfig --log /artefact/results.json data/configurations/old/rofibots/m10-chair.rofi"
->>>>>>> 4942e256... snakeReconfig: Yield valid JSON stats
-=======
-<<<<<<< HEAD
->>>>>>> c5c7a113... experiments: Prepare IK reconfig experiments
-=======
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-puppy.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-spider.5.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-ball.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-rectangle.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-spider.2.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-spider.4.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-dumbbell.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-stool.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-fan.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-chair.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-spider.3.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-column.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-snake.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-circle.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-eight.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-board.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-chain.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-roundrect.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-caterpillar.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-infant.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m08-spider.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-snake.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-doublewheel.rofi",
-    "util/monitorMemUsage.sh /artefact/results.json snakeReconfig --log /artefact/results.json data/configurations/old/rofibots/m10-chair.rofi"
->>>>>>> 0003d485... experiments: Add snake_reconfig_ik experiments
->>>>>>> f7426e80... experiments: Add snake_reconfig_ik experiments
 ]
