@@ -32,4 +32,4 @@ inline std::string errorName( dynamixel::HardwareError e ) {
 }
 
 
-}; // rofi::hal::bsp
+} // rofi::hal::bsp

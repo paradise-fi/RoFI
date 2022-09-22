@@ -20,7 +20,7 @@
 #include <espDriver/gpio.hpp>
 #include <espDriver/spi.hpp>
 
-#include <bsp.hpp>
+#include "bsp.hpp"
 #include <atoms/util.hpp>
 #include <logging.hpp>
 
