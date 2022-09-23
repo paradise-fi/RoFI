@@ -127,6 +127,9 @@ if (${BUILD_GAZEBO})
   # Workaround for bug in gazebo that causes problems on `g++11` with `-std=c++20`
   set(GAZEBO_INCLUDE_DIRS "$ENV{ROFI_ROOT}/gazebo_include" ${GAZEBO_INCLUDE_DIRS})
 
+  find_library(LibTBB NAMES tbb)
+  link_libraries(gazebo ${LibTBB})
+
   find_package(Protobuf REQUIRED)
   # Include Gazebo messages
   set(PROTOBUF_IMPORT_DIRS)
