@@ -19,10 +19,10 @@ class UniversalModule : public Module {
      */
     UniversalModule buildUniversalModule( int id, Angle alpha, Angle beta, Angle gamma );
 
+    enum UmComponents { UmBodyA = 7, UmBodyB = 8, UmShoeA = 6, UmShoeB = 9 };
+
 public:
     ATOMS_CLONEABLE( UniversalModule );
-
-    enum UmParts { UmBodyA = 7, UmBodyB = 8, UmShoeA = 6, UmShoeB = 9 };
 
     explicit UniversalModule( int id ) : UniversalModule( id, 0_deg, 0_deg, 0_deg ) {};
     UniversalModule( int id, Angle a, Angle b, Angle g )
@@ -51,6 +51,19 @@ public:
     void setGamma( Angle a ) {
         std::array tmp{ a.rad() };
         setJointPositions( 2, tmp );
+    }
+
+    Component getBodyA() {
+        return components()[ UmBodyA ];
+    }
+    const Component getBodyA() const {
+        return components()[ UmBodyA ];
+    }
+    Component getBodyB() {
+        return components()[ UmBodyB ];
+    }
+    const Component getBodyB() const {
+        return components()[ UmBodyB ];
     }
 
     const auto& getConnector( const std::string& cStr ) const {
