@@ -104,6 +104,17 @@ if(NOT dimcli_POPULATED)
 endif()
 
 FetchContent_Declare(
+  magic_enum
+  GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
+  GIT_TAG        v0.8.1
+)
+FetchContent_GetProperties(magic_enum)
+if(NOT magic_enum_POPULATED)
+  FetchContent_Populate(magic_enum)
+  add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
+endif()
+
+FetchContent_Declare(
   cxxopts
   GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
   GIT_TAG        v2.2.0
