@@ -42,6 +42,13 @@ def flashEsp32Image(img, extra):
             i = extra.index("--baud")
         command += extra[i:i+2]
         del extra[i:i+2]
+    if "-p" in extra or "--port" in extra:
+        try:
+            i = extra.index("-p")
+        except ValueError:
+            i = extra.index("--port")
+        command += extra[i:i+2]
+        del extra[i:i+2]
     command += [
         "--chip", "esp32",
         "--before=default_reset",
