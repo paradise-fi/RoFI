@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <map>
 #include <set>
+#include <memory>
 
 #include <legacy/configuration/Configuration.h>
 #include <legacy/configuration/IO.h>
