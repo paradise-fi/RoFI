@@ -51,7 +51,10 @@ std::optional< ConfigWithPose > ConfigWithPose::tryReadConfiguration( std::istre
             }
 
             ignition::math::Vector3d angles;
-            lineStream >> config->pose.Pos() >> angles >> std::ws;
+            lineStream >> config->pose.Pos() >> angles;
+            if ( !lineStream.eof() )
+                lineStream >> std::ws;
+
             config->pose.Rot() = ignition::math::Quaterniond( IGN_DTOR( angles ) );
             if ( !lineStream || !lineStream.eof() )
             {
@@ -70,7 +73,10 @@ std::optional< ConfigWithPose > ConfigWithPose::tryReadConfiguration( std::istre
         {
             double alpha, beta, gamma;
             unsigned int id;
-            lineStream >> id >> alpha >> beta >> gamma >> std::ws;
+            lineStream >> id >> alpha >> beta >> gamma;
+            if ( !lineStream.eof() )
+                lineStream >> std::ws;
+
             if ( !lineStream || !lineStream.eof() )
             {
                 throw std::runtime_error( "Error while reading module" );
@@ -80,7 +86,9 @@ std::optional< ConfigWithPose > ConfigWithPose::tryReadConfiguration( std::istre
         else if ( type == "E" )
         {
             auto edge = IO::readEdge( lineStream );
-            lineStream >> std::ws;
+            if ( !lineStream.eof() )
+                lineStream >> std::ws;
+
             if ( !lineStream || !lineStream.eof() )
             {
                 throw std::runtime_error( "Error while reading edge" );
