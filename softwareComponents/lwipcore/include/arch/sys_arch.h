@@ -66,14 +66,18 @@ typedef struct sys_thread * sys_thread_t;
    ---------------------------------------
 */
 
-void sys_mark_tcpip_thread(void);
-#define LWIP_MARK_TCPIP_THREAD()   sys_mark_tcpip_thread()
-
 #if LWIP_TCPIP_CORE_LOCKING
 void sys_lock_tcpip_core(void);
 #define LOCK_TCPIP_CORE()          sys_lock_tcpip_core()
 void sys_unlock_tcpip_core(void);
 #define UNLOCK_TCPIP_CORE()        sys_unlock_tcpip_core()
+#endif
+
+
+#ifndef LWIP_PLATFORM_ASSERT
+/* Define LWIP_PLATFORM_ASSERT to something to catch missing stdio.h includes */
+void lwip_example_app_platform_assert(const char *msg, int line, const char *file);
+#define LWIP_PLATFORM_ASSERT(x) lwip_example_app_platform_assert(x, __LINE__, __FILE__)
 #endif
 
 #endif /* LWIP_ARCH_SYS_ARCH_H */
