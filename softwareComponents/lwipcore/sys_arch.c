@@ -66,6 +66,12 @@
 #include "lwip/stats.h"
 #include "lwip/tcpip.h"
 
+u32_t
+lwip_port_rand(void)
+{
+  return (u32_t)rand();
+}
+
 static void
 get_monotonic_time(struct timespec *ts)
 {
@@ -717,3 +723,16 @@ sys_arch_unprotect(sys_prot_t pval)
     }
 }
 #endif /* SYS_LIGHTWEIGHT_PROT */
+
+/* Define LWIP_PLATFORM_ASSERT to something to catch missing stdio.h includes */
+void lwip_example_app_platform_assert(const char *msg, int line, const char *file);
+
+/* This function is only required to prevent arch.h including stdio.h
+ * (which it does if LWIP_PLATFORM_ASSERT is undefined)
+ */
+void lwip_example_app_platform_assert(const char *msg, int line, const char *file)
+{
+  printf("Assertion \"%s\" failed at line %d in %s\n", msg, line, file);
+  fflush(NULL);
+  abort();
+}
