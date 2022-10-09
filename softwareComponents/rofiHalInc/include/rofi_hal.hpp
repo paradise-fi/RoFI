@@ -3,7 +3,7 @@
 #include <memory>
 #include <span>
 
-#include "networking.hpp"
+#include "lwip++.hpp"
 
 namespace rofi::hal {
 
