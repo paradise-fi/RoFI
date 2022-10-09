@@ -3,6 +3,10 @@
 #include "atoms/util.hpp"
 #include "rofi_hal.hpp"
 
+#include "lwip++.hpp"
+
+#include <lwip/tcpip.h>
+
 #include <tuple>
 #include <list>
 #include <functional>
@@ -11,9 +15,10 @@
 #include <optional>
 #include <numeric>
 
-#define STUB           1
-#define AUTOSUMMARY    1
-#define SUMMARY_DEPTH  1
+
+#define STUB           0
+#define AUTOSUMMARY    0
+#define SUMMARY_DEPTH  0
 
 using Cost = uint8_t;
 
@@ -37,232 +42,215 @@ struct Gateway {
     }
 };
 
-class RTable;
-
-struct Record {
-    const Ip6Addr ip;
-    const uint8_t mask;
-    std::list< Gateway > gws;
-
-    Record() = delete;
-    Record( const Ip6Addr& ip, uint8_t mask, const Gateway& gw ) : ip( ip ), mask( mask ), gws( { gw } ) {}
-    Record( const Ip6Addr& ip, uint8_t mask, const Gateway& gw, const std::vector< Record* >& s )
-    : ip( ip ), mask( mask ), gws( { gw } ), sumarizing( s ) {}
-
-    ~Record() {
-        if ( isSumarizing() ) {
-            for ( auto& r : sumarizing ) {
-                if ( r )
-                    r->setSummarized( nullptr );
-            }
-        }
-
-        if ( isSummarized() )
-            summarized->unsummary( *this );
-
-        if ( active ) {
-            ip_rm_route( &ip, mask );
-        }
-    }
-
-    Record& activate() {
-        if ( hasGateway() )
-            active = static_cast< bool >( ip_add_route( &ip, mask, gws.front().name ) );
-        for ( auto& s : sumarizing )
-            s->setSummarized( this );
-
-        return *this;
-    }
-
-    bool isSumarizing() const {
-        return sumarizing.size() != 0;
-    }
-
-    bool isSummarized() const {
-        return summarized != nullptr;
-    }
-
-    void setSummarized( Record* r ) {
-        summarized = r;
-    }
-
-    void unsummary( const Record& r ) {
-        sumarizing.erase( std::remove_if( sumarizing.begin(), sumarizing.end(), [ &r ]( Record* ptr ) {
-            if ( *ptr == r )
-                ptr->summarized = nullptr;
-            return *ptr == r;
-        } ) );
-
-        finishedSumarizing = sumarizing.size() == 0;
-    }
-
-    void updateSummary( const Record& r ) {
-        if ( !isSumarizing() )
-            return;
-
-        Cost cost   = getCost();
-        Cost actual = 255;
-        for ( const auto& s : sumarizing ) {
-            if ( s && s->gws.size() > 0 )
-                actual = std::min( actual, s->getCost() );
-        }
-
-        if ( actual != 255 && cost != actual )
-            gws.begin()->cost = actual;
-
-        if ( r.gws.size() == 0 )
-            unsummary( r );
-
-        finishedSumarizing = sumarizing.size() <= 1;
-    }
-
-    bool toDelete() const {
-        return finishedSumarizing;
-    }
-
-    void update( const Gateway& g, int size ) const {
-        if ( active && ( gws.size() != 0 && g != gws.front() ) ) {
-            ip_update_route( &ip, mask, gws.front().name );
-        }
-
-        if ( size != gws.size() && isSummarized() )
-            summarized->updateSummary( *this );
-    }
-
-    bool merge( const Record& r ) {
-        return op( &Record::_merge, r );
-    }
-
-    bool disjoin( const Record& r ) {
-        return op( &Record::_disjoin, r );
-    }
-
-    bool remove( const std::string& str ) {
-        Record tmp( ip, mask, Gateway( str.c_str(), getCost() ) );
-        return op( &Record::_remove, tmp );
-    }
-
-    Cost getCost() const { // should be called on valid record!
-        return gws.front().cost;
-    }
-
-    std::string getGwName() const {
-        return gws.size() != 0 ? gws.front().name : "null";
-    }
-
-    Gateway getGateway() const {
-        return gws.front();
-    }
-
-    bool hasGateway() const {
-        return gws.size() != 0 && strcmp( "null", gws.front().name ) != 0;
-    }
-
-    bool hasSameNetwork( const Record& rec ) const {
-        return rec.mask == mask && ( Ip6Addr( mask ) & ip ) == ( Ip6Addr( mask ) & rec.ip );
-    }
-
-    bool isStub() const {
-        Netif* n = static_cast< Netif* >( netif_find( getGwName().c_str() ) );
-        return n && n->isStub();
-    }
-
-    bool singlePath() const {
-        int size = 0;
-        for ( const auto& g : gws ) {
-            if ( strcmp( g.name, "null" ) == 0 )
-                continue;
-            size++;
-        }
-        return size <= 1;
-    }
-
-    bool operator==( const Record& rec ) const {
-        return rec.ip == ip && rec.mask == mask && rec.gws == gws;
-    }
-    bool operator!=( const Record& rec ) const {
-        return !( *this == rec );
-    }
-private:
-    bool active = false;
-    bool finishedSumarizing = false;
-    Record* summarized = nullptr;
-    std::vector< Record* > sumarizing;
-
-    bool op( const std::function< void( Record*, const Record& ) >& f, const Record& r ) {
-        if ( !this->hasSameNetwork( r ) )
-            return false;
-
-        std::size_t size = gws.size();
-        auto first       = gws.front();
-
-        std::bind( f, this, r )(); // invoke immediately
-
-        update( first, size );
-        return size != gws.size();
-    }
-
-    void _merge( const Record& r ) {
-        if ( getCost() == 0 ) // do not merge with loopback
-            return;
-        std::list< Gateway > toMerge = r.gws;
-        gws.merge( toMerge, []( const Gateway& g1, const Gateway& g2 ) {
-            if ( std::string( g1.name ) == "null" )
-                return false; // null will be always last
-
-            return g1.cost <= g2.cost;
-        } );
-
-        for ( auto it = gws.begin(); it != gws.end(); it++ ) {
-            auto current = it;
-            while ( current != gws.end() ) {
-                current++;
-                if ( strcmp( current->name, it->name ) == 0 )
-                    current = gws.erase( current );
-            }
-        }
-    }
-
-    void _disjoin( const Record& r ) {
-        for ( auto g : r.gws ) {
-            gws.remove_if( [ &g ]( const Gateway& gw ) {
-                return strcmp( g.name, gw.name ) == 0;
-            } );
-        }
-    }
-
-    void _remove( const Record& r ) {
-        std::string name = r.getGwName();
-        std::size_t size = gws.size();
-        gws.remove_if( [ &name ]( const Gateway& g ) { return strcmp( name.c_str(), g.name ) == 0; } );
-    }
-
-    friend RTable;
-    friend std::ostream& operator<<( std::ostream& o, const Record& r );
-};
-
-std::ostream& operator<<( std::ostream& o, const Record& r ) {
-    char flag = '*';
-    o << r.ip << "/" << static_cast< int >( r.mask );
-    if ( r.isSummarized() )
-        o << " summarized by " << r.summarized->ip << "/" << static_cast< int >( r.summarized->mask );
-    o << "\n";
-    for ( auto& g : r.gws ) {
-        o << "\t" << flag << g.name << " [" << static_cast< int >( g.cost ) << "]"
-            << ( r.isStub() ? " stubby" : "      " ) << "\n";
-        flag = ' ';
-    }
-    return o;
-}
-
 
 class RTable {
 public:
+    struct Record {
+        const Ip6Addr ip;
+        const uint8_t mask;
+        std::list< Gateway > gws;
+
+        Record() = delete;
+        Record( const Ip6Addr& ip, uint8_t mask, const Gateway& gw ) : ip( ip ), mask( mask ), gws( { gw } ) {}
+        Record( const Ip6Addr& ip, uint8_t mask, const Gateway& gw, const std::vector< Record* >& s )
+        : ip( ip ), mask( mask ), gws( { gw } ), sumarizing( s ) {}
+
+        ~Record() {
+            if ( isSumarizing() ) {
+                for ( auto& r : sumarizing ) {
+                    if ( r )
+                        r->setSummarized( nullptr );
+                }
+            }
+
+            if ( isSummarized() )
+                summarized->unsummary( *this );
+
+            if ( active ) {
+                ip_rm_route( &ip, mask );
+            }
+        }
+
+        Record& activate() {
+            if ( hasGateway() )
+                active = static_cast< bool >( ip_add_route( &ip, mask, gws.front().name ) );
+            for ( auto& s : sumarizing )
+                s->setSummarized( this );
+
+            return *this;
+        }
+
+        bool isSumarizing() const {
+            return sumarizing.size() != 0;
+        }
+
+        bool isSummarized() const {
+            return summarized != nullptr;
+        }
+
+        void setSummarized( Record* r ) {
+            summarized = r;
+        }
+
+        void unsummary( const Record& r ) {
+            sumarizing.erase( std::remove_if( sumarizing.begin(), sumarizing.end(), [ &r ]( Record* ptr ) {
+                if ( *ptr == r )
+                    ptr->summarized = nullptr;
+                return *ptr == r;
+            } ) );
+
+            finishedSumarizing = sumarizing.size() == 0;
+        }
+
+        void updateSummary( const Record& r ) {
+            if ( !isSumarizing() )
+                return;
+
+            Cost cost   = getCost();
+            Cost actual = 255;
+            for ( const auto& s : sumarizing ) {
+                if ( s && s->gws.size() > 0 )
+                    actual = std::min( actual, s->getCost() );
+            }
+
+            if ( actual != 255 && cost != actual )
+                gws.begin()->cost = actual;
+
+            if ( r.gws.size() == 0 )
+                unsummary( r );
+
+            finishedSumarizing = sumarizing.size() <= 1;
+        }
+
+        bool toDelete() const {
+            return finishedSumarizing;
+        }
+
+        void update( const Gateway& g, size_t size ) const {
+            if ( active && ( gws.size() != 0 && g != gws.front() ) ) {
+                ip_update_route( &ip, mask, gws.front().name );
+            }
+
+            if ( size != gws.size() && isSummarized() )
+                summarized->updateSummary( *this );
+        }
+
+        bool merge( const Record& r ) {
+            return op( &Record::_merge, r );
+        }
+
+        bool disjoin( const Record& r ) {
+            return op( &Record::_disjoin, r );
+        }
+
+        bool remove( const std::string& str ) {
+            Record tmp( ip, mask, Gateway( str.c_str(), getCost() ) );
+            return op( &Record::_remove, tmp );
+        }
+
+        Cost getCost() const { // should be called on valid record!
+            return gws.front().cost;
+        }
+
+        std::string getGwName() const {
+            return gws.size() != 0 ? gws.front().name : "null";
+        }
+
+        Gateway getGateway() const {
+            return gws.front();
+        }
+
+        bool hasGateway() const {
+            return gws.size() != 0 && strcmp( "null", gws.front().name ) != 0;
+        }
+
+        bool hasSameNetwork( const Record& rec ) const {
+            return rec.mask == mask && ( Ip6Addr( mask ) & ip ) == ( Ip6Addr( mask ) & rec.ip );
+        }
+
+        bool isStub() const {
+            LOCK_TCPIP_CORE();
+            Netif* n = static_cast< Netif* >( netif_find( getGwName().c_str() ) );
+            UNLOCK_TCPIP_CORE();
+            return n && n->isStub();
+        }
+
+        bool singlePath() const {
+            int size = 0;
+            for ( const auto& g : gws ) {
+                if ( strcmp( g.name, "null" ) == 0 )
+                    continue;
+                size++;
+            }
+            return size <= 1;
+        }
+
+        bool operator==( const Record& rec ) const {
+            return rec.ip == ip && rec.mask == mask && rec.gws == gws;
+        }
+        bool operator!=( const Record& rec ) const {
+            return !( *this == rec );
+        }
+    private:
+        bool active = false;
+        bool finishedSumarizing = false;
+        Record* summarized = nullptr;
+        std::vector< Record* > sumarizing;
+
+        bool op( const std::function< void( Record*, const Record& ) >& f, const Record& r ) {
+            if ( !this->hasSameNetwork( r ) )
+                return false;
+
+            std::size_t size = gws.size();
+            auto first       = gws.front();
+
+            std::bind( f, this, r )(); // invoke immediately
+
+            update( first, size );
+            return size != gws.size();
+        }
+
+        void _merge( const Record& r ) {
+            if ( getCost() == 0 ) // do not merge with loopback
+                return;
+            std::list< Gateway > toMerge = r.gws;
+            gws.merge( toMerge, []( const Gateway& g1, const Gateway& g2 ) {
+                if ( std::string( g1.name ) == "null" )
+                    return false; // null will be always last
+
+                return g1.cost <= g2.cost;
+            } );
+
+            for ( auto it = gws.begin(); it != gws.end(); it++ ) {
+                auto current = it;
+                while ( current != gws.end() ) {
+                    current++;
+                    if ( strcmp( current->name, it->name ) == 0 )
+                        current = gws.erase( current );
+                }
+            }
+        }
+
+        void _disjoin( const Record& r ) {
+            for ( auto g : r.gws ) {
+                gws.remove_if( [ &g ]( const Gateway& gw ) {
+                    return strcmp( g.name, gw.name ) == 0;
+                } );
+            }
+        }
+
+        void _remove( const Record& r ) {
+            std::string name = r.getGwName();
+            gws.remove_if( [ &name ]( const Gateway& g ) { return strcmp( name.c_str(), g.name ) == 0; } );
+        }
+
+        friend RTable;
+        friend std::ostream& operator<<( std::ostream& o, const Record& r );
+    };
+
     enum class Command : uint8_t { Call = 0, Response = 1, Stubby = 2, Hello = 3, HelloResponse = 4, Sync = 5 };
     enum class Action  : int     { RespondToAll = 0, CallToAll = 1, Respond = 2, Nothing = 3, OnHello = 4
                                  , HelloToAll = 5 };
-
-    RTable() = default;
 
     bool add( const Ip6Addr& ip, uint8_t mask, Cost cost, Netif* n ) {
         return add( Record( ip, mask, Gateway( n ? n->getName().c_str() : "null", cost ) ) );
@@ -376,7 +364,7 @@ public:
     };
 
     PBuf createRRPhello( Netif* n, Command cmd = Command::Hello ) {
-        int count   = records.size() - recForIfOrSummarized( n );
+        int count   = static_cast< int >( records.size() - recForIfOrSummarized( n ) );
         auto packet = PBuf::allocate( 2 + count * Entry::size() );
         as< Command >( packet.payload() )     = cmd;
         as< uint8_t >( packet.payload() + 1 ) = static_cast< uint8_t >( count );
@@ -403,7 +391,7 @@ public:
     }
 
     PBuf createRRPmsgIfless( Netif* n, Command cmd = Command::Call ) {
-        int count   = ( n && n->isStub() ) ? 0 : ( changes.size() - changesIfless( n ) );
+        int count   = static_cast< int >( n && n->isStub() ? 0 : changes.size() - changesIfless( n ) );
         auto packet = PBuf::allocate( 2 + count * Entry::size() );
         as< Command >( packet.payload() )     = cmd;
         as< uint8_t >( packet.payload() + 1 ) = static_cast< uint8_t >( count );
@@ -468,10 +456,10 @@ public:
         removeDefaultGW( stub );
     }
 
-private:
     std::list< Record > records;
+private:
     Netif* stub = nullptr;
-    volatile int counter = 0;
+    int counter = 0;
     std::vector< std::pair< Operation, Record > > changes;
 
     void addEntry( uint8_t* data, const Record& rec, Operation act = Operation::Add ) {
@@ -533,7 +521,7 @@ private:
 
     bool trySummarize( const std::list< Record >::iterator& last ) {
         int count = 0, newCount = 0;
-        int prefix = 1, minimalPrefix = 1;
+        uint8_t prefix = 1, minimalPrefix = 1;
         for ( ; prefix <= SUMMARY_DEPTH; prefix++ ) {
             newCount = wouldSummarize( last, prefix );
             if ( newCount == count ) {
@@ -654,7 +642,7 @@ private:
         return size != records.size();
     }
 
-    int recForIfOrSummarized( Netif* n ) const {
+    size_t recForIfOrSummarized( Netif* n ) const {
         if ( !n )
             return 0;
 
@@ -781,6 +769,23 @@ private:
 
     friend std::ostream& operator<<( std::ostream& o, const RTable& rt );
 };
+
+std::ostream& operator<<( std::ostream& o, const RTable::Record& r ) {
+    char flag = '*';
+    o << r.ip << "/" << static_cast< int >( r.mask );
+    if ( r.isSummarized() )
+        o << " summarized by " << r.summarized->ip << "/" << static_cast< int >( r.summarized->mask );
+    o << "\n";
+    for ( auto& g : r.gws ) {
+        o << "\t" << flag << g.name << " [" << static_cast< int >( g.cost ) << "]"
+        #if STUB
+            << ( r.isStub() ? " stubby" : "      " )
+        #endif
+            << "\n";
+        flag = ' ';
+    }
+    return o;
+}
 
 std::ostream& operator<<( std::ostream& o, const RTable& rt ) {
     for ( const auto& r : rt.records ) {
