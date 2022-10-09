@@ -2,15 +2,14 @@
 
 #include <lwip/pbuf.h>
 #include <lwip/netif.h>
-#include <lwip/ip.h>
+#include <lwip/ip6.h>
 
-// Temporary work-around
-void mask_to_address(uint8_t mask, ip6_addr_t* m);
+#include <fwtable/forwarding_table.h>
 
-#include <cassert>
-#include <cstdint>
 #include <type_traits>
 #include <sstream>
+#include <cstring>
+#include <cassert>
 
 namespace rofi::hal {
 
@@ -20,40 +19,46 @@ namespace rofi::hal {
  * Provides a few useful methods and C++ operators.
  */
 struct Ip6Addr : ip6_addr_t {
-	Ip6Addr( const char* str ) {
-		ip6addr_aton( str, this );
+    Ip6Addr( const char* str ) {
+        ip6addr_aton( str, this );
     }
     Ip6Addr( ip6_addr addr ) : ip6_addr( addr ) {}
-	Ip6Addr( ip6_addr&& o ) {
-		std::swap( addr, o.addr );
-	}
+    Ip6Addr( ip6_addr&& o ) {
+        std::swap( addr, o.addr );
+    }
 
-	Ip6Addr( uint8_t mask ) {
-		mask_to_address( mask, this );
-	}
+    Ip6Addr( uint8_t mask ) {
+        mask_to_address( mask, this );
+    }
 
     bool operator==( const Ip6Addr& o ) const {
-		return addr[0] == o.addr[0] && addr[1] == o.addr[1] && addr[2] == o.addr[2]
-					&& addr[3] == o.addr[3];
-	}
+        return addr[0] == o.addr[0] && addr[1] == o.addr[1] && addr[2] == o.addr[2]
+                    && addr[3] == o.addr[3];
+    }
 
-	bool operator!=( const Ip6Addr& o ) const {
-		return !( o == *this );
-	}
+    bool operator!=( const Ip6Addr& o ) const {
+        return !( o == *this );
+    }
 
-	struct Ip6Addr operator&( const Ip6Addr& mask ) const {
-		Ip6Addr res( *this );
-		for ( int i = 0; i < 4; i++ )
-			res.addr[ i ] = addr[ i ] & mask.addr[ i ];
-		return res;
-	}
+    struct Ip6Addr operator&( const Ip6Addr& mask ) const {
+        Ip6Addr res( *this );
+        for ( int i = 0; i < 4; i++ )
+            res.addr[ i ] = addr[ i ] & mask.addr[ i ];
+        return res;
+    }
 
     static int size() { return 16; }
 };
 
 inline std::ostream& operator<<( std::ostream& o, const Ip6Addr& a ) {
-	o << ip6addr_ntoa( &a );
-	return o;
+    char buff[40] = { 0 };
+    ip6addr_ntoa_r( &a, buff, 40);
+    o << buff;
+    return o;
+}
+
+inline Ip6Addr operator"" _ip ( const char* ip, std::size_t ) {
+    return Ip6Addr( ip );
 }
 
 typedef struct netif netif_t;
@@ -64,30 +69,70 @@ typedef struct netif netif_t;
  * Provides few useful methods.
  */
 struct Netif : netif_t {
-	std::string getName() const {
-		std::ostringstream s;
-		s << name[ 0 ] << name[ 1 ] << static_cast< int >( num );
-		return s.str();
-	}
+    bool setName( const std::string newName, uint8_t num ) {
+        return setName( newName + std::to_string( num ) );
+    }
 
-	bool isStub() const {
-		return stub;
-	}
+    bool setName( const std::string newName ) {
+        if ( newName.length() > 5 )
+            return false;
 
-	bool setStub( bool b ) {
-		return stub = b;
-	}
+        int n = atoi( newName.c_str() + 2 );
+        if ( n < 0 )
+            return false;
 
-	bool isActive() const {
-		return active;
-	}
+        name[ 0 ] = newName[ 0 ];
+        name[ 1 ] = newName[ 1 ];
+        num = static_cast< uint8_t >( n );
+        return true;
+    }
 
-	bool setActive( bool b ) {
-		return active = b;
-	}
+    std::string getName() const {
+        std::ostringstream s;
+        s << name[ 0 ] << name[ 1 ] << static_cast< int >( num );
+        return s.str();
+    }
+
+    bool isStub() const {
+        return stub;
+    }
+
+    bool setStub( bool b ) {
+        return stub = b;
+    }
+
+    bool isActive() const {
+        return active;
+    }
+
+    bool setActive( bool b ) {
+        return active = b;
+    }
 private:
-	bool stub   = false;
-	bool active = false;
+    bool stub   = false;
+    bool active = false;
+};
+
+/**
+ * \brief Struct for a representation of a mac address
+ *
+ */
+
+struct PhysAddr {
+    PhysAddr( uint8_t *a ) {
+        std::copy_n( a, 6, addr );
+    }
+    PhysAddr( uint8_t a, uint8_t b, uint8_t c, uint8_t d, uint8_t e, uint8_t f ) {
+        addr[ 0 ] = a; addr[ 1 ] = b; addr[ 2 ] = c;
+        addr[ 3 ] = d; addr[ 4 ] = e; addr[ 5 ] = f;
+    }
+
+    PhysAddr( const PhysAddr& ) = default;
+    PhysAddr& operator=( const PhysAddr& ) = default;
+
+    static int size() { return 6; }
+
+    uint8_t addr[ 6U ];
 };
 
 /**
