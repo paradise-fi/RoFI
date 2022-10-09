@@ -3,41 +3,24 @@
 #include "rofi_hal.hpp"
 #include "routing_table.hpp"
 
-#include <atoms/unreachable.hpp>
 #include <lwip/mld6.h>
 #include <lwip/raw.h>
 #include <lwip/ip6_addr.h>
+#include <lwip/tcpip.h>
 
 #include <algorithm>
 #include <string>
 #include <cassert>
 #include <sstream>
+#include <iostream>
 
 namespace rofinet {
     using namespace rofi::hal;
 
-static int seqNum() {
-    static int num = 0;
+static uint8_t seqNum() {
+    static uint8_t num = 0;
     return num++;
 }
-
-struct PhysAddr {
-    PhysAddr( uint8_t *a ) {
-        std::copy_n( a, 6, addr );
-    }
-    PhysAddr( uint8_t a, uint8_t b, uint8_t c, uint8_t d, uint8_t e, uint8_t f ) {
-        addr[ 0 ] = a; addr[ 1 ] = b; addr[ 2 ] = c;
-        addr[ 3 ] = d; addr[ 4 ] = e; addr[ 5 ] = f;
-    }
-
-    PhysAddr( const PhysAddr& ) = default;
-    PhysAddr& operator=( const PhysAddr& ) = default;
-
-    static int size() { return 6; }
-
-    uint8_t addr[ 6 ];
-};
-
 
 class PhysNetif {
 public:
@@ -68,7 +51,9 @@ public:
             }
         } );
 
-        netif_add( &netif, nullptr, nullptr, nullptr, this, init, tcpip_input );
+        LOCK_TCPIP_CORE();
+        netif_add_noaddr( &netif, this, init, tcpip_input );
+        UNLOCK_TCPIP_CORE();
         setRRP();
     }
 
@@ -77,8 +62,10 @@ public:
     }
 
     void setUp() {
+        LOCK_TCPIP_CORE();
         netif_create_ip6_linklocal_address( &netif, 0 );
         netif_set_up( &netif );
+        UNLOCK_TCPIP_CORE();
         if ( isConnected() )
             sendRRP( RTable::Command::Hello );
     }
@@ -89,7 +76,13 @@ public:
         auto rrp = rtable.isHello( cmd )        ? rtable.createRRPhello( &netif, cmd )
                  : cmd == RTable::Command::Sync ? rtable.createRRPhello( &netif, cmd )
                                                 : rtable.createRRPmsgIfless( &netif, cmd );
-        err_t res = raw_sendto_if_src( pcb, rrp.release(), &ip, &netif, &netif.ip6_addr[ 0 ] ); // use link-local address as source
+
+        LOCK_TCPIP_CORE();
+        // use link-local address as source
+        err_t res = raw_sendto_if_src( pcb, rrp.release(), &ip, &netif, &netif.ip6_addr[ 0 ] );
+        UNLOCK_TCPIP_CORE();
+        if ( res != ERR_OK )
+            std::cerr << "Error - failed to send RRP msg: " << lwip_strerr( res ) << std::endl;
         return res == ERR_OK;
     }
 
@@ -107,12 +100,12 @@ public:
     }
 
 private:
-    void send( const Ip6Addr&, PBuf&& packet, int contentType = 0 ) {
-        connector.send( contentType, std::move( packet) );
+    void send( PBuf&& packet, uint16_t contentType = 0 ) {
+        connector.send( contentType, std::move( packet ) );
     }
 
     static err_t init( struct netif* n ) {
-        auto self = reinterpret_cast< PhysNetif* >( n->state );
+        auto* self = reinterpret_cast< PhysNetif* >( n->state );
         n->hwaddr_len = 6;
         std::copy_n( self->pAddr.addr, 6, n->hwaddr );
         n->mtu = 120;
@@ -121,13 +114,13 @@ private:
         n->output_ip6 = output;
         n->input = netif_input;
         n->linkoutput = linkOutput;
-        n->flags |= NETIF_FLAG_IGMP | NETIF_FLAG_MLD6;
+        n->flags |= NETIF_FLAG_LINK_UP | NETIF_FLAG_IGMP | NETIF_FLAG_UP | NETIF_FLAG_MLD6;
         return ERR_OK;
     }
 
     static err_t output( struct netif* n, struct pbuf *p, const ip6_addr_t* ip ) {
         auto self = reinterpret_cast< PhysNetif* >( n->state );
-        self->send( Ip6Addr( *ip ), PBuf::reference( p ) );
+        self->send( PBuf::reference( p ) );
 
         return ERR_OK;
     }
@@ -138,7 +131,9 @@ private:
 
     void onPacket( Connector, uint16_t contentType, PBuf&& packet ) {
         if ( contentType == 0 ) {
+            LOCK_TCPIP_CORE();
             netif.input( packet.release(), &netif );
+            UNLOCK_TCPIP_CORE();
         }
     }
 
@@ -187,16 +182,20 @@ private:
         create_rrp_listener();
         ip6_addr_t ip;
         ip6addr_aton( "ff02::1f", &ip );
+        LOCK_TCPIP_CORE();
         auto res = mld6_joingroup_netif( &netif, &ip );
+        UNLOCK_TCPIP_CORE();
         if ( res != ERR_OK )
-            std::cout << "Error - failed to join mld6 group: " << lwip_strerr( res ) << std::endl;
+            std::cerr << "Error - failed to join mld6 group: " << lwip_strerr( res ) << std::endl;
     }
 
     void create_rrp_listener() {
+        LOCK_TCPIP_CORE();
         pcb = raw_new_ip6( IP6_NEXTH_ICMP6 );
         assert( pcb && "raw_new_ip6 failed, pcb is null!" );
         raw_bind_netif( pcb, &netif );
         raw_recv( pcb, onRRP, this );
+        UNLOCK_TCPIP_CORE();
     }
 
     void sendToOthers( RTable::Command cmd = RTable::Command::Call ) {
@@ -211,6 +210,8 @@ private:
     RTable& rtable;
     std::function< void( RTable::Command ) > _sendToOthers;
     std::function< void() > toStubOut;
+
+    friend class RoIF;
 };
 
 
