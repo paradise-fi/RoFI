@@ -42,17 +42,27 @@
  * Include user defined options first. Anything not defined in these files
  * will be set to standard values. Override anything you dont like!
  */
-#include "lwipopts.h"
 #include "lwip/debug.h"
 
-#define LWIP_DEBUG 1
+#define LWIP_HOOK_FILENAME "fwtable/forwarding_table.h"
+#define LWIP_HOOK_IP6_ROUTE(src, dest)    ip_find_route(dest, src)
+#define LWIP_HOOK_ND6_GET_GW(netif, dest) ip_find_gw(netif, dest)
+
+#define LWIP_NETIF_LOOPBACK       1
 
 #define LWIP_IPV6                 1
 #define LWIP_IPV6_FORWARD         1
 #define LWIP_IPV6_MLD             1
 #define LWIP_RAW                  1
 
-// change if needed
+#define LWIP_DEBUG                1
+#define IP6_DEBUG                 1
+#define RAW_DEBUG                 1
+
+#define LWIP_IPV4                 0
+#define LWIP_ACD                  0
+
+/* change if needed */
 #define MEM_LIBC_MALLOC           1
 #define MEMP_MEM_MALLOC           1
 
@@ -62,8 +72,9 @@
 #define MEMP_NUM_MLD6_GROUP       16
 #define MEMP_NUM_IGMP_GROUP       16
 
-#define LWIP_DONT_PROVIDE_BYTEORDER_FUNCTIONS  1
-#define LWIP_IP_CHECK_PBUF_REF_COUNT_FOR_TX(p) 1 // needed in simulator
+#define LWIP_DONT_PROVIDE_BYTEORDER_FUNCTIONS  0
+
+// #define LWIP_IP_CHECK_PBUF_REF_COUNT_FOR_TX(p) 1 // nasty hack for now
 
 /*
    -----------------------------------------------
@@ -217,7 +228,7 @@
  * interfaces. If you are going to run lwIP on a device with only one network
  * interface, define this to 0.
  */
-#define IP_FORWARD                      0
+#define IP_FORWARD                      1
 
 /**
  * IP_OPTIONS: Defines the behavior for IP options.
@@ -448,11 +459,12 @@
 
 #define LWIP_TCPIP_CORE_LOCKING         0
 
-// #if !NO_SYS
-// void sys_check_core_locking(void);
-// #define LWIP_ASSERT_CORE_LOCKED()  sys_check_core_locking()
-// void sys_mark_tcpip_thread(void);
-// #define LWIP_MARK_TCPIP_THREAD()   sys_mark_tcpip_thread()
-// #endif
+
+#if !NO_SYS && LWIP_TCPIP_CORE_LOCKING
+void sys_check_core_locking(void);
+#define LWIP_ASSERT_CORE_LOCKED()  sys_check_core_locking()
+void sys_mark_tcpip_thread(void);
+#define LWIP_MARK_TCPIP_THREAD()   sys_mark_tcpip_thread()
+#endif
 
 #endif /* LWIP_LWIPOPTS_H */
