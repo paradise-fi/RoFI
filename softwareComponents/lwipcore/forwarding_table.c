@@ -1,4 +1,7 @@
 #include "forwarding_table.h"
+
+#include <lwip/ip6_addr.h>
+#include <lwip/ip6.h>
 #include "string.h"
 
 #ifndef FW_TABLE_SIZE
@@ -16,33 +19,6 @@ int cmp_masks(const struct rt_entry* a, const struct rt_entry* b) {
 	return a->mask > b->mask;
 }
 
-void chunk_to_rest(uint8_t chunk, int b, char* str) {
-	switch (chunk) {
-		case 3:
-			*str = 'e';
-			break;
-		case 2:
-			*str = 'c';
-			break;
-		case 1:
-			*str = '8';
-			break;
-		default:
-            if (b) {
-                *str = '\0';
-            } else {
-                *str = ':';
-                *( ++str ) = '\0';
-            }
-			return;
-	}
-    ++str;
-	if (!b) {
-        *str = ':';
-        *(++str) = ':';
-    }
-}
-
 void ip_print_table(void) {
 	for (int i = 0; i < fw_table_size; i++) {
         printf("ip: %s/%d gw: %s\n", ip6addr_ntoa(&fw_table[i].addr)
@@ -50,31 +26,29 @@ void ip_print_table(void) {
 	}
 }
 
+uint8_t turn_on_n_bits(uint8_t n) {
+    if (n == 0 || n >= 8)
+        return 0;
+
+    return (1 << (8 - n)) + turn_on_n_bits(n - 1);
+}
+
 void mask_to_address(uint8_t mask, ip6_addr_t* m) {
 	ip6_addr_set_zero(m);
-	edge_segment = mask > 112 || mask <= 16;
-    memset( mask_str, '\0', 48 );
-    pos = 0;
+    ip6_addr_t full;
 
-	while (mask >= 16) {
-        memcpy(mask_str + pos, "ffff:", sizeof(char) * 5);
-        pos += 5;
-		mask = mask - 16;
-	}
+    for (int i = 0; i < 4; i++) {
+        full.addr[i] = UINT32_MAX;
+    }
 
-	while (mask >= 4) {
-        *(mask_str + pos) = 'f';
-        pos++;
-		mask = mask - 4;
-		if (mask == 0 && !edge_segment) {
-			*(mask_str + pos) = 'f';
-            pos++;
-		}
-	}
+    memcpy(m, full.addr, mask / 8);
+    /* there can be some left over when the mask is not byte padded */
+    uint8_t leftover = mask % 8;
+    if (leftover != 0) {
+        *(((uint8_t*) m->addr) + mask / 8) = turn_on_n_bits(leftover);
+    }
 
-	chunk_to_rest(mask, edge_segment, mask_str + pos);
 	ip6_addr_set_zone(m, IP6_UNKNOWN); /* Options: IP6_UNKNOWN = 0, IP6_UNICAST = 1, IP6_MULTICAST = 2 */
-	ip6addr_aton(mask_str, m);
 }
 
 void ip6_addr_and(ip6_addr_t* ip, const ip6_addr_t* mask) {
@@ -142,7 +116,8 @@ int ip_add_route(const ip6_addr_t* addr, uint8_t mask, const char* netif_name) {
 
 struct netif* ip_find_route(const ip6_addr_t* ip, const ip6_addr_t* src) {
 	struct rt_entry* entry = ip_find_route_entry(ip);
-	return entry && !ip6_addr_isany_val(*src) ? netif_find(entry->gw_name) : NULL;
+
+    return entry && !ip6_addr_isany_val(*src) ? netif_find(entry->gw_name) : NULL;
 }
 
 const ip6_addr_t* ip_find_gw(struct netif* netif, const ip6_addr_t* dest) {
@@ -152,8 +127,8 @@ const ip6_addr_t* ip_find_gw(struct netif* netif, const ip6_addr_t* dest) {
 
     if (netif != NULL) {
         for (int i = 0; i < LWIP_IPV6_NUM_ADDRESSES; i++) {
-            if (!ip6_addr_isany(&netif->ip6_addr[i])) {
-                return &netif->ip6_addr[i];
+            if (!ip_addr_isany(&netif->ip6_addr[i])) {
+                return ip_2_ip6(&netif->ip6_addr[i]);
             }
         }
     }
@@ -189,8 +164,8 @@ int ip_rm_route_if(const char* netif_name) {
 	while (index >= 0 && index < fw_table_size) {
         if (strcmp(netif_name, fw_table[index].gw_name) == 0) {
             remove_at(index);
-            --index;
         }
+        --index;
     }
 
 	return size != fw_table_size ? 1 : 0;
@@ -208,3 +183,5 @@ void ip_update_route(const ip6_addr_t* ip, uint8_t mask, const char* new_gw) {
 		i++;
 	}
 }
+
+void ip_clear() { fw_table_size = 0; }
