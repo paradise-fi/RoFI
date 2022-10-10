@@ -17,10 +17,6 @@ include(${LWIP_DIR}/src/Filelists.cmake)
 
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/include/fwtable/forwarding_table.h ${LWIP_INCLUDE_DIRS}/lwip/forwarding_table.h COPYONLY)
-#message("before lwipcore6_SRCS ${lwipcore6_SRCS}")
-#set(lwipcore6_SRCS ${lwipcore6_SRCS} ${LWIP_DIR}/src/core/ipv6/forwarding_table.c)
-#message("after lwipcore6_SRCS ${lwipcore6_SRCS}")
-
 set(lwipcore_SRCS ${lwipcore_SRCS} ${CMAKE_CURRENT_SOURCE_DIR}/forwarding_table.c)
 
 target_include_directories(lwipcore PUBLIC ${LWIP_INCLUDE_DIRS})
