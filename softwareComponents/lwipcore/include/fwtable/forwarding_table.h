@@ -33,6 +33,9 @@ void ip_update_route(const ip6_addr_t* ip, uint8_t mask, const char* new_gw);
 
 void ip_print_table(void);
 
+struct rt_entry* ip_find_route_entry(const ip6_addr_t* ip);
+
+void ip_clear();
 
 /* helper function */
 void mask_to_address(uint8_t mask, ip6_addr_t* m);

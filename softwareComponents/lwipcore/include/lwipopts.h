@@ -55,6 +55,9 @@
 #define LWIP_IPV6_MLD             1
 #define LWIP_RAW                  1
 
+#define LWIP_IPV6_DHCP6           1
+#define LWIP_IPV6_AUTOCONFIG      1
+
 #define LWIP_DEBUG                1
 #define IP6_DEBUG                 1
 #define RAW_DEBUG                 1
@@ -63,8 +66,8 @@
 #define LWIP_ACD                  0
 
 /* change if needed */
-#define MEM_LIBC_MALLOC           1
-#define MEMP_MEM_MALLOC           1
+#define MEM_LIBC_MALLOC           0
+#define MEMP_MEM_MALLOC           0
 
 #define IPV6_FRAG_COPYHEADER      1
 #define LWIP_MULTICAST_TX_OPTIONS 1
