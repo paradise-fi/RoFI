@@ -4,6 +4,7 @@
 #include <type_traits>
 #include <atoms/traits.hpp>
 #include <functional>
+#include <limits>
 
 namespace atoms::detail {
 
@@ -50,6 +51,16 @@ std::make_unsigned_t< T > to_unsigned( T value ) {
         assert( value >= T( 0 ) );
     }
     return static_cast< std::make_unsigned_t< T > >( value );
+}
+
+template < typename T >
+std::make_signed_t< T > to_signed( T value )
+{
+    static_assert( std::is_arithmetic_v< T > );
+    if constexpr ( std::is_unsigned_v< T > ) {
+        assert( value <= std::numeric_limits< std::make_signed_t< T > >::max() );
+    }
+    return static_cast< std::make_signed_t< T > >( value );
 }
 
 template < typename Container, typename T >
