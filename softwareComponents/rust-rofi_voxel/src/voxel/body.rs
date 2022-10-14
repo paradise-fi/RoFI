@@ -1,4 +1,5 @@
 use crate::atoms;
+use crate::pos::VoxelPos;
 use modular_bitfield::prelude::*;
 
 #[derive(BitfieldSpecifier, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -69,6 +70,8 @@ pub struct VoxelBody {
     pub joint_pos: JointPosition,
 }
 static_assertions::assert_eq_size!(VoxelBody, u8);
+
+pub type VoxelBodyWithPos = (VoxelBody, VoxelPos);
 
 impl VoxelBody {
     pub fn new_with(
@@ -162,4 +165,13 @@ impl VoxelBody {
             self.z_conn_dir(),
         ]
     }
+}
+
+pub fn get_neighbour_pos(body_with_pos: VoxelBodyWithPos) -> Result<VoxelPos, String> {
+    body_with_pos
+        .0
+        .other_body_dir()
+        .update_position(body_with_pos.1 .0)
+        .map_err(|err_str| format!("Other body direction error ({})", err_str))
+        .map(VoxelPos)
 }

@@ -1,7 +1,8 @@
 pub mod body;
 
-pub use body::VoxelBody;
+pub use body::{VoxelBody, VoxelBodyWithPos};
 
+use crate::pos::VoxelPos;
 use modular_bitfield::prelude::*;
 
 #[bitfield(bits = 7)]
@@ -11,6 +12,8 @@ pub struct Voxel {
     has_value: bool,
 }
 static_assertions::assert_eq_size!(Voxel, u8);
+
+pub type VoxelWithPos = (Voxel, VoxelPos);
 
 impl Default for Voxel {
     fn default() -> Self {
