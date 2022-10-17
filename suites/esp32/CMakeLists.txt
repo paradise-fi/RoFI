@@ -73,6 +73,7 @@ add_component(lwipcore)
 add_component(rofiHalInc)
 add_component(rofiHalEsp32)
 add_component(libfi)
+add_component(firmwareUpdater)
 # Introduce alias
 add_library(rofi::hal ALIAS rofi_hal_esp32)
 
@@ -84,6 +85,7 @@ add_application(hardwareModules/universalModule/software/esp32/esp_hello_world)
 add_application(examples/hal/wifi)
 add_application(examples/hal/servo)
 add_application(examples/hal/connectorMovementHal)
+add_application(examples/hal/firmwareUpdater)
 
 
 
