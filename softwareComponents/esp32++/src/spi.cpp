@@ -1,4 +1,4 @@
-#include "spi.hpp"
+#include "espDriver/spi.hpp"
 
 std::ostream& rofi::esp32::operator<<( std::ostream& o, spi_bus_config_t s ) {
     o << "mosi_io_num: " << s.mosi_io_num << "\n";

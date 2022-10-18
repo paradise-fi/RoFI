@@ -1,4 +1,4 @@
-#include "gpio.hpp"
+#include "espDriver/gpio.hpp"
 
 std::ostream& operator<<( std::ostream& o, gpio_config_t s ) {
     o << "pin_bit_mask: " << s.pin_bit_mask << "\n";
