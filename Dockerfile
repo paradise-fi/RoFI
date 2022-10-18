@@ -14,6 +14,7 @@ RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -; \
 
 RUN DEBIAN_FRONTEND=noninteractive TZ="Europe/London" \
         apt-get install -y --no-install-recommends \
+        build-essential \
         git ssh rsync curl tar \
         clang-11  llvm-11 clang-tidy-11 libc++-11-dev libc++abi-11-dev \
         gcc-10 g++-10 \
@@ -49,7 +50,11 @@ RUN export IDF_PATH=$ROFI_TOOLS_PATH/esp-idf && \
     pip install sphinx breathe myst_parser sphinx_rtd_theme
 
 # Install Rust
+ENV RUSTUP_HOME="/rust"
+ENV CARGO_HOME="/cargo"
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/cargo/bin:$PATH"
+RUN rustup default nightly
 
 # Newer Ubuntu (21.10) miss libdl.so which is (probably) required by VTK.
 # This is a temporary work-around until we migrate to VTK 9.
@@ -68,6 +73,8 @@ RUN for i in `dpkg-query -L g++-10 | cut -d: -f2 | grep '/usr/bin/[^/].*-10'`; d
 RUN cmake --version
 RUN clang++ --version
 RUN g++ --version
+RUN cargo --version
+RUN rustup show
 RUN llvm-cov --version
 RUN gcov --version
 RUN clang-tidy --version
