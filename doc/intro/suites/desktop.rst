@@ -30,6 +30,7 @@ Build options
 -  ``BUILD_HEADLESS`` (default ``FALSE``): Build only parts of the project that
    can run headlessly. I.e., does not compile visualizer nor rofi-app.
 -  ``BUILD_GAZEBO`` (default ``TRUE``): Build parts that require gazebo libraries.
+-  ``BUILD_RUST`` (default ``TRUE``): Build parts that contain or depend on Rust.
 -  ``BUILD_SMTRECONFIG`` (default ``FALSE``): Defines whether to build the
    library for reconfiguration via reduction to SMT. The library is not directly
    applicable and also brings heavy dependency in the form of Z3, thus it makes

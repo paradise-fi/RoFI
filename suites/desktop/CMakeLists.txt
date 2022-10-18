@@ -126,6 +126,8 @@ if (${BUILD_RUST})
     FetchContent_Populate(corrosion)
     add_subdirectory(${corrosion_SOURCE_DIR} ${corrosion_BINARY_DIR})
   endif()
+
+  include(RustTests)
 endif()
 
 FetchContent_Declare(
