@@ -15,6 +15,8 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
+# Pick from https://gitlab.com/conradsnicta/armadillo-code
+set(USE_ARMA_VERSION 10.6.x)
 
 include(FetchContent)
 include(CollectTargets)
@@ -31,6 +33,7 @@ if(${LIBCXX})
     set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++")
 endif(${LIBCXX})
 
+find_package(Armadillo REQUIRED)
 
 # Specify common dependencies
 FetchContent_Declare(
@@ -79,6 +82,17 @@ if(NOT pybind11_POPULATED)
   FetchContent_Populate(pybind11)
   add_subdirectory(${pybind11_SOURCE_DIR} ${pybind11_BINARY_DIR})
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${pybind11_SOURCE_DIR}/contrib")
+endif()
+
+FetchContent_Declare(
+        carma
+        GIT_REPOSITORY https://github.com/RUrlus/carma.git
+        GIT_TAG        v0.6.6
+)
+FetchContent_GetProperties(carma)
+if(NOT carma_POPULATED)
+  FetchContent_Populate(carma)
+  add_subdirectory(${carma_SOURCE_DIR} ${carma_BINARY_DIR})
 endif()
 
 FetchContent_Declare(
@@ -142,8 +156,6 @@ if(NOT cxxopts_POPULATED)
 endif()
 set_target_properties(cxxopts PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:cxxopts,INTERFACE_INCLUDE_DIRECTORIES>)
 
-find_package(Armadillo REQUIRED)
-
 if (${BUILD_GAZEBO})
   find_package(gazebo REQUIRED)
 
@@ -189,6 +201,8 @@ endif()
 
 add_component(atoms)
 add_component(configuration)
+add_component(configurationPy)
+add_library(rofi::configuration ALIAS configuration)
 add_component(kinematics)
 add_component(reconfig)
 if (${BUILD_SMTRECONFIG})
