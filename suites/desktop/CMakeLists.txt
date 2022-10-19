@@ -15,8 +15,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/bin)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
-# Pick from https://gitlab.com/conradsnicta/armadillo-code
-set(USE_ARMA_VERSION 10.6.x)
 
 include(FetchContent)
 include(CollectTargets)
@@ -32,8 +30,6 @@ endfunction()
 if(${LIBCXX})
     set(CMAKE_CXX_FLAGS "${CMAKE_C_FLAGS} -stdlib=libc++")
 endif(${LIBCXX})
-
-find_package(Armadillo REQUIRED)
 
 # Specify common dependencies
 FetchContent_Declare(
@@ -85,14 +81,39 @@ if(NOT pybind11_POPULATED)
 endif()
 
 FetchContent_Declare(
-        carma
-        GIT_REPOSITORY https://github.com/RUrlus/carma.git
-        GIT_TAG        v0.6.6
+  armadillo
+  GIT_REPOSITORY https://gitlab.com/conradsnicta/armadillo-code.git
+  GIT_TAG        10.8.x
+)
+FetchContent_GetProperties(armadillo)
+if(NOT armadillo_POPULATED)
+  FetchContent_Populate(armadillo)
+  add_subdirectory(${armadillo_SOURCE_DIR} ${armadillo_BINARY_DIR})
+
+  get_target_property(inc_dir armadillo INTERFACE_INCLUDE_DIRECTORIES)
+  set_property(TARGET armadillo PROPERTY INTERFACE_INCLUDE_DIRECTORIES "")
+  target_include_directories(armadillo SYSTEM INTERFACE ${inc_dir})
+endif()
+
+
+FetchContent_Declare(
+  carma
+  # There is a bug in upstream, use our fork instead
+  # GIT_REPOSITORY https://github.com/RUrlus/carma.git
+  # GIT_TAG        v0.6.6
+  GIT_REPOSITORY https://github.com/paradise-fi/carma.git
+  GIT_TAG        supportFixed
 )
 FetchContent_GetProperties(carma)
 if(NOT carma_POPULATED)
   FetchContent_Populate(carma)
+
+  set(ARMADILLO_ROOT_DIR ${Armadillo_SOURCE_DIR})
   add_subdirectory(${carma_SOURCE_DIR} ${carma_BINARY_DIR})
+
+  get_target_property(inc_dir carma INTERFACE_INCLUDE_DIRECTORIES)
+  set_property(TARGET carma PROPERTY INTERFACE_INCLUDE_DIRECTORIES "")
+  target_include_directories(carma SYSTEM INTERFACE ${inc_dir})
 endif()
 
 FetchContent_Declare(
