@@ -19,7 +19,7 @@ RUN DEBIAN_FRONTEND=noninteractive TZ="Europe/London" \
         clang-11  llvm-11 clang-tidy-11 libc++-11-dev libc++abi-11-dev \
         gcc-10 g++-10 \
         cmake make ninja-build valgrind gdb \
-        python3 python3-pip python3-venv \
+        python3 python3-pip python3-venv python3-dev python3-numpy \
         doxygen graphviz \
         libarmadillo-dev libvtk7-dev libvtk7-qt-dev qtdeclarative5-dev \
         gazebo libgazebo-dev libz3-dev
@@ -52,8 +52,9 @@ RUN export IDF_PATH=$ROFI_TOOLS_PATH/esp-idf && \
 # Install Rust
 ENV RUSTUP_HOME="/rust"
 ENV CARGO_HOME="/cargo"
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 ENV PATH="/cargo/bin:$PATH"
+
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
 RUN rustup default nightly
 
 # Newer Ubuntu (21.10) miss libdl.so which is (probably) required by VTK.
