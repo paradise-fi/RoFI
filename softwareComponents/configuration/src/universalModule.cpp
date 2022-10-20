@@ -155,7 +155,7 @@ RofiWorld readOldConfigurationFormat( std::istream& s ) {
         if ( cStr == "B+X" ) { return 4; }
         if ( cStr == "B-Z" ) { return 5; }
 
-        ROFI_UNREACHABLE( "translateComponent got invalid input" );
+        throw std::logic_error( "translateComponent got invalid input" );
     }
 
     std::string UniversalModule::translateComponent( int c ) {
@@ -173,7 +173,7 @@ RofiWorld readOldConfigurationFormat( std::istream& s ) {
             case 5:
                 return "B-Z";
         }
-        ROFI_UNREACHABLE( "translateComponent got invalid input" );
+        throw std::logic_error( "translateComponent got invalid input" );
     }
 
 
