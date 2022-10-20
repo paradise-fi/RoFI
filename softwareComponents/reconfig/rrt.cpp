@@ -5,12 +5,12 @@ namespace Distance
 {
     inline double reconnections(const Configuration& curr, const Configuration& goal) {
         auto diff = curr.diff(goal);
-        return diff.reconnections().size();
+        return double(diff.reconnections().size());
     }
 
     inline double rotations(const Configuration& curr, const Configuration& goal) {
         auto diff = curr.diff(goal);
-        return diff.rotations().size();
+        return double(diff.rotations().size());
     }
 
     inline double diff(const Configuration& curr, const Configuration& goal) {
@@ -163,7 +163,7 @@ inline const Configuration* getCfg(const Configuration& cfg)
 }
 
 
-inline const Configuration* addToTree(ConfigPool& pool, ConfigEdges& edges, 
+inline const Configuration* addToTree(ConfigPool& pool, ConfigEdges& edges,
     const Configuration* from, const Configuration& to)
 {
     if (!pool.has(to))
@@ -242,7 +242,7 @@ inline Configuration steer(const Configuration& from, const Configuration& to, D
     return minCfg;
 }
 
-inline Configuration steerRotate(const Configuration& from,const Configuration& to, const Action& diff)
+inline Configuration steerRotate(const Configuration& from, const Configuration& /*to*/, const Action& diff)
 {
     unsigned long count = diff.rotations().size();
 
@@ -266,8 +266,8 @@ inline Configuration steerRotate(const Configuration& from,const Configuration& 
     return from;
 }
 
-inline std::vector<Configuration> steerReconnect(const Configuration& from,const Configuration& to, 
-    const Action& diff, unsigned step)
+inline std::vector<Configuration> steerReconnect(const Configuration& from,
+    const Configuration& /*to*/, const Action& diff, unsigned /*step*/)
 {
     auto allRec = diff.reconnections();
     unsigned long count = allRec.size();
@@ -320,7 +320,7 @@ inline std::vector<Configuration> steerPath(const Configuration& from, const Con
     return steerReconnect(from, to, fromToDiff, step);
 }
 
-inline std::optional<Configuration> steerEdge(const Configuration& from, const Configuration& to, unsigned step)
+inline std::optional<Configuration> steerEdge(const Configuration& from, const Configuration& to, unsigned /*step*/)
 {
     auto diff = from.diff(to);
     std::vector<Edge> edges;
@@ -361,7 +361,7 @@ inline void extendEdge(ConfigPool& pool, ConfigEdges& edges, const Configuration
     }
 }
 
-inline void extendPath(ConfigPool& pool, ConfigEdges& edges, const Configuration& cfg, unsigned step, 
+inline void extendPath(ConfigPool& pool, ConfigEdges& edges, const Configuration& cfg, unsigned step,
     DistFunction* dist = Eval::matrixDiff)
 {
     const Configuration* near = nearest(cfg, pool, dist);
@@ -412,7 +412,7 @@ inline void extend2(ConfigPool& pool, ConfigEdges& edges, const Configuration& c
     addToTree(pool, edges, near, next);
 }
 
-std::vector<Configuration> RRT(const Configuration& init, const Configuration& goal, 
+std::vector<Configuration> RRT(const Configuration& init, const Configuration& goal,
     unsigned step /*= 90*/, AlgorithmStat* stat /*= nullptr*/)
 {
     ConfigPool pool;

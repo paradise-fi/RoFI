@@ -88,7 +88,7 @@ private:
 
 
 namespace Eval {
-    inline double trivial(const Configuration& conf, const Configuration& goal) {
+    inline double trivial(const Configuration& /*conf*/, const Configuration& /*goal*/) {
         return 1;
     }
 
@@ -128,7 +128,7 @@ namespace Eval {
 
     inline double actionDiff(const Configuration& curr, const Configuration& goal) {
         Action action = curr.diff(goal);
-        return action.rotations().size() + action.reconnections().size() ;
+        return double( action.rotations().size() + action.reconnections().size() );
     }
 }
 
@@ -179,15 +179,15 @@ inline std::vector<Configuration> createPath(ConfigEdges& edges, const Configura
     return {};
 }
 
-std::vector<Configuration> BFS(const Configuration& init, 
-    const Configuration& goal, unsigned step = 90, 
+std::vector<Configuration> BFS(const Configuration& init,
+    const Configuration& goal, unsigned step = 90,
     unsigned bound = 1, AlgorithmStat* stat = nullptr);
 
-std::vector<Configuration> AStar(const Configuration& init, 
-    const Configuration& goal, unsigned step = 90, 
+std::vector<Configuration> AStar(const Configuration& init,
+    const Configuration& goal, unsigned step = 90,
     unsigned bound = 1, EvalFunction& eval = Eval::trivial, AlgorithmStat* stat = nullptr);
 
-std::vector<Configuration> RRT(const Configuration& init, 
+std::vector<Configuration> RRT(const Configuration& init,
     const Configuration& goal, unsigned step = 90, AlgorithmStat* stat = nullptr);
 
 #endif //ROBOTS_BFS_H
