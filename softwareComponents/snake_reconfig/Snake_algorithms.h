@@ -59,7 +59,7 @@ std::pair<std::vector<Configuration>, bool> limitedAstar(const Configuration& in
     initDist[pointer] = 0;
     goalDist[pointer] = startDist;
     pred[pointer] = pointer;
-    int i = 0;
+    unsigned i = 0;
     queue.push( {goalDist[pointer], pointer} );
 
 
@@ -178,7 +178,7 @@ using moment = std::chrono::time_point<std::chrono::system_clock>;
 using ProgressCallback = std::function< void(
     int, std::optional<moment>, std::optional<moment>,
     std::optional<moment>, std::optional<moment>,
-    std::optional<moment>, std::optional<moment>, int ) >;
+    std::optional<moment>, std::optional<moment>, size_t ) >;
 
 std::pair<std::vector<Configuration>, bool> reconfigToSnake(const Configuration& init, ProgressCallback progressCallback);
 
@@ -189,8 +189,8 @@ std::vector<Configuration> reconfigThroughSnake(const Configuration& from, const
 nlohmann::json logProgressJson( unsigned progress,
     std::optional<moment> start, std::optional<moment> aerate,
     std::optional<moment> tts, std::optional<moment> parity,
-    std::optional<moment> docks, std::optional<moment> circle, unsigned pathLen );
+    std::optional<moment> docks, std::optional<moment> circle, size_t pathLen );
 
 void logProgressCSV(std::ostream& debug_output, unsigned progress, std::optional<moment> start, std::optional<moment> aerate,
     std::optional<moment> tts, std::optional<moment> parity, std::optional<moment> docks, std::optional<moment> circle,
-    unsigned pathLen);
+    size_t pathLen);

@@ -112,3 +112,16 @@ public:
 #define CONCAT_( a, b ) a ## b
 #define CONCAT( a, b ) CONCAT_( a, b )
 #define ATOMS_DEFER( fn ) Defer CONCAT( __defer__, __LINE__ )( fn )
+
+/**
+ * Decide if a value fits given type
+*/
+template < typename T >
+constexpr bool fitsIn(auto x) {
+    static_assert(std::is_integral_v< T > );
+    static_assert(std::is_integral_v< decltype(x) > );
+
+    using Trait = std::numeric_limits< T >;
+
+    return x <= Trait::max() && x >= Trait::min();
+}
