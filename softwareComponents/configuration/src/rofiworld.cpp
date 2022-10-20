@@ -45,14 +45,14 @@ std::string roficom::orientationToString( Orientation o ) {
 roficom::Orientation roficom::stringToOrientation( const std::string& str ) {
     if ( str == "N" || str == "North" )
         return Orientation::North;
-    else if ( str == "E" || str == "East" )
+    if ( str == "E" || str == "East" )
         return Orientation::East;
-    else if ( str == "S" || str == "South" )
+    if ( str == "S" || str == "South" )
         return Orientation::South;
-    else if ( str == "W" || str == "West" )
+    if ( str == "W" || str == "West" )
         return Orientation::West;
-    else
-        ROFI_UNREACHABLE( "String does not represent the orientation" );
+
+    throw std::logic_error( "String does not represent the orientation" );
 }
 
 int Component::getIndexInParent() const {

@@ -98,7 +98,6 @@ private:
 
     static err_t linkOutput( struct netif*, struct pbuf* ) {
         ROFI_UNREACHABLE( "Link output should not be directly used" );
-        return ERR_OK;
     }
 
     void send( const Ip6Addr& ip, PBuf&& packet, int contentType = 0 ) {

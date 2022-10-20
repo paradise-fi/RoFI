@@ -225,7 +225,7 @@ namespace rofi::configuration::serialization {
         j[ "id" ]   = m.getId();
         j[ "type" ] = nullptr;
         int i = 0;
-        
+
         for ( const auto& c : m.components() ) {
             json js;
             if ( c.parent )
@@ -309,6 +309,19 @@ namespace rofi::configuration::serialization {
         }
     };
 
+    template< typename Callback >
+    inline nlohmann::json moduleByTypeToJSON( const Module& mod, Callback& attrCb ) {
+        switch ( mod.type ) {
+            case ModuleType::Universal:
+                return details::moduleToJSON( dynamic_cast< const UniversalModule& >( mod ), attrCb );
+            case ModuleType::Pad:
+                return details::moduleToJSON( dynamic_cast< const Pad& >( mod ), attrCb );
+            case ModuleType::Unknown:
+                return details::moduleToJSON( dynamic_cast< const UnknownModule& >( mod ), attrCb );
+        }
+        ROFI_UNREACHABLE( "Unknown type of a module" );
+    }
+
     } // namespace details
 
 
@@ -333,22 +346,7 @@ namespace rofi::configuration::serialization {
         res[ "spaceJoints"  ] = json::array();
 
         for ( const auto& m : world.modules() ) {
-            json j;
-            switch ( m.module->type ) {
-                case ModuleType::Universal:
-                    j = details::moduleToJSON( dynamic_cast< const UniversalModule& >( *m.module ), attrCb );
-                    break;
-                case ModuleType::Pad:
-                    j = details::moduleToJSON( dynamic_cast< const Pad& >( *m.module ), attrCb );
-                    break;
-                case ModuleType::Unknown:
-                    j = details::moduleToJSON( dynamic_cast< const UnknownModule& >( *m.module ), attrCb );
-                    break;
-                default:
-                    ROFI_UNREACHABLE( "Unknown type of a module" );
-            }
-
-            res[ "modules" ].push_back( j );
+            res[ "modules" ].push_back( details::moduleByTypeToJSON( *m.module, attrCb ) );
         }
 
         for ( const RoficomJoint& rj : world.roficomConnections() ) {
@@ -415,7 +413,7 @@ namespace rofi::configuration::serialization {
             else if ( jm[ "type" ] == "unknown" )
                 world.insert( details::moduleFromJSON< UnknownModule >( jm, attrCb ) );
             else
-                ROFI_UNREACHABLE( "Unknown type of a module" );
+                throw std::logic_error( "Unknown type of a module" );
         }
 
         // function for translation of components to docs if necessary
@@ -459,7 +457,7 @@ namespace rofi::configuration::serialization {
                 world.setSpaceJointPositions( conn, positions );
                 details::processAttributes( sj, attrCb, conn );
             } else {
-                ROFI_UNREACHABLE( "Unknown joint type" );
+                throw std::logic_error( "Unknown joint type" );
             }
         }
 

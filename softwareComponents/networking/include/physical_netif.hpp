@@ -134,7 +134,6 @@ private:
 
     static err_t linkOutput( struct netif*, struct pbuf* ) {
         ROFI_UNREACHABLE( "Link output should not be directly used" );
-        return ERR_OK;
     }
 
     void onPacket( Connector, uint16_t contentType, PBuf&& packet ) {
@@ -195,8 +194,7 @@ private:
 
     void create_rrp_listener() {
         pcb = raw_new_ip6( IP6_NEXTH_ICMP6 );
-        if ( pcb == nullptr )
-            ROFI_UNREACHABLE( "raw_new_ip6 failed, pcb is null!" );
+        assert( pcb && "raw_new_ip6 failed, pcb is null!" );
         raw_bind_netif( pcb, &netif );
         raw_recv( pcb, onRRP, this );
     }
