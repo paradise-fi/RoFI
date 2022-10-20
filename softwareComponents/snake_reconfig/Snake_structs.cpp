@@ -1,5 +1,7 @@
 #include "Snake_structs.h"
 
+#include <atoms/util.hpp>
+
 /* * * * * *
  * Scores  *
  * * * * * */
@@ -93,10 +95,11 @@ double DistFromConnScore::distFromConn(const Configuration& config, const Edge& 
 
 SpaceGridScore::SpaceGridScore(const Configuration& init)
 : _configuration(&init)
-, _module_count(init.getIDs().size())
+, _module_count(unsigned(init.getIDs().size()))
 , _side_size(4*_module_count+1)
 , _grid_size(_side_size * _side_size * _side_size)
 , _grid(_grid_size, _EMPTY) {
+    assert(fitsIn<unsigned>(init.getIDs().size()));
 }
 
 SpaceGridScore::SpaceGridScore(unsigned module_count)
@@ -223,7 +226,7 @@ int SpaceGridScore::_add_score(int x, int y, int z) {
  * MakeStar  *
  * * * * * * */
 
-MakeStar::MakeStar(const Configuration& init, ID root)
+MakeStar::MakeStar(const Configuration& init, ID /*root*/)
 : mass(init.massCenter())
 , config(init)
 , dists() {

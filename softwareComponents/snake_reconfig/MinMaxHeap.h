@@ -6,6 +6,8 @@
 #include <type_traits>
 #include <vector>
 
+#include <atoms/util.hpp>
+
 template<typename T, typename Comp>
 class MinMaxHeap {
 public:
@@ -190,8 +192,12 @@ public:
         _occupied = std::min(_occupied, _capacity);
     }
 
-    int size() const {
+    int ssize() const {
         return _occupied;
+    }
+
+    size_t size() const {
+        return to_unsigned(_occupied);
     }
 
     int limit() const {
@@ -287,7 +293,7 @@ private:
             }
             return;
         }
-        
+
         int smallest;
         if (_in(l) && _comp(_min_heap[l], _min_heap[i])) {
             smallest = l;
