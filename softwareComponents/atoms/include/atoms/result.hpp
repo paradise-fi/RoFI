@@ -341,6 +341,102 @@ public:
      */
 
     /**
+     * \name Get or throw operations
+     * \{
+     */
+
+    /**
+     * \brief Returns the contained value if it contains a value.
+     * Otherwise, throws the contained error as an exception.
+     *
+     * \throws If the result type contains an error throws exception of type `error_type`.
+     *
+     * \returns The contained value or doesn't return normally.
+     */
+    constexpr value_type & get_or_throw() &
+    {
+        return has_value() ? assume_value() : throw assume_error();
+    }
+    /**
+     * \brief Returns the contained value if it contains a value.
+     * Otherwise, throws the contained error as an exception.
+     *
+     * \throws If the result type contains an error throws exception of type `error_type`.
+     *
+     * \returns The contained value or doesn't return normally.
+     */
+    constexpr const value_type & get_or_throw() const &
+    {
+        return has_value() ? assume_value() : throw assume_error();
+    }
+    /**
+     * \brief Returns the contained value if it contains a value.
+     * Otherwise, throws the contained error as an exception.
+     *
+     * \throws If the result type contains an error throws exception of type `error_type`.
+     *
+     * \returns The contained value or doesn't return normally.
+     */
+    constexpr value_type && get_or_throw() &&
+    {
+        return has_value() ? std::move( assume_value() ) : throw std::move( assume_error() );
+    }
+
+    /**
+     * \brief Returns the contained value if this contains a value.
+     * Otherwise, throws the \p ExceptionT constructed from the error.
+     *
+     * \tparam ExceptionT exception type constructable from `value_type &`
+     *
+     * \throws If the result type contains an error throws exception of type \p ExceptionT.
+     *
+     * \returns The contained value or doesn't return normally.
+     */
+    template < std::constructible_from< error_type & > ExceptionT >
+    constexpr value_type & get_or_throw_as() &
+    {
+        static_assert( std::is_base_of_v< std::exception, ExceptionT > );
+        return has_value() ? assume_value() : throw ExceptionT( assume_error() );
+    }
+    /**
+     * \brief Returns the contained value if this contains a value.
+     * Otherwise, throws the \p ExceptionT constructed from the error.
+     *
+     * \tparam ExceptionT exception type constructable from `value_type &`
+     *
+     * \throws If the result type contains an error throws exception of type \p ExceptionT.
+     *
+     * \returns The contained value or doesn't return normally.
+     */
+    template < std::constructible_from< const error_type & > ExceptionT >
+    constexpr const value_type & get_or_throw_as() const &
+    {
+        static_assert( std::is_base_of_v< std::exception, ExceptionT > );
+        return has_value() ? assume_value() : throw ExceptionT( assume_error() );
+    }
+    /**
+     * \brief Returns the contained value if this contains a value.
+     * Otherwise, throws the \p ExceptionT constructed from the error.
+     *
+     * \tparam ExceptionT exception type constructable from `value_type &`
+     *
+     * \throws If the result type contains an error throws exception of type \p ExceptionT.
+     *
+     * \returns The contained value or doesn't return normally.
+     */
+    template < std::constructible_from< error_type && > ExceptionT >
+    constexpr value_type && get_or_throw_as() &&
+    {
+        static_assert( std::is_base_of_v< std::exception, ExceptionT > );
+        return has_value() ? std::move( assume_value() )
+                           : throw ExceptionT( std::move( assume_error() ) );
+    }
+
+    /**
+     * \}
+     */
+
+    /**
      * \name Monadic operations
      *
      * Inspired by and designed to be compatible with
