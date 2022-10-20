@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atoms/result.hpp>
 #include <atoms/unreachable.hpp>
 #include <configuration/rofibot.hpp>
 #include <configuration/universalModule.hpp>
@@ -22,15 +23,15 @@ namespace rofi::configuration::serialization {
         ROFI_UNREACHABLE( "Unknown component type" );
     }
 
-    inline ComponentType stringToComponentType( const std::string& str ) {
+    inline atoms::Result< ComponentType > stringToComponentType( const std::string& str ) {
         if ( str == "roficom" )
-            return ComponentType::Roficom;
-        else if ( str == "UM body" )
-            return ComponentType::UmBody;
-        else if ( str == "UM shoe" )
-            return ComponentType::UmShoe;
-        else
-            ROFI_UNREACHABLE( "String does not represent a component type" );
+            return atoms::result_value( ComponentType::Roficom );
+        if ( str == "UM body" )
+            return atoms::result_value( ComponentType::UmBody );
+        if ( str == "UM shoe" )
+            return atoms::result_value( ComponentType::UmShoe );
+
+        return atoms::result_error< std::string >( "String does not represent a component type" );
     }
 
     namespace details {
@@ -266,7 +267,8 @@ namespace rofi::configuration::serialization {
 
             int i = 0;
             for ( const auto& c : j[ "components" ] ) {
-                ComponentType t = stringToComponentType( c[ "type" ] );
+                ComponentType t = stringToComponentType( c[ "type" ] )
+                                          .get_or_throw_as< std::logic_error >();
                 // Parent can be nullptr as it will be set in Module's constructor.
                 components.push_back( Component( t, {}, {}, nullptr ) );
                 processAttributes( j[ "components" ][ i ], cb, components.back(), i );
@@ -297,7 +299,7 @@ namespace rofi::configuration::serialization {
                     details::processAttributes( j[ "joints" ][ i ], cb, joints.back(), i );
                     i++;
                 } else {
-                    ROFI_UNREACHABLE( "Unknown module was given an unknown ComponentJoint" );
+                    throw std::logic_error( "Unknown module was given an unknown ComponentJoint" );
                 }
             }
 
