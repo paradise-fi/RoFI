@@ -80,21 +80,7 @@ if(NOT pybind11_POPULATED)
   set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${pybind11_SOURCE_DIR}/contrib")
 endif()
 
-FetchContent_Declare(
-  armadillo
-  GIT_REPOSITORY https://gitlab.com/conradsnicta/armadillo-code.git
-  GIT_TAG        10.8.x
-)
-FetchContent_GetProperties(armadillo)
-if(NOT armadillo_POPULATED)
-  FetchContent_Populate(armadillo)
-  add_subdirectory(${armadillo_SOURCE_DIR} ${armadillo_BINARY_DIR})
-
-  get_target_property(inc_dir armadillo INTERFACE_INCLUDE_DIRECTORIES)
-  set_property(TARGET armadillo PROPERTY INTERFACE_INCLUDE_DIRECTORIES "")
-  target_include_directories(armadillo SYSTEM INTERFACE ${inc_dir})
-endif()
-
+find_package(Armadillo REQUIRED)
 
 FetchContent_Declare(
   carma
@@ -108,7 +94,6 @@ FetchContent_GetProperties(carma)
 if(NOT carma_POPULATED)
   FetchContent_Populate(carma)
 
-  set(ARMADILLO_ROOT_DIR ${Armadillo_SOURCE_DIR})
   add_subdirectory(${carma_SOURCE_DIR} ${carma_BINARY_DIR})
 
   get_target_property(inc_dir carma INTERFACE_INCLUDE_DIRECTORIES)

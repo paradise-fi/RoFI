@@ -5,13 +5,13 @@ project(rofi)
 file(GLOB LEGACY_CONF_SRC legacy_src/*)
 add_library(legacy-configuration STATIC ${LEGACY_CONF_SRC})
 target_include_directories(legacy-configuration PUBLIC legacy_include combined_include)
-target_link_libraries(legacy-configuration PUBLIC armadillo)
+target_link_libraries(legacy-configuration PUBLIC ${ARMADILLO_LIBRARIES} )
 
 
 file(GLOB CONFIGURATION_SRC src/*)
 add_library(configuration STATIC ${CONFIGURATION_SRC})
 target_include_directories(configuration PUBLIC include combined_include/legacy)
-target_link_libraries(configuration PUBLIC armadillo atoms fmt)
+target_link_libraries(configuration PUBLIC ${ARMADILLO_LIBRARIES}  atoms fmt)
 
 add_library(configurationWithJson INTERFACE)
 target_include_directories(configurationWithJson INTERFACE json_include)

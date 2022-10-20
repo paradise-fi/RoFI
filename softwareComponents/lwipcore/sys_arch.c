@@ -717,3 +717,7 @@ sys_arch_unprotect(sys_prot_t pval)
     }
 }
 #endif /* SYS_LIGHTWEIGHT_PROT */
+
+
+// void sio_send( u8_t c, sio_status_t * siostat ) { return; }
+// u32_t sio_tryread(sio_fd_t fd, u8_t *data, u32_t len) { return 0; }
