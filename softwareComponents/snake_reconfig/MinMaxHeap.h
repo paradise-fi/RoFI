@@ -190,8 +190,12 @@ public:
         _occupied = std::min(_occupied, _capacity);
     }
 
-    int size() const {
+    int ssize() const {
         return _occupied;
+    }
+
+    size_t size() const {
+        return size_t(_occupied);
     }
 
     int limit() const {
@@ -287,7 +291,7 @@ private:
             }
             return;
         }
-        
+
         int smallest;
         if (_in(l) && _comp(_min_heap[l], _min_heap[i])) {
             smallest = l;

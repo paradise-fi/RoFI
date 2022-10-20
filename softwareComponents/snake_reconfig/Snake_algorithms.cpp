@@ -36,7 +36,7 @@ std::optional< std::chrono::milliseconds > momentDiff(
 nlohmann::json logProgressJson( unsigned progress,
     std::optional<moment> start, std::optional<moment> aerate,
     std::optional<moment> tts, std::optional<moment> parity,
-    std::optional<moment> docks, std::optional<moment> circle, unsigned pathLen )
+    std::optional<moment> docks, std::optional<moment> circle, size_t pathLen )
 {
     nlohmann::json j = {
         { "progress", progress },
@@ -53,7 +53,7 @@ nlohmann::json logProgressJson( unsigned progress,
 
 void logProgressCSV(std::ostream& debug_output, unsigned progress, std::optional<moment> start, std::optional<moment> aerate,
     std::optional<moment> tts, std::optional<moment> parity, std::optional<moment> docks, std::optional<moment> circle,
-    unsigned pathLen) {
+    size_t pathLen) {
 
     debug_output << progress << ";" << std::chrono::duration_cast<std::chrono::seconds>(*aerate - *start).count();
 
@@ -200,7 +200,7 @@ void appendMapped(std::vector<Configuration>& path1, const std::vector<Configura
     std::unordered_map<ID, std::pair<ID, bool>> mapping = createMapping(path1.back(), path2.back());
 
     path1.reserve(path1.size() + path2.size());
-    for (int i = path2.size() - 1; i > 0; --i) {
+    for (size_t i = path2.size() - 1; i > 0; --i) {
         path1.emplace_back(remappedConfig(path2[i], mapping));
     }
 }
@@ -228,8 +228,8 @@ std::vector<Configuration> reconfigThroughSnake(const Configuration& from, const
 
 std::vector<Configuration> aerateConfig(const Configuration& init) {
     SimpleNextGen simpleGen{};
-    SpaceGridScore gridScore(init.getIDs().size());
-    auto moduleCount = init.getModules().size();
+    SpaceGridScore gridScore(unsigned(init.getIDs().size()));
+    auto moduleCount = unsigned(init.getModules().size());
     unsigned limit = 2 * moduleCount * moduleCount;
 
     return limitedAstar(init, simpleGen, gridScore, limit).first;
@@ -238,7 +238,7 @@ std::vector<Configuration> aerateConfig(const Configuration& init) {
 std::vector<Configuration> aerateFromRoot(const Configuration& init) {
     SmartBisimpleOnlyRotGen smartGen{};
     AwayFromRootScore rootScore{};
-    unsigned limit = 3 * init.getModules().size();
+    unsigned limit = 3 * unsigned(init.getModules().size());
 
     return limitedAstar(init, smartGen, rootScore, limit).first;
 }
@@ -246,7 +246,7 @@ std::vector<Configuration> aerateFromRoot(const Configuration& init) {
 std::vector<Configuration> straightenSnake(const Configuration& init) {
     SmartBisimpleOnlyRotGen smartGen{};
     FurthestPointsScore furthestScore{};
-    unsigned limit = init.getModules().size();
+    auto limit = unsigned(init.getModules().size());
 
     return limitedAstar(init, smartGen, furthestScore, limit).first;
 }
@@ -258,7 +258,6 @@ std::vector<Configuration> straightenSnake(const Configuration& init) {
 ID closestMass(const Configuration& init) {
     Vector mass = init.massCenter();
     ID bestID = 0;
-    ShoeId bestShoe = A;
     double bestDist = std::numeric_limits<double>::max();
     for (const auto& [id, ms] : init.getMatrices()) {
         for (unsigned i = 0; i < 2; ++i) {
@@ -267,7 +266,6 @@ ID closestMass(const Configuration& init) {
             if (currDist < bestDist) {
                 bestDist = currDist;
                 bestID = id;
-                bestShoe = i ? B : A;
             }
         }
     }
@@ -303,7 +301,7 @@ Vector findSubtreeMassCenter(const Configuration& init, ID subroot) {
         mass += center(ms[A]);
         mass += center(ms[B]);
     }
-    mass /= subtree.size()*2;
+    mass /= double(subtree.size()) * 2.0;
     return mass;
 }
 
@@ -318,7 +316,7 @@ std::vector<Configuration> makeEdgeSpace(const Configuration& init, ID subroot1,
 
     SmartBisimpleOnlyRotGen smartGen{};
     EdgeSpaceScore edgeScore(realMass, subtrees);
-    unsigned limit = 2 * init.getModules().size();
+    unsigned limit = 2 * unsigned(init.getModules().size());
 
     return limitedAstar(init, smartGen, edgeScore, limit).first;
 }
@@ -340,7 +338,7 @@ std::pair<std::vector<Configuration>, bool> connectArm(const Configuration& init
 
     BiParalyzedGen parGen(allowed);
     DistFromConnScore connScore(connection);
-    unsigned limit = init.getModules().size();
+    auto limit = unsigned(init.getModules().size());
 
     auto [astarPath, foundGoal] = limitedAstar(spacePath.back(), parGen, connScore, limit);
 
@@ -422,9 +420,8 @@ void computeSubtreeSizes(const Configuration& config, std::unordered_map<ID, uns
     auto moduleCount = config.getMatrices().size();
     const auto& spannSucc = config.getSpanningSucc();
     bag.reserve(moduleCount);
-    unsigned bagIndex = 0;
     bag.emplace_back(config.getFixedId());
-    for (unsigned bagIndex = 0; bagIndex < moduleCount; ++bagIndex) {
+    for (size_t bagIndex = 0; bagIndex < moduleCount; ++bagIndex) {
         auto currId = bag[bagIndex];
         for (const auto& optEdge : spannSucc.at(currId)) {
             if (!optEdge.has_value())
@@ -432,7 +429,7 @@ void computeSubtreeSizes(const Configuration& config, std::unordered_map<ID, uns
             bag.emplace_back(optEdge.value().id2());
         }
     }
-    for (int i = moduleCount - 1; i >= 0; --i) {
+    for (int i = int(moduleCount) - 1; i >= 0; --i) {
         auto currId = bag[i];
         subtreeSizes[currId] = 1;
         for (const auto& optEdge : spannSucc.at(currId)) {
@@ -459,10 +456,8 @@ std::tuple<ID, ShoeId, unsigned> computeActiveRadius(const Configuration& config
     auto currId = id;
     auto currShoe = shoe;
     auto prevId = id;
-    auto prevShoe = shoe;
     while (spannPred.at(currId).has_value()) {
         prevId = currId;
-        prevShoe = currShoe;
         prevSize = subtreeSizes.at(currId);
         std::tie(currId, currShoe) = spannPred.at(currId).value();
         auto newSize = subtreeSizes.at(currId);
@@ -709,7 +704,6 @@ std::vector<std::pair<ID, ShoeId>> colourAndFindLeafs(const Configuration& confi
     const auto& spannSucc = config.getSpanningSucc();
     while (!bag.empty()) {
         auto [currId, currShoe, isWhite] = bag.front();
-        auto otherShoe = currShoe == A ? B : A;
         bag.pop();
         bool isLeaf = true;
         for (const auto& optEdge : spannSucc.at(currId)) {
@@ -741,7 +735,7 @@ bool canConnect(ShoeId shoe1, bool aColour1, ShoeId shoe2, bool aColour2) {
 }
 
 std::pair<Edge, unsigned> getEdgeToStrictDisjoinArm(const Configuration& config, const Edge& added) {
-    unsigned moduleCount = config.getMatrices().size();
+    auto moduleCount = unsigned(config.getMatrices().size());
     ID currId = added.id2();
     ShoeId currShoe = added.side2();
     ID prevId = added.id1();
