@@ -33,7 +33,7 @@ int main( int argc, char* argv[] ) {
         generateSimpleActions( configuration, availableActions, 90 );
         assert( !availableActions.empty() );
 
-        std::uniform_int_distribution< int > selector( 0, availableActions.size() - 1 );
+        std::uniform_int_distribution< size_t > selector( 0, availableActions.size() - 1 );
 
         auto cfg = executeIfValid( configuration, availableActions[ selector( gen ) ] );
         if ( !cfg.has_value() ) {
