@@ -46,7 +46,7 @@ private slots:
 
 private:
     Ui::Rofiapp_MainWindow *ui;
-    float bckgValue;
+    double bckgValue;
     bool fullScreen;
 
     Configuration *current_cfg;
