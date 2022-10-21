@@ -71,7 +71,7 @@ inline std::vector< std::string_view > split( std::string_view line )
 
 float readFloat( std::string_view str )
 {
-    return std::atof( std::string( str ).data() );
+    return float( std::atof( std::string( str ).data() ) );
 }
 
 int readInt( std::string_view str )
