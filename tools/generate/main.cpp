@@ -21,15 +21,13 @@ void printToFile(const Configuration& cfg, const std::string& path)
     file.close();
 }
 
-void printToFile(const ConfigPair& test, unsigned modules, unsigned path, unsigned step, unsigned bound)
+void printToFile(const ConfigPair& test, unsigned modules, unsigned path)
 {
     std::stringstream init;
-    //init << folder << modules << "-" << path << "-" << step << "-" << bound << "-init.in";
     init << folder << modules << "-" << path << "-init.in";
     printToFile(test.first, init.str());
 
     std::stringstream goal;
-    //goal << folder << modules << "-" << path << "-" << step << "-" << bound << "-goal.in";
     goal << folder << modules << "-" << path  << "-goal.in";
     printToFile(test.second, goal.str());
 }
@@ -88,7 +86,7 @@ Configuration sampleTree(std::vector<ID>& ids)
     return cfg;
 }
 
-ConfigPair generateTest(unsigned modules, unsigned path, unsigned step, unsigned bound)
+ConfigPair generateTest(unsigned modules, unsigned path, unsigned step)
 {
     std::default_random_engine e;
     e.seed(std::chrono::system_clock::now().time_since_epoch().count());
@@ -153,8 +151,8 @@ int main()
     {
         for (unsigned path : pathSize)
         {
-            auto test = generateTest(i, path, 90, 1);
-            printToFile(test, i, path, 90, 1);
+            auto test = generateTest(i, path, 90);
+            printToFile(test, i, path);
         }
     }
 }
