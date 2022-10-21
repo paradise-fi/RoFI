@@ -18,8 +18,7 @@ struct Moveable {
     Moveable & operator=( Moveable && ) = default;
 };
 
-enum class RefType
-{
+enum class RefType {
     LValue,
     CLValue,
     RValue,
@@ -60,6 +59,20 @@ struct MyStruct {
     {
         return RefType::CRValue;
     }
+};
+
+template < typename T >
+struct Convertible {
+    Convertible( T value ) : value( value ) {}
+
+    template < typename U >
+    operator U() const
+    {
+        static_assert( std::is_convertible_v< T, U > );
+        return static_cast< U >( value );
+    }
+
+    T value;
 };
 
 
@@ -441,20 +454,20 @@ TEST_CASE( "Match" )
         CHECK( !error11.match( checkValue11CLRef ) );
 
         const auto cvalue11 = Result< int, int >::value( 11 );
-        const auto cvalue14 = Result< unsigned, long >::value( 14 );
-        const auto cerror11 = Result< long, int >::error( 11 );
+        const auto cvalue14 = Result< Convertible< unsigned >, Convertible< long > >::value( 14 );
+        const auto cerror11 = Result< Convertible< long >, int >::error( 11 );
 
         CHECK( cvalue11.match( checkValue11CLRef ) );
         CHECK( !cvalue14.match( checkValue11CLRef ) );
         CHECK( !cerror11.match( checkValue11CLRef ) );
 
         CHECK( Result< int, int >::value( 11 ).match( checkValue11RRef ) );
-        CHECK( !Result< int, long >::value( 14 ).match( checkValue11RRef ) );
-        CHECK( !Result< int, long >::error( 11 ).match( checkValue11RRef ) );
+        CHECK( !Result< int, Convertible< long > >::value( 14 ).match( checkValue11RRef ) );
+        CHECK( !Result< int, Convertible< long > >::error( 11 ).match( checkValue11RRef ) );
 
         CHECK( Result< int, int >::value( 11 ).match( checkValue11CLRef ) );
-        CHECK( !Result< int, long >::value( 14 ).match( checkValue11CLRef ) );
-        CHECK( !Result< int, long >::error( 11 ).match( checkValue11CLRef ) );
+        CHECK( !Result< int, Convertible< long > >::value( 14 ).match( checkValue11CLRef ) );
+        CHECK( !Result< int, Convertible< long > >::error( 11 ).match( checkValue11CLRef ) );
     }
 }
 
