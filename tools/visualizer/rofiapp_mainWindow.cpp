@@ -114,7 +114,7 @@ void Rofiapp_MainWindow::on_loadConf_clicked()
               "Open Configuration File",
               QDir::currentPath(),
               "All files (*.*)");
-    
+
     if( !fileName.isNull() )
     {
         QString lineContents="";

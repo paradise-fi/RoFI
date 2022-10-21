@@ -136,7 +136,8 @@ inline double countSteps(double a, double b, unsigned long step, unsigned long t
     if (totalSteps == 0){
         return a;
     }
-    return a + (((b - a) * step) / totalSteps);
+    // It is safe to assume that number of steps will fit into a double
+    return a + (((b - a) * double(step)) / double(totalSteps));
 }
 
 /**
