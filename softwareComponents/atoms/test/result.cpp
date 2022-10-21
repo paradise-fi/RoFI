@@ -1,3 +1,4 @@
+#include <set>
 #include <stdexcept>
 
 #include <atoms/result.hpp>
@@ -225,30 +226,155 @@ TEST_CASE( "Reference types on methods" )
 
 TEST_CASE( "Method access" )
 {
-    SECTION( "value" )
+    SECTION( "arrow" )
     {
         auto value = Result< MyStruct >::value( {} );
+        const auto cvalue = value;
         CHECK( value->success() );
         CHECK( !value->isConst() );
-        const auto cvalue = value;
         CHECK( cvalue->isConst() );
 
         CHECK( value->refType() == RefType::LValue );
         CHECK( cvalue->refType() == RefType::CLValue );
-
-        // Arrow doesn't work with rvalues
-        CHECK( std::move( value ).assume_value().refType() == RefType::RValue );
+        Result< MyStruct >::value( {} )->refType();
+    }
+    SECTION( "dereference" )
+    {
+        auto value = Result< MyStruct >::value( {} );
+        const auto cvalue = value;
+        CHECK( ( *value ).refType() == RefType::LValue );
+        CHECK( ( *cvalue ).refType() == RefType::CLValue );
         CHECK( ( *std::move( value ) ).refType() == RefType::RValue );
+        CHECK( std::set{ RefType::CRValue, RefType::CLValue }.contains(
+                ( *std::move( cvalue ) ).refType() ) );
         CHECK( ( *Result< MyStruct >::value( {} ) ).refType() == RefType::RValue );
+    }
+}
+
+TEST_CASE( "Assume" )
+{
+    SECTION( "value" )
+    {
+        auto value = Result< MyStruct >::value( {} );
+        const auto cvalue = value;
+        CHECK( value.assume_value().success() );
+        CHECK( !value.assume_value().isConst() );
+        CHECK( cvalue.assume_value().isConst() );
+
+        CHECK( value.assume_value().refType() == RefType::LValue );
+        CHECK( std::move( value ).assume_value().refType() == RefType::RValue );
+        CHECK( cvalue.assume_value().refType() == RefType::CLValue );
+        CHECK( std::set{ RefType::CRValue, RefType::CLValue }.contains(
+                std::move( cvalue ).assume_value().refType() ) );
+        CHECK( Result< MyStruct >::value( {} ).assume_value().refType() == RefType::RValue );
     }
     SECTION( "error" )
     {
         auto error = Result< int, MyStruct >::error( {} );
         const auto cerror = error;
+        CHECK( error.assume_error().success() );
+        CHECK( !error.assume_error().isConst() );
+        CHECK( cerror.assume_error().isConst() );
 
         CHECK( error.assume_error().refType() == RefType::LValue );
         CHECK( cerror.assume_error().refType() == RefType::CLValue );
         CHECK( std::move( error ).assume_error().refType() == RefType::RValue );
+        CHECK( std::set{ RefType::CRValue, RefType::CLValue }.contains(
+                std::move( cerror ).assume_error().refType() ) );
+        CHECK( Result< int, MyStruct >::error( {} ).assume_error().refType() == RefType::RValue );
+    }
+}
+
+TEST_CASE( "get_or_throw" )
+{
+    SECTION( "basic" )
+    {
+        SECTION( "has value" )
+        {
+            auto int_value = Result< int >::value( 10 );
+            CHECK( int_value.get_or_throw() == 10 );
+            CHECK( std::move( int_value ).get_or_throw() == 10 );
+
+            auto moveable_value = Result< Moveable >::value( {} );
+            CHECK_NOTHROW( moveable_value.get_or_throw() );
+
+
+            auto value = Result< MyStruct >::value( {} );
+            const auto cvalue = value;
+            CHECK( value.get_or_throw().success() );
+            CHECK( !value.get_or_throw().isConst() );
+            CHECK( cvalue.get_or_throw().isConst() );
+
+            CHECK( value.get_or_throw().refType() == RefType::LValue );
+            CHECK( std::move( value ).get_or_throw().refType() == RefType::RValue );
+            CHECK( cvalue.get_or_throw().refType() == RefType::CLValue );
+            CHECK( std::set{ RefType::CRValue, RefType::CLValue }.contains(
+                    std::move( cvalue ).get_or_throw().refType() ) );
+            CHECK( Result< MyStruct >::value( {} ).get_or_throw().refType() == RefType::RValue );
+        }
+        SECTION( "has error" )
+        {
+            auto str_error = Result< int, std::string >::error( "error" );
+            const auto cstr_error = str_error;
+            CHECK_THROWS_MATCHES( str_error.get_or_throw(),
+                                  std::string,
+                                  Catch::Matchers::Equals( "error" ) );
+            CHECK_THROWS_MATCHES( cstr_error.get_or_throw(),
+                                  std::string,
+                                  Catch::Matchers::Equals( "error" ) );
+            CHECK_THROWS_MATCHES( std::move( str_error ).get_or_throw(),
+                                  std::string,
+                                  Catch::Matchers::Equals( "error" ) );
+
+            auto moveable_error = Result< int, Moveable >::error( {} );
+            CHECK_THROWS_AS( std::move( moveable_error ).get_or_throw(), Moveable );
+        }
+    }
+    SECTION( "get_or_throw_as" )
+    {
+        SECTION( "has value" )
+        {
+            auto int_value = Result< int >::value( 10 );
+            CHECK( int_value.get_or_throw_as< std::runtime_error >() == 10 );
+            CHECK( std::move( int_value ).get_or_throw_as< std::runtime_error >() == 10 );
+
+            auto moveable_value = Result< Moveable >::value( {} );
+            CHECK_NOTHROW( moveable_value.get_or_throw_as< std::logic_error >() );
+
+
+            auto value = Result< MyStruct >::value( {} );
+            const auto cvalue = value;
+            CHECK( value.get_or_throw_as< std::runtime_error >().success() );
+            CHECK( !value.get_or_throw_as< std::runtime_error >().isConst() );
+            CHECK( cvalue.get_or_throw_as< std::runtime_error >().isConst() );
+
+            CHECK( value.get_or_throw_as< std::runtime_error >().refType() == RefType::LValue );
+            CHECK( std::move( value ).get_or_throw_as< std::runtime_error >().refType()
+                   == RefType::RValue );
+            CHECK( cvalue.get_or_throw_as< std::runtime_error >().refType() == RefType::CLValue );
+            CHECK( std::set{ RefType::CRValue, RefType::CLValue }.contains(
+                    std::move( cvalue ).get_or_throw_as< std::runtime_error >().refType() ) );
+            CHECK( Result< MyStruct >::value( {} ).get_or_throw_as< std::runtime_error >().refType()
+                   == RefType::RValue );
+        }
+        SECTION( "has error" )
+        {
+            auto str_error = Result< int, std::string >::error( "error" );
+            const auto cstr_error = str_error;
+            CHECK_THROWS_AS( str_error.get_or_throw_as< std::runtime_error >(),
+                             std::runtime_error );
+            CHECK_THROWS_AS( cstr_error.get_or_throw_as< std::logic_error >(), std::logic_error );
+            CHECK_THROWS_AS( std::move( str_error ).get_or_throw_as< std::logic_error >(),
+                             std::logic_error );
+
+            struct MoveableException : std::exception {
+                MoveableException( Moveable ) {}
+            };
+
+            auto moveable_error = Result< int, Moveable >::error( {} );
+            CHECK_THROWS_AS( std::move( moveable_error ).get_or_throw_as< MoveableException >(),
+                             MoveableException );
+        }
     }
 }
 
