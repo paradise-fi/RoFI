@@ -232,7 +232,7 @@ inline uint16_t update_crc(uint16_t crc_accum, const uint8_t *data_blk_ptr, int 
 
     for(j = 0; j < data_blk_size; j++)
     {
-        i = ((uint16_t)(crc_accum >> 8) ^ data_blk_ptr[j]) & 0xFF;
+        i = (uint16_t(crc_accum >> 8) ^ data_blk_ptr[j]) & 0xFF;
         crc_accum = uint16_t((crc_accum << 8) ^ crc_table[i]);
     }
 
