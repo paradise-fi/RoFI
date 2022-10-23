@@ -1,10 +1,7 @@
 function(add_cargo_package_tests TARGET_NAME)
-    set(ONE_VALUE_KEYWORDS PACKAGE_NAME MANIFEST_PATH)
+    set(ONE_VALUE_KEYWORDS MANIFEST_PATH)
     cmake_parse_arguments(CART "${}" "${ONE_VALUE_KEYWORDS}" "${}" ${ARGN})
 
-    if (NOT CART_PACKAGE_NAME)
-        message(FATAL_ERROR "PACKAGE_NAME is a required keyword for add_cargo_package_tests")
-    endif()
     if (NOT CART_MANIFEST_PATH)
         message(FATAL_ERROR "MANIFEST_PATH is a required keyword for add_cargo_package_tests")
     endif()
@@ -38,12 +35,10 @@ function(add_cargo_package_tests TARGET_NAME)
                 test
                 --no-run
                 --manifest-path "${CART_MANIFEST_PATH}"
-                --package "${CART_PACKAGE_NAME}"
+                --workspace
                 --target-dir "${CARGO_TARGET_DIR}"
                 --message-format=json
-
-            | _extract_rust_executable.py
-            | xargs -i ${CMAKE_COMMAND} -E copy {} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET_NAME}"
+            | _get_rust_executables.py script "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET_NAME}"
         WORKING_DIRECTORY "${CART_MANIFEST_DIR}"
         USES_TERMINAL
         COMMAND_EXPAND_LISTS
