@@ -22,6 +22,15 @@ using HasCount = std::disjunction<
 } // namespace atoms::detail
 
 
+// Inspired by https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2022/p2593r0.html
+template< typename T >
+struct always_false : std::false_type {};
+
+template< class T >
+inline constexpr bool always_false_v = always_false< T >::value;
+
+
+
 template < std::size_t... >
 struct sum: std::integral_constant< std::size_t, 0 > {};
 
@@ -117,11 +126,36 @@ public:
  * Decide if a value fits given type
 */
 template < typename T >
-constexpr bool fitsIn(auto x) {
+constexpr bool fitsIn( auto x ) {
+    using SourceT = decltype( x );
+
     static_assert(std::is_integral_v< T > );
-    static_assert(std::is_integral_v< decltype(x) > );
+    static_assert(std::is_integral_v< SourceT > );
 
     using Trait = std::numeric_limits< T >;
 
-    return x <= Trait::max() && x >= Trait::min();
+    // We have to differentiate three cases based on signedness of the types as
+    // we cannot safely cast values between them
+    if constexpr        ( std::is_signed_v< T > == std::is_signed_v< SourceT > ) {
+        return x <= Trait::max() && x >= Trait::min();
+    } else if constexpr ( std::is_unsigned_v< T > && std::is_signed_v< SourceT > ) {
+        if ( x < SourceT( 0 ) )
+            return false;
+
+        if constexpr ( sizeof( T ) >= sizeof( SourceT ) )
+            return true;
+        else
+            return x <= SourceT( Trait::max() );
+    }
+    else if constexpr ( std::is_signed_v< T > && std::is_unsigned_v< SourceT > ) {
+
+        if constexpr( sizeof( T ) > sizeof( SourceT ) )
+            return true;
+        else
+            return x <= SourceT( Trait::max() );
+    }
+    else {
+        static_assert( always_false_v< T >, "Unreachable" );
+    }
 }
+
