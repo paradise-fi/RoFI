@@ -80,6 +80,9 @@ struct treeConfig {
     /* Distance from root */
     std::map< ID, int > depths;
 
+    /* Iteration limit for fabrik */
+    size_t max_iterations = 1000;
+
     /* Save and reset inner state on failure */
     treeConfig saveState();
     void resetState( const treeConfig& old );
