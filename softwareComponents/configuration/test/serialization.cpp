@@ -99,7 +99,7 @@ TEST_CASE( "Pad" ) {
     REQUIRE_NOTHROW( cpy.prepare() );
 
     CHECK( world.roficomConnections().size() == cpy.roficomConnections().size() );
-    CHECK( world.modules().size()  == to_unsigned( idCounter ) ); // idCounter is equal to number of modules within the world
+    CHECK( ModuleId(world.modules().size())  == idCounter ); // idCounter is equal to number of modules within the world
     CHECK( world.modules().size()  == cpy.modules().size()  );
     CHECK( world.referencePoints().size() == cpy.referencePoints().size() );
     CHECK( j == toJSON( cpy ) );
@@ -221,7 +221,7 @@ TEST_CASE( "UniversalModule" ) {
     REQUIRE_NOTHROW( cpy.prepare() );
 
     CHECK( world.roficomConnections().size() == cpy.roficomConnections().size() );
-    CHECK( world.modules().size()  == to_unsigned( idCounter ) ); // idCounter is equal to number of modules within the world
+    CHECK( ModuleId(world.modules().size())  == idCounter ); // idCounter is equal to number of modules within the world
     CHECK( world.modules().size()  == cpy.modules().size()  );
     CHECK( world.referencePoints().size() == 1 );
     CHECK( world.referencePoints().size() == cpy.referencePoints().size() );
