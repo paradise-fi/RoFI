@@ -3,6 +3,7 @@ use crate::pos::VoxelPos;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct Voxel {
     pub pos: VoxelPos,
     pub other_body_dir: atoms::Direction,
