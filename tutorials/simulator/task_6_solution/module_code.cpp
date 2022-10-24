@@ -20,7 +20,7 @@ void blockingWait( std::chrono::milliseconds delayMs )
 
 hal::PBuf createPacket( const std::string & message )
 {
-    auto packet = hal::PBuf::allocate( message.size() );
+    auto packet = hal::PBuf::allocate( int( message.size() ) );
 
     auto msgPtr = message.data();
     for ( auto it = packet.chunksBegin(); it != packet.chunksEnd(); ++it ) {

@@ -74,7 +74,7 @@ inline void runSlave( const char * masterAddr )
     {
         std::cout << "pcb is null" << std::endl;
     }
-    int res = udp_bind( pcb, IP6_ADDR_ANY, 7777 );
+    err_t res = udp_bind( pcb, IP6_ADDR_ANY, 7777 );
     std::cout << "UDP binded (" << res << ")" << std::endl;
     udp_recv( pcb, onSlavePacket, nullptr );
 
@@ -87,13 +87,13 @@ inline void runSlave( const char * masterAddr )
     while ( true )
     {
         const char * message = "Hello world!  ";
-        const int len = strlen( message );
+        const auto len = int( strlen( message ) );
         auto buffer = rofi::hal::PBuf::allocate( len );
         for ( int i = 0; i != len + 1; i++ )
         {
             buffer[ i ] = message[ i ];
         }
-        buffer[ len - 1 ] = 'a' + ( counter++ ) % 26;
+        buffer[ len - 1 ] = uint8_t( 'a' + ( counter++ ) % 26 );
         std::cout << "Sending message: " << buffer.asString() << " to "
                   << Ip6Addr( addr.u_addr.ip6 ) << std::endl;
         res = udp_sendto( pcb, buffer.release(), &addr, 7777 );
