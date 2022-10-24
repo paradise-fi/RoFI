@@ -4,6 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 #[serde(try_from = "i32")]
 #[serde(into = "i32")]
+#[serde(deny_unknown_fields)]
 enum ShoeJointPosition {
     #[default]
     Zero,

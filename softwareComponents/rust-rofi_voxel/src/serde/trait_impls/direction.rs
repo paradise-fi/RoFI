@@ -2,6 +2,7 @@ use crate::atoms;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Direction {
     pub axis: atoms::Axis,
     pub is_positive: bool,
