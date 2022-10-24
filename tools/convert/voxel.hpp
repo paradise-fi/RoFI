@@ -219,23 +219,25 @@ struct VoxelWorld {
             throw std::runtime_error( "RofiWorld has to be prepared to convert to voxel json" );
         }
 
-        auto subtractPos = []( Position lhs, const Position & rhs ) -> Position {
+        constexpr auto subPos = []( Position lhs, const Position & rhs ) -> Position {
             for ( size_t i = 0; i < lhs.size(); i++ ) {
                 lhs[ i ] -= rhs[ i ];
             }
             return lhs;
         };
 
-        auto minPos = Position();
-        auto maxPos = Position();
-        auto updateLimitPos = [ &minPos, &maxPos ]( const Position & pos ) {
+        auto beginPos = std::optional< Position >();
+        auto updateLimitPos = [ &beginPos ]( const Position & pos ) {
+            if ( !beginPos ) {
+                beginPos = pos;
+                return;
+            }
             for ( size_t i = 0; i < pos.size(); i++ ) {
-                minPos[ i ] = std::min( minPos[ i ], pos[ i ] );
-                maxPos[ i ] = std::max( maxPos[ i ], pos[ i ] );
+                ( *beginPos )[ i ] = std::min( ( *beginPos )[ i ], pos[ i ] );
             }
         };
 
-        auto modules = std::vector< Voxel >();
+        auto voxelBodies = std::vector< Voxel >();
         for ( const auto & rofiModule : rofiWorld.modules() ) {
             auto universalModule = dynamic_cast< const rofi::configuration::UniversalModule * >(
                     rofiModule.module.get() );
@@ -244,19 +246,18 @@ struct VoxelWorld {
             }
             for ( auto voxel : Voxel::fromRofiModule( *universalModule ) ) {
                 updateLimitPos( voxel.pos );
-                modules.push_back( std::move( voxel ) );
+                voxelBodies.push_back( std::move( voxel ) );
             }
         }
-        for ( auto & voxel : modules ) {
-            voxel.pos = subtractPos( std::move( voxel.pos ), minPos );
+        for ( auto & voxel : voxelBodies ) {
+            assert( beginPos && "Position has to be updated before adding the voxel body" );
+            voxel.pos = subPos( std::move( voxel.pos ), *beginPos );
         }
 
-        return VoxelWorld{ .modules = std::move( modules ),
-                           .sizes = subtractPos( maxPos, minPos ) };
+        return VoxelWorld{ .bodies = std::move( voxelBodies ) };
     }
 
-    std::vector< Voxel > modules = {};
-    Position sizes = {};
+    std::vector< Voxel > bodies = {};
 };
 
 
@@ -309,6 +310,6 @@ NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Direction, axis, is_positive )
 // Make Voxel (de)serializable to nlohmann::json
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Voxel, pos, other_body_dir, is_shoe_rotated, joint_pos )
 // Make VoxelWorld (de)serializable to nlohmann::json
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( VoxelWorld, modules, sizes )
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( VoxelWorld, bodies )
 
 } // namespace rofi::voxel
