@@ -32,8 +32,8 @@ public:
 
         auto old = _buffer[ _pos ];
         _buffer[ _pos ] = value;
-        _sum += ( value - old ) / _buffer.size();
-        _pos = ( _pos + 1 ) % _buffer.size();
+        _sum += ( value - old ) / double( _buffer.size() );
+        _pos = ( _pos + 1 ) % int( _buffer.size() );
     }
 
     double getAverage() const
@@ -134,13 +134,13 @@ class VelocityPIDController : public ForceController
         return _jointData.joint->Position() >= _jointData.getMaxPosition();
     }
 
-    unsigned char _jointId = 0;
-    std::optional< unsigned char > _rofiId;
+    uint8_t _jointId = 0;
+    std::optional< uint8_t > _rofiId;
     static constexpr int numOfJointBitsInId = 2;
     static_assert( numOfJointBitsInId > 0 && numOfJointBitsInId < 8 );
 
 protected:
-    std::optional< unsigned char > getCombinedId() const
+    std::optional< uint8_t > getCombinedId() const
     {
         if ( !_rofiId )
         {
@@ -157,7 +157,7 @@ protected:
 public:
     VelocityPIDController( JointDataBase & jointData,
                            const PIDLoader::ControllerValues & pidValues,
-                           int jointId )
+                           uint8_t jointId )
             : ForceController( jointData )
             , _velController( pidValues.velocity.getPID( _jointData.getLowestEffort(),
                                                          _jointData.getMaxEffort() ) )
@@ -241,9 +241,9 @@ public:
             lorris::Packet packet;
             packet.devId() = *combinedId;
             packet.command() = 0;
-            packet.push< float >( _targetVelocity ); // Target
-            packet.push< float >( velocity );        // Current
-            packet.push< float >( force );           // Output
+            packet.push< float >( float( _targetVelocity ) ); // Target
+            packet.push< float >( float( velocity ) );        // Current
+            packet.push< float >( float( force ) );           // Output
             packet.send();
         }
     }
@@ -327,7 +327,7 @@ public:
     PositionPIDController( JointDataBase & jointData,
                            const PIDLoader::ControllerValues & pidValues,
                            PositionCallback && positionReached,
-                           int jointId )
+                           uint8_t jointId )
             : VelocityPIDController( jointData, pidValues, jointId )
             , _posController( pidValues.position.getPID( _jointData.getLowestVelocity(),
                                                          _jointData.getMaxVelocity() ) )
@@ -389,9 +389,9 @@ public:
             lorris::Packet packet;
             packet.devId() = *combinedId;
             packet.command() = 1;
-            packet.push< float >( _targetPosition ); // Target
-            packet.push< float >( position );        // Current
-            packet.push< float >( velocity );        // Output
+            packet.push< float >( float( _targetPosition ) ); // Target
+            packet.push< float >( float( position ) );        // Current
+            packet.push< float >( float( velocity ) );        // Output
             packet.send();
         }
     }
@@ -478,7 +478,7 @@ public:
     PIDController( JointDataBase & jointData,
                    const PIDLoader::ControllerValues & pidValues,
                    PositionCallback && positionReached,
-                   int jointId )
+                   uint8_t jointId )
             : _jointData( jointData )
             , _controller( jointData,
                            pidValues,

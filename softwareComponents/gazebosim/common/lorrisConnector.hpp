@@ -58,7 +58,7 @@ public:
     template < typename T >
     void push( T t )
     {
-        int offset = _data.size();
+        size_t offset = _data.size();
         setSize( size() + sizeof( T ) );
         assert( _data.size() >= offset + sizeof( T ) );
         reinterpret_cast< T & >( _data.at( offset ) ) = t;
@@ -74,7 +74,7 @@ public:
     }
 
     template < typename T >
-    T get( int offset ) const
+    T get( size_t offset ) const
     {
         return reinterpret_cast< T & >( _data.at( offset ) );
     }
@@ -89,7 +89,7 @@ private:
 class Connector
 {
 public:
-    Connector( int port ) : _port( port )
+    Connector( uint16_t port ) : _port( port )
     {
         using namespace std::string_literals;
         assert( port >= 0 );
@@ -140,7 +140,7 @@ public:
 
 private:
     int _socketFd;
-    int _port;
+    uint16_t _port;
 };
 
 inline void Packet::send() const

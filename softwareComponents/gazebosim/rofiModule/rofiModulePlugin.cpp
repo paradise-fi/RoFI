@@ -120,7 +120,7 @@ void RMP::addConnector( gazebo::physics::ModelPtr connectorModel )
     connectors.emplace_back( std::move( pub ), std::move( sub ) );
 
     rofi::messages::ConnectorCmd emptyCmd;
-    emptyCmd.set_connector( connectors.size() - 1 );
+    emptyCmd.set_connector( int( connectors.size() ) - 1 );
     emptyCmd.set_cmdtype( rofi::messages::ConnectorCmd::NO_CMD );
     connectors.back().first->Publish( std::move( emptyCmd ) );
 }
@@ -154,7 +154,7 @@ void RMP::findAndInitJoints()
 
         _pub->Publish( getJointRofiResp( rofi::messages::JointCmd::SET_POS_WITH_SPEED,
                                          joint,
-                                         desiredPosition ) );
+                                         float( desiredPosition ) ) );
     };
 
     checkChildrenNames( _sdf, { "controller" } );
@@ -173,7 +173,7 @@ void RMP::findAndInitJoints()
                              nullptr,
                              pidValues,
                              std::bind( callback, joints.size(), std::placeholders::_1 ),
-                             static_cast< int >( joints.size() ) );
+                             static_cast< uint8_t >( joints.size() ) );
         assert( joints.back() );
         assert( joints.back().joint->GetMsgType() == msgs::Joint::REVOLUTE );
     }
@@ -258,8 +258,8 @@ void RMP::onRofiCmd( const RMP::RofiCmdPtr & msg )
             resp.set_rofiid( rofiId.value() );
             resp.set_resptype( rofi::messages::RofiCmd::DESCRIPTION );
             auto description = resp.mutable_rofidescription();
-            description->set_jointcount( joints.size() );
-            description->set_connectorcount( connectors.size() );
+            description->set_jointcount( int( joints.size() ) );
+            description->set_connectorcount( int( connectors.size() ) );
             gzmsg << "Returning description (" << resp.rofidescription().jointcount() << " joints, "
                   << resp.rofidescription().connectorcount() << " connectors)\n";
             _pub->Publish( std::move( resp ) );
@@ -322,11 +322,11 @@ void RMP::onJointCmd( const rofi::messages::JointCmd & msg )
             jointResp.set_resptype( JointCmd::GET_CAPABILITIES );
 
             auto & capabilities = *jointResp.mutable_capabilities();
-            capabilities.set_maxposition( jointData.getMaxPosition() );
-            capabilities.set_minposition( jointData.getMinPosition() );
-            capabilities.set_maxspeed( jointData.getMaxVelocity() );
-            capabilities.set_minspeed( jointData.getMinVelocity() );
-            capabilities.set_maxtorque( jointData.getMaxEffort() );
+            capabilities.set_maxposition( float( jointData.getMaxPosition() ) );
+            capabilities.set_minposition( float( jointData.getMinPosition() ) );
+            capabilities.set_maxspeed( float( jointData.getMaxVelocity() ) );
+            capabilities.set_minspeed( float(  jointData.getMinVelocity() ) );
+            capabilities.set_maxtorque( float(  jointData.getMaxEffort() ) );
 
             gzmsg << "Returning capabilities of joint (" << joint << ")\n";
 
@@ -337,7 +337,7 @@ void RMP::onJointCmd( const rofi::messages::JointCmd & msg )
         {
             double velocity = joints.at( joint ).joint->GetVelocity( 0 );
             gzmsg << "Returning current velocity of joint " << joint << ": " << velocity << "\n";
-            _pub->Publish( getJointRofiResp( JointCmd::GET_VELOCITY, joint, velocity ) );
+            _pub->Publish( getJointRofiResp( JointCmd::GET_VELOCITY, joint, float( velocity ) ) );
             break;
         }
         case JointCmd::SET_VELOCITY:
@@ -352,7 +352,7 @@ void RMP::onJointCmd( const rofi::messages::JointCmd & msg )
         {
             double position = joints.at( joint ).joint->Position();
             gzmsg << "Returning current position of joint " << joint << ": " << position << "\n";
-            _pub->Publish( getJointRofiResp( JointCmd::GET_POSITION, joint, position ) );
+            _pub->Publish( getJointRofiResp( JointCmd::GET_POSITION, joint, float( position ) ) );
             break;
         }
         case JointCmd::SET_POS_WITH_SPEED:
@@ -372,7 +372,7 @@ void RMP::onJointCmd( const rofi::messages::JointCmd & msg )
             gzwarn << "Get torque joint command not implemented\n";
 
             gzmsg << "Returning current torque of joint " << joint << ": " << torque << "\n";
-            _pub->Publish( getJointRofiResp( JointCmd::GET_TORQUE, joint, torque ) );
+            _pub->Publish( getJointRofiResp( JointCmd::GET_TORQUE, joint, float( torque ) ) );
             break;
         }
         case JointCmd::SET_TORQUE:
