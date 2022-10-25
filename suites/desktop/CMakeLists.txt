@@ -18,6 +18,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR}/lib)
 
 include(FetchContent)
 include(CollectTargets)
+include(RmakeUtils)
 
 function(add_component componentName)
     add_subdirectory($ENV{ROFI_ROOT}/softwareComponents/${componentName} ${componentName})
