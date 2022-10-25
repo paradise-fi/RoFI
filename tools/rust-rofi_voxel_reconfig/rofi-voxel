@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+if [[ $# -ne 2 ]] ; then
+    >&2 echo "Expected 2 args: <input_file> <goal_file>"
+    exit 1
+fi
+
+if [ -z "$ROFI_BUILD_DIR" ]; then
+    >&2 echo "ROFI_BUILD_DIR is not set. Are you in RoFI environment?";
+    exit 1;
+fi
+
+TMP_DIR="$ROFI_BUILD_DIR/desktop/tmp"
+mkdir -p "$TMP_DIR" || exit 1
+
+INIT_VOXEL_FILE=$(mktemp "$TMP_DIR/tmp.init-voxel_world.json.XXXXXX")
+GOAL_VOXEL_FILE=$(mktemp "$TMP_DIR/tmp-goal-voxel_world.json.XXXXXX")
+trap "rm -f \"$INIT_VOXEL_FILE\" \"$GOAL_VOXEL_FILE\"" EXIT INT QUIT TERM
+
+rofi-convert voxel-json "$1" "$INIT_VOXEL_FILE" \
+    || { >&2 echo -e "\nError while converting init configuration"; exit 1; }
+rofi-convert voxel-json "$2" "$GOAL_VOXEL_FILE" \
+    || { >&2 echo -e "\nError while converting goal configuration"; exit 1; }
+
+rofi-voxel_reconfig "$INIT_VOXEL_FILE" "$GOAL_VOXEL_FILE" \
+    || { >&2 echo -e "\nError while running reconfiguration algorithm"; exit 1; }
