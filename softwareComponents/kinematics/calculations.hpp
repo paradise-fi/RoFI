@@ -126,26 +126,6 @@ inline Matrix inverse( Matrix m ){
     return rotation * translate;
 }
 
-/* Rotational part of a matrix */
-// arma::mat33 get_rotation( const Matrix& matrix ){
-//     arma::mat33 result;
-//     for( int i = 0; i < 3; ++i ){
-//         for( int j = 0; j < 3; ++j ){
-//             result.at( i, j ) = matrix.at( i, j );
-//         }
-//     }
-//     return result;
-// }
-
-// /* Translational part */
-// arma::vec3 get_translation( const Matrix& matrix ){
-//     arma::vec3 result;
-//     for( int i = 0; i < 3; ++i ){
-//         result[ i ] = matrix.at( i, 3 );
-//     }
-//     return result;
-// }
-
 template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
@@ -164,18 +144,6 @@ inline double azimuth( const Vector& point ){
     return equals( point[ 0 ], 0.0 ) && equals( point[ 1 ], 0.0 )
         ? 0.0
         : atan2( point[ 0 ], -point[ 1 ] );
-}
-
-inline double xFromSphere( double radial, double polar, double azimuth ){
-    return radial * sin( polar ) * cos( azimuth );
-}
-
-inline double yFromSphere( double radial, double polar, double azimuth ){
-    return radial * sin( polar ) * sin( azimuth );
-}
-
-inline double zFromSphere( double radial, double polar, double azimuth ){
-    return radial * cos( polar );
 }
 
 inline double roundToPi( double value ){

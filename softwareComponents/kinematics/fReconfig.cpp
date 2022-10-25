@@ -49,10 +49,8 @@ joint otherSide( joint j ){
 }
 
 ID closestMass( const Configuration& init ){
-    //std::cout << IO::toString( init );
     Vector mass = init.massCenter();
     ID bestID = 0;
-    ShoeId bestShoe = A;
     double bestDist = std::numeric_limits<double>::max();
     for (const auto& [id, ms] : init.getMatrices()) {
         for (unsigned i = 0; i < 2; ++i) {
@@ -61,7 +59,6 @@ ID closestMass( const Configuration& init ){
             if (currDist < bestDist) {
                 bestDist = currDist;
                 bestID = id;
-                bestShoe = i ? B : A;
             }
         }
     }
@@ -238,8 +235,8 @@ int treeConfig::connections( ID id, ShoeId side, ID exclude ){
     auto edges = config.getEdges( id, { exclude } );
     int count = 0;
     for( auto edge : edges ){
-        if( edge.id1() == id && edge.side1() == side ||
-            edge.id2() == id && edge.side2() == side )
+        if( ( edge.id1() == id && edge.side1() == side ) ||
+            ( edge.id2() == id && edge.side2() == side ) )
         {
             count++;
         }
@@ -522,7 +519,7 @@ Configuration treeConfig::link( joints& arm1, joints& arm2 ){
 
     Edge toDisconnect = edgeBetween( arm2.front(), getPrevious( arm2.front() ) );
 
-    size_t i = arm2.size() - 1;
+    int i = static_cast< int >( arm2.size() ) - 1;
     while( i != -1 ){
         arm1.push_back( arm2.back() );
         if( arm1.back().id != arm1[ arm1.size() - 2 ].id ){
@@ -558,12 +555,13 @@ bool treeConfig::fabrik( const joints& arm, const Matrix& target ){
     const auto& matrices = config.getMatrices();
     Matrix base = matrices.at( arm.front().id ).at( arm.front().side );
 
+    // TODO: reject immediately if target is out of reach
     size_t iterations = 0;
     while( !eq( config.getMatrices().at( arm.back().id ).at( arm.back().side ), target )
            || ( collisions == collisionStrategy::online && !config.isValid() ) )
     {
         reaching( arm, backArm, target );
-        if( ++iterations == 1000 ){
+        if( ++iterations == max_iterations ){
             return false;
         }
     }
@@ -649,7 +647,7 @@ Matrix treeConfig::nextPosition( const joints& arm, size_t currentJoint,
 {
     int direction = forward ? -1 : 1;
 
-    if( currentJoint >= arm.size() || currentJoint == arm.size() - 1 && direction == 1 ){
+    if( currentJoint >= arm.size() || ( currentJoint == arm.size() - 1 && direction == 1 ) ){
         return currentConfig.getMatrices().at( arm.back().id ).at( arm.back().side );
     }
     if( currentJoint == 0 && direction == -1 ){
@@ -754,7 +752,7 @@ std::pair< double, double > treeConfig::computeAngles( const joints& arm, size_t
             next = project( X, Zero, next );
             auto [ p1, _ ] = simplify( polar( next ),
                                         azimuth( next ) );
-            auto [ ee, a1 ] = simplify( polar( rotate( M_PI, Y )  * otherPos * Zero ),
+            auto [ unused, a1 ] = simplify( polar( rotate( M_PI, Y )  * otherPos * Zero ),
                                         azimuth( rotate( M_PI, Y ) * otherPos * Zero ) );
 
             return { p1, a1 };
@@ -763,7 +761,7 @@ std::pair< double, double > treeConfig::computeAngles( const joints& arm, size_t
     if( edge.dock1() == ZMinus ){
         auto [ p1, a1 ] = simplify( polar( rotate( M_PI, Y ) * otherPos * Zero ),
                                     azimuth( rotate( M_PI, Y ) * otherPos * Zero ) );
-        double a2 = azimuth( rotate( M_PI, Y ) * nextPos * Zero );
+
         // TODO: adjust rotation based on orientation and angle, to make further points reachable
         return { p1, a1 };
     }
