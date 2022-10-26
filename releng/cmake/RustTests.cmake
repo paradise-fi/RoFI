@@ -22,12 +22,16 @@ function(add_cargo_package_tests TARGET_NAME)
         set(CARGO_BUILD_TYPE release)
     endif()
 
+    set(COMPILER_ARTIFACTS_FILE "${CARGO_TARGET_DIR}/${TARGET_NAME}_artifacts.json")
+
     add_custom_target(
         ${TARGET_NAME}
         ALL
 
         COMMAND
             ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+        COMMAND
+            ${CMAKE_COMMAND} -E make_directory "${CARGO_TARGET_DIR}"
         # Build test
         COMMAND
             ${CMAKE_COMMAND} -E env
@@ -37,12 +41,40 @@ function(add_cargo_package_tests TARGET_NAME)
                 --manifest-path "${CART_MANIFEST_PATH}"
                 --workspace
                 --target-dir "${CARGO_TARGET_DIR}"
-                --message-format=json
-            | _get_rust_executables.py script "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET_NAME}"
+                --message-format=json-render-diagnostics
+            > "${COMPILER_ARTIFACTS_FILE}"
+        COMMAND
+            cat "${COMPILER_ARTIFACTS_FILE}" | _get_rust_executables.py script "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET_NAME}"
         WORKING_DIRECTORY "${CART_MANIFEST_DIR}"
         USES_TERMINAL
         COMMAND_EXPAND_LISTS
         VERBATIM
     )
 
+endfunction()
+
+# Workaround for corrosion not supporting CMAKE_RUNTIME_OUTPUT_DIRECTORY/CMAKE_LIBRARY_OUTPUT_DIRECTORY
+# for cmake version < 3.19
+function(rofi_register_corrosion_lib TARGET_NAME)
+    add_custom_command(
+        TARGET
+            "cargo-build_${TARGET_NAME}"
+        POST_BUILD
+        COMMAND
+            ${CMAKE_COMMAND} -E make_directory "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
+        COMMAND
+            ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/lib${TARGET_NAME}.so" "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
+        )
+endfunction()
+
+function(rofi_register_corrosion_bin TARGET_NAME)
+    add_custom_command(
+        TARGET
+            "cargo-build_${TARGET_NAME}"
+        POST_BUILD
+        COMMAND
+            ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+        COMMAND
+            ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_BINARY_DIR}/${TARGET_NAME}" "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+        )
 endfunction()
