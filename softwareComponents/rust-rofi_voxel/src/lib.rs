@@ -6,3 +6,6 @@ pub mod voxel;
 pub mod voxel_world;
 
 pub mod serde;
+
+pub mod module_move;
+pub mod module_repr;
