@@ -6,12 +6,23 @@ use crate::pos::VoxelPos;
 use modular_bitfield::prelude::*;
 
 #[bitfield(bits = 7)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Voxel {
     value: VoxelBody,
     has_value: bool,
 }
 static_assertions::assert_eq_size!(Voxel, u8);
+
+impl std::fmt::Debug for Voxel {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        debug_assert!(
+            self.has_body() || *self == Voxel::EMPTY,
+            "Empty but non-zero voxel ({:?})",
+            self.value()
+        );
+        self.get_body().fmt(f)
+    }
+}
 
 pub type VoxelWithPos = (Voxel, VoxelPos);
 
@@ -34,6 +45,11 @@ impl Voxel {
         self.has_value()
     }
     pub fn get_body(self) -> Option<VoxelBody> {
+        debug_assert!(
+            self.has_body() || self == Voxel::EMPTY,
+            "Empty but non-zero voxel ({:?})",
+            self.value()
+        );
         if self.has_body() {
             Option::Some(self.value())
         } else {

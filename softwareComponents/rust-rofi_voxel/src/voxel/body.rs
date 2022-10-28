@@ -18,13 +18,25 @@ impl ShoeOrientation {
     }
 }
 
-#[derive(BitfieldSpecifier, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    BitfieldSpecifier, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, amplify::Display,
+)]
+#[display(Debug)]
 #[repr(u8)]
 #[bits = 2]
 pub enum JointPosition {
     Zero,
     Plus90,
     Minus90,
+}
+impl std::fmt::Debug for JointPosition {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            JointPosition::Zero => write!(f, "0"),
+            JointPosition::Plus90 => write!(f, "+90"),
+            JointPosition::Minus90 => write!(f, "-90"),
+        }
+    }
 }
 
 impl JointPosition {

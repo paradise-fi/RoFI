@@ -3,14 +3,22 @@ use crate::pos::{IndexType, VoxelPos};
 use crate::voxel::body::get_neighbour_pos;
 use crate::voxel::{Voxel, VoxelBody, VoxelBodyWithPos, VoxelWithPos};
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct VoxelWorld(atoms::Vec3D<Voxel>);
-
-#[derive(Debug, Clone, Copy, thiserror::Error)]
+#[derive(Debug, Clone, amplify::Error)]
 pub enum InvalidVoxelWorldError {
-    #[error("missing other body at {:?}", { let Self::MissingOtherBody((_, pos)) = self; pos })]
     MissingOtherBody(VoxelBodyWithPos),
 }
+impl std::fmt::Display for InvalidVoxelWorldError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            InvalidVoxelWorldError::MissingOtherBody((_, pos)) => {
+                write!(f, "Missing other body at {pos:?}")
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct VoxelWorld(atoms::Vec3D<Voxel>);
 
 impl VoxelWorld {
     pub fn new(sizes: VoxelPos) -> Self {
@@ -116,5 +124,13 @@ impl VoxelWorld {
         }
 
         Self(new_world)
+    }
+
+    pub fn dump_bodies(&self) {
+        println!("VoxelWorld {{ bodies=[");
+        for (body, pos) in self.all_bodies() {
+            println!("    {:?}: {:?},", pos, body);
+        }
+        println!("] }}");
     }
 }

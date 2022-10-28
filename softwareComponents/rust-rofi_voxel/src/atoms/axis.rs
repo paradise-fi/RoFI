@@ -1,7 +1,21 @@
 use enum_iterator::Sequence;
 use modular_bitfield::prelude::*;
+use static_assertions::const_assert_eq;
 
-#[derive(BitfieldSpecifier, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Sequence)]
+#[derive(
+    BitfieldSpecifier,
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    Sequence,
+    amplify::Display,
+)]
+#[display(Debug)]
 #[repr(u8)]
 #[bits = 2]
 pub enum Axis {
@@ -9,6 +23,7 @@ pub enum Axis {
     Y,
     Z,
 }
+const_assert_eq!(Axis::CARDINALITY, 3);
 
 impl Axis {
     pub fn as_index(self) -> u8 {

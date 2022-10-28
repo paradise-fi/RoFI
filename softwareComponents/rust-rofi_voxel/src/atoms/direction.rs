@@ -2,10 +2,19 @@ use super::Axis;
 use modular_bitfield::prelude::*;
 
 #[bitfield(bits = 3)]
-#[derive(BitfieldSpecifier, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    BitfieldSpecifier, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, amplify::Display,
+)]
+#[display(Debug)]
 pub struct Direction {
     pub axis: Axis,
     pub is_positive: bool,
+}
+impl std::fmt::Debug for Direction {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let sign = if self.is_positive() { '+' } else { '-' };
+        write!(f, "{}{}", self.axis(), sign)
+    }
 }
 
 impl Direction {

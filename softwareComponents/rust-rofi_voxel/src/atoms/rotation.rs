@@ -1,13 +1,27 @@
 use super::{Axis, Direction};
 use enum_iterator::Sequence;
 use modular_bitfield::prelude::*;
+use static_assertions::const_assert_eq;
 
-#[derive(BitfieldSpecifier, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Sequence)]
+#[derive(
+    BitfieldSpecifier, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Sequence, amplify::Display,
+)]
+#[display(Debug)]
 #[repr(u8)]
 #[bits = 1]
 pub enum RotationAngle {
     Plus90,
     Minus90,
+}
+const_assert_eq!(RotationAngle::CARDINALITY, 2);
+
+impl std::fmt::Debug for RotationAngle {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            RotationAngle::Plus90 => write!(f, "+90"),
+            RotationAngle::Minus90 => write!(f, "-90"),
+        }
+    }
 }
 
 impl RotationAngle {
