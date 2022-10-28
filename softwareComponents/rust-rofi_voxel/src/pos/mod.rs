@@ -1,3 +1,7 @@
+mod relative;
+
+pub use relative::{RelativeIndexType, RelativeVoxelPos};
+
 pub type IndexType = u8;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

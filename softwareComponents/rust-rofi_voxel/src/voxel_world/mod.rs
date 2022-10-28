@@ -1,4 +1,11 @@
+mod centered;
+mod rotated;
+mod subworld;
 mod world_rotation;
+
+pub use centered::CenteredVoxelWorld;
+pub use rotated::{rotate_body, rotate_voxel, RotatedVoxelWorld};
+pub use subworld::VoxelSubworld;
 
 use crate::atoms;
 use crate::pos::{compute_minimal_pos_hull, IndexType, VoxelPos};
