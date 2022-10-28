@@ -26,7 +26,7 @@ pub enum Axis {
 const_assert_eq!(Axis::CARDINALITY, 3);
 
 impl Axis {
-    pub fn as_index(self) -> u8 {
+    pub fn as_index(self) -> usize {
         match self {
             Axis::X => 0,
             Axis::Y => 1,
