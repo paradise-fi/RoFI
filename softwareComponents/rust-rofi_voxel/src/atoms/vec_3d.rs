@@ -1,9 +1,18 @@
 type Sizes = [usize; 3];
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct Vec3D<T> {
     data: Vec<T>,
     sizes: Sizes,
+}
+
+impl<T: std::fmt::Debug> std::fmt::Debug for Vec3D<T> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.get_data()
+            .map(Iterator::collect)
+            .collect::<Vec<Vec<_>>>()
+            .fmt(f)
+    }
 }
 
 impl<T> Vec3D<T> {
@@ -19,7 +28,10 @@ impl<T> Vec3D<T> {
     where
         T: Default,
     {
-        assert!(sizes.iter().all(|&size| size > 0));
+        assert!(
+            sizes.iter().all(|&size| size > 0),
+            "size of new Vec3D is zero (sizes={sizes:?})"
+        );
         let mut data = Vec::new();
         data.resize_with(sizes.iter().product(), Default::default);
         Self { data, sizes }
