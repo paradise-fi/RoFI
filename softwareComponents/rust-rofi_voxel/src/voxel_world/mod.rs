@@ -1,17 +1,37 @@
 use crate::atoms;
-use crate::pos::{IndexType, VoxelPos};
+use crate::pos::{compute_minimal_pos_hull, IndexType, VoxelPos};
 use crate::voxel::body::get_neighbour_pos;
 use crate::voxel::{Voxel, VoxelBody, VoxelBodyWithPos, VoxelWithPos};
 
 #[derive(Debug, Clone, amplify::Error)]
 pub enum InvalidVoxelWorldError {
     MissingOtherBody(VoxelBodyWithPos),
+    NotMinimalSize {
+        current: VoxelPos,
+        minimal: [std::ops::Range<IndexType>; 3],
+    },
+    VoxelOutOfBounds {
+        pos: VoxelPos,
+        sizes: VoxelPos,
+    },
 }
 impl std::fmt::Display for InvalidVoxelWorldError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             InvalidVoxelWorldError::MissingOtherBody((_, pos)) => {
                 write!(f, "Missing other body at {pos:?}")
+            }
+            InvalidVoxelWorldError::NotMinimalSize { current, minimal } => {
+                write!(
+                    f,
+                    "Not minimal size (current: {current:?}, minimal: {minimal:?})"
+                )
+            }
+            InvalidVoxelWorldError::VoxelOutOfBounds { pos, sizes } => {
+                write!(
+                    f,
+                    "Voxel is out of bounds (voxel pos: {pos:?}, sizes: {sizes:?})"
+                )
             }
         }
     }
@@ -21,24 +41,58 @@ impl std::fmt::Display for InvalidVoxelWorldError {
 pub struct VoxelWorld(atoms::Vec3D<Voxel>);
 
 impl VoxelWorld {
-    pub fn new(sizes: VoxelPos) -> Self {
-        let VoxelPos(sizes) = sizes;
-        Self(atoms::Vec3D::new(sizes.map(Into::into)))
+    fn from_sizes_and_bodies_unchecked<IBodies: IntoIterator<Item = VoxelBodyWithPos>>(
+        sizes: VoxelPos,
+        bodies: IBodies,
+    ) -> Result<Self, InvalidVoxelWorldError> {
+        let mut world = Self(atoms::Vec3D::new(sizes.0.map(Into::into)));
+
+        for (body, pos) in bodies {
+            let voxel_mut = world
+                .get_voxel_mut(pos)
+                .ok_or(InvalidVoxelWorldError::VoxelOutOfBounds { pos, sizes })?;
+            *voxel_mut = crate::voxel::Voxel::new_with_body(body);
+        }
+
+        Ok(world)
     }
 
-    pub fn from_vec3d(
-        vec: atoms::Vec3D<Voxel>,
-    ) -> Result<Self, (atoms::Vec3D<Voxel>, InvalidVoxelWorldError)> {
-        let world = Self(vec);
-        match world.check_voxel_world() {
-            Ok(()) => Ok(world),
-            Err(err) => Err((world.0, err)),
-        }
+    pub fn from_sizes_and_bodies<IBodies: IntoIterator<Item = VoxelBodyWithPos>>(
+        sizes: VoxelPos,
+        bodies: IBodies,
+    ) -> Result<Self, InvalidVoxelWorldError> {
+        let world = Self::from_sizes_and_bodies_unchecked(sizes, bodies)?;
+        world.check_voxel_world()?;
+        Ok(world)
+    }
+
+    pub fn from_bodies<IBodies: IntoIterator<Item = VoxelBodyWithPos> + Clone>(
+        bodies: IBodies,
+    ) -> Result<Self, InvalidVoxelWorldError> {
+        let size_ranges = Self::compute_minimal_size_ranges(bodies.clone());
+
+        let begin = size_ranges.clone().map(|size_range| size_range.start);
+        let sizes = size_ranges.map(|size_range| size_range.end - size_range.start);
+
+        Self::from_sizes_and_bodies(
+            VoxelPos(sizes),
+            bodies.into_iter().map(|(body, VoxelPos(pos))| {
+                let pos = VoxelPos(pos.zip(begin).map(|(pos_i, begin_i)| pos_i - begin_i));
+                (body, pos)
+            }),
+        )
     }
 
     pub fn check_voxel_world(&self) -> Result<(), InvalidVoxelWorldError> {
         for size in self.0.sizes() {
-            assert!(size > 0 && size - 1 <= IndexType::MAX.into());
+            assert!(size > 0 && size <= IndexType::MAX.into());
+        }
+
+        if !self.is_minimal_size() {
+            return Err(InvalidVoxelWorldError::NotMinimalSize {
+                current: self.sizes(),
+                minimal: Self::compute_minimal_size_ranges(self.all_bodies()),
+            });
         }
 
         for body_with_pos in self.all_bodies() {
@@ -100,30 +154,15 @@ impl VoxelWorld {
         self.get_voxel(position)?.get_body()
     }
 
-    // Can return a world that is not valid
-    pub fn filtered<P>(&self, predicate: P) -> Self
-    where
-        P: Fn(VoxelBodyWithPos) -> bool,
-    {
-        let predicate = &predicate;
-        let VoxelWorld(world) = self;
+    pub fn compute_minimal_size_ranges<IBodies: IntoIterator<Item = VoxelBodyWithPos>>(
+        bodies: IBodies,
+    ) -> [std::ops::Range<IndexType>; 3] {
+        compute_minimal_pos_hull(bodies.into_iter().map(|(_, VoxelPos(pos))| pos))
+            .expect("No modules in VoxelWorld")
+    }
 
-        let mut new_world = world.clone();
-        let [x_size, y_size, z_size] = world.sizes();
-        for x in 0..x_size {
-            for y in 0..y_size {
-                for z in 0..z_size {
-                    let indices = [x, y, z];
-                    *new_world.get_mut(indices).unwrap() =
-                        Voxel::from(world.get(indices).unwrap().get_body().filter(|&body| {
-                            let voxel_pos = VoxelPos(indices.map(|i| u8::try_from(i).unwrap()));
-                            predicate((body, voxel_pos))
-                        }));
-                }
-            }
-        }
-
-        Self(new_world)
+    pub fn is_minimal_size(&self) -> bool {
+        Self::compute_minimal_size_ranges(self.all_bodies()) == self.sizes().0.map(|size| 0..size)
     }
 
     pub fn dump_bodies(&self) {
