@@ -26,7 +26,7 @@ impl Direction {
     where
         T: num::One + num::CheckedAdd + num::CheckedSub,
     {
-        let axis_pos = &mut position[usize::from(self.axis().as_index())];
+        let axis_pos = &mut position[self.axis().as_index()];
         if self.is_positive() {
             *axis_pos = axis_pos
                 .checked_add(&T::one())

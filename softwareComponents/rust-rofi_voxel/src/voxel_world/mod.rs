@@ -1,7 +1,11 @@
+mod world_rotation;
+
 use crate::atoms;
 use crate::pos::{compute_minimal_pos_hull, IndexType, VoxelPos};
 use crate::voxel::body::get_neighbour_pos;
 use crate::voxel::{Voxel, VoxelBody, VoxelBodyWithPos, VoxelWithPos};
+use std::assert_matches::{assert_matches, debug_assert_matches};
+use world_rotation::WorldRotation;
 
 #[derive(Debug, Clone, amplify::Error)]
 pub enum InvalidVoxelWorldError {
@@ -163,6 +167,42 @@ impl VoxelWorld {
 
     pub fn is_minimal_size(&self) -> bool {
         Self::compute_minimal_size_ranges(self.all_bodies()) == self.sizes().0.map(|size| 0..size)
+    }
+
+    fn are_sizes_normalized(sizes: VoxelPos) -> bool {
+        let VoxelPos([x_size, y_size, z_size]) = sizes;
+        x_size >= y_size && y_size >= z_size
+    }
+
+    pub fn is_normalized(&self) -> bool {
+        Self::are_sizes_normalized(self.sizes())
+    }
+
+    pub fn as_one_of_norm_eq_world(self) -> Self {
+        if self.is_normalized() {
+            self
+        } else {
+            self.normalized_eq_worlds()
+                .next()
+                .expect("There has to be a normalized version of world")
+        }
+    }
+
+    // For sizes in normalized worlds it holds that size.x >= size.y >= size.z
+    pub fn normalized_eq_worlds(&self) -> impl Iterator<Item = Self> + '_ {
+        assert_matches!(Self::check_voxel_world(self), Ok(()));
+        enum_iterator::all::<WorldRotation>().filter_map(move |world_rot| {
+            let transformed_sizes = world_rot.rotate_sizes(self.sizes());
+            if Self::are_sizes_normalized(transformed_sizes) {
+                let transformed_world = world_rot.rotate_world(self);
+                debug_assert_eq!(transformed_world.sizes(), transformed_sizes);
+                debug_assert_matches!(Self::check_voxel_world(&transformed_world), Ok(()));
+                debug_assert!(transformed_world.is_normalized());
+                Some(transformed_world)
+            } else {
+                None
+            }
+        })
     }
 
     pub fn dump_bodies(&self) {
