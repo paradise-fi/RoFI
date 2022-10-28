@@ -7,5 +7,6 @@ pub mod voxel_world;
 
 pub mod serde;
 
+pub mod connectivity;
 pub mod module_move;
 pub mod module_repr;
