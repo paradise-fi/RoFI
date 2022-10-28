@@ -1,4 +1,4 @@
-#![feature(array_zip, assert_matches)]
+#![feature(array_methods, array_zip, assert_matches)]
 
 pub mod atoms;
 pub mod pos;

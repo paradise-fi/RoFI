@@ -33,7 +33,7 @@ impl Default for Voxel {
 }
 
 impl Voxel {
-    const EMPTY: Self = Self::new();
+    pub const EMPTY: Self = Self::new();
 
     pub fn new_with(body_opt: Option<VoxelBody>) -> Self {
         body_opt.map_or(Self::default(), Self::new_with_body)

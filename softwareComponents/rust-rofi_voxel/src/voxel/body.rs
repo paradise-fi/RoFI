@@ -97,55 +97,6 @@ impl VoxelBody {
             .with_joint_pos(joint_pos)
     }
 
-    pub fn rotated(self, rotation: atoms::Rotation) -> Self {
-        if self.other_body_dir().axis() == rotation.axis() {
-            match (self.is_shoe_rotated(), rotation.angle()) {
-                (true, atoms::RotationAngle::Plus90) | (false, atoms::RotationAngle::Minus90) => {
-                    self.with_is_shoe_rotated(!self.is_shoe_rotated())
-                }
-                (true, atoms::RotationAngle::Minus90) | (false, atoms::RotationAngle::Plus90) => {
-                    self.with_is_shoe_rotated(!self.is_shoe_rotated())
-                        .with_joint_pos(self.joint_pos().opposite())
-                }
-            }
-        } else if self.other_body_dir().axis() == rotation.axis().next_axis() {
-            let new_other_body_dir = atoms::Direction::new_with(
-                rotation.axis().prev_axis(),
-                match rotation.angle() {
-                    atoms::RotationAngle::Plus90 => self.other_body_dir().is_positive(),
-                    atoms::RotationAngle::Minus90 => !self.other_body_dir().is_positive(),
-                },
-            );
-            let new_joint_pos = if self.is_shoe_rotated() {
-                self.joint_pos()
-            } else {
-                match rotation.angle() {
-                    atoms::RotationAngle::Plus90 => self.joint_pos().opposite(),
-                    atoms::RotationAngle::Minus90 => self.joint_pos(),
-                }
-            };
-
-            Self::new_with(new_other_body_dir, !self.is_shoe_rotated(), new_joint_pos)
-        } else {
-            debug_assert_eq!(self.other_body_dir().axis(), rotation.axis().prev_axis());
-
-            let new_other_body_dir = atoms::Direction::new_with(
-                rotation.axis().next_axis(),
-                self.other_body_dir().is_positive() != rotation.angle().is_positive(),
-            );
-            let new_joint_pos = if !self.is_shoe_rotated() {
-                self.joint_pos()
-            } else {
-                match rotation.angle() {
-                    atoms::RotationAngle::Plus90 => self.joint_pos(),
-                    atoms::RotationAngle::Minus90 => self.joint_pos().opposite(),
-                }
-            };
-
-            Self::new_with(new_other_body_dir, !self.is_shoe_rotated(), new_joint_pos)
-        }
-    }
-
     pub fn x_conns_axis(self) -> atoms::Axis {
         let other_body_axis = self.other_body_dir().axis();
         if self.is_shoe_rotated() {
