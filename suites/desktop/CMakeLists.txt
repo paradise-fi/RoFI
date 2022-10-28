@@ -253,6 +253,10 @@ if (${BUILD_GAZEBO})
   endif()
 endif()
 
+if (${BUILD_RUST})
+  add_tool(rust-rofi_voxel_reconfig)
+endif()
+
 
 if (${BUILD_GAZEBO})
   add_subdirectory($ENV{ROFI_ROOT}/data/gazebo/worlds data/gazebo/worlds)
