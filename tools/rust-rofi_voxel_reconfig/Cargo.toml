@@ -1,0 +1,11 @@
+[package]
+name = "rofi_voxel_reconfig"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rofi_voxel = { path = "../../softwareComponents/rust-rofi_voxel" }
+
+clap = { version = "4.0", features = ["derive"] }
+failure = "0.1.8"
+serde_json = "1.0"
