@@ -25,11 +25,19 @@ impl<T> Vec3D<T> {
         Self { data, sizes }
     }
 
-    fn inner_index(&self, indices: Sizes) -> usize {
-        self.sizes
+    fn inner_index(&self, indices: Sizes) -> Option<usize> {
+        if indices
+            .zip(self.sizes)
             .iter()
-            .zip(indices.iter())
-            .fold(0, |value, (&size, &idx)| value * size + idx)
+            .any(|(idx, size)| idx >= size)
+        {
+            return None;
+        }
+        let inner_index = indices
+            .zip(self.sizes)
+            .into_iter()
+            .fold(0, |value, (idx, size)| value * size + idx);
+        Some(inner_index)
     }
 
     pub fn sizes(&self) -> Sizes {
@@ -50,10 +58,10 @@ impl<T> Vec3D<T> {
     }
 
     pub fn get(&self, indices: Sizes) -> Option<&T> {
-        self.data.get(self.inner_index(indices))
+        self.data.get(self.inner_index(indices)?)
     }
     pub fn get_mut(&mut self, indices: Sizes) -> Option<&mut T> {
-        let index = self.inner_index(indices);
+        let index = self.inner_index(indices)?;
         self.data.get_mut(index)
     }
 }
