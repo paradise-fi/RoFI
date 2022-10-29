@@ -80,14 +80,12 @@ impl VoxelWorld {
     }
 
     pub fn get_voxel(&self, position: VoxelPos) -> Option<Voxel> {
-        let VoxelPos([x, y, z]) = position;
-        let indices = [x.into(), y.into(), z.into()];
-        self.0.get(indices).copied()
+        let VoxelPos(indices) = position;
+        self.0.get(indices.map(Into::into)).copied()
     }
     pub fn get_voxel_mut(&mut self, position: VoxelPos) -> Option<&mut Voxel> {
-        let VoxelPos([x, y, z]) = position;
-        let indices = [x.into(), y.into(), z.into()];
-        self.0.get_mut(indices)
+        let VoxelPos(indices) = position;
+        self.0.get_mut(indices.map(Into::into))
     }
 
     pub fn get_body(&self, position: VoxelPos) -> Option<VoxelBody> {
