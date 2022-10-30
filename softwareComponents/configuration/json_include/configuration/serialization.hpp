@@ -126,7 +126,7 @@ namespace rofi::configuration::serialization {
 
     inline void onUMTranslateDocs( nlohmann::json& j, ModuleType t, int component ) {
         if ( t == ModuleType::Universal && component < 6 )
-            j = std::move( UniversalModule::translateComponent( component ) );
+            j = std::string( UniversalModule::translateComponent( component ) );
         else
             j = component;
     }

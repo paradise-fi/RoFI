@@ -471,7 +471,7 @@ void SimplesimClient::initInfoTree( const rofi::configuration::RofiWorld & rofiw
         }
         if ( auto * um = dynamic_cast< UniversalModule * >( moduleInfo.module.get() ) ) {
             for ( int j = 0; j < 6; ++j ) {
-                std::string connector = um->translateComponent( j );
+                std::string connector = std::string( um->translateComponent( j ) );
                 _ui->treeWidget->topLevelItem( i )
                         ->child( 0 )
                         ->child( j )

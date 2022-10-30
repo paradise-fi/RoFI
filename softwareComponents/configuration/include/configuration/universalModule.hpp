@@ -2,6 +2,7 @@
 
 #include <array>
 #include <iostream>
+#include <string_view>
 #include <configuration/rofiworld.hpp>
 
 namespace rofi::configuration {
@@ -66,12 +67,12 @@ public:
         return components()[ UmBodyB ];
     }
 
-    const auto& getConnector( const std::string& cStr ) const {
+    const auto& getConnector( std::string_view cStr ) const {
         return components()[ translateComponent( cStr ) ];
     }
 
-    static int translateComponent( const std::string& cStr );
-    static std::string translateComponent( int c );
+    static int translateComponent( std::string_view cStr );
+    static std::string_view translateComponent( int c );
 };
 
 
