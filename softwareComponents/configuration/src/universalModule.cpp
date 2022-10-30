@@ -147,7 +147,7 @@ RofiWorld readOldConfigurationFormat( std::istream& s ) {
     return world;
 }
 
-    int UniversalModule::translateComponent( const std::string& cStr ) {
+    int UniversalModule::translateComponent( std::string_view cStr ) {
         if ( cStr == "A-X" ) { return 0; }
         if ( cStr == "A+X" ) { return 1; }
         if ( cStr == "A-Z" ) { return 2; }
@@ -158,7 +158,7 @@ RofiWorld readOldConfigurationFormat( std::istream& s ) {
         throw std::logic_error( "translateComponent got invalid input" );
     }
 
-    std::string UniversalModule::translateComponent( int c ) {
+    std::string_view UniversalModule::translateComponent( int c ) {
         switch ( c ) {
             case 0:
                 return "A-X";
