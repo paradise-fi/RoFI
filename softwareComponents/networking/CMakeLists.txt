@@ -1,8 +1,12 @@
 cmake_minimum_required(VERSION 3.6)
 project(rofidriver)
 
-file(GLOB_RECURSE SRC src/*.cpp)
+file(GLOB SRC src/*.cpp)
 
-add_library(networking INTERFACE)
-target_link_libraries(networking INTERFACE atoms)
-target_include_directories(networking INTERFACE include)
+add_library(networking STATIC ${SRC})
+target_link_libraries(networking PUBLIC atoms lwip++ rofi::hal)
+target_include_directories(networking PUBLIC include)
+
+file(GLOB TEST_SRC test/*.cpp)
+add_executable(test-networking ${TEST_SRC})
+target_link_libraries(test-networking PRIVATE Catch2WithMain networking)
