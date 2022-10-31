@@ -4,11 +4,17 @@
 #include <stdexcept>
 #include <chrono>
 #include <cstring>
+
+// We do not support tracing
+#define traceISR_EXIT_TO_SCHEDULER()
+
 #include <freertos/queue.h>
 #include <freertos/semphr.h>
 #include <freertos/timers.h>
 #include <typeinfo>
 #include <utility>
+
+#include <esp32/rom/ets_sys.h>
 
 namespace rtos {
 

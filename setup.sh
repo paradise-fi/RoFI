@@ -84,18 +84,27 @@ setGazeboVariables() {
 }
 
 setupIdf() {
+    IDF_REQUIRED_VERSION=v5.0-beta1
+
     # We allow the user to set a global path to build dependencies that are
     # fetched autonomously, e.g., in the script ~/rofi.pre.env. If there is no
     # such path, we put the build tools into the current RoFI worktree.
+    #
+    # We also fetch the parameters when the global version doesn't match the
+    # required version
+    INSTALLED_VERSION=$(cd ${ROFI_TOOLS_PATH}/esp-idf; git describe 2>/dev/null)
     if [ ! $ROFI_TOOLS_PATH ]; then
         export ROFI_TOOLS_PATH=$ROFI_ROOT/build.deps
+    elif [ "${INSTALLED_VERSION}" != "${IDF_REQUIRED_VERSION}" ]; then
+        export ROFI_TOOLS_PATH=$ROFI_ROOT/build.deps
     fi
+
     mkdir -p $ROFI_TOOLS_PATH
     export IDF_PATH=$ROFI_TOOLS_PATH/esp-idf
     export IDF_TOOLS_PATH=$ROFI_TOOLS_PATH/esp-tools
     export PYTHONPATH="${IDF_PATH}/components/partition_table:$PYTHONPATH"
     if [ ! -d $IDF_PATH ]; then
-        git clone --depth 1 --branch v4.3.2 --recursive \
+        git clone --depth 1 --branch ${IDF_REQUIRED_VERSION} --recursive \
             https://github.com/espressif/esp-idf.git $IDF_PATH
         $IDF_PATH/install.sh
         IDF_POST_INSTALL=1

@@ -10,6 +10,8 @@ include(ColoredOutput)
 
 project(rofi)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fconcepts")
+
 # Specify common dependencies
 FetchContent_Declare(
   magic_enum
@@ -51,8 +53,9 @@ function(add_application path)
 endfunction()
 
 idf_build_process(esp32
-    COMPONENTS idf::esp32 idf::freertos idf::esptool_py idf::esp_http_client
-               idf::lwip idf::console
+    COMPONENTS idf::freertos idf::esptool_py idf::esp_http_client idf::esp_wifi
+               idf::lwip idf::console idf::nvs_flash idf::esp_hw_support idf::esp_rom
+               idf::esp_timer
     SDKCONFIG ${CMAKE_CURRENT_LIST_DIR}/sdkconfig
     BUILD_DIR ${CMAKE_BINARY_DIR})
 
