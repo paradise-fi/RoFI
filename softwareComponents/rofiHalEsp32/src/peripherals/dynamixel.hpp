@@ -84,7 +84,7 @@ public:
             .stop_bits = UART_STOP_BITS_1,
             .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
             .rx_flow_ctrl_thresh = 0,
-            .use_ref_tick = false
+            .source_clk = UART_SCLK_DEFAULT
         };
         if ( uart_param_config( _uart, &uart_config ) != ESP_OK )
             throw ServoError( "Cannot initialize bus" );

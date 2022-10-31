@@ -10,6 +10,8 @@
 #include <cmath>
 #include <type_traits>
 
+#include <esp_timer.h>
+
 #include <freeRTOS.hpp>
 
 #include <driver/spi_master.h>

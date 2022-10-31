@@ -7,7 +7,9 @@
 import importlib.util
 import subprocess
 import os
+import sys
 
+sys.path.append(os.path.join(os.environ["IDF_PATH"], "tools"))
 idf_monitor_path = os.path.join(os.environ["IDF_PATH"], "tools", "idf_monitor.py")
 spec = importlib.util.spec_from_file_location("idf_monitor", idf_monitor_path)
 idf_monitor = importlib.util.module_from_spec(spec)
