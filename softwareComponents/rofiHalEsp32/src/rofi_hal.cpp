@@ -194,7 +194,7 @@ public:
      * \param clkPin GPIO for SPI clock
      * \param clkFrequency clock frequency in Hz (up to 26 MHz)
      */
-    ConnectorBus( spi_host_device_t bus, gpio_num_t dataPin, gpio_num_t clkPin,
+    ConnectorBus( spi_host_device_t bus, gpio_num_t miso, gpio_num_t mosi, gpio_num_t clkPin,
         int clkFrequency)
         : _commandQueue( 64 ),
           _dmaBuffer( static_cast< uint8_t* >( heap_caps_malloc( 12 , MALLOC_CAP_DMA ) ) )
@@ -202,12 +202,13 @@ public:
         using namespace rofi::esp32;
 
         spi_bus_config_t busConfig = SpiBus()
-            .mosiIoNum( dataPin )
+            .mosiIoNum( mosi )
+            .misoIoNum( miso )
             .sclkIoNum( clkPin )
             .flags( SPICOMMON_BUSFLAG_MASTER );
         spi_device_interface_config_t devConfig = SpiDeviceInterface() // Virtual device
             .mode( 0 )
-            .flags( SPI_DEVICE_3WIRE | SPI_DEVICE_HALFDUPLEX )
+            // .flags( SPI_DEVICE_3WIRE | SPI_DEVICE_HALFDUPLEX )
             .queueSize( 1 )
             .clockSpeedHz( clkFrequency );
         std::cout << busConfig << "\n";
@@ -351,14 +352,12 @@ private:
 
     void _issueReceiveCmd( rtos::ExContext exCtx = rtos::ExContext::Normal ) {
         _receiveCmdCounter++;
-        ets_printf( "Currently scheduled: %d\n", _receiveCmdCounter.load() );
         ConnectorBus::ReceiveCommand c;
         c.conn = this;
         _bus->schedule( c, exCtx );
     }
 
     SpiTransactionGuard startTransaction() {
-        std::cout << "Transaction on " << _cs << "\n";
         return SpiTransactionGuard( _cs, defaultCsConfig( _cs ) );
     }
 
@@ -387,7 +386,6 @@ private:
             std::cout << "invalid pending receive";
             status.pendingReceive = 0;
         }
-        std::cout << "Pending to receive (" << _cs << "): " << status.pendingReceive << "\n";
         while ( _receiveCmdCounter < status.pendingReceive )
             _issueReceiveCmd();
         _status = status;
@@ -419,10 +417,9 @@ private:
     static void _csInterruptHandler( void * arg ) {
         auto *self = reinterpret_cast< ConnectorLocal* >( arg );
         // Probably a packet, so try to read it, then check the true reason
-        // self->_issueReceiveCmd( rtos::ExContext::ISR );
-        // ets_printf("Interrupted %d\n", self->_cs);
-        // if ( self->_interruptCounter == 0 )
-        //     self->_issueInterruptCmd( rtos::ExContext::ISR );
+        self->_issueReceiveCmd( rtos::ExContext::ISR );
+        if ( self->_interruptCounter == 0 )
+            self->_issueInterruptCmd( rtos::ExContext::ISR );
     }
 
     friend class ConnectorBus;
@@ -456,7 +453,6 @@ void ConnectorBus::run( VersionCommand c ) {
 
 void ConnectorBus::run( InterruptCommand c ) {
     using namespace rofi::esp32;
-    ets_printf( "Interrupt command %d\n", c.counter );
 
     auto transaction = c.conn->startTransaction();
     const int headerSize = 3;
@@ -475,7 +471,6 @@ void ConnectorBus::run( InterruptCommand c ) {
 
 void ConnectorBus::run( StatusCommand c ) {
     using namespace rofi::esp32;
-    rofi::log::info( "Status command " + std::to_string(c.conn->_cs ) );
 
     auto transaction = c.conn->startTransaction();
     const int headerSize = 5;
@@ -497,7 +492,6 @@ void ConnectorBus::run( StatusCommand c ) {
 void ConnectorBus::run( SendCommand c ) {
     using namespace rofi::esp32;
     // rofi::log::info( "Send command" );
-    ets_printf("Send command %d\n", c.conn->_cs);
 
     if ( c.packet.size() > 2048 ) {
         rofi::log::warning( "Trying to send big packet" );
@@ -507,31 +501,24 @@ void ConnectorBus::run( SendCommand c ) {
     auto transaction = c.conn->startTransaction();
     const int headerSize = 1;
     as< ProtocolCommand >( _dmaBuffer ) = ProtocolCommand::Send;
-    ets_printf("Send command %d - A\n", c.conn->_cs);
     spiWrite( _spiDev, _dmaBuffer, headerSize );
-     ets_printf("Send command %d - B\n", c.conn->_cs);
 
     slaveDelay();
 
     const int packetHeaderSize = 4;
     as< uint16_t >( _dmaBuffer ) = c.contentType;
     as< uint16_t >( _dmaBuffer + 2 ) = c.packet.size();
-     ets_printf("Send command %d - C\n", c.conn->_cs);
     spiWrite( _spiDev, _dmaBuffer, packetHeaderSize );
-     ets_printf("Send command %d - D\n", c.conn->_cs);
 
     for ( auto it = c.packet.chunksBegin(); it != c.packet.chunksEnd(); ++it ) {
         spiWrite( _spiDev, it->mem(), it->size() );
     }
-    ets_printf("Send command %d -E \n", c.conn->_cs);
     transaction.end();
 
-    ets_printf("Send command %d finished\n", c.conn->_cs);
     c.conn->finish( c );
 }
 
 void ConnectorBus::run( ReceiveCommand c ) {
-    rofi::log::info( "Receive command" );
     using namespace rofi::esp32;
     auto transaction = c.conn->startTransaction();
 
@@ -745,21 +732,21 @@ class RoFILocal : public RoFI::Implementation {
 public:
     RoFILocal() try:
         _servoBus( bsp::buildServoBus() ),
-        _joints( {
-            std::make_shared< JointLocal >(
-                _servoBus.getServo( bsp::alphaId ),
-                                    shoeJointCapability(),
-                                    bsp::alphaRatio ),
-            std::make_shared< JointLocal >(
-                _servoBus.getServo( bsp::betaId ),
-                                    shoeJointCapability(),
-                                    bsp::betaRatio ),
-            std::make_shared< JointLocal >(
-                _servoBus.getServo( bsp::gammaId ),
-                                    bodyJointCapability(),
-                                    bsp::gammaRatio )
-        } ),
-        _connectorBus( HSPI_HOST, GPIO_NUM_19, GPIO_NUM_18, 100000 ),
+        // _joints( {
+        //     std::make_shared< JointLocal >(
+        //         _servoBus.getServo( bsp::alphaId ),
+        //                             shoeJointCapability(),
+        //                             bsp::alphaRatio ),
+        //     std::make_shared< JointLocal >(
+        //         _servoBus.getServo( bsp::betaId ),
+        //                             shoeJointCapability(),
+        //                             bsp::betaRatio ),
+        //     std::make_shared< JointLocal >(
+        //         _servoBus.getServo( bsp::gammaId ),
+        //                             bodyJointCapability(),
+        //                             bsp::gammaRatio )
+        // } ),
+        _connectorBus( HSPI_HOST, GPIO_NUM_19, GPIO_NUM_18, GPIO_NUM_17, 100000 ),
         _connectors( {
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_27 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_25 ),
@@ -769,7 +756,7 @@ public:
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_26 )
         } )
     {} catch ( const std::runtime_error& e ) {
-        throw std::runtime_error( "Cannot intialize local RoFI Driver: "s + e.what() );
+        throw std::runtime_error( "Cannot initialize local RoFI Driver: "s + e.what() );
     }
 
     virtual RoFI::Id getId() const override {
