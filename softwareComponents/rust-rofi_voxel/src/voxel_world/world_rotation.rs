@@ -3,6 +3,16 @@ use crate::pos::VoxelPos;
 use crate::{atoms, voxel::VoxelBody};
 use enum_iterator::Sequence;
 
+/// This structure represents rotation of voxel worlds
+///
+/// The worlds that are being rotated have unsigned indices (going from 0 to size),
+/// but the rotation allows inverting some of the axis.
+/// So the minimal index will always be at `[0,0,0]` although this doesn't have to correspond
+/// with the original position `[0,0,0]`.
+///
+/// The rotation is given by the axis `x_rotates_to` which corresponds to the original X axis.
+/// And by `neg_axis` flags which indicate if the original axis `[X,Y,Z]` is inverted
+/// (inverting meaning that original position 0 corresponds to position `size-1` and vice versa).
 #[derive(Debug, PartialEq, Eq, Sequence)]
 pub struct WorldRotation {
     /// Axis at which rotated [1,0,0] has value 1
