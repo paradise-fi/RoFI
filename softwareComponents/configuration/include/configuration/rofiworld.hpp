@@ -823,6 +823,9 @@ RofiWorld::RoficomJointHandle connect( const Component& c1, const Component& c2,
  */
 template < typename JointT, typename... Args >
 RofiWorld::SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&... args ) {
+    static_assert( std::is_base_of_v< Joint, JointT > );
+    static_assert( std::is_constructible_v< JointT, Args... > );
+
     RofiWorld& world = *c.parent->parent;
     RofiWorld::ModuleInfo& info = world._modules[ world._idMapping[ c.parent->getId() ] ];
 
