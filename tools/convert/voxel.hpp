@@ -37,6 +37,8 @@ inline auto toIntegerArray( const rofi::configuration::matrices::Vector & values
     return result;
 }
 
+using Position = std::array< int, 3 >;
+
 enum class Axis : int {
     X = 0,
     Y,
@@ -58,36 +60,39 @@ inline auto nextAxis( Axis axis ) -> Axis
 }
 
 struct Direction {
+    static auto fromVector( const std::array< int, 3 > & direction ) -> std::optional< Direction >
+    {
+        auto result = std::optional< Direction >();
+        for ( unsigned i = 0; i < 3; i++ ) {
+            switch ( direction[ i ] ) {
+                case 0:
+                    break;
+                case -1:
+                case 1:
+                    if ( result ) {
+                        return std::nullopt;
+                    }
+                    result = Direction{ .axis = toAxis( to_signed( i ) ),
+                                        .is_positive = direction[ i ] > 0 };
+                    break;
+                default:
+                    return std::nullopt;
+            }
+        }
+        return result;
+    }
+    static auto fromVector( const rofi::configuration::matrices::Vector & direction )
+            -> std::optional< Direction >
+    {
+        if ( auto dir = toIntegerArray( direction ) ) {
+            return fromVector( *dir );
+        }
+        return std::nullopt;
+    }
+
     Axis axis = {};
     bool is_positive = {};
 };
-inline auto getDirection( const rofi::configuration::matrices::Vector & direction )
-        -> std::optional< Direction >
-{
-    auto dirOpt = toIntegerArray( direction );
-    if ( !dirOpt ) {
-        return std::nullopt;
-    }
-    auto dir = *dirOpt;
-
-    auto result = std::optional< Direction >();
-    for ( unsigned i = 0; i < 3; i++ ) {
-        switch ( dir[ i ] ) {
-            case 0:
-                break;
-            case -1:
-            case 1:
-                if ( result ) {
-                    return std::nullopt;
-                }
-                result = Direction{ .axis = toAxis( to_signed( i ) ), .is_positive = dir[ i ] > 0 };
-                break;
-            default:
-                return std::nullopt;
-        }
-    }
-    return result;
-}
 
 enum class JointPosition {
     Zero,
@@ -107,6 +112,18 @@ inline auto originalJointPosFromAngle( Angle angle ) -> std::optional< JointPosi
     }
     return std::nullopt;
 }
+auto jointPositionToInteger( JointPosition joint_pos ) -> int8_t
+{
+    switch ( joint_pos ) {
+        case JointPosition::Zero:
+            return 0;
+        case JointPosition::Minus90:
+            return -90;
+        case JointPosition::Plus90:
+            return 90;
+    }
+    ROFI_UNREACHABLE( "JointPosition is out of bounds" );
+}
 inline auto jointPositionInverse( JointPosition value ) -> JointPosition
 {
     switch ( value ) {
@@ -119,8 +136,6 @@ inline auto jointPositionInverse( JointPosition value ) -> JointPosition
     }
     ROFI_UNREACHABLE( "JointPosition is out of bounds" );
 }
-
-using Position = std::array< int, 3 >;
 
 /// This documentation is copy from Rust `voxel::body::VoxelBody`
 ///
@@ -150,7 +165,7 @@ struct Voxel {
     static auto getOtherBodyDir( const rofi::configuration::matrices::Matrix & bodyPos )
             -> Direction
     {
-        auto dir = getDirection( bodyPos * rofi::configuration::matrices::Z );
+        auto dir = Direction::fromVector( bodyPos * rofi::configuration::matrices::Z );
         if ( !dir ) {
             throw std::runtime_error( "Module is not rotated orthogonaly" );
         }
@@ -159,7 +174,7 @@ struct Voxel {
     static auto getIsShoeRotated( const rofi::configuration::matrices::Matrix & bodyPos,
                                   Direction otherBodyDir ) -> bool
     {
-        auto xDirOpt = getDirection( bodyPos * rofi::configuration::matrices::X );
+        auto xDirOpt = Direction::fromVector( bodyPos * rofi::configuration::matrices::X );
         if ( !xDirOpt ) {
             throw std::runtime_error( "Module is not rotated orthogonaly" );
         }
@@ -171,7 +186,7 @@ struct Voxel {
     static auto getJointPosition( const rofi::configuration::matrices::Matrix & bodyPos,
                                   Angle shoeJointAngle ) -> JointPosition
     {
-        auto yDirOpt = getDirection( bodyPos * rofi::configuration::matrices::Y );
+        auto yDirOpt = Direction::fromVector( bodyPos * rofi::configuration::matrices::Y );
         if ( !yDirOpt ) {
             throw std::runtime_error( "Module is not rotated orthogonaly" );
         }
@@ -275,18 +290,7 @@ void from_json( const nlohmann::json & j, Axis & axis )
 // Make JointPosition (de)serializable to nlohmann::json
 void to_json( nlohmann::json & j, const JointPosition & joint_pos )
 {
-    switch ( joint_pos ) {
-        case JointPosition::Zero:
-            j = 0;
-            return;
-        case JointPosition::Minus90:
-            j = -90;
-            return;
-        case JointPosition::Plus90:
-            j = 90;
-            return;
-    }
-    throw std::runtime_error( "Could not read JointPosition" );
+    j = jointPositionToInteger( joint_pos );
 }
 void from_json( const nlohmann::json & j, JointPosition & joint_pos )
 {
