@@ -1,11 +1,13 @@
 #include <dimcli/cli.h>
 #include <iostream>
+#include "points.hpp"
 #include "preview.hpp"
 #include "check.hpp"
 #include "build.hpp"
 
 int main( int argc, char * argv[] ) {
     Dim::Cli cli;
+    cli.command( "points"  ).action( points  );
     cli.command( "preview" ).action( preview );
     cli.command( "check"   ).action( check   );
     cli.command( "build"   ).action( build   );
