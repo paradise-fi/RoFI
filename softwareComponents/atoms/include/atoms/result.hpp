@@ -190,20 +190,20 @@ public:
      */
 
     /**
-     * \brief Checks whether `*this` contains a value.
+     * \brief Checks whether `this` contains a value.
      *
-     * \retval true if `*this` contains a value.
-     * \retval false if `*this` contains an error.
+     * \retval true if `this` contains a value.
+     * \retval false if `this` contains an error.
      */
     constexpr bool has_value() const noexcept
     {
         return _data.index() == 0;
     }
     /**
-     * \brief Checks whether `*this` contains a value.
+     * \brief Checks whether `this` contains a value.
      *
-     * \retval true if `*this` contains a value.
-     * \retval false if `*this` contains an error.
+     * \retval true if `this` contains a value.
+     * \retval false if `this` contains an error.
      */
     constexpr operator bool() const noexcept
     {
@@ -299,6 +299,7 @@ public:
      */
     constexpr value_type && assume_value() && noexcept
     {
+        assert( has_value() );
         static_assert( !std::is_same_v< value_type, detail::TypePlaceholder > );
         return std::move( assume_value() );
     }
@@ -332,8 +333,50 @@ public:
      */
     constexpr error_type && assume_error() && noexcept
     {
+        assert( !has_value() );
         static_assert( !std::is_same_v< error_type, detail::TypePlaceholder > );
         return std::move( assume_error() );
+    }
+
+
+    /**
+     * \brief Assume that the result contains an error.
+     *
+     * Deletes the `value_type` so `this` can be converted to another `Result`.
+     *
+     * \returns `Result` containing error from `this`.
+     */
+    constexpr Result< detail::TypePlaceholder, error_type > assume_error_result() & noexcept
+    {
+        assert( !has_value() );
+        static_assert( !std::is_same_v< error_type, detail::TypePlaceholder > );
+        return Result< detail::TypePlaceholder, error_type >::error( assume_error() );
+    }
+    /**
+     * \brief Assume that the result contains an error.
+     *
+     * Deletes the `value_type` so `this` can be converted to another `Result`.
+     *
+     * \returns `Result` containing error from `this`.
+     */
+    constexpr Result< detail::TypePlaceholder, error_type > assume_error_result() const & noexcept
+    {
+        assert( !has_value() );
+        static_assert( !std::is_same_v< error_type, detail::TypePlaceholder > );
+        return Result< detail::TypePlaceholder, error_type >::error( assume_error() );
+    }
+    /**
+     * \brief Assume that the result contains an error.
+     *
+     * Deletes the `value_type` so `this` can be converted to another `Result`.
+     *
+     * \returns `Result` containing error from `this`.
+     */
+    constexpr Result< detail::TypePlaceholder, error_type > assume_error_result() && noexcept
+    {
+        assert( !has_value() );
+        static_assert( !std::is_same_v< error_type, detail::TypePlaceholder > );
+        return Result< detail::TypePlaceholder, error_type >::error( std::move( assume_error() ) );
     }
 
     /**
@@ -383,7 +426,7 @@ public:
     }
 
     /**
-     * \brief Returns the contained value if this contains a value.
+     * \brief Returns the contained value if `this` contains a value.
      * Otherwise, throws the \p ExceptionT constructed from the error.
      *
      * \tparam ExceptionT exception type constructable from `value_type &`
@@ -399,7 +442,7 @@ public:
         return has_value() ? assume_value() : throw ExceptionT( assume_error() );
     }
     /**
-     * \brief Returns the contained value if this contains a value.
+     * \brief Returns the contained value if `this` contains a value.
      * Otherwise, throws the \p ExceptionT constructed from the error.
      *
      * \tparam ExceptionT exception type constructable from `value_type &`
@@ -415,7 +458,7 @@ public:
         return has_value() ? assume_value() : throw ExceptionT( assume_error() );
     }
     /**
-     * \brief Returns the contained value if this contains a value.
+     * \brief Returns the contained value if `this` contains a value.
      * Otherwise, throws the \p ExceptionT constructed from the error.
      *
      * \tparam ExceptionT exception type constructable from `value_type &`
@@ -906,7 +949,7 @@ public:
      *
      * \param other result to check equality against
      *
-     * \returns whether both `*this` and \p other contain value and the values
+     * \returns whether both `this` and \p other contain value and the values
      * are equal or both contain error and the errors are equal.
      */
     bool operator==( const Result & other ) const = default;
