@@ -6,6 +6,7 @@
 
 #include <magic_enum.hpp>
 
+#include "atoms/result.hpp"
 #include "configuration/rofiworld.hpp"
 
 
@@ -47,6 +48,7 @@ enum class Axis : int {
 inline auto toAxis( std::underlying_type_t< Axis > i ) -> Axis
 {
     auto axis = magic_enum::enum_cast< Axis >( i );
+    assert( axis );
     return axis ? *axis : throw std::logic_error( "Axis index is out-of-bounds" );
 }
 inline auto nextAxis( Axis axis ) -> Axis
@@ -154,71 +156,96 @@ inline auto jointPositionInverse( JointPosition value ) -> JointPosition
 ///     when `joint_pos` is `Plus90` the Z-connector is towards the plus axis
 ///     otherwise the Z-connector is towards the minus axis
 struct Voxel {
-    static auto getVoxelPos( const rofi::configuration::matrices::Matrix & bodyPos ) -> Position
+    static auto getVoxelPos( const rofi::configuration::matrices::Matrix & bodyPos )
+            -> atoms::Result< Position >
     {
         auto center = rofi::configuration::matrices::center( bodyPos );
         if ( auto voxelPos = toIntegerArray( center ) ) {
-            return *voxelPos;
+            return atoms::result_value( *voxelPos );
         }
-        throw std::runtime_error( "Position is not on the grid" );
+        return atoms::result_error< std::string >( "Position is not on the grid" );
     }
     static auto getOtherBodyDir( const rofi::configuration::matrices::Matrix & bodyPos )
-            -> Direction
+            -> atoms::Result< Direction >
     {
         auto dir = Direction::fromVector( bodyPos * rofi::configuration::matrices::Z );
         if ( !dir ) {
-            throw std::runtime_error( "Module is not rotated orthogonaly" );
+            return atoms::result_error< std::string >( "Module is not rotated orthogonaly" );
         }
-        return *dir;
+        return atoms::result_value( *dir );
     }
     static auto getIsShoeRotated( const rofi::configuration::matrices::Matrix & bodyPos,
-                                  Direction otherBodyDir ) -> bool
+                                  Direction otherBodyDir ) -> atoms::Result< bool >
     {
         auto xDirOpt = Direction::fromVector( bodyPos * rofi::configuration::matrices::X );
         if ( !xDirOpt ) {
-            throw std::runtime_error( "Module is not rotated orthogonaly" );
+            return atoms::result_error< std::string >( "Module is not rotated orthogonaly" );
         }
         auto xDir = *xDirOpt;
         assert( otherBodyDir.axis != xDir.axis );
 
-        return nextAxis( otherBodyDir.axis ) != xDir.axis;
+        return atoms::result_value( nextAxis( otherBodyDir.axis ) != xDir.axis );
     }
     static auto getJointPosition( const rofi::configuration::matrices::Matrix & bodyPos,
-                                  Angle shoeJointAngle ) -> JointPosition
+                                  Angle shoeJointAngle ) -> atoms::Result< JointPosition >
     {
         auto yDirOpt = Direction::fromVector( bodyPos * rofi::configuration::matrices::Y );
         if ( !yDirOpt ) {
-            throw std::runtime_error( "Module is not rotated orthogonaly" );
+            return atoms::result_error< std::string >( "Module is not rotated orthogonaly" );
         }
         auto yDir = *yDirOpt;
 
         auto originalJointPosOpt = originalJointPosFromAngle( shoeJointAngle );
         if ( !originalJointPosOpt ) {
-            throw std::runtime_error( "Joint position is not a right angle" );
+            return atoms::result_error< std::string >( "Joint position is not a right angle" );
         }
         auto originalJointPos = *originalJointPosOpt;
 
-        return yDir.is_positive ? originalJointPos : jointPositionInverse( originalJointPos );
+        return atoms::result_value( yDir.is_positive ? originalJointPos
+                                                     : jointPositionInverse( originalJointPos ) );
     }
 
     static auto fromBodyComponent( const rofi::configuration::Component & body, Angle shoeAngle )
-            -> Voxel
+            -> atoms::Result< Voxel >
     {
         assert( body.type == rofi::configuration::ComponentType::UmBody );
         auto bodyPos = body.getPosition();
-        auto otherBodyDir = getOtherBodyDir( bodyPos );
 
-        return Voxel{ .pos = getVoxelPos( bodyPos ),
-                      .other_body_dir = otherBodyDir,
-                      .is_shoe_rotated = getIsShoeRotated( bodyPos, otherBodyDir ),
-                      .joint_pos = getJointPosition( bodyPos, shoeAngle ) };
+        auto pos = getVoxelPos( bodyPos );
+        if ( !pos ) {
+            return std::move( pos ).assume_error_result();
+        }
+        auto otherBodyDir = getOtherBodyDir( bodyPos );
+        if ( !otherBodyDir ) {
+            return std::move( otherBodyDir ).assume_error_result();
+        }
+        auto isShoeRotated = getIsShoeRotated( bodyPos, *otherBodyDir );
+        if ( !isShoeRotated ) {
+            return std::move( isShoeRotated ).assume_error_result();
+        }
+        auto jointPos = getJointPosition( bodyPos, shoeAngle );
+        if ( !jointPos ) {
+            return std::move( jointPos ).assume_error_result();
+        }
+
+        return atoms::result_value( Voxel{ .pos = *pos,
+                                           .other_body_dir = *otherBodyDir,
+                                           .is_shoe_rotated = *isShoeRotated,
+                                           .joint_pos = *jointPos } );
     }
     static auto fromRofiModule( const rofi::configuration::UniversalModule & rofiModule )
-            -> std::array< Voxel, 2 >
+            -> atoms::Result< std::array< Voxel, 2 > >
     {
         assert( rofiModule.type == rofi::configuration::ModuleType::Universal );
-        return std::array{ fromBodyComponent( rofiModule.getBodyA(), rofiModule.getAlpha() ),
-                           fromBodyComponent( rofiModule.getBodyB(), rofiModule.getBeta() ) };
+        auto shoeA = fromBodyComponent( rofiModule.getBodyA(), rofiModule.getAlpha() );
+        if ( !shoeA ) {
+            return std::move( shoeA ).assume_error_result();
+        }
+        auto shoeB = fromBodyComponent( rofiModule.getBodyB(), rofiModule.getBeta() );
+        if ( !shoeA ) {
+            return std::move( shoeB ).assume_error_result();
+        }
+        return atoms::result_value( std::array{ *shoeA, *shoeB } );
     }
 
     Position pos = {};
@@ -228,10 +255,12 @@ struct Voxel {
 };
 
 struct VoxelWorld {
-    static auto fromRofiWorld( const rofi::configuration::RofiWorld & rofiWorld ) -> VoxelWorld
+    static auto fromRofiWorld( const rofi::configuration::RofiWorld & rofiWorld )
+            -> atoms::Result< VoxelWorld >
     {
         if ( !rofiWorld.isPrepared() ) {
-            throw std::runtime_error( "RofiWorld has to be prepared to convert to voxel json" );
+            return atoms::result_error< std::string >(
+                    "RofiWorld has to be prepared to convert to voxel json" );
         }
 
         constexpr auto subPos = []( Position lhs, const Position & rhs ) -> Position {
@@ -257,9 +286,13 @@ struct VoxelWorld {
             auto universalModule = dynamic_cast< const rofi::configuration::UniversalModule * >(
                     rofiModule.module.get() );
             if ( !universalModule ) {
-                throw std::runtime_error( "Module is not Universal module" );
+                return atoms::result_error< std::string >( "Module is not Universal module" );
             }
-            for ( auto voxel : Voxel::fromRofiModule( *universalModule ) ) {
+            auto voxelModule = Voxel::fromRofiModule( *universalModule );
+            if ( !voxelModule ) {
+                return std::move( voxelModule ).assume_error_result();
+            }
+            for ( auto voxel : *voxelModule ) {
                 updateLimitPos( voxel.pos );
                 voxelBodies.push_back( std::move( voxel ) );
             }
@@ -269,7 +302,7 @@ struct VoxelWorld {
             voxel.pos = subPos( std::move( voxel.pos ), *beginPos );
         }
 
-        return VoxelWorld{ .bodies = std::move( voxelBodies ) };
+        return atoms::result_value( VoxelWorld{ .bodies = std::move( voxelBodies ) } );
     }
 
     std::vector< Voxel > bodies = {};

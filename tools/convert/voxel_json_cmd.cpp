@@ -24,7 +24,8 @@ void voxelJsonCmd( Dim::Cli & /* cli */ )
     auto inputCfg = readInput( inputCfgFilePath, readJsonCfgFromStream )
                             .get_or_throw_as< std::runtime_error >();
     assert( inputCfg );
-    auto voxelJson = nlohmann::json( rofi::voxel::VoxelWorld::fromRofiWorld( *inputCfg ) );
+    auto voxelJson = nlohmann::json( rofi::voxel::VoxelWorld::fromRofiWorld( *inputCfg )
+                                             .get_or_throw_as< std::runtime_error >() );
     writeOutput( outputCfgFilePath, [ &voxelJson ]( std::ostream & ostr ) {
         ostr.width( 4 );
         ostr << voxelJson << std::endl;
