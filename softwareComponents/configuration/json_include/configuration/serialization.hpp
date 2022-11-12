@@ -131,24 +131,21 @@ namespace rofi::configuration::serialization {
             j = component;
     }
 
-    template< bool isConnector = false, typename F >
-    inline std::pair< ModuleId, int > connectionFromJSON( const nlohmann::json& j, const std::string& where
-                                                        , F&& f = []( ModuleId ) { return ModuleType::Unknown; } ) {
+    template< typename F >
+    inline std::pair< ModuleId, int > connectionComponentFromJSON( const nlohmann::json& j
+                                                                 , F&& f = []( ModuleId ) { return ModuleType::Unknown; } ) {
         static_assert( std::is_invocable_r_v< ModuleType, F, ModuleId > );
-        assert( where == "to" || where == "from" );
 
-        ModuleId id = j[ where ][ "id" ];
-        std::string conn( isConnector ? "connector" : "component" );
-        int connId = f( id ) == ModuleType::Universal && isConnector && j[ where ][ conn ].is_string()
-                        ? UniversalModule::translateComponent( j[ where ][ conn ].get< std::string >() )
-                        : j[ where ][ conn ].get< int >();
+        ModuleId id = j[ "id" ];
+        if ( j.contains( "component" ) && j.contains( "connector" ) ) {
+            throw std::runtime_error( "You can specify only one of 'component', 'connector'" );
+        }
+        const nlohmann::json & connJson = j.contains( "connector" ) ? j[ "connector" ] : j[ "component" ];
+        int connId = f( id ) == ModuleType::Universal && connJson.is_string()
+                        ? UniversalModule::translateComponent( connJson.get< std::string >() )
+                        : connJson.get< int >();
 
         return std::pair( id, connId );
-    }
-
-    template< typename F >
-    inline std::pair< ModuleId, int > connectorFromJSON( const nlohmann::json& j, const std::string& where, F&& f ) {
-        return connectionFromJSON< true >( j, where, std::forward< F >( f ) );
     }
 
     inline void connectionToJSON( nlohmann::json& j, const std::string& where
@@ -423,8 +420,8 @@ namespace rofi::configuration::serialization {
             roficom::Orientation o = roficom::stringToOrientation( jj[ "orientation" ] )
                                              .get_or_throw_as< std::runtime_error >();
 
-            auto [ sourceModule, sourceConnector ] = details::connectorFromJSON( jj, "from", f );
-            auto [ destinationModule, destinationConnector ] = details::connectorFromJSON( jj, "to", f );
+            auto [ sourceModule, sourceConnector ] = details::connectionComponentFromJSON( jj[ "from" ], f );
+            auto [ destinationModule, destinationConnector ] = details::connectionComponentFromJSON( jj[ "to" ], f );
 
             auto conn = connect( world.getModule( sourceModule )->connectors()[ sourceConnector ]
                                , world.getModule( destinationModule )->connectors()[ destinationConnector ]
@@ -434,7 +431,7 @@ namespace rofi::configuration::serialization {
         }
 
         for ( const auto& sj : j[ "spaceJoints" ] ) {
-            auto [ destinationModule, destinationComponent ] = details::connectionFromJSON( sj, "to", f );
+            auto [ destinationModule, destinationComponent ] = details::connectionComponentFromJSON( sj[ "to" ], f );
 
             Vector fixedPoint = { sj[ "point" ][ 0 ], sj[ "point" ][ 1 ], sj[ "point" ][ 2 ] };
             if ( sj[ "joint" ][ "type" ] == "rigid" ) {
