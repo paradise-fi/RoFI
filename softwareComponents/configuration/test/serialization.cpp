@@ -482,10 +482,11 @@ TEST_CASE( "Working with attributes" ) {
 
         CHECK( sum == 10 );
     }
+}
 
-    SECTION( "Tutorial configuration" )
-    {
-        auto world = fromJSON( R"""({
+TEST_CASE( "Tutorial configuration" )
+{
+    auto world = fromJSON( R"""({
     "modules": [
         {
             "id": 12,
@@ -529,19 +530,58 @@ TEST_CASE( "Working with attributes" ) {
     ]
 })"""_json );
 
+    REQUIRE( world.prepare() );
+    REQUIRE( world.isValid() );
+
+    auto um12 = dynamic_cast< UniversalModule * >( world.getModule( 12 ) );
+    REQUIRE( um12 );
+    auto connectorB = um12->getConnector( "B-Z" );
+    auto nearConnector = connectorB.getNearConnector();
+    REQUIRE( nearConnector );
+    CHECK( nearConnector->first.parent->getId() == 42 );
+    CHECK( nearConnector->first.getIndexInParent() == 4 );
+    CHECK( nearConnector->second == roficom::Orientation::South );
+}
+
+TEST_CASE( "Serialize deserialized" )
+{
+    SECTION( "Single module" )
+    {
+        auto world = fromJSON( R"""({
+        "modules": [
+            {
+                "id": 1,
+                "type": "universal",
+                "alpha": 0,
+                "beta": 0,
+                "gamma": 0
+            }
+        ],
+        "moduleJoints": [],
+        "spaceJoints": [
+            {
+                "point": [ 0, 0, 0 ],
+                "joint": {
+                    "type": "rigid",
+                    "sourceToDestination": "identity"
+                },
+                "to": {
+                    "id": 1,
+                    "component": 0
+                }
+            }
+        ]
+    })"""_json );
+
         REQUIRE( world.prepare() );
         REQUIRE( world.isValid() );
 
-        auto um12 = dynamic_cast< UniversalModule * >( world.getModule( 12 ) );
-        REQUIRE( um12 );
-        auto connectorB = um12->getConnector( "B-Z" );
-        auto nearConnector = connectorB.getNearConnector();
-        REQUIRE( nearConnector );
-        CHECK( nearConnector->first.parent->getId() == 42 );
-        CHECK( nearConnector->first.getIndexInParent() == 4 );
-        CHECK( nearConnector->second == roficom::Orientation::South );
-    }
+        auto worldToJson = toJSON( world );
+        auto worldToJsonFromJson = fromJSON( worldToJson );
+        auto worldToJsonFromJsonToJson = toJSON( worldToJsonFromJson );
 
+        CHECK( worldToJson == worldToJsonFromJsonToJson );
+    }
 }
 
 } // namespace
