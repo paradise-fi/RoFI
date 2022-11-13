@@ -41,16 +41,18 @@ part -- bot -- of the world) and check for its validity.
 
 .. code-block:: cpp
 
-    world.prepare();
-    auto [ ok, err ] = world.isValid( SimpleCollision() );
-    if ( !ok )
-        std::cerr << "invalid configuration: " << err << "\n";
+    auto prepared = world.prepare();
+    if ( !prepared )
+        std::cerr << "could not prepare configuration: " << prepared.assume_error() << "\n";
+    auto valid = world.isValid( SimpleCollision() );
+    if ( !valid )
+        std::cerr << "invalid configuration: " << valid.assume_error() << "\n";
 
     // or you can shorten the above to
-    auto [ ok, err ] = world.validate( SimpleCollision() );
+    auto ok = world.validate( SimpleCollision() );
 
     // also, the SimpleCollision model is the default one, so you can ommit it too and get
-    auto [ ok, err ] = world.validate();
+    auto ok = world.validate();
 
 
 Types and Constants
