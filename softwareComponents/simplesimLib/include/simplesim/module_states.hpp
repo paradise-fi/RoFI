@@ -263,7 +263,7 @@ public:
     {
         assert( _physicalModulesConfiguration.visit( []( const auto & configuration ) {
             assert( configuration );
-            return configuration->isValid( rofi::configuration::SimpleCollision() ).first;
+            return configuration->isValid( rofi::configuration::SimpleCollision() );
         } ) );
     }
 

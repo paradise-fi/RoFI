@@ -43,10 +43,7 @@ auto readAndPrepareConfigurationFromFile( const std::filesystem::path & cfgFileP
     auto rofiworld = std::make_shared< configuration::RofiWorld >(
             readConfigurationFromStream( inputCfgFile, configFormat ) );
     assert( rofiworld );
-    rofiworld->prepare();
-    if ( auto [ ok, str ] = rofiworld->isValid( configuration::SimpleCollision() ); !ok ) {
-        throw std::runtime_error( str );
-    }
+    rofiworld->validate( configuration::SimpleCollision() ).get_or_throw_as< std::runtime_error >();
     return rofiworld;
 }
 

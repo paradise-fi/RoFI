@@ -420,7 +420,8 @@ namespace rofi::configuration::serialization {
         auto f = [ &world ]( ModuleId id ) -> ModuleType { return world.getModule( id )->type; };
 
         for ( const auto& jj : j[ "moduleJoints" ] ) {
-            roficom::Orientation o = roficom::stringToOrientation( jj[ "orientation" ] );
+            roficom::Orientation o = roficom::stringToOrientation( jj[ "orientation" ] )
+                                             .get_or_throw_as< std::runtime_error >();
 
             auto [ sourceModule, sourceConnector ] = details::connectorFromJSON( jj, "from", f );
             auto [ destinationModule, destinationConnector ] = details::connectorFromJSON( jj, "to", f );

@@ -314,7 +314,7 @@ auto updateConnectorStates( RofiWorld & configuration,
 
             // Workaround for a bug in configuration (not reseting and requiring the prepared flag)
             if ( !configuration.isPrepared() ) {
-                configuration.prepare();
+                configuration.prepare().get_or_throw_as< std::logic_error >();
             }
         }
     }
@@ -338,11 +338,11 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
                                                           _moduleInnerStates );
 
     // Workaround for a bug in configuration (not setting the prepared flag properly)
-    newConfiguration->prepare();
+    newConfiguration->prepare().get_or_throw_as< std::logic_error >();
 
-    if ( auto [ ok, err ] = newConfiguration->validate( SimpleCollision{} ); !ok ) {
-        std::cerr << "Error after joint update: '" << err << "'\n";
-        throw std::runtime_error( std::move( err ) );
+    if ( auto ok = newConfiguration->validate( SimpleCollision{} ); !ok ) {
+        std::cerr << "Error after joint update: '" << ok.assume_error() << "'\n";
+        throw std::runtime_error( std::move( ok ).assume_error() );
     }
 
     auto connectorUpdateEvents = updateConnectorStates( *newConfiguration, _moduleInnerStates );
@@ -350,9 +350,9 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
             connectorUpdateEvents.connectorsToFinalizePosition );
     updateEvents.connectionsChanged = std::move( connectorUpdateEvents.connectionsChanged );
 
-    if ( auto [ ok, err ] = newConfiguration->validate( SimpleCollision{} ); !ok ) {
-        std::cerr << "Error after connector update: '" << err << "'\n";
-        throw std::runtime_error( std::move( err ) );
+    if ( auto ok = newConfiguration->validate( SimpleCollision{} ); !ok ) {
+        std::cerr << "Error after connector update: '" << ok.assume_error() << "'\n";
+        throw std::runtime_error( std::move( ok ).assume_error() );
     }
     return std::pair( newConfiguration, std::move( updateEvents ) );
 }

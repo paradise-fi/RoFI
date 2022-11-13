@@ -30,9 +30,8 @@ int main()
 {
     auto world = createConfiguration();
 
-    world.prepare();
-    if ( auto result = world.isValid(); !result.first ) {
-        std::cerr << "Configuration is not valid (" << result.second << ")\n";
+    if ( auto result = world.validate(); !result ) {
+        std::cerr << "Configuration is not valid (" << result.assume_error() << ")\n";
         return 1;
     }
 

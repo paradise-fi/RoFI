@@ -96,7 +96,7 @@ public:
             std::shared_ptr< const rofi::configuration::RofiWorld > newConfiguration )
     {
         assert( newConfiguration );
-        assert( newConfiguration->isValid( rofi::configuration::SimpleCollision() ).first );
+        assert( newConfiguration->isValid( rofi::configuration::SimpleCollision() ) );
         _currentConfiguration.replace( std::move( newConfiguration ) );
     }
 
