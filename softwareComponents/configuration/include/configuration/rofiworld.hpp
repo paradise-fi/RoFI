@@ -38,7 +38,7 @@ namespace roficom {
     /**
      * Return a corresponding angle in radians for a given orientation
      */
-    double orientationToAngle( Orientation o = Orientation::North );
+    Angle orientationToAngle( Orientation o = Orientation::North );
     Matrix orientationToTransform( roficom::Orientation orientation );
 
     std::string orientationToString( Orientation o );
