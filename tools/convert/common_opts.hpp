@@ -17,10 +17,7 @@ inline auto readJsonCfgFromStream( std::istream & istr )
     auto rofiWorld = rofi::configuration::serialization::fromJSON( nlohmann::json::parse( istr ) );
 
     auto rofiWorldPtr = std::make_shared< rofi::configuration::RofiWorld >( std::move( rofiWorld ) );
-    rofiWorldPtr->prepare();
-    if ( auto [ ok, str ] = rofiWorldPtr->isValid( rofi::configuration::SimpleCollision() ); !ok ) {
-        throw std::runtime_error( str );
-    }
+    rofiWorldPtr->validate( rofi::configuration::SimpleCollision() ).get_or_throw_as< std::runtime_error >();
     return rofiWorldPtr;
 }
 

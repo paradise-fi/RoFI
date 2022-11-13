@@ -42,17 +42,17 @@ std::string roficom::orientationToString( Orientation o ) {
     ROFI_UNREACHABLE( "Invalid orientation" );
 }
 
-roficom::Orientation roficom::stringToOrientation( const std::string& str ) {
+atoms::Result< roficom::Orientation > roficom::stringToOrientation( const std::string & str ) {
     if ( str == "N" || str == "North" )
-        return Orientation::North;
+        return atoms::result_value( Orientation::North );
     if ( str == "E" || str == "East" )
-        return Orientation::East;
+        return atoms::result_value( Orientation::East );
     if ( str == "S" || str == "South" )
-        return Orientation::South;
+        return atoms::result_value( Orientation::South );
     if ( str == "W" || str == "West" )
-        return Orientation::West;
+        return atoms::result_value( Orientation::West );
 
-    throw std::logic_error( "String does not represent the orientation" );
+    return atoms::result_error< std::string >( "String does not represent the orientation" );
 }
 
 int Component::getIndexInParent() const {
@@ -134,7 +134,7 @@ void RofiWorld::setSpaceJointPositions( SpaceJointHandle jointId, std::span< con
     _prepared = false;
 }
 
-void RofiWorld::prepare() {
+atoms::Result< std::monostate > RofiWorld::prepare() {
     using namespace rofi::configuration::matrices;
     _clearModulePositions();
 
@@ -148,7 +148,7 @@ void RofiWorld::prepare() {
         Matrix modulePosition = jointPosition * arma::inv( componentPosition );
         if ( mInfo.absPosition ) {
             if ( !equals( mInfo.absPosition.value(), modulePosition ) )
-                throw std::runtime_error(
+                return atoms::result_error(
                         fmt::format( "Inconsistent rooting of module {}", mInfo.module->_id ) );
         } else {
             mInfo.absPosition = componentPosition;
@@ -156,12 +156,13 @@ void RofiWorld::prepare() {
         roots.insert( _idMapping[ mInfo.module->_id ] );
     }
 
-    auto dfsTraverse = [&]( ModuleInfo& m, Matrix position, auto& self ) {
+    auto dfsTraverse = [&]( ModuleInfo& m, Matrix position, auto& self ) -> atoms::Result< std::monostate >
+    {
         if ( m.absPosition ) {
             if ( !equals( position, m.absPosition.value() ) )
-                throw std::runtime_error(
+                return atoms::result_error(
                         fmt::format( "Inconsistent position of module {}", m.module->_id ) );
-            return;
+            return atoms::result_value( std::monostate() );
         }
 
         m.absPosition = position;
@@ -185,24 +186,30 @@ void RofiWorld::prepare() {
                                                                                       : j.sourceConnector );
             // Reverse the comonentPosition to get position of the module origin
             Matrix otherPosition = jointRefPosition * arma::inv( otherConnectorPosition );
-            self( other, otherPosition, self );
+            if ( auto result = self( other, otherPosition, self ); !result ) {
+                return result;
+            }
         }
+        return atoms::result_value( std::monostate() );
     };
 
     for ( auto h : roots ) {
         ModuleInfo& m = _modules[ h ];
         auto pos = m.absPosition.value();
         m.absPosition.reset();
-        dfsTraverse( m, pos, dfsTraverse );
+        if ( auto result = dfsTraverse( m, pos, dfsTraverse ); !result ) {
+            return result;
+        }
     }
 
     for ( ModuleInfo& m : _modules ) {
         if ( !m.absPosition.has_value() )
-            throw std::runtime_error(
+            return atoms::result_error(
                     fmt::format( "Not fixed position of module {}", m.module->_id ) );
     }
 
     _prepared = true;
+    return atoms::result_value( std::monostate() );
 }
 
 void RofiWorld::disconnect( RoficomJointHandle h ) {

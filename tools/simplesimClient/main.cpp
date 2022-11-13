@@ -59,8 +59,8 @@ private:
                 configuration::serialization::fromJSON( nlohmann::json::parse( msg->value() ) ) );
         assert( rofiworld );
 
-        if ( auto [ ok, err_str ] = rofiworld->validate( configuration::SimpleCollision() ); !ok ) {
-            std::cerr << "Configuration not valid: '" << err_str << "'" << std::endl;
+        if ( auto ok = rofiworld->validate( configuration::SimpleCollision() ); !ok ) {
+            std::cerr << "Configuration not valid: '" << ok.assume_error() << "'" << std::endl;
             return;
         }
 

@@ -10,6 +10,7 @@
 #include <ranges>
 
 #include <atoms/containers.hpp>
+#include <atoms/result.hpp>
 #include <atoms/units.hpp>
 #include <atoms/util.hpp>
 #include <fmt/format.h>
@@ -42,7 +43,7 @@ namespace roficom {
     Matrix orientationToTransform( roficom::Orientation orientation );
 
     std::string orientationToString( Orientation o );
-    Orientation stringToOrientation( const std::string& str );
+    atoms::Result< Orientation > stringToOrientation( const std::string & str );
 } // namespace roficom
 
 /**
@@ -197,7 +198,7 @@ public:
         assert( idx >= 0 );
         assert( to_unsigned( idx ) < _components.size() );
         if ( !_componentRelativePositions )
-            prepare();
+            prepare().get_or_throw_as< std::logic_error >();
 
         return _componentRelativePositions.value()[ idx ];
     }
@@ -240,31 +241,42 @@ public:
     /**
      * \brief Precompute component relative positions
      *
-     * Raises std::logic_error if the components are inconsistent
+     * \returns result error if the components are inconsistent
      */
-    void prepare() {
+    atoms::Result< std::monostate > prepare() {
         using namespace rofi::configuration::matrices;
         std::vector< Matrix > relPositions( _components.size() );
         std::vector< bool > initialized( _components.size() );
 
-        auto dfsTraverse = [&]( int compIdx, Matrix relPosition, auto& self ) {
+        auto dfsTraverse = [&]( int compIdx, Matrix relPosition, auto& self ) -> atoms::Result< std::monostate >
+        {
             if ( initialized[ compIdx ] ) {
-                if ( !equals( relPosition, relPositions[ compIdx ] ) )
-                    throw std::logic_error( "Inconsistent component relative positions" );
-                return;
+                if ( !equals( relPosition, relPositions[ compIdx ] ) ) {
+                    return atoms::result_error< std::string >( "Inconsistent component relative positions" );
+                }
+                return atoms::result_value( std::monostate() );
             }
             relPositions[ compIdx ] = relPosition;
             initialized[ compIdx ] = true;
             for ( int outJointIdx : _components[ compIdx ].outJoints ) {
                 const ComponentJoint& j = _joints[ outJointIdx ];
-                self( j.destinationComponent, relPosition * j.joint->sourceToDest(), self );
+                auto result = self( j.destinationComponent, relPosition * j.joint->sourceToDest(), self );
+                if ( !result ) {
+                    return result;
+                }
             }
+            return atoms::result_value( std::monostate() );
         };
-        dfsTraverse( _rootComponent.value(), identity, dfsTraverse );
 
-        if ( !std::ranges::all_of( initialized, std::identity{} ) )
-            throw std::logic_error( "There are components without relative position" );
+        if ( auto result = dfsTraverse( _rootComponent.value(), identity, dfsTraverse ); !result ) {
+            return result;
+        }
+
+        if ( !std::ranges::all_of( initialized, std::identity{} ) ) {
+            return atoms::result_error< std::string >( "There are components without relative position" );
+        }
         _componentRelativePositions = std::move( relPositions );
+        return atoms::result_value( std::monostate() );
     }
 
     auto configurableJoints() {
@@ -566,13 +578,12 @@ public:
     /**
      * \brief Decide whether the configuration is valid given the collision model
      *
-     * \return A pair - first item indicates the validity, the second one gives
-     * textual description of the reason for invalidity
+     * \returns result - the error gives textual description of the reason for invalidity
      */
     template < typename Collision = SimpleCollision >
-    std::pair< bool, std::string > isValid( Collision collisionModel = Collision() ) const {
+    atoms::Result< std::monostate > isValid( Collision collisionModel = Collision() ) const {
         if ( !_prepared ) {
-            return { false, "configuration is not prepared" };
+            return atoms::result_error< std::string >( "Configuration is not prepared" );
         }
 
         for ( const ModuleInfo& m : _modules ) {
@@ -580,33 +591,30 @@ public:
                 if ( n.module->_id >= m.module->_id ) // Collision is symmetric
                     break;
                 if ( collisionModel( *n.module, *m.module, *n.absPosition, *m.absPosition ) ) {
-                    return { false, fmt::format("Modules {} and {} collide",
-                        m.module->_id, n.module->_id ) };
+                    return atoms::result_error( fmt::format( "Modules {} and {} collide",
+                        m.module->_id, n.module->_id ) );
                 }
             }
         }
 
         for ( const ModuleInfo& m : _modules ) {
             if ( !m.absPosition )
-                return { false, fmt::format("Module {} is not rooted",
-                        m.module->_id) };
+                return atoms::result_error( fmt::format( "Module {} is not rooted",
+                        m.module->_id) );
         }
-        return { true, "" };
+        return atoms::result_value( std::monostate() );
     }
 
     /**
      * \brief Prepare configuration if needed and decide whether it is valid with given collision model
      *
-     * \return A pair - first item indicates the validity, the second one gives
-     * textual description of the reason for invalidity
+     * \returns result - the error gives textual description of the reason for invalidity
      */
     template < typename Collision = SimpleCollision >
-    [[nodiscard]] std::pair< bool, std::string > validate( Collision collisionModel = Collision() ) {
+    atoms::Result< std::monostate > validate( Collision collisionModel = Collision() ) {
         if ( !_prepared ) {
-            try {
-                prepare();
-            } catch ( const std::runtime_error& err ) {
-                return { false, err.what() };
+            if ( auto result = prepare(); !result ) {
+                return result;
             }
         }
         return isValid( collisionModel );
@@ -615,10 +623,9 @@ public:
     /**
      * \brief Precompute position of all the modules in the configuration
      *
-     * Raises std::runtime_error if the configuration is inconsistent, and,
-     * therefore, it cannot be
+     * \returns result error if the configuration is inconsistent
      */
-    void prepare();
+    atoms::Result< std::monostate > prepare();
 
     /**
      * \brief Set position of a space joints specified by its id
@@ -627,10 +634,12 @@ public:
 
     /**
      * \brief Get position of a module specified by its id
+     *
+     * \throws std::logic_error if configuration is inconsistent or module with given ID doesn't exist
      */
     Matrix getModulePosition( ModuleId id ) {
         if ( !_prepared )
-            prepare();
+            prepare().get_or_throw_as< std::logic_error >();
         if ( !_idMapping.contains( id ) )
             throw std::logic_error( "bad access: rofi world does not containt module with such id" );
         return _modules[ _idMapping[ id ] ].absPosition.value();

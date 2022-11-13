@@ -25,7 +25,7 @@ TEST_CASE( "Universal Module Test" ) {
     SECTION( "Creation" ) {
         auto um = UniversalModule( 0, 0_deg, 0_deg, 0_deg );
         CHECK( um.components().size() == 10 );
-        um.prepare();
+        REQUIRE( um.prepare() );
         REQUIRE( um.getOccupiedRelativePositions().size() == 2 );
         CHECK( equals( um.getOccupiedRelativePositions()[ 0 ], identity ) );
         CHECK( equals( center( um.getOccupiedRelativePositions()[ 1 ] ), { 0, 0, 1, 1 } ) );
@@ -227,7 +227,7 @@ TEST_CASE( "Two modules next to each other" ) {
     auto con = m2.connectors()[ 1 ];
     connect( m1.connectors()[ 0 ], con, Orientation::South );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    REQUIRE_NOTHROW( world.prepare() );
+    REQUIRE( world.prepare() );
 
     SECTION( "The second is just moved to left by one" ) {
         Matrix new_origin = identity * translate( { -1, 0, 0 } );
@@ -271,7 +271,7 @@ TEST_CASE( "Two modules - different angles" ) {
     auto& m2 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_deg ) );
     connect( m1.connectors()[ 3 ], m2.connectors()[ 0 ], Orientation::South );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    REQUIRE_NOTHROW( world.prepare() );
+    REQUIRE( world.prepare() );
 
     SECTION( "BodyA " ) {
         CHECK( equals( world.getModulePosition( m1.getId() ), identity ) );
@@ -298,7 +298,7 @@ TEST_CASE( "Three modules -- connect docks 3 to 0s " ) {
     connect( m1.connectors()[ 3 ], m2.connectors()[ 0 ], Orientation::South );
     connect( m2.connectors()[ 3 ], m3.connectors()[ 0 ], Orientation::South );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    REQUIRE_NOTHROW( world.prepare() );
+    REQUIRE( world.prepare() );
 
     SECTION( "Modules are well placed" ) {
         CHECK( equals( center( world.getModulePosition( m1.getId() ) ), center( identity ) ) );
@@ -355,12 +355,8 @@ TEST_CASE( "Basic RofiWorld manipulation" ) {
     CHECK( world.roficomConnections().size() == 4 );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
     m1.setGamma( Angle::deg( 90 ) );
-    auto [ b, str ] = world.isValid();
-    CHECK( !b ); // because the configuration is not prepared
-    auto [ b2, str2 ] = world.validate();
-    CHECK( b2 );
-    if ( !b2 )
-        std::cout << "Error: " << str2 << "\n";
+    CHECK_FALSE( world.isValid() ); // because the configuration is not prepared
+    CHECK( world.validate() );
 }
 
 TEST_CASE( "Colliding configuration" ) {
@@ -380,8 +376,7 @@ TEST_CASE( "Colliding configuration" ) {
     connect( m4.connectors()[ 1 ], m5.connectors()[ 2 ], Orientation::North );
     CHECK( world.roficomConnections().size() == 4 );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    auto [ b, str ] = world.validate();
-    CHECK( !b );
+    CHECK_FALSE( world.validate() );
 }
 
 TEST_CASE( "Changing modules ID" ) {
@@ -395,14 +390,14 @@ TEST_CASE( "Changing modules ID" ) {
     connect( m2.connectors()[ 5 ], m3.connectors()[ 2 ], Orientation::North );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
 
-    CHECK( world.validate().first );
+    CHECK( world.validate() );
 
     CHECK( m1.getId() == 0 );
     CHECK( m2.getId() == 1 );
     CHECK( m3.getId() == 2 );
 
     CHECK( m2.setId( 42 ) );
-    CHECK( world.validate().first );
+    CHECK( world.validate() );
     CHECK( m1.getId() == 0 );
     CHECK( m2.getId() != 1 );
     CHECK( m2.getId() == 42 );
@@ -470,7 +465,7 @@ TEST_CASE( "Connect and disconnect" ) {
         CHECK( world.roficomConnections().empty() );
         auto j = connect( m1.getConnector( "A+X" ), m2.getConnector( "B-Z" ), roficom::Orientation::North );
         CHECK( world.roficomConnections().size() == 1 );
-        world.prepare();
+        REQUIRE( world.prepare() );
         CHECK( world.isPrepared() );
         world.disconnect( j );
         CHECK( !world.isPrepared() );
@@ -484,7 +479,7 @@ TEST_CASE( "Connect and disconnect" ) {
         auto h = connect< RigidJoint >( m.getConnector( "A-Z" ), { 0, 0, 0 }, identity );
         CHECK( !world.referencePoints().empty() );
 
-        world.prepare();
+        REQUIRE( world.prepare() );
         CHECK( world.isPrepared() );
         world.disconnect( h );
         CHECK( !world.isPrepared() );
@@ -504,13 +499,13 @@ TEST_CASE( "Connect and disconnect" ) {
                            m2.getConnector( "A-X" ),
                            roficom::Orientation::South );
 
-        world.prepare();
+        REQUIRE( world.prepare() );
         REQUIRE( world.isPrepared() );
-        CHECK( world.isValid().first );
+        CHECK( world.isValid() );
 
         world.disconnect( j1 );
 
-        CHECK_THROWS( world.prepare() );
+        CHECK_FALSE( world.prepare() );
     }
 
     SECTION( "Reconnect" )
@@ -526,9 +521,9 @@ TEST_CASE( "Connect and disconnect" ) {
                            m2.getConnector( "A-X" ),
                            roficom::Orientation::South );
 
-        world.prepare();
+        REQUIRE( world.prepare() );
         REQUIRE( world.isPrepared() );
-        CHECK( world.isValid().first );
+        CHECK( world.isValid() );
 
         m1.setAlpha( 0_deg );
         m2.setBeta( 0_deg );
@@ -536,22 +531,22 @@ TEST_CASE( "Connect and disconnect" ) {
                            m2.getConnector( "B+X" ),
                            roficom::Orientation::South );
 
-        world.prepare();
+        REQUIRE( world.prepare() );
         REQUIRE( world.isPrepared() );
-        CHECK( world.isValid().first );
+        CHECK( world.isValid() );
 
         world.disconnect( j1 );
 
-        world.prepare();
+        REQUIRE( world.prepare() );
         REQUIRE( world.isPrepared() );
-        CHECK( world.isValid().first );
+        CHECK( world.isValid() );
 
         m1.setAlpha( 90_deg );
         m2.setBeta( 90_deg );
 
-        world.prepare();
+        REQUIRE( world.prepare() );
         REQUIRE( world.isPrepared() );
-        CHECK( world.isValid().first );
+        CHECK( world.isValid() );
     }
 }
 
@@ -566,14 +561,14 @@ TEST_CASE( "Get near connector" ) {
 
         connect( m1.getConnector( "A+X" ), m2.getConnector( "A+X" ), roficom::Orientation::North );
 
-        world.prepare();
-        CHECK( world.isValid().first );
+        REQUIRE( world.prepare() );
+        CHECK( world.isValid() );
 
         SECTION( "Works with fixed connection" ) {
             connect( m1.getConnector( "B-X" ), m2.getConnector( "B-X" ), roficom::Orientation::North );
 
-            world.prepare();
-            CHECK( world.isValid().first );
+            REQUIRE( world.prepare() );
+            CHECK( world.isValid() );
         }
 
         SECTION( "Get near connector" ) {
@@ -584,8 +579,8 @@ TEST_CASE( "Get near connector" ) {
 
             connect( m1.getConnector( "B-X" ), nearConnector->first, nearConnector->second );
 
-            world.prepare();
-            CHECK( world.isValid().first );
+            REQUIRE( world.prepare() );
+            CHECK( world.isValid() );
         }
     }
 
@@ -613,8 +608,8 @@ TEST_CASE( "Get near connector" ) {
                     pad42.connectors()[ 1 ],
                     roficom::Orientation::North );
 
-        REQUIRE_NOTHROW( world.prepare() );
-        REQUIRE( world.isValid().first );
+        REQUIRE( world.prepare() );
+        REQUIRE( world.isValid() );
 
         auto connectorB = um12.getConnector( "B-Z" );
         auto nearConnector = connectorB.getNearConnector();

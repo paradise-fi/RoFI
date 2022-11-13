@@ -23,7 +23,7 @@ TEST_CASE( "UniversalModule - Demo" ) {
     auto con = m2.connectors()[ 1 ];
     connect( m1.connectors()[ 0 ], con, Orientation::South );
     connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-    REQUIRE_NOTHROW( world.prepare() );
+    REQUIRE( world.prepare() );
 
     auto j = serialization::toJSON( world );
     std::string js_str = j.dump( 4 );
@@ -38,7 +38,7 @@ TEST_CASE( "UniversalModule - Demo" ) {
     REQUIRE( world.modules().size() == worldj.modules().size() );
     REQUIRE( world.roficomConnections().size() == worldj.roficomConnections().size() );
     REQUIRE( world.referencePoints().size() == worldj.referencePoints().size() );
-    REQUIRE_NOTHROW( worldj.prepare() );
+    REQUIRE( worldj.prepare() );
 
     for ( auto& m : world.modules() ) {
         ModuleId id = m.module->getId();
@@ -64,7 +64,7 @@ TEST_CASE( "Empty" ) {
         CHECK( world.modules().size() == 0 );
         CHECK( world.roficomConnections().size() == 0 );
         CHECK( world.referencePoints().size() == 0 );
-        CHECK( world.validate( SimpleCollision() ).first );
+        CHECK( world.validate( SimpleCollision() ) );
     }
 }
 
@@ -95,8 +95,8 @@ TEST_CASE( "Pad" ) {
 
     RofiWorld cpy = fromJSON( j );
 
-    REQUIRE_NOTHROW( world.prepare() );
-    REQUIRE_NOTHROW( cpy.prepare() );
+    REQUIRE( world.prepare() );
+    REQUIRE( cpy.prepare() );
 
     CHECK( world.roficomConnections().size() == cpy.roficomConnections().size() );
     CHECK( ModuleId(world.modules().size())  == idCounter ); // idCounter is equal to number of modules within the world
@@ -217,8 +217,8 @@ TEST_CASE( "UniversalModule" ) {
 
     RofiWorld cpy = fromJSON( j );
 
-    REQUIRE_NOTHROW( world.prepare() );
-    REQUIRE_NOTHROW( cpy.prepare() );
+    REQUIRE( world.prepare() );
+    REQUIRE( cpy.prepare() );
 
     CHECK( world.roficomConnections().size() == cpy.roficomConnections().size() );
     CHECK( ModuleId(world.modules().size())  == idCounter ); // idCounter is equal to number of modules within the world
@@ -529,8 +529,8 @@ TEST_CASE( "Working with attributes" ) {
     ]
 })"""_json );
 
-        REQUIRE_NOTHROW( world.prepare() );
-        REQUIRE( world.isValid().first );
+        REQUIRE( world.prepare() );
+        REQUIRE( world.isValid() );
 
         auto um12 = dynamic_cast< UniversalModule * >( world.getModule( 12 ) );
         REQUIRE( um12 );
