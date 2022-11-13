@@ -37,7 +37,7 @@ namespace roficom {
     enum class Orientation { North, East, South, West };
 
     /**
-     * Return a corresponding angle in radians for a given orientation
+     * \returns angle corresponding to the given orientation
      */
     Angle orientationToAngle( Orientation o = Orientation::North );
     Matrix orientationToTransform( roficom::Orientation orientation );
@@ -114,7 +114,7 @@ struct Component {
     /**
      * \brief Get the absolute component position
      *
-     * Raises std::logic_error if the world is not prepared
+     * \throws std::logic_error if the world is not prepared
      */
     Matrix getPosition() const;
 
@@ -123,10 +123,10 @@ struct Component {
      *
      * that can be connected to
      *
-     * Returns the connector and orientation
-     * Returns `nullopt` if no such connector exists
+     * \returns the connector and orientation
+     * \returns `nullopt` if no such connector exists
      *
-     * Raises std::logic_error if the world is not prepared
+     * \throws std::logic_error if the world is not prepared
      */
     std::optional< std::pair< const Component&, roficom::Orientation > > getNearConnector() const;
 };
@@ -178,10 +178,12 @@ public:
     }
 
     /** \brief Set ID of the module to the new value
-     * 
+     *
      * Checks if the new value is not used within its world,
-     * if it's in use, the ID is left the same and the method returns
-     * False. Otherwise the ID is changed. Returns True on success.
+     * in which case the ID is changed to the new value.
+     * Otherwise the ID is left the same.
+     *
+     * \returns whether the value was changed
      */
     bool setId( ModuleId newId );
 
@@ -192,7 +194,7 @@ public:
     /**
      * \brief Get a component position relative to module origin
      *
-     * Raises std::logic_error if the components are inconsistent
+     * \throws std::logic_error if the components are inconsistent
      */
     Matrix getComponentRelativePosition( int idx ) {
         assert( idx >= 0 );
@@ -206,7 +208,7 @@ public:
     /**
      * \brief Get a component position relative to module origin
      *
-     * Raises std::logic_error if the components are not prepared
+     * \throws std::logic_error if the components are not prepared
      */
     Matrix getComponentRelativePosition( int idx ) const {
         assert( idx >= 0 );
@@ -221,7 +223,7 @@ public:
     /**
      * \brief Get a vector of occupied positions relative to module origin
      *
-     * Raises std::logic_error if the components are not prepared
+     * \throws std::logic_error if the components are not prepared
      */
     std::vector< Matrix > getOccupiedRelativePositions() const {
         using namespace rofi::configuration::matrices;
@@ -329,6 +331,10 @@ public:
 
     /**
      * \brief Get index of a component
+     *
+     * \throws std::logic_error if the component doesn't belong to the module
+     *
+     * \returns index of the first equal component
      */
     int componentIdx( const Component& c ) const {
         int idx = 0;
@@ -370,6 +376,10 @@ private:
 
     /**
      * \brief Get index of root component - component with no ingoing edges
+     *
+     * \throws std::logic_error if the module doesn't have a root component
+     *
+     * \returns index of the root component
      */
     int _computeRoot() const {
         for ( size_t i = 0; i < _components.size(); i++ )
@@ -474,11 +484,14 @@ public:
      * other modules via connect(). The module is assigned a unique id within
      * the world.
      *
-     * Returns a reference to the newly created module.
+     * \throws std::logic_error if module with the same ID is already present
+     *
+     * \returns reference to the newly created module.
      */
     Module& insert( const Module& m ) {
-        if ( _idMapping.contains( m._id ) )
-            throw std::runtime_error( "Module with given id is already present" );
+        if ( _idMapping.contains( m._id ) ) {
+            throw std::logic_error( "Module with given id is already present" );
+        }
         auto id = _modules.insert( { atoms::ValuePtr( m ), {}, {}, {}, std::nullopt } );
         _idMapping.insert( { _modules[ id ].module->_id, id } );
         Module* insertedModule = _modules[ id ].module.get();
@@ -497,7 +510,7 @@ public:
      * other modules via connect(). The module is assigned a unique id within
      * the world.
      *
-     * Returns a reference to the newly created module.
+     * \returns reference to the newly created module.
      */
     template< std::derived_from< Module > ModuleT >
         requires( !std::is_same_v< ModuleT, Module > )
@@ -568,7 +581,7 @@ public:
 
     /**
      * @brief Return true if the configuration is prepared
-     * 
+     *
      * Configuration can be prepared with `prepare`.
      */
     bool isPrepared() const {
@@ -791,20 +804,22 @@ struct SpaceJoint {
 /**
  * \brief Connect two modules via connector
  *
- * Requires that both modules belong to the same RofiWorld
- *, otherwise
- * std::logic_error is thrown.
+ * \throws std::logic_error if components don't belong to the same configuration
  *
+ * \returns handle to the connection joint
  */
 RofiWorld::RoficomJointHandle connect( const Component& c1, const Component& c2, roficom::Orientation o );
 
 /**
  * \brief Connect a module's component to a point in space via given joint type
  *
- * First argument specified the component, the rest of the arguments are
- * forwarded
+ * \tparam JointT connection joint type
  *
- * Returns ID of the joint which can be used for setting parameters of the joint
+ * \param c component to connect
+ * \param refpoint reference point in space
+ * \param args arguments to forward to \p JointT creation
+ *
+ * \returns handle to the connection joint
  */
 template < typename JointT, typename... Args >
 RofiWorld::SpaceJointHandle connect( const Component& c, Vector refpoint, Args&&... args ) {
