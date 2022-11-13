@@ -649,7 +649,7 @@ public:
             _servo.torqueOff();
             _servo.setTorqueLimit( limit );
             _servo.torqueOn();
-            _servo.move( target, Angle::rad( 2 * Angle::pi ) );
+            _servo.move( target, 360_deg );
         });
     }
 

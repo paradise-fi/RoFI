@@ -6,26 +6,26 @@ namespace rofi::configuration {
 
 using namespace rofi::configuration::matrices;
 
-double roficom::orientationToAngle( roficom::Orientation o ) {
+Angle roficom::orientationToAngle( roficom::Orientation o ) {
     using namespace roficom;
     switch ( o ) {
         case Orientation::North:
-            return M_PI;
+            return 180_deg;
         case Orientation::East:
-            return - M_PI_2;
+            return -90_deg;
         case Orientation::South:
-            return 0;
+            return 0_deg;
         case Orientation::West:
-            return M_PI_2;
+            return 90_deg;
     }
     ROFI_UNREACHABLE( "Orientation was modified" );
 }
 
 Matrix roficom::orientationToTransform( roficom::Orientation orientation ) {
     // the "default" roficom is A-X
-    return translate( { -1, 0, 0 } ) * rotate( M_PI, { 0, 0, 1 } )
-        * rotate( M_PI, { 1, 0, 0 } )
-        * rotate( roficom::orientationToAngle( orientation ), { -1, 0, 0 } );
+    return translate( { -1, 0, 0 } ) * rotate( Angle::pi, { 0, 0, 1 } )
+        * rotate( Angle::pi, { 1, 0, 0 } )
+        * rotate( roficom::orientationToAngle( orientation ).rad(), { -1, 0, 0 } );
 }
 
 std::string roficom::orientationToString( Orientation o ) {
