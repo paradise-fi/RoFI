@@ -151,7 +151,7 @@ atoms::Result< std::monostate > RofiWorld::prepare() {
                 return atoms::result_error(
                         fmt::format( "Inconsistent rooting of module {}", mInfo.module->_id ) );
         } else {
-            mInfo.absPosition = componentPosition;
+            mInfo.absPosition = modulePosition;
         }
         roots.insert( _idMapping[ mInfo.module->_id ] );
     }
