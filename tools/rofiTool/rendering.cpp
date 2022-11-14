@@ -162,9 +162,113 @@ void buildConfigurationScene( vtkRenderer* renderer, RofiWorld& world ) {
 }
 
 void renderConfiguration( RofiWorld world, const std::string& configName ) {
-        vtkNew< vtkRenderer > renderer;
+    vtkNew< vtkRenderer > renderer;
     setupRenderer( renderer.Get() );
     buildConfigurationScene( renderer.Get(), world );
+
+    vtkNew< vtkRenderWindow > renderWindow;
+    renderWindow->AddRenderer( renderer.Get() );
+    renderWindow->SetWindowName( ( "Preview of " + configName ).c_str() );
+
+    // Setup main window loop
+    vtkNew< vtkRenderWindowInteractor > renderWindowInteractor;
+    renderWindowInteractor->SetRenderWindow( renderWindow.Get() );
+
+    vtkNew< vtkAxesActor > axes;
+    vtkNew< vtkOrientationMarkerWidget > widget;
+    widget->SetOutlineColor( 0.9300, 0.5700, 0.1300 );
+    widget->SetOrientationMarker( axes.Get() );
+    widget->SetInteractor( renderWindowInteractor.Get() );
+    widget->SetViewport( 0.0, 0.0, 0.4, 0.4 );
+    widget->SetEnabled( 1 );
+    widget->InteractiveOn();
+
+    // Start main window loop
+    renderWindow->Render();
+    renderWindowInteractor->Start();
+}
+
+void addPointToScene( vtkRenderer* renderer, const Matrix& pointPosition, std::array<double,3> colour, double scale = 1 / 95.0 )
+{
+    auto posTrans = vtkSmartPointer< vtkTransform >::New();
+    posTrans->SetMatrix( convertMatrix( pointPosition ) );
+
+    auto filter = vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+    filter->SetTransform( posTrans );
+
+    // Load blender object
+    auto reader = vtkSmartPointer<vtkOBJReader>::New();
+    ResourceFile modelFile = LOAD_RESOURCE_FILE_LAZY( model_point_obj )();
+    reader->SetFileName( modelFile.name().c_str() );
+    reader->Update();
+
+    auto trans = vtkSmartPointer< vtkTransform >::New();
+    trans->RotateX( 90 );
+    auto t = vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+    t->SetInputConnection( reader->GetOutputPort() );
+    t->SetTransform( trans );
+    t->Update();
+
+    filter->SetInputConnection( t->GetOutputPort() );
+
+    auto frameMapper = vtkSmartPointer< vtkPolyDataMapper >::New();
+    frameMapper->SetInputConnection( filter->GetOutputPort() );
+
+    auto frameActor = vtkSmartPointer< vtkActor >::New();
+    frameActor->SetMapper( frameMapper );
+    frameActor->GetProperty()->SetColor( colour.data() );
+    frameActor->GetProperty()->SetOpacity( 1.0 );
+    frameActor->GetProperty()->SetFrontfaceCulling( true );
+    frameActor->GetProperty()->SetBackfaceCulling( true );
+    frameActor->SetPosition( pointPosition( 0, 3 ), pointPosition( 1, 3 ), pointPosition( 2, 3 ) );
+    frameActor->SetScale( scale );
+
+    renderer->AddActor( frameActor );
+}
+
+void buildConfigurationPointsScene( vtkRenderer* renderer, RofiWorld& world, bool showModules ) {
+    using namespace rofi::isoreconfig;
+
+    // [0] are module points, [1] are connection points
+    std::array< Positions, 2 > pts = decomposeRofiWorld( world );
+
+    // Show configuration points (colour depends on module index)
+    int index = 0;
+    for ( const Matrix& pt : pts[0] )
+        addPointToScene( renderer, pt, getModuleColor( index++ ) );
+
+    // Show connector points (green)
+    for ( const Matrix& pt : pts[1] )
+        addPointToScene( renderer, pt, { 0, 1, 0 }, 1 / 90.0 );
+
+    // Show centroid (black)
+    addPointToScene( renderer, centroid( world ), { 0, 0, 0 } );
+
+    // Show modules 
+    if ( showModules )
+    {
+        // get active (i.e. connected) connectors for each module within RofiWorld
+        std::map< ModuleId, std::set< int > > active_cons;
+        for ( const auto& roficom : world.roficomConnections() ) {
+            active_cons[ world.getModule( roficom.sourceModule )->getId() ].insert( roficom.sourceConnector );
+            active_cons[ world.getModule( roficom.destModule )->getId()   ].insert( roficom.destConnector );
+        }
+        index = 0;
+        for ( auto& mInfo : world.modules() ) 
+        {
+            assert( mInfo.absPosition && "The configuration has to be prepared" );
+            if ( !active_cons.contains( mInfo.module->getId() ) )
+                active_cons[ mInfo.module->getId() ] = {};
+            addModuleToScene( renderer, *mInfo.module, *mInfo.absPosition, index, active_cons[ mInfo.module->getId() ] );
+            index++;
+        }
+    }
+}
+
+void renderPoints( RofiWorld configuration, const std::string& configName, bool showModules ) {
+    vtkNew< vtkRenderer > renderer;
+    setupRenderer( renderer.Get() );
+    buildConfigurationPointsScene( renderer.Get(), configuration, showModules );
 
     vtkNew< vtkRenderWindow > renderWindow;
     renderWindow->AddRenderer( renderer.Get() );
