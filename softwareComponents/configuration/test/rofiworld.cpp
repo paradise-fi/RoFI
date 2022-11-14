@@ -674,4 +674,61 @@ TEST_CASE( "Configuration copying" ) {
     }
 }
 
+TEST_CASE( "Fix in space" )
+{
+    auto world = RofiWorld();
+
+    SECTION( "Translation" )
+    {
+        auto & um12 = world.insert( UniversalModule( 12 ) );
+
+        connect< RigidJoint >( um12.getBodyA(), Vector{ 2, 4, 6 }, translate( { 10, 20, 30 } ) );
+
+        REQUIRE( world.validate() );
+
+        CAPTURE( um12.getBodyA().getPosition() );
+        CAPTURE( center( um12.getBodyA().getPosition() ) );
+        CAPTURE( translate( { 2, 4, 6 } ) * translate( { 12, 24, 36 } ) );
+
+        CHECK( equals( center( um12.getBodyA().getPosition() ), Vector( { 12, 24, 36, 1 } ) ) );
+        CHECK( equals( um12.getBodyA().getPosition(), translate( { 12, 24, 36 } ) ) );
+    }
+
+    SECTION( "Rotation" )
+    {
+        auto & um12 = world.insert( UniversalModule( 12 ) );
+
+        connect< RigidJoint >( um12.getBodyA(),
+                               Vector{ 2, 4, 6 },
+                               rotate( Angle::pi, { 0, 0, 1 } ) );
+
+        REQUIRE( world.validate() );
+
+        CAPTURE( um12.getBodyA().getPosition() );
+
+        CHECK( equals( center( um12.getBodyA().getPosition() ), Vector( { 2, 4, 6, 1 } ) ) );
+        CHECK( equals( um12.getBodyA().getPosition(),
+                       translate( { 2, 4, 6 } ) * rotate( Angle::pi, { 0, 0, 1, 1 } ) ) );
+    }
+
+    SECTION( "Rotation + translation" )
+    {
+        auto & um12 = world.insert( UniversalModule( 12 ) );
+
+        connect< RigidJoint >( um12.getBodyA(),
+                               Vector{ 2, 4, 6 },
+                               rotate( Angle::pi, { 0, 0, 1 } ) * translate( { 10, 20, 30 } ) );
+
+        REQUIRE( world.validate() );
+
+        CAPTURE( um12.getBodyA().getPosition() );
+
+        CHECK( equals( center( um12.getBodyA().getPosition() ),
+                       Vector( { 2 - 10, 4 - 20, 6 + 30, 1 } ) ) );
+        CHECK( equals( um12.getBodyA().getPosition(),
+                       translate( { 2, 4, 6 } ) * rotate( Angle::pi, { 0, 0, 1 } )
+                               * translate( { 10, 20, 30 } ) ) );
+    }
+}
+
 } // namespace
