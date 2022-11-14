@@ -6,4 +6,4 @@ add_resources(modelResources
 
 add_executable(rofi-tool main.cpp points.cpp preview.cpp build.cpp rendering.cpp check.cpp
     ${modelResources})
-target_link_libraries(rofi-tool PRIVATE dimcli configuration isoreconfig ${VTK_LIBRARIES} atoms-heavy)
+target_link_libraries(rofi-tool PRIVATE dimcli configuration configurationWithJson isoreconfig ${VTK_LIBRARIES} atoms-heavy)

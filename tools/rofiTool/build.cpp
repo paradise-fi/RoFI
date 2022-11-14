@@ -80,7 +80,8 @@ int build( Dim::Cli & /* cli */ ) {
         rofi::configuration::matrices::Vector( { 0, 0, 0 } ),
         rofi::configuration::matrices::identity );
 
-    world.prepare();
+    world.prepare().get_or_throw_as< std::runtime_error >();
+        
     renderConfiguration( world, botTypeToString( static_cast< BotType >( *botType ) ) );
 
     return 0;
