@@ -10,6 +10,8 @@
 #include <sstream>
 #include <cstring>
 #include <cassert>
+#include <optional>
+#include <algorithm>
 
 namespace rofi::hal {
 
@@ -22,12 +24,18 @@ struct Ip6Addr : ip6_addr_t {
     Ip6Addr( const char* str ) {
         ip6addr_aton( str, this );
     }
+    Ip6Addr( const std::string& str ) {
+        if ( !ip6addr_aton( str.c_str(), this ) )
+            throw std::runtime_error( "Given string is not valid IPv6 address" );
+    }
     Ip6Addr( ip6_addr addr ) : ip6_addr( addr ) {}
     Ip6Addr( ip6_addr&& o ) {
         std::swap( addr, o.addr );
     }
 
     Ip6Addr( uint8_t mask ) {
+        if ( mask > 128 )
+            throw std::runtime_error( "Mask has to be in range [0, 128]");
         mask_to_address( mask, this );
     }
 
@@ -47,7 +55,11 @@ struct Ip6Addr : ip6_addr_t {
         return res;
     }
 
-    static int size() { return 16; }
+    bool linkLocal() const {
+        return ip6_addr_islinklocal( this );
+    }
+
+    static constexpr int size() { return 16; }
 };
 
 inline std::ostream& operator<<( std::ostream& o, const Ip6Addr& a ) {
@@ -93,24 +105,24 @@ struct Netif : netif_t {
         return s.str();
     }
 
-    bool isStub() const {
-        return stub;
+    std::optional< Ip6Addr > getAddress( int i ) const {
+        assert( i < LWIP_IPV6_NUM_ADDRESSES && "getAddress index exceedes address count" );
+        return ip6_addr_isvalid( ip6_addr_state[ i ] ) || ip6_addr_islinklocal( &ip6_addr[ i ] )
+            ? std::optional( ip6_addr[ i ] ) : std::nullopt;
     }
 
-    bool setStub( bool b ) {
-        return stub = b;
+    int addAddress( const Ip6Addr& ip ) {
+        s8_t index = -1;
+        netif_add_ip6_address( this, &ip, &index );
+        if ( index != -1 )
+            netif_ip6_addr_set_state( this, index, IP6_ADDR_VALID );
+        return static_cast< int >( index );
     }
 
-    bool isActive() const {
-        return active;
+    void removeAddress( int index ) {
+        assert( index < LWIP_IPV6_NUM_ADDRESSES && "getAddress index exceedes address count" );
+        netif_ip6_addr_set_state( this, static_cast< s8_t >( index ), IP6_ADDR_INVALID );
     }
-
-    bool setActive( bool b ) {
-        return active = b;
-    }
-private:
-    bool stub   = false;
-    bool active = false;
 };
 
 /**
@@ -130,7 +142,7 @@ struct PhysAddr {
     PhysAddr( const PhysAddr& ) = default;
     PhysAddr& operator=( const PhysAddr& ) = default;
 
-    static int size() { return 6; }
+    static constexpr int size() { return 6; }
 
     uint8_t addr[ 6U ];
 };
