@@ -4,8 +4,6 @@
 
 #include <lwip/udp.h>
 
-#include "roif.hpp"
-
 namespace udpEx6
 {
 using namespace rofinet;
@@ -66,7 +64,7 @@ inline void runMaster()
 
     while ( true )
     {
-        sleep( 2 );
+        sleep( 4 );
     }
 }
 
@@ -86,8 +84,8 @@ inline void runSlave( const char * masterAddr )
     Ip6Addr addr( masterAddr );
 
     LOCK_TCPIP_CORE();
-    auto res = udp_bind( pcb, IP_ADDR_ANY, 7777 );
-    std::cout << "UDP binded (" << res << ")" << std::endl;
+    err_t res = udp_bind( pcb, IP6_ADDR_ANY, 7777 );
+    std::cout << "UDP binded (" << static_cast< int >( res ) << ")" << std::endl;
     udp_recv( pcb, onSlavePacket, nullptr );
     UNLOCK_TCPIP_CORE();
 
