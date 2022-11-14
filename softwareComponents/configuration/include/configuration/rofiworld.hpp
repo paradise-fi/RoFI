@@ -234,7 +234,16 @@ public:
         for ( auto& m : _componentRelativePositions.value() ) {
             res.push_back( translate( center( m ) ) );
         }
-        std::sort( res.begin(), res.end(), []( auto a, auto b ) { return equals( a, b ); } );
+        std::sort( res.begin(), res.end(), []( const Matrix & a, const Matrix & b ) {
+            for (int x = 0; x < 4; x++ ) {
+                for (int y = 0; y < 4; y++ ) {
+                    if ( std::abs( a( x, y ) - b( x, y ) ) > 1 / matrices::precision ) {
+                        return a( x, y ) < b( x, y );
+                    }
+                }
+            }
+            return false;
+        } );
         res.erase( std::unique( res.begin(), res.end(), []( auto a, auto b ) { return equals( a, b ); } ), res.end() );
 
         return res;
