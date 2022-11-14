@@ -6,3 +6,4 @@ add_subdirectory(basicJointPosition)
 
 add_subdirectory(basicMove)
 add_subdirectory(communication)
+add_subdirectory(networkManager)
