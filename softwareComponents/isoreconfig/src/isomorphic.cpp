@@ -32,8 +32,7 @@ Positions decomposeUniversalModule(
 
 std::array< Positions, 2 > decomposeRofiWorld( const RofiWorld& rw )
 {
-    auto [ ok, err ] = rw.isValid();
-    if ( !ok ) throw std::logic_error( "RofiWorld to decompose is not prepared" );
+    rw.isValid().get_or_throw_as< std::logic_error >();
 
     std::array< Positions, 2 > result;
 
