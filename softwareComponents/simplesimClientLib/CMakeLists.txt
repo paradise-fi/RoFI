@@ -8,7 +8,7 @@ set(RESOURCE_FILES
 )
 
 set(FILES
-    # Required to inlcude header files for Qt compilation
+    # Required to include header files for Qt compilation
     include/simplesim_client.hpp
     include/changecolor.hpp
 

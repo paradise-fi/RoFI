@@ -14,7 +14,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Change color</string>
+   <string>Change Color</string>
   </property>
   <widget class="QDialogButtonBox" name="buttonBox">
    <property name="geometry">
@@ -100,8 +100,8 @@
   <widget class="QPlainTextEdit" name="plainTextEdit">
    <property name="geometry">
     <rect>
-     <x>150</x>
-     <y>70</y>
+     <x>140</x>
+     <y>60</y>
      <width>121</width>
      <height>121</height>
     </rect>
@@ -110,7 +110,7 @@
     <bool>true</bool>
    </property>
    <property name="plainText">
-    <string>Enter module IDs to color:
+    <string>Enter module indices to color:
 - individual: 1
 - multiple: 1,2,3
 - range: 1..3</string>

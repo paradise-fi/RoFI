@@ -13,6 +13,7 @@ ChangeColor::ChangeColor( QWidget * parent, size_t size )
     _ui->setupUi( this );
     _ui->plainTextEdit->hide();
 
+    this->setWindowFlags( Qt::Window );
     connect( _ui->buttonBox, SIGNAL( rejected() ), this, SLOT( hide() ) );
     connect( _ui->buttonBox, SIGNAL( accepted() ), this, SLOT( accept() ) );
     connect( _ui->toolButton, SIGNAL( clicked() ), this, SLOT( toggleHelp() ) );
