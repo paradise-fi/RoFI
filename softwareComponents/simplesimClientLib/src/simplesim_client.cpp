@@ -374,6 +374,7 @@ void SimplesimClient::itemSelected( QTreeWidgetItem * selected )
     int treeIdx;
     rofi::configuration::ModuleId moduleId;
     std::array< double, 3 > white = { { 1.0, 1.0, 1.0 } };
+    Matrix selectedPosition;
 
     if ( !selected->parent() ) {
         treeIdx = _ui->treeWidget->indexOfTopLevelItem( selected );
@@ -385,12 +386,20 @@ void SimplesimClient::itemSelected( QTreeWidgetItem * selected )
         moduleId = _treeIdMapping[ treeIdx ];
         _moduleRenderInfos[ moduleId ].componentActors.front()->GetProperty()->GetColor( _lastColor.data() );
         colorModule( moduleId, white );
+        auto config = *getCurrentConfig();
+        selectedPosition = config.getModulePosition( moduleId );
     } else {
         treeIdx = _ui->treeWidget->indexOfTopLevelItem( selected->parent()->parent() );
         moduleId = _treeIdMapping[ treeIdx ];
         int component = _ui->treeWidget->topLevelItem( treeIdx )->child( 0 )->indexOfChild( selected );
         _moduleRenderInfos[ moduleId ].componentActors[ component ]->GetProperty()->GetColor( _lastColor.data() );
         colorModule( moduleId, white, component );
+
+        selectedPosition = getCurrentConfig()->getModule( moduleId )
+            ->components()[ component ].getPosition();
+    }
+    if( _ui->centerSelected->isChecked() ){
+        setCamera( selectedPosition );
     }
     _lastModule = moduleId;
 }
@@ -425,6 +434,13 @@ void SimplesimClient::changeColorWindow()
     _changeColorWindow->show();
 }
 
+void SimplesimClient::setCamera( Matrix focalPoint )
+{
+    _renderer->GetActiveCamera()->SetFocalPoint( focalPoint.at( 0, 3 ),
+                                                 focalPoint.at( 1, 3 ),
+                                                 focalPoint.at( 2, 3 ) );
+
+}
 void SimplesimClient::pauseButton()
 {
     bool paused = getCurrentSettings().paused();
