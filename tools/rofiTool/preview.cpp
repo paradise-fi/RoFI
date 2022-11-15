@@ -1,11 +1,10 @@
-#include "preview.hpp"
+#include "commands.hpp"
 #include "rendering.hpp"
 
 #include <fstream>
 #include <stdexcept>
 
 #include <configuration/rofiworld.hpp>
-#include <configuration/universalModule.hpp>
 
 static auto command = Dim::Cli().command( "preview" )
     .desc( "Interactively preview a configuration" );
@@ -13,16 +12,14 @@ static auto& inputFile = command.opt< std::string >( "<FILE>" )
     .desc("Specify source file");
 
 int preview( Dim::Cli & /* cli */ ) {
-    auto cfgFile = std::ifstream( *inputFile );
-    if ( !cfgFile.is_open() )
-        throw std::runtime_error( "Cannot open file '" + *inputFile + "'" );
+    auto configuration = parseConfiguration( *inputFile );
 
-    auto configuration = rofi::configuration::readOldConfigurationFormat( cfgFile );
-    rofi::configuration::connect< rofi::configuration::RigidJoint >(
-        configuration.modules().begin()->module->bodies()[ 0 ],
-        rofi::configuration::matrices::Vector( { 0, 0, 0 } ),
-        rofi::configuration::matrices::identity );
-    configuration.prepare();
+    if ( configuration.modules().size() == 0 )
+        throw std::runtime_error( "Configuration in '" + *inputFile + "' does not contain any modules to display" );
+
+    affixConfiguration( configuration );
+
+    configuration.prepare().get_or_throw_as< std::runtime_error >();
 
     renderConfiguration( configuration, *inputFile );
 

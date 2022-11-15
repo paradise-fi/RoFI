@@ -1,9 +1,6 @@
 #include <dimcli/cli.h>
 #include <iostream>
-#include "points.hpp"
-#include "preview.hpp"
-#include "check.hpp"
-#include "build.hpp"
+#include "commands.hpp"
 
 int main( int argc, char * argv[] ) {
     Dim::Cli cli;
