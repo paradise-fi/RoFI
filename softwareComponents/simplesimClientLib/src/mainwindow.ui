@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>943</width>
-    <height>623</height>
+    <height>634</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -116,7 +116,14 @@
     <property name="title">
      <string>View</string>
     </property>
+    <widget class="QMenu" name="menuCamera_settings">
+     <property name="title">
+      <string>Camera settings</string>
+     </property>
+     <addaction name="centerSelected"/>
+    </widget>
     <addaction name="changeColor"/>
+    <addaction name="menuCamera_settings"/>
    </widget>
    <addaction name="menuView"/>
   </widget>
@@ -124,6 +131,20 @@
   <action name="changeColor">
    <property name="text">
     <string>Change module color</string>
+   </property>
+  </action>
+  <action name="centerSelected">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>false</bool>
+   </property>
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Center selected module</string>
    </property>
   </action>
  </widget>

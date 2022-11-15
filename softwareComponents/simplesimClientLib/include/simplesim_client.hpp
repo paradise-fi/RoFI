@@ -191,6 +191,7 @@ private:
         settingsCmd.set_cmd_type( cmdType );
         return settingsCmd;
     }
+    void setCamera( rofi::configuration::matrices::Matrix focalPoint );
 
     std::unique_ptr< Ui::SimplesimClient > _ui;
 
