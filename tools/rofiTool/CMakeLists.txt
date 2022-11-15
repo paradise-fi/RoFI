@@ -4,6 +4,6 @@ project(rofi)
 add_resources(modelResources
     "model/body.obj" "model/connector.obj" "model/shoe.obj" "model/point.obj" )
 
-add_executable(rofi-tool main.cpp points.cpp preview.cpp build.cpp rendering.cpp check.cpp
+add_executable(rofi-tool main.cpp points.cpp preview.cpp build.cpp rendering.cpp check.cpp commands.cpp
     ${modelResources})
 target_link_libraries(rofi-tool PRIVATE dimcli configuration configurationWithJson isoreconfig ${VTK_LIBRARIES} atoms-heavy)
