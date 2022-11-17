@@ -3,6 +3,7 @@
 #include <nlohmann/json.hpp>
 
 #include "common_opts.hpp"
+#include "configuration/serialization.hpp"
 #include "voxel.hpp"
 
 
