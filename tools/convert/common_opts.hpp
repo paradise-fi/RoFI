@@ -29,7 +29,7 @@ inline auto readJsonCfgFromStream( std::istream & istr )
     }
 
     assert( rofiWorldPtr );
-    if ( auto ok = rofiWorldPtr->validate( rofi::configuration::SimpleCollision() ) ) {
+    if ( auto ok = rofiWorldPtr->validate( rofi::configuration::SimpleCollision() ); !ok ) {
         return std::move( ok ).assume_error_result();
     }
     return atoms::result_value( std::move( rofiWorldPtr ) );
