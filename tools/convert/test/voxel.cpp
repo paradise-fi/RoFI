@@ -295,4 +295,48 @@ TEST_CASE( "All possible configurations - 1 module" )
     CHECK( rofiWorldsEquivalent( **convertedRofiWorld, rofiWorld ) );
 }
 
+TEST_CASE( "All possible configurations - 2 modules", "[!hide]" )
+{
+    auto rofiWorld = RofiWorld();
+
+    auto alpha1 = GENERATE( 0_deg, 90_deg, -90_deg );
+    auto alpha2 = GENERATE( 0_deg, 90_deg, -90_deg );
+    auto beta1 = GENERATE( 0_deg, 90_deg, -90_deg );
+    auto beta2 = GENERATE( 0_deg, 90_deg, -90_deg );
+    auto gamma1 = GENERATE( 0_deg, 90_deg );
+    auto gamma2 = GENERATE( 180_deg, 270_deg );
+
+    auto & um1 = rofiWorld.insert( UniversalModule( 1, alpha1, beta1, gamma1 ) );
+    auto & um2 = rofiWorld.insert( UniversalModule( 2, alpha2, beta2, gamma2 ) );
+
+    auto refPoint = Vector{ 0, 0, 0 };
+    auto transform = matrices::identity;
+    connect< RigidJoint >( um1.connectors()[ 0 ], refPoint, transform );
+
+    auto orientation = GENERATE( roficom::Orientation::North,
+                                 roficom::Orientation::East,
+                                 roficom::Orientation::South,
+                                 roficom::Orientation::West );
+
+    REQUIRE( um1.connectors().size() == 6 );
+    auto connector1 = um1.connectors()[ GENERATE( range( 0, 6 ) ) ];
+    REQUIRE( um2.connectors().size() == 6 );
+    auto connector2 = um2.connectors()[ GENERATE( range( 0, 6 ) ) ];
+
+    connect( connector1, connector2, orientation );
+
+    REQUIRE( rofiWorld.validate() );
+
+    auto voxelWorld = VoxelWorld::fromRofiWorld( rofiWorld );
+    REQUIRE( voxelWorld );
+
+    auto convertedRofiWorld = voxelWorld->toRofiWorld();
+    REQUIRE( convertedRofiWorld );
+    REQUIRE( *convertedRofiWorld );
+    REQUIRE( ( *convertedRofiWorld )->isValid() );
+
+
+    CHECK( rofiWorldsEquivalent( **convertedRofiWorld, rofiWorld ) );
+}
+
 } // namespace
