@@ -189,6 +189,7 @@ endif()
 
 add_component(atoms)
 add_component(configuration)
+add_component(voxel)
 add_component(kinematics)
 add_component(reconfig)
 add_component(isoreconfig)

@@ -1,5 +1,3 @@
-#include <iostream>
-
 #include <dimcli/cli.h>
 
 #include "common_opts.hpp"
