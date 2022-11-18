@@ -122,6 +122,23 @@ void Module::setJointPositions( int idx, std::span< const float > p ) {
         parent->onModuleMove();
 }
 
+atoms::Result< std::monostate > Module::changeJointPositionsBy( int idx, std::span< float > diff ) {
+    assert( idx >= 0 );
+    assert( to_unsigned( idx ) < _joints.size() );
+    assert( _joints[ to_unsigned( idx ) ].joint->positions().size() == diff.size() );
+
+    auto result = _joints[ to_unsigned( idx ) ].joint->changePositionsBy( diff );
+    // Do not clear component positions if the joint change did not happen
+    if ( !result.has_value() )
+        return result;
+
+    _componentRelativePositions = std::nullopt;
+    if ( parent )
+        parent->onModuleMove();
+
+    return result;
+}
+
 void Module::clearComponentPositions() {
     _componentRelativePositions = std::nullopt;
     if ( parent )
