@@ -190,6 +190,23 @@ public:
     void setJointPositions( int idx, std::span< const float > p );
     // Implemented in CPP files as it depends on definition of RofiWorld
 
+    /**
+     * \brief Changes parameters of joint positions by values in <diff>.
+     * 
+     * Assumes <idx> is at most index of last joint in joint container.
+     * Assumes <diff> contains as many values as joint has parameters.
+     * If values from <diff> added to values of current parameters 
+     * are not bounded by pairs of values in joint limits, 
+     * function does not change the positions
+     * and does not clear component positions 
+     * (configuration is still prepared).
+     * 
+     * \param idx Joint index
+     * @param diff Span of values to be added to current parameters (can be negative).
+     * @return result_error if any of the resulting parameters 
+     * does not respect corresponding joint limit. 
+     */
+    atoms::Result< std::monostate> changeJointPositionsBy( int idx, std::span< float > diff );
 
     /**
      * \brief Get a component position relative to module origin

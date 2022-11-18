@@ -9,8 +9,10 @@
 #include <span>
 
 #include <atoms/patterns.hpp>
+#include <atoms/result.hpp>
 #include <atoms/units.hpp>
 #include <configuration/Matrix.h>
+#include <fmt/format.h>
 
 namespace rofi::configuration {
 
@@ -49,9 +51,58 @@ struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
         return _positions;
     }
 
+    /**
+     * @brief Sets joint settings to corresponding values given by <pos>.
+     * Assumes there are exactly as many values as there are joint settings.
+     * 
+     * @throws std::logic_error if the given settings do not respect joint limits.
+     */
     void setPositions( std::span< const float > pos ) {
-        assert( pos.size() == _positions.size() && "Positions have to preserve given size" );
+        assert( pos.size() == _positions.size() && "Incorrect number of parameters to set" );
+
+        size_t pId = 0;
+        for ( auto[low, high] : _jointLimits )
+        {
+            if ( pos[pId] < low || high < pos[pId] ) 
+                throw std::logic_error( 
+                    fmt::format( "Parameter at index {} with value {} is not within limit [{}, {}]", 
+                    pId, pos[pId], low, high ) );
+            ++pId;
+        }
+
         std::copy( pos.begin(), pos.end(), _positions.begin() );
+    }
+
+    /**
+     * @brief Changes each joint setting by the corresponding value in <diff>.
+     * 
+     * Assumes there are exactly as many values given as there are joint settings.
+     * 
+     * @return result error if the resulting values do not respect joint limits.
+     */
+    atoms::Result< std::monostate > changePositionsBy( std::span< const float > diff )
+    {
+        assert( diff.size() == _positions.size() && "Incorrect number of parameters to set" );
+
+        std::vector< float > newParams( _positions.size() );
+
+        size_t paramId = 0;
+        for ( auto[low, high] : _jointLimits )
+        {
+            float newValue = _positions[paramId] + diff[paramId];
+
+            if ( newValue < low || high < newValue ) 
+                return atoms::result_error< std::string >( 
+                    fmt::format( "Parameter at index {} with value {} added to current value {} is not within limit [{}, {}]", 
+                    paramId, diff[paramId], _positions[paramId], low, high ) );
+            
+            newParams[paramId++] = newValue;
+        }
+
+        assert( _positions.size() == newParams.size() );
+        std::swap( _positions, newParams );
+
+        return atoms::result_value( std::monostate() );
     }
 
     virtual Matrix sourceToDest() const = 0;
