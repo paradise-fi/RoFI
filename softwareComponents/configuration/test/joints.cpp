@@ -50,18 +50,18 @@ TEST_CASE( "Base RotationJoint" ) {
         auto j = RotationJoint( identity, { 1, 0, 0 }, translate( { 42, 42, 42 } ), -90_deg, 90_deg );
         REQUIRE( j.positions().size() == 1 );
         Joint& jj = j;
-        tmp = { ( 180_deg ).rad() };
+        tmp = { ( 90_deg ).rad() };
         jj.setPositions( tmp );
         jj.sourceToDest();
         REQUIRE( j.positions().size() == 1 );
-        CHECK( j.positions()[ 0 ] == ( 180_deg ).rad() );
+        CHECK( j.positions()[ 0 ] == ( 90_deg ).rad() );
     }
 }
 
 TEST_CASE( "sourceToDest and destToSource" ) {
     std::vector< float > tmp{ 0 };
     SECTION( "Unit size" ) {
-        auto j = RotationJoint( { 0, 0, 0 }, { 0, 0, 0 }, { 1, 0, 0 }, { 1, 0, 0 }, -90_deg, 90_deg );
+        auto j = RotationJoint( { 0, 0, 0 }, { 0, 0, 0 }, { 1, 0, 0 }, { 1, 0, 0 }, -360_deg, 360_deg );
         j.setPositions( tmp );
         CHECK( equals( j.sourceToDest(), translate( {  1, 0, 0 } ) ) );
         CHECK( equals( j.destToSource(), translate( { -1, 0, 0 } ) ) );
@@ -76,7 +76,7 @@ TEST_CASE( "sourceToDest and destToSource" ) {
     }
 
     SECTION( "Bigger size" ) {
-        auto j = RotationJoint( { 0, 0, 0 }, { 0, 0, 0 }, { 5, 0, 0 }, { 0, 1, 0 }, -90_deg, 90_deg );
+        auto j = RotationJoint( { 0, 0, 0 }, { 0, 0, 0 }, { 5, 0, 0 }, { 0, 1, 0 }, -180_deg, 180_deg );
         j.setPositions( tmp );
         CHECK( equals( j.sourceToDest(), translate( { 5, 0, 0 } ) ) );
         tmp = { ( 180_deg ).rad() };
