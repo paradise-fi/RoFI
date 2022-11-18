@@ -120,11 +120,11 @@ TEST_CASE( "UniversalModule" ) {
         CHECK( js[ "modules" ][ 0 ][ "gamma" ] == 180 );
     }
 
-    SECTION( "Signle With rotational joint" ) {
+    SECTION( "Single With rotational joint" ) {
         auto& m1 = world.insert( UniversalModule( idCounter++, 0_deg, 0_deg, 0_rad ) );
         connect< RotationJoint >( m1.bodies()[ 0 ], Vector{ 0, 0, 0 }
                                 , identity, Vector{ 1, 0, 0 }, translate( { 0, 0, 1 } )
-                                , Angle::deg( 90 ), Angle::deg( 90 ) );
+                                , Angle::deg( -90 ), Angle::deg( 90 ) );
     }
 
     SECTION( "Multiple Modules" ) {
