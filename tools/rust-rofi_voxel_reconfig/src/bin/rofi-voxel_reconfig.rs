@@ -1,7 +1,7 @@
 use clap::Parser;
 use failure::Error;
 use input::Input;
-use rofi_voxel::{reconfiguration, serde, voxel_world};
+use rofi_voxel::{reconfiguration, serde};
 
 pub mod input {
     use failure::{ensure, Error, ResultExt};
@@ -89,8 +89,8 @@ fn main() -> Result<(), Error> {
 
     let InputWorlds { init, goal } = args.get_worlds()?;
 
-    let init = voxel_world::VoxelWorld::try_from(&init)?;
-    let goal = voxel_world::VoxelWorld::try_from(&goal)?;
+    let (init, _min_pos) = init.to_world_and_min_pos()?;
+    let (goal, _min_pos) = goal.to_world_and_min_pos()?;
 
     let reconfig_sequence = reconfiguration::compute_reconfiguration_moves(&init, goal)?;
 
