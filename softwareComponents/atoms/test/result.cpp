@@ -2,6 +2,7 @@
 #include <stdexcept>
 
 #include <atoms/result.hpp>
+#include <atoms/test_aid.hpp>
 #include <atoms/util.hpp>
 #include <catch2/catch.hpp>
 

@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include <configuration/joints.hpp>
+#include <configuration/test_aid.hpp>
 
 namespace {
 

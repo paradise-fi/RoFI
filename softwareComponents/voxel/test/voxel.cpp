@@ -7,74 +7,9 @@
 #include <fmt/format.h>
 
 #include "configuration/serialization.hpp"
+#include "configuration/test_aid.hpp"
+#include "voxel/test_aid.hpp"
 
-
-namespace Catch
-{
-template < typename ValueT, typename ErrorT >
-struct StringMaker< atoms::Result< ValueT, ErrorT > > {
-    static std::string convert( const atoms::Result< ValueT, ErrorT > & result )
-    {
-        using namespace std::string_literals;
-        return result.match( overload{
-                []( std::true_type, const auto & value ) {
-                    return "Value: "s + StringMaker< ValueT >::convert( value );
-                },
-                []( std::false_type, const auto & error ) {
-                    return "Error: "s + StringMaker< ErrorT >::convert( error );
-                },
-        } );
-    }
-};
-
-template <>
-struct StringMaker< Angle > {
-    static std::string convert( const Angle & angle )
-    {
-        return fmt::format( "{} deg", angle.deg() );
-    }
-};
-template <>
-struct StringMaker< rofi::configuration::matrices::Vector > {
-    static std::string convert( const rofi::configuration::matrices::Vector & vec )
-    {
-        return fmt::format( "[{}, {}, {}, {}]", vec[ 0 ], vec[ 1 ], vec[ 2 ], vec[ 3 ] );
-    }
-};
-
-template <>
-struct StringMaker< nlohmann::json > {
-    static std::string convert( const nlohmann::json & json )
-    {
-        return json.dump( 2 );
-    }
-};
-template <>
-struct StringMaker< rofi::voxel::VoxelWorld > {
-    static std::string convert( const rofi::voxel::VoxelWorld & world )
-    {
-        return nlohmann::json( world ).dump( 2 );
-    }
-};
-template <>
-struct StringMaker< rofi::configuration::RofiWorld > {
-    static std::string convert( const rofi::configuration::RofiWorld & world )
-    {
-        using namespace rofi::configuration;
-        auto attribCb = overload{
-                []( const UniversalModule & mod ) {
-                    return nlohmann::json::object( {
-                            { "posA", matrices::center( mod.getBodyA().getPosition() ) },
-                            { "posB", matrices::center( mod.getBodyB().getPosition() ) },
-                    } );
-                },
-                []( auto &&... ) { return nlohmann::json{}; },
-        };
-
-        return rofi::configuration::serialization::toJSON( world, attribCb ).dump( 2 );
-    }
-};
-} // namespace Catch
 
 auto rofiWorldsEquivalent( const rofi::configuration::RofiWorld & actual,
                            const rofi::configuration::RofiWorld & expected )
