@@ -1,6 +1,7 @@
 #include <catch2/catch.hpp>
 
 #include <configuration/serialization.hpp>
+#include <configuration/test_aid.hpp>
 #include <iostream>
 
 #include <atoms/util.hpp>

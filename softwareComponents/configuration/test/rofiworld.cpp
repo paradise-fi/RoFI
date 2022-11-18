@@ -2,6 +2,7 @@
 
 #include <configuration/pad.hpp>
 #include <configuration/rofiworld.hpp>
+#include <configuration/test_aid.hpp>
 #include <configuration/universalModule.hpp>
 #include <configuration/unknownModule.hpp>
 
