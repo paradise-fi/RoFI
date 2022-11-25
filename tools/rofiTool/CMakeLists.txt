@@ -17,6 +17,7 @@ set(ROFI_TOOL_SRCS
     module_count.cpp
     points.cpp
     preview.cpp
+    shape.cpp
 )
 
 add_executable(rofi-tool ${ROFI_TOOL_SRCS} ${MODEL_RESOURCES})
