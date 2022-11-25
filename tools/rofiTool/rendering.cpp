@@ -1,6 +1,8 @@
 #include "rendering.hpp"
 
 #include <atoms/resources.hpp>
+#include <isoreconfig/isomorphic.hpp>
+#include <isoreconfig/geometry.hpp>
 
 #include <vtkActor.h>
 #include <vtkCamera.h>
@@ -229,39 +231,83 @@ void addPointToScene( vtkRenderer* renderer, const Matrix& pointPosition, std::a
 void buildConfigurationPointsScene( vtkRenderer* renderer, RofiWorld& world, bool showModules ) {
     using namespace rofi::isoreconfig;
 
-    // [0] are module points, [1] are connection points
     std::array< Positions, 2 > pts = decomposeRofiWorld( world );
 
-    // Show configuration points (colour depends on module index)
-    int index = 0;
-    for ( const Matrix& pt : pts[0] )
-        addPointToScene( renderer, pt, getModuleColor( index++ ) );
+    // merge [0] module points and [1] connection points
+    for ( const Matrix& pos : pts[1] )
+        pts[0].push_back( pos );
+
+    arma::mat coeff; // principal component coefficients
+    arma::mat score; // projected data - points in new coordinate system
+    arma::vec latent; // eigenvalues of the covariance matrix of X - eigenvectors for PCA space
+    arma::vec tsquared; // Hotteling's statistic for each sample
+    princomp( coeff, score, latent, tsquared, cloudToScore( positionsToCloud( pts[0] ) ) );
+
+    auto determinant = det( coeff );
+    assert( std::abs( std::abs( determinant ) - 1 ) < ERROR_MARGIN );
+    // If transformation is a reflection, reflect back along YZ plane
+    // (otherwise there are rendering issues with modules)
+    if ( determinant < 0 )
+    {
+        score *= arma::mat{ {-1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
+        coeff *= arma::mat{ {-1, 0, 0}, {0, 1, 0}, {0, 0, 1} };
+    }
+        
+    Positions pos = cloudToPositions( scoreToCloud( score ) );
+    assert( pos.size() == pts[0].size() );
+
+    // Show module points (colour depends on index)
+    assert( pts[0].size() >= pts[1].size() );
+    for ( size_t i = 0; i < pts[0].size() - pts[1].size(); ++i )
+        addPointToScene( renderer, pos[i], getModuleColor( int(i) ) );
 
     // Show connector points (green)
-    for ( const Matrix& pt : pts[1] )
-        addPointToScene( renderer, pt, { 0, 1, 0 }, 1 / 90.0 );
+    for ( size_t i = pts[0].size() - pts[1].size(); i < pos.size(); ++i )
+        addPointToScene( renderer, pos[i], { 0, 1, 0 }, 1 / 90.0 );
 
     // Show centroid (black)
-    addPointToScene( renderer, centroid( world ), { 0, 0, 0 } );
+    addPointToScene( renderer, centroid( pos ), { 0, 0, 0 } );
 
-    // Show modules 
-    if ( showModules )
+    if ( !showModules ) return;
+    
+    // Transpose and extend <coeff> to 4x4 matrix
+    // (transposed <coeff> is PCA transformation)
+    Matrix transf = arma::eye(4, 4);
+    for ( int i = 0; i < 3; ++i )
+        for ( int j = 0; j < 3; ++j )
+            transf(i, j) = coeff(j, i);
+
+    // Translate reference points by the initial centroid in the direction of transf
+    Matrix translation = matrices::translate( transf * (-centroid( pts[0] ).col(3)) );
+
+    // Transform configuration reference points to new PCA coordinate system
+    for ( auto j = world.referencePoints().begin(); j != world.referencePoints().end(); ++j )
     {
-        // get active (i.e. connected) connectors for each module within RofiWorld
-        std::map< ModuleId, std::set< int > > active_cons;
-        for ( const auto& roficom : world.roficomConnections() ) {
-            active_cons[ world.getModule( roficom.sourceModule )->getId() ].insert( roficom.sourceConnector );
-            active_cons[ world.getModule( roficom.destModule )->getId()   ].insert( roficom.destConnector );
-        }
-        index = 0;
-        for ( auto& mInfo : world.modules() ) 
-        {
-            assert( mInfo.absPosition && "The configuration has to be prepared" );
-            if ( !active_cons.contains( mInfo.module->getId() ) )
-                active_cons[ mInfo.module->getId() ] = {};
-            addModuleToScene( renderer, *mInfo.module, *mInfo.absPosition, index, active_cons[ mInfo.module->getId() ] );
-            index++;
-        }
+        Vector newRefPoint = translation * j->refPoint;
+        
+        // Affix new reference point in new coordinate system <transf>
+        const Component& comp = world.getModule( j->destModule )->components()[j->destComponent];
+        world.disconnect( j.get_handle() );
+        connect< RigidJoint >( comp, newRefPoint, transf );
+    }
+
+    auto result = world.prepare();
+    assert( result );
+
+    // get active (i.e. connected) connectors for each module within RofiWorld
+    std::map< ModuleId, std::set< int > > active_cons;
+    for ( const auto& roficom : world.roficomConnections() ) {
+        active_cons[ world.getModule( roficom.sourceModule )->getId() ].insert( roficom.sourceConnector );
+        active_cons[ world.getModule( roficom.destModule )->getId()   ].insert( roficom.destConnector );
+    }
+    int index = 0;
+    for ( auto& mInfo : world.modules() ) 
+    {
+        assert( mInfo.absPosition && "The configuration has to be prepared" );
+        if ( !active_cons.contains( mInfo.module->getId() ) )
+            active_cons[ mInfo.module->getId() ] = {};
+        addModuleToScene( renderer, *mInfo.module, *mInfo.absPosition, index, active_cons[ mInfo.module->getId() ] );
+        index++;
     }
 }
 

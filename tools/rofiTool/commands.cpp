@@ -29,6 +29,6 @@ void affixConfiguration( rofi::configuration::RofiWorld& configuration )
     const auto & firstModule = modules.begin()->module;
     rofi::configuration::connect< rofi::configuration::RigidJoint >( 
         firstModule->bodies().front(),
-        rofi::configuration::Vector( { 0, 0, 0 } ),
+        rofi::configuration::Vector( { 0, 0, 0, 1 } ),
         rofi::configuration::matrices::identity );
 }
