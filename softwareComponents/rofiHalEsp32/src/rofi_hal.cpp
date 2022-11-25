@@ -4,6 +4,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <iostream>
+#include <utility>
 #include <variant>
 #include <thread>
 #include <atomic>
@@ -15,6 +16,8 @@
 #include <driver/spi_master.h>
 #include <driver/gpio.h>
 #include <esp_log.h>
+#include <esp_ota_ops.h>
+#include <esp_partition.h>
 #include <esp_heap_caps.h>
 
 #include <espDriver/gpio.hpp>
@@ -741,6 +744,109 @@ rofi::hal::Joint::Implementation::Capabilities bodyJointCapability() {
     return cap;
 }
 
+class PartitionLocal :
+    virtual public rofi::hal::Partition::Implementation,
+    public std::enable_shared_from_this< PartitionLocal >
+{
+protected:
+    const esp_partition_t* _partition;
+
+public:
+    PartitionLocal( const esp_partition_t* partition ) {
+        if ( partition == nullptr ) {
+            throw std::invalid_argument( "nullptr passed to constructor" );
+        }
+        _partition = partition;
+    }
+
+    virtual size_t getSize() override {
+        return _partition->size;
+    }
+
+    virtual void read( size_t offset, size_t size, const std::span< unsigned char >& buffer ) override {
+        assert( size <= buffer.size() );
+
+        esp_err_t err = esp_partition_read( _partition, offset, buffer.data(), size );
+        if ( err == ESP_ERR_INVALID_ARG ) {
+            throw std::invalid_argument( "offset exceeds partition size" );
+        }
+
+        if ( err == ESP_ERR_INVALID_SIZE || err != ESP_OK ) {
+            throw std::runtime_error( "unable to successfully read data" );
+        }
+    }
+
+    virtual void write( size_t offset, const std::span< const unsigned char >& data ) override {
+        esp_err_t err = esp_partition_write( _partition, offset, data.data(), data.size() );
+        if ( err == ESP_ERR_INVALID_ARG ) {
+            throw std::invalid_argument( "offset exceeds partition size" );
+        }
+
+        if ( err == ESP_ERR_INVALID_SIZE || err != ESP_OK ) {
+            throw std::runtime_error( "unable to successfully write data" );
+        }
+    }
+};
+
+class UpdatePartitionLocal :
+        public rofi::hal::UpdatePartition::Implementation,
+        public PartitionLocal,
+        public std::enable_shared_from_this< UpdatePartition >
+{
+    esp_ota_handle_t _updateHandle;
+    bool& _updateInitialized;
+    bool _updateEnded = false;
+
+public:
+    UpdatePartitionLocal( const esp_partition_t* partition, esp_ota_handle_t&& updateHandle, bool& updateInitialized )
+        : PartitionLocal( partition ), _updateHandle( updateHandle ), _updateInitialized( updateInitialized ) {}
+
+    virtual void write( size_t offset, const std::span< const unsigned char >& data ) override {
+        if ( _updateEnded ) { throw std::runtime_error( "update procedure is already done" ); };
+
+        esp_err_t err = esp_ota_write_with_offset( _updateHandle, data.data(), data.size(), offset );
+        if ( err == ESP_ERR_INVALID_ARG ) {
+            throw std::invalid_argument( "offset exceeds partition size" );
+        }
+        if ( err == ESP_ERR_OTA_VALIDATE_FAILED ) {
+            throw std::runtime_error( "invalid image format" );
+        }
+
+        if ( err != ESP_OK ) {
+            throw std::runtime_error( "unable to successfully write data" );
+        }
+    }
+
+    virtual void commit() override {
+        if ( _updateEnded ) { throw std::runtime_error( "update procedure is already done" ); }
+
+        esp_err_t err = esp_ota_end( _updateHandle );
+        if ( err == ESP_ERR_INVALID_ARG ) {
+            throw std::runtime_error( "no data were written to the partition" );
+        }
+        if ( err == ESP_ERR_OTA_VALIDATE_FAILED ) {
+            throw std::runtime_error( "written data is invalid" );
+        }
+
+        _updateEnded = true;
+        _updateInitialized = false;
+    }
+
+    virtual void abort() override {
+        if ( _updateEnded ) { throw std::runtime_error( "update procedure is already done" ); }
+
+        esp_ota_abort( _updateHandle );
+        _updateEnded = true;
+        _updateInitialized = false;
+    }
+
+    virtual ~UpdatePartitionLocal() override {
+        if ( _updateEnded ) { return; }
+        esp_ota_abort( _updateHandle );
+        _updateInitialized = false;
+    }
+};
+
 class RoFILocal : public RoFI::Implementation {
 public:
     RoFILocal() try:
@@ -792,12 +898,55 @@ public:
         return { 3, 6 };
     };
 
+    virtual Partition getRunningPartition() override {
+        if ( ! _runningPartition ) {
+            const esp_partition_t* runningPartition = esp_ota_get_running_partition();
+            if ( runningPartition == nullptr ) {
+                throw std::runtime_error( "error occurred during obtaining running partition" );
+            }
+            _runningPartition = std::make_shared< PartitionLocal >( runningPartition );
+        }
+
+        return { _runningPartition };
+    }
+
+    virtual UpdatePartition initUpdate() override {
+        if ( _updateInitialized ) {
+            throw std::runtime_error( "there is another update in progress" );
+        }
+
+        const esp_partition_t* updatePartition = esp_ota_get_next_update_partition( nullptr );
+        if ( updatePartition == nullptr ) {
+            throw std::runtime_error( "update partition not configured or another error occurred" );
+        }
+        esp_ota_handle_t updateHandle;
+        esp_err_t err = esp_ota_begin( updatePartition, OTA_SIZE_UNKNOWN, &updateHandle );
+        if ( err == ESP_ERR_NO_MEM ) {
+            throw std::runtime_error( "not enough memory to start firmware update ");
+        }
+        if ( err != ESP_OK ) {
+            throw std::runtime_error( "error occurred during firmware update initialization" );
+        }
+
+        _updateInitialized = true;
+        return {
+            std::make_shared< UpdatePartitionLocal >( updatePartition, std::move( updateHandle ), _updateInitialized )
+        };
+    }
+
+    virtual void reboot() override {
+        esp_restart();
+    }
+
 private:
     bsp::ServoBus _servoBus;
     std::array< std::shared_ptr< Joint::Implementation >, 3 > _joints;
 
     ConnectorBus _connectorBus;
     std::array< std::shared_ptr< Connector::Implementation >, 6 > _connectors;
+
+    std::shared_ptr< rofi::hal::Partition::Implementation > _runningPartition;
+    bool _updateInitialized = false;
 };
 
 } // namespace
