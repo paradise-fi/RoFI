@@ -13,13 +13,21 @@ constexpr double ERROR_MARGIN = 1.0 / 1000000;
  */
 using Point = arma::vec3;
 /**
- * @brief "Cloud" of points
+ * @brief Container of points
  */
 using Cloud = std::vector< Point >;
 /**
  * @brief "Position" (4x4 matrix)
  */
 using Matrix = arma::mat44;
+/**
+ * @brief Container of positions
+ */
+using Positions = std::vector< Matrix >;
+/**
+ * @brief Score (<n> x 3 matrix with <n> points as rows)
+ */
+using Score = arma::mat;
 
 
 /**
@@ -28,9 +36,30 @@ using Matrix = arma::mat44;
 Matrix pointToPos( const Point& point );
 
 /**
+ * @brief Converts a cloud to positions
+ */
+Positions cloudToPositions( const Cloud& cop );
+
+/**
  * @brief Converts a position to a point.
  */
 Point posToPoint( const Matrix& position );
+
+/**
+ * @brief Converts positions to a cloud.
+ */
+Cloud positionsToCloud( const Positions& poss );
+
+/**
+ * @brief Converts cloud to score.
+ */
+Score cloudToScore( const Cloud& cop );
+
+/**
+ * @brief Converts score to a cloud.
+ */
+Cloud scoreToCloud( const Score& score );
+
 
 /**
  * @brief Calculate the centroid (unweighted average) 
@@ -43,12 +72,12 @@ Point centroid( const Cloud& cop );
 
 /**
  * @brief Calculate the centroid (unweighted average) 
- * of a given vector of positions.
+ * of given positions.
  * Assumes the vector is not empty.
  * @param positions Vector to calculate the center of gravity from.
  * @return Unweighted average (centroid) of a given vector <positions>.
  */
-Point centroid( const std::vector< Matrix >& positions );
+Matrix centroid( const Positions& positions );
 
 /**
  * @brief Finds points furthest and second furthest away from <centerPos> 

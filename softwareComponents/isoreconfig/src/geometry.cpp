@@ -10,10 +10,48 @@ Matrix pointToPos( const Point& point )
     return result;
 }
 
+Positions cloudToPositions( const Cloud& cop )
+{
+    Positions result;
+    for ( const Point& p : cop ) 
+        result.push_back( pointToPos( p ) );
+    return result;
+}
+
 Point posToPoint( const Matrix& position )
 {
     return Point{ position.at(0,3), position.at(1,3), position.at(2,3) };
 }
+
+Cloud positionsToCloud( const Positions& poss )
+{
+    Cloud result;
+    for ( const Matrix& pos : poss ) 
+        result.push_back( posToPoint( pos ) );
+    return result;
+}
+
+Score cloudToScore( const Cloud& cop )
+{
+    arma::mat result( cop.size(), 3 );
+
+    for ( size_t i = 0; i < cop.size(); ++i )  
+        for ( size_t j = 0; j < 3; ++j )
+            result(i, j) = cop[i](j);
+
+    return result;
+}
+
+Cloud scoreToCloud( const Score& score )
+{
+    Cloud result;
+
+    for ( size_t i = 0; i < score.n_rows; ++i )
+        result.push_back( { score(i,0), score(i, 1), score(i, 2) } );
+
+    return result;
+}
+
 
 Point centroid( const Cloud& cop )
 {
@@ -23,17 +61,17 @@ Point centroid( const Cloud& cop )
     for ( const Point& point : cop )
         result += point;
 
-    double pointCount = cop.size();
+    double pointCount = double(cop.size());
     return result / Point( { pointCount, pointCount, pointCount } );
 }
 
-Point centroid( const std::vector< Matrix >& positions )
+Matrix centroid( const Positions& positions )
 {
     Cloud cop;
     for ( const Matrix& pos : positions )
         cop.push_back( posToPoint( pos ) );
 
-    return centroid( cop );
+    return pointToPos( centroid( cop ) );
 }
 
 double cubeNorm( const Point& vec )
