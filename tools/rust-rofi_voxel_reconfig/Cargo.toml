@@ -3,6 +3,9 @@ name = "rofi_voxel_reconfig"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "rofi-voxel_reconfig"
+
 [dependencies]
 rofi_voxel = { path = "../../softwareComponents/rust-rofi_voxel" }
 
