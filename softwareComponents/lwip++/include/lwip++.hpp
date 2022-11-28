@@ -48,6 +48,18 @@ struct Ip6Addr : ip6_addr_t {
         return !( o == *this );
     }
 
+    bool operator<( const Ip6Addr& o ) const {
+        return addr[ 0 ] < o.addr[ 0 ]
+            || ( addr[ 0 ] == o.addr[ 0 ] && addr[ 1 ] < addr[ 1 ] )
+            || ( addr[ 0 ] == o.addr[ 0 ] && addr[ 1 ] == o.addr[ 1 ] && addr[ 2 ] < o.addr[ 2 ] )
+            || ( addr[ 0 ] == o.addr[ 0 ] && addr[ 1 ] == o.addr[ 1 ]
+                                          && addr[ 2 ] == o.addr[ 2 ] && addr[ 3 ] < o.addr[ 3 ] );
+    }
+
+    bool operator>( const Ip6Addr& o ) const {
+        return o < *this;
+    }
+
     struct Ip6Addr operator&( const Ip6Addr& mask ) const {
         Ip6Addr res( *this );
         for ( int i = 0; i < 4; i++ )
@@ -56,7 +68,14 @@ struct Ip6Addr : ip6_addr_t {
     }
 
     bool linkLocal() const {
-        return ip6_addr_islinklocal( this );
+        // redefinition of ip6_addr_islinklocal to prevent -Wold-style-cast warnings
+        auto f = []( unsigned long x ) {
+            return ( ( x & static_cast< u32_t >( 0x000000ffUL ) ) << 24 )
+                 | ( ( x & static_cast< u32_t >( 0x0000ff00UL ) ) <<  8 )
+                 | ( ( x & static_cast< u32_t >( 0x00ff0000UL ) ) >>  8 )
+                 | ( ( x & static_cast< u32_t >( 0xff000000UL ) ) >> 24 );
+        };
+        return ( ( addr[ 0 ] & f( 0xffc00000UL ) ) == f( 0xfe800000UL ) );
     }
 
     static constexpr int size() { return 16; }
@@ -107,7 +126,7 @@ struct Netif : netif_t {
 
     std::optional< Ip6Addr > getAddress( int i ) const {
         assert( i < LWIP_IPV6_NUM_ADDRESSES && "getAddress index exceedes address count" );
-        return ip6_addr_isvalid( ip6_addr_state[ i ] ) || ip6_addr_islinklocal( &ip6_addr[ i ] )
+        return ip6_addr_isvalid( ip6_addr_state[ i ] ) || Ip6Addr( ip6_addr[ i ] ).linkLocal()
             ? std::optional( ip6_addr[ i ] ) : std::nullopt;
     }
 
