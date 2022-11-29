@@ -9,6 +9,8 @@
 #include <lwip/tcpip.h>
 #include <networking/logger.hpp>
 
+#include <atoms/unreachable.hpp>
+
 #include <optional>
 #include <list>
 #include <functional>
@@ -226,7 +228,6 @@ public:
         _onMessageStorage.push_back( std::forward< OnMessage >( onMessage ) );
         createListener( listenerAddr, _onMessageStorage.back() );
         // TODO: Maybe return bool
-        // return h; // returns handle for the linked pcb, to be able to shut the protocol down
     }
 
     /**
