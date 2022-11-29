@@ -7,7 +7,8 @@
 #include <networking/protocol.hpp>
 #include <networking/logger.hpp>
 
-#include <cassert>
+#include <atoms/unreachable.hpp>
+
 #include <vector>
 #include <deque>
 #include <map>
@@ -34,11 +35,11 @@ class NetworkManager {
                     res = _routingTable.remove( rec ) || res;
                     break;
                 case Protocol::Route::CHANGE:
-                    assert( false && "Change is not yet implemented" );
+                    ROFI_UNREACHABLE( "Change is not yet implemented" );
                     // res = _routingTable.update( rec ) || res;
                     break;
                 default:
-                    assert( false && "Route was modified" );
+                    ROFI_UNREACHABLE( "Route was modified" );
                     break;
             }
         }
@@ -116,7 +117,7 @@ class NetworkManager {
                     changedAddress = true;
                     break;
                 default:
-                    assert( false && "Protocol::ConfigAction was modified" );
+                    ROFI_UNREACHABLE( "Protocol::ConfigAction was modified" );
             }
         }
 
