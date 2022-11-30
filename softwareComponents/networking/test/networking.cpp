@@ -14,6 +14,10 @@
 namespace {
     using namespace rofi::net;
     using namespace rofi::hal;
+
+    auto dummyLogFun = []( Logger::Level, const std::string&, const std::string& ) {};
+    auto dummyNetmgCB = []( const Interface*, ConnectorEvent ) {};
+
     TEST_CASE( "Test Ip6Addr" ) {
         SECTION( "wrapper behaves correctly" ) {
             ip6_addr_t ip;
@@ -36,7 +40,7 @@ namespace {
     }
 
     TEST_CASE( "Protocols" ) {
-        Interface interface( PhysAddr( 1, 2, 3, 4, 5, 6 ) );
+        Interface interface( PhysAddr( 1, 2, 3, 4, 5, 6 ), dummyLogFun, std::nullopt, dummyNetmgCB );
         std::vector< std::unique_ptr< Protocol > > protocols;
         protocols.push_back( std::make_unique< RRP >( RRP() ) );
         protocols.push_back( std::make_unique< SimplePeriodic >( SimplePeriodic() ) );

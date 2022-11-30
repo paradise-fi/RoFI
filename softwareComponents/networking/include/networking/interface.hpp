@@ -135,10 +135,10 @@ public:
     /// Type alias for the Interface's name. Use this instead of string, it may change in the future.
     using Name = std::string;
 
-    explicit Interface( const PhysAddr& pAddr, std::optional< Connector > connector = std::nullopt )
-           : Interface( pAddr, []( Logger::Level, const std::string&, const std::string& ) {}, connector ) {}
-
-    Interface( const PhysAddr& pAddr, Logger::LogFunction lf, std::optional< Connector > connector = std::nullopt )
+    template< typename NetmgCB, typename = std::is_invocable_r< void, NetmgCB, const Interface*, hal::ConnectorEvent > >
+    Interface( const PhysAddr& pAddr, Logger::LogFunction lf
+             , std::optional< Connector > connector
+             , const NetmgCB& networkManagerEventCB )
     : _paddr( pAddr ), _connector( connector ), _logger( lf )
     {
         netif_add_noaddr( &_netif, this, init, my_input );
@@ -153,6 +153,12 @@ public:
                     _netif.input( p.release(), &_netif );
                 } else {
                     log( Logger::Level::Debug, "message with a different content type than zero" );
+                }
+            } );
+
+            _connector->onConnectorEvent( [ this, networkManagerEventCB ]( hal::Connector, hal::ConnectorEvent e ) {
+                if ( e == hal::ConnectorEvent::Connected || e == hal::ConnectorEvent::Disconnected ) {
+                    networkManagerEventCB( this, e );
                 }
             } );
         }
