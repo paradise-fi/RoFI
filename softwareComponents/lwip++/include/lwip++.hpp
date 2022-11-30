@@ -126,8 +126,9 @@ struct Netif : netif_t {
 
     std::optional< Ip6Addr > getAddress( int i ) const {
         assert( i < LWIP_IPV6_NUM_ADDRESSES && "getAddress index exceedes address count" );
-        return ip6_addr_isvalid( ip6_addr_state[ i ] ) || Ip6Addr( ip6_addr[ i ] ).linkLocal()
-            ? std::optional( ip6_addr[ i ] ) : std::nullopt;
+        assert( IP_IS_V6_VAL( ip6_addr[ i ] ) );
+        return ip6_addr_isvalid( ip6_addr_state[ i ] ) || Ip6Addr( *ip_2_ip6( &ip6_addr[ i ] ) ).linkLocal()
+            ? std::optional( *ip_2_ip6( &ip6_addr[ i ] ) ) : std::nullopt;
     }
 
     int addAddress( const Ip6Addr& ip ) {
