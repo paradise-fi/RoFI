@@ -14,7 +14,7 @@
 #include <map>
 #include <utility>
 
-namespace rofinet {
+namespace rofi::net {
 
 class NetworkManager {
     Logger _logger;
@@ -127,7 +127,7 @@ class NetworkManager {
 public:
     NetworkManager() = delete;
 
-    explicit NetworkManager( rofi::hal::RoFI rofi ) {
+    explicit NetworkManager( hal::RoFI rofi ) {
         int connectors = rofi.getDescriptor().connectorCount;
         uint8_t moduleID = static_cast< uint8_t >( rofi.getId() );
         PhysAddr p( moduleID, moduleID, moduleID, moduleID, moduleID, moduleID );
@@ -142,7 +142,7 @@ public:
         }
     };
 
-    NetworkManager( rofi::hal::RoFI rofi, PhysAddr p ) {
+    NetworkManager( hal::RoFI rofi, PhysAddr p ) {
         int connectors = rofi.getDescriptor().connectorCount;
 
         auto logFun = [ &logger = _logger ]( Logger::Level l, const std::string& where, const std::string& msg ) {
@@ -374,4 +374,4 @@ public:
 
 };
 
-} // namespace rofinet
+} // namespace rofi::net
