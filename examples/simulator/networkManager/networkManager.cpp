@@ -11,7 +11,7 @@
 #include <iostream>
 
 using namespace rofi::hal;
-using namespace rofinet;
+using namespace rofi::net;
 
 /*
  * Simple demo of the Network Manager and its CLI interface. For routing to start,
