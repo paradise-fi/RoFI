@@ -22,9 +22,9 @@ int main()
     Ip6Addr leaderIp = "fc07::a";
     uint8_t leaderMask = 46;
 
-    rofinet::NetworkManager net( rofi::hal::RoFI::getLocalRoFI() );
-    net.addProtocol( rofinet::SimplePeriodic( 2000 ) );
-    net.addProtocol( rofinet::LeaderElect( id, leaderIp, leaderMask ) );
+    rofi::net::NetworkManager net( rofi::hal::RoFI::getLocalRoFI() );
+    net.addProtocol( rofi::net::SimplePeriodic( 2000 ) );
+    net.addProtocol( rofi::net::LeaderElect( id, leaderIp, leaderMask ) );
 
     if ( id == 1 ) {
         net.addAddress( "fc07:0:0:1::1"_ip, 64, net.interface( "rl0" ) );

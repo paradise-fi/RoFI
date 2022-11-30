@@ -6,7 +6,7 @@
 
 namespace udpEx6
 {
-using namespace rofinet;
+using namespace rofi::net;
 
 inline void onMasterPacket( void *,
                             struct udp_pcb * pcb,
