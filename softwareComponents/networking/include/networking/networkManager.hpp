@@ -48,11 +48,14 @@ class NetworkManager {
     }
 
     void propagateRouteUpdates( Protocol* proto ) {
+        if ( !proto )
+            return;
+
         for ( auto& interface : _interfaces ) {
             if ( interface.isVirtual() )
                 continue;
 
-            if ( !proto || !proto->manages( interface ) )
+            if ( !proto->manages( interface ) )
                 continue;
 
             bool changed = proto->afterMessage( interface, [ this, &interface, proto ]( PBuf&& msg ) {
@@ -64,8 +67,7 @@ class NetworkManager {
             }
         }
 
-        if ( proto )
-            proto->clearUpdates();
+        proto->clearUpdates();
     }
 
     void handleIpUpdate( bool add, const Interface::Name& ifname, const Ip6Addr& ip, uint8_t mask ) {
@@ -124,6 +126,32 @@ class NetworkManager {
         return changedAddress;
     }
 
+    void processPossibleChanges( Protocol* protocol ) {
+        if ( !protocol )
+            return;
+
+        if ( !protocol->getInterfaceUpdates().empty() || !protocol->getRTEUpdates().empty() ) {
+            processConfigUpdates( protocol->getInterfaceUpdates() );
+            processRouteUpdates( *protocol, protocol->getRTEUpdates() );
+            propagateRouteUpdates( protocol );
+        }
+    }
+
+    void onInterfaceChange( const Interface* i, hal::ConnectorEvent e ) {
+        if ( e != hal::ConnectorEvent::Connected && e != hal::ConnectorEvent::Disconnected )
+            assert( false && "onInterfaceChange got a different event than (dis)connect" );
+
+        for ( auto& proto : _protocols ) {
+            if ( !proto->manages( *i ) )
+                continue;
+
+            bool changed = proto->onInterfaceEvent( *i, e == hal::ConnectorEvent::Connected );
+            if ( changed ) {
+                processPossibleChanges( proto.get() );
+            }
+        }
+    }
+
 public:
     NetworkManager() = delete;
 
@@ -136,9 +164,16 @@ public:
                     logger.log( l, where, msg );
         };
 
-        _interfaces.emplace_back( p, logFun ); // virtual interface
+        // virtual interface
+        _interfaces.emplace_back( p, logFun, std::nullopt
+                    , []( const Interface*, hal::ConnectorEvent ) { ROFI_UNREACHABLE( "interface dummy cb" ); } );
+
         for ( int i = 0; i < connectors; i++ ) {
-            _interfaces.emplace_back( p, logFun, rofi.getConnector( i ) );
+            _interfaces.emplace_back( p, logFun, rofi.getConnector( i )
+                                    , [ this ]( auto i, auto e ) {
+                                        return onInterfaceChange( i, e );
+                                    }
+            );
         }
     };
 
@@ -149,9 +184,15 @@ public:
                     logger.log( l, where, msg );
         };
 
-        _interfaces.emplace_back( p, logFun ); // virtual interface
+        // virtual interface
+        _interfaces.emplace_back( p, logFun, std::nullopt
+                    , []( const Interface*, hal::ConnectorEvent ) { ROFI_UNREACHABLE( "interface dummy cb" ); } );
+
         for ( int i = 0; i < connectors; i++ ) {
-            _interfaces.emplace_back( p, logFun, rofi.getConnector( i ) );
+            _interfaces.emplace_back( p, logFun, rofi.getConnector( i ), [ this ]( auto i, auto e ) {
+                                        return onInterfaceChange( i, e );
+                                    }
+                                );
         }
     };
 
@@ -274,11 +315,7 @@ public:
                             for ( auto& protocol : _protocols ) {
                                 if ( !protocol || !protocol->manages( interface ) || protocol->name() == proto.name() )
                                     continue;
-                                if ( !protocol->getInterfaceUpdates().empty() || !protocol->getRTEUpdates().empty() ) {
-                                    processConfigUpdates( protocol->getInterfaceUpdates() );
-                                    processRouteUpdates( *protocol, protocol->getRTEUpdates() );
-                                    propagateRouteUpdates( protocol.get() );
-                                }
+                                processPossibleChanges( protocol.get() );
                             }
                         }
                         return 1; // pbuf was eaten
