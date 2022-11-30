@@ -11,7 +11,7 @@
 #include <map>
 #include <set>
 
-namespace rofinet {
+namespace rofi::net {
 
 /**
  * Proof-of-concept routing protocol using IP layer only with periodic messages.
@@ -174,4 +174,4 @@ public:
 
 };
 
-} // namespace rofinet
+} // namespace rofi::net

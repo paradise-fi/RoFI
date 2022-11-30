@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-namespace rofinet {
+namespace rofi::net {
 
 class Logger {
 public:
@@ -97,4 +97,4 @@ private:
     std::optional< std::reference_wrapper< std::ostream > > _out;
 };
 
-} // namespace rofinet
+} // namespace rofi::net
