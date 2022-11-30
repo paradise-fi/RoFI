@@ -1,7 +1,7 @@
 #include <networking/routingTable.hpp>
 #include <networking/protocol.hpp>
 
-namespace rofinet {
+namespace rofi::net {
 
 std::ostream& operator<<( std::ostream& o, const RoutingTable& rt ) {
     for ( auto& rec : rt._records ) {
@@ -20,4 +20,4 @@ std::ostream& operator<<( std::ostream& o, const RoutingTable& rt ) {
     return o;
 }
 
-} // namespace rofinet
+} // namespace rofi::net

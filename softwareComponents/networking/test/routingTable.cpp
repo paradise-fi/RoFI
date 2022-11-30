@@ -7,11 +7,11 @@
 #include <iostream>
 
 namespace {
-    using namespace rofinet;
+    using namespace rofi::net;
     using namespace rofi::hal;
 
     TEST_CASE( "RoutingTable" ) {
-        rofinet::RoutingTable rt;
+        RoutingTable rt;
 
         SECTION( "Add" ) {
             CHECK( rt.empty() );

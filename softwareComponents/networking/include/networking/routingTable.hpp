@@ -10,7 +10,7 @@
 #include <ranges>
 #include <functional>
 
-namespace rofinet {
+namespace rofi::net {
     class Protocol;
 
 /**
@@ -366,4 +366,4 @@ private:
 
 };
 
-} // namespace rofinet
+} // namespace rofi::net

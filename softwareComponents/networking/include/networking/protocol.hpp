@@ -6,7 +6,7 @@
 
 #include <vector>
 
-namespace rofinet {
+namespace rofi::net {
 
 /**
  * \brief Virtual class defining the interface for NetworkManager's protocols.
@@ -57,7 +57,7 @@ public:
      * \return `Result` indicating if (and which) change of state is required.
      * 
     */
-    virtual Result onMessage( const std::string& interfaceName, rofi::hal::PBuf packet ) = 0;
+    virtual Result onMessage( const std::string& interfaceName, hal::PBuf packet ) = 0;
 
 
     /** 
@@ -190,4 +190,4 @@ public:
     }
 };
 
-} // namespace rofinet
+} // namespace rofi::net
