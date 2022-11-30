@@ -6,7 +6,7 @@
 #include <sstream>
 #include <string>
 
-namespace rofinet {
+namespace rofi::net {
 
 /**
  * Class for CLI management for NetworkManager class.
@@ -240,4 +240,4 @@ class NetworkManagerCli {
             std::cout << helpmsg;
         }
     };
-} // namespace rofinet
+} // namespace rofi::net

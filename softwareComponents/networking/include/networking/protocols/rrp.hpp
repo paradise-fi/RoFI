@@ -8,7 +8,7 @@
 #include <set>
 #include <functional>
 
-namespace rofinet {
+namespace rofi::net {
 
 class RRP : public Protocol {
     using Update = std::pair< Route, RoutingTable::Record >;
@@ -384,4 +384,4 @@ public:
     }
 };
 
-}
+} // namespace rofi::net

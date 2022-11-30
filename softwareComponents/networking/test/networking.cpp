@@ -12,7 +12,7 @@
 #include <networking/protocols/rrp.hpp>
 
 namespace {
-    using namespace rofinet;
+    using namespace rofi::net;
     using namespace rofi::hal;
     TEST_CASE( "Test Ip6Addr" ) {
         SECTION( "wrapper behaves correctly" ) {
