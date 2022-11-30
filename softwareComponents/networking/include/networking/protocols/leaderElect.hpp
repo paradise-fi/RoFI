@@ -11,7 +11,7 @@
 #include <functional>
 #include <map>
 
-namespace rofinet {
+namespace rofi::net {
 
 /**
  * \brief Proof-of-concept of a leader election protocol using IP layer only.
@@ -123,5 +123,5 @@ public:
     }
 };
 
-} // namespace rofinet
+} // namespace rofi::net
 

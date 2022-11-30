@@ -17,14 +17,14 @@
 #include <map>
 
 
-namespace rofinet {
+namespace rofi::net {
 
 // TODO: Maybe don't expose it like this
-using PBuf = rofi::hal::PBuf;
-using Ip6Addr = rofi::hal::Ip6Addr;
-using Netif   = rofi::hal::Netif;
-using PhysAddr  = rofi::hal::PhysAddr;
-using Connector = rofi::hal::Connector;
+using PBuf      = hal::PBuf;
+using Ip6Addr   = hal::Ip6Addr;
+using Netif     = hal::Netif;
+using PhysAddr  = hal::PhysAddr;
+using Connector = hal::Connector;
 
 /**
  * \brief Class representing the interface of a Module. Supports both, physical (i.e., with
@@ -398,4 +398,4 @@ inline std::ostream& operator<<( std::ostream& o, const Interface& i ) {
     return o;
 }
 
-} // namespace rofinet
+} // namespace rofi::net
