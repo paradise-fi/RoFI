@@ -232,9 +232,6 @@ public:
 
     virtual ~RRP() = default;
 
-    RoutingTable::Cost convertCost( Cost c ) { return static_cast< RoutingTable::Cost >( c ); }
-    Cost convertCost( RoutingTable::Cost c ) { return static_cast< Cost >( c ); }
-
     virtual bool afterMessage( const Interface& i, std::function< void ( PBuf&& ) > f, void* /* args */ ) override {
         bool res = false;
         if ( !_stub && amIStubby() ) {
@@ -269,6 +266,21 @@ public:
     virtual Result onMessage( const std::string& interfaceName, rofi::hal::PBuf packet ) override {
         auto packetWithoutHeader = pbuf_free_header( packet.release(), IP6_HLEN );
         return update( std::move( rofi::hal::PBuf::own( packetWithoutHeader ) ), interfaceName );
+    }
+
+    virtual bool onInterfaceEvent( const Interface& interface, bool connected ) override {
+        assert( manages( interface ) && "onInterfaceEvent within protocol got unmanaged interface" );
+
+        bool res = false;
+        if ( connected ) {
+            res = addInterface( interface );
+        } else {
+            res = removeInterface( interface );
+            // removeInterface removes the interface from the managed ones, but we do not want this
+            _managedInterfaces.push_back( interface );
+        }
+
+        return res;
     }
 
     virtual std::vector< std::pair< Route, RoutingTable::Record > > getRTEUpdates() const override {

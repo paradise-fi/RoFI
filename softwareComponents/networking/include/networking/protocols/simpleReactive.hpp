@@ -90,6 +90,21 @@ public:
         return false;
     }
 
+    virtual bool onInterfaceEvent( const Interface& interface, bool connected ) override {
+        assert( manages( interface ) && "onInterfaceEvent within protocol got unmanaged interface" );
+
+        bool res = false;
+        if ( connected ) {
+            res = addInterface( interface );
+        } else {
+            res = removeInterface( interface );
+            // removeInterface removes the interface from the managed ones, but we do not want this
+            _managedInterfaces.push_back( interface );
+        }
+
+        return res;
+    }
+
     virtual std::vector< std::pair< Route, RoutingTable::Record > > getRTEUpdates() const override {
         return _updates;
     }

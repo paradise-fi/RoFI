@@ -59,6 +59,15 @@ public:
     */
     virtual Result onMessage( const std::string& interfaceName, hal::PBuf packet ) = 0;
 
+    /**
+     * \brief This is called when an event (Connected, Disconnected) on connector arises.
+     *
+     * \return Returns @True if any the event caused any changes.
+     *
+     * @param interface on which event originated
+     * @param connected @True if a connector was connected, @False if it was disconnected
+     */
+    virtual bool onInterfaceEvent( const Interface& /* interface */, bool /* connected */ ) { return false; }
 
     /** 
      * This is called after processing updates from onMessage (if any) and provides

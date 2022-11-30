@@ -10,6 +10,9 @@ namespace {
     using namespace rofi::net;
     using namespace rofi::hal;
 
+    auto dummyLogFun = []( Logger::Level, const std::string&, const std::string& ) {};
+    auto dummyNetmgCB = []( const Interface*, ConnectorEvent ) {};
+
     TEST_CASE( "RoutingTable" ) {
         RoutingTable rt;
 
@@ -119,8 +122,8 @@ namespace {
         SECTION( "updating lwip's forwarding table" ) {
             ip_clear();
             REQUIRE( rt.empty() );
-            Interface interface1( PhysAddr( 1, 2, 3, 4, 5, 6 ) );
-            Interface interface2( PhysAddr( 6, 5, 4, 3, 2, 1 ) );
+            Interface interface1( PhysAddr( 1, 2, 3, 4, 5, 6 ), dummyLogFun, std::nullopt, dummyNetmgCB );
+            Interface interface2( PhysAddr( 6, 5, 4, 3, 2, 1 ), dummyLogFun, std::nullopt, dummyNetmgCB );
             auto ip = "fe80::1"_ip;
             // ip_find_route_entry is used in tests because it does not require lwip initialized
             CHECK( ip_find_route_entry( &ip ) == nullptr );
