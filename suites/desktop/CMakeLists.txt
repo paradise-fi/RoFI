@@ -20,6 +20,10 @@ include(FetchContent)
 include(CollectTargets)
 include(RmakeUtils)
 
+if (${BUILD_RUST})
+  include(RmakeRust)
+endif()
+
 function(add_component componentName)
     add_subdirectory($ENV{ROFI_ROOT}/softwareComponents/${componentName} ${componentName})
 endfunction()
@@ -114,21 +118,6 @@ FetchContent_GetProperties(magic_enum)
 if(NOT magic_enum_POPULATED)
   FetchContent_Populate(magic_enum)
   add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
-endif()
-
-if (${BUILD_RUST})
-  FetchContent_Declare(
-    corrosion
-    GIT_REPOSITORY https://github.com/corrosion-rs/corrosion
-    GIT_TAG v0.2.2
-  )
-  FetchContent_GetProperties(corrosion)
-  if(NOT corrosion_POPULATED)
-    FetchContent_Populate(corrosion)
-    add_subdirectory(${corrosion_SOURCE_DIR} ${corrosion_BINARY_DIR})
-  endif()
-
-  include(RustTests)
 endif()
 
 FetchContent_Declare(

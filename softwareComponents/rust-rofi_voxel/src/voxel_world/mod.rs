@@ -7,10 +7,10 @@ pub use centered::CenteredVoxelWorld;
 pub use rotated::{rotate_body, rotate_voxel, RotatedVoxelWorld};
 pub use subworld::VoxelSubworld;
 
-use crate::atoms;
-use crate::pos::{compute_minimal_pos_hull, IndexType, VoxelPos};
+use crate::pos::{compute_minimal_pos_hull, IndexType, RelativeIndexType, VoxelPos};
 use crate::voxel::body::get_neighbour_pos;
 use crate::voxel::{Voxel, VoxelBody, VoxelBodyWithPos, VoxelWithPos};
+use crate::{atoms, pos::RelativeVoxelPos};
 use std::assert_matches::{assert_matches, debug_assert_matches};
 use world_rotation::WorldRotation;
 
@@ -79,19 +79,44 @@ impl VoxelWorld {
 
     pub fn from_bodies<IBodies: IntoIterator<Item = VoxelBodyWithPos> + Clone>(
         bodies: IBodies,
-    ) -> Result<Self, InvalidVoxelWorldError> {
+    ) -> Result<(Self, VoxelPos), InvalidVoxelWorldError> {
         let size_ranges = Self::compute_minimal_size_ranges(bodies.clone());
 
         let begin = size_ranges.clone().map(|size_range| size_range.start);
         let sizes = size_ranges.map(|size_range| size_range.end - size_range.start);
 
-        Self::from_sizes_and_bodies(
+        let world = Self::from_sizes_and_bodies(
             VoxelPos(sizes),
             bodies.into_iter().map(|(body, VoxelPos(pos))| {
                 let pos = VoxelPos(pos.zip(begin).map(|(pos_i, begin_i)| pos_i - begin_i));
                 (body, pos)
             }),
-        )
+        )?;
+        Ok((world, VoxelPos(begin)))
+    }
+    pub fn from_bodies_rel_pos<IBodies>(
+        bodies: IBodies,
+    ) -> Result<(Self, RelativeVoxelPos), InvalidVoxelWorldError>
+    where
+        IBodies: IntoIterator<Item = (VoxelBody, RelativeVoxelPos)> + Clone,
+    {
+        let size_ranges = Self::compute_minimal_size_ranges_rel_pos(bodies.clone());
+
+        let begin = size_ranges.clone().map(|size_range| size_range.start);
+        let sizes = size_ranges.map(|size_range| size_range.end - size_range.start);
+
+        let world = Self::from_sizes_and_bodies(
+            VoxelPos(sizes.map(|pos| IndexType::try_from(pos).unwrap())),
+            bodies.into_iter().map(|(body, RelativeVoxelPos(pos))| {
+                let pos = VoxelPos(
+                    pos.zip(begin)
+                        .map(|(pos_i, begin_i)| IndexType::try_from(pos_i - begin_i).unwrap()),
+                );
+                (body, pos)
+            }),
+        )?;
+
+        Ok((world, RelativeVoxelPos(begin)))
     }
 
     pub fn check_voxel_world(&self) -> Result<(), InvalidVoxelWorldError> {
@@ -169,6 +194,15 @@ impl VoxelWorld {
         bodies: IBodies,
     ) -> [std::ops::Range<IndexType>; 3] {
         compute_minimal_pos_hull(bodies.into_iter().map(|(_, VoxelPos(pos))| pos))
+            .expect("No modules in VoxelWorld")
+    }
+    pub fn compute_minimal_size_ranges_rel_pos<IBodies>(
+        bodies: IBodies,
+    ) -> [std::ops::Range<RelativeIndexType>; 3]
+    where
+        IBodies: IntoIterator<Item = (VoxelBody, RelativeVoxelPos)>,
+    {
+        compute_minimal_pos_hull(bodies.into_iter().map(|(_, RelativeVoxelPos(pos))| pos))
             .expect("No modules in VoxelWorld")
     }
 
