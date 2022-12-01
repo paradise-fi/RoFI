@@ -79,14 +79,14 @@ vtkAlgorithmOutput * getComponentModel( ComponentType type )
     return cache[ type ]->GetOutputPort();
 }
 
-void setupRenderer( vtkRenderer * renderer )
+void setupRenderer( vtkRenderer & renderer )
 {
-    renderer->SetBackground( 1.0, 1.0, 1.0 );
-    renderer->ResetCamera();
+    renderer.SetBackground( 1.0, 1.0, 1.0 );
+    renderer.ResetCamera();
 }
 
-void addModuleToScene( vtkRenderer * renderer,
-                       Module & m,
+void addModuleToScene( vtkRenderer & renderer,
+                       const Module & m,
                        const Matrix & mPosition,
                        int moduleIndex,
                        const std::set< int > & activeConns )
@@ -120,11 +120,11 @@ void addModuleToScene( vtkRenderer * renderer,
         frameActor->SetPosition( cPosition( 0, 3 ), cPosition( 1, 3 ), cPosition( 2, 3 ) );
         frameActor->SetScale( 1.0 / 95.0 );
 
-        renderer->AddActor( frameActor );
+        renderer.AddActor( frameActor );
     }
 }
 
-void buildRofiWorldScene( vtkRenderer * renderer, const RofiWorld & world )
+void buildRofiWorldScene( vtkRenderer & renderer, const RofiWorld & world )
 {
     assert( world.isPrepared() && "The rofi world has to be prepared" );
 
@@ -155,8 +155,8 @@ void renderRofiWorld( const RofiWorld & world, const std::string & configName )
     assert( world.isValid() && "The rofi world has to be valid" );
 
     vtkNew< vtkRenderer > renderer;
-    setupRenderer( renderer.Get() );
-    buildRofiWorldScene( renderer.Get(), world );
+    setupRenderer( *renderer.Get() );
+    buildRofiWorldScene( *renderer.Get(), world );
 
     vtkNew< vtkRenderWindow > renderWindow;
     renderWindow->AddRenderer( renderer.Get() );
@@ -180,7 +180,7 @@ void renderRofiWorld( const RofiWorld & world, const std::string & configName )
     renderWindowInteractor->Start();
 }
 
-void addPointToScene( vtkRenderer * renderer,
+void addPointToScene( vtkRenderer & renderer,
                       const Matrix & pointPosition,
                       std::array< double, 3 > colour,
                       double scale = 1.0 / 95.0 )
@@ -218,10 +218,10 @@ void addPointToScene( vtkRenderer * renderer,
     frameActor->SetPosition( pointPosition( 0, 3 ), pointPosition( 1, 3 ), pointPosition( 2, 3 ) );
     frameActor->SetScale( scale );
 
-    renderer->AddActor( frameActor );
+    renderer.AddActor( frameActor );
 }
 
-void buildRofiWorldPointsScene( vtkRenderer * renderer, RofiWorld world, bool showModules )
+void buildRofiWorldPointsScene( vtkRenderer & renderer, RofiWorld world, bool showModules )
 {
     using namespace rofi::isoreconfig;
 
@@ -316,8 +316,8 @@ void buildRofiWorldPointsScene( vtkRenderer * renderer, RofiWorld world, bool sh
 void renderPoints( RofiWorld world, const std::string & configName, bool showModules )
 {
     vtkNew< vtkRenderer > renderer;
-    setupRenderer( renderer.Get() );
-    buildRofiWorldPointsScene( renderer.Get(), std::move( world ), showModules );
+    setupRenderer( *renderer.Get() );
+    buildRofiWorldPointsScene( *renderer.Get(), std::move( world ), showModules );
 
     vtkNew< vtkRenderWindow > renderWindow;
     renderWindow->AddRenderer( renderer.Get() );
