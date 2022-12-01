@@ -1,23 +1,35 @@
-#include "commands.hpp"
-
 #include <configuration/rofiworld.hpp>
+#include <dimcli/cli.h>
 
-static auto command = Dim::Cli().command( "check" )
-    .desc( "Check a given configuration" );
-static auto& inputFile = command.opt< std::string >( "<FILE>" )
-    .desc("Specify configuration file");
+#include "common.hpp"
 
-int check( Dim::Cli & /* cli */ ) {
-    auto configuration = parseConfiguration( *inputFile );
 
-    // Empty configuration is valid
-    if ( configuration.modules().size() == 0 )
-        return 0;
+void check( Dim::Cli & cli );
 
-    affixConfiguration( configuration );
+static auto command = Dim::Cli().command( "check" ).action( check ).desc(
+        "Check a given rofi world" );
+static auto & inputFile = command.opt< std::string >( "<world_file>" )
+                                  .desc( "Specify rofi world source file" );
 
-    configuration.validate( rofi::configuration::SimpleCollision() ).get_or_throw_as< std::runtime_error >();
+void check( Dim::Cli & cli )
+{
+    auto world = parseRofiWorld( *inputFile );
+    if ( !world ) {
+        cli.fail( EXIT_FAILURE, "Error while parsing world", world.assume_error() );
+        return;
+    }
 
-    return 0;
+    // Empty world is valid
+    if ( world->modules().empty() ) {
+        return;
+    }
+
+    if ( world->referencePoints().empty() ) {
+        std::cout << "No reference points found, fixing the world in space\n";
+        affixRofiWorld( *world );
+    }
+
+    if ( !world->validate() ) {
+        exit( EXIT_FAILURE ); // Avoid dimcli error message
+    }
 }
-

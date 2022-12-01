@@ -1,88 +1,127 @@
-#include "commands.hpp"
-#include "rendering.hpp"
-#include <configuration/pad.hpp>
-#include <configuration/bots/umpad.hpp>
-#include <configuration/universalModule.hpp>
+#include <optional>
 
-static auto command = Dim::Cli().command( "build" )
-    .desc( "Build and show given rofibot" );
-static auto& botType = command.opt< int >( "<ROFIBOT>" )
-    .desc("Specify wished rofibot: 0 - UM, 1 - UM n pad, 2 - UM n x m pad,"
-            + std::string( " 3 - RoFiCoM n pad, 4 - RoFiCoM n x m pad" ) );
+#include <atoms/unreachable.hpp>
+#include <configuration/bots/umpad.hpp>
+#include <configuration/pad.hpp>
+#include <configuration/universalModule.hpp>
+#include <dimcli/cli.h>
+
+#include "common.hpp"
+#include "rendering.hpp"
+
+
+void build( Dim::Cli & cli );
+
+static auto command = Dim::Cli().command( "build" ).action( build ).desc(
+        "Build and show given rofibot" );
+static auto & botType = command.opt< int >( "<rofibot_type>" )
+                                .desc( "Specify wished rofibot: "
+                                       "0 - UM, 1 - UM n pad, "
+                                       "2 - UM n x m pad, 3 - RoFiCoM n pad, "
+                                       "4 - RoFiCoM n x m pad" );
 
 enum class BotType {
-                     UM
-                   , UMpadN
-                   , UMpadNM
-                   , NPad
-                   , NMPad
+    UM = 0,
+    UMpadN,
+    UMpadNM,
+    NPad,
+    NMPad,
 };
 
-int readIntWithMsg( const std::string& msg ) {
-    int n;
-    std::cout << msg;
-    std::cin >> n;
-    return n;
+std::optional< BotType > toBotType( int b )
+{
+    switch ( static_cast< BotType >( b ) ) {
+        case BotType::UM:
+        case BotType::UMpadN:
+        case BotType::UMpadNM:
+        case BotType::NPad:
+        case BotType::NMPad:
+            return static_cast< BotType >( b );
+    }
+    return std::nullopt;
 }
 
-rofi::configuration::RofiWorld buildWishedRofibot( BotType botType ) {
+rofi::configuration::RofiWorld buildWishedRofibot( BotType botType )
+{
     using namespace rofi::configuration;
-    RofiWorld world;
-    int n, m;
+
+    constexpr auto readIntWithMsg = []( const std::string & msg ) {
+        int n;
+        std::cout << msg;
+        std::cin >> n;
+        return n;
+    };
+
     switch ( botType ) {
-        case BotType::UM:
+        case BotType::UM: {
+            RofiWorld world;
             world.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
             return world;
-        case BotType::UMpadN:
-            n = readIntWithMsg( "Dimension: " );
+        }
+        case BotType::UMpadN: {
+            int n = readIntWithMsg( "Dimension: " );
             return buildUMpad( n );
-        case BotType::UMpadNM:
-            n = readIntWithMsg( "Dimension n: " );
-            m = readIntWithMsg( "Dimension m: " );
+        }
+        case BotType::UMpadNM: {
+            int n = readIntWithMsg( "Dimension n: " );
+            int m = readIntWithMsg( "Dimension m: " );
             return buildUMpad( n, m );
-        case BotType::NPad:
-            n = readIntWithMsg( "Dimension: " );
+        }
+        case BotType::NPad: {
+            RofiWorld world;
+            int n = readIntWithMsg( "Dimension: " );
             world.insert( Pad( 0, n ) );
-            break;
-        case BotType::NMPad:
-            n = readIntWithMsg( "Dimension n: " );
-            m = readIntWithMsg( "Dimension m: " );
+            return world;
+        }
+        case BotType::NMPad: {
+            RofiWorld world;
+            int n = readIntWithMsg( "Dimension n: " );
+            int m = readIntWithMsg( "Dimension m: " );
             world.insert( Pad( 0, n, m ) );
-            break;
-        default:
-            throw std::runtime_error( "Unknown model" );
+            return world;
+        }
     }
-    return world;
+
+    ROFI_UNREACHABLE( "Unknown BotType" );
 }
 
-std::string botTypeToString( BotType b ) {
-    std::string str;
+std::string botTypeToString( BotType b )
+{
     switch ( b ) {
         case BotType::UM:
-            str = "an universal module";
-            break;
+            return "an universal module";
         case BotType::UMpadN:
         case BotType::UMpadNM:
-            str = "a pad of universale modules";
-            break;
-        default:
-            str = "a RoFICoM pad";
+            return "a pad of universale modules";
+        case BotType::NPad:
+        case BotType::NMPad:
+            return "a RoFICoM pad";
     }
-    return str;
+
+    ROFI_UNREACHABLE( "Unknown BotType" );
 }
 
-int build( Dim::Cli & /* cli */ ) {
-    auto world = buildWishedRofibot( static_cast< BotType >( *botType ) );
+void build( Dim::Cli & cli )
+{
+    using namespace rofi::configuration;
 
-    rofi::configuration::connect< rofi::configuration::RigidJoint >(
-        *botType > 2 ? world.getModule( 0 )->connectors()[ 0 ] // No body within the pad
-                     : world.getModule( 0 )->bodies()[ 0 ],     // UM, so we fix its body
-        rofi::configuration::matrices::Vector( { 0, 0, 0 } ),
-        rofi::configuration::matrices::identity );
+    auto bType = toBotType( *botType );
+    if ( !bType ) {
+        cli.fail( EXIT_FAILURE, "Invalid value for BotType" );
+        return;
+    }
 
-    world.prepare().get_or_throw_as< std::runtime_error >();
-        
-    renderConfiguration( world, botTypeToString( static_cast< BotType >( *botType ) ) );
+    auto world = buildWishedRofibot( *bType );
+    if ( world.modules().empty() ) {
+        cli.fail( EXIT_FAILURE, "Empty rofi world" );
+        return;
+    }
+    affixRofiWorld( world );
 
-    return 0;
+    if ( auto valid = world.validate(); !valid ) {
+        cli.fail( EXIT_FAILURE, "Invalid rofi world", valid.assume_error() );
+        return;
+    }
+
+    renderRofiWorld( world, botTypeToString( *bType ) );
 }

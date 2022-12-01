@@ -1,27 +1,43 @@
-#include "commands.hpp"
-#include "rendering.hpp"
-
 #include <fstream>
 #include <stdexcept>
 
 #include <configuration/rofiworld.hpp>
+#include <dimcli/cli.h>
 
-static auto command = Dim::Cli().command( "preview" )
-    .desc( "Interactively preview a configuration" );
-static auto& inputFile = command.opt< std::string >( "<FILE>" )
-    .desc("Specify source file");
+#include "common.hpp"
+#include "rendering.hpp"
 
-int preview( Dim::Cli & /* cli */ ) {
-    auto configuration = parseConfiguration( *inputFile );
 
-    if ( configuration.modules().size() == 0 )
-        throw std::runtime_error( "Configuration in '" + *inputFile + "' does not contain any modules to display" );
+void preview( Dim::Cli & cli );
 
-    affixConfiguration( configuration );
+static auto command = Dim::Cli()
+                              .command( "preview" )
+                              .action( preview )
+                              .desc( "Interactively preview a rofi world" );
+static auto & inputFile = command.opt< std::string >( "<world_file>" )
+                                  .desc( "Specify rofi world source file" );
 
-    configuration.prepare().get_or_throw_as< std::runtime_error >();
+void preview( Dim::Cli & cli )
+{
+    auto world = parseRofiWorld( *inputFile );
+    if ( !world ) {
+        cli.fail( EXIT_FAILURE, "Error while parsing world", world.assume_error() );
+        return;
+    }
+    if ( world->modules().empty() ) {
+        cli.fail( EXIT_FAILURE, "Empty rofi world" );
+        return;
+    }
 
-    renderConfiguration( configuration, *inputFile );
+    if ( world->referencePoints().empty() ) {
+        std::cout << "No reference points found, fixing the world in space\n";
+        affixRofiWorld( *world );
+    }
 
-    return 0;
+    if ( auto valid = world->validate(); !valid ) {
+        cli.fail( EXIT_FAILURE, "Invalid rofi world", valid.assume_error() );
+        return;
+    }
+
+    renderRofiWorld( *world, *inputFile );
 }
