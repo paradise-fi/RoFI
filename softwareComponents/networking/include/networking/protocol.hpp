@@ -22,28 +22,28 @@ public:
      * after it obtains a process an incomming message in `onMessage`.
      *
     */
-    enum class Result { ROUTE_UPDATE
-                      , INTERFACE_UPDATE
-                      , ALL_UPDATE
-                      , NO_UPDATE
+    enum class Result { ROUTE_UPDATE      /// An update changing routing table
+                      , INTERFACE_UPDATE  /// An update changing configuration of interface
+                      , ALL_UPDATE        /// An update combining the above
+                      , NO_UPDATE         /// No changes are needed
                     };
 
     /**
      * \brief Enum for communicating the route updates.
     */
-    enum class Route { ADD
-                     , RM
-                     , CHANGE
+    enum class Route { ADD     /// A new route to be added
+                     , RM      /// A known route is no longer valid
+                     , CHANGE  /// A known route has changed
                     };
 
     /**
      * \brief Enum for communicating the interface state updates.
     */
-    enum class ConfigAction { ADD_IP
-                            , REMOVE_IP
-                            , SHUT_DOWN
-                            , SET_UP
-                            , RESPOND
+    enum class ConfigAction { ADD_IP     /// Interface shoud get a new IP
+                            , REMOVE_IP  /// Interface should lose an IP
+                            , SHUT_DOWN  /// Interface should be shut down
+                            , SET_UP     /// Interface should be set up
+                            , RESPOND    /// A response on obtained update is needed
                             };
 
     using RoutingTableFun = std::function< RoutingTable::Records () >;
@@ -62,10 +62,10 @@ public:
     /**
      * \brief This is called when an event (Connected, Disconnected) on connector arises.
      *
-     * \return Returns @True if any the event caused any changes.
+     * \return true if any the event caused any changes.
      *
      * @param interface on which event originated
-     * @param connected @True if a connector was connected, @False if it was disconnected
+     * @param connected true if a connector was connected, false if it was disconnected
      */
     virtual bool onInterfaceEvent( const Interface& /* interface */, bool /* connected */ ) { return false; }
 
@@ -73,7 +73,7 @@ public:
      * This is called after processing updates from onMessage (if any) and provides
      * to the protocol the ability of sending a message via given interface.
      * 
-     * \return Returns bool indicating if any local change is required to take place.
+     * \return bool indicating if any local change is required to take place.
     */ 
     virtual bool afterMessage( const Interface& i, std::function< void ( PBuf&& ) > f, void* args ) = 0;
 
@@ -112,14 +112,14 @@ public:
     /**
      * \brief Indicate a new address on given interface.
      * 
-     * \return Returns @true if any change was caused by this change.
+     * \return true if any change was caused by this change.
     */
     virtual bool addAddressOn( const Interface&, const Ip6Addr&, uint8_t /* mask */ ) { return false; }
 
     /**
      * \brief Indicate a removal of an address on given interface.
      * 
-     * \return Returns @true if any change was caused by this change.
+     * \return true if any change was caused by this change.
     */
     virtual bool rmAddressOn( const Interface&, const Ip6Addr&, uint8_t /* mask */ ) { return false; }
 
@@ -127,7 +127,7 @@ public:
     /**
      * \brief Add the given interface into the protocol.
      * 
-     * \return Returns @true if the interface was succesfully added.
+     * \return true if the interface was succesfully added.
      * 
     */
     virtual bool addInterface( const Interface& interface ) = 0;
@@ -135,7 +135,7 @@ public:
     /**
      * \brief Remove the given interface into the protocol.
      * 
-     * \return Returns @true if the interface was succesfully removed.
+     * \return true if the interface was succesfully removed.
      * 
     */
     virtual bool removeInterface( const Interface& interface ) = 0;
@@ -143,10 +143,10 @@ public:
     /**
      * \brief Given an interface, decide if it is managed by the protocol.
      * 
-     * \return Returns @true if the interface is managed by the protocol.
+     * \return true if the interface is managed by the protocol.
      * 
      * Namely, it should hold that after adding an interface via `addInterface`
-     * which returns @true, then `manages` should return @true for such interface. 
+     * which returns true, then `manages` should return true for such interface.
     */
     virtual bool manages( const Interface& interface ) const = 0;
 

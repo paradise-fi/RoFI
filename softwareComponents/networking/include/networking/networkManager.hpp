@@ -152,31 +152,27 @@ class NetworkManager {
         }
     }
 
+    PhysAddr createMacFromId( int id ) {
+        auto m = static_cast< uint8_t >( id );
+        return PhysAddr( m, m, m, m, m, m );
+    }
+
 public:
     NetworkManager() = delete;
 
-    explicit NetworkManager( hal::RoFI rofi ) {
-        int connectors = rofi.getDescriptor().connectorCount;
-        uint8_t moduleID = static_cast< uint8_t >( rofi.getId() );
-        PhysAddr p( moduleID, moduleID, moduleID, moduleID, moduleID, moduleID );
+    /**
+     * @brief Create a Network Manager instance for module corresponding to given RoFI proxy.
+     *
+     * This constructor creates MAC adress from the proxy's id.
+     */
+    explicit NetworkManager( hal::RoFI rofi )
+    : NetworkManager( rofi, createMacFromId( rofi.getId() ) ) {}
 
-        auto logFun = [ &logger = _logger ]( Logger::Level l, const std::string& where, const std::string& msg ) {
-                    logger.log( l, where, msg );
-        };
-
-        // virtual interface
-        _interfaces.emplace_back( p, logFun, std::nullopt
-                    , []( const Interface*, hal::ConnectorEvent ) { ROFI_UNREACHABLE( "interface dummy cb" ); } );
-
-        for ( int i = 0; i < connectors; i++ ) {
-            _interfaces.emplace_back( p, logFun, rofi.getConnector( i )
-                                    , [ this ]( auto i, auto e ) {
-                                        return onInterfaceChange( i, e );
-                                    }
-            );
-        }
-    };
-
+    /**
+     * @brief Create a Network Manager instance for module corresponding to given RoFI proxy.
+     *
+     * This constructor uses @p p as the MAC address.
+     */
     NetworkManager( hal::RoFI rofi, PhysAddr p ) {
         int connectors = rofi.getDescriptor().connectorCount;
 
@@ -188,6 +184,7 @@ public:
         _interfaces.emplace_back( p, logFun, std::nullopt
                     , []( const Interface*, hal::ConnectorEvent ) { ROFI_UNREACHABLE( "interface dummy cb" ); } );
 
+        // physical interfaces (those with connectors)
         for ( int i = 0; i < connectors; i++ ) {
             _interfaces.emplace_back( p, logFun, rofi.getConnector( i ), [ this ]( auto i, auto e ) {
                                         return onInterfaceChange( i, e );
@@ -196,6 +193,9 @@ public:
         }
     };
 
+    /**
+     * @brief Finds an interface of given name among Network Manager's interfaces.
+     */
     std::optional< std::reference_wrapper< const Interface > > findInterface( const Interface::Name& name ) const {
         for ( auto& i : _interfaces ) {
             if ( i.name() == name )
@@ -205,19 +205,32 @@ public:
         return std::nullopt;
     }
 
+    /**
+     * @brief Returns an interface of given name. The interface must exist within Network Manager.
+     */
     std::reference_wrapper< const Interface > interface( const Interface::Name& name ) const {
         auto res = findInterface( name );
         assert( res.has_value() && "No interface of that name" );
         return res.value();
     }
 
-    // TODO: Improve the return value type
+    /**
+     * @brief Get iterable range of interfaces within the Network Manager.
+     */
     auto interfaces() const {
         return std::views::all( _interfaces );
     }
 
+    /**
+     * @brief Add given protocol into the Network Manager.
+     *
+     * There must NOT be a protocol with same name and/or listenner address present in the Network Manager.
+     *
+     * @param p protocol to add
+     * @return Pointer to the added instance under control of the Network Manager.
+     */
     template< std::derived_from< Protocol > Proto >
-    void addProtocol( const Proto& p ) {
+    Protocol* addProtocol( const Proto& p ) {
         auto it = std::ranges::find_if( _protocols, [ &p ]( auto& proto ) {
             return proto->name() == p.name() || proto->address() == p.address();
         } );
@@ -229,12 +242,23 @@ public:
         } else {
             throw std::runtime_error( "" );
         }
+
+        return _protocols.back().get();
     }
 
+    /**
+     * @brief Get iterable range of protocols within the Network Manager.
+     */
     auto protocols() const {
         return std::views::all( _protocols );
     }
 
+    /**
+     * @brief Add given address and mask onto a given interface.
+     *
+     * @return true if the address was added succesfully
+     * @return false otherwise
+     */
     bool addAddress( const Ip6Addr& ip, uint8_t mask, const Interface& i ) {
         for ( auto& interface : _interfaces ) {
             if ( interface == i ) {
@@ -255,6 +279,12 @@ public:
     }
 
     // TODO: Remove the code duplication!
+    /**
+     * @brief Remove given address and mask from the given interface.
+     *
+     * @return true if the address was removed succesfully
+     * @return false otherwise
+     */
     bool removeAddress( const Ip6Addr& ip, uint8_t mask, const Interface& i ) {
         for ( auto& interface : _interfaces ) {
             if ( interface == i ) {
@@ -275,6 +305,13 @@ public:
         return false;
     }
 
+    /**
+     * @brief Get protocol of a given name.
+     *
+     * Names are unique within the protocol.
+     *
+     * @return a pointer to a protocol of a given name
+     */
     Protocol* getProtocol( const std::string& name ) {
         for ( auto& proto : _protocols ) {
             if ( proto->name() == name )
@@ -284,6 +321,21 @@ public:
         return nullptr;
     }
 
+    /**
+     * @brief Set protocol to run on all interfaces.
+     */
+    void setProtocol( Protocol& proto ) {
+        for ( auto& i : _interfaces ) {
+            setProtocol( proto, i );
+        }
+    }
+
+    /**
+     * @brief Set protocol to run on a given interface.
+     *
+     * This sets up all necessary listeners, starts processing protocol messages, etc.
+     *
+     */
     void setProtocol( Protocol& proto, const Interface& i ) {
         bool rteChanged = false;
 
@@ -335,6 +387,12 @@ public:
         propagateRouteUpdates( &proto );
     }
 
+    /**
+     * @brief Remove protocol from the given interface.
+     *
+     * This unsets all listeners, stops processing protocol's messages.
+     *
+     */
     void removeProtocol( Protocol& proto, const Interface& i ) {
         for ( auto& interface : _interfaces ) {
             if ( interface == i ) {
@@ -345,6 +403,9 @@ public:
     }
 
     // TODO: Make these state setting function more effective and remove code duplication
+    /**
+     * @brief Set the interface up. The interface starts processing trafic.
+     */
     void setUp( const Interface& i ) {
         for ( auto& interface : _interfaces ) {
             if ( interface == i ) {
@@ -355,60 +416,103 @@ public:
         }
     }
 
+    /**
+     * @brief Set all interfaces up.
+     *
+     */
     void setUp() {
         for ( auto& interface : _interfaces ) {
+            // TODO: Call the callback for connect?
             setUp( interface );
         }
     }
 
+    /**
+     * @brief Set the interface down. The interface stops processing trafic.
+     */
     void setDown( const Interface& i ) {
         for ( auto& interface : _interfaces ) {
             if ( interface == i ) {
                 // TODO: Remove the address from the table!
+                // Call the callback for disconnect?
                 setUp( interface );
                 break;
             }
         }
     }
 
+    /**
+     * @brief Set all interfaces down.
+     */
     void setDown() {
         for ( auto& interface : _interfaces ) {
             setDown( interface );
         }
     }
 
+    /**
+     * @brief Get network manager's routing table.
+     */
     const RoutingTable& routingTable() const {
         return _routingTable;
     }
 
+    /**
+     * @brief Add a static route into the routing table.
+     *
+     * @return true if the route was succesfully added
+     * @return false if the interface does not exist or the route was not added
+     */
     bool addRoute( const Ip6Addr ip, uint8_t mask, const Interface::Name& ifname, RoutingTable::Cost cost ) {
         return findInterface( ifname ) && _routingTable.add( ip, mask, ifname, cost );
     }
 
+
+    /**
+     * @brief Remove a static route into the routing table.
+     *
+     * @return true if the route was succesfully removed
+     * @return false if the interface does not exist or the route was not removed
+     */
     bool rmRoute( const Ip6Addr ip, uint8_t mask, const Interface::Name& ifname ) {
         return findInterface( ifname ) && _routingTable.removeInterface( ip, mask, ifname );
     }
 
+    /**
+     * @brief Logs a given message with corresponding severity level.
+     */
     void log( Logger::Level l, const std::string& msg ) {
         _logger.log( l, msg );
     }
 
+    /**
+     * @brief Logs a given message with corresponding severity level specifying the component
+     * where the event originated.
+     */
     void log( Logger::Level l, const std::string& where, const std::string& msg ) {
         _logger.log( l, where, msg );
     }
 
+    /**
+     * @brief Returns an iterable range of logs.
+     */
     auto logs() const {
         return _logger.logs();
     }
 
+    /**
+     * @brief Returns an iterable range of logs only from the specified component.
+     */
     auto logsFrom( const Interface& i ) const {
         return _logger.logsFrom( i.name() );
     }
 
+    /**
+     * @brief Returns an iterable range of logs with given severity level.
+     */
     auto logs( Logger::Level l ) const {
         return _logger.logs( l );
     }
-
 };
 
 } // namespace rofi::net
