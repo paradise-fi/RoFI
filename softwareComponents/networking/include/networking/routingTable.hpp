@@ -65,7 +65,7 @@ public:
         /**
          * \brief Add a new gateway for the given record.
          * 
-         * \return Returns @true if the gateway was added.
+         * \return true if the gateway was added.
         */
         bool addGateway( const Interface::Name& n, Cost c ) {
             return addGateway( n, c, nullptr );
@@ -106,7 +106,7 @@ public:
         /**
          * \brief Remove given gateway.
          * 
-         * \return Returns @true if the gateway was succesfully removed.
+         * \return true if the gateway was succesfully removed.
         */
         bool removeGateway( const Gateway& gw ) {
             return removeGateway( gw.name(), gw.cost(), gw.learnedFrom() );
@@ -187,7 +187,7 @@ public:
     /**
      * \brief Check if the table contains any record.
      * 
-     * \return Returns @true if there are no records.
+     * \return true if there are no records.
     */
     bool empty() const { return _records.empty(); }
 
@@ -206,7 +206,7 @@ public:
     /**
      * \brief Add a new network to the table. If the record exists, it merges gateways of both records.
      * 
-     * \return Returns @true if a record was added or (in case it exists) merging added a new gateway.
+     * \return true if a record was added or (in case it exists) merging added a new gateway.
     */
     bool add( const Record& r, const Protocol* learnedFrom = nullptr ) {
         bool res = false;
@@ -240,7 +240,7 @@ public:
     /**
      * \brief Remove given record.
      * 
-     * \return Returns @true if record was removed.
+     * \return true if record was removed.
     */
     bool remove( const Record& r ) {
         bool res = false;
