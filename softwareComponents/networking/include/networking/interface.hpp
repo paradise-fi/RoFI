@@ -171,7 +171,7 @@ public:
     /**
      * \brief Set the interface up so it starts processing traffic.
      * 
-     * \return Returns @true if the interface was set up correctly.
+     * \return true if the interface was set up correctly.
     */
     bool setUp() {
         if ( !isConnected() && !isVirtual() )
@@ -193,7 +193,7 @@ public:
     /**
      * \brief Query on the state of the interface.
      * 
-     * \return Returns @true if the interface is up.
+     * \return true if the interface is up.
     */
     bool isUp() const {
         return _netif.flags | NETIF_FLAG_UP;
@@ -202,7 +202,7 @@ public:
     /**
      * \brief Query on the state of the interface.
      * 
-     * \return Returns @true if the interface is down.
+     * \return true if the interface is down.
     */
     bool isDown() const {
         return !isUp();
@@ -211,20 +211,20 @@ public:
     /**
      * \brief Query on the state of the underlying connector.
      * 
-     * \return Returns @true if the connector of the interface is connected. For virtual interface
-     * this returns always @false.
+     * \return true if the connector of the interface is connected. For virtual interface
+     * this returns always false.
     */
     bool isConnected() { return _connector.has_value() && _connector->getState().connected; }
 
     /**
-     * \brief Returns @true if the interface is virtual (i.e., does not have a physical connector).
+     * \brief Returns true if the interface is virtual (i.e., does not have a physical connector).
     */
     bool isVirtual() const { return !_connector.has_value(); }
 
     /**
      * \brief Set up a protocol listener on given address with given callback function.
      * 
-     * \return Returns a handle type unique for every protocol.
+     * \return a handle type unique for every protocol.
     */
     template< typename OnMessage, typename = std::is_invocable_r< err_t, OnMessage, raw_pcb*, pbuf*, const ip_addr_t* > >
     void setProtocol( const Ip6Addr& listenerAddr, OnMessage&& onMessage ) {
@@ -249,7 +249,7 @@ public:
     /**
      * \brief Sends a message onto the given address using the protocol corresponding to the handle.
      * 
-     * \return Returns @true if the message was sent correctly.
+     * \return true if the message was sent correctly.
     */
     bool sendProtocol( const Ip6Addr& listenerAddr, PBuf&& msg ) {
         if ( !_pcbs.contains( listenerAddr ) || !_pcbs[ listenerAddr ] )
@@ -269,7 +269,7 @@ public:
      * 
      * Number of addresses is determined by the underlying lwip library, namely by LWIP_IPV6_NUM_ADDRESSES macro.
      * 
-     * \return Returns a pair – corresponding to IP address and the subnet mask.
+     * \return a pair – corresponding to IP address and the subnet mask.
     */
     std::pair< Ip6Addr, uint8_t > getAddress( int index ) const {
         for ( auto [ i, mask ] : _addrIndexWithMask ) {
@@ -317,7 +317,7 @@ public:
     /**
      * \brief Add given address with the given mask to the interface.
      * 
-     * \return Returns @true if the address was correctly added.
+     * \return true if the address was correctly added.
     */
     bool addAddress( const Ip6Addr& ip, uint8_t mask ) {
         auto index = _netif.addAddress( ip );
@@ -334,7 +334,7 @@ public:
     /**
      * \brief Removes given address with the given mask to the interface.
      * 
-     * \return Returns @true if the address was correctly removed.
+     * \return true if the address was correctly removed.
     */
     bool removeAddress( const Ip6Addr& ip, uint8_t mask ) {
         int i = 0;

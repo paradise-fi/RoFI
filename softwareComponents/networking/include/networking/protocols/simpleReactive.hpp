@@ -155,9 +155,17 @@ public:
 
         std::swap( *it, _managedInterfaces.back() );
         _managedInterfaces.pop_back();
-        // add addresses into changes
-        for ( auto [ ip, mask ] : interface.getAddress() ) {
-            _updates.push_back( { Route::RM, { ip, mask, interface.name(), 0 } } );
+
+        // remove all routes that has this interface as their gateway
+        auto records = routingTableCB();
+        for ( const auto& rec : records ) {
+            for ( const auto& g : rec.gateways() ) {
+                if ( g.name() != interface.name() )
+                    continue;
+                
+                _updates.push_back( { Route::RM
+                                    , { rec.ip(), rec.mask(), interface.name(), g.cost(), g.learnedFrom() } } );
+            }
         }
 
         return true;

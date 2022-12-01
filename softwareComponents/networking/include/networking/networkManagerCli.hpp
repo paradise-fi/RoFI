@@ -127,9 +127,13 @@ class NetworkManagerCli {
                 std::cout << proto->info() << std::endl;
             } else if ( cmd == "manage" ) {
                 ss >> cmd;
+                if ( !_netManager.findInterface( cmd ) )
+                    throw std::runtime_error( cmd + " not found, interface does not exist" );
                 _netManager.setProtocol( *proto, _netManager.interface( cmd ) );
             } else if ( cmd == "ignore" ) {
                 ss >> cmd;
+                if ( !_netManager.findInterface( cmd ) )
+                    throw std::runtime_error( cmd + " not found, interface does not exist" );
                 _netManager.removeProtocol( *proto, _netManager.interface( cmd ) );
             } else {
                 throw std::runtime_error( cmd + " is not a valid argument for protocol command" );
@@ -163,7 +167,7 @@ class NetworkManagerCli {
         /**
          * \brief Process given command and makes appropriate changes to underlying NetworkManager.
          * 
-         * \return Returns @true if the command was succesfully parsed.
+         * \return true if the command was succesfully parsed.
         */
         bool command( const std::string& cmd ) {
             std::stringstream ss( cmd );
@@ -219,8 +223,8 @@ class NetworkManagerCli {
         void help() const {
             const char* helpmsg = 
                 "netmg  [ if | interface ]    <name>  show\n"
-                "                                     address show\n"                   // show addresses
-                "                                             get            <index>\n" // get address on given index
+                "                                     address show\n"                     // show addresses
+                "                                             get            <index>\n"   // get address on given index
                 "                                             add            <ip/mask>\n" // add address
                 "                                             [rm | remove]  <ip/mask>\n" // remove address
                 "\n"
