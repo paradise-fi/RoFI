@@ -65,10 +65,11 @@ vtkAlgorithmOutput * getComponentModel( rofi::configuration::ComponentType type 
 {
     using ComponentType = rofi::configuration::ComponentType;
 
-    static const std::map< ComponentType, std::function< ResourceFile() > > resourceMap(
-            { { ComponentType::UmShoe, LOAD_RESOURCE_FILE_LAZY( model_shoe_obj ) },
-              { ComponentType::UmBody, LOAD_RESOURCE_FILE_LAZY( model_body_obj ) },
-              { ComponentType::Roficom, LOAD_RESOURCE_FILE_LAZY( model_connector_obj ) } } );
+    static const auto resourceMap = std::map< ComponentType, std::function< ResourceFile() > >( {
+            { ComponentType::Roficom, LOAD_RESOURCE_FILE_LAZY( model_connector_obj ) },
+            { ComponentType::UmBody, LOAD_RESOURCE_FILE_LAZY( model_body_obj ) },
+            { ComponentType::UmShoe, LOAD_RESOURCE_FILE_LAZY( model_shoe_obj ) },
+    } );
     static std::map< ComponentType, vtkSmartPointer< vtkTransformPolyDataFilter > > cache;
 
     assert( resourceMap.contains( type ) && "Unsupported component type specified" );
