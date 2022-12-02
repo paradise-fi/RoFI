@@ -39,5 +39,5 @@ void preview( Dim::Cli & cli )
         return;
     }
 
-    renderRofiWorld( *world, *inputFile );
+    renderRofiWorld( *world, "Preview of " + *inputFile );
 }
