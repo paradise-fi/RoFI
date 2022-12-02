@@ -123,5 +123,5 @@ void build( Dim::Cli & cli )
         return;
     }
 
-    renderRofiWorld( world, botTypeToString( *bType ) );
+    renderRofiWorld( world, "Preview of " + botTypeToString( *bType ) );
 }
