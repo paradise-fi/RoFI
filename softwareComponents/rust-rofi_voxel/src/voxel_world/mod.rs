@@ -230,6 +230,8 @@ impl VoxelWorld {
     }
 
     // For sizes in normalized worlds it holds that size.x >= size.y >= size.z
+    //
+    // The iterator can return multiple equal worlds (in case the world is symmetrical)
     pub fn normalized_eq_worlds(&self) -> impl Iterator<Item = Self> + '_ {
         assert_matches!(Self::check_voxel_world(self), Ok(()));
         enum_iterator::all::<WorldRotation>().filter_map(move |world_rot| {
