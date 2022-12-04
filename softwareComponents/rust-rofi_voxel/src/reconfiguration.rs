@@ -113,23 +113,29 @@ fn find_parents_from_to(
                     new_world
                         .normalized_eq_worlds()
                         .all(|norm_world| parent_worlds.contains_key(&norm_world)),
-                    "parent_worlds contains some, but not all normalized variants of {new_world:?}"
+                    "parent_worlds contains a normalized variant, but not itself {new_world:?}"
                 );
                 continue;
             }
 
-            for norm_world in new_world.normalized_eq_worlds() {
-                let old = parent_worlds.insert(Rc::new(norm_world), Some(current.clone()));
-                assert_eq!(
-                    old, None,
-                    "parent_worlds contained normalized eq variant, but not {new_world:?}"
-                );
-            }
+            debug_assert!(
+                new_world
+                    .normalized_eq_worlds()
+                    .all(|norm_world| !parent_worlds.contains_key(&norm_world)),
+                "parent_worlds contains itself but not some normalized variant {new_world:?}"
+            );
+
+            parent_worlds.extend(
+                new_world
+                    .normalized_eq_worlds()
+                    .map(|norm_world| (Rc::new(norm_world), Some(current.clone()))),
+            );
 
             if parent_worlds.contains_key(goal) {
                 return Ok(parent_worlds);
             }
 
+            debug_assert!(new_world.is_normalized());
             // Get the world as Rc from the parent_worlds
             let new_world = parent_worlds
                 .get_key_value(&new_world)
