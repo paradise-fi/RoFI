@@ -256,3 +256,272 @@ impl VoxelWorld {
         println!("] }}");
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::atoms::{Axis, Direction};
+    use crate::voxel::body::JointPosition;
+    use std::collections::HashSet;
+
+    #[test]
+    fn test_normalized_eq_single_def_module() {
+        let (first_world, _) = VoxelWorld::from_bodies([
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::Z, true),
+                    false,
+                    JointPosition::Zero,
+                ),
+                VoxelPos([0; 3]),
+            ),
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::Z, false),
+                    false,
+                    JointPosition::Zero,
+                ),
+                VoxelPos([0, 0, 1]),
+            ),
+        ])
+        .unwrap();
+
+        let (second_world, _) = VoxelWorld::from_bodies([
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::X, true),
+                    true,
+                    JointPosition::Zero,
+                ),
+                VoxelPos([0; 3]),
+            ),
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::X, false),
+                    true,
+                    JointPosition::Zero,
+                ),
+                VoxelPos([1, 0, 0]),
+            ),
+        ])
+        .unwrap();
+
+        assert_eq!(
+            first_world.normalized_eq_worlds().collect::<HashSet<_>>(),
+            second_world.normalized_eq_worlds().collect()
+        );
+    }
+
+    #[test]
+    fn test_normalized_eq_single_rot_module() {
+        let (first_world, _) = VoxelWorld::from_bodies([
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::Y, true),
+                    false,
+                    JointPosition::Zero,
+                ),
+                VoxelPos([0; 3]),
+            ),
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::Y, false),
+                    true,
+                    JointPosition::Zero,
+                ),
+                VoxelPos([0, 1, 0]),
+            ),
+        ])
+        .unwrap();
+
+        let (second_world, _) = VoxelWorld::from_bodies([
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::X, true),
+                    false,
+                    JointPosition::Zero,
+                ),
+                VoxelPos([0; 3]),
+            ),
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::X, false),
+                    true,
+                    JointPosition::Zero,
+                ),
+                VoxelPos([1, 0, 0]),
+            ),
+        ])
+        .unwrap();
+
+        assert_eq!(
+            first_world.normalized_eq_worlds().collect::<HashSet<_>>(),
+            second_world.normalized_eq_worlds().collect()
+        );
+    }
+
+    #[test]
+    fn test_normalized_eq_single_jrot_module() {
+        let (first_world, _) = VoxelWorld::from_bodies([
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::Y, true),
+                    true,
+                    JointPosition::Plus90,
+                ),
+                VoxelPos([0; 3]),
+            ),
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::Y, false),
+                    true,
+                    JointPosition::Minus90,
+                ),
+                VoxelPos([0, 1, 0]),
+            ),
+        ])
+        .unwrap();
+
+        let (second_world, _) = VoxelWorld::from_bodies([
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::X, true),
+                    false,
+                    JointPosition::Minus90,
+                ),
+                VoxelPos([0; 3]),
+            ),
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::X, false),
+                    false,
+                    JointPosition::Plus90,
+                ),
+                VoxelPos([1, 0, 0]),
+            ),
+        ])
+        .unwrap();
+
+        assert_eq!(
+            first_world.normalized_eq_worlds().collect::<HashSet<_>>(),
+            second_world.normalized_eq_worlds().collect()
+        );
+    }
+
+    #[test]
+    fn test_normalized_single_module() {
+        let (world, _pos) = VoxelWorld::from_bodies([
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::X, true),
+                    true,
+                    JointPosition::Plus90,
+                ),
+                VoxelPos([0; 3]),
+            ),
+            (
+                VoxelBody::new_with(
+                    atoms::Direction::new_with(atoms::Axis::X, false),
+                    false,
+                    JointPosition::Minus90,
+                ),
+                VoxelPos([1, 0, 0]),
+            ),
+        ])
+        .unwrap();
+
+        println!(
+            "{:?}",
+            world
+                .normalized_eq_worlds()
+                .map(|w| crate::serde::VoxelWorld::from_world(&w))
+                .collect::<Vec<_>>()
+        );
+
+        assert_eq!(
+            world.normalized_eq_worlds().collect::<HashSet<_>>(),
+            amplify::set![
+                VoxelWorld::from_bodies([
+                    (
+                        VoxelBody::new_with(
+                            Direction::new_with(Axis::X, true),
+                            true,
+                            JointPosition::Plus90
+                        ),
+                        VoxelPos([0, 0, 0])
+                    ),
+                    (
+                        VoxelBody::new_with(
+                            Direction::new_with(Axis::X, false),
+                            false,
+                            JointPosition::Minus90
+                        ),
+                        VoxelPos([1, 0, 0])
+                    ),
+                ])
+                .unwrap()
+                .0,
+                VoxelWorld::from_bodies([
+                    (
+                        VoxelBody::new_with(
+                            Direction::new_with(Axis::X, true),
+                            false,
+                            JointPosition::Plus90
+                        ),
+                        VoxelPos([0, 0, 0])
+                    ),
+                    (
+                        VoxelBody::new_with(
+                            Direction::new_with(Axis::X, false),
+                            true,
+                            JointPosition::Plus90
+                        ),
+                        VoxelPos([1, 0, 0])
+                    ),
+                ])
+                .unwrap()
+                .0,
+                VoxelWorld::from_bodies([
+                    (
+                        VoxelBody::new_with(
+                            Direction::new_with(Axis::X, true),
+                            false,
+                            JointPosition::Minus90
+                        ),
+                        VoxelPos([0, 0, 0])
+                    ),
+                    (
+                        VoxelBody::new_with(
+                            Direction::new_with(Axis::X, false),
+                            true,
+                            JointPosition::Minus90
+                        ),
+                        VoxelPos([1, 0, 0])
+                    ),
+                ])
+                .unwrap()
+                .0,
+                VoxelWorld::from_bodies([
+                    (
+                        VoxelBody::new_with(
+                            Direction::new_with(Axis::X, true),
+                            true,
+                            JointPosition::Minus90
+                        ),
+                        VoxelPos([0, 0, 0])
+                    ),
+                    (
+                        VoxelBody::new_with(
+                            Direction::new_with(Axis::X, false),
+                            false,
+                            JointPosition::Plus90
+                        ),
+                        VoxelPos([1, 0, 0])
+                    ),
+                ])
+                .unwrap()
+                .0
+            ]
+        )
+    }
+}
