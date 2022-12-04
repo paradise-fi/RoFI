@@ -162,3 +162,82 @@ pub fn compute_reconfiguration_moves(
     let parent_worlds = find_parents_from_to(init, &goal)?;
     Ok(get_path_to(&goal, &parent_worlds))
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::atoms::{Axis, Direction};
+    use crate::pos::VoxelPos;
+    use crate::voxel::{body::JointPosition, VoxelBody};
+
+    #[test]
+    pub fn test_reconfig_no_steps() {
+        let (world, _) = VoxelWorld::from_bodies([
+            (
+                VoxelBody::new_with(
+                    Direction::new_with(Axis::X, true),
+                    true,
+                    JointPosition::Plus90,
+                ),
+                VoxelPos([0; 3]),
+            ),
+            (
+                VoxelBody::new_with(
+                    Direction::new_with(Axis::X, false),
+                    false,
+                    JointPosition::Minus90,
+                ),
+                VoxelPos([1, 0, 0]),
+            ),
+        ])
+        .unwrap();
+
+        let result = compute_reconfiguration_moves(&world, world.clone()).unwrap();
+        assert_eq!(result.len(), 0);
+    }
+
+    #[test]
+    pub fn test_reconfig_one_step() {
+        let (init_world, _) = VoxelWorld::from_bodies([
+            (
+                VoxelBody::new_with(
+                    Direction::new_with(Axis::X, true),
+                    true,
+                    JointPosition::Plus90,
+                ),
+                VoxelPos([0; 3]),
+            ),
+            (
+                VoxelBody::new_with(
+                    Direction::new_with(Axis::X, false),
+                    false,
+                    JointPosition::Minus90,
+                ),
+                VoxelPos([1, 0, 0]),
+            ),
+        ])
+        .unwrap();
+        let (goal_world, _) = VoxelWorld::from_bodies([
+            (
+                VoxelBody::new_with(
+                    Direction::new_with(Axis::X, true),
+                    true,
+                    JointPosition::Plus90,
+                ),
+                VoxelPos([0; 3]),
+            ),
+            (
+                VoxelBody::new_with(
+                    Direction::new_with(Axis::X, false),
+                    true,
+                    JointPosition::Minus90,
+                ),
+                VoxelPos([1, 0, 0]),
+            ),
+        ])
+        .unwrap();
+
+        let result = compute_reconfiguration_moves(&init_world, goal_world).unwrap();
+        assert_eq!(result.len(), 1);
+    }
+}
