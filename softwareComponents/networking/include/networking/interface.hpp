@@ -136,6 +136,12 @@ public:
     using Name = std::string;
 
     template< typename NetmgCB, typename = std::is_invocable_r< void, NetmgCB, const Interface*, hal::ConnectorEvent > >
+    Interface( const PhysAddr& pAddr
+             , std::optional< Connector > connector
+             , const NetmgCB& networkManagerEventCB )
+    : Interface( pAddr, []( Logger::Level, const std::string, const std::string ) {}, connector, networkManagerEventCB ) {}
+
+    template< typename NetmgCB, typename = std::is_invocable_r< void, NetmgCB, const Interface*, hal::ConnectorEvent > >
     Interface( const PhysAddr& pAddr, Logger::LogFunction lf
              , std::optional< Connector > connector
              , const NetmgCB& networkManagerEventCB )
@@ -224,7 +230,7 @@ public:
     /**
      * \brief Set up a protocol listener on given address with given callback function.
      * 
-     * \return a handle type unique for every protocol.
+     * Throws an exception if the protocol is already running on given interface.
     */
     template< typename OnMessage, typename = std::is_invocable_r< err_t, OnMessage, raw_pcb*, pbuf*, const ip_addr_t* > >
     void setProtocol( const Ip6Addr& listenerAddr, OnMessage&& onMessage ) {
@@ -233,11 +239,10 @@ public:
 
         _onMessageStorage.push_back( std::forward< OnMessage >( onMessage ) );
         createListener( listenerAddr, _onMessageStorage.back() );
-        // TODO: Maybe return bool
     }
 
     /**
-     * \brief Remove protocol corresponding to the given handle. Stops corresponding listener.
+     * \brief Remove protocol corresponding to the given address. Stops corresponding listener.
     */
     void removeProtocol( const Ip6Addr& listenerAddr ) {
         if ( _pcbs.contains( listenerAddr ) ) {
@@ -368,11 +373,15 @@ public:
     /**
      * \brief Function that returns the amount of data sent (in bytes).
     */
-    long long unsigned dataSent() const { return _sent; }
+    long long unsigned dataSent() const {
+        return isVirtual() ? 0 : _sent;
+    }
     /**
      * \brief Function that returns the amount of data received (in bytes).
     */
-    long long unsigned dataReceived() const { return _received; }
+    long long unsigned dataReceived() const {
+        return isVirtual() ? 0 : _received;
+    }
 
     friend bool operator==( const Interface& i1, const Interface& i2 );
     friend std::ostream& operator<<( std::ostream& o, const Interface& i );
