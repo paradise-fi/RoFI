@@ -29,6 +29,18 @@ using namespace rofi::net;
  * > netmg table show
 */
 
+void printHelp() {
+    const char* msg =
+        "There are three commands available.\n"
+        "\t netmg <command> .... control the networking (NetworkManager)\n"
+        "\t msg ................ send a message (starts an interactive session)\n"
+        "\t message ............ send a message (same as msg above)\n"
+        "\t connect ............ connect a connector of the local RoFI (starts an interactive session\n"
+        "\t disconnect ......... complementary to the previous action\n"
+        "\t help | ?............ display this message\n";
+    std::cout << msg;
+}
+
 void onMessage(  void*, struct udp_pcb*, struct pbuf* p, const ip6_addr_t* addr, u16_t ) {
     if ( !p || !addr )
         return;
@@ -50,7 +62,7 @@ udp_pcb* setUpListener() {
     return pcb;
 }
 
-std::pair< Ip6Addr, std::string > getReceiverMsg() {
+std::pair< Ip6Addr, std::string > getMsgToSend() {
     std::string ip, msg;
     std::cout << "send message to: ";
     std::getline( std::cin, ip );
@@ -74,6 +86,23 @@ void sendMessage( const Ip6Addr& ip, const std::string& msg, udp_pcb* pcb ) {
     err_t res = udp_sendto( pcb, packet.release(), &ip, 7777 );
     if ( res != ERR_OK ) {
         std::cout << "send failed with " << lwip_strerr( res ) << std::endl;
+    }
+}
+
+void handleConnector( bool connect ) {
+    int connectorIdx;
+    auto rofi = RoFI::getLocalRoFI();
+    std::cout << "which connector do you want to disconnect? (0 - "
+              << rofi.getDescriptor().connectorCount << "): ";
+    std::cin >> connectorIdx;
+    if ( connectorIdx >= 0 && connectorIdx < rofi.getDescriptor().connectorCount ) {
+        if ( connect )
+            rofi.getConnector( connectorIdx ).connect();
+        else {
+            rofi.getConnector( connectorIdx ).disconnect();
+        }
+    } else {
+        std::cout << "index out of range! ignoring..." << std::endl;
     }
 }
 
@@ -102,7 +131,7 @@ int main() {
 
     // ToDo: Maybe addAddress might return an optional< index > instead of bool?
     //       Then you could write "just" net.interface( "rl0" ).get().getAddress( index ). 
-    std::cout << "address: " << net.interface( "rl0" ).get().getAddress().front().first << std::endl;
+    std::cout << "address: " << net.interface( "rl0" ).getAddress().front().first << std::endl;
     net.setUp();
 
     auto* pcb = setUpListener();
@@ -124,19 +153,25 @@ int main() {
     */
 
     std::string line;
-    std::cout << "> ";
+    std::cout << "for help type help or ?\n> ";
     while ( std::getline( std::cin, line ) ) {
         if ( line.empty() ) {
             std::cout << "> ";
             continue;
         } else if ( line == "end" || line == "q" || line == "quit" ) {
             break;
+        } else if ( line == "?" || line == "help" ) {
+            printHelp();
+            std::cout << "> ";
+            continue;;
         }
 
         try {
             if ( line == "msg" || line == "message" ) {
-                auto [ ip, msg ] = getReceiverMsg();
+                auto [ ip, msg ] = getMsgToSend();
                 sendMessage( ip, msg, pcb );
+            } else if ( line == "connect" || line == "disconnect" ) {
+                handleConnector( line == "connect" );
             } else if ( netcli.command( line ) ) {
                 // Ok, command parsed
             } else {
