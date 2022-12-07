@@ -23,8 +23,8 @@ int main()
     uint8_t leaderMask = 46;
 
     rofi::net::NetworkManager net( rofi::hal::RoFI::getLocalRoFI() );
-    net.addProtocol( rofi::net::SimplePeriodic( 2000 ) );
-    net.addProtocol( rofi::net::LeaderElect( id, leaderIp, leaderMask ) );
+    auto rtProto = net.addProtocol( rofi::net::SimplePeriodic( 2000 ) );
+    auto leaderProto = net.addProtocol( rofi::net::LeaderElect( id, leaderIp, leaderMask ) );
 
     if ( id == 1 ) {
         net.addAddress( "fc07:0:0:1::1"_ip, 64, net.interface( "rl0" ) );
@@ -39,15 +39,8 @@ int main()
     }
 
     net.setUp();
-
-    auto* protocol = net.getProtocol( "leader-elect" );
-    for ( auto& i : net.interfaces() ) {
-        net.setProtocol( *protocol, i );
-    }
-    protocol = net.getProtocol( "simple-periodic" );
-    for ( auto& i : net.interfaces() ) {
-        net.setProtocol( *protocol, i );
-    }
+    net.setProtocol( *leaderProto );
+    net.setProtocol( *rtProto );
 
     if ( id == 1 ) {
         udpEx6::runMaster();
