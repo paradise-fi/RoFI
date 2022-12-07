@@ -196,22 +196,23 @@ public:
     /**
      * @brief Finds an interface of given name among Network Manager's interfaces.
      */
-    std::optional< std::reference_wrapper< const Interface > > findInterface( const Interface::Name& name ) const {
+    const Interface* findInterface( const Interface::Name& name ) const {
         for ( auto& i : _interfaces ) {
             if ( i.name() == name )
-                return { i };
+                return &i;
         }
         
-        return std::nullopt;
+        return nullptr;
     }
 
     /**
      * @brief Returns an interface of given name. The interface must exist within Network Manager.
      */
-    std::reference_wrapper< const Interface > interface( const Interface::Name& name ) const {
+    const Interface& interface( const Interface::Name& name ) const {
         auto res = findInterface( name );
-        assert( res.has_value() && "No interface of that name" );
-        return res.value();
+        if ( !res )
+            throw std::runtime_error( "interface of name " + name + " does not exits" );
+        return *res;
     }
 
     /**
