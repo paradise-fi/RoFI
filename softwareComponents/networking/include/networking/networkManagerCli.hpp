@@ -83,12 +83,12 @@ class NetworkManagerCli {
         if ( cmd == "show" ) {
             std::cout << *interface << "\n";
         } else if ( cmd == "address" ) {
-            parseAddress( interface->get(), ss );
+            parseAddress( *interface, ss );
         } else if ( cmd == "state" ) {
-            std::cout << ( interface->get().isUp() ? "Up" : "Down" ) << "\n";
+            std::cout << ( interface->isUp() ? "Up" : "Down" ) << "\n";
         } else if ( cmd == "stats" ) {
-            std::cout << "sent: " << interface->get().dataSent() << " bytes / received: "
-                                  << interface->get().dataReceived() << " bytes\n";
+            std::cout << "sent: " << interface->dataSent() << " bytes / received: "
+                                  << interface->dataReceived() << " bytes\n";
         } else {
             throw std::runtime_error( cmd + " is not a valid command for interface command" );
         }
