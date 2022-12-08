@@ -54,7 +54,7 @@ class SimpleReactive : public Protocol {
 
 public:
 
-    virtual Result onMessage( const std::string& interfaceName, rofi::hal::PBuf packetWithHeader ) override {
+    virtual bool onMessage( const std::string& interfaceName, rofi::hal::PBuf packetWithHeader ) override {
         auto packet = PBuf::own( pbuf_free_header( packetWithHeader.release(), IP6_HLEN ) );
         int count = static_cast< int >( as< uint16_t >( packet.payload() ) );
         auto data = packet.payload() + 2;
@@ -82,7 +82,7 @@ public:
             data += Ip6Addr::size() + 3;
         }
 
-        return count != removedCount ? Result::ROUTE_UPDATE : Result::NO_UPDATE;
+        return count != removedCount;
     }
 
     virtual bool afterMessage( const Interface& i, std::function< void ( PBuf&& ) > f, void* /* args */ ) override {
@@ -105,7 +105,9 @@ public:
         return res;
     }
 
-    virtual std::vector< std::pair< Route, RoutingTable::Record > > getRTEUpdates() const override {
+    virtual bool hasRouteUpdates() const override { return !_updates.empty(); }
+
+    virtual std::vector< std::pair< Route, RoutingTable::Record > > getRouteUpdates() const override {
         return _updates;
     }
 

@@ -19,7 +19,7 @@ class NetworkManagerCli {
         _netManager.log( l, "netcli", msg );
     }
 
-    std::pair< Ip6Addr, uint8_t > parseIpMask( std::stringstream& ss ) {
+    std::pair< Ip6Addr, uint8_t > parseIpMask( std::istream& ss ) {
         std::string ip; int mask;
         ss >> std::ws;
         std::getline( ss, ip, '/' );
@@ -30,7 +30,7 @@ class NetworkManagerCli {
         return { Ip6Addr( ip.c_str() ), static_cast< uint8_t >( mask ) };
     }
 
-    void parseAddress( const Interface& i, std::stringstream& ss ) {
+    void parseAddress( const Interface& i, std::istream& ss ) {
         std::string cmd;
         ss >> cmd;
 
@@ -60,7 +60,7 @@ class NetworkManagerCli {
     }
 
     // TODO: Do not leak function names in exceptions, just report what was parsed when error occurred
-    void parseInterface( std::stringstream& ss ) {
+    void parseInterface( std::istream& ss ) {
         std::string name, cmd;
         ss >> cmd;
         if ( cmd == "show" ) {
@@ -94,7 +94,7 @@ class NetworkManagerCli {
         }
     }
 
-    void parseTable( std::stringstream& ss ) {
+    void parseTable( std::istream& ss ) {
         std::string cmd;
         ss >> cmd;
 
@@ -107,7 +107,7 @@ class NetworkManagerCli {
         }
     }
 
-    void parseRoute( bool add, std::stringstream& ss ) {
+    void parseRoute( bool add, std::istream& ss ) {
         std::string cmd, ifname;
         int cost;
         
@@ -138,7 +138,7 @@ class NetworkManagerCli {
         }
     }
 
-    void parseProtocol( std::stringstream& ss ) {
+    void parseProtocol( std::istream& ss ) {
         std::string cmd, name;
         ss >> cmd;
         if ( cmd == "show" ) {
@@ -166,7 +166,7 @@ class NetworkManagerCli {
         }
     }
 
-    void parseLog( std::stringstream& ss ) const {
+    void parseLog( std::istream& ss ) const {
         std::string cmd, name;
         ss >> cmd;
         if ( cmd == "show" ) {
@@ -202,7 +202,7 @@ class NetworkManagerCli {
         /**
          * \brief Overloaded variant of the previous `command` function.
         */
-        bool command( std::stringstream& ss ) {
+        bool command( std::istream& ss ) {
             std::string cmd;
             ss >> cmd;
             if ( cmd == "netmg" ) {

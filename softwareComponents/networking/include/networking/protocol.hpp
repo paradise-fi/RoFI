@@ -16,24 +16,10 @@ class Protocol {
 
 public:
     /**
-     * \brief Enum representing the change protocol requires
-     * 
-     * Enum representing the nature of an update that protocol requests to do
-     * after it obtains a process an incomming message in `onMessage`.
-     *
-    */
-    enum class Result { ROUTE_UPDATE      /// An update changing routing table
-                      , INTERFACE_UPDATE  /// An update changing configuration of interface
-                      , ALL_UPDATE        /// An update combining the above
-                      , NO_UPDATE         /// No changes are needed
-                    };
-
-    /**
      * \brief Enum for communicating the route updates.
     */
     enum class Route { ADD     /// A new route to be added
                      , RM      /// A known route is no longer valid
-                     , CHANGE  /// A known route has changed
                     };
 
     /**
@@ -54,10 +40,10 @@ public:
     /**
      * \brief Process the incomming message on given interface.
      * 
-     * \return `Result` indicating if (and which) change of state is required.
+     * \return true if if a change of state is required.
      * 
     */
-    virtual Result onMessage( const std::string& interfaceName, hal::PBuf packet ) = 0;
+    virtual bool onMessage( const std::string& interfaceName, hal::PBuf packet ) = 0;
 
     /**
      * \brief This is called when an event (Connected, Disconnected) on connector arises.
@@ -78,15 +64,25 @@ public:
     virtual bool afterMessage( const Interface& i, std::function< void ( PBuf&& ) > f, void* args ) = 0;
 
     /**
+     * \brief Function that returns true if there are any pending routing updates.
+     */
+    virtual bool hasRouteUpdates() const { return false; }
+
+    /**
      * \brief Function that outputs all routing updates possibly created in `onMessage`.
      * 
      * \return A vector of pairs with the type of change (e.g., a new route) and its RoutingTable::Record to be added.
      * 
-     * This function is called in case `onMessage` returns either `ROUTE_UPDATE` or `ALL_UPDATE`. The default
+     * This function is called in case `onMessage` and `hasRouteUpdates` return `true`. The default
      * implementation returns an empty vector, so it is not necessary to override this for non-routing protocols.
      * 
     */
-    virtual std::vector< std::pair< Route, RoutingTable::Record > > getRTEUpdates() const { return {}; };
+    virtual std::vector< std::pair< Route, RoutingTable::Record > > getRouteUpdates() const { return {}; };
+
+    /**
+     * \brief Function that returns true if there are any pending configuration updates.
+     */
+    virtual bool hasConfigUpdates() const { return false; }
 
     /**
      * \brief Function that outputs all interface/state related updates possibly created in `onMessage`
@@ -94,10 +90,10 @@ public:
      * \return A vector of pairs with the type of change (e.g., a new IP) and its `ConfigChange` with
      * all necessary information.
      * 
-     * This function is called in case `onMessage` returns either `INTERFACE_UPDATE` or `ALL_UPDATE`. The default
+     * This function is called in case `onMessage` and `hasConfigUpdates` return `true`. The default
      * imlementation return an empty vector, so it is not necessary to override this for routing-only protocols.
     */
-    virtual std::vector< std::pair< ConfigAction, ConfigChange > > getInterfaceUpdates() const { return {}; }
+    virtual std::vector< std::pair< ConfigAction, ConfigChange > > getConfigUpdates() const { return {}; }
 
     /**
      * \brief Clear any (cached) updates.

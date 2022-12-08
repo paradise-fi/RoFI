@@ -142,7 +142,7 @@ class RRP : public Protocol {
         }
     }
 
-    Result update( rofi::hal::PBuf packet, const std::string& interfaceName ) {
+    bool update( rofi::hal::PBuf packet, const std::string& interfaceName ) {
         Command command = as< Command >( packet.payload() );
 
         if ( command == Command::Stubby || command == Command::Sync )
@@ -185,7 +185,7 @@ class RRP : public Protocol {
         else
             _interfacesCommands.erase( interfaceName );
 
-        return count > 0 ? Result::ROUTE_UPDATE : Result::NO_UPDATE;
+        return count > 0;
     }
 
     PBuf createMsg( const std::string& interfaceName, Command cmd ) {
@@ -263,7 +263,7 @@ public:
         return res;
     }
 
-    virtual Result onMessage( const std::string& interfaceName, rofi::hal::PBuf packet ) override {
+    virtual bool onMessage( const std::string& interfaceName, rofi::hal::PBuf packet ) override {
         auto packetWithoutHeader = pbuf_free_header( packet.release(), IP6_HLEN );
         return update( std::move( rofi::hal::PBuf::own( packetWithoutHeader ) ), interfaceName );
     }
@@ -283,7 +283,9 @@ public:
         return res;
     }
 
-    virtual std::vector< std::pair< Route, RoutingTable::Record > > getRTEUpdates() const override {
+    virtual bool hasRouteUpdates() const override { return !_updates.empty(); }
+
+    virtual std::vector< std::pair< Route, RoutingTable::Record > > getRouteUpdates() const override {
         return _updates;
     }
 
