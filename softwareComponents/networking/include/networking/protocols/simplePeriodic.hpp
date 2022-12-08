@@ -30,7 +30,7 @@ class SimplePeriodic : public Protocol {
         int count = 0;
         for ( auto& r : records ) {
             auto g = r.best();
-            if ( !g || g->name() == interfaceName )
+            if ( !g || ( g->name() == interfaceName && g->cost() != 0 ) )
                 continue;
             count++;
         }
@@ -41,7 +41,7 @@ class SimplePeriodic : public Protocol {
 
         for ( auto& r : records ) {
             auto g = r.best();
-            if ( !g || g->name() == interfaceName )
+            if ( !g || ( g->name() == interfaceName && g->cost() != 0 ) )
                 continue;
 
             as< Ip6Addr >( data ) = r.ip();
@@ -54,6 +54,9 @@ class SimplePeriodic : public Protocol {
     }
 
     void _periodicUpdates( const Interface& i, std::function< void ( PBuf&& ) > f, void* args ) {
+        if ( !_interfaceWithCb.contains( i.name() ) )
+            return;
+
         f( std::move( _createMsg( i.name() ) ) );
         rofi::hal::RoFI::wait( _period, [ =, this, _i = &i ]() { _periodicUpdates( *_i, f, args ); } );
     }
@@ -161,6 +164,8 @@ public:
         for ( auto [ ip, mask ] : interface.getAddress() ) {
             _updates.push_back( { Route::RM, { ip, mask, interface.name(), 0 } } );
         }
+
+        _interfaceWithCb.erase( interface.name() );
 
         return true;
     }
