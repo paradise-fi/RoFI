@@ -60,7 +60,9 @@ public:
                 _confChanges.push_back( { ConfigAction::RESPOND, { "", Ip6Addr( "::" ), 0 } } );
                 result = true;
             }
-        } if ( _id == _leaderId ) {
+        }
+        // is the same if above needed?
+        if ( _id == _leaderId ) {
             _confChanges.push_back( { ConfigAction::ADD_IP, { "rl0", _leaderAddress, _mask } } );
             result = true;
         }
