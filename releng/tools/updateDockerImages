@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 set -e
 
-docker build -t yaqwsx/rofi.debian .
-docker build -t yaqwsx/rofi .
-docker build -t yaqwsx/rofi.ubuntu --build-arg BASE=ubuntu:21.10 .
+docker build -t ghcr.io/paradise-fi/rofi.debian .
+docker build -t ghcr.io/paradise-fi/rofi .
+docker build -t ghcr.io/paradise-fi/rofi.ubuntu --build-arg BASE=ubuntu:22.04 .
+docker build -t ghcr.io/paradise-fi/rofi.doc -f Dockerfile.doc .
 
-docker push yaqwsx/rofi
-docker push yaqwsx/rofi.debian
-docker push yaqwsx/rofi.ubuntu
+docker push ghcr.io/paradise-fi/rofi
+docker push ghcr.io/paradise-fi/rofi.debian
+docker push ghcr.io/paradise-fi/rofi.ubuntu
+docker push ghcr.io/paradise-fi/rofi.doc

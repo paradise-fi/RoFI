@@ -11,7 +11,7 @@ jobs:
     strategy:
       matrix:
         environment: [Debug, Release]
-        image: [yaqwsx/rofi.debian, yaqwsx/rofi.ubuntu]
+        image: [ghcr.io/paradise-fi/rofi.debian, ghcr.io/paradise-fi/rofi.ubuntu]
     defaults:
       run:
         shell: bash
@@ -36,7 +36,7 @@ jobs:
       matrix:
         environment: [Debug, Release]
     container:
-      image: yaqwsx/rofi.debian
+      image: ghcr.io/paradise-fi/rofi.debian
     defaults:
       run:
         shell: bash
@@ -63,7 +63,7 @@ jobs:
       matrix:
         environment: [Debug, Release]
     container:
-      image: yaqwsx/rofi.debian
+      image: ghcr.io/paradise-fi/rofi.debian
     defaults:
       run:
         shell: bash
@@ -81,7 +81,7 @@ jobs:
     name: "Build documentation"
     runs-on: ubuntu-20.04
     container:
-      image: yaqwsx/rofi.doc
+      image: ghcr.io/paradise-fi/rofi.doc
     defaults:
       run:
         shell: bash
