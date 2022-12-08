@@ -34,8 +34,8 @@ public:
 
     virtual ~LeaderElect() = default;
 
-    virtual Result onMessage( const std::string& interfaceName, rofi::hal::PBuf packetWithHeader ) {
-        Result result = Result::NO_UPDATE;
+    virtual bool onMessage( const std::string& interfaceName, rofi::hal::PBuf packetWithHeader ) {
+        bool result = false;
 
         auto packet = PBuf::own( pbuf_free_header( packetWithHeader.release(), IP6_HLEN ) );
         int otherId = as< int >( packet.payload() );
@@ -45,7 +45,7 @@ public:
             if ( otherId < _leaderId ) {
                 if ( _leaderId == _id ) {
                     _confChanges.push_back( { ConfigAction::REMOVE_IP, { "rl0", _leaderAddress, _mask } } );
-                    result = Result::INTERFACE_UPDATE;
+                    result = true;
                 }
 
                 _leaderId = otherId;
@@ -54,15 +54,15 @@ public:
                 }
             } else if ( _id == _leaderId ) {
                 _confChanges.push_back( { ConfigAction::ADD_IP, { "rl0", _leaderAddress, _mask } } );
-                result = Result::INTERFACE_UPDATE;
+                result = true;
             } else {
                 // ToDo: Think about doing this optional.
                 _confChanges.push_back( { ConfigAction::RESPOND, { "", Ip6Addr( "::" ), 0 } } );
-                result = Result::INTERFACE_UPDATE;
+                result = true;
             }
         } if ( _id == _leaderId ) {
             _confChanges.push_back( { ConfigAction::ADD_IP, { "rl0", _leaderAddress, _mask } } );
-            result = Result::INTERFACE_UPDATE;
+            result = true;
         }
 
         return result;
@@ -79,7 +79,9 @@ public:
         return false;
     }
 
-    virtual std::vector< std::pair< ConfigAction, ConfigChange > > getInterfaceUpdates() const {
+    virtual bool hasConfigUpdates() const override { return !_confChanges.empty(); }
+
+    virtual std::vector< std::pair< ConfigAction, ConfigChange > > getConfigUpdates() const {
         return _confChanges;
     }
 
