@@ -52,6 +52,32 @@ class SimpleReactive : public Protocol {
         return packet;
     }
 
+    bool _addInterface( const Interface& interface ) {
+        _managedInterfaces.push_back( std::ref( interface ) );
+        bool added = false;
+        for ( auto [ ip, mask ] : interface.getAddress() ) {
+            added = addAddressOn( interface, ip, mask ) || added;
+        }
+
+        return true;
+    }
+
+    bool _removeInterface( const Interface& interface ) {
+        // remove all routes that has this interface as their gateway
+        auto records = routingTableCB();
+        for ( const auto& rec : records ) {
+            for ( const auto& g : rec.gateways() ) {
+                if ( g.name() != interface.name() )
+                    continue;
+
+                _updates.push_back( { Route::RM
+                                    , { rec.ip(), rec.mask(), interface.name(), g.cost(), g.learnedFrom() } } );
+            }
+        }
+
+        return true;
+    }
+
 public:
 
     virtual bool onMessage( const std::string& interfaceName, rofi::hal::PBuf packetWithHeader ) override {
@@ -95,11 +121,9 @@ public:
 
         bool res = false;
         if ( connected ) {
-            res = addInterface( interface );
+            res = _addInterface( interface );
         } else {
-            res = removeInterface( interface );
-            // removeInterface removes the interface from the managed ones, but we do not want this
-            _managedInterfaces.push_back( interface );
+            res = _removeInterface( interface );
         }
 
         return res;
@@ -139,13 +163,7 @@ public:
         if ( manages( interface ) ) // interface is already managed
             return false;
 
-        _managedInterfaces.push_back( std::ref( interface ) );
-        bool added = false;
-        for ( auto [ ip, mask ] : interface.getAddress() ) {
-            added = addAddressOn( interface, ip, mask ) || added;
-        }
-
-        return true;
+        return _addInterface( interface );
     }
 
     virtual bool removeInterface( const Interface& interface ) override {
@@ -158,19 +176,7 @@ public:
         std::swap( *it, _managedInterfaces.back() );
         _managedInterfaces.pop_back();
 
-        // remove all routes that has this interface as their gateway
-        auto records = routingTableCB();
-        for ( const auto& rec : records ) {
-            for ( const auto& g : rec.gateways() ) {
-                if ( g.name() != interface.name() )
-                    continue;
-                
-                _updates.push_back( { Route::RM
-                                    , { rec.ip(), rec.mask(), interface.name(), g.cost(), g.learnedFrom() } } );
-            }
-        }
-
-        return true;
+        return _removeInterface( interface );
     }
 
     virtual bool manages( const Interface& interface ) const override {
