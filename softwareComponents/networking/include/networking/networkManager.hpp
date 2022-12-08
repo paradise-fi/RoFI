@@ -19,8 +19,6 @@ namespace rofi::net {
 class NetworkManager {
     Logger _logger;
     std::deque< Interface > _interfaces;
-    // running protocols: < < name of interface, name of protocol >, handle >
-    // TODO: Make this garbage readable
     RoutingTable _routingTable;
     std::vector< std::unique_ptr< Protocol > > _protocols;
 
@@ -33,10 +31,6 @@ class NetworkManager {
                     break;
                 case Protocol::Route::RM:
                     res = _routingTable.remove( rec ) || res;
-                    break;
-                case Protocol::Route::CHANGE:
-                    ROFI_UNREACHABLE( "Change is not yet implemented" );
-                    // res = _routingTable.update( rec ) || res;
                     break;
                 default:
                     ROFI_UNREACHABLE( "Route was modified" );
@@ -62,8 +56,8 @@ class NetworkManager {
                                     interface.sendProtocol( proto->address(), std::move( msg ) );
                         }, nullptr );
             if ( changed ) {
-                processConfigUpdates( proto->getInterfaceUpdates() );
-                processRouteUpdates( *proto, proto->getRTEUpdates() );
+                processConfigUpdates( proto->getConfigUpdates() );
+                processRouteUpdates( *proto, proto->getRouteUpdates() );
             }
         }
 
@@ -130,11 +124,17 @@ class NetworkManager {
         if ( !protocol )
             return;
 
-        if ( !protocol->getInterfaceUpdates().empty() || !protocol->getRTEUpdates().empty() ) {
-            processConfigUpdates( protocol->getInterfaceUpdates() );
-            processRouteUpdates( *protocol, protocol->getRTEUpdates() );
-            propagateRouteUpdates( protocol );
+        bool b = false;
+        if ( protocol->hasConfigUpdates() ) {
+            processConfigUpdates( protocol->getConfigUpdates() );
+            b = true;
         }
+        if ( protocol->hasRouteUpdates() ) {
+            processRouteUpdates( *protocol, protocol->getRouteUpdates() );
+            b = true;
+        }
+        if ( b )
+            propagateRouteUpdates( protocol );
     }
 
     void onInterfaceChange( const Interface* i, hal::ConnectorEvent e ) {
@@ -355,12 +355,12 @@ public:
                             return 0;
 
                         bool changed = false;
-                        auto res = proto.onMessage( interface.name(), PBuf::own( p ) );
-                        if ( res == Protocol::Result::INTERFACE_UPDATE || res == Protocol::Result::ALL_UPDATE ) {
-                            changed = processConfigUpdates( proto.getInterfaceUpdates() );
-                        }
-                        if ( res == Protocol::Result::ROUTE_UPDATE || res == Protocol::Result::ALL_UPDATE ) {
-                            changed = processRouteUpdates( proto, proto.getRTEUpdates() ) || changed;
+                        bool res = proto.onMessage( interface.name(), PBuf::own( p ) );
+                        if ( res ) {
+                            if ( proto.hasConfigUpdates() )
+                                changed = processConfigUpdates( proto.getConfigUpdates() );
+                            if ( proto.hasRouteUpdates() )
+                                changed = processRouteUpdates( proto, proto.getRouteUpdates() ) || changed;
                         }
 
                         if ( changed ) {
@@ -376,9 +376,9 @@ public:
 
                 // proto addInterface adds updates into RTEUpdates
                 rteChanged = proto.addInterface( interface ) || rteChanged;
-                rteChanged = processConfigUpdates( proto.getInterfaceUpdates() ) || rteChanged;
+                rteChanged = processConfigUpdates( proto.getConfigUpdates() ) || rteChanged;
                 // we pick those updates and add new records / remove old ones in the Routing Table
-                rteChanged = processRouteUpdates( proto, proto.getRTEUpdates() ) || rteChanged;
+                rteChanged = processRouteUpdates( proto, proto.getRouteUpdates() ) || rteChanged;
                 // and clear updates which we extracted in the previous step
                 proto.clearUpdates();
                 break;
