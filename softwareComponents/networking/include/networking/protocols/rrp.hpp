@@ -227,6 +227,43 @@ class RRP : public Protocol {
         return packet;
     }
 
+    bool _addInterface( const Interface& interface ) {
+        auto learned = routingTableCB();
+
+        for ( auto l : learned ) {
+            auto it = std::ranges::find_if( _toSendFrom[ interface.name() ], [ &l ]( const Update& r ) {
+                // TODO: Do we want to compare records or their networks?
+                return r.second.compareNetworks( l );
+            } );
+            if ( it == _toSendFrom[ interface.name() ].end() )
+                _toSendFrom[ interface.name() ].push_back( { Route::ADD, l } );
+        }
+
+        _interfacesCommands.emplace( interface.name(), Command::Hello );
+
+        bool added = false;
+        for ( auto [ ip, mask ] : interface.getAddress() ) {
+            added = addAddressOn( interface, ip, mask ) || added;
+        }
+
+        return added || !std::ranges::empty( learned );
+    }
+
+    bool _removeInterface( const Interface& interface ) {
+        // remove all routes that has this interface as their gateway
+        auto records = routingTableCB();
+        for ( const auto& rec : records ) {
+            for ( const auto& g : rec.gateways() ) {
+                if ( g.name() != interface.name() )
+                    continue;
+
+                _updates.push_back( { Route::RM, { rec.ip(), rec.mask(), interface.name(), 0 } } );
+            }
+        }
+
+        return true;
+    }
+
 public:
     using Cost = uint8_t;
 
@@ -333,26 +370,8 @@ public:
         if ( manages( interface ) ) // interface is already managed
             return false;
 
-        auto learned = routingTableCB();
-
-        for ( auto l : learned ) {
-            auto it = std::ranges::find_if( _toSendFrom[ interface.name() ], [ &l ]( const Update& r ) {
-                // TODO: Do we want to compare records or their networks?
-                return r.second.compareNetworks( l );
-            } );
-            if ( it == _toSendFrom[ interface.name() ].end() )
-                _toSendFrom[ interface.name() ].push_back( { Route::ADD, l } );
-        }
-
-        _interfacesCommands.emplace( interface.name(), Command::Hello );
-
         _managedInterfaces.push_back( std::ref( interface ) );
-        bool added = false;
-        for ( auto [ ip, mask ] : interface.getAddress() ) {
-            added = addAddressOn( interface, ip, mask ) || added;
-        }
-
-        return added || !std::ranges::empty( learned );
+        return _addInterface( interface );
     }
 
     virtual bool removeInterface( const Interface& interface ) override {
@@ -366,18 +385,7 @@ public:
         std::swap( *it, _managedInterfaces.back() );
         _managedInterfaces.pop_back();
 
-        // remove all routes that has this interface as their gateway
-        auto records = routingTableCB();
-        for ( const auto& rec : records ) {
-            for ( const auto& g : rec.gateways() ) {
-                if ( g.name() != interface.name() )
-                    continue;
-                
-                _updates.push_back( { Route::RM, { rec.ip(), rec.mask(), interface.name(), 0 } } );
-            }
-        }
-
-        return true;
+        return _removeInterface( interface );
     }
 
     virtual bool manages( const Interface& interface ) const override {
