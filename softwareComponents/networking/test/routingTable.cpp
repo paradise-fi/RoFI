@@ -53,7 +53,7 @@ namespace {
             CHECK( rt.find( "fe80::1"_ip, 64 ) != nullptr );
             CHECK( rt.find( "fe80::2"_ip, 64 ) != nullptr );
             CHECK( rt.find( "fe80::2"_ip, 48 ) == nullptr );
-            CHECK( rt.find( "fc07::a", 80 ) == nullptr );
+            CHECK( rt.find( "fc07::a"_ip, 80 ) == nullptr );
         }
 
         SECTION( "removeInterface" ) {

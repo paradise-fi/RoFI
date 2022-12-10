@@ -57,7 +57,7 @@ namespace {
         }
 
         SECTION( "Manage / Ignore with IP on the interface" ) {
-            interface.addAddress( "fe80:abba::1", 64 );
+            interface.addAddress( "fe80:abba::1"_ip, 64 );
             for ( auto& p : protocols ) {
                 CHECK( !p->manages( interface ) );
                 p->addInterface( interface );

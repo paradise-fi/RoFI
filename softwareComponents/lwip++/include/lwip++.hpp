@@ -21,10 +21,10 @@ namespace rofi::hal {
  * Provides a few useful methods and C++ operators.
  */
 struct Ip6Addr : ip6_addr_t {
-    Ip6Addr( const char* str ) {
+    explicit Ip6Addr( const char* str ) {
         ip6addr_aton( str, this );
     }
-    Ip6Addr( const std::string& str ) {
+    explicit Ip6Addr( const std::string& str ) {
         if ( !ip6addr_aton( str.c_str(), this ) )
             throw std::runtime_error( "Given string is not valid IPv6 address" );
     }
@@ -33,7 +33,7 @@ struct Ip6Addr : ip6_addr_t {
         std::swap( addr, o.addr );
     }
 
-    Ip6Addr( uint8_t mask ) {
+    explicit Ip6Addr( uint8_t mask ) {
         if ( mask > 128 )
             throw std::runtime_error( "Mask has to be in range [0, 128]");
         mask_to_address( mask, this );
@@ -60,7 +60,7 @@ struct Ip6Addr : ip6_addr_t {
         return o < *this;
     }
 
-    struct Ip6Addr operator&( const Ip6Addr& mask ) const {
+    Ip6Addr operator&( const Ip6Addr& mask ) const {
         Ip6Addr res( *this );
         for ( int i = 0; i < 4; i++ )
             res.addr[ i ] = addr[ i ] & mask.addr[ i ];
