@@ -19,7 +19,7 @@ int main()
     int id = rofi::hal::RoFI::getLocalRoFI().getId();
     std::cout << "ID: " + std::to_string( id ) + "\n";
 
-    Ip6Addr leaderIp = "fc07::a";
+    Ip6Addr leaderIp = "fc07::a"_ip;
     uint8_t leaderMask = 46;
 
     rofi::net::NetworkManager net( rofi::hal::RoFI::getLocalRoFI() );
