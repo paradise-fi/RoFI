@@ -43,6 +43,19 @@ public:
             Interface::Name name() const { return _ifname; }
             const Protocol* learnedFrom() const { return _learnedFrom; }
 
+            /**
+             * @brief Update the cost with a new value, if the new value is lower.
+             *
+             * \return true if the cost changed, false otherwise
+             */
+            bool improveCost( Cost c ) {
+                if ( _cost > c ) {
+                    _cost = c;
+                    return true;
+                }
+                return false;
+            }
+
             auto operator<=>( const Gateway& ) const = default;
     };
 
@@ -76,9 +89,19 @@ public:
         */
         bool addGateway( Interface::Name n, Cost c, const Protocol* learnedFrom ) {
             Gateway newGw( n, c, learnedFrom );
-            auto it = std::find( _gws.begin(), _gws.end(), newGw );
-            if ( it != _gws.end() )
-                return false; // the record already exists
+            auto it = std::find_if( _gws.begin(), _gws.end(), [ &newGw ]( auto& g ) {
+                return g.name() == newGw.name() && g.learnedFrom() == newGw.learnedFrom();
+            } );
+
+            if ( it != _gws.end() ) {
+                if ( it->cost() == c )
+                    return false; // the same record already exists
+                if ( it->cost() == 0 )
+                    return false; // do not add records to local interfaces/addresses
+
+                // the record exist but has a different cost -- use the better one
+                return it->improveCost( c );
+            }
 
             // if the last has better cost than the new one, add it right at the end
             if ( !_gws.empty() && _gws.back().cost() <= c ) {
@@ -224,6 +247,9 @@ public:
     bool add( const Ip6Addr& ip, uint8_t mask, const Interface::Name& n, Cost c, const Protocol* learned = nullptr ) {
         auto rec = find( ip, mask );
         if ( rec ) {
+            if ( rec->best() && rec->best()->cost() == 0 && c != 0 ) // do not add external routes to local interfaces
+                return false;
+
             auto size = rec->size();
             if ( rec->addGateway( n, c, learned ) ) // returns true if the best changed
                 ip_update_route( &ip, mask, n.c_str() );
