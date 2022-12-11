@@ -38,7 +38,7 @@ class SimpleReactive : public Protocol {
         as< uint16_t >( packet.payload() ) = static_cast< uint16_t >( count );
         auto* data = packet.payload() + 2;
 
-        for ( auto& r : records ) {
+        for ( const auto& r : records ) {
             auto g = r.best();
             if ( !g || ( g->name() == interfaceName && g->cost() != 0 ) )
                 continue;
@@ -53,7 +53,6 @@ class SimpleReactive : public Protocol {
     }
 
     bool _addInterface( const Interface& interface ) {
-        _managedInterfaces.push_back( std::ref( interface ) );
         bool added = false;
         for ( auto [ ip, mask ] : interface.getAddress() ) {
             added = addAddressOn( interface, ip, mask ) || added;
@@ -85,16 +84,9 @@ public:
         int count = static_cast< int >( as< uint16_t >( packet.payload() ) );
         auto data = packet.payload() + 2;
 
-        int removedCount = 0;
-        // Remove everything we learned from this interface via this protocol
-        for ( const auto& l : routingTableCB() ) {
-            for ( const auto& g : l.gateways() ) {
-                if ( g.name() != interfaceName )
-                    continue;
-                _updates.push_back( Update{ Route::RM, { l.ip(), l.mask(), interfaceName, g.cost(), g.learnedFrom() } } );
-                removedCount++;
-            }
-        }
+        bool somethingNew = false;
+        auto records = routingTableCB();
+        std::set< int > validRecords;
 
         for ( int i = 0; i < count; i++ ) {
             Ip6Addr ip  = as< Ip6Addr >( data );
@@ -102,13 +94,36 @@ public:
             auto cost   = as< uint16_t >( data + Ip6Addr::size() + 1 ) + 5;
             RoutingTable::Record rec{ ip, mask, interfaceName, cost };
 
-            Update update{ Route::ADD, rec };
-            _updates.push_back( update );
+            // do we know about this route already?
+            int index = -1;
+            auto it = std::find_if( records.begin(), records.end(), [ &rec, this, &index ]( auto& r ) {
+                index++;
+                return r.compareNetworks( rec ) && rec.addGateway( rec.best()->name(), rec.best()->cost(), this );
+            } );
+            if ( it == records.end() ) { // no, so we add it
+                somethingNew = true;
+                Update update{ Route::ADD, rec };
+                _updates.push_back( update );
+            } else {
+                validRecords.insert( index );
+            }
 
             data += Ip6Addr::size() + 3;
         }
 
-        return count != removedCount;
+        // remove those records, that were not used in the find above -- so they were not
+        // among routes in the processed update message, and therefore are no longer valid
+        for ( unsigned i = 0; i < records.size(); i++ ) {
+            if ( validRecords.contains( i ) )
+                continue;
+            for ( auto& g : records[ i ].gateways() ) {
+                if ( g.name() == interfaceName )
+                    _updates.push_back( { Route::RM
+                                        , { records[ i ].ip(), records[ i ].mask(), g.name(), g.cost() } } );
+            }
+        }
+
+        return somethingNew;
     }
 
     virtual bool afterMessage( const Interface& i, std::function< void ( PBuf&& ) > f, void* /* args */ ) override {
@@ -117,7 +132,7 @@ public:
     }
 
     virtual bool onInterfaceEvent( const Interface& interface, bool connected ) override {
-        assert( manages( interface ) && "onInterfaceEvent within protocol got unmanaged interface" );
+        assert( manages( interface ) && "onInterfaceEvent within SimpleReactive got unmanaged interface" );
 
         bool res = false;
         if ( connected ) {
@@ -163,6 +178,7 @@ public:
         if ( manages( interface ) ) // interface is already managed
             return false;
 
+        _managedInterfaces.push_back( std::ref( interface ) );
         return _addInterface( interface );
     }
 
