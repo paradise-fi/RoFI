@@ -115,7 +115,7 @@ public:
         } );
     }
 
-    virtual Ip6Addr address() const override { return "ff02::aa:ff"; }
+    virtual Ip6Addr address() const override { return Ip6Addr( "ff02::aa:ff" ); }
 
     virtual std::string name() const override { return "leader-elect"; }
 

@@ -56,7 +56,7 @@ class RRP : public Protocol {
     std::vector< std::reference_wrapper< const Interface > > _managedInterfaces;
     std::set< Interface::Name > _stubInterfaces;
     std::vector< Update > _updates;
-    // interface name, routing update, record -> on which interface the Protocol::Route originated
+
     std::vector< std::pair< Interface::Name, Update > > _toSendExcept;
     std::map< Interface::Name, std::vector< Update > > _toSendFrom;
     std::map< Interface::Name, Command > _interfacesCommands;
@@ -64,12 +64,14 @@ class RRP : public Protocol {
 
     std::optional< Interface::Name > getPhysicalGw( const RoutingTable::Records& records ) const {
         for ( const auto& rec : records ) {
-            if ( !rec.best() || isVirtualInterface( rec.best()->name() ).value_or( false ) )
-                continue;
-            if ( _stubInterfaces.contains( rec.best()->name() ) )
-                continue;
-            
-            return { rec.best()->name() };
+            for ( const auto& gw : rec.gateways() ) {
+                if ( *isVirtualInterface( gw.name() ) )
+                    continue;
+                if ( _stubInterfaces.contains( gw.name() ) )
+                    continue;
+                
+                return { gw.name() };
+            }
         }
 
         return std::nullopt;
@@ -80,23 +82,56 @@ class RRP : public Protocol {
         if ( records.empty() )
             return false;
 
-        // ToDo: Make this more fail proof -- you need to get any _physical_ output netif.
         auto outInterface = getPhysicalGw( records );
         if ( !outInterface.has_value() )
             return false;
 
-        bool oneWayOut = std::ranges::all_of( records, [ &outInterface ]( const RoutingTable::Record& r ) {
-            return std::ranges::all_of( r.gateways(), [ &outInterface ]( const RoutingTable::Gateway& gw ) {
-                return gw.name() == *outInterface || isVirtualInterface( gw.name() );
+        bool oneWayOut = std::ranges::all_of( records, [ &outInterface, this ]( const RoutingTable::Record& r ) {
+            return std::ranges::all_of( r.gateways(), [ &outInterface, this ]( const RoutingTable::Gateway& gw ) {
+                return gw.name() == *outInterface
+                    || isVirtualInterface( gw.name() )
+                    || _stubInterfaces.contains( gw.name() );
             } );
         } );
 
-        bool isSynced = std::ranges::all_of( _interfacesCommands, []( const auto& keyVal ) {
-            auto val = keyVal.second;
-            return ( val != Command::Call && val != Command::Hello ) || isVirtualInterface( keyVal.first );
-        } );
+        return oneWayOut;
+    }
 
-        return oneWayOut && isSynced;
+    Interface::Name setDefaultGateway() {
+        auto records = routingTableCB();
+        auto defaultGW = defaultGatewayVia( *getPhysicalGw( records ) );
+
+        // first anihilate pending updates for the gw interface
+
+        for ( auto& [ type, rec ] : _updates ) {
+            if ( type == Route::ADD && rec.best()->name() == defaultGW.best()->name() )
+                _updates.push_back( { Route::RM, rec } );
+        }
+
+        _updates.push_back( { Route::ADD, defaultGW } );
+        // remove all records for the now default gw interface
+        for ( const auto& rec : records ) {
+            for ( const auto& g : rec.gateways() ) {
+                if ( g.name() != defaultGW.best()->name() )
+                    continue;
+
+                Update update( Route::RM, { rec.ip(), rec.mask(), g.name(), g.cost(), this } );
+                _updates.push_back( update );
+            }
+        }
+        return defaultGW.best()->name();
+    }
+
+    std::optional< Interface::Name > destroyDefaultGateway() {
+        auto records = routingTableCB();
+        for ( auto& r : records ) {
+            if ( r.ip() == Ip6Addr( "::" ) && r.mask() == 0 ) {
+                _updates.push_back( { Route::RM, { r.ip(), r.mask(), r.best()->name(), r.best()->cost(), this } } );
+                return { r.best()->name() };
+            }
+        }
+
+        return std::nullopt;
     }
 
     std::optional< Command > getResponseCmd( Command received, bool newRecords ) const {
@@ -139,6 +174,12 @@ class RRP : public Protocol {
                     continue;
                 _interfacesCommands[ i.get().name() ] = Command::Hello;
             }
+        } else if ( _stub && !amIStubby() ) {
+            for ( auto& i : _managedInterfaces ) {
+                if ( i.get().name() == interfaceName )
+                    continue;
+                _interfacesCommands[ i.get().name() ] = Command::Hello;
+            }
         }
     }
 
@@ -158,25 +199,17 @@ class RRP : public Protocol {
             auto mask   = as< uint8_t >( data + Ip6Addr::size() );
             auto cost   = as< uint8_t >( data + Ip6Addr::size() + 1 );
             auto action = as< Operation >( data + Ip6Addr::size() + 2 );
-            RoutingTable::Record rec{ ip, mask, interfaceName, cost };
+            RoutingTable::Record rec{ ip, mask, interfaceName, cost, this };
 
             Update update{ action == Operation::Add ? Route::ADD : Route::RM, rec };
             _updates.push_back( update );
             auto it = std::ranges::find_if( _toSendExcept, [ &update ]( const auto& r ) {
-                // TODO: Do we want to compare records or their networks?
                 return r.second.second.compareNetworks( update.second );
             } );
             if ( it == _toSendExcept.end() )
                 _toSendExcept.push_back( { interfaceName, update } );
 
             data += EntrySize;
-        }
-
-        // if we're stub and we got message from aa new interface, we destroy the stub
-        auto mif = getPhysicalGw( routingTableCB() );
-        if ( _stub && mif && *mif != interfaceName ) {
-            _stub = false;
-            _updates.push_back( { Route::RM, defaultGatewayVia( *mif ) } );
         }
 
         auto responseCmd = getResponseCmd( command, count > 0 );
@@ -188,8 +221,28 @@ class RRP : public Protocol {
         return count > 0;
     }
 
+    void addTableForHello( const std::string& interfaceName, Command cmd ) {
+        if ( cmd != Command::Hello && cmd != Command::HelloResponse )
+            return;
+
+        _toSendFrom[ interfaceName ].clear();
+        for ( auto& r : routingTableCB() ) {
+            if ( r.ip() == Ip6Addr( "::" ) )
+                continue;
+            if ( r.best() && r.best()->name() != interfaceName ) {
+                auto gw = *r.best();
+                RoutingTable::Record record( r.ip(), r.mask(), gw.name(), gw.cost(), gw.learnedFrom() );
+                _toSendFrom[ interfaceName ].push_back( { Route::ADD, record } );
+            }
+        }
+    }
+
     PBuf createMsg( const std::string& interfaceName, Command cmd ) {
-        auto fromOtherIfs = [ &interfaceName ]( auto& p ) { return std::get< 0 >( p ) != interfaceName; };
+        addTableForHello( interfaceName, cmd );
+
+        auto fromOtherIfs = [ &interfaceName ]( auto& p ) {
+            return std::get< 0 >( p ) != interfaceName;
+        };
 
         int count = static_cast< int >( std::ranges::count_if( _toSendExcept, fromOtherIfs ) )
             + static_cast< int >( _toSendFrom.contains( interfaceName ) ? _toSendFrom[ interfaceName ].size() : 0 );
@@ -228,11 +281,14 @@ class RRP : public Protocol {
     }
 
     bool _addInterface( const Interface& interface ) {
+        _stubInterfaces.clear();
         auto learned = routingTableCB();
 
         for ( auto l : learned ) {
+            if ( l.ip() == Ip6Addr( "::" ) )
+                continue;
+
             auto it = std::ranges::find_if( _toSendFrom[ interface.name() ], [ &l ]( const Update& r ) {
-                // TODO: Do we want to compare records or their networks?
                 return r.second.compareNetworks( l );
             } );
             if ( it == _toSendFrom[ interface.name() ].end() )
@@ -242,7 +298,7 @@ class RRP : public Protocol {
         _interfacesCommands.emplace( interface.name(), Command::Hello );
 
         bool added = false;
-        for ( auto [ ip, mask ] : interface.getAddress() ) {
+        for ( auto& [ ip, mask ] : interface.getAddress() ) {
             added = addAddressOn( interface, ip, mask ) || added;
         }
 
@@ -251,17 +307,30 @@ class RRP : public Protocol {
 
     bool _removeInterface( const Interface& interface ) {
         // remove all routes that has this interface as their gateway
+        bool b = false;
         auto records = routingTableCB();
         for ( const auto& rec : records ) {
             for ( const auto& g : rec.gateways() ) {
                 if ( g.name() != interface.name() )
                     continue;
 
-                _updates.push_back( { Route::RM, { rec.ip(), rec.mask(), interface.name(), 0 } } );
+                Update update( Route::RM, { rec.ip(), rec.mask(), g.name(), g.cost(), this } );
+                _updates.push_back( update );
+                _toSendExcept.push_back( { interface.name(), update } );
+                b = true;
             }
         }
 
-        return true;
+        bool removed = false;
+        for ( auto& [ ip, mask ] : interface.getAddress() ) {
+            removed = rmAddressOn( interface, ip, mask ) || removed;
+        }
+
+        for ( auto& i : _managedInterfaces ) {
+            _interfacesCommands[ i.get().name() ] = Command::Call;
+        }
+
+        return removed || b;
     }
 
 public:
@@ -272,28 +341,17 @@ public:
     virtual bool afterMessage( const Interface& i, std::function< void ( PBuf&& ) > f, void* /* args */ ) override {
         bool res = false;
         if ( !_stub && amIStubby() ) {
-            auto records = routingTableCB();
-            auto defaultGW = defaultGatewayVia( *getPhysicalGw( records ) );
             _stub = true;
-            _interfacesCommands[ i.name() ] = Command::Sync;
-            // add the default gateway, nothing happens if it is present already
-            _updates.push_back( { Route::ADD, defaultGW } );
-            // remove all records for the now default gw interface
-            for ( const auto& rec : records ) {
-                for ( const auto& g : rec.gateways() ) {
-                    if ( g.name() == defaultGW.best()->name() ) {
-                        _updates.push_back( { Route::RM, { rec.ip(), rec.mask(), g.name(), g.cost(), this } } );
-                    }
-                }
-            }
+            auto defGW = setDefaultGateway();
+            // if this is called after Hello msg is received, send everything from stub
+            addTableForHello( defGW, _interfacesCommands[ defGW ] );
+            _interfacesCommands[ defGW ] = Command::Stubby;
             res = true;
         }
 
-        if ( _interfacesCommands.contains( i.name() ) && !_stubInterfaces.contains( i.name() ) ) {
+        if ( res || ( _interfacesCommands.contains( i.name() ) && !_stubInterfaces.contains( i.name() ) ) ) {
             f( std::move( createMsg( i.name(), _interfacesCommands[ i.name() ] ) ) );
-            if ( _interfacesCommands[ i.name() ] != Command::Hello ) {
-                _toSendFrom.erase( i.name() );
-            }
+            _toSendFrom.erase( i.name() );
         }
 
         _interfacesCommands.erase( i.name() );
@@ -306,21 +364,25 @@ public:
     }
 
     virtual bool onInterfaceEvent( const Interface& interface, bool connected ) override {
-        assert( manages( interface ) && "onInterfaceEvent within protocol got unmanaged interface" );
+        assert( manages( interface ) && "onInterfaceEvent within RRP got unmanaged interface" );
 
         bool res = false;
         if ( connected ) {
-            res = addInterface( interface );
+            res = _addInterface( interface );
         } else {
-            res = removeInterface( interface );
-            // removeInterface removes the interface from the managed ones, but we do not want this
-            _managedInterfaces.push_back( interface );
+            res = _removeInterface( interface );
         }
 
         return res;
     }
 
-    virtual bool hasRouteUpdates() const override { return !_updates.empty(); }
+    virtual bool hasRouteUpdates() const override {
+        bool noUpdates = false;
+        for ( auto& [ i, updates ] : _toSendFrom ) {
+            noUpdates = noUpdates || !updates.empty();
+        }
+        return !_updates.empty() || noUpdates;
+    }
 
     virtual std::vector< std::pair< Route, RoutingTable::Record > > getRouteUpdates() const override {
         return _updates;
@@ -338,8 +400,7 @@ public:
             Update rec{ Route::ADD, { ip, mask, interface.name(), 0 } };
             _updates.push_back( rec );
             auto it = std::ranges::find_if( _toSendExcept, [ &rec ]( const auto& r ) {
-                // TODO: Do we want to compare records or their networks?
-                return r.second.second.compareNetworks( rec.second );
+                return r.second.second.compareNetworks( rec.second ) && r.second.first == rec.first;
             } );
             if ( it == _toSendExcept.end() )
                 _toSendExcept.push_back( { interface.name(), rec } );
@@ -354,8 +415,7 @@ public:
             Update rec{ Route::RM, { ip, mask, interface.name(), 0 } };
             _updates.push_back( rec );
             auto it = std::ranges::find_if( _toSendExcept, [ &rec ]( const auto& r ) {
-                // TODO: Do we want to compare records or their networks?
-                return r.second.second.compareNetworks( rec.second );
+                return r.second.second.compareNetworks( rec.second ) && r.second.first == rec.first;
             } );
             if ( it == _toSendExcept.end() )
                 _toSendExcept.push_back( { interface.name(), rec } );
@@ -366,7 +426,6 @@ public:
     }
 
     virtual bool addInterface( const Interface& interface ) override {
-        // TODO: add asserts
         if ( manages( interface ) ) // interface is already managed
             return false;
 
