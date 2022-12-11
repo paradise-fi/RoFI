@@ -93,7 +93,7 @@ void handleConnector( bool connect ) {
     int connectorIdx;
     auto rofi = RoFI::getLocalRoFI();
     std::cout << "which connector do you want to disconnect? (0 - "
-              << rofi.getDescriptor().connectorCount << "): ";
+              << ( rofi.getDescriptor().connectorCount - 1 ) << "): ";
     std::cin >> connectorIdx;
     if ( connectorIdx >= 0 && connectorIdx < rofi.getDescriptor().connectorCount ) {
         if ( connect )
@@ -104,6 +104,17 @@ void handleConnector( bool connect ) {
     } else {
         std::cout << "index out of range! ignoring..." << std::endl;
     }
+}
+
+Ip6Addr createAddressFromId( int id ) {
+    assert( id > 0 && "id is always non-negative" );
+
+    std::stringstream ss;
+    ss << "fc07:0:0:";
+    ss << id;
+    ss << "::1";
+
+    return Ip6Addr( ss.str() );
 }
 
 int main() {
@@ -117,17 +128,7 @@ int main() {
     NetworkManager net( RoFI::getLocalRoFI() );
     NetworkManagerCli netcli( net );
 
-    if ( id == 1 ) {
-        net.addAddress( "fc07:0:0:1::1"_ip, 80, net.interface( "rl0" ) );
-    } else if ( id == 2 ) {
-        net.addAddress( "fc07:0:0:2::1"_ip, 80, net.interface( "rl0" ) );
-    } else if ( id == 3 ) {
-        net.addAddress( "fc07:0:0:3::1"_ip, 80, net.interface( "rl0" ) );
-    } else if ( id == 4 ) {
-        net.addAddress( "fc07:0:0:4::1"_ip, 80, net.interface( "rl0" ) );
-    } else {
-        throw std::runtime_error( "more than 4 bots!" );
-    }
+    net.addAddress( createAddressFromId( id ), 80, net.interface( "rl0" ) );
 
     // ToDo: Maybe addAddress might return an optional< index > instead of bool?
     //       Then you could write "just" net.interface( "rl0" ).get().getAddress( index ). 
@@ -139,7 +140,7 @@ int main() {
     net.addProtocol( RRP() );
     net.addProtocol( SimplePeriodic() );
     net.addProtocol( SimpleReactive() );
-    net.addProtocol( LeaderElect( id, "fc07:a::a", 96 ) );
+    net.addProtocol( LeaderElect( id, "fc07:a::a"_ip, 96 ) );
 
     /*
      * If you want to set-up some protocol on all interfaces, you can do it by
