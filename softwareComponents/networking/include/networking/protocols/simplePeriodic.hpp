@@ -109,6 +109,22 @@ public:
         return false;
     }
 
+    virtual bool onInterfaceEvent( const Interface& interface, bool connected ) override {
+        assert( manages( interface ) && "onInterfaceEvent within SimpleReactive got unmanaged interface" );
+
+        if ( !connected ) {
+            // add everything we know, to pass it to the new neighbour
+            for ( auto& rec : routingTableCB() ) {
+                for ( auto& g : rec.gateways() )
+                    if ( g.name() == interface.name() )
+                        _updates.push_back( { Route::RM
+                                            , { rec.ip(), rec.mask(), g.name(), g.cost(), g.learnedFrom() } } );
+            }
+        }
+
+        return !connected;
+    }
+
     virtual bool hasRouteUpdates() const override { return !_updates.empty(); }
 
     virtual std::vector< std::pair< Route, RoutingTable::Record > > getRouteUpdates() const override {

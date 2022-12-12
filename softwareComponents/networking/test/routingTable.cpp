@@ -146,6 +146,14 @@ namespace {
             rt.purge( interface2.name() );
             CHECK( interface1.name() == ip_find_route_entry( &ip )->gw_name );
         }
+
+        SECTION( "default routes" ) {
+            REQUIRE( rt.empty() );
+            rt.add( Ip6Addr( "::" ), 0, "rd3", 0, nullptr );
+            CHECK( rt.size() == 1 );
+            rt.add( Ip6Addr( "fc07:0:0:2::1" ), 80, "rd6", 0, nullptr );
+            CHECK( rt.size() == 2 );
+        }
     }
 
 } // namespace
