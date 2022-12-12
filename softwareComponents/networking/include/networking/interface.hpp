@@ -9,6 +9,8 @@
 #include <lwip/tcpip.h>
 #include <networking/logger.hpp>
 
+#include <lwip/dhcp6.h>
+
 #include <atoms/unreachable.hpp>
 
 #include <optional>
@@ -39,6 +41,7 @@ class Interface {
     long long unsigned _sent = 0;
     long long unsigned _received = 0;
     Logger::LogFunction _logger;
+    dhcp6 _dhcp;
 
     std::list< std::function< uint8_t (void*, raw_pcb*, pbuf*, const ip6_addr*) > > _onMessageStorage;
 
@@ -79,7 +82,7 @@ class Interface {
             throw std::runtime_error( "netif init function has null state" );
         n->hwaddr_len = 6;
         std::copy_n( interface->_paddr.addr, 6, n->hwaddr );
-        n->mtu = 120; n->mtu6 = 120;
+        n->mtu = 1500; n->mtu6 = 1500; // TODO: Check this with all possible implementations.
         n->name[ 0 ] = 'r'; n->name[ 1 ] = interface->isVirtual() ? 'l' : 'd';
         n->num = uniqueID(); // lwip will overwrite this if any netif with the same number exists
         n->output_ip6 = output;
@@ -149,6 +152,8 @@ public:
     {
         netif_add_noaddr( &_netif, this, init, my_input );
         netif_create_ip6_linklocal_address( &_netif, isVirtual() ? 0 : 1 );
+
+        dhcp6_set_struct( &_netif, &_dhcp );
             
         if ( isVirtual() ) {
             netif_set_default( &_netif );
@@ -370,6 +375,28 @@ public:
             throw std::runtime_error( "Interface::send called on virtual interface" );
     }
 
+    enum class DHCP { SLAAC, STATEFULL };
+
+    /**
+     * \brief Start a DHCP protocol on the interface.
+     *
+     * Currently, stateless is
+     */
+    bool dhcpUp( DHCP type ) {
+        switch ( type ) {
+            case DHCP::SLAAC:
+                return ERR_OK == dhcp6_enable_stateless( &_netif );
+            case DHCP::STATEFULL:
+                assert( type == DHCP::SLAAC && "Only stateless configuration is currently supported" );
+        }
+
+        return false;
+    }
+
+    void dhcpDown() {
+        dhcp6_disable( &_netif );
+    }
+
     /**
      * \brief Function that returns the amount of data sent (in bytes).
     */
@@ -403,11 +430,16 @@ inline std::ostream& operator<<( std::ostream& o, const Interface& i ) {
     if ( !i.isVirtual() )
         o << "sent: " << i.dataSent() << " bytes / received: " << i.dataReceived() << " bytes\n";
     // link-local address
-    if ( i.getAddress( 0 ).first.linkLocal() )
-        o  << "\t address " << 0 << ": " << i.getAddress( 0 ).first << " [link-local]\n";
-    for ( auto& [ index, addrMask ] : i._addrIndexWithMask ) {
-        o << "\t address " << index << ": " << *i._netif.getAddress( index )
-                                    << "/" << static_cast< int >( addrMask ) << "\n";
+
+    for ( int index = 0; index < LWIP_IPV6_NUM_ADDRESSES; index++ ) {
+        if ( !i._netif.getAddress( index ) )
+            continue;
+        o << "\t address " << index << ": " << *i._netif.getAddress( index );
+        if ( i._netif.getAddress( index )->linkLocal() )
+            o << " [link-local]";
+        else
+            o << "/" << static_cast< int >( i.getAddress( index ).second );
+        o << "\n";
     }
 
     return o;
