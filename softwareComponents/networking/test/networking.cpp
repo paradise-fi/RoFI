@@ -51,7 +51,7 @@ namespace {
                 CHECK( !p->manages( interface ) );
                 p->addInterface( interface );
                 CHECK( p->manages( interface ) );
-                REQUIRE( p->removeInterface( interface ) );
+                p->removeInterface( interface );
                 CHECK( !p->manages( interface ) );
             }
         }
@@ -62,7 +62,7 @@ namespace {
                 CHECK( !p->manages( interface ) );
                 p->addInterface( interface );
                 CHECK( p->manages( interface ) );
-                REQUIRE( p->removeInterface( interface ) );
+                p->removeInterface( interface );
                 CHECK( !p->manages( interface ) );
             }
         }

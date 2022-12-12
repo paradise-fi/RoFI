@@ -178,10 +178,21 @@ public:
         }
 
         /**
-         * Get the best (with the lowest cost) gateway for given network if it exists.
+         * \brief Get the best (with the lowest cost) gateway for given network if it exists.
         */
         std::optional< Gateway > best() const {
             return _gws.empty() ? std::nullopt : std::optional( _gws.front() );
+        }
+
+        /**
+         * @brief Check if a given gateway is present in the record.
+         */
+        bool contains( const Gateway& gw ) const {
+            for ( auto& g : _gws ) {
+                if ( g == gw )
+                    return true;
+            }
+            return false;
         }
 
         /**
@@ -251,8 +262,10 @@ public:
                 return false;
 
             auto size = rec->size();
-            if ( rec->addGateway( n, c, learned ) ) // returns true if the best changed
+            if ( rec->addGateway( n, c, learned ) ) { // returns true if the best changed
                 ip_update_route( &ip, mask, n.c_str() );
+                return true;
+            }
             return size != rec->size(); // true if the gw was added
         }
 
