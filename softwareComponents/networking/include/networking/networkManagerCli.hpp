@@ -35,8 +35,7 @@ class NetworkManagerCli {
         ss >> cmd;
 
         if ( cmd == "show" ) {
-            for ( const auto& [ ip, m ]  : i.getAddress() )
-                std::cout << ip << "/" << static_cast< int >( m ) << "\n";
+            std::cout << i;
         } else if ( cmd == "get" ) {
             if ( ss.eof() )
                 throw std::runtime_error( "address get [index] is missing index in the input" );
@@ -54,6 +53,14 @@ class NetworkManagerCli {
                    , std::string( "address ") + cmd + " for " + Logger::toString( ip )
                                               + "/" + Logger::toString( static_cast< int >( mask ) ) + " failed" );
             }
+        } else if ( cmd == "dhcp" ) {
+            ss >> cmd;
+            if ( cmd == "up" || cmd == "down" ) {
+                _netManager.dhcp( i, cmd == "up" );
+            } else {
+                throw std::runtime_error( cmd + " is not supported option for DHCP" );
+            }
+        
         } else {
             throw std::runtime_error( cmd + " is not a valid command for address command" );
         }
