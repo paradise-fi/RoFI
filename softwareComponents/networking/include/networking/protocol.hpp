@@ -129,7 +129,7 @@ public:
     virtual bool addInterface( const Interface& interface ) = 0;
 
     /**
-     * \brief Remove the given interface into the protocol.
+     * \brief Remove the given interface from the protocol.
      * 
      * \return true if the interface was succesfully removed.
      * 
