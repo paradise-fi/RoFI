@@ -53,9 +53,8 @@ class SimpleReactive : public Protocol {
     }
 
     bool _addInterface( const Interface& interface ) {
-        bool added = false;
         for ( auto [ ip, mask ] : interface.getAddress() ) {
-            added = addAddressOn( interface, ip, mask ) || added;
+            addAddressOn( interface, ip, mask );
         }
 
         return true;
@@ -63,6 +62,7 @@ class SimpleReactive : public Protocol {
 
     bool _removeInterface( const Interface& interface ) {
         // remove all routes that has this interface as their gateway
+        bool removed = false;
         auto records = routingTableCB();
         for ( const auto& rec : records ) {
             for ( const auto& g : rec.gateways() ) {
@@ -71,10 +71,11 @@ class SimpleReactive : public Protocol {
 
                 _updates.push_back( { Route::RM
                                     , { rec.ip(), rec.mask(), interface.name(), g.cost(), g.learnedFrom() } } );
+                removed = true;
             }
         }
 
-        return true;
+        return removed;
     }
 
 public:
@@ -98,7 +99,7 @@ public:
             int index = -1;
             auto it = std::find_if( records.begin(), records.end(), [ &rec, this, &index ]( auto& r ) {
                 index++;
-                return r.compareNetworks( rec ) && rec.addGateway( rec.best()->name(), rec.best()->cost(), this );
+                return r.compareNetworks( rec ) && r.contains( { rec.best()->name(), rec.best()->cost(), this } );
             } );
             if ( it == records.end() ) { // no, so we add it
                 somethingNew = true;
@@ -117,9 +118,11 @@ public:
             if ( validRecords.contains( i ) )
                 continue;
             for ( auto& g : records[ i ].gateways() ) {
-                if ( g.name() == interfaceName )
+                if ( g.name() == interfaceName ) {
                     _updates.push_back( { Route::RM
-                                        , { records[ i ].ip(), records[ i ].mask(), g.name(), g.cost() } } );
+                                        , { records[ i ].ip(), records[ i ].mask(), g.name(), g.cost(), this } } );
+                    somethingNew = true;
+                }
             }
         }
 
@@ -137,6 +140,12 @@ public:
         bool res = false;
         if ( connected ) {
             res = _addInterface( interface );
+            // add everything we know, to pass it to the new neighbour
+            for ( auto& rec : routingTableCB() ) {
+                if ( rec.best() && rec.best()->name() != interface.name() )
+                    _updates.push_back( { Route::ADD
+                                        , { rec.ip(), rec.mask(), rec.best()->name(), rec.best()->cost(), this } } );
+            }
         } else {
             res = _removeInterface( interface );
         }
