@@ -1,11 +1,14 @@
 #include "rendering.hpp"
 
+#include <string_view>
+
 #include <atoms/resources.hpp>
 #include <isoreconfig/geometry.hpp>
 #include <isoreconfig/isomorphic.hpp>
 
 #include <vtkActor.h>
 #include <vtkAxesActor.h>
+#include <vtkCallbackCommand.h>
 #include <vtkCamera.h>
 #include <vtkCylinderSource.h>
 #include <vtkInteractorStyleTrackballCamera.h>
@@ -205,6 +208,150 @@ void renderRofiWorld( const RofiWorld & world, const std::string & displayName )
     addAxesWidget( *widget.Get(), renderWindowInteractor.Get() );
 
     buildRofiWorldScene( *renderer.Get(), world );
+
+    // Start main window loop
+    renderWindow->Render();
+    renderWindowInteractor->Start();
+}
+
+class [[nodiscard]] SequenceRenderer {
+private:
+    void removeCurrentRenderer()
+    {
+        assert( renderWindow.HasRenderer( renderers[ currentRenderer ].Get() ) );
+        renderWindow.RemoveRenderer( renderers[ currentRenderer ].Get() );
+    }
+    void setRenderer( int newRenderer )
+    {
+        assert( !renderers.empty() );
+        assert( newRenderer >= 0 );
+        assert( to_unsigned( newRenderer ) < renderers.size() );
+
+        currentRenderer = to_unsigned( newRenderer );
+        renderWindow.AddRenderer( renderers[ currentRenderer ].Get() );
+        renderWindow.SetWindowName( getCurrentDisplayName().c_str() );
+    }
+
+    static void keypressEventCallback( vtkObject * caller,
+                                       [[maybe_unused]] unsigned long eventId,
+                                       void * clientData,
+                                       void * /* callData */ )
+    {
+        using namespace std::string_view_literals;
+
+        assert( eventId == vtkCommand::KeyPressEvent );
+        assert( dynamic_cast< vtkRenderWindowInteractor * >( caller ) );
+        assert( clientData );
+
+        auto & self = *reinterpret_cast< SequenceRenderer * >( clientData );
+
+        auto & renderWindowInteractor = *static_cast< vtkRenderWindowInteractor * >( caller );
+        auto keyPressed = std::string_view( renderWindowInteractor.GetKeySym() );
+        if ( keyPressed == "Left"sv ) {
+            if ( !self.setPrevRenderer() ) {
+                std::cout << "Already at the first world in sequence\n";
+            }
+            self.renderWindow.Render();
+        } else if ( keyPressed == "Right"sv ) {
+            if ( !self.setNextRenderer() ) {
+                std::cout << "Already at the last world in sequence\n";
+            }
+            self.renderWindow.Render();
+        }
+    }
+
+public:
+    SequenceRenderer( std::span< const RofiWorld > worlds,
+                      std::string displayName,
+                      vtkRenderWindow & renderWindow )
+            : renderers( worlds.size() )
+            , displayName( std::move( displayName ) )
+            , renderWindow( renderWindow )
+    {
+        assert( !worlds.empty() );
+        assert( worlds.size() == renderers.size() );
+
+        for ( size_t i = 0; i < worlds.size(); i++ ) {
+            assert( worlds[ i ].isValid() && "All rofi worlds have to be valid" );
+            setupRenderer( *renderers[ i ].Get() );
+            buildRofiWorldScene( *renderers[ i ].Get(), worlds[ i ] );
+        }
+
+        // Use the same camera for all renderers
+        for ( size_t i = 1; i < worlds.size(); i++ ) {
+            renderers[ i ]->SetActiveCamera( renderers[ 0 ]->GetActiveCamera() );
+        }
+
+        setRenderer( 0 );
+    }
+
+    bool setNextRenderer()
+    {
+        if ( currentRenderer + 1 >= renderers.size() ) {
+            return false;
+        }
+        updateRenderer( static_cast< int >( currentRenderer ) + 1 );
+        return true;
+    }
+    bool setPrevRenderer()
+    {
+        if ( currentRenderer <= 0 ) {
+            return false;
+        }
+        updateRenderer( static_cast< int >( currentRenderer ) - 1 );
+        return true;
+    }
+
+    void updateRenderer( int newRenderer )
+    {
+        if ( newRenderer < 0 || to_unsigned( newRenderer ) >= renderers.size() ) {
+            std::cerr << "Renderer " << newRenderer << "is out of bounds\n";
+            return;
+        }
+
+        removeCurrentRenderer();
+        setRenderer( newRenderer );
+    }
+
+    std::string getCurrentDisplayName() const
+    {
+        return std::string( "(" ) + std::to_string( currentRenderer + 1 ) + "/"
+             + std::to_string( renderers.size() ) + ") " + displayName;
+    }
+
+    void setCallback( vtkRenderWindowInteractor & renderWindowInteractor )
+    {
+        vtkNew< vtkCallbackCommand > keypressCallback;
+        keypressCallback->SetCallback( SequenceRenderer::keypressEventCallback );
+        keypressCallback->SetClientData( this );
+        renderWindowInteractor.AddObserver( vtkCommand::KeyPressEvent, keypressCallback.Get() );
+    }
+
+private:
+    size_t currentRenderer = 0;
+    std::vector< vtkNew< vtkRenderer > > renderers;
+    std::string displayName;
+    vtkRenderWindow & renderWindow;
+};
+
+void renderRofiWorldSequence( std::span< const RofiWorld > worlds, const std::string & displayName )
+{
+#ifndef NDEBUG
+    for ( const auto & world : worlds ) {
+        assert( world.isPrepared() && "All rofi worlds have to be prepared" );
+        assert( world.isValid() && "All rofi worlds have to be valid" );
+    }
+#endif
+
+    vtkNew< vtkRenderWindow > renderWindow;
+    vtkNew< vtkRenderWindowInteractor > renderWindowInteractor;
+    setupRenderWindow( renderWindow.Get(), renderWindowInteractor.Get(), displayName );
+
+    auto sequenceRenderer = SequenceRenderer( worlds, displayName, *renderWindow.Get() );
+    sequenceRenderer.setCallback( *renderWindowInteractor.Get() );
+
+    vtkNew< vtkOrientationMarkerWidget > widget;
+    addAxesWidget( *widget.Get(), renderWindowInteractor.Get() );
 
     // Start main window loop
     renderWindow->Render();

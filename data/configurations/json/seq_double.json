@@ -1,0 +1,98 @@
+[
+    {
+        "modules": [
+            {
+                "id": 12,
+                "type": "universal",
+                "alpha": 0,
+                "beta": 0,
+                "gamma": 0
+            },
+            {
+                "id": 42,
+                "type": "universal",
+                "alpha": 0,
+                "beta": 0,
+                "gamma": 0
+            }
+        ],
+        "moduleJoints": [
+            {
+                "orientation": "North",
+                "from": {
+                    "id": 12,
+                    "connector": "A-Z"
+                },
+                "to": {
+                    "id": 42,
+                    "connector": "A-Z"
+                }
+            }
+        ],
+        "spaceJoints": [
+            {
+                "point": [
+                    0,
+                    0,
+                    0
+                ],
+                "joint": {
+                    "type": "rigid",
+                    "sourceToDestination": "identity"
+                },
+                "to": {
+                    "id": 12,
+                    "component": 0
+                }
+            }
+        ]
+    },
+    {
+        "modules": [
+            {
+                "id": 12,
+                "type": "universal",
+                "alpha": 0,
+                "beta": 0,
+                "gamma": 0
+            },
+            {
+                "id": 42,
+                "type": "universal",
+                "alpha": 0,
+                "beta": 0,
+                "gamma": 90
+            }
+        ],
+        "moduleJoints": [
+            {
+                "orientation": "North",
+                "from": {
+                    "id": 12,
+                    "connector": "A-Z"
+                },
+                "to": {
+                    "id": 42,
+                    "connector": "A-Z"
+                }
+            }
+        ],
+        "spaceJoints": [
+            {
+                "point": [
+                    0,
+                    0,
+                    0
+                ],
+                "joint": {
+                    "type": "rigid",
+                    "sourceToDestination": "identity"
+                },
+                "to": {
+                    "id": 12,
+                    "component": 0
+                }
+            }
+        ]
+    }
+]
