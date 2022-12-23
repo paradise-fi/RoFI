@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.11)
 
 set(CONVERT_SRC
     main.cpp
-    voxel_json_cmd.cpp
+    voxel_json.cpp
     )
 
 add_executable(rofi-convert ${CONVERT_SRC})
