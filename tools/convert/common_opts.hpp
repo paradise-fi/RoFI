@@ -36,6 +36,33 @@ inline auto readRofiWorldJsonFromStream( std::istream & istr )
     return atoms::result_value( std::move( rofiWorldPtr ) );
 }
 
+inline auto readRofiWorldSeqJsonFromStream( std::istream & istr )
+        -> atoms::Result< std::vector< rofi::configuration::RofiWorld > >
+{
+    using namespace std::string_literals;
+    using namespace rofi::configuration;
+
+    std::vector< RofiWorld > rofiWorldSeq;
+    try {
+        auto rofiWorldSeqJson = nlohmann::json::parse( istr );
+        if ( !rofiWorldSeqJson.is_array() ) {
+            return atoms::result_error< std::string >( "Expected an array of rofi worlds" );
+        }
+        for ( auto & rofiWorldJson : rofiWorldSeqJson ) {
+            rofiWorldSeq.push_back( serialization::fromJSON( rofiWorldJson ) );
+        }
+    } catch ( const nlohmann::json::exception & e ) {
+        return atoms::result_error( "Error while parsing rofi world sequence ("s + e.what() + ")" );
+    }
+
+    for ( auto & rofiWorld : rofiWorldSeq ) {
+        if ( auto ok = rofiWorld.validate( SimpleCollision() ); !ok ) {
+            return std::move( ok ).assume_error_result();
+        }
+    }
+    return atoms::result_value( std::move( rofiWorldSeq ) );
+}
+
 
 auto readInput( const std::filesystem::path & inputFilePath,
                 std::invocable< std::istream & > auto readCallback )
