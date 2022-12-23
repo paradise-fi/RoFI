@@ -84,6 +84,12 @@ void setupRenderer( vtkRenderer & renderer )
 {
     renderer.SetBackground( 1.0, 1.0, 1.0 );
     renderer.ResetCamera();
+
+    auto activeCamera = renderer.GetActiveCamera();
+    assert( activeCamera );
+    activeCamera->Zoom( 1 );
+    activeCamera->SetPosition( 0, 10, 5 );
+    activeCamera->SetViewUp( 0, 0, 1 );
 }
 
 void setupRenderWindow( vtkRenderWindow * renderWindow,
@@ -93,8 +99,16 @@ void setupRenderWindow( vtkRenderWindow * renderWindow,
     assert( renderWindow );
     assert( renderWindowInteractor );
 
+    if ( auto screenSize = renderWindow->GetScreenSize() ) {
+        renderWindow->SetPosition( screenSize[ 0 ] / 4, screenSize[ 1 ] / 6 );
+        renderWindow->SetSize( screenSize[ 0 ] / 2, screenSize[ 1 ] / 2 );
+    }
     renderWindow->SetWindowName( displayName.c_str() );
+
     renderWindowInteractor->SetRenderWindow( renderWindow );
+    vtkNew< vtkInteractorStyleTrackballCamera > interactorStyle;
+    renderWindowInteractor->SetInteractorStyle( interactorStyle.Get() );
+    renderWindowInteractor->Initialize();
 }
 
 void addAxesWidget( vtkOrientationMarkerWidget & widget,
