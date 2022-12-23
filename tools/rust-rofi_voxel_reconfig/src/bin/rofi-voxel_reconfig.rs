@@ -24,7 +24,7 @@ pub mod input {
         pub fn get_reader(&self) -> Result<BufReader<Box<dyn std::io::Read>>, Error> {
             match self {
                 Input::File(path) => Ok(BufReader::new(Box::new(
-                    File::open(path).with_context(|_| format!("Could not open file {:?}", path))?,
+                    File::open(path).with_context(|_| format!("Could not open file {path:?}"))?,
                 ))),
                 Input::StdIn => Ok(BufReader::new(Box::new(std::io::stdin()))),
             }
@@ -55,10 +55,13 @@ pub mod input {
 /// Compute RoFI reconfiguration from init to goal by using voxels
 #[derive(Debug, Parser)]
 struct Cli {
-    /// Init configuration file in voxel-json format ('-' for standard input)
-    init_file: String,
-    /// Goal configuration file in voxel-json format ('-' for standard input)
-    goal_file: String,
+    /// Init world file in voxel-json format ('-' for standard input)
+    init_world_file: String,
+    /// Goal world file in voxel-json format ('-' for standard input)
+    goal_world_file: String,
+    /// Return result in a short json format
+    #[arg(short, long, default_value_t = false)]
+    short: bool,
 }
 
 #[derive(Debug)]
@@ -69,8 +72,8 @@ struct InputWorlds {
 
 impl Cli {
     pub fn get_worlds(&self) -> Result<InputWorlds, Error> {
-        let init = Input::from_arg(&self.init_file);
-        let goal = Input::from_arg(&self.goal_file);
+        let init = Input::from_arg(&self.init_world_file);
+        let goal = Input::from_arg(&self.goal_world_file);
 
         Input::check_max_one_stdin([&init, &goal])?;
 
@@ -94,7 +97,16 @@ fn main() -> Result<(), Error> {
 
     let reconfig_sequence = reconfiguration::compute_reconfiguration_moves(&init, goal)?;
 
-    println!("Found sequence:\n{:?}", reconfig_sequence);
+    let reconfig_sequence = reconfig_sequence
+        .iter()
+        .map(|world| crate::serde::VoxelWorld::from_world(world))
+        .collect::<Vec<_>>();
+
+    if args.short {
+        serde_json::to_writer(std::io::stdout(), &reconfig_sequence)?;
+    } else {
+        serde_json::to_writer_pretty(std::io::stdout(), &reconfig_sequence)?;
+    }
 
     Ok(())
 }
