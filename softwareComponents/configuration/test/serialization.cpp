@@ -58,7 +58,15 @@ TEST_CASE( "Empty" ) {
     }
 
     SECTION( "fromJSON" ) {
-        auto js = R"({ "modules" : [], "spaceJoints" : [], "moduleJoints" : [] })"_json;
+        nlohmann::json js;
+
+        SECTION( "All" ) {
+            js = R"({ "modules" : [], "spaceJoints" : [], "moduleJoints" : [] })"_json;
+        }
+        SECTION( "Only modules" ) {
+            js = R"({ "modules" : [] })"_json;
+        }
+
 
         RofiWorld world = fromJSON( js );
 
