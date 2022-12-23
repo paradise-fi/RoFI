@@ -12,6 +12,17 @@
 atoms::Result< rofi::configuration::RofiWorld > parseRofiWorld( const std::string & inputFile );
 
 /**
+ * @brief Parses rofi world sequence from given \p inputFile .
+ * Assumes that the file is in json format
+ * and that it contains an array of rofi worlds.
+ * Returns an error if the format is incorrect.
+ * @param inputFile path to file containing the rofi world sequence
+ * @returns the parsed rofi world sequence
+ */
+auto parseRofiWorldSequence( const std::string & inputFile )
+        -> atoms::Result< std::vector< rofi::configuration::RofiWorld > >;
+
+/**
  * @brief Affixes given \p world in space using a `RigidJoint` between
  * (0, 0, 0) and first body of first module.
  * Assumes the world is not empty.
