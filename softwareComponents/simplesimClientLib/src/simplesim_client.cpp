@@ -529,9 +529,8 @@ void SimplesimClient::renderCurrentConfiguration()
             _moduleRenderInfos = addConfigurationToRenderer( _renderer.Get(), *newConfiguration );
         }
 
+        updateInfoTree( *newConfiguration );
         _lastRenderedConfiguration = std::move( newConfiguration );
         _renderWindow->Render();
     }
-
-    updateInfoTree( *getCurrentConfig() );
 }

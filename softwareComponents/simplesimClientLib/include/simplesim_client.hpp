@@ -72,7 +72,8 @@ public:
 
     ~SimplesimClient();
 
-    // Blocks until the user closes the window
+    // Initializes the client and starts the timer for simplesim
+    // Doesn't block and doesn't start the qt main loop
     void run()
     {
         assert( _onSettingsCmdCallback && "Set settings cmd callback before running" );
