@@ -85,35 +85,6 @@ void setupRenderer( vtkRenderer * renderer )
     renderer->ResetCamera();
 }
 
-void buildTemporarySceneShoeOnly( vtkRenderer * renderer, ComponentType component )
-{
-    vtkNew< vtkNamedColors > colors;
-    vtkNew< vtkCylinderSource > cylinder;
-    cylinder->SetResolution( 32 );
-    vtkNew< vtkPolyDataMapper > bodyMapper;
-    bodyMapper->SetInputConnection( getComponentModel( component ) );
-    vtkNew< vtkActor > bodyActor;
-    bodyActor->SetMapper( bodyMapper.Get() );
-    bodyActor->SetScale( 1 / 95.0 );
-    bodyActor->GetProperty()->SetColor( colors->GetColor4d( "Tomato" ).GetData() );
-    renderer->AddActor( bodyActor.Get() );
-}
-
-void buildTemporaryScene( vtkRenderer * renderer )
-{
-    vtkNew< vtkNamedColors > colors;
-    vtkNew< vtkCylinderSource > cylinder;
-    cylinder->SetResolution( 32 );
-    vtkNew< vtkPolyDataMapper > cylinderMapper;
-    cylinderMapper->SetInputConnection( cylinder->GetOutputPort() );
-    vtkNew< vtkActor > cylinderActor;
-    cylinderActor->SetMapper( cylinderMapper.Get() );
-    cylinderActor->GetProperty()->SetColor( colors->GetColor4d( "Tomato" ).GetData() );
-    cylinderActor->RotateX( 30.0 );
-    cylinderActor->RotateY( -45.0 );
-    renderer->AddActor( cylinderActor.Get() );
-}
-
 void addModuleToScene( vtkRenderer * renderer,
                        Module & m,
                        const Matrix & mPosition,
