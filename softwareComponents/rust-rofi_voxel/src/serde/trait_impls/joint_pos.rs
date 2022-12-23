@@ -28,7 +28,7 @@ impl TryFrom<i32> for ShoeJointPosition {
             0 => Ok(Self::Zero),
             90 => Ok(Self::Plus90),
             -90 => Ok(Self::Minus90),
-            _ => Err(format!("Shoe joint pos {} is not valid", value)),
+            _ => Err(format!("Shoe joint pos {value} is not valid")),
         }
     }
 }

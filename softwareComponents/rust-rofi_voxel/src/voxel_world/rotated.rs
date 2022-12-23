@@ -109,7 +109,7 @@ impl<'a> RotatedVoxelWorld<'a> {
             self.rotation
         );
         for (body, pos) in self.all_bodies() {
-            println!("    {:?}: {:?},", pos, body);
+            println!("    {pos:?}: {body:?},");
         }
         println!("] }}");
     }

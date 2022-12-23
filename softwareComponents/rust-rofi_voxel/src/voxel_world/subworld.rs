@@ -60,7 +60,7 @@ impl<'a> VoxelSubworld<'a> {
     pub fn dump_bodies(&self) {
         println!("VoxelSubworld {{ bodies=[");
         for (body, pos) in self.all_bodies() {
-            println!("    {:?}: {:?},", pos, body);
+            println!("    {pos:?}: {body:?},");
         }
         println!("] }}");
     }

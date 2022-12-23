@@ -25,7 +25,7 @@ TEST_CASE( "No move" )
         auto result = rofi::voxel::voxel_reconfig( *voxelWorld, *voxelWorld );
         REQUIRE( result );
 
-        CHECK( result->size() == 0 );
+        CHECK( result->size() == 1 );
     }
 
     SECTION( "Two modules" )
@@ -44,7 +44,7 @@ TEST_CASE( "No move" )
         auto result = rofi::voxel::voxel_reconfig( *voxelWorld, *voxelWorld );
         REQUIRE( result );
 
-        CHECK( result->size() == 0 );
+        CHECK( result->size() == 1 );
     }
 }
 
@@ -83,6 +83,6 @@ TEST_CASE( "One move" )
         auto result = rofi::voxel::voxel_reconfig( *initVoxelWorld, *goalVoxelWorld );
         REQUIRE( result );
 
-        CHECK( result->size() == 1 );
+        CHECK( result->size() == 2 );
     }
 }
