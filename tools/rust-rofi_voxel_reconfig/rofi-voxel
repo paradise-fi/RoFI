@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 if [[ $# -ne 2 ]] ; then
-    >&2 echo "Expected 2 args: <input_file> <goal_file>"
+    >&2 echo "Expected 2 args: <input_world_file> <goal_world_file>"
     exit 1
 fi
 
@@ -13,14 +13,25 @@ fi
 TMP_DIR="$ROFI_BUILD_DIR/desktop/tmp"
 mkdir -p "$TMP_DIR" || exit 1
 
-INIT_VOXEL_FILE=$(mktemp "$TMP_DIR/tmp.init-voxel_world.json.XXXXXX")
-GOAL_VOXEL_FILE=$(mktemp "$TMP_DIR/tmp-goal-voxel_world.json.XXXXXX")
-trap "rm -f \"$INIT_VOXEL_FILE\" \"$GOAL_VOXEL_FILE\"" EXIT INT QUIT TERM
+INIT_VOXEL_FILE=$(mktemp "$TMP_DIR/tmp-init_voxel_world.XXXXXX.json")
+GOAL_VOXEL_FILE=$(mktemp "$TMP_DIR/tmp-goal_voxel_world.XXXXXX.json")
+RESULT_VOXEL_FILE=$(mktemp "$TMP_DIR/tmp-result_voxel_worlds.XXXXXX.json")
+RESULT_FILE=$(mktemp "$TMP_DIR/tmp-result_worlds.XXXXXX.json")
+trap "rm -f \"$INIT_VOXEL_FILE\" \"$GOAL_VOXEL_FILE\" \"$RESULT_VOXEL_FILE\" \"$RESULT_FILE\"" EXIT INT QUIT TERM
 
 rofi-convert voxel-json "$1" "$INIT_VOXEL_FILE" \
-    || { >&2 echo -e "\nError while converting init configuration"; exit 1; }
+    || { >&2 echo -e "\nError while converting init world"; exit 1; }
 rofi-convert voxel-json "$2" "$GOAL_VOXEL_FILE" \
-    || { >&2 echo -e "\nError while converting goal configuration"; exit 1; }
+    || { >&2 echo -e "\nError while converting goal world"; exit 1; }
 
-rofi-voxel_reconfig "$INIT_VOXEL_FILE" "$GOAL_VOXEL_FILE" \
+echo "Starting voxel reconfiguration at `date +"%T.%3N"`"
+rofi-voxel_reconfig "$INIT_VOXEL_FILE" "$GOAL_VOXEL_FILE" > "$RESULT_VOXEL_FILE" \
     || { >&2 echo -e "\nError while running reconfiguration algorithm"; exit 1; }
+echo "Ended voxel reconfiguration at `date +"%T.%3N"`"
+
+rofi-convert voxel-json --sequence --reverse "$RESULT_VOXEL_FILE" "$RESULT_FILE" \
+    || { >&2 echo -e "\nError while converting result world sequence"; exit 1; }
+
+rofi-tool preview-seq "$RESULT_FILE"
+
+rm -f "$INIT_VOXEL_FILE" "$GOAL_VOXEL_FILE" "$RESULT_VOXEL_FILE" "$RESULT_FILE"
