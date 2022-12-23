@@ -63,19 +63,19 @@ vtkAlgorithmOutput * getComponentModel( ComponentType type )
     assert( resourceMap.contains( type ) && "Unsupported component type specified" );
 
     if ( !cache.contains( type ) ) {
-        auto reader = vtkSmartPointer< vtkOBJReader >::New();
+        vtkNew< vtkOBJReader > reader;
         ResourceFile modelFile = resourceMap.find( type )->second();
         reader->SetFileName( modelFile.name().c_str() );
         reader->Update();
 
-        auto trans = vtkSmartPointer< vtkTransform >::New();
+        vtkNew< vtkTransform > trans;
         trans->RotateX( 90 );
         auto t = vtkSmartPointer< vtkTransformPolyDataFilter >::New();
         t->SetInputConnection( reader->GetOutputPort() );
-        t->SetTransform( trans );
+        t->SetTransform( trans.Get() );
         t->Update();
 
-        cache.emplace( type, t );
+        cache.emplace( type, std::move( t ) );
     }
     return cache.at( type )->GetOutputPort();
 }
@@ -117,8 +117,8 @@ void addAxesWidget( vtkOrientationMarkerWidget & widget,
     assert( renderWindowInteractor );
 
     widget.SetOutlineColor( 0.9300, 0.5700, 0.1300 );
-    auto axes = vtkSmartPointer< vtkAxesActor >::New();
-    widget.SetOrientationMarker( axes );
+    vtkNew< vtkAxesActor > axes;
+    widget.SetOrientationMarker( axes.Get() );
     widget.SetInteractor( renderWindowInteractor );
     widget.SetViewport( 0.0, 0.0, 0.4, 0.4 );
     widget.SetEnabled( 1 );
@@ -141,18 +141,18 @@ void addModuleToScene( vtkRenderer & renderer,
             cPosition = cPosition * matrices::translate( { -0.05, 0, 0 } );
         }
 
-        auto posTrans = vtkSmartPointer< vtkTransform >::New();
+        vtkNew< vtkTransform > posTrans;
         posTrans->SetMatrix( convertMatrix( cPosition ) );
 
-        auto filter = vtkSmartPointer< vtkTransformPolyDataFilter >::New();
-        filter->SetTransform( posTrans );
+        vtkNew< vtkTransformPolyDataFilter > filter;
+        filter->SetTransform( posTrans.Get() );
         filter->SetInputConnection( getComponentModel( component.type ) );
 
-        auto frameMapper = vtkSmartPointer< vtkPolyDataMapper >::New();
+        vtkNew< vtkPolyDataMapper > frameMapper;
         frameMapper->SetInputConnection( filter->GetOutputPort() );
 
-        auto frameActor = vtkSmartPointer< vtkActor >::New();
-        frameActor->SetMapper( frameMapper );
+        vtkNew< vtkActor > frameActor;
+        frameActor->SetMapper( frameMapper.Get() );
         frameActor->GetProperty()->SetColor( moduleColor.data() );
         frameActor->GetProperty()->SetOpacity( 1.0 );
         frameActor->GetProperty()->SetFrontfaceCulling( true );
@@ -160,7 +160,7 @@ void addModuleToScene( vtkRenderer & renderer,
         frameActor->SetPosition( cPosition( 0, 3 ), cPosition( 1, 3 ), cPosition( 2, 3 ) );
         frameActor->SetScale( 1.0 / 95.0 );
 
-        renderer.AddActor( frameActor );
+        renderer.AddActor( frameActor.Get() );
     }
 }
 
@@ -216,32 +216,32 @@ void addPointToScene( vtkRenderer & renderer,
                       std::array< double, 3 > colour,
                       double scale = 1.0 / 95.0 )
 {
-    auto posTrans = vtkSmartPointer< vtkTransform >::New();
+    vtkNew< vtkTransform > posTrans;
     posTrans->SetMatrix( convertMatrix( pointPosition ) );
 
-    auto filter = vtkSmartPointer< vtkTransformPolyDataFilter >::New();
-    filter->SetTransform( posTrans );
+    vtkNew< vtkTransformPolyDataFilter > filter;
+    filter->SetTransform( posTrans.Get() );
 
     // Load blender object
-    auto reader = vtkSmartPointer< vtkOBJReader >::New();
+    vtkNew< vtkOBJReader > reader;
     ResourceFile modelFile = LOAD_RESOURCE_FILE( model_point_obj );
     reader->SetFileName( modelFile.name().c_str() );
     reader->Update();
 
-    auto trans = vtkSmartPointer< vtkTransform >::New();
+    vtkNew< vtkTransform > trans;
     trans->RotateX( 90 );
-    auto t = vtkSmartPointer< vtkTransformPolyDataFilter >::New();
+    vtkNew< vtkTransformPolyDataFilter > t;
     t->SetInputConnection( reader->GetOutputPort() );
-    t->SetTransform( trans );
+    t->SetTransform( trans.Get() );
     t->Update();
 
     filter->SetInputConnection( t->GetOutputPort() );
 
-    auto frameMapper = vtkSmartPointer< vtkPolyDataMapper >::New();
+    vtkNew< vtkPolyDataMapper > frameMapper;
     frameMapper->SetInputConnection( filter->GetOutputPort() );
 
-    auto frameActor = vtkSmartPointer< vtkActor >::New();
-    frameActor->SetMapper( frameMapper );
+    vtkNew< vtkActor > frameActor;
+    frameActor->SetMapper( frameMapper.Get() );
     frameActor->GetProperty()->SetColor( colour.data() );
     frameActor->GetProperty()->SetOpacity( 1.0 );
     frameActor->GetProperty()->SetFrontfaceCulling( true );
@@ -249,7 +249,7 @@ void addPointToScene( vtkRenderer & renderer,
     frameActor->SetPosition( pointPosition( 0, 3 ), pointPosition( 1, 3 ), pointPosition( 2, 3 ) );
     frameActor->SetScale( scale );
 
-    renderer.AddActor( frameActor );
+    renderer.AddActor( frameActor.Get() );
 }
 
 void buildRofiWorldPointsScene( vtkRenderer & renderer, RofiWorld world, bool showModules )
