@@ -135,6 +135,6 @@ pub fn get_neighbour_pos(body_with_pos: VoxelBodyWithPos) -> Result<VoxelPos, St
         .0
         .other_body_dir()
         .update_position(body_with_pos.1 .0)
-        .map_err(|err_str| format!("Other body direction error ({})", err_str))
+        .map_err(|err_str| format!("Other body direction error ({err_str})"))
         .map(VoxelPos)
 }

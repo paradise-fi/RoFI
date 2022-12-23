@@ -21,7 +21,7 @@ fn get_path_to(
 ) -> Vec<Rc<VoxelWorld>> {
     assert!(parent_worlds.contains_key(goal), "Missing goal parent");
 
-    let mut parent = parent_worlds[goal].clone();
+    let mut parent = Some(parent_worlds.get_key_value(goal).unwrap().0.clone());
     let mut path = std::iter::from_fn(|| {
         let child = parent.as_ref()?;
         assert!(parent_worlds.contains_key(child), "Missing prev node");
@@ -193,7 +193,7 @@ mod test {
         .unwrap();
 
         let result = compute_reconfiguration_moves(&world, world.clone()).unwrap();
-        assert_eq!(result.len(), 0);
+        assert_eq!(result.len(), 1);
     }
 
     #[test]
@@ -238,6 +238,6 @@ mod test {
         .unwrap();
 
         let result = compute_reconfiguration_moves(&init_world, goal_world).unwrap();
-        assert_eq!(result.len(), 1);
+        assert_eq!(result.len(), 2);
     }
 }
