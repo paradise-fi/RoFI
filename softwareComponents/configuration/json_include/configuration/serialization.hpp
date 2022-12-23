@@ -430,9 +430,11 @@ namespace rofi::configuration::serialization {
     inline RofiWorld fromJSON( const nlohmann::json& j, Callback attrCb ) {
         RofiWorld world;
 
-        for ( size_t i = 0; i < j[ "modules" ].size(); i++ ) {
-            auto& jm = j[ "modules" ][ i ];
+        if ( !j.contains( "modules" ) ) {
+            throw std::logic_error( "Cannot find modules in rofi world json" );
+        }
 
+        for ( const auto& jm : j[ "modules" ] ) {
             if ( jm[ "type" ] == "unknown" )
                 world.insert( details::moduleFromJSON< UnknownModule >( jm, attrCb ) );
             else if ( jm[ "type" ] == "universal" )
@@ -448,46 +450,50 @@ namespace rofi::configuration::serialization {
         // function for translation of components to docs if necessary
         auto f = [ &world ]( ModuleId id ) -> ModuleType { return world.getModule( id )->type; };
 
-        for ( const auto& jj : j[ "moduleJoints" ] ) {
-            roficom::Orientation o = roficom::stringToOrientation( jj[ "orientation" ] )
-                                             .get_or_throw_as< std::runtime_error >();
+        if ( j.contains( "moduleJoints" ) ) {
+            for ( const auto& jj : j[ "moduleJoints" ] ) {
+                roficom::Orientation o = roficom::stringToOrientation( jj[ "orientation" ] )
+                                                .get_or_throw_as< std::runtime_error >();
 
-            auto [ sourceModule, sourceConnector ] = details::connectionComponentFromJSON( jj[ "from" ], f );
-            auto [ destinationModule, destinationConnector ] = details::connectionComponentFromJSON( jj[ "to" ], f );
+                auto [ sourceModule, sourceConnector ] = details::connectionComponentFromJSON( jj[ "from" ], f );
+                auto [ destinationModule, destinationConnector ] = details::connectionComponentFromJSON( jj[ "to" ], f );
 
-            auto conn = connect( world.getModule( sourceModule )->connectors()[ sourceConnector ]
-                               , world.getModule( destinationModule )->connectors()[ destinationConnector ]
-                               , o );
+                auto conn = connect( world.getModule( sourceModule )->connectors()[ sourceConnector ]
+                                , world.getModule( destinationModule )->connectors()[ destinationConnector ]
+                                , o );
 
-            details::processAttributes( jj, attrCb, conn );
+                details::processAttributes( jj, attrCb, conn );
+            }
         }
 
-        for ( const auto& sj : j[ "spaceJoints" ] ) {
-            auto [ destinationModule, destinationComponent ] = details::connectionComponentFromJSON( sj[ "to" ], f );
+        if ( j.contains( "spaceJoints" ) ) {
+            for ( const auto& sj : j[ "spaceJoints" ] ) {
+                auto [ destinationModule, destinationComponent ] = details::connectionComponentFromJSON( sj[ "to" ], f );
 
-            Vector fixedPoint = { sj[ "point" ][ 0 ], sj[ "point" ][ 1 ], sj[ "point" ][ 2 ] };
-            if ( sj[ "joint" ][ "type" ] == "rigid" ) {
-                auto conn = connect< RigidJoint >( world.getModule( destinationModule )->components()[ destinationComponent ]
-                                                 , fixedPoint
-                                                 , details::matrixFromJSON( sj[ "joint" ][ "sourceToDestination" ] ) );
-                details::processAttributes( sj, attrCb, conn );
-            } else if ( sj[ "joint" ][ "type" ] == "rotational" ) {
-                auto& jj = sj[ "joint" ];
-                std::vector< float > positions = jj[ "positions" ];
-
-                auto conn = connect< RotationJoint >( world.getModule( destinationModule )->components()[ destinationComponent ]
+                Vector fixedPoint = { sj[ "point" ][ 0 ], sj[ "point" ][ 1 ], sj[ "point" ][ 2 ] };
+                if ( sj[ "joint" ][ "type" ] == "rigid" ) {
+                    auto conn = connect< RigidJoint >( world.getModule( destinationModule )->components()[ destinationComponent ]
                                                     , fixedPoint
-                                                    , details::matrixFromJSON( jj[ "preMatrix" ] )
-                                                    , Vector{ jj[ "axis" ][ 0 ]
-                                                    , jj[ "axis" ][ 1 ]
-                                                    , jj[ "axis" ][ 2 ] }
-                                                    , details::matrixFromJSON( jj[ "postMatrix" ] )
-                                                    , Angle::deg( jj[ "limits" ][ "min" ] )
-                                                    , Angle::deg( jj[ "limits" ][ "max" ] ) );
-                world.setSpaceJointPositions( conn, positions );
-                details::processAttributes( sj, attrCb, conn );
-            } else {
-                throw std::logic_error( "Unknown joint type" );
+                                                    , details::matrixFromJSON( sj[ "joint" ][ "sourceToDestination" ] ) );
+                    details::processAttributes( sj, attrCb, conn );
+                } else if ( sj[ "joint" ][ "type" ] == "rotational" ) {
+                    auto& jj = sj[ "joint" ];
+                    std::vector< float > positions = jj[ "positions" ];
+
+                    auto conn = connect< RotationJoint >( world.getModule( destinationModule )->components()[ destinationComponent ]
+                                                        , fixedPoint
+                                                        , details::matrixFromJSON( jj[ "preMatrix" ] )
+                                                        , Vector{ jj[ "axis" ][ 0 ]
+                                                        , jj[ "axis" ][ 1 ]
+                                                        , jj[ "axis" ][ 2 ] }
+                                                        , details::matrixFromJSON( jj[ "postMatrix" ] )
+                                                        , Angle::deg( jj[ "limits" ][ "min" ] )
+                                                        , Angle::deg( jj[ "limits" ][ "max" ] ) );
+                    world.setSpaceJointPositions( conn, positions );
+                    details::processAttributes( sj, attrCb, conn );
+                } else {
+                    throw std::logic_error( "Unknown joint type" );
+                }
             }
         }
 
