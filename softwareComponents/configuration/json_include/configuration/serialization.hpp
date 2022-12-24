@@ -337,14 +337,14 @@ namespace rofi::configuration::serialization {
     template< typename Callback >
     inline nlohmann::json moduleByTypeToJSON( const Module& mod, Callback& attrCb ) {
         switch ( mod.type ) {
+            case ModuleType::Unknown:
+                return details::moduleToJSON( dynamic_cast< const UnknownModule& >( mod ), attrCb );
             case ModuleType::Universal:
                 return details::moduleToJSON( dynamic_cast< const UniversalModule& >( mod ), attrCb );
             case ModuleType::Pad:
                 return details::moduleToJSON( dynamic_cast< const Pad& >( mod ), attrCb );
             case ModuleType::Cube:
                 return details::moduleToJSON( dynamic_cast< const Cube& >( mod ), attrCb );
-            case ModuleType::Unknown:
-                return details::moduleToJSON( dynamic_cast< const UnknownModule& >( mod ), attrCb );
         }
         ROFI_UNREACHABLE( "Unknown type of a module" );
     }
@@ -433,14 +433,14 @@ namespace rofi::configuration::serialization {
         for ( size_t i = 0; i < j[ "modules" ].size(); i++ ) {
             auto& jm = j[ "modules" ][ i ];
 
-            if ( jm[ "type" ] == "universal" )
+            if ( jm[ "type" ] == "unknown" )
+                world.insert( details::moduleFromJSON< UnknownModule >( jm, attrCb ) );
+            else if ( jm[ "type" ] == "universal" )
                 world.insert( details::moduleFromJSON< UniversalModule >( jm, attrCb ) );
             else if ( jm[ "type" ] == "pad" )
                 world.insert( details::moduleFromJSON< Pad >( jm, attrCb ) );
             else if ( jm[ "type" ] == "cube" )
                 world.insert( details::moduleFromJSON< Cube >( jm, attrCb ) );
-            else if ( jm[ "type" ] == "unknown" )
-                world.insert( details::moduleFromJSON< UnknownModule >( jm, attrCb ) );
             else
                 throw std::logic_error( "Unknown type of a module" );
         }
