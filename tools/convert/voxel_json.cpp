@@ -1,9 +1,10 @@
-#include "voxel.hpp"
-
+#include <atoms/cmdline_utils.hpp>
+#include <atoms/parsing.hpp>
+#include <configuration/serialization.hpp>
+#include <dimcli/cli.h>
 #include <nlohmann/json.hpp>
 
-#include "common_opts.hpp"
-#include "configuration/serialization.hpp"
+#include <voxel.hpp>
 
 
 void convertVoxelJson( Dim::Cli & cli );
@@ -30,7 +31,8 @@ static auto & sequence = command.opt< bool >( "seq sequence" )
 
 void convertToVoxelJson( Dim::Cli & cli )
 {
-    auto inputRofiWorld = readInput( *inputWorldFilePath, readRofiWorldJsonFromStream );
+    auto inputRofiWorld = atoms::readInput( *inputWorldFilePath,
+                                            atoms::parseAndValidateRofiWorldJson );
     if ( !inputRofiWorld ) {
         cli.fail( EXIT_FAILURE, "Error while reading rofi world", inputRofiWorld.assume_error() );
         return;
@@ -48,7 +50,7 @@ void convertToVoxelJson( Dim::Cli & cli )
     }
 
     auto voxelWorldJson = nlohmann::json( *voxelWorld );
-    writeOutput( *outputWorldFilePath, [ &voxelWorldJson ]( std::ostream & ostr ) {
+    atoms::writeOutput( *outputWorldFilePath, [ &voxelWorldJson ]( std::ostream & ostr ) {
         ostr.width( 4 );
         ostr << voxelWorldJson << std::endl;
     } );
@@ -66,7 +68,7 @@ void convertFromVoxelJson( Dim::Cli & cli )
             return atoms::result_error( "Error while parsing voxel world ("s + e.what() + ")" );
         }
     };
-    auto inputVoxelWorld = readInput( *inputWorldFilePath, parseVoxelWorldFromJson );
+    auto inputVoxelWorld = atoms::readInput( *inputWorldFilePath, parseVoxelWorldFromJson );
     if ( !inputVoxelWorld ) {
         cli.fail( EXIT_FAILURE, "Error while parsing voxel world", inputVoxelWorld.assume_error() );
         return;
@@ -84,7 +86,7 @@ void convertFromVoxelJson( Dim::Cli & cli )
     assert( ( *rofiWorld )->isValid() );
 
     auto rofiWorldJson = rofi::configuration::serialization::toJSON( **rofiWorld );
-    writeOutput( *outputWorldFilePath, [ &rofiWorldJson ]( std::ostream & ostr ) {
+    atoms::writeOutput( *outputWorldFilePath, [ &rofiWorldJson ]( std::ostream & ostr ) {
         ostr.width( 4 );
         ostr << rofiWorldJson << std::endl;
     } );
@@ -92,7 +94,8 @@ void convertFromVoxelJson( Dim::Cli & cli )
 
 void convertToVoxelSeqJson( Dim::Cli & cli )
 {
-    auto inputRofiWorldSeq = readInput( *inputWorldFilePath, readRofiWorldSeqJsonFromStream );
+    auto inputRofiWorldSeq = atoms::readInput( *inputWorldFilePath,
+                                               atoms::parseAndValidateRofiWorldSeqJson );
     if ( !inputRofiWorldSeq ) {
         cli.fail( EXIT_FAILURE,
                   "Error while reading rofi world sequence",
@@ -120,7 +123,7 @@ void convertToVoxelSeqJson( Dim::Cli & cli )
     }
 
     auto voxelWorldSeqJson = nlohmann::json( voxelWorldSeq );
-    writeOutput( *outputWorldFilePath, [ &voxelWorldSeqJson ]( std::ostream & ostr ) {
+    atoms::writeOutput( *outputWorldFilePath, [ &voxelWorldSeqJson ]( std::ostream & ostr ) {
         ostr.width( 4 );
         ostr << voxelWorldSeqJson << std::endl;
     } );
@@ -142,7 +145,7 @@ void convertFromVoxelSeqJson( Dim::Cli & cli )
                                         + ")" );
         }
     };
-    auto inputVoxelWorldSeq = readInput( *inputWorldFilePath, parseVoxelWorldSeqFromJson );
+    auto inputVoxelWorldSeq = atoms::readInput( *inputWorldFilePath, parseVoxelWorldSeqFromJson );
     if ( !inputVoxelWorldSeq ) {
         cli.fail( EXIT_FAILURE,
                   "Error while parsing voxel world sequence",
@@ -169,7 +172,7 @@ void convertFromVoxelSeqJson( Dim::Cli & cli )
         rofiWorldSeqJson.push_back( rofi::configuration::serialization::toJSON( **rofiWorld ) );
     }
 
-    writeOutput( *outputWorldFilePath, [ &rofiWorldSeqJson ]( std::ostream & ostr ) {
+    atoms::writeOutput( *outputWorldFilePath, [ &rofiWorldSeqJson ]( std::ostream & ostr ) {
         ostr.width( 4 );
         ostr << rofiWorldSeqJson << std::endl;
     } );
