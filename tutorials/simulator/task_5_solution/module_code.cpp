@@ -3,6 +3,7 @@
 #include <iostream>
 
 #include <atoms/units.hpp>
+#include <atoms/unreachable.hpp>
 
 #include <rofi_hal.hpp>
 
@@ -132,7 +133,7 @@ std::string_view connectionOrientation( hal::ConnectorState state )
         case hal::ConnectorOrientation::West:
             return "West";
     }
-    assert( false && "Unknown connector orientation" );
+    ROFI_UNREACHABLE( "Unknown connector orientation" );
 }
 
 int main()

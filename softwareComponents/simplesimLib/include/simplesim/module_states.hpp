@@ -168,11 +168,12 @@ namespace detail
                 assert( rhsInnerState );
 
                 if ( !lhsInnerState->connectedTo().has_value()
-                     && !rhsInnerState->connectedTo().has_value() ) {
+                     && !rhsInnerState->connectedTo().has_value() )
+                {
                     lhsInnerState->setConnectedTo( rhs, *orientation );
                     rhsInnerState->setConnectedTo( lhs, *orientation );
                 } else {
-                    using ConnectedToValue = ConnectorInnerState::OtherConnector;
+                    using ConnectedToValue [[maybe_unused]] = ConnectorInnerState::OtherConnector;
                     assert( lhsInnerState->connectedTo().has_value() );
                     assert( rhsInnerState->connectedTo().has_value() );
                     assert( *lhsInnerState->connectedTo()
@@ -327,7 +328,8 @@ public:
 
         for ( const auto & posReached : updateEvents.positionsReached ) {
             if ( auto jointInnerPos = detail::getJointInnerState( _moduleInnerStates,
-                                                                  posReached.joint ) ) {
+                                                                  posReached.joint ) )
+            {
                 jointInnerPos->holdCurrentPosition();
             }
             onRespCallback( posReached.getRofiResp() );
@@ -341,7 +343,8 @@ public:
         }
         for ( const auto & connector : updateEvents.connectorsToFinalizePosition ) {
             if ( auto * connInnerState = detail::getConnectorInnerState( _moduleInnerStates,
-                                                                         connector ) ) {
+                                                                         connector ) )
+            {
                 connInnerState->finalizePosition();
             }
         }

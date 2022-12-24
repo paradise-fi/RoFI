@@ -71,7 +71,7 @@ std::set< size_t > ChangeColor::parseModuleIdxs( const QString & source ) const
     };
 
     auto result = std::set< size_t >();
-    for ( QStringRef part : source.splitRef( ',', QString::SkipEmptyParts ) ) {
+    for ( QStringRef part : source.splitRef( ',', Qt::SkipEmptyParts ) ) {
         if ( part.contains( ".." ) ) {
             auto numberStrings = part.split( ".." );
             if ( numberStrings.size() != 2 ) {

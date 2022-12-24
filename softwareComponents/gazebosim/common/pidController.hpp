@@ -194,7 +194,7 @@ public:
         }
 
         {
-            using IdLimits = std::numeric_limits< decltype( _rofiId )::value_type >;
+            using IdLimits [[maybe_unused]] = std::numeric_limits< decltype( _rofiId )::value_type >;
             assert( rofiId >= IdLimits::min() );
             assert( rofiId <= IdLimits::max() );
             assert( rofiId << numOfJointBitsInId >= IdLimits::min() );
