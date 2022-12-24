@@ -6,6 +6,7 @@
 #include <variant>
 #include <vector>
 
+#include "atoms/unreachable.hpp"
 #include "atoms/util.hpp"
 #include "configuration/rofiworld.hpp"
 
@@ -235,7 +236,7 @@ public:
                 case Position::Extended:
                     return true;
             }
-            assert( false );
+            ROFI_UNREACHABLE( "Unknown connector position" );
         };
         auto toMsgOrientation = []( Orientation o ) {
             switch ( o ) {
@@ -248,7 +249,7 @@ public:
                 case Orientation::West:
                     return messages::ConnectorState::WEST;
             }
-            assert( false );
+            ROFI_UNREACHABLE( "Unknown connector orientation" );
         };
 
         messages::ConnectorState state;
