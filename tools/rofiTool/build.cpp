@@ -1,12 +1,12 @@
 #include <optional>
 
+#include <atoms/parsing.hpp>
 #include <atoms/unreachable.hpp>
 #include <configuration/bots/umpad.hpp>
 #include <configuration/pad.hpp>
 #include <configuration/universalModule.hpp>
 #include <dimcli/cli.h>
 
-#include "common.hpp"
 #include "rendering.hpp"
 
 
@@ -116,7 +116,7 @@ void build( Dim::Cli & cli )
         cli.fail( EXIT_FAILURE, "Empty rofi world" );
         return;
     }
-    affixRofiWorld( world );
+    atoms::fixateRofiWorld( world );
 
     if ( auto valid = world.validate(); !valid ) {
         cli.fail( EXIT_FAILURE, "Invalid rofi world", valid.assume_error() );

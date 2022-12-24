@@ -10,7 +10,6 @@ add_resources(MODEL_RESOURCES
 
 set(ROFI_TOOL_SRCS
     main.cpp
-    common.cpp
     rendering.cpp
 
     build.cpp

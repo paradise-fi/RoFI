@@ -1,10 +1,10 @@
 #include <fstream>
 #include <stdexcept>
 
+#include <atoms/parsing.hpp>
 #include <configuration/rofiworld.hpp>
 #include <dimcli/cli.h>
 
-#include "common.hpp"
 #include "rendering.hpp"
 
 
@@ -19,7 +19,7 @@ static auto & inputFile = command.opt< std::string >( "<world_file>" )
 
 void preview( Dim::Cli & cli )
 {
-    auto world = parseRofiWorld( *inputFile );
+    auto world = atoms::parseRofiWorld( *inputFile );
     if ( !world ) {
         cli.fail( EXIT_FAILURE, "Error while parsing world", world.assume_error() );
         return;
@@ -31,7 +31,7 @@ void preview( Dim::Cli & cli )
 
     if ( world->referencePoints().empty() ) {
         std::cout << "No reference points found, fixing the world in space\n";
-        affixRofiWorld( *world );
+        atoms::fixateRofiWorld( *world );
     }
 
     if ( auto valid = world->validate(); !valid ) {
