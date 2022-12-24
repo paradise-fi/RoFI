@@ -5,6 +5,7 @@
 #include <configuration/rofiworld.hpp>
 #include <configuration/universalModule.hpp>
 #include <configuration/pad.hpp>
+#include <configuration/cube.hpp>
 #include <configuration/unknownModule.hpp>
 
 #include <nlohmann/json.hpp>
@@ -19,6 +20,8 @@ namespace rofi::configuration::serialization {
                 return "UM body";
             case ComponentType::UmShoe:
                 return "UM shoe";
+            case ComponentType::CubeBody:
+                return "Cube body";
         }
         ROFI_UNREACHABLE( "Unknown component type" );
     }
@@ -30,6 +33,8 @@ namespace rofi::configuration::serialization {
             return atoms::result_value( ComponentType::UmBody );
         if ( str == "UM shoe" )
             return atoms::result_value( ComponentType::UmShoe );
+        if ( str == "Cube body" )
+            return atoms::result_value( ComponentType::CubeBody );
 
         return atoms::result_error< std::string >( "String does not represent a component type" );
     }
@@ -215,6 +220,29 @@ namespace rofi::configuration::serialization {
     };
 
     template< typename Callback >
+    inline nlohmann::json moduleToJSON( const Cube& m, Callback& attrCb ) {
+        using namespace nlohmann;
+        json j;
+        j[ "id" ]     = m.getId();
+        j[ "type"   ] = "cube";
+
+        addAttributes( j, attrCb, m );
+        return j;
+    }
+
+    template< typename Callback >
+    struct partial_spec< Cube, Callback > {
+        static inline Cube moduleFromJSON( const nlohmann::json& j, Callback& cb ) {
+            assert( j[ "type" ] == "cube" );
+
+            ModuleId id = j[ "id" ];
+            Cube m( id );
+            processAttributes( j, cb, m );
+            return m;
+        }
+    };
+
+    template< typename Callback >
     inline nlohmann::json moduleToJSON( const UnknownModule& m, Callback& attrCb ) {
         using namespace nlohmann;
         json j;
@@ -313,6 +341,8 @@ namespace rofi::configuration::serialization {
                 return details::moduleToJSON( dynamic_cast< const UniversalModule& >( mod ), attrCb );
             case ModuleType::Pad:
                 return details::moduleToJSON( dynamic_cast< const Pad& >( mod ), attrCb );
+            case ModuleType::Cube:
+                return details::moduleToJSON( dynamic_cast< const Cube& >( mod ), attrCb );
             case ModuleType::Unknown:
                 return details::moduleToJSON( dynamic_cast< const UnknownModule& >( mod ), attrCb );
         }
@@ -407,6 +437,8 @@ namespace rofi::configuration::serialization {
                 world.insert( details::moduleFromJSON< UniversalModule >( jm, attrCb ) );
             else if ( jm[ "type" ] == "pad" )
                 world.insert( details::moduleFromJSON< Pad >( jm, attrCb ) );
+            else if ( jm[ "type" ] == "cube" )
+                world.insert( details::moduleFromJSON< Cube >( jm, attrCb ) );
             else if ( jm[ "type" ] == "unknown" )
                 world.insert( details::moduleFromJSON< UnknownModule >( jm, attrCb ) );
             else

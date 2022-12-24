@@ -24,13 +24,14 @@ using ModuleId = int;
 
 enum class ComponentType {
     UmShoe, UmBody,
-    Roficom
+    Roficom, CubeBody
 };
 
 enum class ModuleType {
     Unknown,
     Universal,
     Pad,
+    Cube
 };
 
 namespace roficom {
