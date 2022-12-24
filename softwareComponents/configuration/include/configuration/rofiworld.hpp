@@ -23,15 +23,17 @@ namespace rofi::configuration {
 using ModuleId = int;
 
 enum class ComponentType {
-    UmShoe, UmBody,
-    Roficom, CubeBody
+    Roficom,
+    UmBody,
+    UmShoe,
+    CubeBody,
 };
 
 enum class ModuleType {
     Unknown,
     Universal,
     Pad,
-    Cube
+    Cube,
 };
 
 namespace roficom {
