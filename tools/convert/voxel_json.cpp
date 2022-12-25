@@ -37,7 +37,7 @@ auto parseVoxelWorldFromJson( std::istream & istr ) -> atoms::Result< rofi::voxe
         auto inputJson = nlohmann::json::parse( istr );
         return atoms::result_value( inputJson.get< rofi::voxel::VoxelWorld >() );
     } catch ( const nlohmann::json::exception & e ) {
-        return atoms::result_error( "Error while parsing voxel world ("s + e.what() + ")" );
+        return atoms::result_error( "Error while reading voxel world ("s + e.what() + ")" );
     }
 }
 
@@ -60,8 +60,8 @@ auto parseVoxelWorldSeqFromJson( std::istream & istr )
 
 void convertToVoxelJson( Dim::Cli & cli )
 {
-    auto inputRofiWorld = atoms::readInput( *inputWorldFilePath,
-                                            atoms::parseAndValidateRofiWorldJson );
+    auto inputRofiWorld = atoms::readInput( *inputWorldFilePath, atoms::parseRofiWorldJson )
+                                  .and_then( atoms::toSharedAndValidate );
     if ( !inputRofiWorld ) {
         cli.fail( EXIT_FAILURE, "Error while reading rofi world", inputRofiWorld.assume_error() );
         return;
@@ -89,7 +89,7 @@ void convertFromVoxelJson( Dim::Cli & cli, bool separateModulesByOne )
 {
     auto inputVoxelWorld = atoms::readInput( *inputWorldFilePath, parseVoxelWorldFromJson );
     if ( !inputVoxelWorld ) {
-        cli.fail( EXIT_FAILURE, "Error while parsing voxel world", inputVoxelWorld.assume_error() );
+        cli.fail( EXIT_FAILURE, "Error while reading voxel world", inputVoxelWorld.assume_error() );
         return;
     }
 
@@ -113,8 +113,8 @@ void convertFromVoxelJson( Dim::Cli & cli, bool separateModulesByOne )
 
 void convertToVoxelSeqJson( Dim::Cli & cli )
 {
-    auto inputRofiWorldSeq = atoms::readInput( *inputWorldFilePath,
-                                               atoms::parseAndValidateRofiWorldSeqJson );
+    auto inputRofiWorldSeq = atoms::readInput( *inputWorldFilePath, atoms::parseRofiWorldSeqJson )
+                                     .and_then( atoms::validateSequence );
     if ( !inputRofiWorldSeq ) {
         cli.fail( EXIT_FAILURE,
                   "Error while reading rofi world sequence",
@@ -153,7 +153,7 @@ void convertFromVoxelSeqJson( Dim::Cli & cli, bool separateModulesByOne )
     auto inputVoxelWorldSeq = atoms::readInput( *inputWorldFilePath, parseVoxelWorldSeqFromJson );
     if ( !inputVoxelWorldSeq ) {
         cli.fail( EXIT_FAILURE,
-                  "Error while parsing voxel world sequence",
+                  "Error while reading voxel world sequence",
                   inputVoxelWorldSeq.assume_error() );
         return;
     }

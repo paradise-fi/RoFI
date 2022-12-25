@@ -1,6 +1,7 @@
 #include <fstream>
 #include <stdexcept>
 
+#include <atoms/cmdline_utils.hpp>
 #include <atoms/parsing.hpp>
 #include <configuration/rofiworld.hpp>
 #include <dimcli/cli.h>
@@ -14,14 +15,20 @@ static auto command = Dim::Cli()
                               .command( "preview" )
                               .action( preview )
                               .desc( "Interactively preview a rofi world" );
-static auto & inputFile = command.opt< std::string >( "<world_file>" )
-                                  .desc( "Specify rofi world source file" );
+static auto & inputFile = command.opt< std::filesystem::path >( "<world_file>" )
+                                  .defaultDesc( {} )
+                                  .desc( "Source rofi world file ('-' for standard input)" );
+static auto & worldFormat = command.opt< atoms::RofiWorldFormat >( "f format" )
+                                    .valueDesc( "ROFI_WORLD_FORMAT" )
+                                    .desc( "Format of the rofi world file" )
+                                    .choice( atoms::RofiWorldFormat::Json, "json" )
+                                    .choice( atoms::RofiWorldFormat::Old, "old" );
 
 void preview( Dim::Cli & cli )
 {
-    auto world = atoms::parseRofiWorld( *inputFile );
+    auto world = atoms::readInput( *inputFile, atoms::parseRofiWorldJson );
     if ( !world ) {
-        cli.fail( EXIT_FAILURE, "Error while parsing world", world.assume_error() );
+        cli.fail( EXIT_FAILURE, "Error while reading rofi world", world.assume_error() );
         return;
     }
     if ( world->modules().empty() ) {
@@ -39,5 +46,5 @@ void preview( Dim::Cli & cli )
         return;
     }
 
-    renderRofiWorld( *world, "Preview of " + *inputFile );
+    renderRofiWorld( *world, "Preview of " + inputFile->string() );
 }

@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <istream>
+#include <memory>
 #include <stdexcept>
 #include <vector>
 
@@ -33,6 +34,48 @@ inline void fixateRofiWorld( rofi::configuration::RofiWorld & world )
     auto component = !firstModule->bodies().empty() ? firstModule->bodies().front()
                                                     : firstModule->components().front();
     connect< RigidJoint >( component, {}, matrices::identity );
+}
+
+
+/**
+ * @brief Converts \p rofiWorld to `std::shared_ptr`
+ * and validates the world.
+ * Returns an error if \p rofiWorld is not valid.
+ * @note Expected use with `atoms::Result::and_then`.
+ * @note Uses `std::shared_ptr` because moving
+ * `rofi::configuration::RofiWorld` unprepares it.
+ * @param rofiWorld input rofi world
+ * @returns the validated \p rofiWorld inside a `std::shared_ptr`
+ */
+inline auto toSharedAndValidate( rofi::configuration::RofiWorld rofiWorld )
+        -> atoms::Result< std::shared_ptr< rofi::configuration::RofiWorld > >
+{
+    using rofi::configuration::RofiWorld;
+    auto result = std::make_shared< RofiWorld >( std::move( rofiWorld ) );
+    assert( result );
+    if ( auto valid = result->validate(); !valid ) {
+        return valid.assume_error_result();
+    } else {
+        return atoms::result_value( std::move( result ) );
+    }
+}
+
+/**
+ * @brief Validates rofi worlds in \p rofiWorldSeq .
+ * Returns an error if any world in \p rofiWorldSeq is not valid.
+ * @note Expected use with `atoms::Result::and_then`.
+ * @param rofiWorldSeq input rofi world sequence
+ * @returns validated \p rofiWorldSeq
+ */
+inline auto validateSequence( std::vector< rofi::configuration::RofiWorld > rofiWorldSeq )
+        -> atoms::Result< std::vector< rofi::configuration::RofiWorld > >
+{
+    for ( auto & rofiWorld : rofiWorldSeq ) {
+        if ( auto valid = rofiWorld.validate(); !valid ) {
+            return valid.assume_error_result();
+        }
+    }
+    return atoms::result_value( std::move( rofiWorldSeq ) );
 }
 
 
@@ -109,98 +152,42 @@ inline auto parseRofiWorldSeqJson( std::istream & istr )
 }
 
 
-/**
- * @brief Parses and validates rofi world from given \p istr .
- * Assumes that the input is in json format.
- * Returns an error if the format is incorrect or is not valid.
- * @param istr input stream containing the rofi world
- * @returns the parsed and validated rofi world
- */
-inline auto parseAndValidateRofiWorldJson( std::istream & istr )
-        -> atoms::Result< std::unique_ptr< rofi::configuration::RofiWorld > >
+enum class RofiWorldFormat {
+    Old = -1,
+    Json,
+};
+
+inline auto operator<<( std::ostream & ostr, RofiWorldFormat configFormat ) -> std::ostream &
 {
-    using rofi::configuration::RofiWorld;
-    return parseRofiWorldJson( istr ).and_then(
-            []( RofiWorld rofiWorld ) -> atoms::Result< std::unique_ptr< RofiWorld > > {
-                auto result = std::make_unique< RofiWorld >( std::move( rofiWorld ) );
-                assert( result );
-                if ( auto valid = result->validate(); !valid ) {
-                    return valid.assume_error_result();
-                } else {
-                    return atoms::result_value( std::move( result ) );
-                }
-            } );
+    switch ( configFormat ) {
+        case RofiWorldFormat::Old:
+            return ostr << "old";
+        case RofiWorldFormat::Json:
+            return ostr << "json";
+    }
+    assert( false );
+    return ostr << static_cast< int >( configFormat );
 }
 
 /**
- * @brief Parses, fixates and validates rofi world from given \p istr .
- * Assumes that the input is in old (Viki) format.
- * Returns an error if the format is incorrect or is not valid.
- * @param istr input stream containing the rofi world
- * @returns the parsed and validated rofi world
- */
-inline auto parseAndValidateOldCfgFormat( std::istream & istr )
-        -> atoms::Result< std::unique_ptr< rofi::configuration::RofiWorld > >
-{
-    using rofi::configuration::RofiWorld;
-    return parseOldCfgFormat( istr, true )
-            .and_then( []( RofiWorld rofiWorld ) -> atoms::Result< std::unique_ptr< RofiWorld > > {
-                auto result = std::make_unique< RofiWorld >( std::move( rofiWorld ) );
-                assert( result );
-                if ( auto valid = result->validate(); !valid ) {
-                    return valid.assume_error_result();
-                } else {
-                    return atoms::result_value( std::move( result ) );
-                }
-            } );
-}
-
-/**
- * @brief Parses rofi world sequence from given \p istr .
- * Assumes that the input is in json format
- * and that it contains an array of rofi worlds.
- * Returns an error if the format is incorrect.
- * @param istr input stream containing the rofi world sequence
- * @returns the parsed rofi world sequence
- */
-inline auto parseAndValidateRofiWorldSeqJson( std::istream & istr )
-        -> atoms::Result< std::vector< rofi::configuration::RofiWorld > >
-{
-    using rofi::configuration::RofiWorld;
-    return parseRofiWorldSeqJson( istr ).and_then(
-            []( auto rofiWorldSeq ) -> atoms::Result< std::vector< RofiWorld > > {
-                for ( RofiWorld & rofiWorld : rofiWorldSeq ) {
-                    if ( auto valid = rofiWorld.validate(); !valid ) {
-                        return valid.assume_error_result();
-                    }
-                }
-                return atoms::result_value( std::move( rofiWorldSeq ) );
-            } );
-}
-
-
-/**
- * @brief Parses rofi world from given \p inputFile .
- * If file has .json extension, assumes the JSON format of rofi world;
- * otherwise assumes the world is in the old (viki) format.
+ * @brief Parses rofi world from given \p istr .
+ * Parses the input according to \p worldFormat .
  * If the world is in old format, fixates the world.
  * Returns an error if the format is incorrect.
- * @param inputFile path to file containing the rofi world
+ * @param istr input stream containing the rofi world
+ * @param worldFormat format of input world
  * @returns the parsed rofi world
  */
-inline auto parseRofiWorld( const std::filesystem::path & inputFile )
+inline auto parseRofiWorld( std::istream & istr, RofiWorldFormat worldFormat )
         -> atoms::Result< rofi::configuration::RofiWorld >
 {
-    auto istr = std::ifstream( inputFile );
-    if ( !istr.is_open() ) {
-        return atoms::result_error( "Cannot open file '" + inputFile.generic_string() + "'" );
+    switch ( worldFormat ) {
+        case RofiWorldFormat::Old:
+            return atoms::parseOldCfgFormat( istr, true );
+        case RofiWorldFormat::Json:
+            return atoms::parseRofiWorldJson( istr );
     }
-
-    if ( inputFile.extension() == ".json" ) {
-        return parseRofiWorldJson( istr );
-    } else {
-        return parseOldCfgFormat( istr, true );
-    }
+    ROFI_UNREACHABLE( "Unknown configuration format" );
 }
 
 } // namespace atoms
