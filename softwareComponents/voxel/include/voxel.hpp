@@ -568,26 +568,27 @@ private:
         }
     }
 
-    auto fixInSpace( ConnectorMap & connectorMap ) const -> atoms::Result< std::monostate >
+    auto fixInSpace( Voxel bodyToFixate, ConnectorMap & connectorMap ) const
+            -> atoms::Result< std::monostate >
     {
-        auto firstBody = bodies.front();
-        auto firstConnIt = connectorMap.find(
-                std::pair{ firstBody.pos, firstBody.xPlusConnDirection().opposite() } );
-        if ( firstConnIt == connectorMap.end() ) {
-            return atoms::result_error< std::string >( "Couldn't find first body X- connector" );
+        auto connIt = connectorMap.find(
+                std::pair{ bodyToFixate.pos, bodyToFixate.xPlusConnDirection().opposite() } );
+        if ( connIt == connectorMap.end() ) {
+            return atoms::result_error< std::string >( "Couldn't find body's X- connector" );
         }
-        auto firstConn = firstConnIt->second;
-        auto refPoint = toMatrixVector( firstBody.pos );
-        auto rotation = firstBody.getXPlusConnMatrixRotation();
+        auto conn = connIt->second;
+        auto refPoint = toMatrixVector( bodyToFixate.pos );
+        auto rotation = bodyToFixate.getXPlusConnMatrixRotation();
 
-        rofi::configuration::connect< rofi::configuration::RigidJoint >( firstConn.first,
+        rofi::configuration::connect< rofi::configuration::RigidJoint >( conn.first,
                                                                          refPoint,
                                                                          rotation );
         return atoms::result_value( std::monostate{} );
     }
 
 public:
-    auto toRofiWorld() const -> atoms::Result< std::shared_ptr< rofi::configuration::RofiWorld > >
+    auto toRofiWorld( bool fixateModulesByOne = false ) const
+            -> atoms::Result< std::shared_ptr< rofi::configuration::RofiWorld > >
     {
         if ( bodies.empty() ) {
             return atoms::result_error< std::string >( "VoxelWorld cannot be empty" );
@@ -626,11 +627,21 @@ public:
             }
         }
 
-        connectModules( connectorMap );
+        if ( fixateModulesByOne ) {
+            for ( const auto & body : bodies ) {
+                auto fixInSpaceResult = fixInSpace( body, connectorMap );
+                if ( !fixInSpaceResult ) {
+                    return std::move( fixInSpaceResult ).assume_error_result();
+                }
+            }
+        } else {
+            connectModules( connectorMap );
 
-        auto fixInSpaceResult = fixInSpace( connectorMap );
-        if ( !fixInSpaceResult ) {
-            return std::move( fixInSpaceResult ).assume_error_result();
+            assert( !bodies.empty() );
+            auto fixInSpaceResult = fixInSpace( bodies.front(), connectorMap );
+            if ( !fixInSpaceResult ) {
+                return std::move( fixInSpaceResult ).assume_error_result();
+            }
         }
 
         if ( auto prepared = result->validate(); !prepared ) {

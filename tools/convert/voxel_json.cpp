@@ -14,19 +14,48 @@ static auto command = Dim::Cli()
                               .action( convertVoxelJson )
                               .desc( "Convert rofi world json to voxel json" );
 
-static auto & inputWorldFilePath =
-        command.opt< std::filesystem::path >( "<input_world_file>" )
-                .defaultDesc( {} )
-                .desc( "Input world file ('-' for standard input)" );
-static auto & outputWorldFilePath =
-        command.opt< std::filesystem::path >( "<output_world_file>" )
-                .defaultDesc( {} )
-                .desc( "Output world file ('-' for standard output)" );
+static auto & inputWorldFilePath = command.opt< std::filesystem::path >( "<input_world_file>" )
+                                           .defaultDesc( {} )
+                                           .desc( "Input world file ('-' for standard input)" );
+static auto & outputWorldFilePath = command.opt< std::filesystem::path >( "<output_world_file>" )
+                                            .defaultDesc( {} )
+                                            .desc( "Output world file ('-' for standard output)" );
 static auto & reverse =
         command.opt< bool >( "r reverse" )
                 .desc( "Convert from voxel world json to rofi world json (default is opposite)" );
 static auto & sequence = command.opt< bool >( "seq sequence" )
                                  .desc( "Convert an array of worlds (default is single world)" );
+static auto & byOne =
+        command.opt< bool >( "b by-one" )
+                .desc( "Fixate all modules by themselves (no roficom connections will be made)" );
+
+
+auto parseVoxelWorldFromJson( std::istream & istr ) -> atoms::Result< rofi::voxel::VoxelWorld >
+{
+    using namespace std::string_literals;
+    try {
+        auto inputJson = nlohmann::json::parse( istr );
+        return atoms::result_value( inputJson.get< rofi::voxel::VoxelWorld >() );
+    } catch ( const nlohmann::json::exception & e ) {
+        return atoms::result_error( "Error while parsing voxel world ("s + e.what() + ")" );
+    }
+}
+
+auto parseVoxelWorldSeqFromJson( std::istream & istr )
+        -> atoms::Result< std::vector< rofi::voxel::VoxelWorld > >
+{
+    using namespace std::string_literals;
+    try {
+        auto inputJson = nlohmann::json::parse( istr );
+        if ( !inputJson.is_array() ) {
+            return atoms::result_error( "Expected an array of rofi worlds"s );
+        }
+        return atoms::result_value( inputJson.get< std::vector< rofi::voxel::VoxelWorld > >() );
+    } catch ( const nlohmann::json::exception & e ) {
+        return atoms::result_error( "Error while parsing voxel world sequence ("s + e.what()
+                                    + ")" );
+    }
+}
 
 
 void convertToVoxelJson( Dim::Cli & cli )
@@ -56,25 +85,15 @@ void convertToVoxelJson( Dim::Cli & cli )
     } );
 }
 
-void convertFromVoxelJson( Dim::Cli & cli )
+void convertFromVoxelJson( Dim::Cli & cli, bool separateModulesByOne )
 {
-    auto parseVoxelWorldFromJson =
-            []( std::istream & istr ) -> atoms::Result< rofi::voxel::VoxelWorld > {
-        try {
-            auto inputJson = nlohmann::json::parse( istr );
-            return atoms::result_value( inputJson.get< rofi::voxel::VoxelWorld >() );
-        } catch ( const nlohmann::json::exception & e ) {
-            using namespace std::string_literals;
-            return atoms::result_error( "Error while parsing voxel world ("s + e.what() + ")" );
-        }
-    };
     auto inputVoxelWorld = atoms::readInput( *inputWorldFilePath, parseVoxelWorldFromJson );
     if ( !inputVoxelWorld ) {
         cli.fail( EXIT_FAILURE, "Error while parsing voxel world", inputVoxelWorld.assume_error() );
         return;
     }
 
-    auto rofiWorld = inputVoxelWorld->toRofiWorld();
+    auto rofiWorld = inputVoxelWorld->toRofiWorld( separateModulesByOne );
     if ( !rofiWorld ) {
         cli.fail( EXIT_FAILURE,
                   "Error while converting voxel world to rofi world",
@@ -129,22 +148,8 @@ void convertToVoxelSeqJson( Dim::Cli & cli )
     } );
 }
 
-void convertFromVoxelSeqJson( Dim::Cli & cli )
+void convertFromVoxelSeqJson( Dim::Cli & cli, bool separateModulesByOne )
 {
-    auto parseVoxelWorldSeqFromJson =
-            []( std::istream & istr ) -> atoms::Result< std::vector< rofi::voxel::VoxelWorld > > {
-        try {
-            auto inputJson = nlohmann::json::parse( istr );
-            if ( !inputJson.is_array() ) {
-                return atoms::result_error< std::string >( "Expected an array of rofi worlds" );
-            }
-            return atoms::result_value( inputJson.get< std::vector< rofi::voxel::VoxelWorld > >() );
-        } catch ( const nlohmann::json::exception & e ) {
-            using namespace std::string_literals;
-            return atoms::result_error( "Error while parsing voxel world sequence ("s + e.what()
-                                        + ")" );
-        }
-    };
     auto inputVoxelWorldSeq = atoms::readInput( *inputWorldFilePath, parseVoxelWorldSeqFromJson );
     if ( !inputVoxelWorldSeq ) {
         cli.fail( EXIT_FAILURE,
@@ -157,7 +162,7 @@ void convertFromVoxelSeqJson( Dim::Cli & cli )
 
     auto rofiWorldSeqJson = nlohmann::json::array();
     for ( size_t i = 0; i < inputVoxelWorldSeq->size(); i++ ) {
-        auto rofiWorld = ( *inputVoxelWorldSeq )[ i ].toRofiWorld();
+        auto rofiWorld = ( *inputVoxelWorldSeq )[ i ].toRofiWorld( separateModulesByOne );
         if ( !rofiWorld ) {
             cli.fail( EXIT_FAILURE,
                       "Error while converting voxel world " + std::to_string( i )
@@ -180,15 +185,20 @@ void convertFromVoxelSeqJson( Dim::Cli & cli )
 
 void convertVoxelJson( Dim::Cli & cli )
 {
+    if ( *byOne && !*reverse ) {
+        cli.fail( EXIT_FAILURE, "by-one flag can only be used with reverse flag" );
+        return;
+    }
+
     if ( *sequence ) {
         if ( *reverse ) {
-            convertFromVoxelSeqJson( cli );
+            convertFromVoxelSeqJson( cli, *byOne );
         } else {
             convertToVoxelSeqJson( cli );
         }
     } else {
         if ( *reverse ) {
-            convertFromVoxelJson( cli );
+            convertFromVoxelJson( cli, *byOne );
         } else {
             convertToVoxelJson( cli );
         }
