@@ -22,11 +22,7 @@ namespace simplesim = rofi::simplesim;
 int main( int argc, char * argv[] )
 {
     Dim::Cli cli;
-    auto & cfgFilePath = simplesim::cfgFilePathCliOpt( cli );
-    auto & cfgFormat = simplesim::cfgFormatCliOpt( cli );
-    auto & pyPacketFilterFilePath = simplesim::pyPacketFilterFilePathCliOpt( cli );
-
-    auto & verbose = cli.opt< bool >( "v verbose" ).desc( "Run simulator in verbose mode" );
+    auto opts = simplesim::SimplesimServerOpts( cli );
 
     auto & qtArgs = cli.optVec< std::string >( "[QT_ARGS]" )
                             .desc( "Optional arguments to pass to the Qt application" );
@@ -40,14 +36,12 @@ int main( int argc, char * argv[] )
     auto app = QApplication( qtCArgc, qtCArgs.data() );
     setlocale( LC_NUMERIC, "C" );
 
-    std::cout << "Reading configuration from file (" << *cfgFormat << " format)" << std::endl;
-    auto inputWorld = simplesim::readAndPrepareConfigurationFromFile( *cfgFilePath, *cfgFormat );
-
-    auto packetFilter = std::optional< simplesim::packetf::PyFilter >();
-    if ( pyPacketFilterFilePath ) {
-        std::cout << "Reading python packet filter from file" << std::endl;
-        packetFilter = simplesim::readPyFilterFromFile( *pyPacketFilterFilePath );
+    auto inputWorld = opts.readInputWorldFile().and_then( atoms::toSharedAndValidate );
+    if ( !inputWorld ) {
+        std::cerr << "Error while reading input world: " << inputWorld.assume_error() << "\n";
+        return EXIT_FAILURE;
     }
+    auto packetFilter = opts.getPyPacketFilter();
 
     std::cout << "Starting gazebo server" << std::endl;
     auto msgServer = rofi::msgs::Server::createAndLoopInThread( "simplesim" );
@@ -55,13 +49,13 @@ int main( int argc, char * argv[] )
 
     // Setup server
     auto server = simplesim::Simplesim(
-            inputWorld,
+            *inputWorld,
             packetFilter
                 ? [ packetFilter = std::move( *packetFilter ) ]( auto packet ) mutable {
                     return packetFilter.filter( std::move( packet ) );
                 }
                 : simplesim::PacketFilter::FilterFunction{},
-            *verbose);
+            opts.verbose );
 
     // Setup client
     auto client = simplesim::SimplesimClient();
@@ -84,8 +78,7 @@ int main( int argc, char * argv[] )
 
     // Run client
     std::cout << "Adding configuration to the client" << std::endl;
-    client.onConfigurationUpdate( inputWorld );
-    inputWorld.reset();
+    client.onConfigurationUpdate( std::move( *inputWorld ) );
 
     std::cout << "Starting simplesim client..." << std::endl;
     client.run();

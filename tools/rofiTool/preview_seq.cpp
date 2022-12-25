@@ -1,6 +1,7 @@
 #include <fstream>
 #include <stdexcept>
 
+#include <atoms/cmdline_utils.hpp>
 #include <atoms/parsing.hpp>
 #include <configuration/rofiworld.hpp>
 #include <dimcli/cli.h>
@@ -14,20 +15,16 @@ static auto command = Dim::Cli()
                               .command( "preview-seq" )
                               .action( preview_seq )
                               .desc( "Interactively preview a rofi world sequence" );
-static auto & inputFile = command.opt< std::string >( "<worlds_file>" )
-                                  .desc( "Specify rofi world sequence source file" );
+static auto & inputFile =
+        command.opt< std::filesystem::path >( "<worlds_file>" )
+                .defaultDesc( {} )
+                .desc( "Source rofi world sequence file ('-' for standard input)" );
 
 void preview_seq( Dim::Cli & cli )
 {
-    auto istr = std::ifstream( *inputFile );
-    if ( !istr.is_open() ) {
-        cli.fail( EXIT_FAILURE, "Cannot open file '" + *inputFile + "'" );
-        return;
-    }
-
-    auto worlds = atoms::parseRofiWorldSeqJson( istr );
+    auto worlds = atoms::readInput( *inputFile, atoms::parseRofiWorldSeqJson );
     if ( !worlds ) {
-        cli.fail( EXIT_FAILURE, "Error while parsing world sequence", worlds.assume_error() );
+        cli.fail( EXIT_FAILURE, "Error while reading world sequence", worlds.assume_error() );
         return;
     }
 
@@ -58,5 +55,5 @@ void preview_seq( Dim::Cli & cli )
         }
     }
 
-    renderRofiWorldSequence( *worlds, "Preview of sequence " + *inputFile );
+    renderRofiWorldSequence( *worlds, "Preview of sequence " + inputFile->string() );
 }

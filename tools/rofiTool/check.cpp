@@ -1,3 +1,4 @@
+#include <atoms/cmdline_utils.hpp>
 #include <atoms/parsing.hpp>
 #include <configuration/rofiworld.hpp>
 #include <dimcli/cli.h>
@@ -7,14 +8,23 @@ void check( Dim::Cli & cli );
 
 static auto command = Dim::Cli().command( "check" ).action( check ).desc(
         "Check a given rofi world" );
-static auto & inputFile = command.opt< std::string >( "<world_file>" )
-                                  .desc( "Specify rofi world source file" );
+static auto & inputFile = command.opt< std::filesystem::path >( "<world_file>" )
+                                  .defaultDesc( {} )
+                                  .desc( "Source rofi world file ('-' for standard input)" );
+static auto & worldFormat = command.opt< atoms::RofiWorldFormat >( "f format" )
+                                    .valueDesc( "ROFI_WORLD_FORMAT" )
+                                    .desc( "Format of the rofi world file" )
+                                    .choice( atoms::RofiWorldFormat::Json, "json" )
+                                    .choice( atoms::RofiWorldFormat::Old, "old" );
+
 
 void check( Dim::Cli & cli )
 {
-    auto world = atoms::parseRofiWorld( *inputFile );
+    auto world = atoms::readInput( *inputFile, []( std::istream & istr ) {
+        return atoms::parseRofiWorld( istr, *worldFormat );
+    } );
     if ( !world ) {
-        cli.fail( EXIT_FAILURE, "Error while parsing world", world.assume_error() );
+        cli.fail( EXIT_FAILURE, "Error while reading world", world.assume_error() );
         return;
     }
 

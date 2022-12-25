@@ -72,38 +72,31 @@ private:
 int main( int argc, char * argv[] )
 {
     Dim::Cli cli;
-
-    auto & cfgFilePath = simplesim::cfgFilePathCliOpt( cli );
-    auto & cfgFormat = simplesim::cfgFormatCliOpt( cli );
-    auto & pyPacketFilterFilePath = simplesim::pyPacketFilterFilePathCliOpt( cli );
-
-    auto & verbose = cli.opt< bool >( "v verbose" ).desc( "Run simulator in verbose mode" );
+    auto opts = simplesim::SimplesimServerOpts( cli );
 
     if ( !cli.parse( argc, argv ) ) {
         return cli.printError( std::cerr );
     }
 
-    std::cout << "Reading configuration from file (" << *cfgFormat << " format)" << std::endl;
-    auto inputWorld = simplesim::readAndPrepareConfigurationFromFile( *cfgFilePath, *cfgFormat );
-
-    auto packetFilter = std::optional< simplesim::packetf::PyFilter >();
-    if ( pyPacketFilterFilePath ) {
-        std::cout << "Reading python packet filter from file" << std::endl;
-        packetFilter = simplesim::readPyFilterFromFile( *pyPacketFilterFilePath );
+    auto inputWorld = opts.readInputWorldFile().and_then( atoms::toSharedAndValidate );
+    if ( !inputWorld ) {
+        std::cerr << "Error while reading input world: " << inputWorld.assume_error() << "\n";
+        return EXIT_FAILURE;
     }
+    auto packetFilter = opts.getPyPacketFilter();
 
     std::cout << "Starting simplesim" << std::endl;
     auto gzMaster = rofi::msgs::Server::createAndLoopInThread( "simplesim" );
 
     // Server setup
     auto server = simplesim::Simplesim(
-            inputWorld,
+            *inputWorld,
             packetFilter
                 ? [ packetFilter = std::move( *packetFilter ) ]( auto packet ) mutable {
                     return packetFilter.filter( std::move( packet ) );
                 }
                 : simplesim::PacketFilter::FilterFunction{},
-            *verbose );
+            opts.verbose );
 
     // Listen for settings cmds
     auto settingsCmdSub = SettingsCmdSubscriber( server );

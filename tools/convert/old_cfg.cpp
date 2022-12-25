@@ -21,9 +21,11 @@ static auto & outputWorldFilePath = command.opt< std::filesystem::path >( "<outp
 
 void convertFromOldCfg( Dim::Cli & cli )
 {
-    auto rofiWorld = atoms::readInput( *inputWorldFilePath, atoms::parseAndValidateOldCfgFormat );
+    auto rofiWorld = atoms::readInput( *inputWorldFilePath, []( std::istream & istr ) {
+                         return atoms::parseOldCfgFormat( istr, true );
+                     } ).and_then( atoms::toSharedAndValidate );
     if ( !rofiWorld ) {
-        cli.fail( EXIT_FAILURE, "Error while parsing old configuration", rofiWorld.assume_error() );
+        cli.fail( EXIT_FAILURE, "Error while reading old configuration", rofiWorld.assume_error() );
         return;
     }
     assert( *rofiWorld );
