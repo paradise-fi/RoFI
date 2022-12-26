@@ -103,15 +103,15 @@ impl<'a> RotatedVoxelWorld<'a> {
     }
 
     pub fn dump_bodies(&self) {
-        println!(
+        eprintln!(
             "RotatedVoxelWorld {{ center={:?}, rotation={:?}, bodies=[",
             self.world.center(),
             self.rotation
         );
         for (body, pos) in self.all_bodies() {
-            println!("    {pos:?}: {body:?},");
+            eprintln!("    {pos:?}: {body:?},");
         }
-        println!("] }}");
+        eprintln!("] }}");
     }
 
     pub fn combine_with(&self, other: &CenteredVoxelWorld) -> (VoxelWorld, VoxelPos) {
