@@ -249,11 +249,11 @@ impl VoxelWorld {
     }
 
     pub fn dump_bodies(&self) {
-        println!("VoxelWorld {{ bodies=[");
+        eprintln!("VoxelWorld {{ bodies=[");
         for (body, pos) in self.all_bodies() {
-            println!("    {pos:?}: {body:?},");
+            eprintln!("    {pos:?}: {body:?},");
         }
-        println!("] }}");
+        eprintln!("] }}");
     }
 }
 

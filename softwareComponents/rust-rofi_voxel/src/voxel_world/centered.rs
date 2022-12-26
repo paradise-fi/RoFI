@@ -54,10 +54,10 @@ impl<'a> CenteredVoxelWorld<'a> {
     }
 
     pub fn dump_bodies(&self) {
-        println!("CenteredVoxelWorld {{ center={:?}, bodies=[", self.center);
+        eprintln!("CenteredVoxelWorld {{ center={:?}, bodies=[", self.center);
         for (body, pos) in self.all_bodies() {
-            println!("    {pos:?}: {body:?},");
+            eprintln!("    {pos:?}: {body:?},");
         }
-        println!("] }}");
+        eprintln!("] }}");
     }
 }
