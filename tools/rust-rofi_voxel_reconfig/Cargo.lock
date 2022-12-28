@@ -436,6 +436,7 @@ version = "0.1.0"
 dependencies = [
  "clap",
  "failure",
+ "itertools",
  "rofi_voxel",
  "serde_json",
 ]

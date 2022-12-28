@@ -50,10 +50,8 @@ fn all_next_worlds<'a>(
     })
 }
 
-/// Returns all possible next worlds
-///
-/// The returned world is normalized (one of possible eq norm worlds)
-fn all_possible_next_worlds<'a>(
+/// Returns all possible next worlds not normalized
+pub fn all_possible_next_worlds_not_norm<'a>(
     world: &'a VoxelWorld,
     connectivity_graph: &'a ConnectivityGraph<'a>,
     goal_bodies_count: usize,
@@ -70,10 +68,20 @@ fn all_possible_next_worlds<'a>(
             "Next world has correct body count, but is invalid ({:?})",
             new_world
         );
-        let new_world = new_world.as_one_of_norm_eq_world();
-        debug_assert!(new_world.is_normalized());
         Some(new_world)
     })
+}
+
+/// Returns all possible next worlds
+///
+/// The returned world is normalized (one of possible eq norm worlds)
+pub fn all_possible_next_worlds<'a>(
+    world: &'a VoxelWorld,
+    connectivity_graph: &'a ConnectivityGraph<'a>,
+    goal_bodies_count: usize,
+) -> impl Iterator<Item = VoxelWorld> + 'a {
+    all_possible_next_worlds_not_norm(world, connectivity_graph, goal_bodies_count)
+        .map(VoxelWorld::as_one_of_norm_eq_world)
 }
 
 fn find_parents_from_to(
