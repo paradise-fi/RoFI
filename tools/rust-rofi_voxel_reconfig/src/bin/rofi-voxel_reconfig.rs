@@ -1,7 +1,7 @@
 use clap::Parser;
 use failure::Error;
 use input::Input;
-use rofi_voxel::{reconfiguration, serde};
+use rofi_voxel::reconfiguration;
 
 pub mod input {
     use failure::{ensure, Error, ResultExt};
@@ -66,8 +66,8 @@ struct Cli {
 
 #[derive(Debug)]
 struct InputWorlds {
-    init: serde::VoxelWorld,
-    goal: serde::VoxelWorld,
+    init: rofi_voxel::serde::VoxelWorld,
+    goal: rofi_voxel::serde::VoxelWorld,
 }
 
 impl Cli {
@@ -91,15 +91,13 @@ fn main() -> Result<(), Error> {
     let args = Cli::parse();
 
     let InputWorlds { init, goal } = args.get_worlds()?;
-
     let (init, _min_pos) = init.to_world_and_min_pos()?;
     let (goal, _min_pos) = goal.to_world_and_min_pos()?;
 
     let reconfig_sequence = reconfiguration::compute_reconfiguration_moves(&init, goal)?;
-
     let reconfig_sequence = reconfig_sequence
         .iter()
-        .map(|world| crate::serde::VoxelWorld::from_world(world))
+        .map(|world| rofi_voxel::serde::VoxelWorld::from_world(world))
         .collect::<Vec<_>>();
 
     if args.short {
