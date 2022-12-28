@@ -1,54 +1,25 @@
 use super::{CenteredVoxelWorld, VoxelWorld};
+use crate::atoms;
+use crate::pos::IndexType;
 use crate::pos::{RelativeIndexType, RelativeVoxelPos, VoxelPos};
+use crate::voxel::body::JointPosition;
 use crate::voxel::{Voxel, VoxelBody};
-use crate::{atoms, pos::IndexType};
 
 pub fn rotate_body(body: VoxelBody, rotation: atoms::Rotation) -> VoxelBody {
-    if body.other_body_dir().axis() == rotation.axis() {
-        match (body.is_shoe_rotated(), rotation.angle()) {
-            (true, atoms::RotationAngle::Plus90) | (false, atoms::RotationAngle::Minus90) => {
-                body.with_is_shoe_rotated(!body.is_shoe_rotated())
+    VoxelBody::new_with(
+        rotation.rotate_dir(body.other_body_dir()),
+        !body.is_shoe_rotated(),
+        match body.joint_pos() {
+            JointPosition::Zero => JointPosition::Zero,
+            JointPosition::Plus90 | JointPosition::Minus90 => {
+                if rotation.rotate_dir(body.z_conn_dir()).is_positive() {
+                    JointPosition::Plus90
+                } else {
+                    JointPosition::Minus90
+                }
             }
-            (true, atoms::RotationAngle::Minus90) | (false, atoms::RotationAngle::Plus90) => body
-                .with_is_shoe_rotated(!body.is_shoe_rotated())
-                .with_joint_pos(body.joint_pos().opposite()),
-        }
-    } else if body.other_body_dir().axis() == rotation.axis().next_axis() {
-        let new_other_body_dir = atoms::Direction::new_with(
-            rotation.axis().prev_axis(),
-            match rotation.angle() {
-                atoms::RotationAngle::Plus90 => body.other_body_dir().is_positive(),
-                atoms::RotationAngle::Minus90 => !body.other_body_dir().is_positive(),
-            },
-        );
-        let new_joint_pos = if body.is_shoe_rotated() {
-            body.joint_pos()
-        } else {
-            match rotation.angle() {
-                atoms::RotationAngle::Plus90 => body.joint_pos().opposite(),
-                atoms::RotationAngle::Minus90 => body.joint_pos(),
-            }
-        };
-
-        VoxelBody::new_with(new_other_body_dir, !body.is_shoe_rotated(), new_joint_pos)
-    } else {
-        debug_assert_eq!(body.other_body_dir().axis(), rotation.axis().prev_axis());
-
-        let new_other_body_dir = atoms::Direction::new_with(
-            rotation.axis().next_axis(),
-            body.other_body_dir().is_positive() != rotation.angle().is_positive(),
-        );
-        let new_joint_pos = if !body.is_shoe_rotated() {
-            body.joint_pos()
-        } else {
-            match rotation.angle() {
-                atoms::RotationAngle::Plus90 => body.joint_pos(),
-                atoms::RotationAngle::Minus90 => body.joint_pos().opposite(),
-            }
-        };
-
-        VoxelBody::new_with(new_other_body_dir, !body.is_shoe_rotated(), new_joint_pos)
-    }
+        },
+    )
 }
 
 pub fn rotate_voxel(voxel: Voxel, rotation: atoms::Rotation) -> Voxel {

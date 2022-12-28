@@ -29,6 +29,10 @@ impl<'a> VoxelSubworld<'a> {
         }
     }
 
+    pub fn underlying_world(&self) -> &'a VoxelWorld {
+        self.world
+    }
+
     pub fn complement(&self) -> Self {
         Self::new(self.world, |pos| !self.included.contains(&pos))
     }

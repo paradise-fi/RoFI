@@ -64,6 +64,30 @@ impl Rotation {
         )
     }
 
+    pub fn new_from_to(from: Direction, to: Direction) -> Self {
+        assert_ne!(from.axis(), to.axis());
+
+        let result = if from.axis().next_axis() == to.axis() {
+            let axis = from.axis().prev_axis();
+            if from.is_positive() == to.is_positive() {
+                Self::new_with(axis, RotationAngle::Plus90)
+            } else {
+                Self::new_with(axis, RotationAngle::Minus90)
+            }
+        } else {
+            let axis = from.axis().next_axis();
+            if from.is_positive() == to.is_positive() {
+                Self::new_with(axis, RotationAngle::Minus90)
+            } else {
+                Self::new_with(axis, RotationAngle::Plus90)
+            }
+        };
+
+        debug_assert_eq!(result.rotate_dir(from), to);
+
+        result
+    }
+
     pub fn rotate<T>(&self, position: [T; 3]) -> [T; 3]
     where
         T: std::ops::Neg<Output = T>,
@@ -86,6 +110,39 @@ impl Rotation {
             Axis::Y => [z, y, x],
             Axis::Z => [y, x, z],
         }
+    }
+
+    pub fn rotate_dir(&self, dir: Direction) -> Direction {
+        let result = if self.axis() == dir.axis() {
+            dir
+        } else if self.axis().next_axis() == dir.axis() {
+            match self.angle() {
+                RotationAngle::Plus90 => {
+                    Direction::new_with(self.axis().prev_axis(), dir.is_positive())
+                }
+                RotationAngle::Minus90 => {
+                    Direction::new_with(self.axis().prev_axis(), !dir.is_positive())
+                }
+            }
+        } else if self.axis().prev_axis() == dir.axis() {
+            match self.angle() {
+                RotationAngle::Plus90 => {
+                    Direction::new_with(self.axis().next_axis(), !dir.is_positive())
+                }
+                RotationAngle::Minus90 => {
+                    Direction::new_with(self.axis().next_axis(), dir.is_positive())
+                }
+            }
+        } else {
+            panic!()
+        };
+
+        debug_assert_eq!(
+            self.rotate(dir.update_position([0; 3]).unwrap()),
+            result.update_position([0; 3]).unwrap()
+        );
+
+        result
     }
 
     pub fn inverse(&self) -> Self {
