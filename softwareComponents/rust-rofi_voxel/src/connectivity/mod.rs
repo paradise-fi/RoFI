@@ -1,6 +1,6 @@
 mod graph;
 
-pub use graph::ConnectivityGraph;
+pub use graph::{is_connected, ConnectivityGraph};
 
 use crate::pos::VoxelPos;
 use crate::voxel::VoxelBodyWithPos;

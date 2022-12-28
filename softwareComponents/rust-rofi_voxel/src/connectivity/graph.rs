@@ -14,6 +14,14 @@ use std::collections::HashMap;
 
 type GraphType = LinkedListGraph;
 
+// Fix bug in `rs_graph::algorithms::is_connected`
+pub fn is_connected<'g, TGraph>(graph: &'g TGraph) -> bool
+where
+    TGraph: rs_graph::IndexGraph<'g>,
+{
+    graph.num_nodes() <= 1 || rs_graph::algorithms::is_connected(&graph)
+}
+
 pub struct ConnectivityGraph<'a> {
     world: &'a VoxelWorld,
     graph: GraphType,
@@ -21,6 +29,10 @@ pub struct ConnectivityGraph<'a> {
 }
 
 impl<'a> ConnectivityGraph<'a> {
+    pub fn graph(&self) -> &GraphType {
+        &self.graph
+    }
+
     fn add_connectivity_nodes(
         world: &'a VoxelWorld,
         mapping: &mut BiHashMap<VoxelPos, Node>,
@@ -182,11 +194,6 @@ impl<'a> ConnectivityGraph<'a> {
     where
         TSelection: Fn(<GraphType as rs_graph::traits::GraphType>::Node) -> bool,
     {
-        // Fix bug in `rs_graph::algorithms::is_connected`
-        let is_connected = |graph: &GraphType| -> bool {
-            graph.num_nodes() <= 1 || rs_graph::algorithms::is_connected(graph)
-        };
-
         [
             Self::get_subgraph(graph_base, &selection),
             Self::get_subgraph(graph_base, &|node| !selection(node)),
