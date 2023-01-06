@@ -2,44 +2,9 @@
 
 use anyhow::Result;
 use clap::Parser;
-use input::Input;
 use itertools::Itertools;
+use rofi_voxel_cli::FileInput;
 use std::assert_matches::assert_matches;
-
-mod input {
-    use anyhow::{Context, Result};
-    use std::fs::File;
-    use std::io::{BufReader, Read};
-
-    #[derive(Debug, Clone)]
-    pub enum Input {
-        File(String),
-        StdIn,
-    }
-    impl Input {
-        pub fn from_arg<TString: AsRef<str> + Into<String>>(file_arg: TString) -> Self {
-            match file_arg.as_ref() {
-                "-" => Self::StdIn,
-                _ => Self::File(file_arg.into()),
-            }
-        }
-
-        pub fn get_reader(&self) -> Result<BufReader<Box<dyn std::io::Read>>> {
-            match self {
-                Input::File(path) => Ok(BufReader::new(Box::new(
-                    File::open(path).with_context(|| format!("Could not open file {path:?}"))?,
-                ))),
-                Input::StdIn => Ok(BufReader::new(Box::new(std::io::stdin()))),
-            }
-        }
-
-        pub fn read_all(&self) -> Result<String> {
-            let mut result = String::new();
-            self.get_reader()?.read_to_string(&mut result)?;
-            Ok(result)
-        }
-    }
-}
 
 /// Compute (unique) normalized versions of voxel world
 #[derive(Debug, Parser)]
@@ -58,7 +23,7 @@ struct InputWorlds {
 
 impl Cli {
     pub fn get_worlds(&self) -> Result<InputWorlds> {
-        let world = Input::from_arg(&self.world_file);
+        let world = FileInput::from_arg(&self.world_file);
         let world = world.read_all()?;
         let world = serde_json::from_str(&world)?;
 

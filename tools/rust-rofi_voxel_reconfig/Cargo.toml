@@ -3,6 +3,11 @@ name = "rofi_voxel_reconfig"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+name = "rofi_voxel_cli"
+crate-type = [ "lib", "cdylib", "staticlib" ]
+
+
 [[bin]]
 name = "rofi-voxel_reconfig"
 
