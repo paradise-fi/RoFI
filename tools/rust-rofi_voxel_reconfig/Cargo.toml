@@ -10,6 +10,6 @@ name = "rofi-voxel_reconfig"
 rofi_voxel = { path = "../../softwareComponents/rust-rofi_voxel" }
 
 clap = { version = "4.0", features = ["derive"] }
-failure = "0.1.8"
+failure = "0.1"
 serde_json = "1.0"
 itertools = "0.10"
