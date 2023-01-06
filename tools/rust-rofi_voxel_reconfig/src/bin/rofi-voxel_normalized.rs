@@ -3,7 +3,7 @@
 use anyhow::Result;
 use clap::Parser;
 use itertools::Itertools;
-use rofi_voxel_cli::FileInput;
+use rofi_voxel_cli::{FileInput, LogArgs};
 use std::assert_matches::assert_matches;
 
 /// Compute (unique) normalized versions of voxel world
@@ -14,6 +14,8 @@ struct Cli {
     /// Return result in a short json format
     #[arg(short, long, default_value_t = false)]
     short: bool,
+    #[clap(flatten)]
+    log: LogArgs,
 }
 
 #[derive(Debug)]
@@ -33,6 +35,8 @@ impl Cli {
 
 fn main() -> Result<()> {
     let args = Cli::parse();
+
+    args.log.setup_logging()?;
 
     let InputWorlds { world } = args.get_worlds()?;
     let (world, _min_pos) = world.to_world_and_min_pos()?;
