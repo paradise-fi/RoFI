@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
 use rofi_voxel::reconfiguration;
-use rofi_voxel_cli::FileInput;
+use rofi_voxel_cli::{FileInput, LogArgs};
 
 /// Compute RoFI reconfiguration from init to goal by using voxels
 #[derive(Debug, Parser)]
@@ -13,6 +13,8 @@ struct Cli {
     /// Return result in a short json format
     #[arg(short, long, default_value_t = false)]
     short: bool,
+    #[clap(flatten)]
+    log: LogArgs,
 }
 
 #[derive(Debug)]
@@ -40,6 +42,8 @@ impl Cli {
 
 fn main() -> Result<()> {
     let args = Cli::parse();
+
+    args.log.setup_logging()?;
 
     let InputWorlds { init, goal } = args.get_worlds()?;
     let (init, _min_pos) = init.to_world_and_min_pos()?;

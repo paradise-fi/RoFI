@@ -5,7 +5,7 @@ use clap::Parser;
 use rofi_voxel::connectivity::ConnectivityGraph;
 use rofi_voxel::reconfiguration::all_possible_next_worlds_not_norm;
 use rofi_voxel::voxel_world::VoxelWorld;
-use rofi_voxel_cli::FileInput;
+use rofi_voxel_cli::{FileInput, LogArgs};
 use std::assert_matches::assert_matches;
 
 /// Compute one step of the reconfiguration algorithm.
@@ -21,6 +21,8 @@ struct Cli {
     /// Don't warn when normalizing the input world
     #[arg(short, long, default_value_t = false)]
     normalize: bool,
+    #[clap(flatten)]
+    log: LogArgs,
 }
 
 #[derive(Debug)]
@@ -52,6 +54,8 @@ fn get_next_worlds(world: &VoxelWorld) -> Vec<VoxelWorld> {
 
 fn main() -> Result<()> {
     let args = Cli::parse();
+
+    args.log.setup_logging()?;
 
     let InputWorlds { world } = args.get_worlds()?;
     let (world, _min_pos) = world.to_world_and_min_pos()?;

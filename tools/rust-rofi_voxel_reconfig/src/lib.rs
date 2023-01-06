@@ -48,3 +48,26 @@ impl FileInput {
         Ok(())
     }
 }
+
+#[derive(Debug, clap::Args)]
+#[clap(mut_arg("verbose", |arg| arg.help_heading(Some("Logging"))))]
+#[clap(mut_arg("quiet", |arg| arg.help_heading(Some("Logging"))))]
+pub struct LogArgs {
+    #[clap(flatten)]
+    pub verbose: clap_verbosity_flag::Verbosity,
+    /// Log file (if not specified, logs to stderr)
+    #[arg(short, long("log"), help_heading = Some("Logging"))]
+    pub log_file: Option<String>,
+}
+
+impl LogArgs {
+    pub fn setup_logging(&self) -> std::io::Result<()> {
+        match &self.log_file {
+            Some(file_name) => {
+                simple_logging::log_to_file(file_name, self.verbose.log_level_filter())?
+            }
+            None => simple_logging::log_to_stderr(self.verbose.log_level_filter()),
+        }
+        Ok(())
+    }
+}
