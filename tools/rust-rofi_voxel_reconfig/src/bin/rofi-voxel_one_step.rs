@@ -1,7 +1,7 @@
 #![feature(assert_matches)]
 
+use anyhow::Result;
 use clap::Parser;
-use failure::Error;
 use input::Input;
 use rofi_voxel::connectivity::ConnectivityGraph;
 use rofi_voxel::reconfiguration::all_possible_next_worlds_not_norm;
@@ -9,7 +9,7 @@ use rofi_voxel::voxel_world::VoxelWorld;
 use std::assert_matches::assert_matches;
 
 mod input {
-    use failure::{Error, ResultExt};
+    use anyhow::{Context, Result};
     use std::fs::File;
     use std::io::{BufReader, Read};
 
@@ -26,16 +26,16 @@ mod input {
             }
         }
 
-        pub fn get_reader(&self) -> Result<BufReader<Box<dyn std::io::Read>>, Error> {
+        pub fn get_reader(&self) -> Result<BufReader<Box<dyn std::io::Read>>> {
             match self {
                 Input::File(path) => Ok(BufReader::new(Box::new(
-                    File::open(path).with_context(|_| format!("Could not open file {path:?}"))?,
+                    File::open(path).with_context(|| format!("Could not open file {path:?}"))?,
                 ))),
                 Input::StdIn => Ok(BufReader::new(Box::new(std::io::stdin()))),
             }
         }
 
-        pub fn read_all(&self) -> Result<String, Error> {
+        pub fn read_all(&self) -> Result<String> {
             let mut result = String::new();
             self.get_reader()?.read_to_string(&mut result)?;
             Ok(result)
@@ -64,7 +64,7 @@ struct InputWorlds {
 }
 
 impl Cli {
-    pub fn get_worlds(&self) -> Result<InputWorlds, Error> {
+    pub fn get_worlds(&self) -> Result<InputWorlds> {
         let world = Input::from_arg(&self.world_file);
         let world = world.read_all()?;
         let world = serde_json::from_str(&world)?;
@@ -85,7 +85,7 @@ fn get_next_worlds(world: &VoxelWorld) -> Vec<VoxelWorld> {
     .collect()
 }
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     let args = Cli::parse();
 
     let InputWorlds { world } = args.get_worlds()?;

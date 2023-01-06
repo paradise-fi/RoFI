@@ -1,10 +1,10 @@
+use anyhow::Result;
 use clap::Parser;
-use failure::Error;
 use input::Input;
 use rofi_voxel::reconfiguration;
 
 pub mod input {
-    use failure::{ensure, Error, ResultExt};
+    use anyhow::{ensure, Context, Result};
     use std::fs::File;
     use std::io::{BufReader, Read};
 
@@ -21,16 +21,16 @@ pub mod input {
             }
         }
 
-        pub fn get_reader(&self) -> Result<BufReader<Box<dyn std::io::Read>>, Error> {
+        pub fn get_reader(&self) -> Result<BufReader<Box<dyn std::io::Read>>> {
             match self {
                 Input::File(path) => Ok(BufReader::new(Box::new(
-                    File::open(path).with_context(|_| format!("Could not open file {path:?}"))?,
+                    File::open(path).with_context(|| format!("Could not open file {path:?}"))?,
                 ))),
                 Input::StdIn => Ok(BufReader::new(Box::new(std::io::stdin()))),
             }
         }
 
-        pub fn read_all(&self) -> Result<String, Error> {
+        pub fn read_all(&self) -> Result<String> {
             let mut result = String::new();
             self.get_reader()?.read_to_string(&mut result)?;
             Ok(result)
@@ -38,7 +38,7 @@ pub mod input {
 
         pub fn check_max_one_stdin<'a, TInputs: IntoIterator<Item = &'a Self>>(
             inputs: TInputs,
-        ) -> Result<(), Error> {
+        ) -> Result<()> {
             ensure!(
                 inputs
                     .into_iter()
@@ -71,7 +71,7 @@ struct InputWorlds {
 }
 
 impl Cli {
-    pub fn get_worlds(&self) -> Result<InputWorlds, Error> {
+    pub fn get_worlds(&self) -> Result<InputWorlds> {
         let init = Input::from_arg(&self.init_world_file);
         let goal = Input::from_arg(&self.goal_world_file);
 
@@ -87,7 +87,7 @@ impl Cli {
     }
 }
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     let args = Cli::parse();
 
     let InputWorlds { init, goal } = args.get_worlds()?;
