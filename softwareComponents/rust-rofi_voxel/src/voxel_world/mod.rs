@@ -48,8 +48,70 @@ impl std::fmt::Display for InvalidVoxelWorldError {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Clone, PartialEq, Eq, Hash)]
 pub struct VoxelWorld(atoms::Vec3D<Voxel>);
+
+fn debug_fmt_bodies<IBodies, TPos: std::fmt::Debug>(
+    bodies: IBodies,
+    f: &mut impl std::fmt::Write,
+    ws_sep: &str,
+    outer_indent: &str,
+    inner_indent: &str,
+    trail_comma: bool,
+) -> std::fmt::Result
+where
+    IBodies: Iterator<Item = (VoxelBody, TPos)>,
+{
+    let mut bodies = bodies.peekable();
+
+    if bodies.peek().is_none() {
+        return f.write_str("[]");
+    }
+
+    f.write_char('[')?;
+
+    let mut comma_sep = None;
+    for (body, pos) in bodies {
+        if let Some(comma_sep) = comma_sep {
+            f.write_char(comma_sep)?;
+        }
+        comma_sep = Some(',');
+        f.write_str(ws_sep)?;
+
+        f.write_str(outer_indent)?;
+        f.write_str(inner_indent)?;
+        f.write_fmt(format_args!("{pos:?}: {body:?}"))?;
+    }
+
+    if trail_comma {
+        assert!(comma_sep.is_some());
+        f.write_char(',')?;
+    }
+
+    f.write_str(ws_sep)?;
+    f.write_str(outer_indent)?;
+    f.write_char(']')
+}
+
+impl std::fmt::Debug for VoxelWorld {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let indent = if f.alternate() { "    " } else { "" };
+        let ws_sep = if f.alternate() { "\n" } else { " " };
+        f.write_str("VoxelWorld {")?;
+        f.write_str(ws_sep)?;
+
+        f.write_fmt(format_args!("{indent}sizes: {:?},{ws_sep}", self.sizes().0))?;
+
+        f.write_fmt(format_args!("{indent}bodies: "))?;
+        debug_fmt_bodies(self.all_bodies(), f, ws_sep, indent, indent, f.alternate())?;
+
+        if f.alternate() {
+            f.write_str(",")?;
+        }
+        f.write_str(ws_sep)?;
+        f.write_str("}")
+    }
+}
 
 impl VoxelWorld {
     fn from_sizes_and_bodies_unchecked<IBodies: IntoIterator<Item = VoxelBodyWithPos>>(
@@ -246,14 +308,6 @@ impl VoxelWorld {
                 None
             }
         })
-    }
-
-    pub fn dump_bodies(&self) {
-        eprintln!("VoxelWorld {{ bodies=[");
-        for (body, pos) in self.all_bodies() {
-            eprintln!("    {pos:?}: {body:?},");
-        }
-        eprintln!("] }}");
     }
 }
 

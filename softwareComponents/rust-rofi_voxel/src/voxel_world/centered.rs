@@ -7,6 +7,31 @@ pub struct CenteredVoxelWorld<'a> {
     world: VoxelSubworld<'a>,
 }
 
+impl<'a> std::fmt::Debug for CenteredVoxelWorld<'a> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let indent = if f.alternate() { "    " } else { "" };
+        let ws_sep = if f.alternate() { "\n" } else { " " };
+        f.write_str("CenteredVoxelWorld {")?;
+        f.write_str(ws_sep)?;
+
+        f.write_fmt(format_args!("{indent}center: {:?},{ws_sep}", self.center()))?;
+
+        f.write_fmt(format_args!(
+            "{indent}sizes: {:?},{ws_sep}",
+            self.size_ranges()
+        ))?;
+
+        f.write_fmt(format_args!("{indent}bodies: "))?;
+        super::debug_fmt_bodies(self.all_bodies(), f, ws_sep, indent, indent, f.alternate())?;
+
+        if f.alternate() {
+            f.write_str(",")?;
+        }
+        f.write_str(ws_sep)?;
+        f.write_str("}")
+    }
+}
+
 impl<'a> CenteredVoxelWorld<'a> {
     pub fn new(world: VoxelSubworld<'a>, center: VoxelPos) -> Self {
         let VoxelPos(c) = center;
@@ -51,13 +76,5 @@ impl<'a> CenteredVoxelWorld<'a> {
             let rel_pos = self.get_rel_pos(abs_pos);
             (body, rel_pos)
         })
-    }
-
-    pub fn dump_bodies(&self) {
-        eprintln!("CenteredVoxelWorld {{ center={:?}, bodies=[", self.center);
-        for (body, pos) in self.all_bodies() {
-            eprintln!("    {pos:?}: {body:?},");
-        }
-        eprintln!("] }}");
     }
 }
