@@ -5,6 +5,16 @@ use crate::voxel_world::VoxelWorld;
 use std::assert_matches::{assert_matches, debug_assert_matches};
 use std::collections::{HashMap, VecDeque};
 use std::rc::Rc;
+use std::sync::atomic::{AtomicU64, Ordering};
+
+pub static TRUE_CUTS: AtomicU64 = AtomicU64::new(0);
+pub static FALSE_CUTS: AtomicU64 = AtomicU64::new(0);
+
+pub static ALL_WORLDS: AtomicU64 = AtomicU64::new(0);
+pub static ADDED_WORLDS: AtomicU64 = AtomicU64::new(0);
+pub static NEXT_WORLDS_BEFORE_ADD: AtomicU64 = AtomicU64::new(0);
+pub static COLLIDED_WORLDS: AtomicU64 = AtomicU64::new(0);
+pub static STEPS_COMPUTED: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Debug, Clone, Copy, amplify::Display, amplify::Error)]
 #[display(doc_comments)]
@@ -57,8 +67,10 @@ pub fn all_possible_next_worlds_not_norm<'a>(
     goal_bodies_count: usize,
 ) -> impl Iterator<Item = VoxelWorld> + 'a {
     all_next_worlds(world, connectivity_graph).filter_map(move |new_world| {
+        ALL_WORLDS.fetch_add(1, Ordering::Relaxed);
         if new_world.all_bodies().count() != goal_bodies_count {
             // Collision occured
+            COLLIDED_WORLDS.fetch_add(1, Ordering::Relaxed);
             return None;
         }
 
@@ -110,10 +122,12 @@ fn find_parents_from_to(
     while let Some(current) = worlds_to_visit.pop_front() {
         debug_assert_matches!(current.check_voxel_world(), Ok(()));
         debug_assert!(current.is_normalized());
+        STEPS_COMPUTED.fetch_add(1, Ordering::Relaxed);
 
         let connectivity_graph = ConnectivityGraph::compute_from(&current);
         for new_world in all_possible_next_worlds(&current, &connectivity_graph, goal_bodies_count)
         {
+            NEXT_WORLDS_BEFORE_ADD.fetch_add(1, Ordering::Relaxed);
             debug_assert_matches!(new_world.check_voxel_world(), Ok(()));
             debug_assert!(new_world.is_normalized());
             if parent_worlds.contains_key(&new_world) {
@@ -152,6 +166,7 @@ fn find_parents_from_to(
                 .clone();
 
             worlds_to_visit.push_back(new_world);
+            ADDED_WORLDS.fetch_add(1, Ordering::Relaxed);
         }
     }
 
@@ -168,7 +183,30 @@ pub fn compute_reconfiguration_moves(
     let goal = goal.as_one_of_norm_eq_world();
 
     let parent_worlds = find_parents_from_to(init, &goal)?;
+
+    log_counters();
+
     Ok(get_path_to(&goal, &parent_worlds))
+}
+
+pub fn log_counters() {
+    let true_cuts = TRUE_CUTS.load(Ordering::Relaxed);
+    let false_cuts = FALSE_CUTS.load(Ordering::Relaxed);
+    log::info!("ALL_CUTS: {}", true_cuts + false_cuts);
+    log::info!("TRUE_CUTS: {}", true_cuts);
+    log::info!("FALSE_CUTS: {}", false_cuts);
+
+    log::info!("ALL_WORLDS: {}", ALL_WORLDS.load(Ordering::Relaxed));
+    log::info!(
+        "COLLIDED_WORLDS: {}",
+        COLLIDED_WORLDS.load(Ordering::Relaxed)
+    );
+    log::info!("STEPS_COMPUTED: {}", STEPS_COMPUTED.load(Ordering::Relaxed));
+    log::info!(
+        "NEXT_WORLDS_BEFORE_ADD: {}",
+        NEXT_WORLDS_BEFORE_ADD.load(Ordering::Relaxed)
+    );
+    log::info!("ADDED_WORLDS: {}", ADDED_WORLDS.load(Ordering::Relaxed));
 }
 
 #[cfg(test)]
