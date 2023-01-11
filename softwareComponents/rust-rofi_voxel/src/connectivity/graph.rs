@@ -11,6 +11,7 @@ use rs_graph::linkedlistgraph::Node;
 use rs_graph::traits::{GraphSize, Undirected};
 use rs_graph::{Buildable, Builder, LinkedListGraph};
 use std::collections::HashMap;
+use std::sync::atomic::Ordering;
 
 type GraphType = LinkedListGraph;
 
@@ -167,6 +168,7 @@ impl<'a> ConnectivityGraph<'a> {
         debug_assert_eq!(self.graph.num_nodes(), 2 + id_count * 2);
         Subset::iter_all(id_count).filter_map(move |selection| {
             if Self::is_valid_selection(&graph_base, |node| is_selected(node, &selection)) {
+                crate::reconfiguration::TRUE_CUTS.fetch_add(1, Ordering::Relaxed);
                 let is_selected = is_selected.clone();
                 Some(VoxelSubworld::new(self.world, move |pos| {
                     is_selected(
@@ -175,6 +177,7 @@ impl<'a> ConnectivityGraph<'a> {
                     )
                 }))
             } else {
+                crate::reconfiguration::FALSE_CUTS.fetch_add(1, Ordering::Relaxed);
                 None
             }
         })
