@@ -78,17 +78,17 @@ struct Convertible {
 };
 
 
-static_assert( atoms::detail::is_result_v< Result< int > > );
-static_assert( atoms::detail::is_result_v< Result< std::string, int > > );
-static_assert( atoms::detail::is_result_v< Result< std::string, std::string > > );
+static_assert( atoms::is_result_v< Result< int > > );
+static_assert( atoms::is_result_v< Result< std::string, int > > );
+static_assert( atoms::is_result_v< Result< std::string, std::string > > );
 
-static_assert( !atoms::detail::is_result_v< int > );
-static_assert( !atoms::detail::is_result_v< std::variant< int, double > > );
+static_assert( !atoms::is_result_v< int > );
+static_assert( !atoms::is_result_v< std::variant< int, double > > );
 
-static_assert( !atoms::detail::is_result_v< Result< int > & > );
-static_assert( !atoms::detail::is_result_v< const Result< int > & > );
-static_assert( !atoms::detail::is_result_v< Result< int > && > );
-static_assert( !atoms::detail::is_result_v< const Result< int > && > );
+static_assert( !atoms::is_result_v< Result< int > & > );
+static_assert( !atoms::is_result_v< const Result< int > & > );
+static_assert( !atoms::is_result_v< Result< int > && > );
+static_assert( !atoms::is_result_v< const Result< int > && > );
 
 
 TEST_CASE( "Result constructors" )
