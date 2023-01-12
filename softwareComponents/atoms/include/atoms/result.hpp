@@ -12,15 +12,15 @@ namespace atoms
 template < typename T, typename E >
 class [[nodiscard]] Result;
 
+template < typename T >
+struct is_result : std::false_type {};
+template < typename T, typename E >
+struct is_result< Result< T, E > > : std::true_type {};
+template < typename T >
+constexpr bool is_result_v = is_result< T >::value;
+
 namespace detail
 {
-    template < typename T >
-    struct is_result : std::false_type {};
-    template < typename T, typename E >
-    struct is_result< Result< T, E > > : std::true_type {};
-    template < typename T >
-    constexpr bool is_result_v = is_result< T >::value;
-
     template < typename F, typename ValueT, typename ErrorT >
     constexpr bool is_invocable_by_common_ref()
     {
@@ -502,7 +502,7 @@ public:
     constexpr auto and_then( F && f ) &
     {
         using ResultT = std::remove_cvref_t< std::invoke_result_t< F, value_type & > >;
-        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( is_result_v< ResultT >, "F must return a result" );
         static_assert( std::is_same_v< error_type, typename ResultT::error_type >,
                        "error types must be the same" );
 
@@ -524,7 +524,7 @@ public:
     constexpr auto and_then( F && f ) const &
     {
         using ResultT = std::remove_cvref_t< std::invoke_result_t< F, const value_type & > >;
-        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( is_result_v< ResultT >, "F must return a result" );
         static_assert( std::is_same_v< error_type, typename ResultT::error_type >,
                        "error types must be the same" );
 
@@ -546,7 +546,7 @@ public:
     constexpr auto and_then( F && f ) &&
     {
         using ResultT = std::remove_cvref_t< std::invoke_result_t< F, value_type && > >;
-        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( is_result_v< ResultT >, "F must return a result" );
         static_assert( std::is_same_v< error_type, typename ResultT::error_type >,
                        "error types must be the same" );
 
@@ -569,7 +569,7 @@ public:
     constexpr auto or_else( F && f ) &
     {
         using ResultT = std::remove_cvref_t< std::invoke_result_t< F, error_type & > >;
-        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( is_result_v< ResultT >, "F must return a result" );
         static_assert( std::is_same_v< value_type, typename ResultT::value_type >,
                        "value types must be the same" );
 
@@ -591,7 +591,7 @@ public:
     constexpr auto or_else( F && f ) const &
     {
         using ResultT = std::remove_cvref_t< std::invoke_result_t< F, const error_type & > >;
-        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( is_result_v< ResultT >, "F must return a result" );
         static_assert( std::is_same_v< value_type, typename ResultT::value_type >,
                        "value types must be the same" );
 
@@ -613,7 +613,7 @@ public:
     constexpr auto or_else( F && f ) &&
     {
         using ResultT = std::remove_cvref_t< std::invoke_result_t< F, error_type && > >;
-        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( is_result_v< ResultT >, "F must return a result" );
         static_assert( std::is_same_v< value_type, typename ResultT::value_type >,
                        "value types must be the same" );
 
@@ -639,7 +639,7 @@ public:
     constexpr auto or_else( F && f ) const
     {
         using ResultT = std::remove_cvref_t< std::invoke_result_t< F > >;
-        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( is_result_v< ResultT >, "F must return a result" );
         static_assert( std::is_same_v< value_type, typename ResultT::value_type >,
                        "value types must be the same" );
 
@@ -664,7 +664,7 @@ public:
     constexpr auto or_else( F && f ) &&
     {
         using ResultT = std::remove_cvref_t< std::invoke_result_t< F > >;
-        static_assert( detail::is_result_v< ResultT >, "F must return a result" );
+        static_assert( is_result_v< ResultT >, "F must return a result" );
         static_assert( std::is_same_v< value_type, typename ResultT::value_type >,
                        "value types must be the same" );
 
@@ -1058,7 +1058,7 @@ inline constexpr auto make_result_error( Args &&... args )
  * \returns The result of \p f on value of \p result or the contained error in \p result .
  */
 template < typename ResultT, typename F >
-    requires( detail::is_result_v< std::remove_cvref_t< ResultT > > )
+    requires( is_result_v< std::remove_cvref_t< ResultT > > )
 inline constexpr auto operator>>( ResultT && result, F && f )
 {
     return std::forward< ResultT >( result ).and_then( std::forward< F >( f ) );
