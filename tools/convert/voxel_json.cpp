@@ -93,7 +93,8 @@ void convertFromVoxelJson( Dim::Cli & cli, bool separateModulesByOne )
         return;
     }
 
-    auto rofiWorld = inputVoxelWorld->toRofiWorld( separateModulesByOne );
+    auto rofiWorld = inputVoxelWorld->toRofiWorld( separateModulesByOne )
+                             .and_then( atoms::toSharedAndValidate );
     if ( !rofiWorld ) {
         cli.fail( EXIT_FAILURE,
                   "Error while converting voxel world to rofi world",
@@ -162,7 +163,9 @@ void convertFromVoxelSeqJson( Dim::Cli & cli, bool separateModulesByOne )
 
     auto rofiWorldSeqJson = nlohmann::json::array();
     for ( size_t i = 0; i < inputVoxelWorldSeq->size(); i++ ) {
-        auto rofiWorld = ( *inputVoxelWorldSeq )[ i ].toRofiWorld( separateModulesByOne );
+        auto rofiWorld = ( *inputVoxelWorldSeq )[ i ]
+                                 .toRofiWorld( separateModulesByOne )
+                                 .and_then( atoms::toSharedAndValidate );
         if ( !rofiWorld ) {
             cli.fail( EXIT_FAILURE,
                       "Error while converting voxel world " + std::to_string( i )
