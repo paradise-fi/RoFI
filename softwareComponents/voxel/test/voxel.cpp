@@ -137,14 +137,14 @@ TEST_CASE( "Default position - 1 module" )
     {
         auto convertedRofiWorld = voxelWorld.toRofiWorld();
         REQUIRE( convertedRofiWorld );
-        REQUIRE( *convertedRofiWorld );
-        REQUIRE( ( *convertedRofiWorld )->isValid() );
+        CAPTURE( *convertedRofiWorld );
+        REQUIRE( convertedRofiWorld->prepare() );
+        REQUIRE( convertedRofiWorld->validate() );
 
-        REQUIRE( rofiWorldsEquivalent( **convertedRofiWorld, rofiWorld ) );
+        REQUIRE( rofiWorldsEquivalent( *convertedRofiWorld, rofiWorld ) );
 
         INFO( "This is not mandatory, but expected" );
-        CHECK( serialization::toJSON( **convertedRofiWorld )
-               == serialization::toJSON( rofiWorld ) );
+        CHECK( serialization::toJSON( *convertedRofiWorld ) == serialization::toJSON( rofiWorld ) );
     }
 }
 
@@ -176,10 +176,11 @@ TEST_CASE( "Orientation" )
 
     auto convertedRofiWorld = voxelWorld->toRofiWorld();
     REQUIRE( convertedRofiWorld );
-    REQUIRE( *convertedRofiWorld );
-    REQUIRE( ( *convertedRofiWorld )->isValid() );
+    CAPTURE( *convertedRofiWorld );
+    REQUIRE( convertedRofiWorld->prepare() );
+    REQUIRE( convertedRofiWorld->validate() );
 
-    CHECK( rofiWorldsEquivalent( **convertedRofiWorld, rofiWorld ) );
+    CHECK( rofiWorldsEquivalent( *convertedRofiWorld, rofiWorld ) );
 }
 
 TEST_CASE( "All possible configurations - 1 module" )
@@ -222,12 +223,12 @@ TEST_CASE( "All possible configurations - 1 module" )
 
     auto convertedRofiWorld = voxelWorld->toRofiWorld();
     REQUIRE( convertedRofiWorld );
-    REQUIRE( *convertedRofiWorld );
-    CAPTURE( **convertedRofiWorld );
-    REQUIRE( ( *convertedRofiWorld )->isValid() );
-    CAPTURE( VoxelWorld::fromRofiWorld( **convertedRofiWorld ) );
+    CAPTURE( *convertedRofiWorld );
+    REQUIRE( convertedRofiWorld->prepare() );
+    REQUIRE( convertedRofiWorld->validate() );
+    CAPTURE( VoxelWorld::fromRofiWorld( *convertedRofiWorld ) );
 
-    CHECK( rofiWorldsEquivalent( **convertedRofiWorld, rofiWorld ) );
+    CHECK( rofiWorldsEquivalent( *convertedRofiWorld, rofiWorld ) );
 }
 
 TEST_CASE( "All possible configurations - 2 modules", "[!hide]" )
@@ -260,6 +261,8 @@ TEST_CASE( "All possible configurations - 2 modules", "[!hide]" )
 
     connect( connector1, connector2, orientation );
 
+    CAPTURE( rofiWorld );
+    REQUIRE( rofiWorld.prepare() );
     REQUIRE( rofiWorld.validate() );
 
     auto voxelWorld = VoxelWorld::fromRofiWorld( rofiWorld );
@@ -267,11 +270,12 @@ TEST_CASE( "All possible configurations - 2 modules", "[!hide]" )
 
     auto convertedRofiWorld = voxelWorld->toRofiWorld();
     REQUIRE( convertedRofiWorld );
-    REQUIRE( *convertedRofiWorld );
-    REQUIRE( ( *convertedRofiWorld )->isValid() );
+    CAPTURE( *convertedRofiWorld );
+    REQUIRE( convertedRofiWorld->prepare() );
+    REQUIRE( convertedRofiWorld->validate() );
 
 
-    CHECK( rofiWorldsEquivalent( **convertedRofiWorld, rofiWorld ) );
+    CHECK( rofiWorldsEquivalent( *convertedRofiWorld, rofiWorld ) );
 }
 
 } // namespace

@@ -588,7 +588,7 @@ private:
 
 public:
     auto toRofiWorld( bool fixateModulesByOne = false ) const
-            -> atoms::Result< std::shared_ptr< rofi::configuration::RofiWorld > >
+            -> atoms::Result< rofi::configuration::RofiWorld >
     {
         if ( bodies.empty() ) {
             return atoms::result_error< std::string >( "VoxelWorld cannot be empty" );
@@ -602,7 +602,7 @@ public:
         auto moduleId = rofi::configuration::ModuleId( 1 );
         auto connectorMap = ConnectorMap();
 
-        auto result = std::make_shared< rofi::configuration::RofiWorld >();
+        auto rofiWorld = rofi::configuration::RofiWorld();
         for ( const auto & voxelBody : bodies ) {
             if ( !isModuleRepr( voxelBody ) ) {
                 continue;
@@ -614,7 +614,7 @@ public:
             auto shoeA = voxelBody;
             auto shoeB = bodiesMap.at( voxelBody.getOtherBodyPos() );
 
-            auto & mod = result->insert( Voxel::toRofiModule( shoeA, shoeB, moduleId++ ) );
+            auto & mod = rofiWorld.insert( Voxel::toRofiModule( shoeA, shoeB, moduleId++ ) );
 
             for ( auto conn : Voxel::getConnectors( shoeA, shoeB ) ) {
                 auto inserted = connectorMap.emplace( std::pair{ conn.pos, conn.dir },
@@ -644,10 +644,7 @@ public:
             }
         }
 
-        if ( auto prepared = result->validate(); !prepared ) {
-            return std::move( prepared ).assume_error_result();
-        }
-        return atoms::result_value( std::move( result ) );
+        return atoms::result_value( std::move( rofiWorld ) );
     }
 
     bool operator==( const VoxelWorld & ) const = default;
