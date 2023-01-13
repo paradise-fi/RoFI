@@ -17,9 +17,9 @@ INIT_ROFI_WORLD_FILE=$(mktemp "$TMP_DIR/tmp.init_rofi_world.XXXXXX.json")
 GOAL_ROFI_WORLD_FILE=$(mktemp "$TMP_DIR/tmp-goal_rofi_world.XXXXXX.json")
 trap "rm -f \"$INIT_ROFI_WORLD_FILE\" \"$INIT_ROFI_WORLD_FILE\"" EXIT INT QUIT TERM
 
-rofi-convert old-cfg "$1" "$INIT_ROFI_WORLD_FILE" \
+rofi-convert --if=old "$1" "$INIT_ROFI_WORLD_FILE" \
     || { >&2 echo -e "\nError while converting init world from old cfg"; exit 1; }
-rofi-convert old-cfg "$2" "$GOAL_ROFI_WORLD_FILE" \
+rofi-convert --if=old "$2" "$GOAL_ROFI_WORLD_FILE" \
     || { >&2 echo -e "\nError while converting goal world from old cfg"; exit 1; }
 
 rofi-voxel "$INIT_ROFI_WORLD_FILE" "$GOAL_ROFI_WORLD_FILE"
