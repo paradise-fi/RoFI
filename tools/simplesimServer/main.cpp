@@ -78,10 +78,10 @@ int main( int argc, char * argv[] )
         return cli.printError( std::cerr );
     }
 
-    auto inputWorld = opts.readInputWorldFile().and_then( atoms::toSharedAndValidate );
+    auto inputWorld = opts.readInputWorldFile().and_then( rofi::parsing::toSharedAndValidate );
     if ( !inputWorld ) {
-        std::cerr << "Error while reading input world: " << inputWorld.assume_error() << "\n";
-        return EXIT_FAILURE;
+        cli.fail( EXIT_FAILURE, "Error while reading input", inputWorld.assume_error() );
+        return cli.printError( std::cerr );
     }
     auto packetFilter = opts.getPyPacketFilter();
 
