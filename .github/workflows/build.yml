@@ -86,6 +86,9 @@ jobs:
       run:
         shell: bash
     steps:
+      # Work-around for https://github.com/actions/runner-images/issues/6775
+      - name: Change Owner of Container Working Directory
+        run: chown root:root .
       - name: Checkout
         uses: actions/checkout@v2
       - name: "Build"
