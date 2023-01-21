@@ -12,10 +12,10 @@ by the file ``.github/workflows/build.yml``. The build tries to build every
 suite and if present, run suite tests.
 
 To save building and pulling build dependencies every time, the individual
-stages run in Docker container. The images are hosted by ``gcr.io`` and every
+stages run in Docker container. The images are hosted by ``ghcr.io`` and every
 member of the organization `paradise-fi <https://github.com/paradise-fi>`_ can
 access it. Note that you need to invoke ``docker login`` to get access to
-``gcr.io``. You can read more in `GitHub
+``ghcr.io``. You can read more in `GitHub
 documentation <https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry>`_.
 
 The images are defined by the files ``Dockerfile`` and ``Dockerfile.doc``. The
