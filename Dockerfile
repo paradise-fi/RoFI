@@ -54,8 +54,7 @@ ENV RUSTUP_HOME="/rust"
 ENV CARGO_HOME="/cargo"
 ENV PATH="/cargo/bin:$PATH"
 
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-RUN rustup default nightly
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain nightly
 
 # Newer Ubuntu (21.10) miss libdl.so which is (probably) required by VTK.
 # This is a temporary work-around until we migrate to VTK 9.
