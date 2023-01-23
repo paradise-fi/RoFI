@@ -1,0 +1,11 @@
+{
+    "cmd": "rofi-voxel {init} {goal} --init-format {init_fmt} --goal-format {goal_fmt} --alg {alg} --repr {repr} -v",
+    "args": {
+        "alg": [
+            "bfs"
+        ],
+        "repr": [
+            "sortvec"
+        ]
+    }
+}
