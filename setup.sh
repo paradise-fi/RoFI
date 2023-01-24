@@ -92,10 +92,10 @@ setupIdf() {
     #
     # We also fetch the parameters when the global version doesn't match the
     # required version
-    INSTALLED_VERSION=$(cd ${ROFI_TOOLS_PATH}/esp-idf; git describe 2>/dev/null)
+    INSTALLED_VERSION=$(cd ${ROFI_TOOLS_PATH}/esp-idf 2>/dev/null && git describe 2>/dev/null)
     if [ ! $ROFI_TOOLS_PATH ]; then
         export ROFI_TOOLS_PATH=$ROFI_ROOT/build.deps
-    elif [ "${INSTALLED_VERSION}" != "${IDF_REQUIRED_VERSION}" ]; then
+    elif [ -d "${ROFI_TOOLS_PATH}" ] && [ "$INSTALLED_VERSION" ] && [ "${INSTALLED_VERSION}" != "${IDF_REQUIRED_VERSION}" ]; then
         export ROFI_TOOLS_PATH=$ROFI_ROOT/build.deps
     fi
 
