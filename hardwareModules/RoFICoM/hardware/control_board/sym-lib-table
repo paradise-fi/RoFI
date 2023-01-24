@@ -1,3 +1,4 @@
 (sym_lib_table
-  (lib (name rofi)(type Legacy)(uri ${KIPRJMOD}/../../../common/rofi.lib)(options "")(descr ""))
+  (lib (name "rofi")(type "Legacy")(uri "${KIPRJMOD}/../../../common/rofi.lib")(options "")(descr ""))
+  (lib (name "STM32G0")(type "KiCad")(uri "/home/xmrazek7/projects/RoFI/master/hardwareModules/common/MCU_ST_STM32G0.kicad_sym")(options "")(descr ""))
 )
