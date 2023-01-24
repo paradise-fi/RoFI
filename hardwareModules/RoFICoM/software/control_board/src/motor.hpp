@@ -97,13 +97,16 @@ public:
     }
 private:
     void _move() {
+        const int MAX_POWER = 80;
         uint32_t duration = HAL_GetTick() - _stateStarted;
         if ( _currentState == State::Expanding )
-            _motor.set( _coef( duration ) * -80 );
+            _motor.set( _coef( duration ) * -MAX_POWER );
         else if ( _currentState == State::Retracting )
-            _motor.set( _coef( duration ) * 50 );
+            _motor.set( _coef( duration ) * MAX_POWER );
+        else if ( _currentState == State::Expanded )
+            _motor.set( _breakCoef( duration ) * -MAX_POWER );
         else
-            _motor.set( 0 );
+            _motor.set( _breakCoef( duration ) * MAX_POWER );
     }
 
     void _set( State s ) {
@@ -116,20 +119,31 @@ private:
         _stateStarted = HAL_GetTick();
     }
 
+    float _breakCoef( int duration ) {
+        if (duration < 20)
+            return -1;
+        return 0;
+    }
+
     float _coef( int duration ) {
         if ( duration > 6000 )
             return 0;
         duration = duration % 1500;
         if ( duration >= 1000 )
             return 0;
-        return ramp( 250, 1000, duration );
-        if (duration <= 500 )
-            return duration / 500.0;
-        else
-            return 1.0 - (duration - 500) / 500.0;
+        // Let's accel up and slow down in the end
+        const int UP_THRESHOLD = 450;
+        const int ACCEL = 150;
+        const float STAND_BY = 0.5;
+        float r = ramp( ACCEL, UP_THRESHOLD, duration );
+        if ( duration > ACCEL && r < STAND_BY )
+            return STAND_BY;
+        return r;
     }
 
     float ramp( int accelTime, int totalTime, int currentTime ) {
+        if ( currentTime > totalTime )
+            return 0;
         if ( currentTime < accelTime )
             return currentTime / float( accelTime );
         if ( totalTime - currentTime < accelTime )
