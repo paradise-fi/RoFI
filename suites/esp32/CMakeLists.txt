@@ -81,6 +81,8 @@ add_library(rofi::hal ALIAS rofi_hal_esp32)
 
 # Add utilities
 add_application(hardwareModules/universalModule/software/esp32/dynamixelConfigurator)
+add_application(hardwareModules/universalModule/software/esp32/console)
+
 
 # Add the examples
 add_application(hardwareModules/universalModule/software/esp32/esp_hello_world)
