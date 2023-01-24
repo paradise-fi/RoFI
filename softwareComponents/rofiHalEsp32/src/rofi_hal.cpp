@@ -413,7 +413,7 @@ private:
         gpio_config_t cfg = defaultCsConfig( _cs );
         auto ret = gpio_config( &cfg );
         ESP_ERROR_CHECK( ret );
-        ret = gpio_isr_handler_add( _cs, _csInterruptHandler, this );
+        // ret = gpio_isr_handler_add( _cs, _csInterruptHandler, this );
         gpio_set_level( _cs, 1 );
         ESP_ERROR_CHECK( ret );
     }
@@ -421,10 +421,10 @@ private:
     static void _csInterruptHandler( void * arg ) {
         auto *self = reinterpret_cast< ConnectorLocal* >( arg );
         // Probably a packet, so try to read it, then check the true reason
-        // self->_issueReceiveCmd( rtos::ExContext::ISR );
-        // ets_printf("Interrupted %d\n", self->_cs);
-        // if ( self->_interruptCounter == 0 )
-        //     self->_issueInterruptCmd( rtos::ExContext::ISR );
+        self->_issueReceiveCmd( rtos::ExContext::ISR );
+        ets_printf("Interrupted %d\n", self->_cs);
+        if ( self->_interruptCounter == 0 )
+            self->_issueInterruptCmd( rtos::ExContext::ISR );
     }
 
     friend class ConnectorBus;
@@ -761,12 +761,12 @@ public:
                                     bodyJointCapability(),
                                     bsp::gammaRatio )
         } ),
-        _connectorBus( HSPI_HOST, GPIO_NUM_19, GPIO_NUM_18, 100000 ),
+        _connectorBus( HSPI_HOST, GPIO_NUM_19, GPIO_NUM_18, 1000000 ),
         _connectors( {
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_27 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_25 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_32 ),
-            std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_4 ),
+            std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_2 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_33 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_26 )
         } )
