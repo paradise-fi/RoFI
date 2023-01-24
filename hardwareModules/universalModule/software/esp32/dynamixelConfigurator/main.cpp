@@ -53,8 +53,8 @@ Id readId( const char * str ) {
 }
 
 // Read a response from gBus and validate it. If invalid, throw an exception
-Packet getReponse() {
-    auto p = gBus.read();
+Packet getReponse( int tickTimeout = 1000 / portTICK_PERIOD_MS ) {
+    auto p = gBus.read( tickTimeout );
     if ( !p.has_value() ) {
         throw std::runtime_error( "No response in time" );
     }
@@ -140,7 +140,7 @@ void registerDumpRegisters() {
 }
 
 void runScan( int argc, char **argv ) {
-    for ( int baudrate : { 57600, 115200, 1000000, 2000000, 3000000, 4500000} ) {
+    for ( int baudrate : { 9600, 57600, 115200, 1000000, 2000000, 3000000, 4500000} ) {
         gBus.reconfigureBaudrate( baudrate );
         uint32_t baud = 0;
 
@@ -350,6 +350,47 @@ void registerFactoryReset() {
     ESP_ERROR_CHECK( esp_console_cmd_register( &cmd ) );
 }
 
+void runGlobalFactoryReset( int argc, char **argv ) {
+    for ( int baudrate : { 9600, 57600, 115200, 1000000, 2000000, 3000000, 4500000} ) {
+        gBus.reconfigureBaudrate( baudrate );
+        std::cout << "Trying baudrate: " << baudrate << "\n";
+        gBus.send( Packet::factoryReset( 0xFE, 0XFF ) );
+        vTaskDelay( 500 / portTICK_PERIOD_MS );
+    }
+    gBus.reconfigureBaudrate( gBaudrate );
+}
+
+void registerGlobalFactoryReset() {
+    const esp_console_cmd_t cmd = {
+        .command = "globalFactoryReset",
+        .help = "Perform full factory reset",
+        .hint = "",
+        .func = &handled< runGlobalFactoryReset >,
+        .argtable = nullptr
+    };
+    ESP_ERROR_CHECK( esp_console_cmd_register( &cmd ) );
+}
+
+
+void runReboot( int argc, char **argv ) {
+    if ( argc != 2 )
+        throw std::runtime_error( "Invalid number of arguments " + std::to_string( argc ) );
+    Id id = readId( argv[ 1 ] );
+    auto servo = gBus.getServo( id );
+    servo.reboot();
+}
+
+void registerReboot() {
+    const esp_console_cmd_t cmd = {
+        .command = "reboot",
+        .help = "Reboot servo",
+        .hint = "Arugments ID",
+        .func = &handled< runReboot >,
+        .argtable = nullptr
+    };
+    ESP_ERROR_CHECK( esp_console_cmd_register( &cmd ) );
+}
+
 
 void registerCommands() {
     registerDumpRegisters();
@@ -359,6 +400,8 @@ void registerCommands() {
     registerSetBaudrate();
     registerMakeServo();
     registerFactoryReset();
+    registerGlobalFactoryReset();
+    registerReboot();
 }
 
 void delay( int ms ) {
