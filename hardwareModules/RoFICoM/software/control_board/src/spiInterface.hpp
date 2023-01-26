@@ -28,7 +28,7 @@ public:
         : _spi( std::move( spi ) ), _spiRw( _spi, Dma::allocate( DMA1 ), Dma::allocate( DMA1 ) ),
           _cmdHandler( std::move( cmdHandler ) ), _csPin( csPin )
     {
-        _spi.onTransactionEnds( [&]{ _startCommand(); } );
+        _spi.onTransactionEnds( [this]{ _startCommand(); } );
         _spi.enable();
         _startCommand();
     }
@@ -41,12 +41,12 @@ public:
             return;
         }
         _spiRw.readBlock( std::move( buffer ), 0, 4,
-            [&, c]( Block b, int size ) {
+            [this, c]( Block b, int size ) {
                 if ( size != 4 )
                     return;
                 uint16_t length = viewAs< uint16_t >( b.get() + 2 );
                 _spiRw.readBlock( std::move( b ), 4, length,
-                    [&, length, c]( Block b, int s ) {
+                    [this, length, c]( Block b, int s ) {
                         c( std::move( b ), 4 + s );
                     } );
             } );
@@ -74,7 +74,7 @@ private:
         _abortCommand();
         _spi.clearRx();
         _spiRw.readBlock( memory::Pool::allocate( 1 ), 0, 1,
-            [&]( Block b, int s ) {
+            [this]( Block b, int s ) {
                 if ( s == 0 )
                     return;
                 auto command = static_cast< Command >( b[ 0 ] );
@@ -84,7 +84,7 @@ private:
                     return;
                 }
                 _spiRw.readBlock( memory::Pool::allocate( size ), 0, size,
-                    [&, command ]( Block b, int s ) {
+                    [this, command ]( Block b, int s ) {
                         if ( s != _commandLen( command ) )
                             return;
                         _cmdHandler( command, std::move( b ) );
