@@ -48,7 +48,7 @@ public:
             if ( bitTimeout == 0 )
                 _uart.disableTimout();
             else {
-                _uart.enableTimeout( bitTimeout, [&, callback, size]() {
+                _uart.enableTimeout( bitTimeout, [this, callback, size]() {
                     _channel.disable();
                     int read = size - LL_DMA_GetDataLength( _channel, _channel );
                     callback( std::move( _block ), read );
@@ -58,7 +58,7 @@ public:
         else if constexpr ( UartD::supportsIdle ) {
             assert( bitTimeout == 8 && "UART only supports idle detection" );
 
-            _uart.enableTimeout( [&, callback, size]() {
+            _uart.enableTimeout( [this, callback, size]() {
                 _channel.disable();
                 int read = size - LL_DMA_GetDataLength( _channel, _channel );
                 callback( std::move( _block ), read );
@@ -68,7 +68,7 @@ public:
             assert( bitTimeout == 0 && "UART does not support bit timeout" );
         }
 
-        _channel.onComplete( [&, callback, size]() {
+        _channel.onComplete( [this, callback, size]() {
             _channel.disable();
             int read = size - LL_DMA_GetDataLength( _channel, _channel );
             callback( std::move( _block ), read );
@@ -176,14 +176,14 @@ private:
         LL_DMA_SetMemoryAddress( _channel, _channel, uint32_t( location ) );
         LL_DMA_SetDataLength( _channel, _channel, requested );
         if constexpr ( UartD::supportsTimeout ) {
-            _uart.enableTimeout( 32, [&, requested]{
+            _uart.enableTimeout( 32, [this, requested]{
                 _channel.disable();
                 int read = requested - LL_DMA_GetDataLength( _channel, _channel );
                 _updateBuffer( read );
             } );
         }
 
-        _channel.onComplete( [&, requested]() {
+        _channel.onComplete( [this, requested]() {
             _channel.disable();
             int read = requested - LL_DMA_GetDataLength( _channel, _channel );
             _updateBuffer( read );
@@ -323,7 +323,7 @@ public:
         LL_DMA_SetMemoryAddress( _channel, _channel, uint32_t( _block.get() + offset ) );
         LL_DMA_SetDataLength( _channel, _channel, size );
 
-        _channel.onComplete( [&, callback, size]() {
+        _channel.onComplete( [this, callback, size]() {
             _channel.disable();
             int written = size - LL_DMA_GetDataLength( _channel, _channel );
             callback( std::move( _block ), written );
@@ -338,7 +338,7 @@ public:
         LL_DMA_SetMemoryAddress( _channel, _channel, uint32_t( mem ) );
         LL_DMA_SetDataLength( _channel, _channel, size );
 
-        _channel.onComplete( [&, callback]() {
+        _channel.onComplete( [this, callback]() {
             _channel.disable();
             callback();
         } );

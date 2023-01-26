@@ -34,7 +34,7 @@ public:
 
     void sendBlob( Block blob ) {
         assert( blob.get() );
-        Defer::job([&, b = std::move( blob )]() mutable {
+        Defer::job([this, b = std::move( blob )]() mutable {
             HAL_Delay(100);
             int length = blobLen( b );
             uint32_t crc = Crc::compute( blobBody( b ), length );
@@ -52,13 +52,13 @@ public:
 private:
     void _receiveFrame() {
         _reader.readBlock( memory::Pool::allocate( 1 ), 0, 1, 0,
-            [&]( Block b, int size ) {
+            [this]( Block b, int size ) {
                 if ( size == 0 || b[ 0 ] != 0xAA ) {
                     _receiveFrame();
                     return;
                 }
                 _reader.readBlock( memory::Pool::allocate( 1 ), 0, 1, _timeout,
-                    [&]( Block /**/, int size ) {
+                    [this]( Block /**/, int size ) {
                         if ( size == 0 ) {
                             Dbg::error("I2");
                             _receiveFrame();
@@ -77,7 +77,7 @@ private:
             return;
         }
         _reader.readBlock( std::move( buffer ), 0, BLOB_HEADER_SIZE, _timeout,
-            [&]( Block b, int size ) {
+            [this]( Block b, int size ) {
                 if ( size != BLOB_HEADER_SIZE ) {
                     Dbg::error("I3, %d", size);
                     _receiveFrame();
@@ -90,7 +90,7 @@ private:
                     return;
                 }
                 _reader.readBlock( std::move( b ), BLOB_HEADER_SIZE, length + CRC_SIZE, _timeout,
-                    [&]( Block b, int s ) {
+                    [this]( Block b, int s ) {
                         Dbg::error("I5");
                         _onNewBlob( std::move( b ), s );
                         _receiveFrame();
@@ -99,7 +99,7 @@ private:
     }
 
     void _onNewBlob( Block b, int size ) {
-        Defer::job([&, blob = std::move( b ), size ]() mutable {
+        Defer::job([this, blob = std::move( b ), size ]() mutable {
             int length = blobLen( blob );
             if ( length + CRC_SIZE != size ) {
                 Dbg::warning( "Invalid blob size, %d", length );
@@ -130,7 +130,7 @@ private:
         header[0] = 0xAA;
         header[1] = 0;
         _writer.writeBlock( std::move( header ), 0, 2,
-            [&]( Block /*header*/, int size ) {
+            [this]( Block /*header*/, int size ) {
                 if ( size != 2 ) {
                     Dbg::error("Failed with %d", size);
                     _busy = false;
@@ -143,7 +143,7 @@ private:
     void _transmitBlob( Block blob ) {
         uint16_t length = blobLen( blob );
         _writer.writeBlock( std::move( blob ), 0, 4 + length + CRC_SIZE,
-            [&]( Block /*blob*/, int /*size*/) {
+            [this]( Block /*blob*/, int /*size*/) {
                 _busy = false;
                 if ( !_outQueue.empty() )
                     _transmitFrame( _outQueue.pop_front() );
