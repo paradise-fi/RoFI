@@ -61,12 +61,35 @@ pub struct LogArgs {
 }
 
 impl LogArgs {
-    pub fn setup_logging(&self) -> std::io::Result<()> {
+    pub fn get_level(&self) -> log::LevelFilter {
+        self.verbose.log_level_filter()
+    }
+
+    pub fn get_config() -> simplelog::Config {
+        simplelog::Config::default()
+    }
+
+    pub fn setup_logging(&self) -> Result<()> {
         match &self.log_file {
-            Some(file_name) => {
-                simple_logging::log_to_file(file_name, self.verbose.log_level_filter())?
-            }
-            None => simple_logging::log_to_stderr(self.verbose.log_level_filter()),
+            Some(log_file) => simplelog::CombinedLogger::init(vec![
+                simplelog::TermLogger::new(
+                    std::cmp::min(log::LevelFilter::Error, self.get_level()),
+                    Self::get_config(),
+                    simplelog::TerminalMode::Stderr,
+                    simplelog::ColorChoice::Auto,
+                ),
+                simplelog::WriteLogger::new(
+                    self.get_level(),
+                    Self::get_config(),
+                    File::options().append(true).create(true).open(log_file)?,
+                ),
+            ])?,
+            None => simplelog::TermLogger::init(
+                self.get_level(),
+                Self::get_config(),
+                simplelog::TerminalMode::Stderr,
+                simplelog::ColorChoice::Auto,
+            )?,
         }
         Ok(())
     }
