@@ -55,8 +55,11 @@ impl FileInput {
 pub struct LogArgs {
     #[clap(flatten)]
     pub verbose: clap_verbosity_flag::Verbosity,
-    /// Log file (if not specified, logs to stderr)
-    #[arg(short, long("log"), help_heading = Some("Logging"))]
+    /// Don't log to terminal (ERRORs will still be logged)
+    #[arg(long, help_heading = Some("Logging"))]
+    pub no_log_term: bool,
+    /// Log to file in human readable format
+    #[arg(long, help_heading = Some("Logging"))]
     pub log_file: Option<String>,
 }
 
@@ -65,32 +68,41 @@ impl LogArgs {
         self.verbose.log_level_filter()
     }
 
-    pub fn get_config() -> simplelog::Config {
-        simplelog::Config::default()
+    fn get_term_logger(
+        mut log_level: log::LevelFilter,
+        no_log_term: bool,
+    ) -> Box<simplelog::TermLogger> {
+        if no_log_term {
+            log_level = std::cmp::min(log_level, log::LevelFilter::Error);
+        }
+        simplelog::TermLogger::new(
+            log_level,
+            simplelog::Config::default(),
+            simplelog::TerminalMode::Stderr,
+            simplelog::ColorChoice::Auto,
+        )
+    }
+
+    fn get_file_logger(
+        log_file: &str,
+        log_level: log::LevelFilter,
+    ) -> std::io::Result<Box<simplelog::WriteLogger<std::fs::File>>> {
+        Ok(simplelog::WriteLogger::new(
+            log_level,
+            simplelog::Config::default(),
+            File::options().append(true).create(true).open(log_file)?,
+        ))
     }
 
     pub fn setup_logging(&self) -> Result<()> {
-        match &self.log_file {
-            Some(log_file) => simplelog::CombinedLogger::init(vec![
-                simplelog::TermLogger::new(
-                    std::cmp::min(log::LevelFilter::Error, self.get_level()),
-                    Self::get_config(),
-                    simplelog::TerminalMode::Stderr,
-                    simplelog::ColorChoice::Auto,
-                ),
-                simplelog::WriteLogger::new(
-                    self.get_level(),
-                    Self::get_config(),
-                    File::options().append(true).create(true).open(log_file)?,
-                ),
-            ])?,
-            None => simplelog::TermLogger::init(
-                self.get_level(),
-                Self::get_config(),
-                simplelog::TerminalMode::Stderr,
-                simplelog::ColorChoice::Auto,
-            )?,
+        let mut loggers = Vec::<Box<dyn simplelog::SharedLogger>>::new();
+
+        loggers.push(Self::get_term_logger(self.get_level(), self.no_log_term));
+        if let Some(log_file) = &self.log_file {
+            loggers.push(Self::get_file_logger(log_file, self.get_level())?);
         }
+
+        simplelog::CombinedLogger::init(loggers)?;
         Ok(())
     }
 }
