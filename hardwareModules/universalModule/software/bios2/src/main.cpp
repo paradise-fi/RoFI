@@ -6,7 +6,7 @@
 #include <drivers/usb.hpp>
 #include <drivers/usb_cdc.hpp>
 #include <system/dbg.hpp>
-#include <system/defer.hpp>
+#include <system/idle.hpp>
 #include <array>
 #include <cstring>
 
@@ -138,11 +138,11 @@ int main() {
         Dbg::info( "Alive! %d, %f V, %f V", i % 12, usbV, busV );
         i++;
 
-        Defer::schedule( 1000, keepAlive );
+        IdleTask::schedule( 1000, keepAlive );
     };
     keepAlive();
 
     while ( true ) {
-        Defer::run();
+        IdleTask::run();
     }
 }

@@ -1,7 +1,7 @@
 #include "espTunnel.hpp"
 
 #include <stm32cxx.config.hpp>
-#include <system/defer.hpp>
+#include <system/idle.hpp>
 #include <drivers/hal.hpp>
 
 bool EspTunnelManager::handleCodingChange( usb_cdc_line_coding current,
@@ -78,7 +78,7 @@ bool EspTunnelManager::handleControlLines( bool dtr, bool rts,
         disableEsp();
         enableBootloader( dtr ); // ...possibly into a bootloader
     }
-    Defer::schedule( 5, [&]{ enableEsp(); } );
+    IdleTask::schedule( 5, [&]{ enableEsp(); } );
     return true;
 }
 
