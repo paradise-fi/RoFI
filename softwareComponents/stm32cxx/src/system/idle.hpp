@@ -8,10 +8,10 @@
 #include <drivers/hal.hpp>
 #include <system/irq.hpp>
 
-class Defer {
+class IdleTask {
 public:
     using Job = fu2::unique_function< void( void ) >;
-    static void job( Job j ) {
+    static void defer( Job j ) {
         instance()._schedule( 0, std::move( j ) );
     }
 
@@ -25,7 +25,7 @@ public:
 
 private:
     using Item = std::pair< uint32_t, Job >;
-    Defer(): _queue( 32 )
+    IdleTask(): _queue( 16 )
     { }
 
     bool _run() {
@@ -37,10 +37,10 @@ private:
             j();
         }
         else {
-            // There can new jobs scheduled within an interrupt. Pulling out of the
-            // queue is safe, however, pushing back again is not. Guard the
-            // interrupts for pushing back
-            // IrqGuard guard( STM32CXX_IRQ_HIGH_PRIORITY ); - TBA: Problem with USB priority
+            // There can be new jobs scheduled within an interrupt. Pulling out
+            // of the queue is safe, however, pushing back again is not. Guard
+            // the interrupts for pushing back IrqGuard guard(
+            // STM32CXX_IRQ_HIGH_PRIORITY ); - TBA: Problem with USB priority
             IrqMask guard;
             _queue.push_back( { timePoint, std::move( j ) } );
         }
@@ -52,8 +52,8 @@ private:
         assert( result );
     }
 
-    static Defer& instance() {
-        static Defer d;
+    static IdleTask& instance() {
+        static IdleTask d;
         return d;
     }
 

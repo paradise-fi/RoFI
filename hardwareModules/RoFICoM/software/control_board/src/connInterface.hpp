@@ -3,7 +3,7 @@
 #include <drivers/uart.hpp>
 #include <drivers/crc.hpp>
 #include <drivers/gpio.hpp>
-#include <system/defer.hpp>
+#include <system/idle.hpp>
 #include <system/ringBuffer.hpp>
 #include <blob.hpp>
 
@@ -34,7 +34,7 @@ public:
 
     void sendBlob( Block blob ) {
         assert( blob.get() );
-        Defer::job([this, b = std::move( blob )]() mutable {
+        IdleTask::defer([this, b = std::move( blob )]() mutable {
             HAL_Delay(100);
             int length = blobLen( b );
             uint32_t crc = Crc::compute( blobBody( b ), length );
@@ -99,7 +99,7 @@ private:
     }
 
     void _onNewBlob( Block b, int size ) {
-        Defer::job([this, blob = std::move( b ), size ]() mutable {
+        IdleTask::defer([this, blob = std::move( b ), size ]() mutable {
             int length = blobLen( blob );
             if ( length + CRC_SIZE != size ) {
                 Dbg::warning( "Invalid blob size, %d", length );
