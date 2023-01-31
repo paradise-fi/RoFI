@@ -124,6 +124,13 @@ namespace rofi::configuration::serialization {
                 res[ "preMatrix" ]  = matrixToJSON( rj.pre() );
                 res[ "postMatrix" ] = matrixToJSON( rj.post() );
                 res[ "axis" ] = rj.axis();
+            },
+            [ &res ]( ModularRotationJoint& mrj ) {
+                res[ "type" ] = "modRotational";
+                res[ "modulo" ] = Angle::rad( mrj.jointLimits()[ 0 ].second ).deg();;
+                res[ "preMatrix" ]  = matrixToJSON( mrj.pre() );
+                res[ "postMatrix" ] = matrixToJSON( mrj.post() );
+                res[ "axis" ] = mrj.axis();
             }
         );
         return res;
@@ -321,6 +328,18 @@ namespace rofi::configuration::serialization {
                                                                         , matrixFromJSON( js[ "joint" ][ "postMatrix" ] )
                                                                         , Angle::deg( js[ "joint" ][ "min" ] )
                                                                         , Angle::deg( js[ "joint" ][ "max" ] ) ) );
+                    details::processAttributes( j[ "joints" ][ i ], cb, joints.back(), i );
+                    i++;
+                } else if ( js[ "joint" ][ "type" ] == "modRotational" ) {
+                    Vector axis;
+                    for ( int ix = 0; ix < 4; ix++ )
+                        axis[ ix ] = js[ "joint" ][ "axis" ][ ix ];
+
+                    joints.push_back( makeComponentJoint< ModularRotationJoint >( source, destination
+                                                                        , matrixFromJSON( js[ "joint" ][ "preMatrix" ] )
+                                                                        , axis
+                                                                        , matrixFromJSON( js[ "joint" ][ "postMatrix" ] )
+                                                                        , Angle::deg( js[ "joint" ][ "modulo" ] ) ) );
                     details::processAttributes( j[ "joints" ][ i ], cb, joints.back(), i );
                     i++;
                 } else {

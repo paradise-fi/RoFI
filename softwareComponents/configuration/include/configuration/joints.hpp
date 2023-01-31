@@ -21,10 +21,12 @@ using rofi::configuration::matrices::Vector;
 
 class RigidJoint;
 class RotationJoint;
+class ModularRotationJoint;
 
 using JointVisitor = atoms::Visits<
     RigidJoint,
-    RotationJoint >;
+    RotationJoint,
+    ModularRotationJoint >;
 
 /**
  * \brief Joint between two coordinate systems
@@ -57,8 +59,9 @@ struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
      * 
      * @throws std::logic_error if the given settings do not respect joint limits.
      */
-    void setPositions( std::span< const float > pos ) {
+    virtual void setPositions( std::span< const float > pos ) {
         assert( pos.size() == _positions.size() && "Incorrect number of parameters to set" );
+
 
         size_t pId = 0;
         for ( auto[low, high] : _jointLimits )
@@ -75,12 +78,11 @@ struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
 
     /**
      * @brief Changes each joint setting by the corresponding value in <diff>.
-     * 
      * Assumes there are exactly as many values given as there are joint settings.
      * 
      * @return result error if the resulting values do not respect joint limits.
      */
-    atoms::Result< std::monostate > changePositionsBy( std::span< const float > diff )
+    virtual atoms::Result< std::monostate > changePositionsBy( std::span< const float > diff )
     {
         assert( diff.size() == _positions.size() && "Incorrect number of parameters to set" );
 
@@ -112,7 +114,7 @@ struct Joint: public atoms::VisitableBase< Joint, JointVisitor > {
     };
 
     friend std::ostream& operator<<( std::ostream& out, Joint& j );
-private:
+protected:
     std::vector< std::pair< float, float > > _jointLimits;
     std::vector< float > _positions;
 };
@@ -197,6 +199,88 @@ struct RotationJoint: public atoms::Visitable< Joint, RotationJoint > {
 
 
     ATOMS_CLONEABLE( RotationJoint );
+
+    friend std::ostream& operator<<( std::ostream& out, Joint& j );
+private:
+    Vector _axis; ///< axis of rotation around with origin in point (0, 0, 0)
+    Matrix _pre; ///< transformation to apply before rotating
+    Matrix _post; ///< transformation to apply after rotating
+};
+
+struct ModularRotationJoint: public atoms::Visitable< Joint, ModularRotationJoint > {
+    /**
+     * Construct rotation joint by specifing the same axis and origin point in
+     * source coordinate system and destination coordinate system.
+     */
+    ModularRotationJoint( Vector sourceOrigin, Vector sourceAxis, Vector destOrigin,
+                   Vector desAxis, Angle modMax )
+        : ModularRotationJoint( rofi::configuration::matrices::translate( sourceOrigin )
+                       , desAxis - sourceAxis
+                       , rofi::configuration::matrices::translate( destOrigin )
+                       , modMax )
+    {}
+
+    /**
+     * Construct rotation joint by specifying transformation before rotation,
+     * followed by rotation axis with origin in (0, 0, 0), followed by another
+     * transformation.
+     */
+    ModularRotationJoint( Matrix pre, Vector axis, Matrix post, Angle modMax )
+        : Visitable( std::vector{ std::pair{ 0.0f, modMax.rad() } } ),
+          _axis( axis ),
+          _pre( pre ),
+          _post( post )
+    {}
+
+    Matrix sourceToDest() const override {
+        return _pre * rofi::configuration::matrices::rotate( position().rad(), _axis ) * _post;
+    }
+
+    Matrix destToSource() const override {
+        return arma::inv( sourceToDest() ); // ToDo: Find out if this is effective enough
+    }
+
+    Angle position() const {
+        return Angle::rad( positions()[ 0 ] );
+    }
+
+    void setPositions( std::span< const float > pos )
+    {
+        assert( pos.size() == 1 && "Incorrect number of parameters to set" );
+
+        float rem = fmodf( pos[0], jointLimits()[ 0 ].second );
+        if( rem < 0 ) // fmodf remainder has same sign as first arg
+            rem += jointLimits()[ 0 ].second;
+        assert( 0 <= rem && rem <= jointLimits()[ 0 ].second );
+
+        _positions[0] = rem;
+    }
+
+    void setPosition( Angle pos ) {
+        auto positions = std::array{ pos.rad() };
+        return setPositions( positions );
+    }
+
+    atoms::Result< std::monostate > changePositionsBy( std::span< const float > diff )
+    {
+        assert( diff.size() == 1 && "Incorrect number of parameters to set" );
+        auto newPos = std::array{ diff[0] + positions()[0] };
+        setPositions( newPos );
+
+        return atoms::result_value( std::monostate() );
+    }
+
+    Angle moduloLimit() const {
+        auto modMax = jointLimits()[ 0 ].second;
+        return Angle::rad( modMax );
+    }
+
+    const Matrix pre() const  { return _pre;  }
+    const Matrix post() const { return _post; }
+    const Vector axis() const { return _axis; }
+
+
+    ATOMS_CLONEABLE( ModularRotationJoint );
 
     friend std::ostream& operator<<( std::ostream& out, Joint& j );
 private:
