@@ -100,7 +100,7 @@ def convert(input_world_file: str, output_world_file: str, input_format: str, ou
         exit(1)
 
 
-def voxel_reconfig(init_voxel_file: str, goal_voxel_file: str, logger: Logger):
+def voxel_reconfig(init_voxel_file: str, goal_voxel_file: str, output: TextIO, logger: Logger):
     try:
         logging.info('Starting voxel reconfiguration')
 
@@ -108,7 +108,7 @@ def voxel_reconfig(init_voxel_file: str, goal_voxel_file: str, logger: Logger):
             + logger.cmd_args()
 
         logging.debug(f'Running cmd: {subprocess.list2cmdline(cmd)}')
-        subprocess.check_call(cmd)
+        subprocess.check_call(cmd, stdout=output)
 
         logging.info('Ended voxel reconfiguration')
     except subprocess.CalledProcessError as _:
@@ -116,7 +116,7 @@ def voxel_reconfig(init_voxel_file: str, goal_voxel_file: str, logger: Logger):
         exit(1)
 
 
-def convert_and_reconfig(init_world_file: str, goal_world_file: str, init_format: str, goal_format: str, logger: Logger):
+def convert_and_reconfig(init_world_file: str, goal_world_file: str, init_format: str, goal_format: str, output: TextIO, logger: Logger):
     assert init_world_file != '-' or goal_world_file != '-'
 
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -136,7 +136,8 @@ def convert_and_reconfig(init_world_file: str, goal_world_file: str, init_format
             convert(goal_world_file, goal_voxel_file,
                     input_format=goal_format, output_format='voxel')
 
-        voxel_reconfig(init_voxel_file, goal_voxel_file, logger=logger)
+        voxel_reconfig(init_voxel_file, goal_voxel_file,
+                       output=output, logger=logger)
 
 
 def check_input_files(parser: argparse.ArgumentParser, files: List[str]):
@@ -161,6 +162,8 @@ if __name__ == '__main__':
                         help="Path to the init world file ('-' for stdin)")
     parser.add_argument('goal_world_file', type=str,
                         help="Path to the goal world file ('-' for stdin)")
+    parser.add_argument('--output', '-o', type=argparse.FileType('w'),
+                        help="Path to the output file (default or '-' for stdout)")
 
     parser.add_argument('--format', '-f', type=str, default='json',
                         choices=['json', 'voxel', 'old'],
@@ -191,4 +194,4 @@ if __name__ == '__main__':
     convert_and_reconfig(args.init_world_file, args.goal_world_file,
                          args.format if args.init_format is None else args.init_format,
                          args.format if args.goal_format is None else args.goal_format,
-                         logger=logger)
+                         output=args.output, logger=logger)
