@@ -6,43 +6,84 @@ import os
 import subprocess
 import sys
 import tempfile
-from typing import List, Optional
+from typing import List, Optional, TextIO
 
 
-def get_logging_level(verbosity: int):
-    assert verbosity >= 0
-    if verbosity == 0:
-        return logging.ERROR
-    if verbosity == 1:
-        return logging.WARNING
-    if verbosity == 2:
-        return logging.INFO
-    return logging.DEBUG
+class Logger:
+    def __init__(self, verbosity: int, no_log_term: bool, log_file: Optional[str], log_json: Optional[str]):
+        self.verbosity = verbosity
+        self.no_log_term = no_log_term
+        self.log_file = log_file
+        self.log_json = log_json
 
+    @property
+    def logging_level(self) -> int:
+        assert self.verbosity >= 0
+        if self.verbosity == 0:
+            return logging.ERROR
+        if self.verbosity == 1:
+            return logging.WARNING
+        if self.verbosity == 2:
+            return logging.INFO
+        return logging.DEBUG
 
-def setup_logging(verbosity: int, logfile: Optional[str]):  # TODO args
-    log_formatter = logging.Formatter('{asctime} [{levelname}] {message}',
-                                      style='{')
-    log_formatter.datefmt = '%H:%M:%S'
+    @staticmethod
+    def term_formatter() -> logging.Formatter:
+        log_fmt = logging.Formatter('[{asctime} {levelname:5.5} {module}] {message}',
+                                    style='{')
+        log_fmt.datefmt = '%H:%M:%S'
+        return log_fmt
 
-    logger = logging.getLogger()
-    logger.setLevel(get_logging_level(verbosity))
+    @staticmethod
+    def file_formatter() -> logging.Formatter:
+        log_fmt = logging.Formatter('[{asctime} {levelname:5.5} {module}] {message}',
+                                    style='{')
+        log_fmt.datefmt = '%H:%M:%S'
+        return log_fmt
 
-    if logfile is not None:
-        file_handler = logging.FileHandler(logfile, encoding='utf-8')
-        # file_handler.setLevel(get_logging_level(verbosity))
-        file_handler.setFormatter(log_formatter)
-        logger.addHandler(file_handler)
+    @staticmethod
+    def json_formatter() -> logging.Formatter:
+        format = '{{"time":"{asctime}","message":"{message}","module_path":"{module}","file":"{filename}","line":{lineno},"level":"{levelname}","target":"{module}"}}'
+        log_fmt = logging.Formatter(format, style='{')
+        return log_fmt
 
-        stderr_handler = logging.StreamHandler(sys.stderr)
-        stderr_handler.setLevel(logging.ERROR)
-        stderr_handler.setFormatter(log_formatter)
-        logger.addHandler(stderr_handler)
-    else:
-        stderr_handler = logging.StreamHandler(sys.stderr)
-        # stderr_handler.setLevel(get_logging_level(verbosity))
-        stderr_handler.setFormatter(log_formatter)
-        logger.addHandler(stderr_handler)
+    @staticmethod
+    def get_term_handler(no_log_term: bool) -> 'logging.StreamHandler[TextIO]':
+        term_handler = logging.StreamHandler(sys.stderr)
+        if no_log_term:
+            term_handler.setLevel(logging.ERROR)
+        term_handler.setFormatter(Logger.term_formatter())
+        return term_handler
+
+    @staticmethod
+    def get_file_handler(log_file: str, formatter: logging.Formatter) -> logging.FileHandler:
+        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+        file_handler.setFormatter(formatter)
+        return file_handler
+
+    def setup_logging(self):
+        logger = logging.getLogger()
+        logger.setLevel(self.logging_level)
+
+        logger.addHandler(Logger.get_term_handler(self.no_log_term))
+        if self.log_file is not None:
+            logger.addHandler(Logger.get_file_handler(
+                self.log_file, Logger.file_formatter()))
+        if self.log_json is not None:
+            logger.addHandler(Logger.get_file_handler(
+                self.log_json, Logger.json_formatter()))
+
+    def cmd_args(self) -> List[str]:
+        args: List[str] = []
+        if self.verbosity > 0:
+            args.append(f"-{'v' * self.verbosity}")
+        if not self.no_log_term:
+            args.append('--no-log-term')
+        if self.log_file is not None:
+            args.extend(['--log-file', self.log_file])
+        if self.log_json is not None:
+            args.extend(['--log-json', self.log_json])
+        return args
 
 
 def convert(input_world_file: str, output_world_file: str, input_format: str, output_format: str):
@@ -59,15 +100,12 @@ def convert(input_world_file: str, output_world_file: str, input_format: str, ou
         exit(1)
 
 
-def voxel_reconfig(init_voxel_file: str, goal_voxel_file: str, verbosity: int, logfile: Optional[str]):
+def voxel_reconfig(init_voxel_file: str, goal_voxel_file: str, logger: Logger):
     try:
         logging.info('Starting voxel reconfiguration')
 
-        cmd = ['rofi-voxel_main', init_voxel_file, goal_voxel_file]
-        if verbosity > 0:
-            cmd.append(f"-{'v' * verbosity}")
-        if logfile is not None:
-            cmd.extend(['--log', logfile])
+        cmd = ['rofi-voxel_main', init_voxel_file, goal_voxel_file] \
+            + logger.cmd_args()
 
         logging.debug(f'Running cmd: {subprocess.list2cmdline(cmd)}')
         subprocess.check_call(cmd)
@@ -78,7 +116,7 @@ def voxel_reconfig(init_voxel_file: str, goal_voxel_file: str, verbosity: int, l
         exit(1)
 
 
-def convert_and_reconfig(init_world_file: str, goal_world_file: str, init_format: str, goal_format: str, verbosity: int, logfile: Optional[str]):
+def convert_and_reconfig(init_world_file: str, goal_world_file: str, init_format: str, goal_format: str, logger: Logger):
     assert init_world_file != '-' or goal_world_file != '-'
 
     with tempfile.TemporaryDirectory() as tmp_dir:
@@ -98,8 +136,7 @@ def convert_and_reconfig(init_world_file: str, goal_world_file: str, init_format
             convert(goal_world_file, goal_voxel_file,
                     input_format=goal_format, output_format='voxel')
 
-        voxel_reconfig(init_voxel_file, goal_voxel_file,
-                       verbosity=verbosity, logfile=logfile)
+        voxel_reconfig(init_voxel_file, goal_voxel_file, logger=logger)
 
 
 def check_input_files(parser: argparse.ArgumentParser, files: List[str]):
@@ -135,16 +172,23 @@ if __name__ == '__main__':
                         choices=['json', 'voxel', 'old'],
                         help='Format of the goal world file (overrides --format)')
 
-    parser.add_argument('--verbose', '-v', action='count', default=0,
-                        help='Increase verbosity level')
-    parser.add_argument('--log', '-l', type=str,
-                        help='Log file')
+    log_parser = parser.add_argument_group('logging')
+    log_parser.add_argument('--verbose', '-v', action='count', default=0,
+                            help='Increase verbosity level')
+    log_parser.add_argument('--no-log-term', action='store_true',
+                            help="Don't log to terminal (Errors will still be logged)")
+    log_parser.add_argument('--log-file', type=str,
+                            help='Log to file in human readable format')
+    log_parser.add_argument('--log-json', type=str,
+                            help='Log to file in json format (each log as one json)')
 
     args = parser.parse_args()
     check_input_files(parser, [args.init_world_file, args.goal_world_file])
-    setup_logging(verbosity=args.verbose, logfile=args.log)
+    logger = Logger(verbosity=args.verbose, no_log_term=args.no_log_term,
+                    log_file=args.log_file, log_json=args.log_json)
+    logger.setup_logging()
 
     convert_and_reconfig(args.init_world_file, args.goal_world_file,
                          args.format if args.init_format is None else args.init_format,
                          args.format if args.goal_format is None else args.goal_format,
-                         verbosity=args.verbose, logfile=args.log)
+                         logger=logger)
