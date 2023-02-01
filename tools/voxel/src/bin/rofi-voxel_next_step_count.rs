@@ -9,6 +9,7 @@ use rofi_voxel_reconfig::reconfiguration::all_possible_next_worlds;
 use rofi_voxel_reconfig::voxel_world::VoxelWorld;
 use std::assert_matches::assert_matches;
 use std::collections::HashMap;
+use std::io::Write;
 use std::rc::Rc;
 use std::time::SystemTime;
 
@@ -20,6 +21,9 @@ struct Cli {
     /// Maximum number of steps
     #[arg(short, long)]
     max: Option<usize>,
+    /// File to store the result data (default is standard output)
+    #[arg(short, long)]
+    output: Option<String>,
     #[clap(flatten)]
     log: LogArgs,
 }
@@ -33,6 +37,89 @@ impl Cli {
     }
     pub fn max(&self) -> usize {
         self.max.unwrap_or(usize::MAX)
+    }
+}
+
+#[derive(Debug, Clone, Copy)]
+struct ResultData {
+    new_worlds: usize,
+    new_worlds_including_eq: usize,
+    all_worlds_in_parent_map: usize,
+    time_since_start: std::time::Duration,
+}
+
+impl ResultData {
+    pub fn as_json_str(&self) -> String {
+        let Self {
+            new_worlds,
+            new_worlds_including_eq,
+            all_worlds_in_parent_map,
+            time_since_start,
+        } = self;
+        let time_since_start_ms = time_since_start.as_micros();
+        format!("{{\"new worlds\": {new_worlds}, \"new worlds including eq\": {new_worlds_including_eq}, \"all worlds in parent map\": {all_worlds_in_parent_map}, \"time microsec\": {time_since_start_ms}}}")
+    }
+}
+
+#[derive(Debug)]
+struct ResultsData {
+    bodies_count: usize,
+    init_eq_worlds: usize,
+    rounds: Vec<ResultData>,
+    start_time: SystemTime,
+}
+
+impl ResultsData {
+    pub fn new(bodies_count: usize, init_eq_worlds: usize) -> Self {
+        log::info!("Starting with bodies_count: {bodies_count}, eq_worlds: {init_eq_worlds}");
+        Self {
+            bodies_count,
+            init_eq_worlds,
+            rounds: Vec::new(),
+            start_time: SystemTime::now(),
+        }
+    }
+
+    pub fn as_json_str(&self) -> String {
+        format!(
+            "{{\n  \"bodies count\": {},\n  \"start\": {},\n  \"rounds\": [\n    {}\n  ]\n}}",
+            self.bodies_count,
+            self.get_start().as_json_str(),
+            self.rounds
+                .iter()
+                .map(|round| round.as_json_str())
+                .join(",\n    ")
+        )
+    }
+
+    pub fn add_round(
+        &mut self,
+        new_worlds: usize,
+        new_worlds_including_eq: usize,
+        all_worlds_in_parent_map: usize,
+    ) {
+        self.rounds.push(ResultData {
+            new_worlds,
+            new_worlds_including_eq,
+            all_worlds_in_parent_map,
+            time_since_start: SystemTime::now()
+                .duration_since(self.start_time)
+                .unwrap_or_default(),
+        });
+        log::info!(
+            "round {}: {}",
+            self.rounds.len(),
+            self.rounds.last().unwrap().as_json_str()
+        );
+    }
+
+    pub fn get_start(&self) -> ResultData {
+        ResultData {
+            new_worlds: 1,
+            new_worlds_including_eq: self.init_eq_worlds,
+            all_worlds_in_parent_map: self.init_eq_worlds,
+            time_since_start: std::time::Duration::ZERO,
+        }
     }
 }
 
@@ -79,7 +166,7 @@ fn get_next_step_counts(
     (next_step_worlds, next_worlds_count)
 }
 
-fn compute_steps(init: VoxelWorld, max_steps: usize) -> Result<()> {
+fn compute_steps(init: VoxelWorld, max_steps: usize) -> Result<ResultsData> {
     assert_matches!(init.check_voxel_world(), Ok(()));
     let init = init.as_one_of_norm_eq_world();
     let init_bodies_count = init.all_bodies().count();
@@ -89,24 +176,11 @@ fn compute_steps(init: VoxelWorld, max_steps: usize) -> Result<()> {
         .map(|init| (Rc::new(init), None))
         .collect::<HashMap<_, _>>();
 
-    log::debug!(
-        "parent count: {} (init)",
-        init.normalized_eq_worlds().unique().count()
-    );
+    let mut results_data = ResultsData::new(init_bodies_count, parent_worlds.len());
 
     let init = parent_worlds.keys().next().unwrap().clone();
-
     let mut worlds_to_visit = vec![init];
-
-    let start_time = SystemTime::now();
-    log::debug!(
-        "'start': {{ 'new worlds': {}, 'new worlds including eq': {0}, 'all worlds in parent map': {}, 'time ms': {} }},",
-        worlds_to_visit.len(),
-        parent_worlds.len(),
-        SystemTime::now().duration_since(start_time)?.as_millis(),
-    );
-
-    for i in 1..=max_steps {
+    for _ in 0..max_steps {
         if worlds_to_visit.is_empty() {
             break;
         }
@@ -114,18 +188,16 @@ fn compute_steps(init: VoxelWorld, max_steps: usize) -> Result<()> {
         let (next_step_worlds, next_worlds_count) =
             get_next_step_counts(&worlds_to_visit, &mut parent_worlds, init_bodies_count);
 
-        println!(
-            "'round {i}': {{ 'new worlds': {}, 'new worlds including eq': {}, 'all worlds in parent map': {}, 'time ms': {} }},",
+        results_data.add_round(
             next_step_worlds.len(),
             next_worlds_count,
             parent_worlds.len(),
-            SystemTime::now().duration_since(start_time)?.as_millis(),
         );
 
         worlds_to_visit = next_step_worlds;
     }
 
-    Ok(())
+    Ok(results_data)
 }
 
 fn main() -> Result<()> {
@@ -137,5 +209,14 @@ fn main() -> Result<()> {
     let (world, _min_pos) = world.to_world_and_min_pos()?;
     assert_matches!(world.check_voxel_world(), Ok(()));
 
-    compute_steps(world, args.max())
+    let results_data = compute_steps(world, args.max())?;
+
+    let results_data = results_data.as_json_str();
+    if let Some(output_file) = &args.output {
+        std::fs::File::create(output_file)?.write_all(results_data.as_bytes())?;
+    } else {
+        println!("{results_data}");
+    }
+
+    Ok(())
 }
