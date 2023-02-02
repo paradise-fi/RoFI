@@ -747,6 +747,7 @@ class RoFILocal : public RoFI::Implementation {
 public:
     RoFILocal() try:
         _servoBus( bsp::buildServoBus() ),
+    #ifndef ROFI_HAL_NO_MOTORS
         _joints( {
             std::make_shared< JointLocal >(
                 _servoBus.getServo( bsp::alphaId ),
@@ -761,7 +762,8 @@ public:
                                     bodyJointCapability(),
                                     bsp::gammaRatio )
         } ),
-        _connectorBus( HSPI_HOST, GPIO_NUM_19, GPIO_NUM_18, 1000000 ),
+    #endif
+        _connectorBus( HSPI_HOST, GPIO_NUM_19, GPIO_NUM_18, 50'000'000 ),
         _connectors( {
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_27 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_25 ),
