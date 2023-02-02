@@ -1,4 +1,3 @@
-
 #include <system/idle.hpp>
 
 #include <cassert>
@@ -22,6 +21,8 @@
 #include <stm32g0xx_ll_cortex.h>
 #include <stm32g0xx_ll_utils.h>
 
+#include <configuration.hpp>
+
 void setupSystemClock() {
     LL_FLASH_SetLatency( LL_FLASH_LATENCY_2 );
     LL_RCC_HSI_Enable();
@@ -43,7 +44,7 @@ void setupSystemClock() {
     /* Set APB1 prescaler*/
     LL_RCC_SetAPB1Prescaler( LL_RCC_APB1_DIV_1 );
 
-    LL_Init1msTick(64000000);
+    LL_Init1msTick( 64000000 );
 
     LL_SYSTICK_SetClkSource( LL_SYSTICK_CLKSOURCE_HCLK );
     /* Update CMSIS variable (which can be updated also through SystemCoreClockUpdate function) */
@@ -68,7 +69,7 @@ Dbg& dbgInstance() {
         USART1, Dma::allocate( DMA1, 1 ), Dma::allocate( DMA1, 2 ),
         TxOn( GpioB[ 6 ] ),
         RxOn( GpioB[ 7 ] ),
-        Baudrate( 115200 ) );
+        Baudrate( cfg::DBG_BAUDRATE ) );
     return inst;
 }
 
@@ -108,11 +109,10 @@ void onCmdInterrupt( SpiInterface& interf, Block /*header*/ ) {
 }
 
 void onCmdSendBlob( SpiInterface& spiInt, ConnComInterface& connInt ) {
-    spiInt.receiveBlob([&]( Block blob, int size ) {
+    spiInt.receiveBlob([&spiInt, &connInt]( Block blob, int size ) {
         int blobLen = viewAs< uint16_t >( blob.get() + 2 );
         if ( size != 4 + blobLen )
             return;
-        Dbg::info( "CMD blob send received: %d, %.*s", blobLen, blobLen, blob.get() + 4 );
         connInt.sendBlob( std::move( blob ) );
     } );
 }
@@ -135,7 +135,7 @@ int main() {
     SystemCoreClockUpdate();
     HAL_Init();
 
-    Dbg::error( "Main clock: %d", SystemCoreClock );
+    Dbg::blockingInfo( "Starting" );
 
     Adc1.setup();
     Adc1.enable();
@@ -163,9 +163,10 @@ int main() {
     );
 
     Uart uart( USART2,
-        Baudrate( 115200 ),
+        Baudrate( cfg::TRANSMIT_BAUDRATE ),
         TxOn( GpioA[ 2 ] ),
-        RxOn( GpioA[ 3 ] ) );
+        RxOn( GpioA[ 3 ] ),
+        UartOversampling( 8 ) );
     uart.enable();
 
     ConnComInterface connComInterface( std::move( uart ) );
@@ -173,7 +174,6 @@ int main() {
     using Command = SpiInterface::Command;
     SpiInterface spiInterface( std::move( spi ), GpioA[ 4 ],
         [&]( Command cmd, Block b ) {
-            Dbg::error("CMD %d", int( cmd ));
             switch( cmd ) {
             case Command::VERSION:
                 onCmdVersion( spiInterface );
@@ -196,7 +196,7 @@ int main() {
         } );
     connComInterface.onNewBlob( [&] { spiInterface.interruptMaster(); } );
 
-    Dbg::error( "Ready for operation" );
+    Dbg::blockingInfo( "Ready for operation" );
 
     while ( true ) {
         slider.run();
@@ -205,7 +205,8 @@ int main() {
             spiInterface.interruptMaster();
 
         if ( Dbg::available() ) {
-            switch( Dbg::get() ) {
+            char chr = Dbg::get();
+            switch( chr ) {
             case 'e':
                 slider.expand();
                 Dbg::info("Expanding");
@@ -215,10 +216,11 @@ int main() {
                 Dbg::info("Retracting");
                 break;
             default:
-                Dbg::error( "DBG received: %c", Dbg::get() );
+                Dbg::error( "DBG received: %c, %d", chr, int( chr ) );
             }
         }
         // Dbg::error("%d, %d", GpioB[ 4 ].read(), GpioB[ 8 ].read());
+        connComInterface.run();
         IdleTask::run();
     }
 }
