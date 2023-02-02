@@ -212,7 +212,6 @@ public:
             .flags( SPI_DEVICE_3WIRE | SPI_DEVICE_HALFDUPLEX )
             .queueSize( 1 )
             .clockSpeedHz( clkFrequency );
-        std::cout << busConfig << "\n";
         auto ret = spi_bus_initialize( bus, &busConfig, 1 );
         ESP_ERROR_CHECK( ret );
         ret = spi_bus_add_device( bus, &devConfig, &_spiDev );
@@ -353,19 +352,17 @@ private:
 
     void _issueReceiveCmd( rtos::ExContext exCtx = rtos::ExContext::Normal ) {
         _receiveCmdCounter++;
-        ets_printf( "Currently scheduled: %d\n", _receiveCmdCounter.load() );
         ConnectorBus::ReceiveCommand c;
         c.conn = this;
         _bus->schedule( c, exCtx );
     }
 
     SpiTransactionGuard startTransaction() {
-        std::cout << "Transaction on " << _cs << "\n";
         return SpiTransactionGuard( _cs, defaultCsConfig( _cs ) );
     }
 
     void finish( ConnectorBus::VersionCommand, ConnectorVersion ver ) {
-        // Not implemented yet - currently, there is no need to distinguishe
+        // Not implemented yet - currently, there is no need to distinguish
         // versions of the connectors
     }
 
@@ -386,10 +383,9 @@ private:
                     event );
         }
         if (status.pendingReceive == 255) {
-            std::cout << "invalid pending receive";
+            rofi::log::debug("invalid pending receive");
             status.pendingReceive = 0;
         }
-        std::cout << "Pending to receive (" << _cs << "): " << status.pendingReceive << "\n";
         while ( _receiveCmdCounter < status.pendingReceive )
             _issueReceiveCmd();
         _status = status;
@@ -413,7 +409,7 @@ private:
         gpio_config_t cfg = defaultCsConfig( _cs );
         auto ret = gpio_config( &cfg );
         ESP_ERROR_CHECK( ret );
-        // ret = gpio_isr_handler_add( _cs, _csInterruptHandler, this );
+        ret = gpio_isr_handler_add( _cs, _csInterruptHandler, this );
         gpio_set_level( _cs, 1 );
         ESP_ERROR_CHECK( ret );
     }
@@ -422,7 +418,6 @@ private:
         auto *self = reinterpret_cast< ConnectorLocal* >( arg );
         // Probably a packet, so try to read it, then check the true reason
         self->_issueReceiveCmd( rtos::ExContext::ISR );
-        ets_printf("Interrupted %d\n", self->_cs);
         if ( self->_interruptCounter == 0 )
             self->_issueInterruptCmd( rtos::ExContext::ISR );
     }
@@ -441,7 +436,6 @@ private:
 
 void ConnectorBus::run( VersionCommand c ) {
     using namespace rofi::esp32;
-    rofi::log::info( "Version command" );
 
     auto transaction = c.conn->startTransaction();
     const int headerSize = 1;
@@ -458,7 +452,6 @@ void ConnectorBus::run( VersionCommand c ) {
 
 void ConnectorBus::run( InterruptCommand c ) {
     using namespace rofi::esp32;
-    ets_printf( "Interrupt command %d\n", c.counter );
 
     auto transaction = c.conn->startTransaction();
     const int headerSize = 3;
@@ -477,12 +470,10 @@ void ConnectorBus::run( InterruptCommand c ) {
 
 void ConnectorBus::run( StatusCommand c ) {
     using namespace rofi::esp32;
-    rofi::log::info( "Status command " + std::to_string(c.conn->_cs ) );
 
     auto transaction = c.conn->startTransaction();
     const int headerSize = 5;
     as< ProtocolCommand >( _dmaBuffer + 0 ) = ProtocolCommand::Status;
-    std::cout << std::hex << c.flags << ", " << c.writeMask << "\n" << std::dec;
     as< uint16_t >( _dmaBuffer + 1 ) = c.flags;
     as< uint16_t >( _dmaBuffer + 3 ) = c.writeMask;
     spiWrite( _spiDev, _dmaBuffer, headerSize );
@@ -498,42 +489,33 @@ void ConnectorBus::run( StatusCommand c ) {
 
 void ConnectorBus::run( SendCommand c ) {
     using namespace rofi::esp32;
-    // rofi::log::info( "Send command" );
-    ets_printf("Send command %d\n", c.conn->_cs);
 
     if ( c.packet.size() > 2048 ) {
-        rofi::log::warning( "Trying to send big packet" );
+        rofi::log::warning( "Trying to send big packet, ignored" );
         c.conn->finish( c );
         return;
     }
     auto transaction = c.conn->startTransaction();
     const int headerSize = 1;
     as< ProtocolCommand >( _dmaBuffer ) = ProtocolCommand::Send;
-    ets_printf("Send command %d - A\n", c.conn->_cs);
     spiWrite( _spiDev, _dmaBuffer, headerSize );
-     ets_printf("Send command %d - B\n", c.conn->_cs);
 
     slaveDelay();
 
     const int packetHeaderSize = 4;
     as< uint16_t >( _dmaBuffer ) = c.contentType;
     as< uint16_t >( _dmaBuffer + 2 ) = c.packet.size();
-     ets_printf("Send command %d - C\n", c.conn->_cs);
     spiWrite( _spiDev, _dmaBuffer, packetHeaderSize );
-     ets_printf("Send command %d - D\n", c.conn->_cs);
 
     for ( auto it = c.packet.chunksBegin(); it != c.packet.chunksEnd(); ++it ) {
         spiWrite( _spiDev, it->mem(), it->size() );
     }
-    ets_printf("Send command %d -E \n", c.conn->_cs);
     transaction.end();
 
-    ets_printf("Send command %d finished\n", c.conn->_cs);
     c.conn->finish( c );
 }
 
 void ConnectorBus::run( ReceiveCommand c ) {
-    rofi::log::info( "Receive command" );
     using namespace rofi::esp32;
     auto transaction = c.conn->startTransaction();
 
@@ -558,7 +540,6 @@ void ConnectorBus::run( ReceiveCommand c ) {
     // auto size = as< uint16_t >( _dmaBuffer );
 
     if ( size == 0 || size > 2048 ) {
-        std::cout << "    Nothing received: " << size << "\n";
         c.conn->finish( c );
         return;
     }
