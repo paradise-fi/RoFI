@@ -31,6 +31,11 @@ public:
     }
 
     template < typename... Args >
+    static void blockingInfo( const char *fmt, Args...args ) {
+        _instance()._blockingInfo( fmt, args... );
+    }
+
+    template < typename... Args >
     static void error( const char *fmt, Args...args ) {
         _instance()._error( fmt, args... );
     }
@@ -91,6 +96,11 @@ private:
         _writer.writeBlock( std::move( buffer ), 0, size + 1, [&]( Mem, int ) {
             _txBusy = false;
         } );
+    }
+
+    template < typename... Args >
+    void _blockingInfo( const char *fmt, Args...args ) {
+        _error( fmt, std::forward< Args >( args )... );
     }
 
     static char *errorBuffer() {
