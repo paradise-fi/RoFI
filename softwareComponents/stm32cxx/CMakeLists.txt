@@ -30,7 +30,7 @@ function(setup_stm32cxx PREFIX MCU)
     FetchContent_Declare(
         function2
         GIT_REPOSITORY https://github.com/Naios/function2.git
-        GIT_TAG        4.2.0
+        GIT_TAG        4.2.2
         )
     FetchContent_GetProperties(function2)
     if(NOT function2_POPULATED)
