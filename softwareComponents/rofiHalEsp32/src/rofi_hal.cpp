@@ -220,7 +220,19 @@ public:
             ESP_INTR_FLAG_SHARED | ESP_INTR_FLAG_LOWMED | ESP_INTR_FLAG_IRAM );
         ESP_ERROR_CHECK( ret );
 
-        std::thread( [&]{ _run(); } ).detach();
+        // We have to use FreeRTOS task as the task needs high priority
+        auto tRet = xTaskCreate([]( void *arg ) {
+                    ConnectorBus& self = *reinterpret_cast< ConnectorBus * >( arg );
+                    self._run();
+                },
+                "ConectorBusTask",
+                4096,   // Stack size
+                this,   // Argument
+                3,      // Priority
+                nullptr // The task is never accessed again
+            );
+        if ( tRet != pdPASS )
+            abort();
     }
 
     ~ConnectorBus() {
