@@ -20,15 +20,15 @@ extern "C" void app_main() {
     std::cout << "Program starts\n";
     auto localRoFI = rofi::hal::RoFI::getLocalRoFI();
     std::cout << "Got local RoFI\n";
-    auto conn1 = localRoFI.getConnector( 0 );
-    auto conn2 = localRoFI.getConnector( 1 );
+    auto conn1 = localRoFI.getConnector( 1 );
+    auto conn2 = localRoFI.getConnector( 2 );
 
     conn1.onPacket( printPacket );
     conn2.onPacket( printPacket );
 
     char counter = 0;
     while( true ) {
-        // std::cout << "Send\n";
+        std::cout << "Send\n";
         counter++;
         const char* msg = "Hello from 1! ";
         const int len = strlen( msg );
@@ -38,7 +38,7 @@ extern "C" void app_main() {
         buf[ len - 1 ] = 'a' + ( counter ) % 26;
         conn1.send( 42, std::move( buf ) );
 
-        std::cout << "Message for connector 2___________________________________\n";
+        std::cout << "Message for connector 2\n";
         const char* msg2 = "Hello form 2! ";
         const int len2 = strlen( msg2 );
         auto buf2 = rofi::hal::PBuf::allocate( len2 );
@@ -46,8 +46,9 @@ extern "C" void app_main() {
             buf2[ i ] = msg2[ i ];
         buf2[ len - 1 ] = 'a' + ( counter ) % 26;
         conn2.send( 42, std::move( buf2 ) );
+        std::cout << "\n\n";
 
-        vTaskDelay( 3000 / portTICK_PERIOD_MS );
+        vTaskDelay( 500 / portTICK_PERIOD_MS );
     }
 
     while ( true ) {
