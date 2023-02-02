@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 3.6)
 
-set(EXTRA_COMPONENT_DIRS "$ENV{ROFI_ROOT}/softwareComponents/rofiHalPhys")
+add_rofi_firmware(hal_connector_demo.elf
+    FLASH_SIZE 4MB
+    SOURCES main.cpp)
+target_link_libraries(hal_connector_demo.elf
+    idf::freertos idf::spi_flash rofi::hal::esp32_jig)
+set_partition_table(hal_connector_demo.elf partitions.csv)
 
-set(COMPONENTS "")
-include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-project(servo)
