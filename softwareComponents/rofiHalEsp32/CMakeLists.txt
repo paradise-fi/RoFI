@@ -1,9 +1,19 @@
 file(GLOB_RECURSE SRC src/*.cpp src/*.c)
 
-add_library(rofi_hal_esp32 ${SRC})
-target_include_directories(rofi_hal_esp32 PUBLIC src)
-set_property(TARGET rofi_hal_esp32 PROPERTY CXX_STANDARD 17)
-target_link_libraries(rofi_hal_esp32 PUBLIC idf::driver idf::esp_wifi idf::esp_rom idf::esp_timer atoms rofi::hal::inc)
-target_compile_options(rofi_hal_esp32 PUBLIC -mtext-section-literals -mlongcalls)
+macro(setup_hal NAME)
+    add_library("${NAME}" ${SRC})
+    target_include_directories("${NAME}" PUBLIC src)
+    set_property(TARGET "${NAME}" PROPERTY CXX_STANDARD 17)
+    target_link_libraries("${NAME}" PUBLIC idf::driver idf::esp_wifi idf::esp_rom idf::esp_timer atoms rofi::hal::inc)
+    target_compile_options("${NAME}" PUBLIC -mtext-section-literals -mlongcalls)
+endmacro()
 
+# We provide two versions: the standard, RoFI HAL and...
+setup_hal(rofi_hal_esp32)
 add_library(rofi::hal::esp32 ALIAS rofi_hal_esp32)
+
+# ...the version that works on RoFI test jig (e.g., it doesn't require the
+# presence of servomotors)
+setup_hal(rofi_hal_esp32_jig)
+target_compile_definitions(rofi_hal_esp32_jig PUBLIC -DROFI_HAL_NO_MOTORS)
+add_library(rofi::hal::esp32_jig ALIAS rofi_hal_esp32_jig)
