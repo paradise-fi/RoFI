@@ -37,8 +37,8 @@ std::array< Positions, 2 > decomposeRofiWorld( const RofiWorld& rw )
     std::array< Positions, 2 > result;
 
     // Decompose modules
-    for ( const auto& /*RofiWorld::ModuleInfo*/ modInf : rw.modules() )
-        for ( const Matrix& pos : decomposeUniversalModule( *modInf.module ) )
+    for ( const auto& rModule : rw.modules() )
+        for ( const Matrix& pos : decomposeUniversalModule( rModule ) )
             result[0].push_back( pos );
 
     // Decompose connections

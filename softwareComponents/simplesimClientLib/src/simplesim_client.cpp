@@ -242,15 +242,14 @@ std::map< rofi::configuration::ModuleId, ModuleRenderInfo > addConfigurationToRe
                          moduleRenderInfos,
                          newConfiguration );
 
-    for ( const auto & moduleInfo : newConfiguration.modules() ) {
-        assert( moduleInfo.module.get() );
-        assert( moduleInfo.absPosition && "The configuration has to be prepared" );
-        moduleRenderInfos[ moduleInfo.module->getId() ].componentActors =
+    for ( const auto & moduleWithPos : newConfiguration.modulesWithAbsPos() ) {
+        const rofi::configuration::Module & rModule = moduleWithPos.first;
+        const auto & absPosition = moduleWithPos.second;
+        moduleRenderInfos[ rModule.getId() ].componentActors =
                 addModuleToScene( renderer,
-                                  *moduleInfo.module,
-                                  *moduleInfo.absPosition,
-                                  moduleRenderInfos[ moduleInfo.module->getId() ]
-                                          .activeConnectors );
+                                  rModule,
+                                  absPosition,
+                                  moduleRenderInfos[ rModule.getId() ].activeConnectors );
     }
 
     assert( moduleRenderInfos.size() == newConfiguration.modules().size() );
@@ -271,15 +270,13 @@ void updateConfigurationInRenderer(
     auto previousModules =
             std::unordered_map< rofi::configuration::ModuleId,
                                 std::reference_wrapper< const rofi::configuration::Module > >();
-    for ( const auto & previousModuleInfo : previousConfiguration.modules() ) {
-        assert( previousModuleInfo.module.get() );
-        previousModules.emplace( previousModuleInfo.module->getId(), *previousModuleInfo.module );
+    for ( const auto & prevModule : previousConfiguration.modules() ) {
+        previousModules.emplace( prevModule.getId(), prevModule );
     }
 
-    for ( const auto & newModuleInfo : newConfiguration.modules() ) {
-        assert( newModuleInfo.module.get() );
-        assert( newModuleInfo.absPosition && "The configuration has to be prepared" );
-        auto & newModule = *newModuleInfo.module;
+    for ( const auto & newModuleWithPos : newConfiguration.modulesWithAbsPos() ) {
+        const rofi::configuration::Module & newModule = newModuleWithPos.first;
+        const auto & absPosition = newModuleWithPos.second;
         auto & moduleRenderInfo = moduleRenderInfos[ newModule.getId() ];
 
         if ( auto previousModuleIt = previousModules.find( newModule.getId() );
@@ -288,14 +285,14 @@ void updateConfigurationInRenderer(
             updateModuleInScene( renderer,
                                  newModule,
                                  previousModuleIt->second,
-                                 *newModuleInfo.absPosition,
+                                 absPosition,
                                  moduleRenderInfo );
         } else {
             assert( moduleRenderInfo.componentActors.empty() );
             moduleRenderInfo.componentActors =
                     addModuleToScene( renderer,
                                       newModule,
-                                      *newModuleInfo.absPosition,
+                                      absPosition,
                                       moduleRenderInfo.activeConnectors );
         }
     }
@@ -399,7 +396,7 @@ void SimplesimClient::itemSelected( QTreeWidgetItem * selected )
         selectedPosition = getCurrentConfig()->getModule( moduleId )
             ->components()[ component ].getPosition();
     }
-    if( _ui->centerSelected->isChecked() ){
+    if ( _ui->centerSelected->isChecked() ) {
         setCamera( selectedPosition );
     }
     _lastModule = moduleId;
@@ -440,7 +437,6 @@ void SimplesimClient::setCamera( Matrix focalPoint )
     _renderer->GetActiveCamera()->SetFocalPoint( focalPoint.at( 0, 3 ),
                                                  focalPoint.at( 1, 3 ),
                                                  focalPoint.at( 2, 3 ) );
-
 }
 void SimplesimClient::pauseButton()
 {
@@ -472,45 +468,45 @@ void SimplesimClient::clearRenderer()
 
 void SimplesimClient::initInfoTree( const rofi::configuration::RofiWorld & rofiworld )
 {
+    assert( rofiworld.isPrepared() );
     int i = 0;
-    for ( const auto & moduleInfo : rofiworld.modules() ) {
-        _treeIdMapping.push_back( moduleInfo.module->getId() );
-        std::string str = "Module " + std::to_string( moduleInfo.module->getId() );
-        QTreeWidgetItem * module = new QTreeWidgetItem( static_cast< QTreeWidget * >( nullptr ),
+    for ( const auto & moduleWithPos : rofiworld.modulesWithAbsPos() ) {
+        const rofi::configuration::Module & rModule = moduleWithPos.first;
+        const auto & absPosition = moduleWithPos.second;
+        _treeIdMapping.push_back( rModule.getId() );
+        std::string str = "Module " + std::to_string( rModule.getId() );
+        QTreeWidgetItem * qtModule = new QTreeWidgetItem( static_cast< QTreeWidget * >( nullptr ),
                                                         { QString( str.c_str() ) } );
         if ( _ui->treeWidget->topLevelItemCount() <= i ) {
-            _ui->treeWidget->addTopLevelItem( module );
+            _ui->treeWidget->addTopLevelItem( qtModule );
         }
-        QTreeWidgetItem * components = new QTreeWidgetItem( module, { QString( "Components" ) } );
-        for ( const auto & c : moduleInfo.module->components() ) {
+        QTreeWidgetItem * components = new QTreeWidgetItem( qtModule, { QString( "Components" ) } );
+        for ( const auto & c : rModule.components() ) {
             std::string comp = rofi::configuration::serialization::componentTypeToString( c.type );
             new QTreeWidgetItem( components, { QString( comp.c_str() ) } );
         }
-        if ( auto * um = dynamic_cast< UniversalModule * >( moduleInfo.module.get() ) ) {
+        if ( auto * universalModule = dynamic_cast< const UniversalModule * >( &rModule ) ) {
             for ( int j = 0; j < 6; ++j ) {
-                std::string connector = std::string( um->translateComponent( j ) );
+                std::string connector = std::string( universalModule->translateComponent( j ) );
                 _ui->treeWidget->topLevelItem( i )
                         ->child( 0 )
                         ->child( j )
                         ->setText( 0, connector.c_str() );
             }
         }
-        if ( moduleInfo.absPosition ) {
-            std::string pos = "Position:\n" + to_string( *moduleInfo.absPosition );
-            new QTreeWidgetItem( module, { QString( pos.c_str() ) } );
-        }
+        std::string pos = "Position:\n" + to_string( absPosition );
+        new QTreeWidgetItem( qtModule, { QString( pos.c_str() ) } );
         ++i;
     }
 }
 
 void SimplesimClient::updateInfoTree( const rofi::configuration::RofiWorld & rofiworld )
 {
+    assert( rofiworld.isPrepared() );
     int i = 0;
-    for ( const auto & moduleInfo : rofiworld.modules() ) {
-        if ( moduleInfo.absPosition ) {
-            std::string pos = "Position:\n" + to_string( *moduleInfo.absPosition );
-            _ui->treeWidget->topLevelItem( i )->child( 1 )->setText( 0, pos.c_str() );
-        }
+    for ( const auto & moduleWithPos : rofiworld.modulesWithAbsPos() ) {
+        std::string pos = "Position:\n" + to_string( moduleWithPos.second );
+        _ui->treeWidget->topLevelItem( i )->child( 1 )->setText( 0, pos.c_str() );
         ++i;
     }
 }

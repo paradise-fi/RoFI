@@ -26,11 +26,10 @@ inline void fixateRofiWorld( rofi::configuration::RofiWorld & world )
     using namespace rofi::configuration;
     auto modules = world.modules();
     assert( !modules.empty() );
-    const auto & firstModule = modules.begin()->module;
-    assert( firstModule );
-    assert( !firstModule->components().empty() );
-    auto component = !firstModule->bodies().empty() ? firstModule->bodies().front()
-                                                    : firstModule->components().front();
+    const auto & firstModule = modules.front();
+    assert( !firstModule.components().empty() );
+    auto component = !firstModule.bodies().empty() ? firstModule.bodies().front()
+                                                   : firstModule.components().front();
     connect< RigidJoint >( component, {}, matrices::identity );
 }
 

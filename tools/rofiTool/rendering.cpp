@@ -181,13 +181,10 @@ void buildRofiWorldScene( vtkRenderer & renderer, const RofiWorld & world )
     }
 
     int index = 0;
-    for ( auto & mInfo : world.modules() ) {
-        assert( mInfo.absPosition && "The rofi world has to be prepared" );
-        addModuleToScene( renderer,
-                          *mInfo.module,
-                          *mInfo.absPosition,
-                          index,
-                          activeConns[ mInfo.module->getId() ] );
+    for ( const auto & moduleWithPos : world.modulesWithAbsPos() ) {
+        const rofi::configuration::Module & rModule = moduleWithPos.first;
+        const auto & absPosition = moduleWithPos.second;
+        addModuleToScene( renderer, rModule, absPosition, index, activeConns[ rModule.getId() ] );
         index++;
     }
 }
@@ -468,8 +465,7 @@ void buildRofiWorldPointsScene( vtkRenderer & renderer, RofiWorld world, bool sh
         connect< RigidJoint >( comp, newRefPoint, transf );
     }
 
-    auto result = world.prepare();
-    assert( result );
+    world.prepare().get_or_throw_as< std::runtime_error >();
 
     // get active (i.e. connected) connectors for each module within RofiWorld
     std::map< ModuleId, std::set< int > > activeConns;
@@ -480,13 +476,10 @@ void buildRofiWorldPointsScene( vtkRenderer & renderer, RofiWorld world, bool sh
         activeConns[ destId ].insert( roficom.destConnector );
     }
     int index = 0;
-    for ( auto & mInfo : world.modules() ) {
-        assert( mInfo.absPosition && "The rofi world has to be prepared" );
-        addModuleToScene( renderer,
-                          *mInfo.module,
-                          *mInfo.absPosition,
-                          index,
-                          activeConns[ mInfo.module->getId() ] );
+    for ( const auto & moduleWithPos : world.modulesWithAbsPos() ) {
+        const rofi::configuration::Module & rModule = moduleWithPos.first;
+        const auto & absPosition = moduleWithPos.second;
+        addModuleToScene( renderer, rModule, absPosition, index, activeConns[ rModule.getId() ] );
         index++;
     }
 }
