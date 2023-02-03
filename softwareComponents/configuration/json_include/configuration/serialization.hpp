@@ -391,8 +391,8 @@ namespace rofi::configuration::serialization {
         res[ "moduleJoints" ] = json::array();
         res[ "spaceJoints"  ] = json::array();
 
-        for ( const auto& m : world.modules() ) {
-            res[ "modules" ].push_back( details::moduleByTypeToJSON( *m.module, attrCb ) );
+        for ( const auto& rModule : world.modules() ) {
+            res[ "modules" ].push_back( details::moduleByTypeToJSON( rModule, attrCb ) );
         }
 
         for ( const RoficomJoint& rj : world.roficomConnections() ) {

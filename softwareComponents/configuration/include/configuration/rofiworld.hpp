@@ -571,10 +571,41 @@ public:
     }
 
     /**
-     * \brief Get a container of ModuleInfo
+     * \brief Get a range of modules
      */
-    const auto& modules() const {
-        return _modules;
+    auto modules() const -> std::ranges::range auto
+    {
+        return std::views::transform( _modules,
+                                      []( const ModuleInfo & moduleInfo ) -> const Module & {
+                                          assert( moduleInfo.module );
+                                          return *moduleInfo.module;
+                                      } );
+    }
+
+    /**
+     * \brief Get a range of modules
+     */
+    auto modules() -> std::ranges::range auto
+    {
+        return std::views::transform( _modules, []( ModuleInfo & moduleInfo ) -> Module & {
+            assert( moduleInfo.module );
+            return *moduleInfo.module;
+        } );
+    }
+
+    /**
+     * \brief Get a range of modules with their absolute positions
+     *
+     * `this` has to be prepared.
+     */
+    auto modulesWithAbsPos() const -> std::ranges::range auto
+    {
+        assert( isPrepared() && "The world has to be prepared" );
+        return std::views::transform( _modules, []( const ModuleInfo & moduleInfo ) {
+            assert( moduleInfo.module );
+            assert( moduleInfo.absPosition && "Position has to be available if world is prepared" );
+            return std::pair( std::ref( *moduleInfo.module ), *moduleInfo.absPosition );
+        } );
     }
 
     /**

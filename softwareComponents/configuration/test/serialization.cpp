@@ -41,8 +41,8 @@ TEST_CASE( "UniversalModule - Demo" ) {
     REQUIRE( world.referencePoints().size() == worldj.referencePoints().size() );
     REQUIRE( worldj.prepare() );
 
-    for ( auto& m : world.modules() ) {
-        ModuleId id = m.module->getId();
+    for ( auto& rModule : world.modules() ) {
+        ModuleId id = rModule.getId();
         CHECK( equals( world.getModulePosition( id ), worldj.getModulePosition( id ) ) );
     }
 }

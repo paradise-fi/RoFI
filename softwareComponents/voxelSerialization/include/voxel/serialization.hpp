@@ -506,9 +506,9 @@ public:
         }
 
         auto voxelBodies = std::vector< Voxel >();
-        for ( const auto & rofiModule : rofiWorld.modules() ) {
-            auto universalModule = dynamic_cast< const rofi::configuration::UniversalModule * >(
-                    rofiModule.module.get() );
+        for ( const auto & rModule : rofiWorld.modules() ) {
+            auto * universalModule = dynamic_cast< const rofi::configuration::UniversalModule * >(
+                    &rModule );
             if ( !universalModule ) {
                 return atoms::result_error< std::string >( "Module is not Universal module" );
             }

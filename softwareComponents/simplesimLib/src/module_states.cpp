@@ -213,17 +213,17 @@ auto updateJointPositions( RofiWorld & configuration,
 {
     using PositionReached = detail::ConfigurationUpdateEvents::PositionReached;
 
-    auto positionsReached = std::vector< PositionReached >();
-    for ( auto & moduleInfo : configuration.modules() ) {
-        assert( moduleInfo.module.get() );
-        auto & module_ = *moduleInfo.module;
-        assert( module_.parent == &configuration );
+    assert( configuration.isPrepared() );
 
-        auto * moduleInnerState = detail::getModuleInnerState( moduleInnerStates, module_.getId() );
+    auto positionsReached = std::vector< PositionReached >();
+    for ( auto & rModule : configuration.modules() ) {
+        assert( rModule.parent == &configuration );
+
+        auto * moduleInnerState = detail::getModuleInnerState( moduleInnerStates, rModule.getId() );
         assert( moduleInnerState );
 
         std::span jointInnerStates = moduleInnerState->joints();
-        std::ranges::view auto jointConfigurations = module_.configurableJoints();
+        std::ranges::view auto jointConfigurations = rModule.configurableJoints();
         assert( std::ssize( jointInnerStates ) == std::ranges::distance( jointConfigurations ) );
 
         for ( auto [ jointConfiguration, i ] : jointConfigurations | enumerated() ) {
@@ -241,7 +241,7 @@ auto updateJointPositions( RofiWorld & configuration,
             if ( posReached ) {
                 assert( i < INT_MAX );
                 positionsReached.push_back(
-                        PositionReached{ .joint = { .moduleId = module_.getId(),
+                        PositionReached{ .joint = { .moduleId = rModule.getId(),
                                                     .jointIdx = static_cast< int >( i ) },
                                          .position = newPosition } );
             }
@@ -267,29 +267,26 @@ auto updateConnectorStates( RofiWorld & configuration,
     };
 
     auto connectorUpdateEvents = ConnectorUpdateEvents();
-    for ( auto & moduleInfo : configuration.modules() ) {
-        assert( moduleInfo.module.get() );
-        auto & module_ = *moduleInfo.module;
-        assert( module_.parent == &configuration );
+    for ( auto & rModule : configuration.modules() ) {
+        assert( rModule.parent == &configuration );
 
-        auto * moduleInnerState = detail::getModuleInnerState( moduleInnerStates, module_.getId() );
+        auto * moduleInnerState = detail::getModuleInnerState( moduleInnerStates, rModule.getId() );
         assert( moduleInnerState );
 
         std::span connectorInnerStates = moduleInnerState->connectors();
-        std::span connectorConfigurations = module_.connectors();
+        std::span connectorConfigurations = rModule.connectors();
         assert( connectorInnerStates.size() == connectorConfigurations.size() );
 
         for ( auto [ connectorInnerState, i ] : connectorInnerStates | enumerated() ) {
-            assert( connectorConfigurations[ i ].parent == &module_ );
+            assert( connectorConfigurations[ i ].parent == &rModule );
             switch ( connectorInnerState.position() ) {
                 case ConnectorInnerState::Position::Retracted:
                 case ConnectorInnerState::Position::Extended:
                     break;
-                case ConnectorInnerState::Position::Retracting:
-                {
+                case ConnectorInnerState::Position::Retracting: {
                     assert( i < INT_MAX );
                     connectorUpdateEvents.connectorsToFinalizePosition.push_back(
-                            { .moduleId = module_.getId(), .connIdx = static_cast< int >( i ) } );
+                            { .moduleId = rModule.getId(), .connIdx = static_cast< int >( i ) } );
 
                     if ( auto removedConnection = removeConnection( connectorConfigurations[ i ] ) )
                     {
@@ -297,14 +294,13 @@ auto updateConnectorStates( RofiWorld & configuration,
                     }
                     break;
                 }
-                case ConnectorInnerState::Position::Extending:
-                {
+                case ConnectorInnerState::Position::Extending: {
                     assert( i < INT_MAX );
                     connectorUpdateEvents.connectorsToFinalizePosition.push_back(
-                            { .moduleId = module_.getId(), .connIdx = static_cast< int >( i ) } );
+                            { .moduleId = rModule.getId(), .connIdx = static_cast< int >( i ) } );
 
                     const auto & connConfiguration = connectorConfigurations[ i ];
-                    assert( connConfiguration.parent == &module_ );
+                    assert( connConfiguration.parent == &rModule );
                     if ( auto connection = detail::connectToNearbyConnector( connConfiguration ) ) {
                         connectorUpdateEvents.connectionsChanged.push_back( *connection );
                     }
@@ -362,23 +358,21 @@ auto ModuleStates::initInnerStatesFromConfiguration( const RofiWorld & worldConf
         -> std::map< ModuleId, ModuleInnerState >
 {
     auto innerStates = std::map< ModuleId, ModuleInnerState >();
-    for ( const auto & moduleInfo : worldConfiguration.modules() ) {
-        const auto & _module = *moduleInfo.module;
-
-        auto joints = std::ranges::distance( _module.configurableJoints() );
-        auto connectors = _module.connectors().size();
+    for ( const auto & rModule : worldConfiguration.modules() ) {
+        auto joints = std::ranges::distance( rModule.configurableJoints() );
+        auto connectors = rModule.connectors().size();
         assert( joints < INT_MAX );
         assert( connectors < INT_MAX );
         auto moduleInnerState = ModuleInnerState( static_cast< int >( joints ),
                                                   static_cast< int >( connectors ) );
 
         if ( verbose ) {
-            std::cerr << "Module id: " << _module.getId()
+            std::cerr << "Module id: " << rModule.getId()
                       << ", joints: " << moduleInnerState.joints().size()
                       << ", connectors: " << moduleInnerState.connectors().size() << std::endl;
         }
 
-        auto [ it, success ] = innerStates.emplace( _module.getId(),
+        auto [ it, success ] = innerStates.emplace( rModule.getId(),
                                                     std::move( moduleInnerState ) );
         if ( !success ) {
             throw std::runtime_error( "Multiple same module ids in configuration" );
