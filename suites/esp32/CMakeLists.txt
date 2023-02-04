@@ -87,7 +87,7 @@ add_application(hardwareModules/universalModule/software/esp32/console)
 
 # Add the examples
 add_application(hardwareModules/universalModule/software/esp32/esp_hello_world)
-add_application(examples/hal/wifi)
+# add_application(examples/hal/wifi) # this breaks the build
 add_application(examples/hal/servo)
 add_application(examples/hal/connectorHal)
 add_application(examples/hal/connectorMovementHal)
