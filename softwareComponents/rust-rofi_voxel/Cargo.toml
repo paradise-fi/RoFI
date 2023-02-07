@@ -6,9 +6,6 @@ edition = "2021"
 [lib]
 crate-type = [ "lib", "cdylib", "staticlib" ]
 
-[features]
-cpp_json_bindings = ["dep:serde_json", "dep:failure"]
-
 [dependencies]
 amplify = "3.13"
 bimap = "0.6"
@@ -21,9 +18,3 @@ rs-graph = "0.20"
 serde = { version = "1.0", features = ["derive"] }
 smallvec = "1.8"
 static_assertions = "1.1"
-
-serde_json = { version="1.0", optional = true }
-failure = { version="0.1", optional = true }
-
-[dev-dependencies]
-serde_json = "1.0"
