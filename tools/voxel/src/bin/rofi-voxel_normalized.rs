@@ -4,7 +4,11 @@ use anyhow::Result;
 use clap::Parser;
 use itertools::Itertools;
 use rofi_voxel_cli::{FileInput, LogArgs};
+use rofi_voxel_reconfig::voxel_world::impls::MapVoxelWorld;
+use rofi_voxel_reconfig::voxel_world::{check_voxel_world, normalized_eq_worlds};
 use std::assert_matches::assert_matches;
+
+type IndexType = i8;
 
 /// Compute (unique) normalized versions of voxel world
 #[derive(Debug, Parser)]
@@ -20,7 +24,7 @@ struct Cli {
 
 #[derive(Debug)]
 struct InputWorlds {
-    world: rofi_voxel_reconfig::serde::VoxelWorld,
+    world: rofi_voxel_reconfig::serde::VoxelWorld<IndexType>,
 }
 
 impl Cli {
@@ -39,11 +43,10 @@ fn main() -> Result<()> {
     args.log.setup_logging()?;
 
     let InputWorlds { world } = args.get_worlds()?;
-    let (world, _min_pos) = world.to_world_and_min_pos()?;
-    assert_matches!(world.check_voxel_world(), Ok(()));
+    let (world, _min_pos) = world.to_world_and_min_pos::<MapVoxelWorld<_>>()?;
+    assert_matches!(check_voxel_world(&world), Ok(()));
 
-    let norm_worlds = world
-        .normalized_eq_worlds()
+    let norm_worlds = normalized_eq_worlds(&world)
         .unique()
         .map(|eq_world| rofi_voxel_reconfig::serde::VoxelWorld::from_world(&eq_world))
         .collect::<Vec<_>>();

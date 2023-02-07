@@ -3,10 +3,14 @@
 use anyhow::Result;
 use clap::Parser;
 use rofi_voxel_cli::{FileInput, LogArgs};
-use rofi_voxel_reconfig::connectivity::ConnectivityGraph;
-use rofi_voxel_reconfig::reconfiguration::all_possible_next_worlds_not_norm;
-use rofi_voxel_reconfig::voxel_world::VoxelWorld;
+use rofi_voxel_reconfig::reconfig::all_next_worlds_not_norm;
+use rofi_voxel_reconfig::voxel_world::impls::MapVoxelWorld;
+use rofi_voxel_reconfig::voxel_world::normalized_eq_worlds;
+use rofi_voxel_reconfig::voxel_world::NormVoxelWorld;
+use rofi_voxel_reconfig::voxel_world::{check_voxel_world, is_normalized};
 use std::assert_matches::assert_matches;
+
+type IndexType = i8;
 
 /// Compute one step of the reconfiguration algorithm.
 ///
@@ -27,7 +31,7 @@ struct Cli {
 
 #[derive(Debug)]
 struct InputWorlds {
-    world: rofi_voxel_reconfig::serde::VoxelWorld,
+    world: rofi_voxel_reconfig::serde::VoxelWorld<IndexType>,
 }
 
 impl Cli {
@@ -40,16 +44,14 @@ impl Cli {
     }
 }
 
-fn get_next_worlds(world: &VoxelWorld) -> Vec<VoxelWorld> {
-    assert_matches!(world.check_voxel_world(), Ok(()));
-    assert!(world.is_normalized());
+fn get_next_worlds<TWorld: NormVoxelWorld>(world: &TWorld) -> Vec<TWorld>
+where
+    TWorld::IndexType: num::Integer + std::hash::Hash,
+{
+    assert_matches!(check_voxel_world(world), Ok(()));
+    assert!(is_normalized(world));
 
-    all_possible_next_worlds_not_norm(
-        world,
-        &ConnectivityGraph::compute_from(world),
-        world.all_bodies().count(),
-    )
-    .collect()
+    all_next_worlds_not_norm(world).collect()
 }
 
 fn main() -> Result<()> {
@@ -58,14 +60,14 @@ fn main() -> Result<()> {
     args.log.setup_logging()?;
 
     let InputWorlds { world } = args.get_worlds()?;
-    let (world, _min_pos) = world.to_world_and_min_pos()?;
-    assert_matches!(world.check_voxel_world(), Ok(()));
+    let (world, _min_pos) = world.to_world_and_min_pos::<MapVoxelWorld<_>>()?;
+    assert_matches!(check_voxel_world(&world), Ok(()));
 
-    let world = if !world.is_normalized() {
+    let world = if !is_normalized(&world) {
         if !args.normalize {
             eprintln!("Normalizing init world");
         }
-        world.normalized_eq_worlds().next().unwrap()
+        normalized_eq_worlds(&world).next().unwrap()
     } else {
         world
     };

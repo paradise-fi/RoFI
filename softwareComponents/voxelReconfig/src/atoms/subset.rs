@@ -1,12 +1,14 @@
+pub type IndexType = u8;
+
 #[derive(Debug, Clone)]
 pub struct Subset(u64);
 
 impl Subset {
-    pub const MAX_SIZE: usize = 64;
+    pub const MAX_SIZE: IndexType = 64;
 
     pub fn all(size: usize) -> Subset {
-        assert!(size <= Self::MAX_SIZE);
-        if size == Self::MAX_SIZE {
+        assert!(size <= Self::MAX_SIZE.into());
+        if size == Self::MAX_SIZE.into() {
             Self(u64::MAX)
         } else {
             Self((1u64 << size) - 1)
@@ -14,11 +16,11 @@ impl Subset {
     }
 
     pub fn iter_all(size: usize) -> SubsetIter {
-        assert!(size <= Self::MAX_SIZE);
+        assert!(size <= Self::MAX_SIZE.into());
         SubsetIter::new(Self::all(size))
     }
 
-    pub fn has_elem(&self, elem: usize) -> bool {
+    pub fn has_elem(&self, elem: IndexType) -> bool {
         assert!(elem < Self::MAX_SIZE);
         self.0 & (1u64 << elem) != 0
     }

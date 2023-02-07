@@ -1,17 +1,20 @@
-use super::VoxelWorld;
-use crate::pos::{compute_minimal_pos_hull, VoxelPos};
-use crate::voxel::{Voxel, VoxelBody};
-use std::collections::HashSet;
+pub use complement::ComplementVoxelSubworld;
 
-/// Can represent a world that is not valid (has bodies with missing other body)
-#[derive(Clone)]
-pub struct VoxelSubworld<'a> {
-    world: &'a VoxelWorld,
-    included: HashSet<VoxelPos>,
-    size_ranges: [std::ops::Range<u8>; 3],
+use super::VoxelWorld;
+use crate::pos::ord::OrdPos;
+use crate::pos::{minimal_pos_hull, Pos, SizeRanges};
+use crate::voxel::Voxel;
+use std::collections::BTreeSet;
+
+/// Can represent a world that is not valid (has voxels with missing other body)
+pub struct VoxelSubworld<'a, TWorld: VoxelWorld> {
+    world: &'a TWorld,
+    included: BTreeSet<OrdPos<TWorld::IndexType>>,
+    size_ranges: SizeRanges<TWorld::IndexType>,
+    complement_size_ranges: SizeRanges<TWorld::IndexType>,
 }
 
-impl<'a> std::fmt::Debug for VoxelSubworld<'a> {
+impl<'a, TWorld: VoxelWorld> std::fmt::Debug for VoxelSubworld<'a, TWorld> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let indent = if f.alternate() { "    " } else { "" };
         let ws_sep = if f.alternate() { "\n" } else { " " };
@@ -23,38 +26,8 @@ impl<'a> std::fmt::Debug for VoxelSubworld<'a> {
             self.size_ranges()
         ))?;
 
-        f.write_fmt(format_args!("{indent}bodies: "))?;
-        super::debug_fmt_bodies(self.all_bodies(), f, ws_sep, indent, indent, f.alternate())?;
-        f.write_fmt(format_args!(",{ws_sep}"))?;
-
-        {
-            let complement = self.complement();
-            let complement_indent = if f.alternate() { "        " } else { "" };
-            f.write_fmt(format_args!("{indent}complement: VoxelSubworld {{"))?;
-            f.write_str(ws_sep)?;
-
-            f.write_fmt(format_args!(
-                "{complement_indent}sizes: {:?},{ws_sep}",
-                complement.size_ranges()
-            ))?;
-
-            f.write_fmt(format_args!("{complement_indent}bodies: "))?;
-            super::debug_fmt_bodies(
-                complement.all_bodies(),
-                f,
-                ws_sep,
-                complement_indent,
-                indent,
-                f.alternate(),
-            )?;
-
-            if f.alternate() {
-                f.write_str(",")?;
-            }
-            f.write_str(ws_sep)?;
-            f.write_str(indent)?;
-            f.write_str("}")?;
-        }
+        f.write_fmt(format_args!("{indent}voxels: "))?;
+        super::debug_fmt_voxels(self.all_voxels(), f, ws_sep, indent, indent, f.alternate())?;
 
         if f.alternate() {
             f.write_str(",")?;
@@ -64,53 +37,169 @@ impl<'a> std::fmt::Debug for VoxelSubworld<'a> {
     }
 }
 
-impl<'a> VoxelSubworld<'a> {
-    pub fn new<P: Fn(VoxelPos) -> bool>(world: &'a VoxelWorld, predicate: P) -> Self {
+impl<'a, TWorld: VoxelWorld> VoxelSubworld<'a, TWorld> {
+    pub fn new<P: Fn(Pos<TWorld::IndexType>) -> bool>(world: &'a TWorld, predicate: P) -> Self {
         let included = world
-            .all_bodies()
-            .map(|(_, pos)| pos)
-            .filter(|&pos| predicate(pos))
-            .collect::<HashSet<_>>();
+            .all_voxels()
+            .filter(|&(pos, _)| predicate(pos))
+            .map(|(pos, _)| OrdPos(pos))
+            .collect::<BTreeSet<_>>();
 
-        let size_ranges = compute_minimal_pos_hull(included.iter().map(|&VoxelPos(pos)| pos))
-            .expect("Subworld cannot be empty");
+        let size_ranges = minimal_pos_hull(included.iter().map(|&OrdPos(pos)| pos));
+        let complement_size_ranges = minimal_pos_hull(
+            world
+                .all_voxels()
+                .map(|(pos, _)| pos)
+                .filter(|&pos| !included.contains(&OrdPos(pos))),
+        );
+
+        debug_assert_eq!(
+            size_ranges
+                .as_ranges_array()
+                .zip(complement_size_ranges.as_ranges_array())
+                .map(|(lhs, rhs)| {
+                    std::cmp::min(lhs.start, rhs.start)..std::cmp::max(rhs.start, rhs.end)
+                }),
+            world.size_ranges().as_ranges_array(),
+        );
 
         Self {
             world,
             included,
             size_ranges,
+            complement_size_ranges,
         }
     }
 
-    pub fn underlying_world(&self) -> &'a VoxelWorld {
+    fn contains(&self, pos: Pos<<Self as VoxelWorld>::IndexType>) -> bool {
+        self.included.contains(&OrdPos(pos))
+    }
+
+    pub fn underlying_world(&self) -> &'a TWorld {
         self.world
     }
 
-    pub fn complement(&self) -> Self {
-        Self::new(self.world, |pos| !self.included.contains(&pos))
+    pub fn complement(&self) -> ComplementVoxelSubworld<'a, TWorld, &Self> {
+        ComplementVoxelSubworld::new(self)
+    }
+}
+
+impl<'a, TWorld: VoxelWorld> VoxelWorld for VoxelSubworld<'a, TWorld> {
+    type IndexType = TWorld::IndexType;
+
+    fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
+        self.size_ranges
     }
 
-    pub fn size_ranges(&self) -> [std::ops::Range<u8>; 3] {
-        self.size_ranges.clone()
+    fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
+        Box::new(
+            self.included
+                .iter()
+                .map(|&OrdPos(pos)| (pos, self.world.get_voxel(pos).unwrap())),
+        )
     }
 
-    pub fn all_bodies(&self) -> impl Iterator<Item = (VoxelBody, VoxelPos)> + '_ {
-        self.world
-            .all_bodies()
-            .filter(|&(_, pos)| self.included.contains(&pos))
+    fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {
+        if self.included.contains(&OrdPos(pos)) {
+            self.world.get_voxel(pos)
+        } else {
+            None
+        }
     }
+}
 
-    pub fn get_voxel(&self, position: VoxelPos) -> Option<Voxel> {
-        self.world.get_voxel(position).map(|voxel| {
-            if self.included.contains(&position) {
-                voxel
-            } else {
-                Voxel::EMPTY
+pub mod complement {
+    use super::VoxelSubworld;
+    use crate::pos::{Pos, SizeRanges};
+    use crate::voxel::Voxel;
+    use crate::voxel_world::{debug_fmt_voxels, VoxelWorld};
+    use std::marker::PhantomData;
+
+    /// Can represent a world that is not valid (has voxels with missing other body)
+    pub struct ComplementVoxelSubworld<'a, TWorld, TWorldRef>(TWorldRef, PhantomData<&'a TWorld>)
+    where
+        TWorld: 'a + VoxelWorld,
+        TWorldRef: std::borrow::Borrow<VoxelSubworld<'a, TWorld>>;
+
+    impl<'a, TWorld, TWorldRef> std::fmt::Debug for ComplementVoxelSubworld<'a, TWorld, TWorldRef>
+    where
+        TWorld: VoxelWorld,
+        TWorldRef: std::borrow::Borrow<VoxelSubworld<'a, TWorld>>,
+    {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            let indent = if f.alternate() { "    " } else { "" };
+            let ws_sep = if f.alternate() { "\n" } else { " " };
+            f.write_str("ComplementVoxelSubworld {")?;
+            f.write_str(ws_sep)?;
+
+            f.write_fmt(format_args!(
+                "{indent}sizes: {:?},{ws_sep}",
+                self.size_ranges()
+            ))?;
+
+            f.write_fmt(format_args!("{indent}voxels: "))?;
+            debug_fmt_voxels(self.all_voxels(), f, ws_sep, indent, indent, f.alternate())?;
+
+            if f.alternate() {
+                f.write_str(",")?;
             }
-        })
+            f.write_str(ws_sep)?;
+            f.write_str("}")
+        }
     }
 
-    pub fn get_body(&self, position: VoxelPos) -> Option<VoxelBody> {
-        self.get_voxel(position)?.get_body()
+    impl<'a, TWorld, TWorldRef> ComplementVoxelSubworld<'a, TWorld, TWorldRef>
+    where
+        TWorld: 'a + VoxelWorld,
+        TWorldRef: std::borrow::Borrow<VoxelSubworld<'a, TWorld>>,
+    {
+        pub fn new(subworld: TWorldRef) -> Self {
+            Self(subworld, PhantomData::default())
+        }
+
+        fn complement(&self) -> &VoxelSubworld<'a, TWorld> {
+            self.0.borrow()
+        }
+
+        fn underlying_world(&self) -> &'a TWorld {
+            self.0.borrow().underlying_world()
+        }
+
+        fn contains(&self, pos: Pos<<Self as VoxelWorld>::IndexType>) -> bool {
+            !self.complement().contains(pos)
+        }
+    }
+
+    impl<'a, TWorld, TWorldRef> VoxelWorld for ComplementVoxelSubworld<'a, TWorld, TWorldRef>
+    where
+        TWorld: 'a + VoxelWorld,
+        TWorldRef: std::borrow::Borrow<VoxelSubworld<'a, TWorld>>,
+    {
+        type IndexType = TWorld::IndexType;
+
+        #[allow(clippy::misnamed_getters)] // Getting size_range of the complement's complement
+        fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
+            self.complement().complement_size_ranges
+        }
+
+        fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
+            Box::new(
+                self.underlying_world()
+                    .all_voxels()
+                    .filter(|&(pos, _)| self.contains(pos)),
+            )
+        }
+
+        fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {
+            if self.contains(pos) {
+                Some(
+                    self.underlying_world()
+                        .get_voxel(pos)
+                        .expect("Invalid subworld"),
+                )
+            } else {
+                None
+            }
+        }
     }
 }

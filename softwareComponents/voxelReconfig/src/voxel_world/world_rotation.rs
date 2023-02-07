@@ -1,6 +1,7 @@
-use super::VoxelWorld;
-use crate::pos::VoxelPos;
-use crate::{atoms, voxel::VoxelBody};
+use super::NormVoxelWorld;
+use crate::atoms;
+use crate::pos::{Pos, Sizes};
+use crate::voxel::Voxel;
 use enum_iterator::Sequence;
 
 /// This structure represents rotation of voxel worlds
@@ -65,53 +66,65 @@ impl WorldRotation {
         atoms::Direction::new_with(self.rotate_axis(direction.axis()), is_positive)
     }
 
-    pub fn rotate_sizes(&self, sizes: VoxelPos) -> VoxelPos {
-        let VoxelPos(sizes) = sizes;
-        VoxelPos(self.rotated_pos_indices().map(|pos_idx| sizes[pos_idx]))
+    fn rotate_as_sizes<TIndex>(&self, sizes: Pos<TIndex>) -> Pos<TIndex>
+    where
+        TIndex: num::Num + Copy,
+    {
+        let sizes = sizes.as_array();
+        self.rotated_pos_indices()
+            .map(|pos_idx| sizes[pos_idx])
+            .into()
     }
 
-    fn rotate_pos(&self, pos: VoxelPos, orig_sizes: VoxelPos) -> VoxelPos {
-        let VoxelPos(pos) = pos;
-        let VoxelPos(sizes) = orig_sizes;
+    pub fn rotate_sizes<TIndex>(&self, sizes: Sizes<TIndex>) -> Sizes<TIndex>
+    where
+        TIndex: num::Num + Ord + Copy,
+    {
+        Sizes::new(self.rotate_as_sizes(sizes.get()))
+    }
+
+    fn rotate_pos<TIndex>(&self, pos: Pos<TIndex>, orig_sizes: Sizes<TIndex>) -> Pos<TIndex>
+    where
+        TIndex: num::Num + Ord + Copy,
+    {
         let negated_pos = pos
-            .zip(sizes)
+            .as_array()
+            .zip(orig_sizes.get().as_array())
             .zip(self.neg_axis)
-            .map(
-                |((pos_i, size_i), is_neg_i)| {
-                    if is_neg_i {
-                        size_i - 1 - pos_i
-                    } else {
-                        pos_i
-                    }
-                },
-            );
-        self.rotate_sizes(VoxelPos(negated_pos))
+            .map(|((pos, size), is_neg)| {
+                if is_neg {
+                    size - TIndex::one() - pos
+                } else {
+                    pos
+                }
+            });
+        self.rotate_as_sizes(negated_pos.into())
     }
 
-    fn rotate_body(&self, body: VoxelBody) -> VoxelBody {
-        let other_body_dir = self.rotate_direction(body.other_body_dir());
-        let is_shoe_rotated = self.swaps_axes_order() ^ body.is_shoe_rotated();
+    fn rotate_voxel(&self, voxel: Voxel) -> Voxel {
+        let body_dir = self.rotate_direction(voxel.body_dir());
+        let shoe_rotated = self.swaps_axes_order() ^ voxel.shoe_rotated();
 
-        let joint_dir = body.z_conn_dir();
+        let joint_dir = voxel.z_conn_dir();
         let joint_pos = if self.rotate_direction(joint_dir).is_positive() == joint_dir.is_positive()
         {
-            body.joint_pos()
+            voxel.joint_pos()
         } else {
-            body.joint_pos().opposite()
+            voxel.joint_pos().opposite()
         };
-        let result = VoxelBody::new_with(other_body_dir, is_shoe_rotated, joint_pos);
+        let result = Voxel::new_with(body_dir, shoe_rotated, joint_pos);
         debug_assert_eq!(self.rotate_direction(joint_dir), result.z_conn_dir());
         result
     }
 
-    pub fn rotate_world(&self, world: &VoxelWorld) -> VoxelWorld {
+    pub fn rotate_world<TWorld: NormVoxelWorld>(&self, world: &TWorld) -> TWorld {
         let sizes = self.rotate_sizes(world.sizes());
-        let bodies = world.all_bodies().map(|(body, pos)| {
-            let body = self.rotate_body(body);
+        let voxels = world.all_voxels().map(|(pos, voxel)| {
+            let voxel = self.rotate_voxel(voxel);
             let pos = self.rotate_pos(pos, world.sizes());
-            (body, pos)
+            (pos, voxel)
         });
-        VoxelWorld::from_sizes_and_bodies(sizes, bodies).expect("world rotation shouldn't fail")
+        TWorld::from_sizes_and_voxels(sizes, voxels).expect("world rotation shouldn't fail")
     }
 }
 
@@ -122,47 +135,47 @@ fn test_rotate_sizes() {
             x_rotates_to: atoms::Axis::X,
             neg_axis: [false; 3],
         }
-        .rotate_sizes(VoxelPos([1, 2, 3])),
-        VoxelPos([1, 2, 3])
+        .rotate_sizes(Sizes::new([1, 2, 3].into())),
+        Sizes::new([1, 2, 3].into())
     );
     assert_eq!(
         WorldRotation {
             x_rotates_to: atoms::Axis::Y,
             neg_axis: [false; 3],
         }
-        .rotate_sizes(VoxelPos([1, 2, 3])),
-        VoxelPos([3, 1, 2])
+        .rotate_sizes(Sizes::new([1, 2, 3].into())),
+        Sizes::new([3, 1, 2].into())
     );
     assert_eq!(
         WorldRotation {
             x_rotates_to: atoms::Axis::Z,
             neg_axis: [false; 3],
         }
-        .rotate_sizes(VoxelPos([1, 2, 3])),
-        VoxelPos([2, 3, 1])
+        .rotate_sizes(Sizes::new([1, 2, 3].into())),
+        Sizes::new([2, 3, 1].into())
     );
     assert_eq!(
         WorldRotation {
             x_rotates_to: atoms::Axis::X,
             neg_axis: [true; 3],
         }
-        .rotate_sizes(VoxelPos([1, 2, 3])),
-        VoxelPos([1, 3, 2])
+        .rotate_sizes(Sizes::new([1, 2, 3].into())),
+        Sizes::new([1, 3, 2].into())
     );
     assert_eq!(
         WorldRotation {
             x_rotates_to: atoms::Axis::Y,
             neg_axis: [true; 3],
         }
-        .rotate_sizes(VoxelPos([1, 2, 3])),
-        VoxelPos([2, 1, 3])
+        .rotate_sizes(Sizes::new([1, 2, 3].into())),
+        Sizes::new([2, 1, 3].into())
     );
     assert_eq!(
         WorldRotation {
             x_rotates_to: atoms::Axis::Z,
             neg_axis: [true; 3],
         }
-        .rotate_sizes(VoxelPos([1, 2, 3])),
-        VoxelPos([3, 2, 1])
+        .rotate_sizes(Sizes::new([1, 2, 3].into())),
+        Sizes::new([3, 2, 1].into())
     );
 }

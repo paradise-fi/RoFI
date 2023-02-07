@@ -1,18 +1,16 @@
-use super::{CenteredVoxelWorld, VoxelWorld};
+use super::{InvalidVoxelWorldError, NormVoxelWorld, VoxelWorld};
 use crate::atoms;
-use crate::pos::IndexType;
-use crate::pos::{RelativeIndexType, RelativeVoxelPos, VoxelPos};
-use crate::voxel::body::JointPosition;
-use crate::voxel::{Voxel, VoxelBody};
+use crate::pos::{Pos, SizeRanges, Sizes};
+use crate::voxel::{JointPosition, Voxel};
 
-pub fn rotate_body(body: VoxelBody, rotation: atoms::Rotation) -> VoxelBody {
-    VoxelBody::new_with(
-        rotation.rotate_dir(body.other_body_dir()),
-        !body.is_shoe_rotated(),
-        match body.joint_pos() {
+pub fn rotate_voxel(voxel: Voxel, rotation: atoms::Rotation) -> Voxel {
+    Voxel::new_with(
+        rotation.rotate_dir(voxel.body_dir()),
+        !voxel.shoe_rotated(),
+        match voxel.joint_pos() {
             JointPosition::Zero => JointPosition::Zero,
             JointPosition::Plus90 | JointPosition::Minus90 => {
-                if rotation.rotate_dir(body.z_conn_dir()).is_positive() {
+                if rotation.rotate_dir(voxel.z_conn_dir()).is_positive() {
                     JointPosition::Plus90
                 } else {
                     JointPosition::Minus90
@@ -22,29 +20,48 @@ pub fn rotate_body(body: VoxelBody, rotation: atoms::Rotation) -> VoxelBody {
     )
 }
 
-pub fn rotate_voxel(voxel: Voxel, rotation: atoms::Rotation) -> Voxel {
-    match voxel.get_body() {
-        Some(body) => Voxel::new_with_body(rotate_body(body, rotation)),
-        None => Voxel::EMPTY,
-    }
+fn combine_size_ranges<TIndex: num::Num + Ord>(
+    lhs: SizeRanges<TIndex>,
+    rhs: SizeRanges<TIndex>,
+) -> SizeRanges<TIndex> {
+    let (lhs_start, lhs_end) = lhs.start_end();
+    let (rhs_start, rhs_end) = rhs.start_end();
+
+    SizeRanges::new(
+        lhs_start
+            .as_array()
+            .zip(rhs_start.as_array())
+            .map(|(lhs, rhs)| std::cmp::min(lhs, rhs))
+            .into(),
+        lhs_end
+            .as_array()
+            .zip(rhs_end.as_array())
+            .map(|(lhs, rhs)| std::cmp::max(lhs, rhs))
+            .into(),
+    )
 }
 
-pub struct RotatedVoxelWorld<'a> {
+pub struct RotatedVoxelWorld<TWorld, TWorldRef>
+where
+    TWorld: VoxelWorld,
+    TWorldRef: std::borrow::Borrow<TWorld>,
+{
+    world: TWorldRef,
     rotation: atoms::Rotation,
-    world: CenteredVoxelWorld<'a>,
+    __phantom: std::marker::PhantomData<TWorld>,
 }
 
-impl<'a> std::fmt::Debug for RotatedVoxelWorld<'a> {
+impl<TWorld, TWorldRef> std::fmt::Debug for RotatedVoxelWorld<TWorld, TWorldRef>
+where
+    TWorld: VoxelWorld,
+    TWorldRef: std::borrow::Borrow<TWorld>,
+    TWorld::IndexType: num::Integer,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let indent = if f.alternate() { "    " } else { "" };
         let ws_sep = if f.alternate() { "\n" } else { " " };
         f.write_str("RotatedVoxelWorld {")?;
         f.write_str(ws_sep)?;
-
-        f.write_fmt(format_args!(
-            "{indent}center: {:?},{ws_sep}",
-            self.world.center()
-        ))?;
 
         f.write_fmt(format_args!(
             "{indent}rotation: {:?},{ws_sep}",
@@ -56,8 +73,8 @@ impl<'a> std::fmt::Debug for RotatedVoxelWorld<'a> {
             self.size_ranges()
         ))?;
 
-        f.write_fmt(format_args!("{indent}bodies: "))?;
-        super::debug_fmt_bodies(self.all_bodies(), f, ws_sep, indent, indent, f.alternate())?;
+        f.write_fmt(format_args!("{indent}voxels: "))?;
+        super::debug_fmt_voxels(self.all_voxels(), f, ws_sep, indent, indent, f.alternate())?;
 
         if f.alternate() {
             f.write_str(",")?;
@@ -67,73 +84,94 @@ impl<'a> std::fmt::Debug for RotatedVoxelWorld<'a> {
     }
 }
 
-impl<'a> RotatedVoxelWorld<'a> {
-    pub fn new(world: CenteredVoxelWorld<'a>, rotation: atoms::Rotation) -> Self {
-        Self { rotation, world }
+impl<TWorld, TWorldRef> RotatedVoxelWorld<TWorld, TWorldRef>
+where
+    TWorld: VoxelWorld,
+    TWorldRef: std::borrow::Borrow<TWorld>,
+{
+    pub fn new(world: TWorldRef, rotation: atoms::Rotation) -> Self {
+        Self {
+            world,
+            rotation,
+            __phantom: Default::default(),
+        }
     }
 
-    pub fn size_ranges(&self) -> [std::ops::Range<RelativeIndexType>; 3] {
-        let size_ranges = self.world.size_ranges();
-        self.rotation
-            .rotate(size_ranges.map(atoms::NegableRange))
-            .map(From::from)
+    fn world(&self) -> &TWorld {
+        self.world.borrow()
     }
 
-    fn get_rel_pos(&self, rot_pos: RelativeVoxelPos) -> RelativeVoxelPos {
-        let RelativeVoxelPos(rot_pos) = rot_pos;
-        RelativeVoxelPos(self.rotation.inverse().rotate(rot_pos))
+    fn get_new_pos(&self, orig_pos: Pos<TWorld::IndexType>) -> Pos<TWorld::IndexType> {
+        self.rotation.rotate(orig_pos.as_array()).into()
     }
-    fn get_rot_pos(&self, rel_pos: RelativeVoxelPos) -> RelativeVoxelPos {
-        let RelativeVoxelPos(rel_pos) = rel_pos;
-        RelativeVoxelPos(self.rotation.rotate(rel_pos))
+    fn get_orig_pos(&self, new_pos: Pos<TWorld::IndexType>) -> Pos<TWorld::IndexType> {
+        self.rotation.inverse().rotate(new_pos.as_array()).into()
     }
 
-    pub fn get_voxel(&self, pos: RelativeVoxelPos) -> Option<Voxel> {
-        self.world
-            .get_voxel(self.get_rel_pos(pos))
+    // The returned world is probably not valid (the rotation center is not updated)
+    // but the rest should be valid (returns None if collision occured)
+    pub fn combine_with<RWorld, UWorld>(
+        &self,
+        other: &UWorld,
+    ) -> Option<(RWorld, Pos<TWorld::IndexType>)>
+    where
+        RWorld: NormVoxelWorld<IndexType = TWorld::IndexType>,
+        UWorld: VoxelWorld<IndexType = TWorld::IndexType>,
+        TWorld::IndexType: num::Integer,
+    {
+        let (min_pos, max_pos_bound) =
+            combine_size_ranges(self.size_ranges(), other.size_ranges()).start_end();
+
+        assert!(min_pos.as_array().iter().all(|pos| pos <= &num::zero()));
+        assert!(max_pos_bound
+            .as_array()
+            .iter()
+            .all(|pos| pos > &num::zero()));
+
+        let sizes = Sizes::new(max_pos_bound - min_pos);
+
+        let center = -min_pos;
+        let voxels = self
+            .all_voxels()
+            .chain(other.all_voxels())
+            .map(|(pos, voxel)| (pos + center, voxel));
+
+        match RWorld::partial_from_sizes_and_voxels(sizes, voxels) {
+            Ok(world) => Some((world, center)),
+            Err(InvalidVoxelWorldError::DuplicateVoxels(_)) => None,
+            Err(err) => Err(err).expect("Combining failed not by duplicates"),
+        }
+    }
+}
+
+impl<TWorld, TWorldRef> VoxelWorld for RotatedVoxelWorld<TWorld, TWorldRef>
+where
+    TWorld: VoxelWorld,
+    TWorldRef: std::borrow::Borrow<TWorld>,
+    TWorld::IndexType: num::Integer,
+{
+    type IndexType = TWorld::IndexType;
+
+    fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
+        let size_ranges = self.world().size_ranges().as_ranges_array();
+        SizeRanges::from_ranges_array(
+            self.rotation
+                .rotate(size_ranges.map(atoms::NegableRange))
+                .map(From::from),
+        )
+    }
+
+    fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
+        Box::new(self.world().all_voxels().map(|(orig_pos, voxel)| {
+            let rot_voxel = rotate_voxel(voxel, self.rotation);
+            let rot_pos = self.get_new_pos(orig_pos);
+            (rot_pos, rot_voxel)
+        }))
+    }
+
+    fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {
+        self.world()
+            .get_voxel(self.get_orig_pos(pos))
             .map(|voxel| rotate_voxel(voxel, self.rotation))
-    }
-
-    pub fn get_body(&self, pos: RelativeVoxelPos) -> Option<VoxelBody> {
-        self.get_voxel(pos)?.get_body()
-    }
-
-    pub fn all_bodies(&self) -> impl Iterator<Item = (VoxelBody, RelativeVoxelPos)> + '_ {
-        self.world.all_bodies().map(|(body, rel_pos)| {
-            let rot_body = rotate_body(body, self.rotation);
-            let rot_pos = self.get_rot_pos(rel_pos);
-            (rot_body, rot_pos)
-        })
-    }
-
-    pub fn combine_with(&self, other: &CenteredVoxelWorld) -> (VoxelWorld, VoxelPos) {
-        let self_size_ranges = self.size_ranges();
-        let other_size_ranges = other.size_ranges();
-
-        let size_ranges = self_size_ranges.zip(other_size_ranges).map(|(lsr, rsr)| {
-            assert!(
-                lsr.contains(&0) || rsr.contains(&0),
-                "one world has to contain the rotation center"
-            );
-            std::cmp::min(lsr.start, rsr.start)..std::cmp::max(lsr.end, rsr.end)
-        });
-
-        let sizes = VoxelPos(
-            size_ranges
-                .clone()
-                .map(|r| IndexType::try_from(r.end - r.start).unwrap()),
-        );
-        let center =
-            VoxelPos(size_ranges.map(|r| {
-                IndexType::try_from(-r.start).expect("start has to be always non-positive")
-            }));
-
-        let bodies = self
-            .all_bodies()
-            .chain(other.all_bodies())
-            .map(|(body, pos)| (body, pos.to_abs_pos(center).unwrap()));
-
-        let world = VoxelWorld::from_sizes_and_bodies_unchecked(sizes, bodies).unwrap();
-        (world, center)
     }
 }
