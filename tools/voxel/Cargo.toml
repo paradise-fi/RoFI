@@ -1,5 +1,5 @@
 [package]
-name = "rofi_voxel_reconfig"
+name = "rofi_voxel"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,11 +8,8 @@ name = "rofi_voxel_cli"
 crate-type = [ "lib", "cdylib", "staticlib" ]
 
 
-[[bin]]
-name = "rofi-voxel_reconfig"
-
 [dependencies]
-rofi_voxel = { path = "../../softwareComponents/rust-rofi_voxel" }
+rofi_voxel_reconfig = { path = "../../softwareComponents/voxelReconfig" }
 
 anyhow = "1.0"
 clap = { version = "4.0", features = ["derive"] }

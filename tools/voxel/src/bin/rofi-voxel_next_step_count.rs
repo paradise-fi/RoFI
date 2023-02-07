@@ -3,10 +3,10 @@
 use anyhow::Result;
 use clap::Parser;
 use itertools::Itertools;
-use rofi_voxel::connectivity::ConnectivityGraph;
-use rofi_voxel::reconfiguration::all_possible_next_worlds;
-use rofi_voxel::voxel_world::VoxelWorld;
 use rofi_voxel_cli::{FileInput, LogArgs};
+use rofi_voxel_reconfig::connectivity::ConnectivityGraph;
+use rofi_voxel_reconfig::reconfiguration::all_possible_next_worlds;
+use rofi_voxel_reconfig::voxel_world::VoxelWorld;
 use std::assert_matches::assert_matches;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -25,7 +25,7 @@ struct Cli {
 }
 
 impl Cli {
-    pub fn get_world(&self) -> Result<rofi_voxel::serde::VoxelWorld> {
+    pub fn get_world(&self) -> Result<rofi_voxel_reconfig::serde::VoxelWorld> {
         let world = FileInput::from_arg(&self.world_file);
         let world = serde_json::from_reader(world.get_reader()?)?;
 

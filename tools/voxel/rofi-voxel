@@ -63,7 +63,7 @@ def voxel_reconfig(init_voxel_file: str, goal_voxel_file: str, verbosity: int, l
     try:
         logging.info('Starting voxel reconfiguration')
 
-        cmd = ['rofi-voxel_reconfig', init_voxel_file, goal_voxel_file]
+        cmd = ['rofi-voxel_main', init_voxel_file, goal_voxel_file]
         if verbosity > 0:
             cmd.append(f"-{'v' * verbosity}")
         if logfile is not None:

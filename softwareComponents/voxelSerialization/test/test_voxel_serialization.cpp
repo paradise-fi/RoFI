@@ -1,5 +1,3 @@
-#include "voxel.hpp"
-
 #include <sstream>
 #include <utility>
 
@@ -8,6 +6,7 @@
 
 #include "configuration/serialization.hpp"
 #include "configuration/test_aid.hpp"
+#include "voxel/serialization.hpp"
 #include "voxel/test_aid.hpp"
 
 

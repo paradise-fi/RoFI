@@ -20,7 +20,7 @@ struct Cli {
 
 #[derive(Debug)]
 struct InputWorlds {
-    world: rofi_voxel::serde::VoxelWorld,
+    world: rofi_voxel_reconfig::serde::VoxelWorld,
 }
 
 impl Cli {
@@ -45,7 +45,7 @@ fn main() -> Result<()> {
     let norm_worlds = world
         .normalized_eq_worlds()
         .unique()
-        .map(|eq_world| rofi_voxel::serde::VoxelWorld::from_world(&eq_world))
+        .map(|eq_world| rofi_voxel_reconfig::serde::VoxelWorld::from_world(&eq_world))
         .collect::<Vec<_>>();
 
     if args.short {

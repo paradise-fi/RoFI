@@ -3,7 +3,7 @@
 #include <atoms/test_aid.hpp>
 #include <catch2/catch.hpp>
 
-#include "voxel.hpp"
+#include "voxel/serialization.hpp"
 
 
 namespace Catch

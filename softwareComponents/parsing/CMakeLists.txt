@@ -6,5 +6,5 @@ target_link_libraries(parsing-lite INTERFACE atoms configurationWithJson)
 target_include_directories(parsing-lite INTERFACE include_lite)
 
 add_library(parsing INTERFACE)
-target_link_libraries(parsing INTERFACE parsing-lite voxel)
+target_link_libraries(parsing INTERFACE parsing-lite voxel_serialization)
 target_include_directories(parsing INTERFACE include)

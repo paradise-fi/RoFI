@@ -1,7 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
-use rofi_voxel::reconfiguration;
 use rofi_voxel_cli::{FileInput, LogArgs};
+use rofi_voxel_reconfig::reconfiguration;
 
 /// Compute RoFI reconfiguration from init to goal by using voxels
 #[derive(Debug, Parser)]
@@ -19,8 +19,8 @@ struct Cli {
 
 #[derive(Debug)]
 struct InputWorlds {
-    init: rofi_voxel::serde::VoxelWorld,
-    goal: rofi_voxel::serde::VoxelWorld,
+    init: rofi_voxel_reconfig::serde::VoxelWorld,
+    goal: rofi_voxel_reconfig::serde::VoxelWorld,
 }
 
 impl Cli {
@@ -52,7 +52,7 @@ fn main() -> Result<()> {
     let reconfig_sequence = reconfiguration::compute_reconfiguration_moves(&init, goal)?;
     let reconfig_sequence = reconfig_sequence
         .iter()
-        .map(|world| rofi_voxel::serde::VoxelWorld::from_world(world))
+        .map(|world| rofi_voxel_reconfig::serde::VoxelWorld::from_world(world))
         .collect::<Vec<_>>();
 
     if args.short {
