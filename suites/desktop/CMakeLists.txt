@@ -180,7 +180,7 @@ endif()
 add_component(atoms)
 add_component(parsing)
 add_component(configuration)
-add_component(voxel)
+add_component(voxelSerialization)
 add_component(kinematics)
 add_component(reconfig)
 add_component(isoreconfig)
@@ -218,7 +218,7 @@ if (${BUILD_GAZEBO})
 endif()
 
 if (${BUILD_RUST})
-  add_component(rust-rofi_voxel)
+  add_component(voxelReconfig)
 endif()
 
 
@@ -245,7 +245,7 @@ if (${BUILD_GAZEBO})
 endif()
 
 if (${BUILD_RUST})
-  add_tool(rust-rofi_voxel_reconfig)
+  add_tool(voxel)
 endif()
 
 

@@ -408,6 +408,20 @@ dependencies = [
 name = "rofi_voxel"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
+ "clap",
+ "clap-verbosity-flag",
+ "itertools",
+ "log",
+ "rofi_voxel_reconfig",
+ "serde_json",
+ "simplelog",
+]
+
+[[package]]
+name = "rofi_voxel_reconfig"
+version = "0.2.0"
+dependencies = [
  "amplify",
  "bimap",
  "enum-iterator",
@@ -419,20 +433,6 @@ dependencies = [
  "serde",
  "smallvec",
  "static_assertions",
-]
-
-[[package]]
-name = "rofi_voxel_reconfig"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "clap",
- "clap-verbosity-flag",
- "itertools",
- "log",
- "rofi_voxel",
- "serde_json",
- "simplelog",
 ]
 
 [[package]]

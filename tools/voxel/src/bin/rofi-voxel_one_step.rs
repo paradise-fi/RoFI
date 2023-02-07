@@ -2,10 +2,10 @@
 
 use anyhow::Result;
 use clap::Parser;
-use rofi_voxel::connectivity::ConnectivityGraph;
-use rofi_voxel::reconfiguration::all_possible_next_worlds_not_norm;
-use rofi_voxel::voxel_world::VoxelWorld;
 use rofi_voxel_cli::{FileInput, LogArgs};
+use rofi_voxel_reconfig::connectivity::ConnectivityGraph;
+use rofi_voxel_reconfig::reconfiguration::all_possible_next_worlds_not_norm;
+use rofi_voxel_reconfig::voxel_world::VoxelWorld;
 use std::assert_matches::assert_matches;
 
 /// Compute one step of the reconfiguration algorithm.
@@ -27,7 +27,7 @@ struct Cli {
 
 #[derive(Debug)]
 struct InputWorlds {
-    world: rofi_voxel::serde::VoxelWorld,
+    world: rofi_voxel_reconfig::serde::VoxelWorld,
 }
 
 impl Cli {
@@ -74,7 +74,7 @@ fn main() -> Result<()> {
 
     let worlds = std::iter::once(&world)
         .chain(&next_worlds)
-        .map(rofi_voxel::serde::VoxelWorld::from_world)
+        .map(rofi_voxel_reconfig::serde::VoxelWorld::from_world)
         .collect::<Vec<_>>();
 
     if args.short {
