@@ -33,16 +33,16 @@ impl TryFrom<i32> for ShoeJointPosition {
     }
 }
 
-impl From<voxel::body::JointPosition> for ShoeJointPosition {
-    fn from(value: voxel::body::JointPosition) -> Self {
+impl From<voxel::JointPosition> for ShoeJointPosition {
+    fn from(value: voxel::JointPosition) -> Self {
         match value {
-            voxel::body::JointPosition::Zero => Self::Zero,
-            voxel::body::JointPosition::Plus90 => Self::Plus90,
-            voxel::body::JointPosition::Minus90 => Self::Minus90,
+            voxel::JointPosition::Zero => Self::Zero,
+            voxel::JointPosition::Plus90 => Self::Plus90,
+            voxel::JointPosition::Minus90 => Self::Minus90,
         }
     }
 }
-impl From<ShoeJointPosition> for voxel::body::JointPosition {
+impl From<ShoeJointPosition> for voxel::JointPosition {
     fn from(value: ShoeJointPosition) -> Self {
         match value {
             ShoeJointPosition::Zero => Self::Zero,
@@ -52,7 +52,7 @@ impl From<ShoeJointPosition> for voxel::body::JointPosition {
     }
 }
 
-impl Serialize for voxel::body::JointPosition {
+impl Serialize for voxel::JointPosition {
     fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
     where
         S: serde::Serializer,
@@ -60,7 +60,7 @@ impl Serialize for voxel::body::JointPosition {
         ShoeJointPosition::from(*self).serialize(serializer)
     }
 }
-impl<'de> Deserialize<'de> for voxel::body::JointPosition {
+impl<'de> Deserialize<'de> for voxel::JointPosition {
     fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
     where
         D: serde::Deserializer<'de>,

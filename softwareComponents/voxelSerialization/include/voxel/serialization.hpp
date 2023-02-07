@@ -178,19 +178,19 @@ inline auto jointPositionInverse( JointPosition value ) -> JointPosition
     ROFI_UNREACHABLE( "JointPosition is out of bounds" );
 }
 
-/// This documentation is copy from Rust `voxel::body::VoxelBody`
+/// This documentation is copy from Rust `voxel::Voxel`
 ///
 /// Canonized representation:
-/// - when `other_body_dir.is_dir_to_plus` is true, the VoxelBody is assumed a BodyA
+/// - when `body_dir.is_dir_to_plus` is true, the Voxel is assumed a BodyA
 ///     otherwise it's assumed BodyB
-/// - when `is_shoe_rotated` is `false`, X-connectors are in the next axis
-///         - `other_body_dir.axis` is `Axis::X` => X-connectors are in Y axis
-///         - `other_body_dir.axis` is `Axis::Y` => X-connectors are in Z axis
-///         - `other_body_dir.axis` is `Axis::Z` => X-connectors are in X axis
+/// - when `shoe_rotated` is `false`, X-connectors are in the next axis
+///         - `body_dir.axis` is `Axis::X` => X-connectors are in Y axis
+///         - `body_dir.axis` is `Axis::Y` => X-connectors are in Z axis
+///         - `body_dir.axis` is `Axis::Z` => X-connectors are in X axis
 ///     otherwise X-connectors are in the previous axis
-///         - `other_body_dir.axis` is `Axis::X` => X-connectors are in Z axis
-///         - `other_body_dir.axis` is `Axis::Y` => X-connectors are in X axis
-///         - `other_body_dir.axis` is `Axis::Z` => X-connectors are in Y axis
+///         - `body_dir.axis` is `Axis::X` => X-connectors are in Z axis
+///         - `body_dir.axis` is `Axis::Y` => X-connectors are in X axis
+///         - `body_dir.axis` is `Axis::Z` => X-connectors are in Y axis
 /// - when `joint_pos` is `Zero`, the shoe joint is in the zero position
 ///     when `joint_pos` is `Plus90` the Z-connector is towards the plus axis
 ///     otherwise the Z-connector is towards the minus axis
@@ -209,7 +209,7 @@ private:
         }
         return atoms::result_error< std::string >( "Position is not on the grid" );
     }
-    static auto getOtherBodyDir( const rofi::configuration::matrices::Matrix & bodyPos )
+    static auto getBodyDir( const rofi::configuration::matrices::Matrix & bodyPos )
             -> atoms::Result< Direction >
     {
         auto dir = Direction::fromVector( bodyPos * rofi::configuration::matrices::Z );
@@ -219,16 +219,16 @@ private:
         return atoms::result_value( *dir );
     }
     static auto getIsShoeRotated( const rofi::configuration::matrices::Matrix & bodyPos,
-                                  Direction otherBodyDir ) -> atoms::Result< bool >
+                                  Direction bodyDir ) -> atoms::Result< bool >
     {
         auto xDirOpt = Direction::fromVector( bodyPos * rofi::configuration::matrices::X );
         if ( !xDirOpt ) {
             return atoms::result_error< std::string >( "Module is not rotated orthogonaly" );
         }
         auto xDir = *xDirOpt;
-        assert( otherBodyDir.axis != xDir.axis );
+        assert( bodyDir.axis != xDir.axis );
 
-        return atoms::result_value( nextAxis( otherBodyDir.axis ) != xDir.axis );
+        return atoms::result_value( nextAxis( bodyDir.axis ) != xDir.axis );
     }
     static auto getJointPosition( const rofi::configuration::matrices::Matrix & bodyPos,
                                   Angle shoeJointAngle ) -> atoms::Result< JointPosition >
@@ -259,11 +259,11 @@ private:
         if ( !pos ) {
             return std::move( pos ).assume_error_result();
         }
-        auto otherBodyDir = getOtherBodyDir( bodyPos );
-        if ( !otherBodyDir ) {
-            return std::move( otherBodyDir ).assume_error_result();
+        auto bodyDir = getBodyDir( bodyPos );
+        if ( !bodyDir ) {
+            return std::move( bodyDir ).assume_error_result();
         }
-        auto isShoeRotated = getIsShoeRotated( bodyPos, *otherBodyDir );
+        auto isShoeRotated = getIsShoeRotated( bodyPos, *bodyDir );
         if ( !isShoeRotated ) {
             return std::move( isShoeRotated ).assume_error_result();
         }
@@ -273,8 +273,8 @@ private:
         }
 
         return atoms::result_value( Voxel{ .pos = *pos,
-                                           .other_body_dir = *otherBodyDir,
-                                           .is_shoe_rotated = *isShoeRotated,
+                                           .body_dir = *bodyDir,
+                                           .shoe_rotated = *isShoeRotated,
                                            .joint_pos = *jointPos } );
     }
 
@@ -302,16 +302,15 @@ public:
 public:
     auto getOtherBodyPos() const -> Position
     {
-        return other_body_dir.movePosition( pos );
+        return body_dir.movePosition( pos );
     }
 
     auto zConnDirection() const -> Direction
     {
-        auto zConnAxis = is_shoe_rotated ? nextAxis( other_body_dir.axis )
-                                         : prevAxis( other_body_dir.axis );
+        auto zConnAxis = shoe_rotated ? nextAxis( body_dir.axis ) : prevAxis( body_dir.axis );
         switch ( joint_pos ) {
             case JointPosition::Zero:
-                return other_body_dir.opposite();
+                return body_dir.opposite();
             case JointPosition::Plus90:
                 return Direction{ .axis = zConnAxis, .is_positive = true };
             case JointPosition::Minus90:
@@ -321,12 +320,12 @@ public:
     }
     auto xPlusConnDirection() const -> Direction
     {
-        if ( is_shoe_rotated ) {
-            return Direction{ .axis = prevAxis( other_body_dir.axis ),
-                              .is_positive = !other_body_dir.is_positive };
+        if ( shoe_rotated ) {
+            return Direction{ .axis = prevAxis( body_dir.axis ),
+                              .is_positive = !body_dir.is_positive };
         } else {
-            return Direction{ .axis = nextAxis( other_body_dir.axis ),
-                              .is_positive = other_body_dir.is_positive };
+            return Direction{ .axis = nextAxis( body_dir.axis ),
+                              .is_positive = body_dir.is_positive };
         }
     }
 
@@ -459,20 +458,20 @@ public:
             -> rofi::configuration::UniversalModule
     {
         auto getGamma = [ & ] {
-            if ( shoeA.is_shoe_rotated == shoeB.is_shoe_rotated ) {
+            if ( shoeA.shoe_rotated == shoeB.shoe_rotated ) {
                 return 0_deg;
             }
-            if ( shoeA.is_shoe_rotated ) {
-                assert( !shoeB.is_shoe_rotated );
+            if ( shoeA.shoe_rotated ) {
+                assert( !shoeB.shoe_rotated );
                 return 90_deg;
             }
-            assert( !shoeA.is_shoe_rotated );
-            assert( shoeB.is_shoe_rotated );
+            assert( !shoeA.shoe_rotated );
+            assert( shoeB.shoe_rotated );
             return -90_deg;
         };
 
-        assert( shoeA.other_body_dir.movePosition( shoeA.pos ) == shoeB.pos );
-        assert( shoeB.other_body_dir.movePosition( shoeB.pos ) == shoeA.pos );
+        assert( shoeA.body_dir.movePosition( shoeA.pos ) == shoeB.pos );
+        assert( shoeB.body_dir.movePosition( shoeB.pos ) == shoeA.pos );
 
         auto alpha = Angle::deg( jointPositionToInteger( shoeA.joint_pos ) );
         auto beta = Angle::deg( jointPositionToInteger( shoeB.joint_pos ) );
@@ -485,8 +484,8 @@ public:
     bool operator==( const Voxel & ) const = default;
 
     Position pos = {};
-    Direction other_body_dir = {};
-    bool is_shoe_rotated = {};
+    Direction body_dir = {};
+    bool shoe_rotated = {};
     JointPosition joint_pos = {};
 };
 
@@ -514,7 +513,7 @@ public:
                     "RofiWorld has to be prepared to convert to voxel json" );
         }
 
-        auto voxelBodies = std::vector< Voxel >();
+        auto voxels = std::vector< Voxel >();
         for ( const auto & rModule : rofiWorld.modules() ) {
             auto * universalModule = dynamic_cast< const rofi::configuration::UniversalModule * >(
                     &rModule );
@@ -526,29 +525,30 @@ public:
                 return std::move( voxelModule ).assume_error_result();
             }
             for ( auto voxel : *voxelModule ) {
-                voxelBodies.push_back( std::move( voxel ) );
+                voxels.push_back( std::move( voxel ) );
             }
         }
 
-        return atoms::result_value( VoxelWorld{ .bodies = std::move( voxelBodies ) } );
+        return atoms::result_value( VoxelWorld{ .bodies = std::move( voxels ) } );
     }
 
 private:
-    static auto isModuleRepr( Voxel voxelBody ) -> bool
+    static auto isModuleRepr( Voxel voxel ) -> bool
     {
-        return voxelBody.other_body_dir.is_positive;
+        return voxel.body_dir.is_positive;
     }
 
-    auto posToBodiesMap() const -> atoms::Result< std::map< Position, Voxel > >
+    auto posToVoxelMap() const -> atoms::Result< std::map< Position, Voxel > >
     {
-        auto bodiesMap = std::map< Position, Voxel >();
-        for ( const auto & voxelBody : bodies ) {
-            auto inserted = bodiesMap.emplace( voxelBody.pos, voxelBody );
+        auto voxelMap = std::map< Position, Voxel >();
+        for ( const auto & voxel : bodies ) {
+            auto inserted = voxelMap.emplace( voxel.pos, voxel );
             if ( !inserted.second ) {
-                return atoms::result_error< std::string >( "Multiple bodies at the same position" );
+                return atoms::result_error< std::string >(
+                        "Multiple voxel bodies at the same position" );
             }
         }
-        return atoms::result_value( std::move( bodiesMap ) );
+        return atoms::result_value( std::move( voxelMap ) );
     }
 
     static void connectModules( ConnectorMap & connectorMap )
@@ -577,17 +577,17 @@ private:
         }
     }
 
-    auto fixInSpace( Voxel bodyToFixate, ConnectorMap & connectorMap ) const
+    auto fixInSpace( Voxel voxelToFixate, ConnectorMap & connectorMap ) const
             -> atoms::Result< std::monostate >
     {
         auto connIt = connectorMap.find(
-                std::pair{ bodyToFixate.pos, bodyToFixate.xPlusConnDirection().opposite() } );
+                std::pair{ voxelToFixate.pos, voxelToFixate.xPlusConnDirection().opposite() } );
         if ( connIt == connectorMap.end() ) {
-            return atoms::result_error< std::string >( "Couldn't find body's X- connector" );
+            return atoms::result_error< std::string >( "Couldn't find voxel's X- connector" );
         }
         auto conn = connIt->second;
-        auto refPoint = toMatrixVector( bodyToFixate.pos );
-        auto rotation = bodyToFixate.getXPlusConnMatrixRotation();
+        auto refPoint = toMatrixVector( voxelToFixate.pos );
+        auto rotation = voxelToFixate.getXPlusConnMatrixRotation();
 
         rofi::configuration::connect< rofi::configuration::RigidJoint >( conn.first,
                                                                          refPoint,
@@ -616,25 +616,25 @@ public:
             return atoms::result_error< std::string >( "VoxelWorld cannot be empty" );
         }
 
-        auto bodiesMapResult = posToBodiesMap();
-        if ( !bodiesMapResult ) {
-            return std::move( bodiesMapResult ).assume_error_result();
+        auto voxelMapResult = posToVoxelMap();
+        if ( !voxelMapResult ) {
+            return std::move( voxelMapResult ).assume_error_result();
         }
-        const auto bodiesMap = std::move( *bodiesMapResult );
+        const auto voxelMap = std::move( *voxelMapResult );
         auto moduleId = rofi::configuration::ModuleId( 1 );
         auto connectorMap = ConnectorMap();
 
         auto rofiWorld = rofi::configuration::RofiWorld();
-        for ( const auto & voxelBody : bodies ) {
-            if ( !isModuleRepr( voxelBody ) ) {
+        for ( const auto & voxel : bodies ) {
+            if ( !isModuleRepr( voxel ) ) {
                 continue;
             }
 
-            if ( !bodiesMap.contains( voxelBody.getOtherBodyPos() ) ) {
+            if ( !voxelMap.contains( voxel.getOtherBodyPos() ) ) {
                 return atoms::result_error< std::string >( "Invalid world" );
             }
-            auto shoeA = voxelBody;
-            auto shoeB = bodiesMap.at( voxelBody.getOtherBodyPos() );
+            auto shoeA = voxel;
+            auto shoeB = voxelMap.at( voxel.getOtherBodyPos() );
 
             auto & mod = rofiWorld.insert( Voxel::toRofiModule( shoeA, shoeB, moduleId++ ) );
 
@@ -650,8 +650,8 @@ public:
         }
 
         if ( fixateModulesByOne ) {
-            for ( const auto & body : bodies ) {
-                auto fixInSpaceResult = fixInSpace( body, connectorMap );
+            for ( const auto & voxel : bodies ) {
+                auto fixInSpaceResult = fixInSpace( voxel, connectorMap );
                 if ( !fixInSpaceResult ) {
                     return std::move( fixInSpaceResult ).assume_error_result();
                 }
@@ -713,7 +713,7 @@ inline void from_json( const nlohmann::json & j, JointPosition & joint_pos )
 // Make Direction (de)serializable to nlohmann::json
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Direction, axis, is_positive )
 // Make Voxel (de)serializable to nlohmann::json
-NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Voxel, pos, other_body_dir, is_shoe_rotated, joint_pos )
+NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( Voxel, pos, body_dir, shoe_rotated, joint_pos )
 // Make VoxelWorld (de)serializable to nlohmann::json
 NLOHMANN_DEFINE_TYPE_NON_INTRUSIVE( VoxelWorld, bodies )
 

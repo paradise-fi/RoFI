@@ -105,20 +105,20 @@ TEST_CASE( "Default position - 1 module" )
     "bodies" : [
         {
             "pos" : [0, 0, 0],
-            "other_body_dir" : {
+            "body_dir" : {
                 "axis" : "Z",
                 "is_positive" : true
             },
-            "is_shoe_rotated" : false,
+            "shoe_rotated" : false,
             "joint_pos" : 0
         },
         {
             "pos" : [0, 0, 1],
-            "other_body_dir" : {
+            "body_dir" : {
                 "axis" : "Z",
                 "is_positive" : false
             },
-            "is_shoe_rotated" : false,
+            "shoe_rotated" : false,
             "joint_pos" : 0
         }
     ]

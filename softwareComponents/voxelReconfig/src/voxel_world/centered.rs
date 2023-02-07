@@ -1,13 +1,21 @@
-use super::VoxelSubworld;
-use crate::pos::{RelativeIndexType, RelativeVoxelPos, VoxelPos};
-use crate::voxel::{Voxel, VoxelBody};
+use super::VoxelWorld;
+use crate::pos::{Pos, SizeRanges};
+use crate::voxel::Voxel;
 
-pub struct CenteredVoxelWorld<'a> {
-    center: VoxelPos,
-    world: VoxelSubworld<'a>,
+pub struct CenteredVoxelWorld<TWorld, TWorldRef>
+where
+    TWorld: VoxelWorld,
+    TWorldRef: std::borrow::Borrow<TWorld>,
+{
+    world: TWorldRef,
+    center: Pos<TWorld::IndexType>,
 }
 
-impl<'a> std::fmt::Debug for CenteredVoxelWorld<'a> {
+impl<TWorld, TWorldRef> std::fmt::Debug for CenteredVoxelWorld<TWorld, TWorldRef>
+where
+    TWorld: VoxelWorld,
+    TWorldRef: std::borrow::Borrow<TWorld>,
+{
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let indent = if f.alternate() { "    " } else { "" };
         let ws_sep = if f.alternate() { "\n" } else { " " };
@@ -21,8 +29,8 @@ impl<'a> std::fmt::Debug for CenteredVoxelWorld<'a> {
             self.size_ranges()
         ))?;
 
-        f.write_fmt(format_args!("{indent}bodies: "))?;
-        super::debug_fmt_bodies(self.all_bodies(), f, ws_sep, indent, indent, f.alternate())?;
+        f.write_fmt(format_args!("{indent}voxels: "))?;
+        super::debug_fmt_voxels(self.all_voxels(), f, ws_sep, indent, indent, f.alternate())?;
 
         if f.alternate() {
             f.write_str(",")?;
@@ -32,49 +40,53 @@ impl<'a> std::fmt::Debug for CenteredVoxelWorld<'a> {
     }
 }
 
-impl<'a> CenteredVoxelWorld<'a> {
-    pub fn new(world: VoxelSubworld<'a>, center: VoxelPos) -> Self {
-        let VoxelPos(c) = center;
-        assert!(
-            c.iter().all(|&i| RelativeIndexType::try_from(i).is_ok()),
-            "Abs pos is too large"
-        );
-        Self { center, world }
+impl<TWorld, TWorldRef> CenteredVoxelWorld<TWorld, TWorldRef>
+where
+    TWorld: VoxelWorld,
+    TWorldRef: std::borrow::Borrow<TWorld>,
+{
+    pub fn new(world: TWorldRef, center: Pos<TWorld::IndexType>) -> Self {
+        Self { world, center }
     }
 
-    pub fn center(&self) -> VoxelPos {
+    fn world(&self) -> &TWorld {
+        self.world.borrow()
+    }
+
+    fn center(&self) -> Pos<TWorld::IndexType> {
         self.center
     }
 
-    pub fn size_ranges(&self) -> [std::ops::Range<RelativeIndexType>; 3] {
-        let world_size_ranges = self.world.size_ranges();
-        let min_pos = world_size_ranges.each_ref().map(|size_i| size_i.start);
-        let max_pos = world_size_ranges.each_ref().map(|size_i| size_i.end);
-        let RelativeVoxelPos(min_pos) = self.get_rel_pos(VoxelPos(min_pos));
-        let RelativeVoxelPos(max_pos) = self.get_rel_pos(VoxelPos(max_pos));
-        min_pos.zip(max_pos).map(|(min, max)| min..max)
+    fn get_new_pos(&self, orig_pos: Pos<TWorld::IndexType>) -> Pos<TWorld::IndexType> {
+        orig_pos - self.center()
+    }
+    fn get_orig_pos(&self, new_pos: Pos<TWorld::IndexType>) -> Pos<TWorld::IndexType> {
+        new_pos + self.center()
+    }
+}
+
+impl<TWorld, TWorldRef> VoxelWorld for CenteredVoxelWorld<TWorld, TWorldRef>
+where
+    TWorld: VoxelWorld,
+    TWorldRef: std::borrow::Borrow<TWorld>,
+{
+    type IndexType = TWorld::IndexType;
+
+    fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
+        let (start, end) = self.world().size_ranges().start_end();
+        SizeRanges::new(self.get_new_pos(start), self.get_new_pos(end))
     }
 
-    fn get_rel_pos(&self, abs_pos: VoxelPos) -> RelativeVoxelPos {
-        RelativeVoxelPos::from_pos_and_origin(abs_pos, self.center)
+    fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
+        Box::new(
+            self.world()
+                .all_voxels()
+                .map(|(orig_pos, voxel)| (self.get_new_pos(orig_pos), voxel)),
+        )
     }
 
-    fn get_abs_pos(&self, rel_pos: RelativeVoxelPos) -> Result<VoxelPos, impl std::error::Error> {
-        rel_pos.to_abs_pos(self.center)
-    }
-
-    pub fn get_voxel(&self, pos: RelativeVoxelPos) -> Option<Voxel> {
-        self.world.get_voxel(self.get_abs_pos(pos).ok()?)
-    }
-
-    pub fn get_body(&self, pos: RelativeVoxelPos) -> Option<VoxelBody> {
-        self.get_voxel(pos)?.get_body()
-    }
-
-    pub fn all_bodies(&self) -> impl Iterator<Item = (VoxelBody, RelativeVoxelPos)> + '_ {
-        self.world.all_bodies().map(|(body, abs_pos)| {
-            let rel_pos = self.get_rel_pos(abs_pos);
-            (body, rel_pos)
-        })
+    fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {
+        let orig_pos = self.get_orig_pos(pos);
+        self.world().get_voxel(orig_pos)
     }
 }

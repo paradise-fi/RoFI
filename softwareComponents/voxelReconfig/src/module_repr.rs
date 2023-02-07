@@ -1,30 +1,35 @@
-use crate::pos::VoxelPos;
-use crate::voxel::body::get_neighbour_pos;
-use crate::voxel::{VoxelBody, VoxelBodyWithPos};
+use crate::pos::Pos;
+use crate::voxel::{get_other_body_pos, PosVoxel, Voxel};
 use crate::voxel_world::VoxelWorld;
 
-pub fn is_module_repr(body: VoxelBody) -> bool {
-    body.other_body_dir().is_positive()
+pub fn is_module_repr(voxel: Voxel) -> bool {
+    voxel.body_dir().is_positive()
 }
 
-pub fn get_module_repr_pos(body_with_pos: VoxelBodyWithPos) -> VoxelPos {
-    if is_module_repr(body_with_pos.0) {
-        body_with_pos.1
+pub fn get_module_repr_pos<TIndex: num::Signed + Copy>(pos_voxel: PosVoxel<TIndex>) -> Pos<TIndex> {
+    if is_module_repr(pos_voxel.1) {
+        pos_voxel.0
     } else {
-        get_neighbour_pos(body_with_pos).unwrap()
+        get_other_body_pos(pos_voxel)
     }
 }
 
-pub fn get_all_module_reprs(world: &VoxelWorld) -> impl Iterator<Item = VoxelBodyWithPos> + '_ {
-    world.all_bodies().filter(|&(body, _)| is_module_repr(body))
+pub fn get_all_module_reprs<TWorld: VoxelWorld>(
+    world: &TWorld,
+) -> impl '_ + Iterator<Item = PosVoxel<TWorld::IndexType>> {
+    world
+        .all_voxels()
+        .filter(|&(_, voxel)| is_module_repr(voxel))
 }
 
-pub fn get_bodies(module: VoxelBodyWithPos, world: &VoxelWorld) -> [VoxelBodyWithPos; 2] {
-    debug_assert!(is_module_repr(module.0));
-    let other_pos = get_neighbour_pos(module).unwrap();
-    let other_body = world
-        .get_body(other_pos)
-        .expect("Missing other body in world");
+pub fn get_other_body<TWorld: VoxelWorld>(
+    pos_voxel: PosVoxel<TWorld::IndexType>,
+    world: &TWorld,
+) -> Result<PosVoxel<TWorld::IndexType>, String> {
+    let other_pos = get_other_body_pos(pos_voxel);
+    let other_voxel = world
+        .get_voxel(other_pos)
+        .ok_or("Missing other body in world")?;
 
-    [module, (other_body, other_pos)]
+    Ok((other_pos, other_voxel))
 }

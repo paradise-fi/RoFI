@@ -1,38 +1,38 @@
 use crate::atoms;
-use crate::pos::RelativeVoxelPos;
+use crate::pos::Pos;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct Voxel {
-    pub pos: RelativeVoxelPos,
-    pub other_body_dir: atoms::Direction,
-    pub is_shoe_rotated: bool,
-    pub joint_pos: crate::voxel::body::JointPosition,
+pub struct Voxel<TIndex: num::Num + Clone> {
+    pub pos: Pos<TIndex>,
+    pub body_dir: atoms::Direction,
+    pub shoe_rotated: bool,
+    pub joint_pos: crate::voxel::JointPosition,
 }
 
-impl From<Voxel> for (crate::voxel::VoxelBody, RelativeVoxelPos) {
-    fn from(value: Voxel) -> Self {
+impl<TIndex: num::Num + Clone> From<Voxel<TIndex>> for crate::voxel::PosVoxel<TIndex> {
+    fn from(value: Voxel<TIndex>) -> Self {
         let Voxel {
             pos,
-            other_body_dir,
-            is_shoe_rotated,
+            body_dir,
+            shoe_rotated,
             joint_pos,
         } = value;
         (
-            crate::voxel::VoxelBody::new_with(other_body_dir, is_shoe_rotated, joint_pos),
             pos,
+            crate::voxel::Voxel::new_with(body_dir, shoe_rotated, joint_pos),
         )
     }
 }
-impl From<(crate::voxel::VoxelBody, RelativeVoxelPos)> for Voxel {
-    fn from(value: (crate::voxel::VoxelBody, RelativeVoxelPos)) -> Self {
-        let (value, pos) = value;
+impl<TIndex: num::Num + Clone> From<crate::voxel::PosVoxel<TIndex>> for Voxel<TIndex> {
+    fn from(value: crate::voxel::PosVoxel<TIndex>) -> Self {
+        let (pos, voxel) = value;
         Self {
             pos,
-            other_body_dir: value.other_body_dir(),
-            is_shoe_rotated: value.is_shoe_rotated(),
-            joint_pos: value.joint_pos(),
+            body_dir: voxel.body_dir(),
+            shoe_rotated: voxel.shoe_rotated(),
+            joint_pos: voxel.joint_pos(),
         }
     }
 }

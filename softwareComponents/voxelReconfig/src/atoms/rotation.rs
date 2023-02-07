@@ -138,8 +138,8 @@ impl Rotation {
         };
 
         debug_assert_eq!(
-            self.rotate(dir.update_position([0; 3]).unwrap()),
-            result.update_position([0; 3]).unwrap()
+            self.rotate(dir.update_position([0; 3])),
+            result.update_position([0; 3])
         );
 
         result

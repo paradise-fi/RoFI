@@ -14,14 +14,15 @@ opt-level = "s"
 crate-type = [ "lib", "cdylib", "staticlib" ]
 
 [dependencies]
-amplify = "3.13"
+amplify = "3.14"
 bimap = "0.6"
 enum-iterator = "1.2"
 itertools = "0.10"
+litemap = "0.6"
 log = "0.4"
 modular-bitfield = "0.11"
 num = "0.4"
 rs-graph = "0.20"
 serde = { version = "1.0", features = ["derive"] }
-smallvec = "1.8"
+smallvec = "1.10"
 static_assertions = "1.1"

@@ -4,14 +4,18 @@ use anyhow::Result;
 use clap::Parser;
 use itertools::Itertools;
 use rofi_voxel_cli::{FileInput, LogArgs};
-use rofi_voxel_reconfig::connectivity::ConnectivityGraph;
-use rofi_voxel_reconfig::reconfiguration::all_possible_next_worlds;
-use rofi_voxel_reconfig::voxel_world::VoxelWorld;
+use rofi_voxel_reconfig::reconfig::all_next_worlds_norm;
+use rofi_voxel_reconfig::voxel_world::impls::MapVoxelWorld;
+use rofi_voxel_reconfig::voxel_world::NormVoxelWorld;
+use rofi_voxel_reconfig::voxel_world::{as_one_of_norm_eq_world, normalized_eq_worlds};
+use rofi_voxel_reconfig::voxel_world::{check_voxel_world, is_normalized};
 use std::assert_matches::assert_matches;
 use std::collections::HashMap;
 use std::io::Write;
 use std::rc::Rc;
 use std::time::SystemTime;
+
+type IndexType = i8;
 
 /// Compute world counts after 1 to max steps of the reconfiguration algorithm
 #[derive(Debug, Parser)]
@@ -29,7 +33,7 @@ struct Cli {
 }
 
 impl Cli {
-    pub fn get_world(&self) -> Result<rofi_voxel_reconfig::serde::VoxelWorld> {
+    pub fn get_world(&self) -> Result<rofi_voxel_reconfig::serde::VoxelWorld<IndexType>> {
         let world = FileInput::from_arg(&self.world_file);
         let world = serde_json::from_reader(world.get_reader()?)?;
 
@@ -63,17 +67,17 @@ impl ResultData {
 
 #[derive(Debug)]
 struct ResultsData {
-    bodies_count: usize,
+    voxel_count: usize,
     init_eq_worlds: usize,
     rounds: Vec<ResultData>,
     start_time: SystemTime,
 }
 
 impl ResultsData {
-    pub fn new(bodies_count: usize, init_eq_worlds: usize) -> Self {
-        log::info!("Starting with bodies_count: {bodies_count}, eq_worlds: {init_eq_worlds}");
+    pub fn new(voxel_count: usize, init_eq_worlds: usize) -> Self {
+        log::info!("Starting with voxel_count: {voxel_count}, eq_worlds: {init_eq_worlds}");
         Self {
-            bodies_count,
+            voxel_count,
             init_eq_worlds,
             rounds: Vec::new(),
             start_time: SystemTime::now(),
@@ -82,8 +86,8 @@ impl ResultsData {
 
     pub fn as_json_str(&self) -> String {
         format!(
-            "{{\n  \"bodies count\": {},\n  \"start\": {},\n  \"rounds\": [\n    {}\n  ]\n}}",
-            self.bodies_count,
+            "{{\n  \"voxel count\": {},\n  \"start\": {},\n  \"rounds\": [\n    {}\n  ]\n}}",
+            self.voxel_count,
             self.get_start().as_json_str(),
             self.rounds
                 .iter()
@@ -123,35 +127,36 @@ impl ResultsData {
     }
 }
 
-fn get_next_step_counts(
-    worlds_to_visit: &[Rc<VoxelWorld>],
-    parent_worlds: &mut HashMap<Rc<VoxelWorld>, Option<Rc<VoxelWorld>>>,
-    init_bodies_count: usize,
-) -> (Vec<Rc<VoxelWorld>>, usize) {
+fn get_next_step_counts<TWorld>(
+    worlds_to_visit: &[Rc<TWorld>],
+    parent_worlds: &mut HashMap<Rc<TWorld>, Option<Rc<TWorld>>>,
+) -> (Vec<Rc<TWorld>>, usize)
+where
+    TWorld: NormVoxelWorld + Eq + std::hash::Hash,
+    TWorld::IndexType: num::Integer + std::hash::Hash,
+{
     let mut next_step_worlds = Vec::new();
     let mut next_worlds_count = 0;
 
     for current in worlds_to_visit {
-        assert_matches!(current.check_voxel_world(), Ok(()));
-        assert!(current.is_normalized());
+        assert_matches!(check_voxel_world(current.as_ref()), Ok(()));
+        assert!(is_normalized(current.as_ref()));
 
-        let connectivity_graph = ConnectivityGraph::compute_from(current);
-        for new_world in all_possible_next_worlds(current, &connectivity_graph, init_bodies_count) {
+        for new_world in all_next_worlds_norm(current.as_ref()) {
             next_worlds_count += 1;
 
-            assert_matches!(new_world.check_voxel_world(), Ok(()));
-            assert!(new_world.is_normalized());
+            assert_matches!(check_voxel_world(&new_world), Ok(()));
+            assert!(is_normalized(&new_world));
             if parent_worlds.contains_key(&new_world) {
                 continue;
             }
 
             parent_worlds.extend(
-                new_world
-                    .normalized_eq_worlds()
+                normalized_eq_worlds(&new_world)
                     .map(|norm_world| (Rc::new(norm_world), Some(current.clone()))),
             );
 
-            assert!(new_world.is_normalized());
+            assert!(is_normalized(&new_world));
             // Get the world as Rc from the parent_worlds
             let new_world = parent_worlds
                 .get_key_value(&new_world)
@@ -166,17 +171,19 @@ fn get_next_step_counts(
     (next_step_worlds, next_worlds_count)
 }
 
-fn compute_steps(init: VoxelWorld, max_steps: usize) -> Result<ResultsData> {
-    assert_matches!(init.check_voxel_world(), Ok(()));
-    let init = init.as_one_of_norm_eq_world();
-    let init_bodies_count = init.all_bodies().count();
+fn compute_steps<TWorld>(init: TWorld, max_steps: usize) -> Result<ResultsData>
+where
+    TWorld: NormVoxelWorld + Eq + std::hash::Hash,
+    TWorld::IndexType: num::Integer + std::hash::Hash,
+{
+    assert_matches!(check_voxel_world(&init), Ok(()));
+    let init = as_one_of_norm_eq_world(init);
 
-    let mut parent_worlds = init
-        .normalized_eq_worlds()
+    let mut parent_worlds = normalized_eq_worlds(&init)
         .map(|init| (Rc::new(init), None))
         .collect::<HashMap<_, _>>();
 
-    let mut results_data = ResultsData::new(init_bodies_count, parent_worlds.len());
+    let mut results_data = ResultsData::new(init.all_voxels().count(), parent_worlds.len());
 
     let init = parent_worlds.keys().next().unwrap().clone();
     let mut worlds_to_visit = vec![init];
@@ -186,7 +193,7 @@ fn compute_steps(init: VoxelWorld, max_steps: usize) -> Result<ResultsData> {
         }
 
         let (next_step_worlds, next_worlds_count) =
-            get_next_step_counts(&worlds_to_visit, &mut parent_worlds, init_bodies_count);
+            get_next_step_counts(&worlds_to_visit, &mut parent_worlds);
 
         results_data.add_round(
             next_step_worlds.len(),
@@ -206,8 +213,8 @@ fn main() -> Result<()> {
     args.log.setup_logging()?;
 
     let world = args.get_world()?;
-    let (world, _min_pos) = world.to_world_and_min_pos()?;
-    assert_matches!(world.check_voxel_world(), Ok(()));
+    let (world, _min_pos) = world.to_world_and_min_pos::<MapVoxelWorld<_>>()?;
+    assert_matches!(check_voxel_world(&world), Ok(()));
 
     let results_data = compute_steps(world, args.max())?;
 

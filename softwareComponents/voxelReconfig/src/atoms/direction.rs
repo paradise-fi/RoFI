@@ -22,21 +22,17 @@ impl Direction {
         Self::new().with_axis(axis).with_is_positive(is_positive)
     }
 
-    pub fn update_position<T>(self, mut position: [T; 3]) -> Result<[T; 3], String>
+    pub fn update_position<T>(self, mut position: [T; 3]) -> [T; 3]
     where
-        T: num::One + num::CheckedAdd + num::CheckedSub,
+        T: num::Signed,
     {
         let axis_pos = &mut position[self.axis().as_index()];
         if self.is_positive() {
-            *axis_pos = axis_pos
-                .checked_add(&T::one())
-                .ok_or("Direction is towards upper num bound")?;
+            *axis_pos = std::mem::replace(axis_pos, num::zero()) + num::one();
         } else {
-            *axis_pos = axis_pos
-                .checked_sub(&T::one())
-                .ok_or("Direction is towards lower num bound")?;
+            *axis_pos = std::mem::replace(axis_pos, num::zero()) - num::one();
         }
-        Ok(position)
+        position
     }
 
     pub fn opposite(self) -> Self {
@@ -45,7 +41,7 @@ impl Direction {
 
     pub fn from_adjacent_positions<T>(from: [T; 3], to: [T; 3]) -> Option<Self>
     where
-        T: num::One + num::CheckedAdd + num::CheckedSub + PartialOrd,
+        T: num::Signed + Ord + Copy,
     {
         let [first_x, first_y, first_z] = &from;
         let [second_x, second_y, second_z] = &to;
@@ -60,7 +56,7 @@ impl Direction {
             return None;
         };
 
-        if result.update_position(from) == Ok(to) {
+        if result.update_position(from) == to {
             Some(result)
         } else {
             None
