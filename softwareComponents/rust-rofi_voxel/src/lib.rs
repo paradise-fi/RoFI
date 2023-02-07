@@ -11,6 +11,3 @@ pub mod connectivity;
 pub mod module_move;
 pub mod module_repr;
 pub mod reconfiguration;
-
-#[cfg(feature = "cpp_json_bindings")]
-mod cpp_json_bindings;
