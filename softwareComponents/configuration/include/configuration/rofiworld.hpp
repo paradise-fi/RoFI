@@ -604,7 +604,7 @@ public:
         return std::views::transform( _modules, []( const ModuleInfo & moduleInfo ) {
             assert( moduleInfo.module );
             assert( moduleInfo.absPosition && "Position has to be available if world is prepared" );
-            return std::pair( std::ref( *moduleInfo.module ), *moduleInfo.absPosition );
+            return std::pair< const Module &, Matrix >{ *moduleInfo.module, *moduleInfo.absPosition };
         } );
     }
 
