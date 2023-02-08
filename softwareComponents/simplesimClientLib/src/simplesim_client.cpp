@@ -242,9 +242,7 @@ std::map< rofi::configuration::ModuleId, ModuleRenderInfo > addConfigurationToRe
                          moduleRenderInfos,
                          newConfiguration );
 
-    for ( const auto & moduleWithPos : newConfiguration.modulesWithAbsPos() ) {
-        const rofi::configuration::Module & rModule = moduleWithPos.first;
-        const auto & absPosition = moduleWithPos.second;
+    for ( const auto & [ rModule, absPosition ] : newConfiguration.modulesWithAbsPos() ) {
         moduleRenderInfos[ rModule.getId() ].componentActors =
                 addModuleToScene( renderer,
                                   rModule,
@@ -274,9 +272,7 @@ void updateConfigurationInRenderer(
         previousModules.emplace( prevModule.getId(), prevModule );
     }
 
-    for ( const auto & newModuleWithPos : newConfiguration.modulesWithAbsPos() ) {
-        const rofi::configuration::Module & newModule = newModuleWithPos.first;
-        const auto & absPosition = newModuleWithPos.second;
+    for ( const auto & [ newModule, absPosition ] : newConfiguration.modulesWithAbsPos() ) {
         auto & moduleRenderInfo = moduleRenderInfos[ newModule.getId() ];
 
         if ( auto previousModuleIt = previousModules.find( newModule.getId() );
@@ -470,9 +466,7 @@ void SimplesimClient::initInfoTree( const rofi::configuration::RofiWorld & rofiw
 {
     assert( rofiworld.isPrepared() );
     int i = 0;
-    for ( const auto & moduleWithPos : rofiworld.modulesWithAbsPos() ) {
-        const rofi::configuration::Module & rModule = moduleWithPos.first;
-        const auto & absPosition = moduleWithPos.second;
+    for ( const auto & [ rModule, absPosition ] : rofiworld.modulesWithAbsPos() ) {
         _treeIdMapping.push_back( rModule.getId() );
         std::string str = "Module " + std::to_string( rModule.getId() );
         QTreeWidgetItem * qtModule = new QTreeWidgetItem( static_cast< QTreeWidget * >( nullptr ),
@@ -504,8 +498,8 @@ void SimplesimClient::updateInfoTree( const rofi::configuration::RofiWorld & rof
 {
     assert( rofiworld.isPrepared() );
     int i = 0;
-    for ( const auto & moduleWithPos : rofiworld.modulesWithAbsPos() ) {
-        std::string pos = "Position:\n" + to_string( moduleWithPos.second );
+    for ( const auto & [ _, absPosition ] : rofiworld.modulesWithAbsPos() ) {
+        std::string pos = "Position:\n" + to_string( absPosition );
         _ui->treeWidget->topLevelItem( i )->child( 1 )->setText( 0, pos.c_str() );
         ++i;
     }

@@ -181,9 +181,7 @@ void buildRofiWorldScene( vtkRenderer & renderer, const RofiWorld & world )
     }
 
     int index = 0;
-    for ( const auto & moduleWithPos : world.modulesWithAbsPos() ) {
-        const rofi::configuration::Module & rModule = moduleWithPos.first;
-        const auto & absPosition = moduleWithPos.second;
+    for ( const auto & [ rModule, absPosition ] : world.modulesWithAbsPos() ) {
         addModuleToScene( renderer, rModule, absPosition, index, activeConns[ rModule.getId() ] );
         index++;
     }
@@ -476,9 +474,7 @@ void buildRofiWorldPointsScene( vtkRenderer & renderer, RofiWorld world, bool sh
         activeConns[ destId ].insert( roficom.destConnector );
     }
     int index = 0;
-    for ( const auto & moduleWithPos : world.modulesWithAbsPos() ) {
-        const rofi::configuration::Module & rModule = moduleWithPos.first;
-        const auto & absPosition = moduleWithPos.second;
+    for ( const auto & [ rModule, absPosition ] : world.modulesWithAbsPos() ) {
         addModuleToScene( renderer, rModule, absPosition, index, activeConns[ rModule.getId() ] );
         index++;
     }
