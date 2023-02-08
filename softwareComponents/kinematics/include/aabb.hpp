@@ -1,6 +1,9 @@
 #pragma once
 
+#include <optional>
+
 #include "shapes.hpp"
+
 
 namespace rofi::geometry {
 
