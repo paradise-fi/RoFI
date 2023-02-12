@@ -178,6 +178,9 @@ if __name__ == '__main__':
     parser.add_argument('--repr', '-r', type=str, default='map',
                         choices=['map', 'matrix', 'sortvec'],
                         help='Voxel world representation for reconfig algorithm (default: %(default)s)')
+    parser.add_argument('--alg', '-a', type=str, default='bfs',
+                        choices=['bfs'],
+                        help='Algorithm for reconfiguration (default: %(default)s)')
 
     log_parser = parser.add_argument_group('logging')
     log_parser.add_argument('--verbose', '-v', action='count', default=0,
@@ -198,5 +201,5 @@ if __name__ == '__main__':
     convert_and_reconfig(args.init_world_file, args.goal_world_file,
                          args.format if args.init_format is None else args.init_format,
                          args.format if args.goal_format is None else args.goal_format,
-                         args=['--repr', args.repr],
+                         args=['--repr', args.repr, '--alg', args.alg],
                          output=args.output, logger=logger)

@@ -4,6 +4,7 @@ use rofi_voxel_cli::{FileInput, LogArgs};
 use rofi_voxel_reconfig::reconfig;
 use rofi_voxel_reconfig::voxel_world::impls::{MapVoxelWorld, MatrixVoxelWorld, SortvecVoxelWorld};
 use rofi_voxel_reconfig::voxel_world::NormVoxelWorld;
+use std::rc::Rc;
 
 type IndexType = i8;
 
@@ -13,6 +14,12 @@ enum VoxelWorldRepr {
     Map,
     Matrix,
     Sortvec,
+}
+
+#[derive(Debug, Clone, Copy, amplify::Display, clap::ValueEnum)]
+#[display(lowercase)]
+enum AlgorithmType {
+    Bfs,
 }
 
 /// Compute RoFI reconfiguration from init to goal by using voxels
@@ -25,6 +32,9 @@ struct Cli {
     /// Voxel world representation
     #[arg(short, long, default_value_t = VoxelWorldRepr::Map)]
     repr: VoxelWorldRepr,
+    /// Voxel world representation
+    #[arg(short, long, default_value_t = AlgorithmType::Bfs)]
+    alg: AlgorithmType,
     /// Return result in a short json format
     #[arg(short, long, default_value_t = false)]
     short: bool,
@@ -55,9 +65,24 @@ impl Cli {
     }
 }
 
+fn compute_reconfig_alg<TWorld>(
+    init: TWorld,
+    goal: TWorld,
+    alg_type: AlgorithmType,
+) -> Result<Vec<Rc<TWorld>>, reconfig::Error>
+where
+    TWorld: NormVoxelWorld + Eq + std::hash::Hash,
+    TWorld::IndexType: 'static + num::Integer + std::hash::Hash + Send + Sync,
+{
+    match alg_type {
+        AlgorithmType::Bfs => reconfig::algs::bfs::compute_reconfig_path(init, goal),
+    }
+}
+
 fn run_voxel_reconfig<TWorld>(
     init: rofi_voxel_reconfig::serde::VoxelWorld<TWorld::IndexType>,
     goal: rofi_voxel_reconfig::serde::VoxelWorld<TWorld::IndexType>,
+    alg_type: AlgorithmType,
 ) -> Result<Vec<rofi_voxel_reconfig::serde::VoxelWorld<TWorld::IndexType>>>
 where
     TWorld: NormVoxelWorld + Eq + std::hash::Hash,
@@ -66,7 +91,7 @@ where
     let (init, _min_pos) = init.to_world_and_min_pos()?;
     let (goal, _min_pos) = goal.to_world_and_min_pos()?;
 
-    let reconfig_sequence = reconfig::compute_reconfig_path::<TWorld>(&init, goal)?;
+    let reconfig_sequence = compute_reconfig_alg::<TWorld>(init, goal, alg_type)?;
     let reconfig_sequence = reconfig_sequence
         .iter()
         .map(|world| rofi_voxel_reconfig::serde::VoxelWorld::from_world(world.as_ref()))
@@ -82,9 +107,11 @@ fn main() -> Result<()> {
     let InputWorlds { init, goal } = args.get_worlds()?;
 
     let reconfig_sequence = match args.repr {
-        VoxelWorldRepr::Map => run_voxel_reconfig::<MapVoxelWorld<_>>(init, goal)?,
-        VoxelWorldRepr::Matrix => run_voxel_reconfig::<MatrixVoxelWorld<_>>(init, goal)?,
-        VoxelWorldRepr::Sortvec => run_voxel_reconfig::<SortvecVoxelWorld<_>>(init, goal)?,
+        VoxelWorldRepr::Map => run_voxel_reconfig::<MapVoxelWorld<_>>(init, goal, args.alg)?,
+        VoxelWorldRepr::Matrix => run_voxel_reconfig::<MatrixVoxelWorld<_>>(init, goal, args.alg)?,
+        VoxelWorldRepr::Sortvec => {
+            run_voxel_reconfig::<SortvecVoxelWorld<_>>(init, goal, args.alg)?
+        }
     };
 
     if args.short {
