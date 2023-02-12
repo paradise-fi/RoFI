@@ -129,7 +129,7 @@ impl ResultsData {
 
 fn get_next_step_counts<TWorld>(
     worlds_to_visit: &[Rc<TWorld>],
-    parent_worlds: &mut HashMap<Rc<TWorld>, Option<Rc<TWorld>>>,
+    parent_map: &mut HashMap<Rc<TWorld>, Option<Rc<TWorld>>>,
 ) -> (Vec<Rc<TWorld>>, usize)
 where
     TWorld: NormVoxelWorld + Eq + std::hash::Hash,
@@ -147,18 +147,18 @@ where
 
             assert_matches!(check_voxel_world(&new_world), Ok(()));
             assert!(is_normalized(&new_world));
-            if parent_worlds.contains_key(&new_world) {
+            if parent_map.contains_key(&new_world) {
                 continue;
             }
 
-            parent_worlds.extend(
+            parent_map.extend(
                 normalized_eq_worlds(&new_world)
                     .map(|norm_world| (Rc::new(norm_world), Some(current.clone()))),
             );
 
             assert!(is_normalized(&new_world));
-            // Get the world as Rc from the parent_worlds
-            let new_world = parent_worlds
+            // Get the world as Rc from the parent_map
+            let new_world = parent_map
                 .get_key_value(&new_world)
                 .expect("Has to contain new_world")
                 .0
@@ -179,27 +179,24 @@ where
     assert_matches!(check_voxel_world(&init), Ok(()));
     let init = as_one_of_norm_eq_world(init);
 
-    let mut parent_worlds = normalized_eq_worlds(&init)
+    let mut parent_map = normalized_eq_worlds(&init)
         .map(|init| (Rc::new(init), None))
         .collect::<HashMap<_, _>>();
 
-    let mut results_data = ResultsData::new(init.all_voxels().count(), parent_worlds.len());
+    let mut results_data = ResultsData::new(init.all_voxels().count(), parent_map.len());
 
-    let init = parent_worlds.keys().next().unwrap().clone();
+    let init = parent_map.keys().next().unwrap().clone();
     let mut worlds_to_visit = vec![init];
+
     for _ in 0..max_steps {
         if worlds_to_visit.is_empty() {
             break;
         }
 
         let (next_step_worlds, next_worlds_count) =
-            get_next_step_counts(&worlds_to_visit, &mut parent_worlds);
+            get_next_step_counts(&worlds_to_visit, &mut parent_map);
 
-        results_data.add_round(
-            next_step_worlds.len(),
-            next_worlds_count,
-            parent_worlds.len(),
-        );
+        results_data.add_round(next_step_worlds.len(), next_worlds_count, parent_map.len());
 
         worlds_to_visit = next_step_worlds;
     }
