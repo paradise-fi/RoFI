@@ -2,6 +2,7 @@
 mod test;
 
 pub mod algs;
+pub mod heuristic;
 
 use crate::connectivity::ConnectivityGraph;
 use crate::module_move::Move;
