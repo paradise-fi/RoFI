@@ -179,7 +179,9 @@ if __name__ == '__main__':
                         choices=['map', 'matrix', 'sortvec'],
                         help='Voxel world representation for reconfig algorithm (default: %(default)s)')
     parser.add_argument('--alg', '-a', type=str, default='bfs',
-                        choices=['bfs'],
+                        choices=['bfs',
+                                 'astar-zero', 'astar-zero-nopt',
+                                 ],
                         help='Algorithm for reconfiguration (default: %(default)s)')
 
     log_parser = parser.add_argument_group('logging')
