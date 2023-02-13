@@ -579,7 +579,7 @@
     (property "Sheet name" "Shoe pads left" (id 0) (at 52.07 31.0384 0)
       (effects (font (size 1.27 1.27)) (justify left bottom))
     )
-    (property "Sheet file" "shoe_pads.kicad_sch" (id 1) (at 52.07 56.4646 0)
+    (property "Sheet file" "shoe_pads_left.kicad_sch" (id 1) (at 52.07 56.4646 0)
       (effects (font (size 1.27 1.27)) (justify left top))
     )
     (pin "SS" input (at 52.07 36.83 180)
