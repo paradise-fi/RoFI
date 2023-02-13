@@ -44,15 +44,15 @@ where
     .unwrap();
     validate_norm_voxel_world(&world);
 
-    let heuristic = Heuristic::Zero;
-
-    let result = compute_reconfig_path(world.clone(), world.clone(), heuristic).unwrap();
-    assert_eq!(result.len(), 1);
-    result
-        .iter()
-        .map(AsRef::<TWorld>::as_ref)
-        .for_each(validate_norm_voxel_world);
-    assert_eq!(&result, &vec![Rc::new(world)]);
+    for heuristic in [Heuristic::Zero, Heuristic::Naive] {
+        let result = compute_reconfig_path(world.clone(), world.clone(), heuristic).unwrap();
+        assert_eq!(result.len(), 1);
+        result
+            .iter()
+            .map(AsRef::<TWorld>::as_ref)
+            .for_each(validate_norm_voxel_world);
+        assert_eq!(&result, &vec![Rc::new(world.clone())]);
+    }
 }
 
 #[test]
@@ -113,13 +113,17 @@ where
     .unwrap();
     validate_norm_voxel_world(&goal_world);
 
-    let heuristic = Heuristic::Zero;
-
-    let result = compute_reconfig_path(init_world.clone(), goal_world.clone(), heuristic).unwrap();
-    assert_eq!(result.len(), 2);
-    result
-        .iter()
-        .map(AsRef::<TWorld>::as_ref)
-        .for_each(validate_norm_voxel_world);
-    assert_eq!(&result, &vec![Rc::new(init_world), Rc::new(goal_world)]);
+    for heuristic in [Heuristic::Zero, Heuristic::Naive] {
+        let result =
+            compute_reconfig_path(init_world.clone(), goal_world.clone(), heuristic).unwrap();
+        assert_eq!(result.len(), 2);
+        result
+            .iter()
+            .map(AsRef::<TWorld>::as_ref)
+            .for_each(validate_norm_voxel_world);
+        assert_eq!(
+            &result,
+            &vec![Rc::new(init_world.clone()), Rc::new(goal_world.clone())]
+        );
+    }
 }

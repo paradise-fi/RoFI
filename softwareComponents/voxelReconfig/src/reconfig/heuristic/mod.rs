@@ -1,7 +1,10 @@
+pub mod naive;
+
 use crate::voxel_world::NormVoxelWorld;
 
 pub enum Heuristic {
     Zero,
+    Naive,
 }
 
 impl Heuristic {
@@ -12,6 +15,7 @@ impl Heuristic {
     {
         match self {
             Self::Zero => Box::new(|_| 0),
+            Self::Naive => Box::new(naive::NaiveHeuristic::new(goal).get_fn()),
         }
     }
 }

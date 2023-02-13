@@ -181,6 +181,7 @@ if __name__ == '__main__':
     parser.add_argument('--alg', '-a', type=str, default='bfs',
                         choices=['bfs',
                                  'astar-zero', 'astar-zero-nopt',
+                                 'astar-naive', 'astar-naive-nopt',
                                  ],
                         help='Algorithm for reconfiguration (default: %(default)s)')
 

@@ -21,7 +21,9 @@ enum VoxelWorldRepr {
 enum AlgorithmType {
     Bfs,
     AstarZero,
+    AstarNaive,
     AstarZeroNopt,
+    AstarNaiveNopt,
 }
 
 /// Compute RoFI reconfiguration from init to goal by using voxels
@@ -83,10 +85,20 @@ where
             goal,
             reconfig::heuristic::Heuristic::Zero,
         ),
+        AlgorithmType::AstarNaive => reconfig::algs::astar::compute_reconfig_path(
+            init,
+            goal,
+            reconfig::heuristic::Heuristic::Naive,
+        ),
         AlgorithmType::AstarZeroNopt => reconfig::algs::astar::nopt::compute_reconfig_path(
             init,
             goal,
             reconfig::heuristic::Heuristic::Zero,
+        ),
+        AlgorithmType::AstarNaiveNopt => reconfig::algs::astar::nopt::compute_reconfig_path(
+            init,
+            goal,
+            reconfig::heuristic::Heuristic::Naive,
         ),
     }
 }
