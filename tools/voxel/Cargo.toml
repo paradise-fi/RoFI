@@ -3,10 +3,16 @@ name = "rofi_voxel"
 version = "0.1.0"
 edition = "2021"
 
+[profile.rel-with-deb-info]
+inherits = "release"
+debug = true
+[profile.min-size-rel]
+inherits = "release"
+opt-level = "s"
+
 [lib]
 name = "rofi_voxel_cli"
 crate-type = [ "lib", "cdylib", "staticlib" ]
-
 
 [dependencies]
 rofi_voxel_reconfig = { path = "../../softwareComponents/voxelReconfig" }
