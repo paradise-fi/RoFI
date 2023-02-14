@@ -3,6 +3,13 @@ name = "rofi_voxel_reconfig"
 version = "0.2.0"
 edition = "2021"
 
+[profile.rel-with-deb-info]
+inherits = "release"
+debug = true
+[profile.min-size-rel]
+inherits = "release"
+opt-level = "s"
+
 [lib]
 crate-type = [ "lib", "cdylib", "staticlib" ]
 
