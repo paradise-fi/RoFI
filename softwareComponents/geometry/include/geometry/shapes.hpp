@@ -10,6 +10,8 @@ namespace rofi::geometry {
 
 using namespace rofi::configuration::matrices;
 
+constexpr double epsilon = 1.0e-10;
+
 struct Box {
     Vector center;
     Vector dimensions;
@@ -45,9 +47,11 @@ struct Box {
 
 struct Sphere {
     Vector center;
-    double radius = 0.499;
+    double radius;
 
-    Sphere( Vector center, double radius = 0.499 ) : center( center ), radius( radius ) {}
+    /* Default radius is <0.5 to make sure spheres with distance 1 don't collide
+       due to rounding errors */
+    Sphere( Vector center, double radius = 0.5 - epsilon ) : center( center ), radius( radius ) {}
 
     Box bounding_box() const {
         return Box( center, radius * 2, radius * 2, radius * 2 );
