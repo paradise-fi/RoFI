@@ -1,4 +1,5 @@
 #include <configuration/rofiworld.hpp>
+#include <isoreconfig/geometry.hpp>
 
 namespace rofi::isoreconfig {
 
@@ -34,13 +35,25 @@ Positions decomposeUniversalModule( const rofi::configuration::Module& mod );
 std::array< Positions, 2 > decomposeRofiWorld( const rofi::configuration::RofiWorld& rw );
 
 /**
- * @brief Calculate the center of gravity (unweighted average of module-defining
- * points) from a given RofiWorld <rw>.
+ * @brief Converts a RofiWorld to a Cloud of Points.
+ */
+Cloud rofiWorldToCloud( const rofi::configuration::RofiWorld& rw );
+
+/**
+ * @brief Calculate the centroid from a given RofiWorld <rw>.
  * Raises std::logic_error if the RofiWorld <rw> has not been prepared.
  * @param rb RofiWorld to calculate the center of gravity from.
  * @return Unweighted average of points defining the RofiWorld
  * (module points, not connection points).
  */
 Matrix centroid( const rofi::configuration::RofiWorld& rw );
+
+/**
+ * @brief Decides if given rofiworlds have the same physical shape.
+ * Decomposes the worlds into points, applies PCA transformation 
+ * and attempts to find an orthogonal transformation
+ * which transforms one set of points into the other.
+ */
+bool equalShape( const rofi::configuration::RofiWorld& rw1, const rofi::configuration::RofiWorld& rw2 );
 
 } // namespace rofi::isoreconfig

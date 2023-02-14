@@ -1,5 +1,4 @@
 #include <isoreconfig/isomorphic.hpp>
-#include <isoreconfig/geometry.hpp>
 #include <cassert>
 
 namespace rofi::isoreconfig {
@@ -50,12 +49,49 @@ std::array< Positions, 2 > decomposeRofiWorld( const RofiWorld& rw )
         result[1].push_back( pos * matrices::translate( { -0.5, 0, 0 } ) );
     }
 
+    return std::tie( modulePoints, connectionPoints );
+}
+
+Cloud rofiWorldToCloud( const RofiWorld& rw )
+{
+    auto [ modulePoints, connectionPoints ] = decomposeRofiWorld( rw );
+
+    // Merge module points and connection points into one container
+    for ( const Vector& pt : connectionPoints )
+        modulePoints.push_back( pt );
+    
+    return Cloud( modulePoints );
+}
+
+Vector centroid( const RofiWorld& rw )
+{
+    auto [ modulePoints, connectionPoints ] = decomposeRofiWorld( rw );
+    for ( const Vector& pt : connectionPoints )
+        modulePoints.push_back( pt );
+    return centroid( modulePoints );
+}
+
+Vector centroid( const std::vector< Vector >& pts )
+{
+    assert( pts.size() >= 1 );
+
+    Vector result = std::accumulate( ++pts.begin(), pts.end(), pts[0], 
+        []( const Vector& pt1, const Vector& pt2 ){ return pt1 + pt2; } );
+
+    for ( size_t i = 0; i < 3; ++i )
+        result(i) /= double(pts.size());
+
     return result;
 }
 
-Matrix centroid( const RofiWorld& rw )
+bool equalShape( const RofiWorld& rw1, const RofiWorld& rw2 )
 {
-    return pointToPos( centroid( decomposeRofiWorld( rw )[0] ));
+    // Worlds with different number of modules or connections do not have same shape
+    if ( rw1.modules().size() != rw2.modules().size() ||
+         rw1.roficomConnections().size() != rw2.roficomConnections().size() )
+        return false;
+
+    return isometric( rofiWorldToCloud( rw1 ), rofiWorldToCloud( rw2 ) );
 }
 
 } // namespace rofi::isoreconfig
