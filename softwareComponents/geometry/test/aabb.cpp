@@ -47,3 +47,31 @@ TEST_CASE( "Pseudorandom insert" ){
     }
     REQUIRE( aabb.depth() == 86 );
 }
+
+TEST_CASE( "Erase empties the tree" ){
+    AABB< Sphere > aabb;
+    std::vector< Sphere > generated;
+    for( int i = 0; i < 10; i++ ){
+        Sphere sphere( { double( std::rand() % 100 ),
+                         double( std::rand() % 100 ),
+                         double( std::rand() % 100 ),
+                         1.0 } );
+        generated.push_back( sphere );
+    }
+    for( const auto& s : generated ){
+        aabb.insert( s );
+    }
+    for( const auto& s : generated ){
+        aabb.erase( s );
+    }
+    REQUIRE( aabb.size() == 0 );
+    REQUIRE( aabb.depth() == 0 );
+}
+
+TEST_CASE( "Simple iterator" ){
+    AABB< Sphere > aabb;
+    aabb.insert( Sphere( Vector{ 10, 10, 10, 1 } ) );
+    for( const auto& s : aabb ){
+        REQUIRE( s == Sphere( Vector{ 10, 10, 10, 1 } ) );
+    }
+}
