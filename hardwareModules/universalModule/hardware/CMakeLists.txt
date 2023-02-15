@@ -6,7 +6,7 @@ set_semicolon_safe(SINGLE_PANEL_OPTS
     --tabs "fixed\; width: 3mm\; vcount: 2"
     --cuts "mousebites\; drill: 0.3mm\; spacing: 0.6mm\; offset: 0.15mm\; prolong: 0.8mm"
     --tooling "3hole\; hoffset: 2.5mm\; voffset: 2.5mm"
-    --post "millradius: 1mm"
+    --debug "trace: true"
     )
 
 add_pcb(um_controlBoard
@@ -125,3 +125,9 @@ add_pcb(um_shoeCable
     SEPARATE --source "annotation\; ref: CABLE1\; tolerance: 3mm\;stack: 2layer"
     FAB jlcpcb --no-drc
 )
+
+add_pcb(um_devkit
+    SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/umDevKit/umDevKit.kicad_pcb
+    FAB jlcpcb --no-drc
+)
+
