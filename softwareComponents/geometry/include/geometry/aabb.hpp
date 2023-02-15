@@ -37,7 +37,7 @@ struct AABB_Leaf {
     explicit AABB_Leaf( LeafShape shape, AABB_Node< LeafShape >* parent = nullptr )
         : shape( shape ), bound( shape.bounding_box() ), parent( parent ) {};
 
-    const leaf_t* find_leaf( const LeafShape& target ) const {
+    leaf_t* find_leaf( const LeafShape& target ) {
         if( shape == target ){
             return this;
         }
@@ -96,8 +96,8 @@ struct AABB_Node {
                               std::visit( get_bound, *children[ 1 ] ) );
     }
 
-    const leaf_t* find_leaf( const LeafShape& shape ) const {
-        auto find = [&]( auto&& node ) -> const leaf_t* {
+    leaf_t* find_leaf( const LeafShape& shape ) {
+        auto find = [&]( auto&& node ) -> leaf_t* {
             if( collide( node.bound, shape ) ){
                 return node.find_leaf( shape );
             }
@@ -144,7 +144,18 @@ struct AABB_Node {
     }
 
     bool is_left_child(){
-        return parent->children[ 0 ] && this == std::get_if< AABB_Node< LeafShape > >( parent->children[ 0 ].get() );
+        return parent->children[ 0 ] && this == std::get_if< node_t >( parent->children[ 0 ].get() );
+    }
+
+    void erase_empty(){
+        if( !children[ 0 ] && !children[ 1 ] && parent ){
+            if( this == std::get_if< node_t >( parent->children[ 0 ].get() ) ){
+                parent->children[ 0 ] = nullptr;
+            } else {
+                parent->children[ 1 ] = nullptr;
+            }
+            parent->erase_empty();
+        }
     }
 };
 
@@ -224,14 +235,27 @@ class AABB {
         }
         if( node->parent ){
             if( node->is_left_child() ){
-                node->parent->children[ 0 ] = nullptr;
+                 node->parent->children[ 0 ] = nullptr;
             } else {
                 node->parent->children[ 1 ] = nullptr;
             }
-        } else {
+            // recursively erase parents if they have no remaining children
+            node->parent->erase_empty();
+        }
+        // erase root if tree is empty
+        node_t* root = to_node( _root.get() );
+        if( !root->children[ 0 ] && !root->children[ 1 ] ){
             _root = nullptr;
         }
         return true;
+    }
+
+    auto begin() const {
+        return Iterator( _root ? _root.get() : nullptr );
+    }
+
+    auto end() const {
+        return Iterator( nullptr );
     }
 
 
@@ -274,7 +298,7 @@ class AABB {
         return nullptr;
     }
 
-    const leaf_t* find_leaf( const LeafShape& shape ){
+    leaf_t* find_leaf( const LeafShape& shape ){
         if( _root ){
             return std::visit( [&]( auto&& node ){ return node.find_leaf( shape ); }, *_root );
         }
@@ -310,6 +334,57 @@ class AABB {
 
     struct Iterator {
 
+        var_t* current;
+
+        Iterator( var_t* node ) : current( node ){
+            descend();
+        }
+
+        const auto& operator++(){
+            next();
+            return *this;
+        }
+
+        const auto& operator*(){
+            assert( std::holds_alternative< leaf_t >( *current ) );
+            return std::get_if< leaf_t >( current )->shape;
+        }
+
+        bool operator==( const Iterator& other ) const {
+            return current == other.current;
+        }
+
+        bool operator!=( const Iterator& other ) const = default;
+
+      private:
+        /* Descend tree to the leftmost leaf */
+        void descend(){
+            while( current && !std::holds_alternative< leaf_t >( *current ) ){
+                node_t* node = std::get_if< node_t >( current );
+                for( auto idx : { 0, 1 } ){
+                    if( node->children[ idx ] ){
+                        current = node->children[ idx ].get();
+                        break;
+                    }
+                }
+            }
+        }
+        /* Traverse to the next leaf on the right */
+        void next(){
+            if( !current ){
+                return;
+            }
+            node_t* parent = std::visit( []( auto&& node ){ return node.parent; }, *current );;
+            while( parent && !parent->children[ 1 ] ){
+                parent = parent->parent;
+            }
+            if( !parent ){
+                current = nullptr;
+                return;
+            }
+            current = parent->children[ 1 ].get();
+            descend();
+        }
     };
 };
 
