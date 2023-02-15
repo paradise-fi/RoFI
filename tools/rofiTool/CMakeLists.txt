@@ -14,6 +14,7 @@ set(ROFI_TOOL_SRCS
 
     build.cpp
     check.cpp
+    module_count.cpp
     points.cpp
     preview.cpp
 )
