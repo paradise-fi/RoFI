@@ -43,9 +43,3 @@ add_pcb(roficom_roficom_skirt3DModel
     SEPARATE --source "annotation\; ref: BOARD2\; tolerance: 6mm"
     STEPMODEL
 )
-
-add_pcb(roficom_cable
-    SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/control_board/control_board.kicad_pcb
-    SEPARATE --source "annotation\; ref: BOARD3\; tolerance: 6mm\; stack: 2layer"
-    FAB jlcpcb --no-drc
-)

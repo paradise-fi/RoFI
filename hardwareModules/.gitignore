@@ -9,6 +9,7 @@
 *.sch-bak
 *~
 _autosave-*
+*auto_saved_files*
 *.tmp
 *-rescue.lib
 *-save.pro
