@@ -24,6 +24,7 @@ RUN DEBIAN_FRONTEND=noninteractive TZ="Europe/London" \
         libarmadillo-dev libvtk7-dev libvtk7-qt-dev qtdeclarative5-dev \
         gazebo libgazebo-dev libz3-dev \
         coinor-clp coinor-libclp-dev
+RUN pip3 install click
 
 # Install ARM Toolchain for STM32
 RUN cd /tmp && \
