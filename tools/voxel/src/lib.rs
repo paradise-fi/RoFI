@@ -1,5 +1,6 @@
 use anyhow::{ensure, Context, Result};
 use std::fs::File;
+use std::io::Write;
 use std::io::{BufReader, Read};
 
 pub use self::logging::LogArgs;
@@ -48,6 +49,49 @@ impl FileInput {
             "Cannot redirect multiple files to stdin"
         );
         Ok(())
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum FileErrOutput {
+    File(String),
+    StdErr,
+}
+
+impl FileErrOutput {
+    pub fn from_arg<TString>(file_arg: TString) -> Self
+    where
+        TString: AsRef<str> + Into<String>,
+    {
+        match file_arg.as_ref() {
+            "-" => Self::StdErr,
+            _ => Self::File(file_arg.into()),
+        }
+    }
+
+    pub fn touch(&self) -> Result<()> {
+        match self {
+            Self::File(path) => {
+                File::options()
+                    .create(true)
+                    .append(true)
+                    .open(path)
+                    .with_context(|| format!("Could not open file '{path}'"))?;
+            }
+            Self::StdErr => {}
+        }
+        Ok(())
+    }
+
+    pub fn get_writer(&self) -> Result<Box<dyn Write>> {
+        match self {
+            Self::File(path) => {
+                Ok(Box::new(File::create(path).with_context(|| {
+                    format!("Could not open file '{path}'")
+                })?))
+            }
+            Self::StdErr => Ok(Box::new(std::io::stderr())),
+        }
     }
 }
 

@@ -1,6 +1,7 @@
 use anyhow::Result;
 use clap::Parser;
-use rofi_voxel_cli::{FileInput, LogArgs};
+use rofi_voxel_cli::{FileErrOutput, FileInput, LogArgs};
+use rofi_voxel_reconfig::counters::Counter;
 use rofi_voxel_reconfig::reconfig;
 use rofi_voxel_reconfig::voxel_world::impls::{MapVoxelWorld, MatrixVoxelWorld, SortvecVoxelWorld};
 use rofi_voxel_reconfig::voxel_world::NormVoxelWorld;
@@ -39,6 +40,9 @@ struct Cli {
     /// Voxel world representation
     #[arg(short, long, default_value_t = AlgorithmType::Bfs)]
     alg: AlgorithmType,
+    /// Log counters to file ('-' for error output)
+    #[arg(short, long)]
+    log_counters: Option<String>,
     /// Return result in a short json format
     #[arg(short, long, default_value_t = false)]
     short: bool,
@@ -120,6 +124,7 @@ where
         .iter()
         .map(|world| rofi_voxel_reconfig::serde::VoxelWorld::from_world(world.as_ref()))
         .collect::<Vec<_>>();
+
     Ok(reconfig_sequence)
 }
 
@@ -127,6 +132,16 @@ fn main() -> Result<()> {
     let args = Cli::parse();
 
     args.log.setup_logging()?;
+
+    let log_counters = if let Some(log_counters) = &args.log_counters {
+        Counter::start()?;
+
+        let log_counters = FileErrOutput::from_arg(log_counters);
+        log_counters.touch()?;
+        Some(log_counters)
+    } else {
+        None
+    };
 
     let InputWorlds { init, goal } = args.get_worlds()?;
 
@@ -142,6 +157,10 @@ fn main() -> Result<()> {
         serde_json::to_writer(std::io::stdout(), &reconfig_sequence)?;
     } else {
         serde_json::to_writer_pretty(std::io::stdout(), &reconfig_sequence)?;
+    }
+
+    if let Some(log_counters) = log_counters {
+        serde_json::to_writer_pretty(log_counters.get_writer()?, &Counter::get_results())?;
     }
 
     Ok(())

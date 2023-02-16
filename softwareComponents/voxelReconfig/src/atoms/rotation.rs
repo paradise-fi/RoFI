@@ -1,7 +1,7 @@
 use super::{Axis, Direction};
 use enum_iterator::Sequence;
 use modular_bitfield::prelude::*;
-use static_assertions::const_assert_eq;
+use static_assertions::{assert_eq_size, const_assert_eq};
 
 #[derive(
     BitfieldSpecifier, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Sequence, amplify::Display,
@@ -46,7 +46,7 @@ pub struct Rotation {
     pub axis: Axis,
     pub angle: RotationAngle,
 }
-static_assertions::assert_eq_size!(Rotation, u8);
+assert_eq_size!(Rotation, u8);
 
 impl Rotation {
     pub fn new_with(axis: Axis, angle: RotationAngle) -> Self {

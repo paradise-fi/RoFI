@@ -1,5 +1,6 @@
 use super::Voxel;
 use modular_bitfield::prelude::*;
+use static_assertions::assert_eq_size;
 
 #[bitfield(bits = 7)]
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
@@ -7,7 +8,7 @@ pub struct VoxelOpt {
     value: Voxel,
     has_value: bool,
 }
-static_assertions::assert_eq_size!(VoxelOpt, u8);
+assert_eq_size!(VoxelOpt, u8);
 
 impl std::fmt::Debug for VoxelOpt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

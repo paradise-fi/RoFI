@@ -1,5 +1,6 @@
 use super::get_bodies_connected_to;
 use crate::atoms::Subset;
+use crate::counters::Counter;
 use crate::module_repr::{get_module_repr_pos, is_module_repr};
 use crate::pos::Pos;
 use crate::voxel::{get_other_body_pos, PosVoxel};
@@ -11,12 +12,8 @@ use rs_graph::traits::FiniteGraph;
 use rs_graph::{Buildable, Builder, LinkedListGraph};
 use std::collections::HashMap;
 use std::rc::Rc;
-use std::sync::atomic;
 
 type GraphType = LinkedListGraph;
-
-pub static TRUE_CUTS: atomic::AtomicU64 = atomic::AtomicU64::new(0);
-pub static FALSE_CUTS: atomic::AtomicU64 = atomic::AtomicU64::new(0);
 
 // Fix bug in `rs_graph::algorithms::is_connected`
 pub fn is_connected<TGraph>(graph: &TGraph) -> bool
@@ -184,13 +181,13 @@ where
         debug_assert_eq!(self.graph.num_nodes(), 2 + id_count * 2);
         Subset::iter_all(id_count).filter_map(move |selection| {
             if is_valid_selection(&graph_base, |node| is_selected(node, &selection)) {
-                TRUE_CUTS.fetch_add(1, atomic::Ordering::Relaxed);
+                Counter::new_successful_cut();
                 Some(VoxelSubworld::new(self.world, |pos| {
                     let node = *self.mapping.get_by_left(&pos).expect("Invalid mapping");
                     is_selected(node, &selection)
                 }))
             } else {
-                FALSE_CUTS.fetch_add(1, atomic::Ordering::Relaxed);
+                Counter::new_failed_cut();
                 None
             }
         })
