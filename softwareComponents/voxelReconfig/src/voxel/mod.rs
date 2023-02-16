@@ -3,6 +3,7 @@ pub mod opt;
 use crate::atoms;
 use crate::pos::Pos;
 use modular_bitfield::prelude::*;
+use static_assertions::assert_eq_size;
 
 #[derive(BitfieldSpecifier, Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[repr(u8)]
@@ -83,7 +84,7 @@ pub struct Voxel {
     pub shoe_rotated: bool,
     pub joint_pos: JointPosition,
 }
-static_assertions::assert_eq_size!(Voxel, u8);
+assert_eq_size!(Voxel, u8);
 
 pub type PosVoxel<TIndex> = (Pos<TIndex>, Voxel);
 

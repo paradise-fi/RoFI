@@ -3,14 +3,13 @@
 #[cfg(test)]
 mod test;
 
+use crate::counters::Counter;
 use crate::reconfig::{all_next_worlds_norm, get_path_to, Error, FxHashMap};
-use crate::reconfig::{log_counters, ADDED_WORLDS, NEXT_WORLDS_BEFORE_ADD, STEPS_COMPUTED};
 use crate::voxel_world::{as_one_of_norm_eq_world, is_normalized, normalized_eq_worlds};
 use crate::voxel_world::{check_voxel_world, NormVoxelWorld};
 use std::assert_matches::{assert_matches, debug_assert_matches};
 use std::collections::VecDeque;
 use std::rc::Rc;
-use std::sync::atomic;
 
 type ParentMap<TWorld> = FxHashMap<Rc<TWorld>, Option<Rc<TWorld>>>;
 
@@ -30,8 +29,6 @@ where
     assert!(is_normalized(&goal));
 
     let parent_map = compute_reconfig_parents(&init, &goal).ok_or(Error::PathNotFound)?;
-
-    log_counters();
 
     Ok(get_path_to(&goal, &parent_map, Clone::clone))
 }
@@ -58,9 +55,7 @@ where
     while let Some(current) = worlds_to_visit.pop_front() {
         debug_assert_matches!(check_voxel_world(current.as_ref()), Ok(()));
         debug_assert!(is_normalized(current.as_ref()));
-        STEPS_COMPUTED.fetch_add(1, atomic::Ordering::Relaxed);
         for new_world in all_next_worlds_norm(current.as_ref()) {
-            NEXT_WORLDS_BEFORE_ADD.fetch_add(1, atomic::Ordering::Relaxed);
             debug_assert_matches!(check_voxel_world(&new_world), Ok(()));
             debug_assert!(is_normalized(&new_world));
 
@@ -83,6 +78,7 @@ where
             let new_world = norm_worlds.peek().expect("No normalized variant").clone();
             debug_assert!(is_normalized(new_world.as_ref()));
 
+            Counter::saved_new_unique_state();
             parent_map.extend(norm_worlds.map(|norm_world| (norm_world, Some(current.clone()))));
 
             if parent_map.contains_key(goal) {
@@ -90,7 +86,6 @@ where
             }
 
             worlds_to_visit.push_back(new_world);
-            ADDED_WORLDS.fetch_add(1, atomic::Ordering::Relaxed);
         }
     }
     None
