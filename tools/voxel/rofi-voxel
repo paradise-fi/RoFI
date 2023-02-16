@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import argparse
+import click
 import logging
-import os
 import subprocess
 import sys
 import tempfile
@@ -140,69 +139,58 @@ def convert_and_reconfig(init_world_file: str, goal_world_file: str, init_format
                        output=output, logger=logger)
 
 
-def check_input_files(parser: argparse.ArgumentParser, files: List[str]):
+def check_input_files(files: List[str]):
     if files.count('-') > 1:
-        parser.error("multiple input file arguments have value '-' (stdin)")
+        logging.fatal("Multiple input file arguments have value '-' (stdin)")
+        exit(1)
 
-    for file in files:
-        if file == '-':
-            return
-        if not os.path.exists(file):
-            parser.error(f"can't open '{file}': No such file or directory")
-        if not os.path.isfile(file):
-            parser.error(f"can't open '{file}': Is a directory")
-        if not os.access(file, os.R_OK):
-            parser.error(f"can't open '{file}': Is not readable")
+
+@click.command()
+@click.argument('init_world_file', type=click.Path(file_okay=True, dir_okay=False, exists=True, allow_dash=True))
+@click.argument('goal_world_file', type=click.Path(file_okay=True, dir_okay=False, exists=True, allow_dash=True))
+@click.option('--output', '-o', type=click.File('w'), default='-',
+              help="Path to file where to store the result")
+@click.option('--format', '-f', type=click.Choice(['json', 'voxel', 'old']), default='json', show_default=True,
+              help='Format of world files')
+@click.option('--init-format', '--if', type=click.Choice(['json', 'voxel', 'old']), default=None,
+              help='Format of init world files (overrides --format)')
+@click.option('--goal-format', '--gf', type=click.Choice(['json', 'voxel', 'old']), default=None,
+              help='Format of goal world files (overrides --format)')
+@click.option('--repr', '-r', type=click.Choice(['map', 'matrix', 'sortvec']), default='sortvec', show_default=True,
+              help='Voxel world representation for reconfig algorithm')
+@click.option('--alg', '-a', type=click.Choice(['bfs',
+                                                'astar-zero', 'astar-zero-nopt',
+                                                'astar-naive', 'astar-naive-nopt',
+                                                ]),
+              default='bfs', show_default=True,
+              help='Algorithm for reconfiguration')
+@click.option('--verbose', '-v', count=True,
+              help='Increase verbosity level')
+@click.option('--no-log-term', is_flag=True,
+              help="Don't log to terminal (does not efect logging errors to stderr)")
+@click.option('--log-file', type=click.Path(file_okay=True, dir_okay=False, exists=False, writable=True, readable=False),
+              help='Log to file in human readable format')
+@click.option('--log-json', type=click.Path(file_okay=True, dir_okay=False, exists=False, writable=True, readable=False),
+              help='Log to file in json format (each log as one json)')
+def rofi_voxel(init_world_file: str, goal_world_file: str, output: TextIO,
+               format: str, init_format: Optional[str], goal_format: Optional[str],
+               repr: str, alg: str,
+               verbose: int, no_log_term: bool, log_file: Optional[str], log_json: Optional[str]):
+    """Run voxel reconfig.
+    Returns the reconfig sequence from world in INIT_WORLD_FILE to world in GOAL_WORLD_FILE in voxel format.
+    """
+    logger = Logger(verbosity=verbose, no_log_term=no_log_term,
+                    log_file=log_file, log_json=log_json)
+    logger.setup_logging()
+
+    check_input_files([init_world_file, goal_world_file])
+
+    convert_and_reconfig(init_world_file, goal_world_file,
+                         format if init_format is None else init_format,
+                         format if goal_format is None else goal_format,
+                         args=['--repr', repr, '--alg', alg],
+                         output=output, logger=logger)
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(
-        description='Run voxel reconfig. Returns the reconfig sequence in voxel format to stdout.')
-    parser.add_argument('init_world_file', type=str,
-                        help="Path to the init world file ('-' for stdin)")
-    parser.add_argument('goal_world_file', type=str,
-                        help="Path to the goal world file ('-' for stdin)")
-    parser.add_argument('--output', '-o', type=argparse.FileType('w'),
-                        help="Path to the output file (default or '-' for stdout)")
-
-    parser.add_argument('--format', '-f', type=str, default='json',
-                        choices=['json', 'voxel', 'old'],
-                        help='Format of world files (default: %(default)s)')
-    parser.add_argument('--init-format', '--if', type=str,
-                        choices=['json', 'voxel', 'old'],
-                        help='Format of the init world file (overrides --format)')
-    parser.add_argument('--goal-format', '--gf', type=str,
-                        choices=['json', 'voxel', 'old'],
-                        help='Format of the goal world file (overrides --format)')
-
-    parser.add_argument('--repr', '-r', type=str, default='map',
-                        choices=['map', 'matrix', 'sortvec'],
-                        help='Voxel world representation for reconfig algorithm (default: %(default)s)')
-    parser.add_argument('--alg', '-a', type=str, default='bfs',
-                        choices=['bfs',
-                                 'astar-zero', 'astar-zero-nopt',
-                                 'astar-naive', 'astar-naive-nopt',
-                                 ],
-                        help='Algorithm for reconfiguration (default: %(default)s)')
-
-    log_parser = parser.add_argument_group('logging')
-    log_parser.add_argument('--verbose', '-v', action='count', default=0,
-                            help='Increase verbosity level')
-    log_parser.add_argument('--no-log-term', action='store_true',
-                            help="Don't log to terminal (Errors will still be logged)")
-    log_parser.add_argument('--log-file', type=str,
-                            help='Log to file in human readable format')
-    log_parser.add_argument('--log-json', type=str,
-                            help='Log to file in json format (each log as one json)')
-
-    args = parser.parse_args()
-    check_input_files(parser, [args.init_world_file, args.goal_world_file])
-    logger = Logger(verbosity=args.verbose, no_log_term=args.no_log_term,
-                    log_file=args.log_file, log_json=args.log_json)
-    logger.setup_logging()
-
-    convert_and_reconfig(args.init_world_file, args.goal_world_file,
-                         args.format if args.init_format is None else args.init_format,
-                         args.format if args.goal_format is None else args.goal_format,
-                         args=['--repr', args.repr, '--alg', args.alg],
-                         output=args.output, logger=logger)
+    rofi_voxel()
