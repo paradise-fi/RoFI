@@ -1,0 +1,26 @@
+experiments/isoreconfig/gen_tasks_args.py e2e -f old $(find experiments/isoreconfig/oneMod90 -type f | sort) | experiments/isoreconfig/gen_tasks_matrix.py - experiments/isoreconfig/args_rofi-isoreconfig.json > experiments/isoreconfig/oneMod90e2eTasks.json
+experiments/isoreconfig/gen_tasks_args.py snake -f json $(find experiments/isoreconfig/twoMod90 -type f | sort) | experiments/isoreconfig/gen_tasks_matrix.py - experiments/isoreconfig/args_rofi-isoreconfig.json > experiments/isoreconfig/twoMod90snakeTasks.json
+experiments/isoreconfig/gen_tasks_args.py e2e -f json $(find experiments/isoreconfig/twoMod90 -type f | sort) | experiments/isoreconfig/gen_tasks_matrix.py - experiments/isoreconfig/args_rofi-isoreconfig.json > experiments/isoreconfig/twoMod90e2eTasks.json
+experiments/isoreconfig/gen_tasks_args.py snake -f json $(find experiments/isoreconfig/threeMod90 -type f | sort) | experiments/isoreconfig/gen_tasks_matrix.py - experiments/isoreconfig/args_rofi-isoreconfig.json > experiments/isoreconfig/threeMod90snakeTasks.json
+experiments/isoreconfig/gen_tasks_args.py e2e -f json $(find experiments/isoreconfig/threeMod90 -type f | sort) | experiments/isoreconfig/gen_tasks_matrix.py - experiments/isoreconfig/args_rofi-isoreconfig.json > experiments/isoreconfig/threeMod90e2eTasks.json
+
+experiments/isoreconfig/gen_tasks_args.py e2e -f old $(find experiments/isoreconfig/twoMod90tangledSnake1k -type f | sort) | experiments/isoreconfig/gen_tasks_matrix.py - experiments/isoreconfig/args_rofi-reconfig.json > experiments/isoreconfig/twoMod90tangledSnake1kviki.json
+experiments/isoreconfig/gen_tasks_args.py e2e -f old $(find experiments/isoreconfig/threeMod90tangledSnake1k -type f | sort) | experiments/isoreconfig/gen_tasks_matrix.py - experiments/isoreconfig/args_rofi-reconfig.json > experiments/isoreconfig/threeMod90tangledSnake1kviki.json
+experiments/isoreconfig/gen_tasks_args.py e2e -f old $(find experiments/isoreconfig/fourMod90tangledSnake1k -type f | sort) | experiments/isoreconfig/gen_tasks_matrix.py - experiments/isoreconfig/args_rofi-reconfig.json > experiments/isoreconfig/fourMod90tangledSnake1kviki.json
+
+experiments/isoreconfig/gen_tasks_args.py e2e -f old $(find experiments/isoreconfig/twoMod90tangledSnake1k -type f | sort) | experiments/isoreconfig/gen_tasks_matrix.py - experiments/isoreconfig/args_rofi-isoreconfig.json > experiments/isoreconfig/twoMod90tangledSnake1kiso.json
+experiments/isoreconfig/gen_tasks_args.py e2e -f old $(find experiments/isoreconfig/threeMod90tangledSnake1k -type f | sort) | experiments/isoreconfig/gen_tasks_matrix.py - experiments/isoreconfig/args_rofi-isoreconfig.json > experiments/isoreconfig/threeMod90tangledSnake1kiso.json
+experiments/isoreconfig/gen_tasks_args.py e2e -f old $(find experiments/isoreconfig/fourMod90tangledSnake1k -type f | sort) | experiments/isoreconfig/gen_tasks_matrix.py - experiments/isoreconfig/args_rofi-isoreconfig.json > experiments/isoreconfig/fourMod90tangledSnake1kiso.json
+
+Merge files, alternate 3 lines from file1 and 2 lines from file2
+awk 'NR%3{print;next} {print;for (i=1;i<=2;i++) {getline < "file2";print} }' file1 > new
+awk 'NR%3{print;next} {print;for (i=1;i<=1;i++) {getline < "experiments/isoreconfig/twoMod90tangledSnake1kShapestar.json";print} }' twoMod90tangledSnake1kVikibfsBfstrictBfshape.json > twoMod90tangledSnake1kVikibfsBfstrictBfshapesShapestar.json
+
+delete every 3rd line, starting at first
+sed '1~3d' file
+
+Flamegraphs from RoFI folder:
+sudo sh -c 'echo 0 >/proc/sys/kernel/perf_event_paranoid'
+perf record -F 99 -ag -- rofi-isoreconfig --algo bfshape experiments/isoreconfig/threeMod90tangledSnake1k/m3_snake.rofi.01 experiments/isoreconfig/threeMod90tangledSnake1k/m3_snake.rofi.05 ./results.json --sf old --tf old --step=90
+perf script --demangle | ../FlameGraph/stackcollapse-perf.pl > out.perf-folded
+cat out.perf-folded | ../FlameGraph/flamegraph.pl > flamegraphNewCloud.svg

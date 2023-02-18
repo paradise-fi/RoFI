@@ -1,0 +1,11 @@
+{
+    "cmd": "rofi-isoreconfig --algo {algo} {init} {goal} /artefact/results.json --sf old --tf old --step={step}",
+    "args": {
+        "algo": [
+            "bfshape"
+        ],
+        "step": [
+            90
+        ]
+    }
+}

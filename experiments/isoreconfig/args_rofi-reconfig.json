@@ -1,0 +1,15 @@
+{
+    "cmd": "rofi-reconfig --alg {alg} --eval {heur} --init {init} --goal {goal} --parallel 1 --step {step}",
+    "args": {
+        "alg": [
+            "astar"
+        ],
+        "heur": [
+            "dMatrix",
+            "dAction"
+        ],
+        "step": [
+            90
+        ]
+    }
+}
