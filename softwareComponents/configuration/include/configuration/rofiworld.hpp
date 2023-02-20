@@ -443,11 +443,12 @@ public:
      * \brief Decide if two modules collide
      */
     bool operator()( const Module& a, const Module& b, Matrix posA, Matrix posB ) {
+        using namespace rofi::configuration::matrices;
+
         for ( auto pA : a.getOccupiedRelativePositions() ) {
             for ( auto pB : b.getOccupiedRelativePositions() ) {
-                if ( rofi::configuration::matrices::equals( static_cast< Matrix >( posA * pA ), posB * pB ) ) {
+                if ( distance( center( posA * pA ), center( posB * pB ) ) < 1 )
                     return true;
-                }
             }
         }
 
@@ -662,7 +663,7 @@ public:
         for ( const ModuleInfo& m : _modules ) {
             for ( const ModuleInfo& n : _modules ) {
                 if ( n.module->_id >= m.module->_id ) // Collision is symmetric
-                    break;
+                    continue;
                 if ( collisionModel( *n.module, *m.module, *n.absPosition, *m.absPosition ) ) {
                     return atoms::result_error( fmt::format( "Modules {} and {} collide",
                         m.module->_id, n.module->_id ) );
