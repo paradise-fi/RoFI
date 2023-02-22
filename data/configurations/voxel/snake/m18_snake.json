@@ -1,0 +1,472 @@
+{
+    "bodies": [
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                0
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                1
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                2
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                3
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                4
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                5
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                6
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                7
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                8
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                9
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                10
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                11
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                12
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                13
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                14
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                15
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                16
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                17
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                18
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                19
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                20
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                21
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                22
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                23
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                24
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                25
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                26
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                27
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                28
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                29
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                30
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                31
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                32
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                33
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                34
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                35
+            ],
+            "shoe_rotated": false
+        }
+    ]
+}
