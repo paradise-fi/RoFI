@@ -1,0 +1,186 @@
+{
+    "bodies": [
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                0
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                1
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                2
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                3
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                4
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                5
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                6
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                7
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                8
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                9
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                10
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                11
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                12
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                13
+            ],
+            "shoe_rotated": false
+        }
+    ]
+}
