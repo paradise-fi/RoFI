@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.15)
 
 add_rust_executable(rofi-voxel_main)
-add_rust_executable(rofi-voxel_next_step_count)
+add_rust_executable(rofi-voxel_full_traversal_bfs)
 add_rust_executable(rofi-voxel_normalized)
 add_rust_executable(rofi-voxel_one_step)
 

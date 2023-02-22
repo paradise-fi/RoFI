@@ -3,19 +3,21 @@
 use anyhow::Result;
 use clap::Parser;
 use itertools::Itertools;
-use rofi_voxel_cli::{FileInput, LogArgs};
+use rofi_voxel_cli::{FileErrOutput, FileInput, LogArgs};
+use rofi_voxel_reconfig::counters::Counter;
 use rofi_voxel_reconfig::reconfig::all_next_worlds_norm;
+use rofi_voxel_reconfig::reconfig::FxHashMap;
 use rofi_voxel_reconfig::voxel_world::impls::MapVoxelWorld;
 use rofi_voxel_reconfig::voxel_world::NormVoxelWorld;
 use rofi_voxel_reconfig::voxel_world::{as_one_of_norm_eq_world, normalized_eq_worlds};
 use rofi_voxel_reconfig::voxel_world::{check_voxel_world, is_normalized};
-use std::assert_matches::assert_matches;
-use std::collections::HashMap;
+use std::assert_matches::{assert_matches, debug_assert_matches};
 use std::io::Write;
 use std::rc::Rc;
 use std::time::SystemTime;
 
 type IndexType = i8;
+type ParentMap<TWorld> = FxHashMap<Rc<TWorld>, Option<Rc<TWorld>>>;
 
 /// Compute world counts after 1 to max steps of the reconfiguration algorithm
 #[derive(Debug, Parser)]
@@ -28,6 +30,9 @@ struct Cli {
     /// File to store the result data (default is standard output)
     #[arg(short, long)]
     output: Option<String>,
+    /// Log counters to file ('-' for error output)
+    #[arg(short, long)]
+    log_counters: Option<String>,
     #[clap(flatten)]
     log: LogArgs,
 }
@@ -45,23 +50,23 @@ impl Cli {
 }
 
 #[derive(Debug, Clone, Copy)]
-struct ResultData {
+struct RoundData {
     new_worlds: usize,
     new_worlds_including_eq: usize,
     all_worlds_in_parent_map: usize,
-    time_since_start: std::time::Duration,
+    round_time: std::time::Duration,
 }
 
-impl ResultData {
+impl RoundData {
     pub fn as_json_str(&self) -> String {
         let Self {
             new_worlds,
             new_worlds_including_eq,
             all_worlds_in_parent_map,
-            time_since_start,
+            round_time,
         } = self;
-        let time_since_start_ms = time_since_start.as_micros();
-        format!("{{\"new worlds\": {new_worlds}, \"new worlds including eq\": {new_worlds_including_eq}, \"all worlds in parent map\": {all_worlds_in_parent_map}, \"time microsec\": {time_since_start_ms}}}")
+        let round_time_us = round_time.as_micros();
+        format!("{{\"new worlds\": {new_worlds}, \"new worlds including eq\": {new_worlds_including_eq}, \"all worlds in parent map\": {all_worlds_in_parent_map}, \"round time [us]\": {round_time_us}}}")
     }
 }
 
@@ -69,8 +74,8 @@ impl ResultData {
 struct ResultsData {
     voxel_count: usize,
     init_eq_worlds: usize,
-    rounds: Vec<ResultData>,
-    start_time: SystemTime,
+    rounds: Vec<RoundData>,
+    last_time: SystemTime,
 }
 
 impl ResultsData {
@@ -80,7 +85,7 @@ impl ResultsData {
             voxel_count,
             init_eq_worlds,
             rounds: Vec::new(),
-            start_time: SystemTime::now(),
+            last_time: SystemTime::now(),
         }
     }
 
@@ -102,14 +107,14 @@ impl ResultsData {
         new_worlds_including_eq: usize,
         all_worlds_in_parent_map: usize,
     ) {
-        self.rounds.push(ResultData {
+        let now = SystemTime::now();
+        self.rounds.push(RoundData {
             new_worlds,
             new_worlds_including_eq,
             all_worlds_in_parent_map,
-            time_since_start: SystemTime::now()
-                .duration_since(self.start_time)
-                .unwrap_or_default(),
+            round_time: now.duration_since(self.last_time).unwrap_or_default(),
         });
+        self.last_time = now;
         log::info!(
             "round {}: {}",
             self.rounds.len(),
@@ -117,19 +122,19 @@ impl ResultsData {
         );
     }
 
-    pub fn get_start(&self) -> ResultData {
-        ResultData {
+    pub fn get_start(&self) -> RoundData {
+        RoundData {
             new_worlds: 1,
             new_worlds_including_eq: self.init_eq_worlds,
             all_worlds_in_parent_map: self.init_eq_worlds,
-            time_since_start: std::time::Duration::ZERO,
+            round_time: std::time::Duration::ZERO,
         }
     }
 }
 
-fn get_next_step_counts<TWorld>(
+fn run_bfs_layer<TWorld>(
     worlds_to_visit: &[Rc<TWorld>],
-    parent_map: &mut HashMap<Rc<TWorld>, Option<Rc<TWorld>>>,
+    parent_map: &mut ParentMap<TWorld>,
 ) -> (Vec<Rc<TWorld>>, usize)
 where
     TWorld: NormVoxelWorld + Eq + std::hash::Hash,
@@ -139,30 +144,34 @@ where
     let mut next_worlds_count = 0;
 
     for current in worlds_to_visit {
-        assert_matches!(check_voxel_world(current.as_ref()), Ok(()));
-        assert!(is_normalized(current.as_ref()));
-
+        debug_assert_matches!(check_voxel_world(current.as_ref()), Ok(()));
+        debug_assert!(is_normalized(current.as_ref()));
         for new_world in all_next_worlds_norm(current.as_ref()) {
-            next_worlds_count += 1;
+            debug_assert_matches!(check_voxel_world(&new_world), Ok(()));
+            debug_assert!(is_normalized(&new_world));
 
-            assert_matches!(check_voxel_world(&new_world), Ok(()));
-            assert!(is_normalized(&new_world));
             if parent_map.contains_key(&new_world) {
+                debug_assert!(
+                    normalized_eq_worlds(&new_world)
+                        .all(|norm_world| parent_map.contains_key(&norm_world)),
+                    "parent map contains a normalized variant, but not itself"
+                );
                 continue;
             }
 
-            parent_map.extend(
+            debug_assert!(
                 normalized_eq_worlds(&new_world)
-                    .map(|norm_world| (Rc::new(norm_world), Some(current.clone()))),
+                    .all(|norm_world| !parent_map.contains_key(&norm_world)),
+                "parent map contains itself but not some normalized variant"
             );
 
-            assert!(is_normalized(&new_world));
-            // Get the world as Rc from the parent_map
-            let new_world = parent_map
-                .get_key_value(&new_world)
-                .expect("Has to contain new_world")
-                .0
-                .clone();
+            next_worlds_count += normalized_eq_worlds(&new_world).count();
+            let mut norm_worlds = normalized_eq_worlds(&new_world).map(Rc::new).peekable();
+            let new_world = norm_worlds.peek().expect("No normalized variant").clone();
+            debug_assert!(is_normalized(new_world.as_ref()));
+
+            Counter::saved_new_unique_state();
+            parent_map.extend(norm_worlds.map(|norm_world| (norm_world, Some(current.clone()))));
 
             next_step_worlds.push(new_world);
         }
@@ -179,14 +188,14 @@ where
     assert_matches!(check_voxel_world(&init), Ok(()));
     let init = as_one_of_norm_eq_world(init);
 
-    let mut parent_map = normalized_eq_worlds(&init)
-        .map(|init| (Rc::new(init), None))
-        .collect::<HashMap<_, _>>();
+    let mut init_worlds = normalized_eq_worlds(&init).map(Rc::new).peekable();
+    let init = init_worlds.peek().expect("No normalized variant").clone();
+    let mut parent_map = init_worlds
+        .map(|init| (init, None))
+        .collect::<ParentMap<_>>();
 
-    let mut results_data = ResultsData::new(init.all_voxels().count(), parent_map.len());
-
-    let init = parent_map.keys().next().unwrap().clone();
-    let mut worlds_to_visit = vec![init];
+    let mut results_data = ResultsData::new(init.all_voxels().count(), 1);
+    let mut worlds_to_visit = Vec::from([init]);
 
     for _ in 0..max_steps {
         if worlds_to_visit.is_empty() {
@@ -194,7 +203,7 @@ where
         }
 
         let (next_step_worlds, next_worlds_count) =
-            get_next_step_counts(&worlds_to_visit, &mut parent_map);
+            run_bfs_layer(&worlds_to_visit, &mut parent_map);
 
         results_data.add_round(next_step_worlds.len(), next_worlds_count, parent_map.len());
 
@@ -209,6 +218,16 @@ fn main() -> Result<()> {
 
     args.log.setup_logging()?;
 
+    let log_counters = if let Some(log_counters) = &args.log_counters {
+        Counter::start()?;
+
+        let log_counters = FileErrOutput::from_arg(log_counters);
+        log_counters.touch()?;
+        Some(log_counters)
+    } else {
+        None
+    };
+
     let world = args.get_world()?;
     let (world, _min_pos) = world.to_world_and_min_pos::<MapVoxelWorld<_>>()?;
     assert_matches!(check_voxel_world(&world), Ok(()));
@@ -220,6 +239,10 @@ fn main() -> Result<()> {
         std::fs::File::create(output_file)?.write_all(results_data.as_bytes())?;
     } else {
         println!("{results_data}");
+    }
+
+    if let Some(log_counters) = log_counters {
+        serde_json::to_writer_pretty(log_counters.get_writer()?, &Counter::get_results())?;
     }
 
     Ok(())
