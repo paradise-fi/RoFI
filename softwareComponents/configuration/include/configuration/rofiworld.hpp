@@ -719,6 +719,14 @@ public:
         return _modules[ _idMapping[ id ] ].absPosition.value();
     }
 
+    Matrix getModulePosition( ModuleId id ) const {
+        if ( !_prepared )
+            throw std::logic_error( "getModulePositions: rofiworld is not prepared" );
+        if ( !_idMapping.contains( id ) )
+            throw std::logic_error( "bad access: rofi world does not containt module with such id" );
+        return _modules[ _idMapping.at( id ) ].absPosition.value();
+    }
+
     void disconnect( RoficomJointHandle h );
     void disconnect( SpaceJointHandle h );
 
