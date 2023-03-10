@@ -113,7 +113,9 @@ where
 // For sizes in normalized worlds it holds that size.x >= size.y >= size.z
 //
 // The iterator can return multiple equal worlds (in case the world is symmetrical)
-pub fn normalized_eq_worlds<TWorld>(world: &TWorld) -> impl Iterator<Item = TWorld> + '_
+pub fn normalized_eq_worlds_with_rot<TWorld>(
+    world: &TWorld,
+) -> impl Iterator<Item = (TWorld, WorldRotation)> + '_
 where
     TWorld: NormVoxelWorld,
 {
@@ -125,24 +127,41 @@ where
             debug_assert_eq!(transformed_world.sizes(), transformed_sizes);
             debug_assert_matches!(check_voxel_world(&transformed_world), Ok(()));
             debug_assert!(is_normalized(&transformed_world));
-            Some(transformed_world)
+            Some((transformed_world, world_rot))
         } else {
             None
         }
     })
 }
 
-pub fn as_one_of_norm_eq_world<TWorld>(world: TWorld) -> TWorld
+// For sizes in normalized worlds it holds that size.x >= size.y >= size.z
+//
+// The iterator can return multiple equal worlds (in case the world is symmetrical)
+pub fn normalized_eq_worlds<TWorld>(world: &TWorld) -> impl Iterator<Item = TWorld> + '_
+where
+    TWorld: NormVoxelWorld,
+{
+    normalized_eq_worlds_with_rot(world).map(|(world, _)| world)
+}
+
+pub fn as_one_of_norm_eq_world_with_rot<TWorld>(world: TWorld) -> (TWorld, WorldRotation)
 where
     TWorld: NormVoxelWorld,
 {
     if is_normalized(&world) {
-        world
+        (world, WorldRotation::identity())
     } else {
-        normalized_eq_worlds(&world)
+        normalized_eq_worlds_with_rot(&world)
             .next()
             .expect("There has to be a normalized version of world")
     }
+}
+
+pub fn as_one_of_norm_eq_world<TWorld>(world: TWorld) -> TWorld
+where
+    TWorld: NormVoxelWorld,
+{
+    as_one_of_norm_eq_world_with_rot(world).0
 }
 
 pub fn check_pos<TIndex: num::Num + Ord + Copy + std::fmt::Debug>(
