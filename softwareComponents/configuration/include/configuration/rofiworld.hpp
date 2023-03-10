@@ -715,8 +715,16 @@ public:
         if ( !_prepared )
             prepare().get_or_throw_as< std::logic_error >();
         if ( !_idMapping.contains( id ) )
-            throw std::logic_error( "bad access: rofi world does not containt module with such id" );
+            throw std::out_of_range( "bad access: rofi world does not contain module with such id" );
         return _modules[ _idMapping[ id ] ].absPosition.value();
+    }
+
+    Matrix getModulePosition( ModuleId id ) const {
+        if ( !_prepared )
+            throw std::logic_error( "getModulePosition: rofiworld is not prepared" );
+        if ( !_idMapping.contains( id ) )
+            throw std::out_of_range( "bad access: rofi world does not contain module with such id" );
+        return _modules[ _idMapping.at( id ) ].absPosition.value();
     }
 
     void disconnect( RoficomJointHandle h );
