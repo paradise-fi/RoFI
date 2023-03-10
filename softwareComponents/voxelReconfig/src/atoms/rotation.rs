@@ -112,30 +112,26 @@ impl Rotation {
         }
     }
 
-    pub fn rotate_dir(&self, dir: Direction) -> Direction {
-        let result = if self.axis() == dir.axis() {
-            dir
-        } else if self.axis().next_axis() == dir.axis() {
-            match self.angle() {
-                RotationAngle::Plus90 => {
-                    Direction::new_with(self.axis().prev_axis(), dir.is_positive())
-                }
-                RotationAngle::Minus90 => {
-                    Direction::new_with(self.axis().prev_axis(), !dir.is_positive())
-                }
-            }
-        } else if self.axis().prev_axis() == dir.axis() {
-            match self.angle() {
-                RotationAngle::Plus90 => {
-                    Direction::new_with(self.axis().next_axis(), !dir.is_positive())
-                }
-                RotationAngle::Minus90 => {
-                    Direction::new_with(self.axis().next_axis(), dir.is_positive())
-                }
-            }
+    pub fn rotate_axis(&self, axis: Axis) -> Axis {
+        if axis == self.axis() {
+            axis
+        } else if axis == self.axis().next_axis() {
+            self.axis().prev_axis()
+        } else if axis == self.axis().prev_axis() {
+            self.axis().next_axis()
         } else {
             panic!()
+        }
+    }
+
+    pub fn rotate_dir(&self, dir: Direction) -> Direction {
+        let result_is_positive = if dir.axis() == self.axis() {
+            dir.is_positive()
+        } else {
+            let is_next_axis = dir.axis() == self.axis().next_axis();
+            is_next_axis ^ self.angle().is_positive() ^ dir.is_positive()
         };
+        let result = Direction::new_with(self.rotate_axis(dir.axis()), result_is_positive);
 
         debug_assert_eq!(
             self.rotate(dir.update_position([0; 3])),
