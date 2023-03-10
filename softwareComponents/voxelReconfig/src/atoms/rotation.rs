@@ -124,13 +124,17 @@ impl Rotation {
         }
     }
 
-    pub fn rotate_dir(&self, dir: Direction) -> Direction {
-        let result_is_positive = if dir.axis() == self.axis() {
-            dir.is_positive()
+    pub fn dir_is_positive_inverted(&self, dir: Direction) -> bool {
+        if dir.axis() == self.axis() {
+            false
         } else {
             let is_next_axis = dir.axis() == self.axis().next_axis();
-            is_next_axis ^ self.angle().is_positive() ^ dir.is_positive()
-        };
+            is_next_axis ^ self.angle().is_positive()
+        }
+    }
+
+    pub fn rotate_dir(&self, dir: Direction) -> Direction {
+        let result_is_positive = dir.is_positive() ^ self.dir_is_positive_inverted(dir);
         let result = Direction::new_with(self.rotate_axis(dir.axis()), result_is_positive);
 
         debug_assert_eq!(

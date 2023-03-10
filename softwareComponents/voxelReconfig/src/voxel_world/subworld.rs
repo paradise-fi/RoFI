@@ -115,11 +115,9 @@ impl<'a, TWorld: VoxelWorld> VoxelWorld for VoxelSubworld<'a, TWorld> {
     }
 
     fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
-        Box::new(
-            self.included
-                .iter()
-                .map(|&OrdPos(pos)| (pos, self.world.get_voxel(pos).unwrap())),
-        )
+        self.included
+            .iter()
+            .map(|&OrdPos(pos)| (pos, self.world.get_voxel(pos).unwrap()))
     }
 
     fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {
@@ -207,11 +205,9 @@ pub mod complement {
         }
 
         fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
-            Box::new(
-                self.underlying_world()
-                    .all_voxels()
-                    .filter(|&(pos, _)| self.contains(pos)),
-            )
+            self.underlying_world()
+                .all_voxels()
+                .filter(|&(pos, _)| self.contains(pos))
         }
 
         fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {

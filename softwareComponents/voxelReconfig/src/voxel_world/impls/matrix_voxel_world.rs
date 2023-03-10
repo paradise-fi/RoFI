@@ -82,20 +82,18 @@ impl<TIndex: MatrixVoxelWorldIndex> VoxelWorld for MatrixVoxelWorld<TIndex> {
     }
 
     fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
-        Box::new(
-            self.data
-                .get_data()
-                .zip(0..)
-                .flat_map(|(plain, x)| {
-                    plain.zip(0..).flat_map(move |(row, y)| {
-                        row.iter()
-                            .copied()
-                            .zip(0..)
-                            .map(move |(voxel, z)| (Self::to_position([x, y, z]).unwrap(), voxel))
-                    })
+        self.data
+            .get_data()
+            .zip(0..)
+            .flat_map(|(plain, x)| {
+                plain.zip(0..).flat_map(move |(row, y)| {
+                    row.iter()
+                        .copied()
+                        .zip(0..)
+                        .map(move |(voxel, z)| (Self::to_position([x, y, z]).unwrap(), voxel))
                 })
-                .filter_map(|(pos, voxel)| Some((pos, voxel.get_voxel()?))),
-        )
+            })
+            .filter_map(|(pos, voxel)| Some((pos, voxel.get_voxel()?)))
     }
 
     fn get_voxel(&self, position: Pos<Self::IndexType>) -> Option<Voxel> {

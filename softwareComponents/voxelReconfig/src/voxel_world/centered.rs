@@ -79,11 +79,9 @@ where
     }
 
     fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
-        Box::new(
-            self.world()
-                .all_voxels()
-                .map(|(orig_pos, voxel)| (self.get_new_pos(orig_pos), voxel)),
-        )
+        self.world()
+            .all_voxels()
+            .map(|(orig_pos, voxel)| (self.get_new_pos(orig_pos), voxel))
     }
 
     fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {
