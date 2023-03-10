@@ -46,6 +46,25 @@ impl<'a, TWorld: VoxelWorld> VoxelSubworld<'a, TWorld> {
             .map(|(pos, _)| OrdPos(pos))
             .collect::<BTreeSet<_>>();
 
+        Self::new_from_set_unchecked(world, included)
+    }
+
+    pub fn new_from_set(
+        world: &'a TWorld,
+        mut included: BTreeSet<OrdPos<TWorld::IndexType>>,
+    ) -> Self {
+        included.retain(|&OrdPos(pos)| world.get_voxel(pos).is_some());
+        Self::new_from_set_unchecked(world, included)
+    }
+
+    fn new_from_set_unchecked(
+        world: &'a TWorld,
+        included: BTreeSet<OrdPos<TWorld::IndexType>>,
+    ) -> Self {
+        debug_assert!(included
+            .iter()
+            .all(|&OrdPos(pos)| world.get_voxel(pos).is_some()));
+
         let size_ranges = minimal_pos_hull(included.iter().map(|&OrdPos(pos)| pos));
         let complement_size_ranges = minimal_pos_hull(
             world
