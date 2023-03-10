@@ -68,6 +68,10 @@ impl WorldRotation {
         result.map(Option::unwrap)
     }
 
+    pub fn is_inverting_axis(&self, axis: atoms::Axis) -> bool {
+        self.neg_axis[axis.as_index()]
+    }
+
     pub fn rotate_axis(&self, axis: atoms::Axis) -> atoms::Axis {
         debug_assert!(axis.as_index() < self.axes_rotate_to().len());
         self.axes_rotate_to()[axis.as_index()]

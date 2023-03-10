@@ -5,6 +5,7 @@ mod world_rotation;
 
 pub mod impls;
 pub mod traits;
+pub mod with_connections;
 
 pub use centered::CenteredVoxelWorld;
 pub use rotated::{rotate_voxel, RotatedVoxelWorld};

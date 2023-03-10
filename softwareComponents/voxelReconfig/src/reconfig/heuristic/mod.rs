@@ -8,7 +8,7 @@ pub enum Heuristic {
 }
 
 impl Heuristic {
-    pub fn get_fn<'a, TWorld>(self, goal: &TWorld) -> Box<dyn FnMut(&TWorld) -> usize + 'a>
+    pub fn get_fn<'a, TWorld>(self, goal: &TWorld) -> Box<dyn 'a + FnMut(&TWorld) -> usize>
     where
         TWorld: 'a + NormVoxelWorld + Eq + std::hash::Hash,
         TWorld::IndexType: num::Integer + std::hash::Hash,

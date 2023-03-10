@@ -61,7 +61,7 @@ impl<TIndex: SortvecVoxelWorldIndex> VoxelWorld for SortvecVoxelWorld<TIndex> {
     }
 
     fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
-        Box::new(self.data.iter().map(|(&OrdPos(pos), &voxel)| (pos, voxel)))
+        self.data.iter().map(|(&OrdPos(pos), &voxel)| (pos, voxel))
     }
 
     fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {

@@ -166,11 +166,11 @@ where
     }
 
     fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
-        Box::new(self.world().all_voxels().map(|(orig_pos, voxel)| {
+        self.world().all_voxels().map(|(orig_pos, voxel)| {
             let rot_voxel = rotate_voxel(voxel, self.rotation);
             let rot_pos = self.get_new_pos(orig_pos);
             (rot_pos, rot_voxel)
-        }))
+        })
     }
 
     fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {
