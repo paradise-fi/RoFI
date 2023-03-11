@@ -1,6 +1,8 @@
-use super::{compute_reconfig_path, Heuristic};
+use crate::algs::astar::opt::compute_path;
 use crate::atoms::{Axis, Direction};
+use crate::reconfig::heuristic::Heuristic;
 use crate::reconfig::test::validate_norm_voxel_world;
+use crate::reconfig::voxel_worlds_graph::VoxelWorldsGraph;
 use crate::voxel::{JointPosition, Voxel};
 use crate::voxel_world::impls::{MapVoxelWorld, MatrixVoxelWorld, SortvecVoxelWorld};
 use crate::voxel_world::NormVoxelWorld;
@@ -45,7 +47,8 @@ where
     validate_norm_voxel_world(&world);
 
     for heuristic in [Heuristic::Zero, Heuristic::Naive] {
-        let result = compute_reconfig_path(world.clone(), world.clone(), heuristic).unwrap();
+        let heuristic = heuristic.get_fn(&world);
+        let result = compute_path::<VoxelWorldsGraph<_>, _>(&world, &world, heuristic).unwrap();
         assert_eq!(result.len(), 1);
         result
             .iter()
@@ -114,8 +117,9 @@ where
     validate_norm_voxel_world(&goal_world);
 
     for heuristic in [Heuristic::Zero, Heuristic::Naive] {
+        let heuristic = heuristic.get_fn(&goal_world);
         let result =
-            compute_reconfig_path(init_world.clone(), goal_world.clone(), heuristic).unwrap();
+            compute_path::<VoxelWorldsGraph<_>, _>(&init_world, &goal_world, heuristic).unwrap();
         assert_eq!(result.len(), 2);
         result
             .iter()

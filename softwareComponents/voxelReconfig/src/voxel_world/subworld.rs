@@ -183,7 +183,7 @@ pub mod complement {
         }
 
         fn underlying_world(&self) -> &'a TWorld {
-            self.0.borrow().underlying_world()
+            VoxelSubworld::underlying_world(self.0.borrow())
         }
 
         fn contains(&self, pos: Pos<<Self as VoxelWorld>::IndexType>) -> bool {

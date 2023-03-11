@@ -1,8 +1,8 @@
 #[cfg(test)]
 mod test;
 
-pub mod algs;
 pub mod heuristic;
+pub mod voxel_worlds_graph;
 
 use crate::connectivity::ConnectivityGraph;
 use crate::counters::Counter;
@@ -11,43 +11,7 @@ use crate::module_repr::is_module_repr;
 use crate::module_repr::{get_all_module_reprs, get_other_body};
 use crate::voxel_world::as_one_of_norm_eq_world;
 use crate::voxel_world::NormVoxelWorld;
-use std::collections::HashMap;
-use std::hash::BuildHasher;
 use std::rc::Rc;
-
-#[derive(Debug, Clone, Copy, amplify::Display, amplify::Error)]
-#[display(doc_comments)]
-pub enum Error {
-    /// Voxel count doesn't match
-    VoxelCountDoesNotMatch,
-    /// Reconfiguration path not found
-    PathNotFound,
-}
-
-fn get_path_to<TWorld: Eq + std::hash::Hash, TParentInfo, S: BuildHasher>(
-    goal: &TWorld,
-    parent_map: &HashMap<Rc<TWorld>, TParentInfo, S>,
-    mut get_parent: impl FnMut(&TParentInfo) -> Option<Rc<TWorld>>,
-) -> Vec<Rc<TWorld>> {
-    let mut parent = Some(
-        parent_map
-            .get_key_value(goal)
-            .expect("Missing goal parent")
-            .0
-            .clone(),
-    );
-    let mut path = std::iter::from_fn(|| {
-        let new_parent = parent_map
-            .get(parent.as_ref()?)
-            .map(&mut get_parent)
-            .expect("Missing prev node");
-        std::mem::replace(&mut parent, new_parent)
-    })
-    .collect::<Vec<_>>();
-
-    path.reverse();
-    path
-}
 
 /// Returns all possible next worlds
 ///
