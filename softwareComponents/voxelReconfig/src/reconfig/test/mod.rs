@@ -1,3 +1,7 @@
+mod astar_opt_test;
+mod astar_test;
+mod bfs_test;
+
 use super::*;
 use crate::pos::{minimal_pos_hull, SizeRanges};
 use crate::voxel_world::VoxelWorld;

@@ -1,9 +1,10 @@
-use super::compute_reconfig_path;
+use super::validate_norm_voxel_world;
+use crate::algs::bfs::compute_path;
 use crate::atoms::{Axis, Direction};
-use crate::reconfig::test::validate_norm_voxel_world;
+use crate::reconfig::voxel_worlds_graph::VoxelWorldsGraph;
 use crate::voxel::{JointPosition, Voxel};
 use crate::voxel_world::impls::{MapVoxelWorld, MatrixVoxelWorld, SortvecVoxelWorld};
-use crate::voxel_world::NormVoxelWorld;
+use crate::voxel_world::{as_one_of_norm_eq_world, NormVoxelWorld};
 use std::rc::Rc;
 
 #[test]
@@ -42,13 +43,14 @@ where
         ),
     ])
     .unwrap();
+    let world = as_one_of_norm_eq_world(world);
     validate_norm_voxel_world(&world);
 
-    let result = compute_reconfig_path(world.clone(), world.clone()).unwrap();
+    let result = compute_path::<VoxelWorldsGraph<_>>(&world, &world).unwrap();
     assert_eq!(result.len(), 1);
     result
         .iter()
-        .map(AsRef::<TWorld>::as_ref)
+        .map(AsRef::as_ref)
         .for_each(validate_norm_voxel_world);
     assert_eq!(&result, &vec![Rc::new(world)]);
 }
@@ -89,7 +91,6 @@ where
         ),
     ])
     .unwrap();
-    validate_norm_voxel_world(&init_world);
     let (goal_world, _) = TWorld::from_voxels([
         (
             [num::zero(); 3].into(),
@@ -109,9 +110,13 @@ where
         ),
     ])
     .unwrap();
+
+    let init_world = as_one_of_norm_eq_world(init_world);
+    let goal_world = as_one_of_norm_eq_world(goal_world);
+    validate_norm_voxel_world(&init_world);
     validate_norm_voxel_world(&goal_world);
 
-    let result = compute_reconfig_path(init_world.clone(), goal_world.clone()).unwrap();
+    let result = compute_path::<VoxelWorldsGraph<_>>(&init_world, &goal_world).unwrap();
     assert_eq!(result.len(), 2);
     result
         .iter()

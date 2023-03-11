@@ -1,8 +1,11 @@
 use anyhow::Result;
 use clap::Parser;
 use rofi_voxel_cli::{FileErrOutput, FileInput, LogArgs};
+use rofi_voxel_reconfig::algs;
 use rofi_voxel_reconfig::counters::Counter;
-use rofi_voxel_reconfig::reconfig;
+use rofi_voxel_reconfig::reconfig::heuristic::Heuristic;
+use rofi_voxel_reconfig::reconfig::voxel_worlds_graph::VoxelWorldsGraph;
+use rofi_voxel_reconfig::voxel_world::as_one_of_norm_eq_world;
 use rofi_voxel_reconfig::voxel_world::impls::{MapVoxelWorld, MatrixVoxelWorld, SortvecVoxelWorld};
 use rofi_voxel_reconfig::voxel_world::NormVoxelWorld;
 use std::rc::Rc;
@@ -23,8 +26,8 @@ enum AlgorithmType {
     Bfs,
     AstarZero,
     AstarNaive,
-    AstarZeroNopt,
-    AstarNaiveNopt,
+    AstarZeroOpt,
+    AstarNaiveOpt,
 }
 
 /// Compute RoFI reconfiguration from init to goal by using voxels
@@ -73,36 +76,33 @@ impl Cli {
     }
 }
 
-fn compute_reconfig_alg<TWorld>(
-    init: TWorld,
-    goal: TWorld,
+fn run_reconfig_alg<TWorld>(
+    init: &TWorld,
+    goal: &TWorld,
     alg_type: AlgorithmType,
-) -> Result<Vec<Rc<TWorld>>, reconfig::Error>
+) -> Result<Vec<Rc<TWorld>>, algs::Error>
 where
     TWorld: NormVoxelWorld + Eq + std::hash::Hash,
-    TWorld::IndexType: 'static + num::Integer + std::hash::Hash + Send + Sync,
+    TWorld::IndexType: num::Integer + std::hash::Hash,
 {
+    type StateGraph<T> = VoxelWorldsGraph<T>;
     match alg_type {
-        AlgorithmType::Bfs => reconfig::algs::bfs::compute_reconfig_path(init, goal),
-        AlgorithmType::AstarZero => reconfig::algs::astar::compute_reconfig_path(
+        AlgorithmType::Bfs => algs::bfs::compute_path::<StateGraph<_>>(init, goal),
+        AlgorithmType::AstarZero => {
+            algs::astar::compute_path::<StateGraph<_>, _>(init, goal, Heuristic::Zero.get_fn(goal))
+        }
+        AlgorithmType::AstarNaive => {
+            algs::astar::compute_path::<StateGraph<_>, _>(init, goal, Heuristic::Naive.get_fn(goal))
+        }
+        AlgorithmType::AstarZeroOpt => algs::astar::opt::compute_path::<StateGraph<_>, _>(
             init,
             goal,
-            reconfig::heuristic::Heuristic::Zero,
+            Heuristic::Zero.get_fn(goal),
         ),
-        AlgorithmType::AstarNaive => reconfig::algs::astar::compute_reconfig_path(
+        AlgorithmType::AstarNaiveOpt => algs::astar::opt::compute_path::<StateGraph<_>, _>(
             init,
             goal,
-            reconfig::heuristic::Heuristic::Naive,
-        ),
-        AlgorithmType::AstarZeroNopt => reconfig::algs::astar::nopt::compute_reconfig_path(
-            init,
-            goal,
-            reconfig::heuristic::Heuristic::Zero,
-        ),
-        AlgorithmType::AstarNaiveNopt => reconfig::algs::astar::nopt::compute_reconfig_path(
-            init,
-            goal,
-            reconfig::heuristic::Heuristic::Naive,
+            Heuristic::Naive.get_fn(goal),
         ),
     }
 }
@@ -119,13 +119,14 @@ where
     let (init, _min_pos) = init.to_world_and_min_pos()?;
     let (goal, _min_pos) = goal.to_world_and_min_pos()?;
 
-    let reconfig_sequence = compute_reconfig_alg::<TWorld>(init, goal, alg_type)?;
-    let reconfig_sequence = reconfig_sequence
+    let init = as_one_of_norm_eq_world(init);
+    let goal = as_one_of_norm_eq_world(goal);
+
+    let reconfig_sequence = run_reconfig_alg::<TWorld>(&init, &goal, alg_type)?;
+    Ok(reconfig_sequence
         .iter()
         .map(|world| rofi_voxel_reconfig::serde::VoxelWorld::from_world(world.as_ref()))
-        .collect::<Vec<_>>();
-
-    Ok(reconfig_sequence)
+        .collect())
 }
 
 fn main() -> Result<()> {
