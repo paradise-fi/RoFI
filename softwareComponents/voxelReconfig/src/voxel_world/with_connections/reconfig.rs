@@ -1,4 +1,5 @@
 use super::{Connections, VoxelWorldWithConnections};
+use crate::algs::StateGraph;
 use crate::atoms::Direction;
 use crate::connectivity::get_bodies_connected_to;
 use crate::counters::Counter;
@@ -6,8 +7,12 @@ use crate::module_move::Move;
 use crate::module_repr::{get_all_module_reprs, get_other_body, is_module_repr};
 use crate::pos::Pos;
 use crate::voxel::PosVoxel;
+use crate::voxel_world::{check_voxel_world, is_normalized, normalized_eq_worlds_with_rot};
 use crate::voxel_world::{NormVoxelWorld, VoxelWorld};
 use rustc_hash::FxHashMap;
+use std::assert_matches::{assert_matches, debug_assert_matches};
+use std::marker::PhantomData;
+use std::rc::Rc;
 
 /// Returns all possible next worlds from moving joint
 ///
@@ -151,4 +156,64 @@ where
             .chain(get_disconnect_successors(world, module.0))
             .chain(get_disconnect_successors(world, other_body.0))
     })
+}
+
+pub fn normalized_eq_worlds<TWorld, TConnections>(
+    world: &VoxelWorldWithConnections<TWorld, TConnections>,
+) -> impl Iterator<Item = VoxelWorldWithConnections<TWorld, TConnections>> + '_
+where
+    TWorld: NormVoxelWorld,
+    TConnections: Connections<IndexType = TWorld::IndexType>,
+{
+    normalized_eq_worlds_with_rot(world.world()).map(|(eq_world, rotation)| {
+        VoxelWorldWithConnections::new_assume_normalized_and_connected(
+            Rc::new(eq_world),
+            world.get_rotated_connections(rotation),
+        )
+    })
+}
+
+pub struct VoxelWorldsWithConnectionsGraph<TWorld, TConnections>(
+    PhantomData<VoxelWorldWithConnections<TWorld, TConnections>>,
+)
+where
+    TWorld: NormVoxelWorld,
+    TConnections: Connections<IndexType = TWorld::IndexType>;
+
+impl<TWorld, TConnections> StateGraph for VoxelWorldsWithConnectionsGraph<TWorld, TConnections>
+where
+    TWorld: NormVoxelWorld + Eq + std::hash::Hash,
+    TWorld::IndexType: num::Integer + std::hash::Hash,
+    TConnections: Connections<IndexType = TWorld::IndexType> + Eq + std::hash::Hash + Clone,
+    TWorld: 'static,
+    TConnections: 'static,
+{
+    type StateType = VoxelWorldWithConnections<TWorld, TConnections>;
+
+    type EqStatesIter<'a> = impl 'a + Iterator<Item = Self::StateType>;
+    type NextStatesIter<'a> = impl 'a + Iterator<Item = Self::StateType>;
+
+    fn debug_check_state(state: &Self::StateType) {
+        debug_assert_matches!(check_voxel_world(state.world()), Ok(()));
+        debug_assert!(is_normalized(state.world()));
+        debug_assert!(state.check_is_valid());
+    }
+    fn init_check(init: &Self::StateType, goal: &Self::StateType) -> bool {
+        assert!(is_normalized(init.world()));
+        assert!(is_normalized(goal.world()));
+        assert_matches!(check_voxel_world(init.world()), Ok(()));
+        assert_matches!(check_voxel_world(goal.world()), Ok(()));
+
+        assert!(init.check_is_valid());
+        assert!(goal.check_is_valid());
+
+        init.world.all_voxels().count() == goal.world.all_voxels().count()
+    }
+
+    fn equivalent_states(state: &Self::StateType) -> Self::EqStatesIter<'_> {
+        normalized_eq_worlds(state)
+    }
+    fn next_states(state: &Self::StateType) -> Self::NextStatesIter<'_> {
+        all_next_worlds(state)
+    }
 }
