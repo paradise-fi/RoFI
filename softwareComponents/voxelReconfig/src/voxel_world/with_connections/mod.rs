@@ -202,6 +202,14 @@ where
         })
     }
 
+    pub fn get_rotated_connections(&self, rotation: WorldRotation) -> TConnections {
+        TConnections::from_connections(Self::rotated_connections(
+            rotation,
+            self.connections.all_connections(),
+            self.world.sizes(),
+        ))
+    }
+
     fn traverse_connections(
         world: &TWorld,
         connections: &TConnections,
@@ -262,5 +270,9 @@ where
         } else {
             Some(VoxelSubworld::new_from_set(&self.world, visited))
         }
+    }
+
+    pub fn check_is_valid(&self) -> bool {
+        Self::is_connected(&self.world, &self.connections)
     }
 }
