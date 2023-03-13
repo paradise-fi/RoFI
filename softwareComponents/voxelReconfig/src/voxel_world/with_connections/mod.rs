@@ -1,3 +1,4 @@
+pub mod heuristic;
 pub mod impls;
 pub mod reconfig;
 

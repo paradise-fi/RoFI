@@ -255,6 +255,14 @@ def check_input_files(files: List[str]):
     show_default=True,
     help="Algorithm for reconfiguration",
 )
+@click.option(
+    "--connections",
+    "-c",
+    type=click.Choice(["map", "set"]),
+    default=None,
+    show_default=True,
+    help="Use connections with specified representation",
+)
 @click.option("--verbose", "-v", count=True, help="Increase verbosity level")
 @click.option(
     "--no-log-term",
@@ -284,6 +292,7 @@ def rofi_voxel(
     goal_format: Optional[str],
     repr: str,
     alg: str,
+    connections: Optional[str],
     verbose: int,
     no_log_term: bool,
     log_file: Optional[str],
@@ -304,7 +313,9 @@ def rofi_voxel(
         goal_world_file,
         format if init_format is None else init_format,
         format if goal_format is None else goal_format,
-        args=["--repr", repr, "--alg", alg],
+        args=["--repr", repr, "--alg", alg] + []
+        if connections is None
+        else ["--connections", connections],
         output=output,
         logger=logger,
     )
