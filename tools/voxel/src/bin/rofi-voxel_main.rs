@@ -7,6 +7,11 @@ use rofi_voxel_reconfig::reconfig::heuristic::Heuristic;
 use rofi_voxel_reconfig::reconfig::voxel_worlds_graph::VoxelWorldsGraph;
 use rofi_voxel_reconfig::voxel_world::as_one_of_norm_eq_world;
 use rofi_voxel_reconfig::voxel_world::impls::{MapVoxelWorld, MatrixVoxelWorld, SortvecVoxelWorld};
+use rofi_voxel_reconfig::voxel_world::with_connections::heuristic::use_world_heuristic;
+use rofi_voxel_reconfig::voxel_world::with_connections::impls::map_connections::MapConnections;
+use rofi_voxel_reconfig::voxel_world::with_connections::impls::set_connections::SetConnections;
+use rofi_voxel_reconfig::voxel_world::with_connections::reconfig::VoxelWorldsWithConnectionsGraph;
+use rofi_voxel_reconfig::voxel_world::with_connections::{Connections, VoxelWorldWithConnections};
 use rofi_voxel_reconfig::voxel_world::NormVoxelWorld;
 use std::rc::Rc;
 
@@ -18,6 +23,13 @@ enum VoxelWorldRepr {
     Map,
     Matrix,
     Sortvec,
+}
+
+#[derive(Debug, Clone, Copy, amplify::Display, clap::ValueEnum)]
+#[display(lowercase)]
+enum ConnectionsRepr {
+    Map,
+    Set,
 }
 
 #[derive(Debug, Clone, Copy, amplify::Display, clap::ValueEnum)]
@@ -43,6 +55,9 @@ struct Cli {
     /// Algorithm for reconfiguration
     #[arg(short, long, default_value_t = AlgorithmType::Bfs)]
     alg: AlgorithmType,
+    /// Use connections with specified representation
+    #[arg(short, long)]
+    connections: Option<ConnectionsRepr>,
     /// Log counters to file ('-' for error output)
     #[arg(short, long)]
     log_counters: Option<String>,
@@ -107,14 +122,54 @@ where
     }
 }
 
+fn run_reconfig_alg_with_connections<TWorld, TConnections>(
+    init: &VoxelWorldWithConnections<TWorld, TConnections>,
+    goal: &VoxelWorldWithConnections<TWorld, TConnections>,
+    alg_type: AlgorithmType,
+) -> Result<Vec<Rc<VoxelWorldWithConnections<TWorld, TConnections>>>, algs::Error>
+where
+    TWorld: NormVoxelWorld + Eq + std::hash::Hash,
+    TWorld::IndexType: num::Integer + std::hash::Hash,
+    TConnections: Connections<IndexType = TWorld::IndexType> + Eq + std::hash::Hash + Clone,
+    TWorld: 'static,
+    TConnections: 'static,
+{
+    type StateGraph<T, U> = VoxelWorldsWithConnectionsGraph<T, U>;
+    match alg_type {
+        AlgorithmType::Bfs => algs::bfs::compute_path::<StateGraph<_, _>>(init, goal),
+        AlgorithmType::AstarZero => algs::astar::compute_path::<StateGraph<_, _>, _>(
+            init,
+            goal,
+            use_world_heuristic(Heuristic::Zero, goal),
+        ),
+        AlgorithmType::AstarNaive => algs::astar::compute_path::<StateGraph<_, _>, _>(
+            init,
+            goal,
+            use_world_heuristic(Heuristic::Naive, goal),
+        ),
+        AlgorithmType::AstarZeroOpt => algs::astar::opt::compute_path::<StateGraph<_, _>, _>(
+            init,
+            goal,
+            use_world_heuristic(Heuristic::Zero, goal),
+        ),
+        AlgorithmType::AstarNaiveOpt => algs::astar::opt::compute_path::<StateGraph<_, _>, _>(
+            init,
+            goal,
+            use_world_heuristic(Heuristic::Naive, goal),
+        ),
+    }
+}
+
 fn run_voxel_reconfig<TWorld>(
     init: rofi_voxel_reconfig::serde::VoxelWorld<TWorld::IndexType>,
     goal: rofi_voxel_reconfig::serde::VoxelWorld<TWorld::IndexType>,
+    connections_repr: Option<ConnectionsRepr>,
     alg_type: AlgorithmType,
 ) -> Result<Vec<rofi_voxel_reconfig::serde::VoxelWorld<TWorld::IndexType>>>
 where
     TWorld: NormVoxelWorld + Eq + std::hash::Hash,
     TWorld::IndexType: 'static + num::Integer + std::hash::Hash + Send + Sync,
+    TWorld: 'static,
 {
     let (init, _min_pos) = init.to_world_and_min_pos()?;
     let (goal, _min_pos) = goal.to_world_and_min_pos()?;
@@ -122,11 +177,39 @@ where
     let init = as_one_of_norm_eq_world(init);
     let goal = as_one_of_norm_eq_world(goal);
 
-    let reconfig_sequence = run_reconfig_alg::<TWorld>(&init, &goal, alg_type)?;
-    Ok(reconfig_sequence
-        .iter()
-        .map(|world| rofi_voxel_reconfig::serde::VoxelWorld::from_world(world.as_ref()))
-        .collect())
+    match connections_repr {
+        None => {
+            let reconfig_sequence = run_reconfig_alg::<TWorld>(&init, &goal, alg_type)?;
+            Ok(reconfig_sequence
+                .iter()
+                .map(|world| rofi_voxel_reconfig::serde::VoxelWorld::from_world(world.as_ref()))
+                .collect())
+        }
+        Some(ConnectionsRepr::Map) => {
+            let reconfig_sequence =
+                run_reconfig_alg_with_connections::<TWorld, MapConnections<TWorld::IndexType>>(
+                    &VoxelWorldWithConnections::new_all_connected(init),
+                    &VoxelWorldWithConnections::new_all_connected(goal),
+                    alg_type,
+                )?;
+            Ok(reconfig_sequence
+                .iter()
+                .map(|world| rofi_voxel_reconfig::serde::VoxelWorld::from_world(world.world()))
+                .collect())
+        }
+        Some(ConnectionsRepr::Set) => {
+            let reconfig_sequence =
+                run_reconfig_alg_with_connections::<TWorld, SetConnections<TWorld::IndexType>>(
+                    &VoxelWorldWithConnections::new_all_connected(init),
+                    &VoxelWorldWithConnections::new_all_connected(goal),
+                    alg_type,
+                )?;
+            Ok(reconfig_sequence
+                .iter()
+                .map(|world| rofi_voxel_reconfig::serde::VoxelWorld::from_world(world.world()))
+                .collect())
+        }
+    }
 }
 
 fn main() -> Result<()> {
@@ -147,10 +230,14 @@ fn main() -> Result<()> {
     let InputWorlds { init, goal } = args.get_worlds()?;
 
     let reconfig_sequence = match args.repr {
-        VoxelWorldRepr::Map => run_voxel_reconfig::<MapVoxelWorld<_>>(init, goal, args.alg)?,
-        VoxelWorldRepr::Matrix => run_voxel_reconfig::<MatrixVoxelWorld<_>>(init, goal, args.alg)?,
+        VoxelWorldRepr::Map => {
+            run_voxel_reconfig::<MapVoxelWorld<_>>(init, goal, args.connections, args.alg)?
+        }
+        VoxelWorldRepr::Matrix => {
+            run_voxel_reconfig::<MatrixVoxelWorld<_>>(init, goal, args.connections, args.alg)?
+        }
         VoxelWorldRepr::Sortvec => {
-            run_voxel_reconfig::<SortvecVoxelWorld<_>>(init, goal, args.alg)?
+            run_voxel_reconfig::<SortvecVoxelWorld<_>>(init, goal, args.connections, args.alg)?
         }
     };
 
