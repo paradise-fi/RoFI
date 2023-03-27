@@ -26,8 +26,15 @@ pub struct Counter {
 static INSTANCE: OnceLock<Mutex<Counter>> = OnceLock::new();
 
 #[derive(Debug, Clone, serde::Serialize)]
+pub struct Counters {
+    pub sum: SuccessorsCallCounters,
+    pub count: usize,
+}
+
+#[derive(Debug, Clone, serde::Serialize)]
 pub struct CountersResult {
-    pub successors_calls: Vec<SuccessorsCallCounters>,
+    pub total: Counters,
+    pub bfs_layers: Option<Vec<Counters>>,
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
@@ -35,10 +42,61 @@ pub struct SuccessorsCallCounters {
     pub modules: usize,
     pub successful_cuts: usize,
     pub failed_cuts: usize,
-    pub all_moves: usize,
     pub duplicate_moves: usize,
     pub collided_moves: usize,
     pub new_unique_states: usize,
+}
+
+impl SuccessorsCallCounters {
+    fn new() -> Self {
+        Self {
+            modules: 0,
+            successful_cuts: 0,
+            failed_cuts: 0,
+            duplicate_moves: 0,
+            collided_moves: 0,
+            new_unique_states: 0,
+        }
+    }
+
+    fn from_counter_logs<ICountersLogs>(logs: ICountersLogs) -> Self
+    where
+        ICountersLogs: IntoIterator<Item = CountersLog>,
+    {
+        let mut counters = SuccessorsCallCounters::new();
+        let mut all_moves = 0;
+        for log in logs {
+            match log {
+                CountersLog::NewSuccessorsCall => panic!("Unexpected value"),
+                CountersLog::NewModule => counters.modules += 1,
+                CountersLog::NewSuccessfulCut => counters.successful_cuts += 1,
+                CountersLog::NewFailedCut => counters.failed_cuts += 1,
+                CountersLog::NewMove => all_moves += 1,
+                CountersLog::MoveCollided => counters.collided_moves += 1,
+                CountersLog::SavedNewUniqueState => counters.new_unique_states += 1,
+            }
+        }
+        counters.duplicate_moves = all_moves - counters.collided_moves - counters.new_unique_states;
+
+        counters
+    }
+
+    fn add(&mut self, other: Self) {
+        let Self {
+            modules,
+            successful_cuts,
+            failed_cuts,
+            duplicate_moves,
+            collided_moves,
+            new_unique_states,
+        } = self;
+        *modules += other.modules;
+        *successful_cuts += other.successful_cuts;
+        *failed_cuts += other.failed_cuts;
+        *duplicate_moves += other.duplicate_moves;
+        *collided_moves += other.collided_moves;
+        *new_unique_states += other.new_unique_states;
+    }
 }
 
 impl Counter {
@@ -86,50 +144,75 @@ impl Counter {
         Self::new_log(CountersLog::SavedNewUniqueState)
     }
 
-    pub fn get_results() -> CountersResult {
+    fn get_bfs_layers(&self) -> Vec<Counters> {
+        assert_eq!(self.logs[0], CountersLog::NewSuccessorsCall);
+        let successors_calls = self.logs[1..]
+            .split(|&log| log == CountersLog::NewSuccessorsCall)
+            .map(|calls| SuccessorsCallCounters::from_counter_logs(calls.iter().copied()));
+
+        let mut layers: Vec<Counters> = vec![];
+        let mut current_layer = Counters {
+            sum: SuccessorsCallCounters::new(),
+            count: 0,
+        };
+        let mut in_current_layer_left = 1;
+        let mut in_next_layer = 0;
+
+        for call in successors_calls {
+            if in_current_layer_left == 0 {
+                assert!(in_next_layer > 0);
+                layers.push(current_layer);
+                current_layer = Counters {
+                    sum: SuccessorsCallCounters::new(),
+                    count: 0,
+                };
+                in_current_layer_left = in_next_layer;
+                in_next_layer = 0;
+            }
+            in_current_layer_left -= 1;
+            in_next_layer += call.new_unique_states;
+
+            current_layer.sum.add(call);
+            current_layer.count += 1;
+        }
+        layers.push(current_layer);
+
+        layers
+    }
+
+    fn get_total(&self) -> Counters {
+        let total_count = self
+            .logs
+            .iter()
+            .filter(|&&log| log == CountersLog::NewSuccessorsCall)
+            .count();
+
+        let total_sum = SuccessorsCallCounters::from_counter_logs(
+            self.logs
+                .iter()
+                .copied()
+                .filter(|&log| log != CountersLog::NewSuccessorsCall),
+        );
+        Counters {
+            sum: total_sum,
+            count: total_count,
+        }
+    }
+
+    pub fn get_results(bfs_layers: bool) -> CountersResult {
         let instance = INSTANCE
             .get()
             .expect("Counter has to be started before calling logs")
             .lock()
             .expect("Counter mutex failed while getting logs");
 
-        assert_eq!(instance.logs[0], CountersLog::NewSuccessorsCall);
-        let successors_calls = instance.logs[1..]
-            .split(|&log| log == CountersLog::NewSuccessorsCall)
-            .map(Self::get_successors_call_result)
-            .collect::<Vec<_>>();
+        let total = instance.get_total();
+        let bfs_layers = if bfs_layers {
+            Some(instance.get_bfs_layers())
+        } else {
+            None
+        };
 
-        CountersResult { successors_calls }
-    }
-
-    fn get_successors_call_result(logs: &[CountersLog]) -> SuccessorsCallCounters {
-        let mut modules = 0;
-        let mut successful_cuts = 0;
-        let mut failed_cuts = 0;
-        let mut all_moves = 0;
-        let mut collided_moves = 0;
-        let mut new_unique_states = 0;
-        for log in logs {
-            match log {
-                CountersLog::NewSuccessorsCall => panic!("Unexpected value"),
-                CountersLog::NewModule => modules += 1,
-                CountersLog::NewSuccessfulCut => successful_cuts += 1,
-                CountersLog::NewFailedCut => failed_cuts += 1,
-                CountersLog::NewMove => all_moves += 1,
-                CountersLog::MoveCollided => collided_moves += 1,
-                CountersLog::SavedNewUniqueState => new_unique_states += 1,
-            }
-        }
-
-        let duplicate_moves = all_moves - collided_moves - new_unique_states;
-        SuccessorsCallCounters {
-            modules,
-            successful_cuts,
-            failed_cuts,
-            all_moves,
-            duplicate_moves,
-            collided_moves,
-            new_unique_states,
-        }
+        CountersResult { total, bfs_layers }
     }
 }

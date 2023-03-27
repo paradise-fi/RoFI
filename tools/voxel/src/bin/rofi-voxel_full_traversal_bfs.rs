@@ -242,7 +242,7 @@ fn main() -> Result<()> {
     }
 
     if let Some(log_counters) = log_counters {
-        serde_json::to_writer_pretty(log_counters.get_writer()?, &Counter::get_results())?;
+        serde_json::to_writer_pretty(log_counters.get_writer()?, &Counter::get_results(true))?;
     }
 
     Ok(())
