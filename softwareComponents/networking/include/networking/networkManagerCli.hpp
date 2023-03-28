@@ -53,6 +53,7 @@ class NetworkManagerCli {
                    , std::string( "address ") + cmd + " for " + Logger::toString( ip )
                                               + "/" + Logger::toString( static_cast< int >( mask ) ) + " failed" );
             }
+#if ROFI_DHCP
         } else if ( cmd == "dhcp" ) {
             ss >> cmd;
             if ( cmd == "up" || cmd == "down" ) {
@@ -60,7 +61,7 @@ class NetworkManagerCli {
             } else {
                 throw std::runtime_error( cmd + " is not supported option for DHCP" );
             }
-        
+#endif
         } else {
             throw std::runtime_error( cmd + " is not a valid command for address command" );
         }
