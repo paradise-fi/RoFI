@@ -479,6 +479,8 @@ public:
         return findInterface( ifname ) && _routingTable.removeInterface( ip, mask, ifname );
     }
 
+// TODO: esp32 lwip
+#if 0
     /**
      * @brief Enables or disables (according to @param enable) stateless DHCP on a given interface
      */
@@ -486,7 +488,6 @@ public:
         for ( auto& i : _interfaces ) {
             if ( i.name() != interface.name() )
                 continue;
-
             if ( enable )
                 i.dhcpUp( Interface::DHCP::SLAAC );
             else
@@ -494,6 +495,7 @@ public:
             break;
         }
     }
+#endif
 
     /**
      * @brief Logs a given message with corresponding severity level.
