@@ -41,9 +41,12 @@ class Interface {
     long long unsigned _sent = 0;
     long long unsigned _received = 0;
     Logger::LogFunction _logger;
+// TODO: esp32 lwip
+#if 0
     dhcp6 _dhcp;
+#endif
 
-    std::list< std::function< uint8_t (void*, raw_pcb*, pbuf*, const ip6_addr*) > > _onMessageStorage;
+    std::list< std::function< uint8_t (void*, raw_pcb*, pbuf*, const ip_addr_t*) > > _onMessageStorage;
 
     static uint8_t uniqueID() {
         static uint8_t id = 0;
@@ -104,7 +107,7 @@ class Interface {
     }
 
     static uint8_t onMessageDumb( void* arg, raw_pcb* pcb, pbuf* p, const ip_addr_t* addr ) {
-        auto* f = reinterpret_cast< std::function< uint8_t( void*, raw_pcb*, pbuf*, const ip6_addr_t* ) >* >( arg );
+        auto* f = reinterpret_cast< std::function< uint8_t( void*, raw_pcb*, pbuf*, const ip_addr_t* ) >* >( arg );
         if ( f )
             return ( *f )( nullptr, pcb, p, addr );
         return 0;
@@ -153,7 +156,10 @@ public:
         netif_add_noaddr( &_netif, this, init, my_input );
         netif_create_ip6_linklocal_address( &_netif, isVirtual() ? 0 : 1 );
 
+// TODO: esp32 lwip
+#if 0
         dhcp6_set_struct( &_netif, &_dhcp );
+#endif
             
         if ( isVirtual() ) {
             netif_set_default( &_netif );
@@ -266,7 +272,8 @@ public:
             return false;
 
         auto [ netifIP, _ ] = getAddress().front();
-        err_t res = raw_sendto_if_src( _pcbs[ listenerAddr ], msg.release(), &listenerAddr, &_netif, &netifIP );
+        err_t res = raw_sendto_if_src( _pcbs[ listenerAddr ], msg.release(), reinterpret_cast< const ip_addr_t* >( &listenerAddr )
+                                     , &_netif,  reinterpret_cast< const ip_addr_t* >( &netifIP ) );
         if ( res != ERR_OK ) {
             log( Logger::Level::Warn
                , std::string( "sendProtocol: raw send to returned an error: " ) + lwip_strerr( res ) );
@@ -377,6 +384,8 @@ public:
 
     enum class DHCP { SLAAC, STATEFULL };
 
+// TODO: esp32 lwip
+#if 0
     /**
      * \brief Start a DHCP protocol on the interface.
      *
@@ -396,6 +405,7 @@ public:
     void dhcpDown() {
         dhcp6_disable( &_netif );
     }
+#endif
 
     /**
      * \brief Function that returns the amount of data sent (in bytes).
