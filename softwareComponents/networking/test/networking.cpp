@@ -5,6 +5,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <set>
 
 #include <networking/protocol.hpp>
 #include <networking/protocols/simpleReactive.hpp>
@@ -26,6 +27,7 @@ namespace {
             Ip6Addr addr( "::" );
             CHECK(  addr == Ip6Addr( ip ) );
             CHECK( ip6_addr_eq( &addr, &ip ) == 1 );
+            CHECK( "fe80:0:1:1:0:0:0:1"_ip < "fe80:0:1:12:0:0:0:1"_ip);
         }
 
         SECTION( "Ip6Addr mask contructor" ) {
@@ -36,6 +38,15 @@ namespace {
             CHECK( Ip6Addr( "ffff:ffff:ffff:ffff:c000::" ) == Ip6Addr( 66 ) );
             CHECK( Ip6Addr( "f000::" ) == Ip6Addr( 4 ) );
             CHECK( Ip6Addr( "e000::" ) == Ip6Addr( 3 ) );
+        }
+
+        SECTION( "Ip6Addr in Set" ) {
+            std::set< Ip6Addr > set;
+            REQUIRE( set.empty() );
+            set.insert( "fe80:0:1:1:0:0:0:1"_ip );
+            CHECK( set.size() == 1 );
+            set.insert( "fe80:0:1:12:0:0:0:1"_ip );
+            CHECK( set.size() == 2 );
         }
     }
 
