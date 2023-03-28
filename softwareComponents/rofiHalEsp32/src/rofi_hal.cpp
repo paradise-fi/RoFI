@@ -996,6 +996,38 @@ private:
 
 namespace rofi::hal {
 
+void RoFI::wait( int ms, std::function< void() > callback )
+{
+    if ( !callback ) {
+        throw std::invalid_argument( "empty callback" );
+    }
+
+    if ( ms < 0 ) {
+        throw std::invalid_argument( "negative wait time" );
+    }
+
+    vTaskDelay( ms / portTICK_PERIOD_MS );
+    callback();
+}
+
+void RoFI::delay( int ms, std::function< void() > callback )
+{
+    if ( !callback ) {
+        throw std::invalid_argument( "empty callback" );
+    }
+
+    if ( ms < 0 ) {
+        throw std::invalid_argument( "negative wait time" );
+    }
+
+    auto* timer = new rtos::Timer();
+    *timer = rtos::Timer( static_cast< std::chrono::milliseconds >( ms ),
+                          rtos::Timer::Type::OneShot,
+                          [ ptr = timer, cb = std::move( callback ) ]() { cb(); delete ptr; }
+                    );
+    timer->start();
+}
+
 RoFI RoFI::getLocalRoFI() {
     // Definition of local RoFI driver
     static std::shared_ptr< RoFILocal > localRoFI = std::make_shared< RoFILocal >();
