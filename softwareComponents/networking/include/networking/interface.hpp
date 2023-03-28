@@ -42,7 +42,7 @@ class Interface {
     long long unsigned _received = 0;
     Logger::LogFunction _logger;
 // TODO: esp32 lwip
-#if 0
+#if ROFI_DHCP
     dhcp6 _dhcp;
 #endif
 
@@ -157,7 +157,7 @@ public:
         netif_create_ip6_linklocal_address( &_netif, isVirtual() ? 0 : 1 );
 
 // TODO: esp32 lwip
-#if 0
+#if ROFI_DHCP
         dhcp6_set_struct( &_netif, &_dhcp );
 #endif
             
@@ -385,7 +385,7 @@ public:
     enum class DHCP { SLAAC, STATEFULL };
 
 // TODO: esp32 lwip
-#if 0
+#if ROFI_DHCP
     /**
      * \brief Start a DHCP protocol on the interface.
      *

@@ -8,6 +8,8 @@ target_link_libraries(networking PUBLIC atoms lwip++ rofi::hal)
 target_include_directories(networking PUBLIC include)
 
 if(NOT ESP32_BUILD)
+add_compile_definitions(networking ROFI_DHCP=1)
+
 file(GLOB TEST_SRC test/*.cpp)
 add_executable(test-networking ${TEST_SRC})
 target_link_libraries(test-networking PRIVATE Catch2WithMain networking)

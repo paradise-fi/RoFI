@@ -3,6 +3,10 @@
 #include "rofi_hal.hpp"
 #include "lwip++.hpp"
 
+#ifndef ROFI_DHCP
+#define ROFI_DHCP 0
+#endif
+
 #include <networking/interface.hpp>
 #include <networking/protocol.hpp>
 #include <networking/logger.hpp>
@@ -480,7 +484,7 @@ public:
     }
 
 // TODO: esp32 lwip
-#if 0
+#if ROFI_DHCP
     /**
      * @brief Enables or disables (according to @param enable) stateless DHCP on a given interface
      */
