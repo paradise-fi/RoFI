@@ -134,7 +134,7 @@ class CountersResult:
     bfs_layers: Optional[List[Counters]]
 
     def get_bfs_table(
-        self, *, type: TableType, show_percent: bool = True
+        self, *, head: str = "Layer", type: TableType, show_percent: bool = True
     ) -> PrettyTable:
         assert self.bfs_layers is not None
 
@@ -142,7 +142,7 @@ class CountersResult:
             [("Total", self.total)],
             iter((f"Layer {i}", calls) for i, calls in enumerate(self.bfs_layers, 1)),
         )
-        return get_table(rows, head="Layer", type=type, show_percent=show_percent)
+        return get_table(rows, head=head, type=type, show_percent=show_percent)
 
 
 class CounterCell:
@@ -294,6 +294,50 @@ def total_json_summary_results(
 
     table = get_table(all_counters, head="File", type=type_, show_percent=percent)
     print(table)
+
+
+@visualize_state_graph.command()
+@click.argument("results_file", type=click.File())
+@click.option(
+    "--type",
+    "-t",
+    "type_",
+    type=click.Choice(["both", "avg", "sum"]),
+    default="both",
+    show_default=True,
+    help="Which data to show",
+)
+@click.option(
+    "--no-percent",
+    "--np",
+    "percent",
+    is_flag=True,
+    default=True,
+    help="Don't show percentages",
+)
+def bfs_from_summary_results(
+    results_file: TextIO, type_: Literal["both", "avg", "sum"], percent: bool
+):
+    results: Dict[str, Any] = json.load(results_file)
+    assert isinstance(results, dict)
+    assert "tasks" in results
+    tasks: List[Any] = results["tasks"]
+    assert isinstance(tasks, list)
+    for i, task in enumerate(tasks, 1):
+        assert isinstance(task, dict)
+        assert "result" in task
+        task_results: Optional[Dict[str, Any]] = task["result"]
+        if task_results is None:
+            continue
+        assert isinstance(task_results, dict)
+
+        counters = parse_json(CountersResult, task_results)
+        assert isinstance(counters, CountersResult)
+
+        table = counters.get_bfs_table(
+            head=f"Task {i} Layer", type=type_, show_percent=percent
+        )
+        print(table)
 
 
 if __name__ == "__main__":
