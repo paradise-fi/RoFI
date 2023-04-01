@@ -1,142 +1,16 @@
-Configuration
-=============
-
-Configuration is a way of representing any bot in an universal manner. It
-contains all building-blocks of the RoFI platform such as various modules
-and joints. Using these blocks, you can specify every RoFI world -- a set
-of rofibots (self-contained bots fixed in space) -- and work with it.
-Configuration computes positions of every component within each bot and
-provides useful functions for manipulation with the whole world, including
-some validity checks (e.g., collision checks).
-
-Using the configuration is pretty straightforward. The main class is
-:cpp:class:`RofiWorld <rofi::configuration::RofiWorld>` for which you create an
-instance and add all the modules you want to have in the world. You have to
-connect these modules one to another appropriately to form individual rofibots.
-If you want to use absolute positions, you have to fix one of components of each
-bot in space, otherwise, the configuration cannot figure out its coordinates
-because everything is kept relative.
-
-For example, let us create a world with a single bot consisted of two universal modules.
-
-.. code-block:: cpp
-
-    #include <configuration/rofiworld.hpp>
-
-    // ...
-
-    RofiWorld world;
-    // add universal module with id 42 in the default state
-    auto& m1 = world.insert( UniversalModule( 42, 0_deg, 0_deg, 0_deg ) );
-    // add universal module with id 42 with beta set to 45 degrees and gamma to 90 degrees
-    auto& m2 = world.insert( UniversalModule( 66, 0_deg, 45_deg, 90_deg ) );
-
-    // connect A+X of the universal module with id = 42 to A-X of UM with id = 66
-    connect( m1.connectors()[ 2 ], m2.connectors()[ 0 ], Orientation::North );
-    // fix the position of the `shoe A` in { 0, 0, 0 }
-    connect< RigidJoint >( m1.bodies()[ 0 ], { 0, 0, 0 }, identity );
-
-With the `world` in hand, you can then prepare it (i.e., compute positions of each
-part -- bot -- of the world) and check for its validity.
-
-.. code-block:: cpp
-
-    auto prepared = world.prepare();
-    if ( !prepared )
-        std::cerr << "could not prepare configuration: " << prepared.assume_error() << "\n";
-    auto valid = world.isValid( SimpleCollision() );
-    if ( !valid )
-        std::cerr << "invalid configuration: " << valid.assume_error() << "\n";
-
-    // or you can shorten the above to
-    auto ok = world.validate( SimpleCollision() );
-
-    // also, the SimpleCollision model is the default one, so you can ommit it too and get
-    auto ok = world.validate();
-
-
-Types and Constants
--------------------
-
-.. doxygentypedef:: rofi::configuration::ModuleId
-    :project: configuration
-
-.. doxygenenum:: rofi::configuration::ComponentType
-    :project: configuration
-
-.. doxygenenum:: rofi::configuration::ModuleType
-    :project: configuration
-
-.. doxygenenum:: rofi::configuration::roficom::Orientation
-    :project: configuration
-
-Classes
--------
-
-.. doxygenclass:: rofi::configuration::RofiWorld
-    :project: configuration
-
-.. doxygenclass:: rofi::configuration::Module
-    :project: configuration
-
-.. doxygenstruct:: rofi::configuration::Joint
-    :project: configuration
-
-.. doxygenstruct:: rofi::configuration::RigidJoint
-    :project: configuration
-
-.. doxygenstruct:: rofi::configuration::RotationJoint
-    :project: configuration
-
-.. doxygenstruct:: rofi::configuration::RoficomJoint
-    :project: configuration
-
-.. doxygenstruct:: rofi::configuration::ComponentJoint
-    :project: configuration
-
-.. doxygenstruct:: rofi::configuration::Component
-    :project: configuration
-
-.. doxygenstruct:: rofi::configuration::SpaceJoint
-    :project: configuration
-
-.. doxygenclass:: rofi::configuration::NoCollision
-    :project: configuration
-
-.. doxygenclass:: rofi::configuration::SimpleCollision
-    :project: configuration
-
-Modules
--------
-
-.. doxygenclass:: rofi::configuration::Pad
-    :project: configuration
-
-.. doxygenclass:: rofi::configuration::UniversalModule
-    :project: configuration
-
-.. doxygenclass:: rofi::configuration::UnknownModule
-    :project: configuration
-
-Functions
----------
-
-.. doxygenfunction:: rofi::configuration::connect(const Component &c1, const Component &c2, roficom::Orientation o)
-    :project: configuration
-
-.. doxygenfunction:: rofi::configuration::connect(const Component &c, Vector refpoint, Args&&... args)
-    :project: configuration
-
-.. doxygenfunction:: rofi::configuration::makeComponentJoint
-    :project: configuration
-
-Serialization
--------------
+Json Serialization
+==================
 
 Configuration also supports serialization to and from `json <https://www.json.org/json-en.html>`_
-format via functions `toJSON` and `fromJSON` respectively, so that you can save your
-configuration into a file and load it as needed. For the json itself we use
-`nlohman::json <https://github.com/nlohmann/json>`_ library.
+format via functions :cpp:func:`toJSON <rofi::configuration::serialization::toJSON>`
+and :cpp:func:`fromJSON <rofi::configuration::serialization::fromJSON>` respectively,
+so that you can save your configuration into a file and load it as needed.
+For the json itself we use `nlohman::json <https://github.com/nlohmann/json>`_ library.
+
+.. contents::
+
+Format Description
+------------------
 
 The configuration description consists of three main parts: `modules`,
 `moduleJoints`, and `spaceJoints`.
@@ -268,14 +142,19 @@ or the `RotationJoint` which requires appropriate matrices
         "axis" : < 4-dimensional array >,
         "preMatrix"  : < matrix >,
         "postMatrix" : < matrix >,
-        "min" : < lower-limit – number >,
-        "max" : < upper-limit – number >
+        "min" : < lower-limit - number >,
+        "max" : < upper-limit - number >
     }
 
 Matrices are, as shown above, represented by 4x4 dimensional array. Or, for
 the identity matrix, you can use a string representation, just write `"identity"`
 instead of `[[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]`.
 
+Functions
+---------
+
+.. doxygenfunction:: rofi::configuration::serialization::toJSON( const RofiWorld& world )
+    :project: configuration
 
 .. doxygenfunction:: rofi::configuration::serialization::toJSON( const RofiWorld& world, Callback attrCb )
     :project: configuration
@@ -285,7 +164,8 @@ an `"attributes"` property, which can be added to any object within the `json`. 
 metadata you might use when working with and sharing the configuration description. For details, see
 the section below.
 
-.. doxygenfunction:: rofi::configuration::serialization::toJSON( const RofiWorld& world )
+
+.. doxygenfunction:: rofi::configuration::serialization::fromJSON( const nlohmann::json& j )
     :project: configuration
 
 .. doxygenfunction:: rofi::configuration::serialization::fromJSON( const nlohmann::json& j, Callback attrCb )
@@ -293,9 +173,6 @@ the section below.
 
 Here you can provide a callback function, that is used for parsing the optional `"attributes"` field. If no
 callback is provided, the field, if present, is ignored. The callback is written in the same way as for `toJSON`.
-
-.. doxygenfunction:: rofi::configuration::serialization::fromJSON( const nlohmann::json& j )
-    :project: configuration
 
 Attributes callback
 -------------------
