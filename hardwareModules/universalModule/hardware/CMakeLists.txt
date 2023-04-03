@@ -116,7 +116,7 @@ add_pcb(um_shoeRight3DModel
 
 add_pcb(um_bodyCable
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/controlBoard/controlBoard.kicad_pcb
-    SEPARATE --source "annotation\; ref: CABLE2\; tolerance: 3mm\;stack: 2layer"
+    SEPARATE --source "annotation\; ref: CABLE2\; tolerance: 8mm\; stack: 2layer"
     FAB jlcpcb --no-drc
 )
 
