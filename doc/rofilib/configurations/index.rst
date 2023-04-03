@@ -8,6 +8,7 @@ any collection of RoFI Modules in a universal manner.
 
 .. toctree::
     rofiworld
+    voxel
 
 Serializations
 --------------
@@ -17,3 +18,4 @@ or to transfer them between programming languages.
 
 .. toctree::
     serializations/json
+    serializations/voxel
