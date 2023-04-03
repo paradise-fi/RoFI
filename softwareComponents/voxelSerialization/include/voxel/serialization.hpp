@@ -497,6 +497,15 @@ private:
                                    std::pair< rofi::configuration::Component, Direction > >;
 
 public:
+    /**
+     * \brief Converts `rofi::configuration::RofiWorld` to `VoxelWorld`.
+     * Requires that:
+     *  - all the modules are `rofi::configuration::UniversalModule`,
+     *  - all joint values are multiple of 90 degrees,
+     *  - all positions have to be whole integers.
+     *
+     * \note Does not check if the resulting `VoxelWorld` is connected.
+    **/
     static auto fromRofiWorld( const rofi::configuration::RofiWorld & rofiWorld )
             -> atoms::Result< VoxelWorld >
     {
@@ -587,6 +596,19 @@ private:
     }
 
 public:
+    /**
+     * \brief Converts `VoxelWorld` to `rofi::configuration::RofiWorld`.
+     * `VoxelWorld` should be connected and the resulting RofiWorld
+     * will be fixed on one component to the world at the according position.
+     *
+     * If you want to convert `VoxelWorld` that isn't connected,
+     * you can set \a fixateModulesByOne.
+     *
+     * \param fixateModulesByOne specifies whether to connect each module
+     *      to the world separately by a `rofi::configuration::RigidJoint`
+     *      instead of connecting modules together
+     *      by `rofi::configuration::RoficomJoint`s
+    **/
     auto toRofiWorld( bool fixateModulesByOne = false ) const
             -> atoms::Result< rofi::configuration::RofiWorld >
     {
