@@ -2,10 +2,10 @@ mod astar_opt_test;
 mod astar_test;
 mod bfs_test;
 
-use super::*;
 use crate::pos::{minimal_pos_hull, SizeRanges};
-use crate::voxel_world::VoxelWorld;
+use crate::voxel_world::{NormVoxelWorld, VoxelWorld};
 use iter_fixed::IntoIteratorFixed;
+use std::rc::Rc;
 
 pub fn validate_voxel_world(world: &impl VoxelWorld) {
     for (pos, voxel) in world.all_voxels() {
@@ -32,4 +32,14 @@ pub fn validate_voxel_world(world: &impl VoxelWorld) {
 pub fn validate_norm_voxel_world(world: &impl NormVoxelWorld) {
     assert_eq!(world.size_ranges(), SizeRanges::from_sizes(world.sizes()));
     validate_voxel_world(world);
+}
+
+fn validate_reconfig_path<TWorld>(path: &[Rc<TWorld>], expected_path: &[Rc<TWorld>])
+where
+    TWorld: NormVoxelWorld + Eq + std::fmt::Debug,
+{
+    path.iter()
+        .map(AsRef::as_ref)
+        .for_each(validate_norm_voxel_world);
+    assert_eq!(path, expected_path);
 }

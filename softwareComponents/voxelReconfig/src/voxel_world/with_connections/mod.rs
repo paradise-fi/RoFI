@@ -1,5 +1,5 @@
-pub mod heuristic;
 pub mod impls;
+pub mod metric;
 pub mod reconfig;
 
 use super::world_rotation::WorldRotation;
