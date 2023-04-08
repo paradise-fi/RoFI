@@ -1,7 +1,7 @@
+use super::{validate_norm_voxel_world, validate_reconfig_path};
 use crate::algs::astar::compute_path;
 use crate::atoms::{Axis, Direction};
-use crate::reconfig::heuristic::Heuristic;
-use crate::reconfig::test::validate_norm_voxel_world;
+use crate::reconfig::metric::{naive::NaiveMetric, ZeroMetric};
 use crate::reconfig::voxel_worlds_graph::VoxelWorldsGraph;
 use crate::voxel::{JointPosition, Voxel};
 use crate::voxel_world::as_one_of_norm_eq_world;
@@ -46,18 +46,15 @@ where
     ])
     .unwrap();
     validate_norm_voxel_world(&world);
-    let world = as_one_of_norm_eq_world(world);
 
-    for heuristic in [Heuristic::Zero, Heuristic::Naive] {
-        let heuristic = heuristic.get_fn(&world);
-        let result = compute_path::<VoxelWorldsGraph<_>, _>(&world, &world, heuristic).unwrap();
-        assert_eq!(result.len(), 1);
-        result
-            .iter()
-            .map(AsRef::<TWorld>::as_ref)
-            .for_each(validate_norm_voxel_world);
-        assert_eq!(&result, &vec![Rc::new(world.clone())]);
-    }
+    let world = Rc::new(as_one_of_norm_eq_world(world));
+    let expected_path = &[world.clone()];
+
+    let result = compute_path::<VoxelWorldsGraph<TWorld>, ZeroMetric>(&world, &world).unwrap();
+    validate_reconfig_path(&result, expected_path);
+
+    let result = compute_path::<VoxelWorldsGraph<TWorld>, NaiveMetric<_>>(&world, &world).unwrap();
+    validate_reconfig_path(&result, expected_path);
 }
 
 #[test]
@@ -118,18 +115,15 @@ where
     .unwrap();
     validate_norm_voxel_world(&goal_world);
 
-    for heuristic in [Heuristic::Zero, Heuristic::Naive] {
-        let heuristic = heuristic.get_fn(&goal_world);
-        let result =
-            compute_path::<VoxelWorldsGraph<_>, _>(&init_world, &goal_world, heuristic).unwrap();
-        assert_eq!(result.len(), 2);
-        result
-            .iter()
-            .map(AsRef::<TWorld>::as_ref)
-            .for_each(validate_norm_voxel_world);
-        assert_eq!(
-            &result,
-            &vec![Rc::new(init_world.clone()), Rc::new(goal_world.clone())]
-        );
-    }
+    let init_world = Rc::new(as_one_of_norm_eq_world(init_world));
+    let goal_world = Rc::new(as_one_of_norm_eq_world(goal_world));
+    let expected_path = &[init_world.clone(), goal_world.clone()];
+
+    let result =
+        compute_path::<VoxelWorldsGraph<TWorld>, ZeroMetric>(&init_world, &goal_world).unwrap();
+    validate_reconfig_path(&result, expected_path);
+
+    let result =
+        compute_path::<VoxelWorldsGraph<TWorld>, NaiveMetric<_>>(&init_world, &goal_world).unwrap();
+    validate_reconfig_path(&result, expected_path);
 }

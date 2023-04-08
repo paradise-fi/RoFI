@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod test;
 
-pub mod heuristic;
+pub mod metric;
 pub mod voxel_worlds_graph;
 
 use crate::connectivity::ConnectivityGraph;

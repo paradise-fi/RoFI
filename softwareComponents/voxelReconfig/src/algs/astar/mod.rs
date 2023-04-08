@@ -1,13 +1,11 @@
 //! Compute any path using the [A* search algorithm](https://en.wikipedia.org/wiki/A*_search_algorithm) with early return.
 
-pub mod cost;
 pub mod opt;
 
-pub use crate::reconfig::heuristic::Heuristic;
-
-use self::cost::{Cost, CostHolder};
 use crate::algs::{reconstruct_path_to, Error, StateGraph};
 use crate::counters::Counter;
+use crate::reconfig::metric::cost::{Cost, CostHolder};
+use crate::reconfig::metric::Metric;
 use rustc_hash::FxHashMap;
 use std::cmp::Reverse;
 use std::collections::BinaryHeap;
@@ -15,15 +13,14 @@ use std::rc::Rc;
 
 type ParentMap<TItem, TCost> = FxHashMap<Rc<TItem>, (Option<Rc<TItem>>, Cost<TCost>)>;
 
-/// `heuristic` will be called only once on each equivalent state
-pub fn compute_path<TGraph, TCost>(
+/// metric will be called only once on each equivalent state
+pub fn compute_path<TGraph, TMetric>(
     init: &TGraph::StateType,
     goal: &TGraph::StateType,
-    mut heuristic: impl FnMut(&TGraph::StateType) -> TCost,
 ) -> Result<Vec<Rc<TGraph::StateType>>, Error>
 where
     TGraph: StateGraph,
-    TCost: num::Num + Ord + Copy + std::fmt::Debug,
+    TMetric: Metric<TGraph::StateType>,
 {
     TGraph::debug_check_state(init);
     TGraph::debug_check_state(goal);
@@ -32,10 +29,10 @@ where
         return Err(Error::InitCheckError);
     }
 
-    debug_assert!(heuristic(init) >= heuristic(goal));
+    let mut metric = TMetric::new(goal);
+    debug_assert!(metric.get_potential(init) >= metric.get_potential(goal));
 
-    let parent_map =
-        compute_parents::<TGraph, _>(init, goal, heuristic).ok_or(Error::PathNotFound)?;
+    let parent_map = compute_parents::<TGraph, _>(init, goal, metric).ok_or(Error::PathNotFound)?;
 
     let goal = parent_map
         .get_key_value(goal)
@@ -48,14 +45,14 @@ where
     }))
 }
 
-fn compute_parents<TGraph, TCost>(
+fn compute_parents<TGraph, TMetric>(
     init: &TGraph::StateType,
     goal: &TGraph::StateType,
-    mut heuristic: impl FnMut(&TGraph::StateType) -> TCost,
-) -> Option<ParentMap<TGraph::StateType, TCost>>
+    mut metric: TMetric,
+) -> Option<ParentMap<TGraph::StateType, TMetric::Potential>>
 where
     TGraph: StateGraph,
-    TCost: num::Num + Ord + Copy + std::fmt::Debug,
+    TMetric: Metric<TGraph::StateType>,
 {
     TGraph::debug_check_state(init);
     TGraph::debug_check_state(goal);
@@ -63,10 +60,10 @@ where
     let mut init_states = TGraph::equivalent_states(init).map(Rc::new).peekable();
     let init = init_states.peek().expect("No equivalent state").clone();
     let mut parent_map = init_states
-        .map(|init| (init, (None, Cost::new(num::zero(), num::zero()))))
+        .map(|init| (init, (None, Cost::new(0, TMetric::Potential::default()))))
         .collect::<ParentMap<_, _>>();
     let mut states_to_visit = BinaryHeap::from([Reverse(CostHolder {
-        estimated_cost: num::zero(),
+        estimated_cost: TMetric::EstimatedCost::default(),
         state: init,
     })]);
 
@@ -78,25 +75,32 @@ where
         TGraph::debug_check_state(&current);
 
         let &(_, cost) = parent_map.get(&current).unwrap();
-        if estimated_cost > cost.estimated_cost() {
-            // There was a shorter way
-            continue;
+
+        {
+            let old_estimated_cost = TMetric::estimated_cost(cost);
+            if estimated_cost > old_estimated_cost {
+                // There was a shorter way
+                continue;
+            }
+            assert_eq!(
+                estimated_cost, old_estimated_cost,
+                "The old estimated cost should be taken first"
+            );
         }
-        assert_eq!(estimated_cost, cost.estimated_cost());
 
         for new_state in TGraph::next_states(&current) {
             TGraph::debug_check_state(&new_state);
 
-            let new_real_cost = cost.cost + num::one();
+            let new_real_cost = cost.real_cost + 1;
 
             let new_state_rc;
             let new_cost;
             if let Some((key, &(_, old_cost))) = parent_map.get_key_value(&new_state) {
-                if new_real_cost >= old_cost.cost {
+                if new_real_cost >= old_cost.real_cost {
                     debug_assert!(TGraph::equivalent_states(&new_state).all(|eq_state| {
                         parent_map
                             .get(&eq_state)
-                            .is_some_and(|(_, c)| c.cost == old_cost.cost)
+                            .is_some_and(|(_, c)| c.real_cost == old_cost.real_cost)
                     }));
                     continue;
                 }
@@ -116,7 +120,7 @@ where
                     .map(Rc::new)
                     .peekable();
                 new_state_rc = eq_states.peek().expect("No equivalent state").clone();
-                new_cost = Cost::new(new_real_cost, heuristic(&new_state_rc));
+                new_cost = Cost::new(new_real_cost, metric.get_potential(&new_state_rc));
 
                 debug_assert!(TGraph::equivalent_states(&new_state_rc)
                     .all(|eq_state| !parent_map.contains_key(&eq_state)));
@@ -134,7 +138,7 @@ where
 
             states_to_visit.push(Reverse(CostHolder::new(
                 new_state_rc,
-                new_cost.estimated_cost(),
+                TMetric::estimated_cost(new_cost),
             )));
         }
     }

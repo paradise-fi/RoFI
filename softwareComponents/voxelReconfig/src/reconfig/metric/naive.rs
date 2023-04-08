@@ -1,12 +1,14 @@
-//! Heuristic based on finding mappings by going through all mappings
+//! Metric based on finding mappings by going through all mappings
 //! and evaluating the difference of worlds fixed to these mappings.
 
 use self::graph::{Graph, Mapping, Node};
+use super::{cost::Cost, Metric};
 use crate::voxel::{JointPosition, Voxel};
 use crate::voxel_world::NormVoxelWorld;
+use num::integer::Roots;
 use std::marker::PhantomData;
 
-pub struct NaiveHeuristic<TWorld>
+pub struct NaiveMetric<TWorld>
 where
     TWorld: NormVoxelWorld,
 {
@@ -14,7 +16,7 @@ where
     __phantom: PhantomData<TWorld>,
 }
 
-impl<TWorld> NaiveHeuristic<TWorld>
+impl<TWorld> NaiveMetric<TWorld>
 where
     TWorld: NormVoxelWorld,
 {
@@ -68,7 +70,7 @@ where
         missing_edges + voxel_diffs
     }
 
-    pub fn compute_heuristic(&mut self, other: &TWorld) -> usize {
+    pub fn compute_best_potential(&mut self, other: &TWorld) -> usize {
         let other_graph = Graph::compute_from(other);
 
         self.get_best_mappings(&other_graph)
@@ -78,22 +80,28 @@ where
     }
 }
 
-impl<TWorld> NaiveHeuristic<TWorld>
+impl<TWorld> Metric<TWorld> for NaiveMetric<TWorld>
 where
     TWorld: NormVoxelWorld,
 {
-    pub fn new(goal: &TWorld) -> Self {
+    type Potential = usize;
+
+    fn new(goal: &TWorld) -> Self
+    where
+        Self: Sized,
+    {
         Self {
             goal: Graph::compute_from(goal),
             __phantom: Default::default(),
         }
     }
 
-    pub fn get_fn<'a>(mut self) -> impl 'a + FnMut(&TWorld) -> usize
-    where
-        TWorld: 'a,
-    {
-        move |world: &TWorld| self.compute_heuristic(world)
+    fn get_potential(&mut self, state: &TWorld) -> Self::Potential {
+        self.compute_best_potential(state)
+    }
+
+    fn estimated_cost(cost: Cost<Self::Potential>) -> Self::EstimatedCost {
+        cost.potential + cost.real_cost.sqrt()
     }
 }
 

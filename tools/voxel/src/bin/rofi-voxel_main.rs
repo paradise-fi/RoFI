@@ -3,13 +3,13 @@ use clap::Parser;
 use rofi_voxel_cli::{FileErrOutput, FileInput, LogArgs};
 use rofi_voxel_reconfig::algs;
 use rofi_voxel_reconfig::counters::Counter;
-use rofi_voxel_reconfig::reconfig::heuristic::Heuristic;
+use rofi_voxel_reconfig::reconfig::metric::{naive::NaiveMetric, ZeroMetric};
 use rofi_voxel_reconfig::reconfig::voxel_worlds_graph::VoxelWorldsGraph;
 use rofi_voxel_reconfig::voxel_world::as_one_of_norm_eq_world;
 use rofi_voxel_reconfig::voxel_world::impls::{MapVoxelWorld, MatrixVoxelWorld, SortvecVoxelWorld};
-use rofi_voxel_reconfig::voxel_world::with_connections::heuristic::use_world_heuristic;
 use rofi_voxel_reconfig::voxel_world::with_connections::impls::map_connections::MapConnections;
 use rofi_voxel_reconfig::voxel_world::with_connections::impls::set_connections::SetConnections;
+use rofi_voxel_reconfig::voxel_world::with_connections::metric::WorldMetricWrapper;
 use rofi_voxel_reconfig::voxel_world::with_connections::reconfig::VoxelWorldsWithConnectionsGraph;
 use rofi_voxel_reconfig::voxel_world::with_connections::{Connections, VoxelWorldWithConnections};
 use rofi_voxel_reconfig::voxel_world::NormVoxelWorld;
@@ -104,21 +104,17 @@ where
     match alg_type {
         AlgorithmType::Bfs => algs::bfs::compute_path::<StateGraph<_>>(init, goal),
         AlgorithmType::AstarZero => {
-            algs::astar::compute_path::<StateGraph<_>, _>(init, goal, Heuristic::Zero.get_fn(goal))
+            algs::astar::compute_path::<StateGraph<_>, ZeroMetric>(init, goal)
         }
         AlgorithmType::AstarNaive => {
-            algs::astar::compute_path::<StateGraph<_>, _>(init, goal, Heuristic::Naive.get_fn(goal))
+            algs::astar::compute_path::<StateGraph<_>, NaiveMetric<_>>(init, goal)
         }
-        AlgorithmType::AstarZeroOpt => algs::astar::opt::compute_path::<StateGraph<_>, _>(
-            init,
-            goal,
-            Heuristic::Zero.get_fn(goal),
-        ),
-        AlgorithmType::AstarNaiveOpt => algs::astar::opt::compute_path::<StateGraph<_>, _>(
-            init,
-            goal,
-            Heuristic::Naive.get_fn(goal),
-        ),
+        AlgorithmType::AstarZeroOpt => {
+            algs::astar::opt::compute_path::<StateGraph<_>, ZeroMetric>(init, goal)
+        }
+        AlgorithmType::AstarNaiveOpt => {
+            algs::astar::opt::compute_path::<StateGraph<_>, NaiveMetric<_>>(init, goal)
+        }
     }
 }
 
@@ -137,26 +133,20 @@ where
     type StateGraph<T, U> = VoxelWorldsWithConnectionsGraph<T, U>;
     match alg_type {
         AlgorithmType::Bfs => algs::bfs::compute_path::<StateGraph<_, _>>(init, goal),
-        AlgorithmType::AstarZero => algs::astar::compute_path::<StateGraph<_, _>, _>(
-            init,
-            goal,
-            use_world_heuristic(Heuristic::Zero, goal),
-        ),
-        AlgorithmType::AstarNaive => algs::astar::compute_path::<StateGraph<_, _>, _>(
-            init,
-            goal,
-            use_world_heuristic(Heuristic::Naive, goal),
-        ),
-        AlgorithmType::AstarZeroOpt => algs::astar::opt::compute_path::<StateGraph<_, _>, _>(
-            init,
-            goal,
-            use_world_heuristic(Heuristic::Zero, goal),
-        ),
-        AlgorithmType::AstarNaiveOpt => algs::astar::opt::compute_path::<StateGraph<_, _>, _>(
-            init,
-            goal,
-            use_world_heuristic(Heuristic::Naive, goal),
-        ),
+        AlgorithmType::AstarZero => {
+            algs::astar::compute_path::<StateGraph<_, _>, ZeroMetric>(init, goal)
+        }
+        AlgorithmType::AstarNaive => algs::astar::compute_path::<
+            StateGraph<_, _>,
+            WorldMetricWrapper<NaiveMetric<_>>,
+        >(init, goal),
+        AlgorithmType::AstarZeroOpt => {
+            algs::astar::opt::compute_path::<StateGraph<_, _>, ZeroMetric>(init, goal)
+        }
+        AlgorithmType::AstarNaiveOpt => algs::astar::opt::compute_path::<
+            StateGraph<_, _>,
+            WorldMetricWrapper<NaiveMetric<_>>,
+        >(init, goal),
     }
 }
 
