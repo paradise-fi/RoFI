@@ -249,6 +249,8 @@ def check_input_files(files: List[str]):
             "astar-zero-opt",
             "astar-naive",
             "astar-naive-opt",
+            "astar-assignment",
+            "astar-assignment-opt",
         ]
     ),
     default="bfs",

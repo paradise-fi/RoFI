@@ -3,6 +3,7 @@ use clap::Parser;
 use rofi_voxel_cli::{FileErrOutput, FileInput, LogArgs};
 use rofi_voxel_reconfig::algs;
 use rofi_voxel_reconfig::counters::Counter;
+use rofi_voxel_reconfig::reconfig::metric::assignment::AssignmentMetric;
 use rofi_voxel_reconfig::reconfig::metric::{naive::NaiveMetric, ZeroMetric};
 use rofi_voxel_reconfig::reconfig::voxel_worlds_graph::VoxelWorldsGraph;
 use rofi_voxel_reconfig::voxel_world::as_one_of_norm_eq_world;
@@ -38,8 +39,10 @@ enum AlgorithmType {
     Bfs,
     AstarZero,
     AstarNaive,
+    AstarAssignment,
     AstarZeroOpt,
     AstarNaiveOpt,
+    AstarAssignmentOpt,
 }
 
 /// Compute RoFI reconfiguration from init to goal by using voxels
@@ -98,7 +101,7 @@ fn run_reconfig_alg<TWorld>(
 ) -> Result<Vec<Rc<TWorld>>, algs::Error>
 where
     TWorld: NormVoxelWorld + Eq + std::hash::Hash,
-    TWorld::IndexType: num::Integer + std::hash::Hash,
+    TWorld::IndexType: num::Integer + std::hash::Hash + num::ToPrimitive,
 {
     type StateGraph<T> = VoxelWorldsGraph<T>;
     match alg_type {
@@ -109,11 +112,18 @@ where
         AlgorithmType::AstarNaive => {
             algs::astar::compute_path::<StateGraph<_>, NaiveMetric<_>>(init, goal)
         }
+        AlgorithmType::AstarAssignment => {
+            algs::astar::compute_path::<StateGraph<_>, AssignmentMetric<_>>(init, goal)
+        }
+
         AlgorithmType::AstarZeroOpt => {
             algs::astar::opt::compute_path::<StateGraph<_>, ZeroMetric>(init, goal)
         }
         AlgorithmType::AstarNaiveOpt => {
             algs::astar::opt::compute_path::<StateGraph<_>, NaiveMetric<_>>(init, goal)
+        }
+        AlgorithmType::AstarAssignmentOpt => {
+            algs::astar::opt::compute_path::<StateGraph<_>, AssignmentMetric<_>>(init, goal)
         }
     }
 }
@@ -125,7 +135,7 @@ fn run_reconfig_alg_with_connections<TWorld, TConnections>(
 ) -> Result<Vec<Rc<VoxelWorldWithConnections<TWorld, TConnections>>>, algs::Error>
 where
     TWorld: NormVoxelWorld + Eq + std::hash::Hash,
-    TWorld::IndexType: num::Integer + std::hash::Hash,
+    TWorld::IndexType: num::Integer + std::hash::Hash + num::ToPrimitive,
     TConnections: Connections<IndexType = TWorld::IndexType> + Eq + std::hash::Hash + Clone,
     TWorld: 'static,
     TConnections: 'static,
@@ -140,12 +150,20 @@ where
             StateGraph<_, _>,
             WorldMetricWrapper<NaiveMetric<_>>,
         >(init, goal),
+        AlgorithmType::AstarAssignment => algs::astar::compute_path::<
+            StateGraph<_, _>,
+            WorldMetricWrapper<AssignmentMetric<_>>,
+        >(init, goal),
         AlgorithmType::AstarZeroOpt => {
             algs::astar::opt::compute_path::<StateGraph<_, _>, ZeroMetric>(init, goal)
         }
         AlgorithmType::AstarNaiveOpt => algs::astar::opt::compute_path::<
             StateGraph<_, _>,
             WorldMetricWrapper<NaiveMetric<_>>,
+        >(init, goal),
+        AlgorithmType::AstarAssignmentOpt => algs::astar::opt::compute_path::<
+            StateGraph<_, _>,
+            WorldMetricWrapper<AssignmentMetric<_>>,
         >(init, goal),
     }
 }
@@ -158,7 +176,7 @@ fn run_voxel_reconfig<TWorld>(
 ) -> Result<Vec<rofi_voxel_reconfig::serde::VoxelWorld<TWorld::IndexType>>>
 where
     TWorld: NormVoxelWorld + Eq + std::hash::Hash,
-    TWorld::IndexType: 'static + num::Integer + std::hash::Hash + Send + Sync,
+    TWorld::IndexType: 'static + num::Integer + std::hash::Hash + num::ToPrimitive + Send + Sync,
     TWorld: 'static,
 {
     let (init, _min_pos) = init.to_world_and_min_pos()?;
