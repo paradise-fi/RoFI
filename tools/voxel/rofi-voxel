@@ -141,7 +141,7 @@ def voxel_reconfig(
         logging.info("Ended voxel reconfiguration")
     except subprocess.CalledProcessError as _:
         logging.fatal("Error while running voxel reconfig")
-        exit(1)
+        raise
 
 
 def convert_and_reconfig(
@@ -263,6 +263,22 @@ def check_input_files(files: List[str]):
     show_default=True,
     help="Use connections with specified representation",
 )
+@click.option(
+    "--log-counters",
+    "-l",
+    type=click.Path(
+        file_okay=True,
+        dir_okay=False,
+        exists=False,
+        writable=True,
+        readable=False,
+        allow_dash=True,
+    ),
+    help="Log counters to file",
+)
+@click.option(
+    "--short", "-s", is_flag=True, help="Return result in a short json format"
+)
 @click.option("--verbose", "-v", count=True, help="Increase verbosity level")
 @click.option(
     "--no-log-term",
@@ -293,6 +309,8 @@ def rofi_voxel(
     repr: str,
     alg: str,
     connections: Optional[str],
+    log_counters: Optional[str],
+    short: bool,
     verbose: int,
     no_log_term: bool,
     log_file: Optional[str],
@@ -313,9 +331,10 @@ def rofi_voxel(
         goal_world_file,
         format if init_format is None else init_format,
         format if goal_format is None else goal_format,
-        args=["--repr", repr, "--alg", alg] + []
-        if connections is None
-        else ["--connections", connections],
+        args=["--repr", repr, "--alg", alg]
+        + ([] if connections is None else ["--connections", connections])
+        + ([] if log_counters is None else ["--log-counters", log_counters])
+        + ([] if not short else ["--short"]),
         output=output,
         logger=logger,
     )
