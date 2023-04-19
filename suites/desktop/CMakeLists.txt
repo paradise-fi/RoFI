@@ -133,6 +133,7 @@ endif()
 set_target_properties(cxxopts PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:cxxopts,INTERFACE_INCLUDE_DIRECTORIES>)
 
 find_package(Armadillo REQUIRED)
+find_package(CLP REQUIRED)
 
 if (${BUILD_GAZEBO})
   find_package(gazebo REQUIRED)
@@ -184,6 +185,7 @@ add_component(voxelSerialization)
 add_component(kinematics)
 add_component(reconfig)
 add_component(isoreconfig)
+add_component(torqueComputation)
 if (${BUILD_SMTRECONFIG})
   add_component(smtreconfig)
 endif()
@@ -228,6 +230,7 @@ add_tool(emptyDockFill)
 add_tool(topology2dot)
 add_tool(ik)
 add_tool(tangle)
+add_tool(torqueCompute)
 
 if (NOT ${BUILD_HEADLESS})
   add_tool(visualizer)
@@ -262,4 +265,3 @@ add_subdirectory($ENV{ROFI_ROOT}/softwareComponents/rofiHalEsp32/test-logic rofi
 list_targets()
 list_dependencies()
 list_sources()
-
