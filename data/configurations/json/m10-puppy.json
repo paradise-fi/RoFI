@@ -1,0 +1,228 @@
+{
+    "modules": [
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 1,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 2,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 3,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 4,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 5,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 6,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 7,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 8,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 9,
+            "type": "universal"
+        },
+        {
+            "id": 10,
+            "width": 3,
+            "height": 3,
+            "type": "pad"
+        }
+    ],
+    "spaceJoints": [
+        {
+            "joint": {
+                "positions": [],
+                "sourceToDestination": [
+                    [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ]
+                ],
+                "type": "rigid"
+            },
+            "point": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "to": {
+                "component": 6,
+                "id": 1
+            }
+        }
+    ],
+    "moduleJoints": [
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 1
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "B+X",
+                "id": 2
+            }
+        },
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 2
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "B+X",
+                "id": 3
+            }
+        },
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 3
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "B+X",
+                "id": 4
+            }
+        },
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 4
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "B+X",
+                "id": 1
+            }
+        },
+        {
+            "from": {
+                "connector": "A+X",
+                "id": 5
+            },
+            "orientation": "West",
+            "to": {
+                "connector": "B-X",
+                "id": 2
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 6
+            },
+            "orientation": "West",
+            "to": {
+                "connector": "B-Z",
+                "id": 1
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 7
+            },
+            "orientation": "West",
+            "to": {
+                "connector": "B-Z",
+                "id": 3
+            }
+        },
+        {
+            "from": {
+                "connector": "A+X",
+                "id": 8
+            },
+            "orientation": "West",
+            "to": {
+                "connector": "B-X",
+                "id": 4
+            }
+        },
+        {
+            "from": {
+                "connector": "A+X",
+                "id": 1
+            },
+            "orientation": "West",
+            "to": {
+                "connector": "B-X",
+                "id": 9
+            }
+        },
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 9
+            },
+            "orientation": "West",
+            "to": {
+                "connector": 4,
+                "id": 10
+            }
+        }
+    ]
+}
