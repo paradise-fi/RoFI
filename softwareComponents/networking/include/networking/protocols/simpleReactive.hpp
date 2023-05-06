@@ -19,6 +19,7 @@ namespace rofi::net {
 class SimpleReactive : public Protocol {
     std::vector< std::reference_wrapper< const Interface > > _managedInterfaces;
     std::set< std::string > _interfaceWithCb;
+    std::map< Interface::Name, Ip6Addr > _counterpartAddress;
 
     using Update = std::pair< Protocol::Route, RoutingTable::Record >;
     std::vector< Update > _updates;
@@ -29,7 +30,7 @@ class SimpleReactive : public Protocol {
         int count = 0;
         for ( auto& r : records ) {
             auto g = r.best();
-            if ( !g || ( g->name() == interfaceName && g->cost() != 0 ) )
+            if ( !g || ( _sameCounterpart( g->name(), interfaceName ) && g->cost() != 0 ) )
                 continue;
             count++;
         }
@@ -40,7 +41,7 @@ class SimpleReactive : public Protocol {
 
         for ( const auto& r : records ) {
             auto g = r.best();
-            if ( !g || ( g->name() == interfaceName && g->cost() != 0 ) )
+            if ( !g || ( _sameCounterpart( g->name(), interfaceName ) && g->cost() != 0 ) )
                 continue;
 
             as< Ip6Addr >( data ) = r.ip();
@@ -75,12 +76,32 @@ class SimpleReactive : public Protocol {
             }
         }
 
+        // remove record for the counterpart's interface
+        _counterpartAddress.erase( interface.name() );
+
         return removed;
+    }
+
+    void _storeCounterpartAddress( const std::string& interfaceName, rofi::hal::PBuf& packet ) {
+        auto* ip6hdr = static_cast< ip6_hdr * >( packet.get()->payload );
+        Ip6Addr source( "::" );
+        ip6_addr_copy_from_packed( source, ip6hdr->src );
+        // TODO: It might be good to check if the records exists and maybe log the change?
+        _counterpartAddress.insert( { interfaceName, source } );
+    }
+
+    bool _sameCounterpart( const Interface::Name recordSource, const Interface::Name outputInterface ) const {
+        return recordSource == outputInterface
+            || (   _counterpartAddress.contains( recordSource )
+                && _counterpartAddress.contains( outputInterface )
+                && (_counterpartAddress.at( recordSource ) == _counterpartAddress.at( outputInterface ) )
+            );
     }
 
 public:
 
     virtual bool onMessage( const std::string& interfaceName, rofi::hal::PBuf packetWithHeader ) override {
+        _storeCounterpartAddress( interfaceName, packetWithHeader );
         auto packet = PBuf::own( pbuf_free_header( packetWithHeader.release(), IP6_HLEN ) );
         int count = static_cast< int >( as< uint16_t >( packet.payload() ) );
         auto data = packet.payload() + 2;
@@ -142,7 +163,8 @@ public:
             res = _addInterface( interface );
             // add everything we know, to pass it to the new neighbour
             for ( auto& rec : routingTableCB() ) {
-                if ( rec.best() && rec.best()->name() != interface.name() )
+                // do not propagate routes from neighbours back to them
+                if ( rec.best() && !_sameCounterpart( rec.best()->name(), interface.name() ) )
                     _updates.push_back( { Route::ADD
                                         , { rec.ip(), rec.mask(), rec.best()->name(), rec.best()->cost(), this } } );
             }
