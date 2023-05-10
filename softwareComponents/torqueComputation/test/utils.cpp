@@ -8,7 +8,7 @@ using namespace arma;
 const double TOLERANCE = 1e-6;
 const std::string INVARIANT_FAILED = "Function invariant invalid!";
 
-TEST_CASE("Project vector onto another - zero vector", "[utils]") {
+TEST_CASE("Project vector onto another - zero vector", "[projectVectorOntoAnother]") {
     vec vector = zeros<vec>(3);
     vec to_vector = {1, 1, 1};
     vec expected = zeros<vec>(3);
@@ -18,7 +18,7 @@ TEST_CASE("Project vector onto another - zero vector", "[utils]") {
     REQUIRE(approx_equal(expected, result, "absdiff", TOLERANCE));
 }
 
-TEST_CASE("Project vector onto another - same direction, unchanged", "[utils]") {
+TEST_CASE("Project vector onto another - same direction, unchanged", "[projectVectorOntoAnother]") {
     vec vector = {2, 2, 2};
     vec to_vector = {1, 1, 1};
     vec expected = {2, 2, 2};
@@ -28,7 +28,7 @@ TEST_CASE("Project vector onto another - same direction, unchanged", "[utils]") 
     REQUIRE(approx_equal(expected, result, "absdiff", TOLERANCE));
 }
 
-TEST_CASE("Project vector onto another - opposite direction, unchanged", "[utils]") {
+TEST_CASE("Project vector onto another - opposite direction, unchanged", "[projectVectorOntoAnother]") {
     vec vector = {-2, -2, -2};
     vec to_vector = {1, 1, 1};
     vec expected = {-2, -2, -2};
@@ -38,7 +38,7 @@ TEST_CASE("Project vector onto another - opposite direction, unchanged", "[utils
     REQUIRE(approx_equal(expected, result, "absdiff", TOLERANCE));
 }
 
-TEST_CASE("Project vector onto another - general case", "[utils]") {
+TEST_CASE("Project vector onto another - general case", "[projectVectorOntoAnother]") {
     vec vector = {7, 5, -1};
     // (5, -4, 2 * sqrt(2)) -> length 7
     vec to_vector = {5, -4, 2.828427125};
@@ -49,7 +49,74 @@ TEST_CASE("Project vector onto another - general case", "[utils]") {
     REQUIRE(approx_equal(expected, result, "absdiff", TOLERANCE));
 }
 
-TEST_CASE("Project matrix onto plane - identity to y", "[utils]") {
+TEST_CASE("Project matrix onto vector - identity to y", "[projectMatrixOntoVector]") {
+    mat matrix = eye(3, 3);
+    vec to = {0, 1, 0};
+
+    mat expected = {
+        {0., 0., 0.},
+        {0., 1., 0.},
+        {0., 0., 0.}
+    };
+
+    mat result = projectMatrixOntoVector(matrix, to);
+
+    REQUIRE(approx_equal(expected, result, "absdiff", TOLERANCE));
+    for (int i = 0; i < 3; i++) {
+        vec row = result.row(i).t();
+        if (arma::norm(row) != 0) {
+            CAPTURE(row);
+            CAPTURE(INVARIANT_FAILED);
+            REQUIRE(isParallel(row, to));
+        }
+    }
+}
+
+TEST_CASE("Project matrix onto vector - identity to general", "[projectMatrixOntoVector]") {
+    mat matrix = eye(3, 3);
+    vec to = {1, 2, 3};
+    mat expected = {
+        {0.071429, 0.142857, 0.214286},
+        {0.142857, 0.285714, 0.428571},
+        {0.214286, 0.428571, 0.642857}
+    };
+
+    mat result = projectMatrixOntoVector(matrix, to);
+
+    REQUIRE(approx_equal(expected, result, "absdiff", TOLERANCE));
+    for (int i = 0; i < 3; i++) {
+        vec row = result.row(i).t();
+        CAPTURE(row);
+        CAPTURE(INVARIANT_FAILED);
+        REQUIRE(isParallel(row, to));
+    }
+}
+
+TEST_CASE("Project matrix onto vector - general independent matrix to general" "[projectMatrixOntoVector]") {
+    mat matrix = {
+        {-1, 5, 9},
+        {2, 7, -6},
+        {4, 3, -8}
+    };
+    vec to = {1, 2, 3};
+    mat expected = {
+        {2.571429, 5.142857, 7.714286},
+        {-0.142857, -0.285714, -0.428571},
+        {-1., -2., -3.}
+    };
+
+    mat result = projectMatrixOntoVector(matrix, to);
+    REQUIRE(approx_equal(expected, result, "absdiff", TOLERANCE));
+    for (int i = 0; i < 3; i++) {
+        vec row = result.row(i).t();
+        CAPTURE(row);
+        CAPTURE(INVARIANT_FAILED);
+        REQUIRE(isParallel(row, to));
+    }
+}
+
+
+TEST_CASE("Project matrix onto plane - identity to y", "[projectMatrixOntoPlane]") {
     mat matrix = eye<mat>(3, 3);
     vec norm = {0, 1, 0};
     mat expected = {
@@ -214,7 +281,7 @@ TEST_CASE("Generate perpendicular vector: general vector", "[generatePerpendicul
     REQUIRE(almostEqual(dot(result, vector), 0.0));
 }
 
-TEST_CASE("Get cross product matrix: zero vector") {
+TEST_CASE("Get cross product matrix: zero vector", "[getCrossProductMatrix]") {
     vec vector = zeros<vec>(3);
     mat expected = zeros<mat>(3, 3);
 
@@ -223,7 +290,7 @@ TEST_CASE("Get cross product matrix: zero vector") {
     REQUIRE(approx_equal(expected, result, "absdiff", TOLERANCE));
 }
 
-TEST_CASE("Get cross product matrix: general") {
+TEST_CASE("Get cross product matrix: general", "[getCrossProductMatrix]") {
     vec vector = {5, 8, -3};
     mat test_matrix = {
             {1, 2, 3},
@@ -250,13 +317,13 @@ TEST_CASE("Get cross product matrix: general") {
     }
 }
 
-TEST_CASE("Cross division matrix: zero vector raises") {
+TEST_CASE("Cross division matrix: zero vector raises", "[getCrossDivisionMatrix]") {
     vec vector {0, 0, 0};
 
     REQUIRE_THROWS_AS(getCrossDivisionMatrix(vector), std::logic_error);
 }
 
-TEST_CASE("Cross division matrix: general") {
+TEST_CASE("Cross division matrix: general", "[getCrossDivisionMatrix]") {
     vec divisor {5, 8, -3};
     mat test_matrix {
         {1, 2, 7},
@@ -291,50 +358,21 @@ TEST_CASE("Cross division matrix: general") {
     }
 }
 
-TEST_CASE("rotate") {
-    vec vector {1, 2, -3};
-    double xDeg = 45;
-    double yDeg = 30;
-    double zDeg = 60;
-    mat expected {
-        {0.433013, -0.435596, 0.789149},
-        {0.75, 0.65974, -0.047367},
-        {-0.5, 0.612372, 0.612372}
-    };
-    vec expected_rotated_vector {-2.805626,  2.211581, -1.112372};
-
-    mat result = rotate(xDeg, yDeg, zDeg);
-
-    REQUIRE(approx_equal(expected, result, "absdiff", TOLERANCE));
-    REQUIRE(approx_equal(expected_rotated_vector, result * vector, "absdiff", TOLERANCE));
-}
-
-TEST_CASE("rotate_not_rotate") {
-    double xDeg = 0;
-    double yDeg = 0;
-    double zDeg = 0;
-    mat expected = eye<mat>(3, 3);
-
-    mat result = rotate(xDeg, yDeg, zDeg);
-
-    REQUIRE(approx_equal(expected, result, "absdiff", TOLERANCE));
-}
-
-TEST_CASE("is_parallel_first_zero_raises", "[is_parallel]") {
+TEST_CASE("First input is zero raises exception", "[is_parallel]") {
     vec u = zeros<vec>(3);
     vec v = {4, 5, -2};
 
     REQUIRE_THROWS_AS(isParallel(u, v), std::logic_error);
 }
 
-TEST_CASE("is_parallel_second_zero_raises", "[is_parallel]") {
+TEST_CASE("Second input is zero raises exception", "[is_parallel]") {
     vec u = {4, 5, -2};
     vec v = zeros<vec>(3);
 
     REQUIRE_THROWS_AS(isParallel(u, v), std::logic_error);
 }
 
-TEST_CASE("is_parallel_perpendicular", "[is_parallel]") {
+TEST_CASE("Perpendicular vectors", "[is_parallel]") {
     vec u = {4, 5, -2};
     vec v = {5, 4, 20};
 
@@ -343,7 +381,7 @@ TEST_CASE("is_parallel_perpendicular", "[is_parallel]") {
     REQUIRE_FALSE(result);
 }
 
-TEST_CASE("is_parallel_parallel", "[is_parallel]") {
+TEST_CASE("Parallel vectors", "[is_parallel]") {
     vec u = {4, 5, -2};
     vec v = {8, 10, -4};
 
@@ -352,7 +390,7 @@ TEST_CASE("is_parallel_parallel", "[is_parallel]") {
     REQUIRE(result);
 }
 
-TEST_CASE("is_parallel_anti_parallel", "[is_parallel]") {
+TEST_CASE("Anti parallel vectors", "[is_parallel]") {
     vec u = {4, 5, -2};
     vec v = {-8, -10, 4};
 
@@ -361,7 +399,7 @@ TEST_CASE("is_parallel_anti_parallel", "[is_parallel]") {
     REQUIRE(result);
 }
 
-TEST_CASE("is_parallel_almost_parallel", "[is_parallel]") {
+TEST_CASE("Almost parallel vectors", "[is_parallel]") {
     vec u = {4, 5, -2};
     vec v = {8, 10, -4.05};
 

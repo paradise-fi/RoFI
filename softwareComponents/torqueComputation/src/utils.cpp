@@ -1,7 +1,5 @@
 #include "utils.hpp"
 
-#include <atoms/units.hpp>
-
 using namespace arma;
 
 bool almostEqual(double a, double b, double epsilon/*=1e-6*/) {
@@ -66,41 +64,6 @@ mat33 getCrossDivisionMatrix(const vec3& divisor) {
     }
     mat divisorMatrix = getCrossProductMatrix(divisor);
     return divisorMatrix / lengthSquared;
-}
-
-mat33 rotate(double xDeg, double yDeg, double zDeg) {
-    double alpha = Angle::deg(zDeg).rad();
-    double beta = Angle::deg(yDeg).rad();
-    double gamma = Angle::deg(xDeg).rad();
-
-    double alphaSin = sin(alpha);
-    double alphaCos = cos(alpha);
-
-    double betaSin = sin(beta);
-    double betaCos = cos(beta);
-
-    double gammaSin = sin(gamma);
-    double gammaCos = cos(gamma);
-
-    mat rotationMatrix = {
-            {
-                alphaCos * betaCos,
-                alphaCos * betaSin * gammaSin - alphaSin * gammaCos,
-                alphaCos * betaSin * gammaCos + alphaSin * gammaSin
-            },
-            {
-                alphaSin * betaCos,
-                alphaSin * betaSin * gammaSin + alphaCos * gammaCos,
-                alphaSin * betaSin * gammaCos - alphaCos * gammaSin
-            },
-            {
-                -betaSin,
-                betaCos * gammaSin,
-                betaCos * gammaCos
-            }
-    };
-
-    return rotationMatrix;
 }
 
 bool isParallel(const vec3& u, const vec3& v) {

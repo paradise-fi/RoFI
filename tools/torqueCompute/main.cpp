@@ -1,9 +1,10 @@
 #include <torqueComputation/compute.hpp>
-#include <torqueComputation/linprog.hpp>
+#include <torqueComputation/serialization.hpp>
 #include <configuration/serialization.hpp>
 #include <configuration/universalModule.hpp>
 #include <nlohmann/json.hpp>
 #include <iostream>
+#include <cmath>
 #include <chrono>
 #include <unistd.h>
 #include <vector>
@@ -148,14 +149,6 @@ TorqueConfig createConfig(const std::string& path) {
     return config;
 }
 
-void releaseConfig(const TorqueConfig& config) {
-    for (const auto& [key, strategy] : config.visitModuleStrategies) {
-        delete strategy;
-    }
-}
-
-
-
 
 int main( int argc, char * argv[] )
 {
@@ -197,11 +190,10 @@ int main( int argc, char * argv[] )
 
     if (args & ArgsEnum::SerializeConfig) {
         std::cout << toJSON(config) << std::endl;
-        releaseConfig(config);
         return 0;
     }
 
-    long double elapsed = 0;
+    long double elapsed = INFINITY;
     bool result = false;
 
     for (int i = 0; i < repeat; i++) {
@@ -215,23 +207,26 @@ int main( int argc, char * argv[] )
         ).feasible;
         auto end = std::chrono::steady_clock::now();
 
-        elapsed += std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        long double current = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
+        if (current < elapsed) {
+            elapsed = current;
+        }
     }
 
-    std::cout << "Elapsed time in nanoseconds: "
-         << elapsed / repeat
-         << " ns" << std::endl;
+    if (args == ArgsEnum::Empty) {
+        std::cout << "Elapsed time in nanoseconds: "
+                  << elapsed
+                  << " ns" << std::endl;
 
-    std::cout << "Elapsed time in microseconds: "
-         << (elapsed / 1000.0) / repeat
-         << " µs" << std::endl;
+        std::cout << "Elapsed time in microseconds: "
+                  << (elapsed / 1000.0)
+                  << " µs" << std::endl;
 
-    std::cout << "Elapsed time in milliseconds: "
-         << (elapsed / 1000000.0) / repeat
-         << " ms" << std::endl;
+        std::cout << "Elapsed time in milliseconds: "
+                  << (elapsed / 1000000.0)
+                  << " ms" << std::endl;
 
-    std::cout << endl << "RESULT: " << (result ? "SUCCESS" : "fail") << std::endl << std::endl;
-
-    releaseConfig(config);
+        std::cout << endl << "RESULT: " << (result ? "SUCCESS" : "fail") << std::endl << std::endl;
+    }
     return 0;
 }

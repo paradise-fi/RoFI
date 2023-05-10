@@ -113,7 +113,8 @@ TEST_CASE("getVariablesLowerBounds: empty", "[VariableManager]") {
 TEST_CASE("getVariablesLowerBounds: without bounds", "[VariableManager]") {
     VariableManager mgr;
     mgr.addEdge(0, 1);
-    vec expected(7, fill::value(-INFINITY));
+    vec expected(7);
+    expected.fill(-INFINITY);
     uword expected_len = 7;
 
     vec result = mgr.getVariablesLowerBounds();
@@ -170,7 +171,8 @@ TEST_CASE("getVariablesUpperBounds: empty", "[VariableManager]") {
 TEST_CASE("getVariablesUpperBounds: without bounds", "[VariableManager]") {
     VariableManager mgr;
     mgr.addEdge(0, 1);
-    vec expected(7, fill::value(INFINITY));
+    vec expected(7);
+    expected.fill(INFINITY);
     uword expected_len = 7;
 
     vec result = mgr.getVariablesUpperBounds();

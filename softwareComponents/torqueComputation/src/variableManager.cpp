@@ -32,11 +32,7 @@ void VariableManager::addEdge(
 }
 
 int VariableManager::getMomentStartIndexForEdge(int fromId, int toId) const {
-    auto it = mapIndices.find(std::make_pair(fromId, toId));
-    if (it == mapIndices.end()) {
-        throw std::out_of_range("invalid edge");
-    }
-    return it->second;
+    return mapIndices.at(std::make_pair(fromId, toId));
 }
 
 int VariableManager::getForceReactionIndexForEdge(int fromId, int toId) const {
@@ -54,7 +50,8 @@ int VariableManager::getEdgesCount() const {
 }
 
 vec VariableManager::getVariablesLowerBounds() const {
-    vec result(getVariablesCount(), fill::value(-INFINITY));
+    vec result(getVariablesCount());
+    result.fill(-INFINITY);
     for (const auto &item: bounds) {
         result[item.first] = -item.second;
     }
@@ -63,7 +60,8 @@ vec VariableManager::getVariablesLowerBounds() const {
 }
 
 vec VariableManager::getVariablesUpperBounds() const {
-    vec result(getVariablesCount(), fill::value(INFINITY));
+    vec result(getVariablesCount());
+    result.fill(INFINITY);
     for (const auto &item : bounds) {
         result[item.first] = item.second;
     }
