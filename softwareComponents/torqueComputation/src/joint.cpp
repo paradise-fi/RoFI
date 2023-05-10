@@ -174,20 +174,6 @@ namespace rofi::torqueComputation {
             approx_equal(moments, other.moments, "absdiff", TOLERANCE);
     }
 
-    size_t Joint::operator()() const {
-        size_t norm_hash = 0;
-        if (norm) {
-            norm_hash = hashVec(norm.value());
-        }
-
-        return std::hash<int>()(id) ^
-                hashVec(coors) ^
-                norm_hash ^
-                std::hash<bool>()(isWall) ^
-                std::hash<bool>()(isBounded) ^
-                hashVec(moments);
-    }
-
     Joint::Joint(
         int id, 
         vec3 coors, 

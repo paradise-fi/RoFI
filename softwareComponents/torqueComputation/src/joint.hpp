@@ -120,8 +120,6 @@ namespace rofi::torqueComputation {
 
         bool operator==(const Joint& other) const;
 
-        size_t operator()() const;
-
         int getId() const { return id; }
         arma::vec3 getCoors() const { return coors; }
         std::optional<arma::vec3> getNorm() const { return norm; }

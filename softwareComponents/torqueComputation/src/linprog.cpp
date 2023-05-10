@@ -63,16 +63,20 @@ namespace rofi::torqueComputation {
         // Arrays will be set to default values
         model.resize(numberRows, numberColumns);
 
+        // CLP library CoinPackedMatrix destructor takes care of deleting this.
         double * elements = new double [numberElements];
 
+        // CLP library CoinPackedMatrix destructor takes care of deleting this.
         CoinBigIndex * starts = new CoinBigIndex [numberColumns+1];
 
+        // CLP library CoinPackedMatrix destructor takes care of deleting this.
         int * rows = new int [numberElements];
         std::iota(rows, rows + numberRows, 0);
         for (int i = 1; i < numberColumns; i++) {
             memcpy(rows + i * numberRows, rows, numberRows * sizeof(int));
         }
 
+        // CLP library CoinPackedMatrix destructor takes care of deleting this.
         int * lengths = new int[numberColumns];
         std::fill_n(lengths, numberColumns, numberRows);
 
@@ -103,10 +107,12 @@ namespace rofi::torqueComputation {
 
         starts[numberColumns] = numberElements;
 
-        // assign to matrix
+        // assign to matrix - is deleted in ClpPackedMatrix destructor.
         CoinPackedMatrix * matrix = new CoinPackedMatrix(true, 0.0, 0.0);
         matrix->assignMatrix(true, numberRows, numberColumns, numberElements,
                              elements, rows, starts, lengths);
+
+        // Deleted in ClpSimplex (ClpModel) destructor.
         ClpPackedMatrix * clpMatrix = new ClpPackedMatrix(matrix);
         model.replaceMatrix(clpMatrix, true);
 
@@ -118,11 +124,6 @@ namespace rofi::torqueComputation {
         int feasible = model.primal();
         double *result = model.primalColumnSolution();
         auto resultVec = std::vector<double>(result, result + numberColumns);
-        
-        delete[] lengths;
-        delete[] rows;
-        delete[] starts;
-        delete[] elements;
 
         return OptimizeResult {
                 feasible == 0,

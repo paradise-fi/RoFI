@@ -1,6 +1,7 @@
 #pragma once
 
 #include <armadillo>
+#include <memory>
 
 #include <configuration/rofiworld.hpp>
 #include <configuration/universalModule.hpp>
@@ -33,12 +34,6 @@ arma::vec3 getPosition(const rofi::configuration::Component& component);
 arma::vec3 toVec3(const arma::vec& vector);
 
 /**
- * Delete allocated Joints from memory.
- * @param joints
- */
-void releaseJoints(const std::unordered_map<int, rofi::torqueComputation::Joint*>& joints);
-
-/**
  * Update joints based on TorqueConfig - e.g. add custom forces and walls.
  * @tparam Tuple
  * @tparam JointHandler
@@ -51,7 +46,7 @@ template <typename Tuple, typename JointHandler>
 void updateJoints(
     const std::vector<Tuple>& source,
     const std::unordered_map<std::pair<int, int>, int, IntPairHash>& roficomMap,
-    const std::unordered_map<int, rofi::torqueComputation::Joint*>& joints,
+    const std::unordered_map<int, std::unique_ptr<rofi::torqueComputation::Joint>>& joints,
     const JointHandler& jointHandler
 ) {
     for (const auto& tuple : source) {
@@ -67,13 +62,11 @@ void updateJoints(
             jointId = getJointId(moduleId, componentId);
         }
         try {
-            jointHandler(tuple, joints.at(jointId));
-            //joints.at(jointId)->setIsWall();
+            jointHandler(tuple, joints.at(jointId).get());
         }
         catch (std::out_of_range& e) {
             std::string msg = "TorqueConfig error. Invalid joint ID for wall: (" + std::to_string(moduleId) + ", " + std::to_string(componentId) + ")" + 
                                 "\nError: " + e.what();
-            releaseJoints(joints);
             throw std::logic_error(msg);
         }
     }
@@ -88,5 +81,5 @@ void updateJoints(
  */
 std::unordered_map<std::pair<int, int>, int, IntPairHash> traverseRoficomConnections(
     const rofi::configuration::RofiWorld& world, 
-    std::unordered_map<int, rofi::torqueComputation::Joint*>& joints
+    std::unordered_map<int, std::unique_ptr<rofi::torqueComputation::Joint>>& joints
 );

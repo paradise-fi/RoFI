@@ -35,8 +35,20 @@ bool almostEqual(double a, double b, double epsilon=1e-6);
  */
 arma::vec3 projectVectorOntoAnother(const arma::vec3& vector, const arma::vec3& to);
 
+/**
+ * Project matrix rows in vector direction. Each row is then parallel with provided vector.
+ * @param matrix
+ * @param to
+ * @return
+ */
 arma::mat33 projectMatrixOntoVector(const arma::mat33& matrix, const arma::vec3& to);
 
+/**
+ * Project matrix rows to plane given by its norm vector.
+ * @param matrix
+ * @param norm
+ * @return
+ */
 arma::mat33 projectMatrixOntoPlane(const arma::mat33& matrix, const arma::vec3& norm);
 
 /**
@@ -70,8 +82,6 @@ arma::mat33 getCrossProductMatrix(const arma::vec3& vector);
  * @return
  */
 arma::mat33 getCrossDivisionMatrix(const arma::vec3& divisor);
-
-arma::mat33 rotate(double xDeg, double yDeg, double zDeg);
 
 /**
  * Check if u and v are parallel. Precision to ~1 thousands.

@@ -1,14 +1,15 @@
 #pragma once
 
+#include <memory>
+#include <vector>
+
 #include <torqueComputation/linprog.hpp>
 #include <configuration/rofiworld.hpp>
 #include "../../src/joint.hpp"
 #include "../../src/utils.hpp"
 #include "../../src/variableManager.hpp"
 #include <armadillo>
-#include <vector>
 #include <unordered_map>
-#include <nlohmann/json.hpp>
 
 namespace rofi::torqueComputation {
     enum ComponentTypeIndex {
@@ -60,7 +61,7 @@ namespace rofi::torqueComputation {
             virtual void createJoints(
                 const rofi::configuration::Module& rofiModule, 
                 const std::unordered_map<std::pair<int, int>, int, IntPairHash>& roficomMap,
-                std::unordered_map<int, Joint*>& joints,
+                std::unordered_map<int, std::unique_ptr<Joint>>& joints,
                 VariableManager& variableManager,
                 const arma::vec& gravitation
             ) const = 0;
@@ -83,7 +84,7 @@ namespace rofi::torqueComputation {
         void createJoints(
             const rofi::configuration::Module& rofiModule, 
             const std::unordered_map<std::pair<int, int>, int, IntPairHash>& roficomMap,
-            std::unordered_map<int, Joint*>& joints,
+            std::unordered_map<int, std::unique_ptr<Joint>>& joints,
             VariableManager& variableManager,
             const arma::vec& gravitation
         ) const;
@@ -101,7 +102,7 @@ namespace rofi::torqueComputation {
         void createJoints(
             const rofi::configuration::Module& rofiModule, 
             const std::unordered_map<std::pair<int, int>, int, IntPairHash>& roficomMap,
-            std::unordered_map<int, Joint*>& joints,
+            std::unordered_map<int, std::unique_ptr<Joint>>& joints,
             VariableManager&,
             const arma::vec& gravitation
         ) const;
@@ -112,7 +113,7 @@ namespace rofi::torqueComputation {
      */
     struct TorqueConfig {
         arma::vec gravitation;
-        std::unordered_map<std::string, VisitModuleStrategy*> visitModuleStrategies;
+        std::unordered_map<rofi::configuration::ModuleType, std::unique_ptr<VisitModuleStrategy>> visitModuleStrategies;
         std::vector<std::tuple<int, int, arma::vec>> forces;
         std::vector<std::pair<int, int>> walls;
     };
@@ -133,18 +134,4 @@ namespace rofi::torqueComputation {
         bool printJoints = false,
         bool printMatrix = false
     );
-
-    /**
-     * Transforms config to JSON representation.
-     * @param config
-     * @return
-     */
-    nlohmann::json toJSON(const TorqueConfig& config);
-
-    /**
-     * Creates config from provided JSON. Allocates VisitModuleStrategies. Do not forget to release them.
-     * @param json
-     * @return
-     */
-    TorqueConfig fromJSON(const nlohmann::json& json);
 }
