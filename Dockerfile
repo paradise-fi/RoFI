@@ -22,7 +22,8 @@ RUN DEBIAN_FRONTEND=noninteractive TZ="Europe/London" \
         python3 python3-pip python3-venv python3-dev python3-numpy \
         doxygen graphviz \
         libarmadillo-dev libvtk7-dev libvtk7-qt-dev qtdeclarative5-dev \
-        gazebo libgazebo-dev libz3-dev
+        gazebo libgazebo-dev libz3-dev \
+        coinor-clp coinor-libclp-dev
 
 # Install ARM Toolchain for STM32
 RUN cd /tmp && \
