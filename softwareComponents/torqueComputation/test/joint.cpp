@@ -21,15 +21,13 @@ TEST_CASE("Joint initialization", "[Joint]") {
     Joint motor_gamma(
         1,
         {1, 1, 0},
-        {1, 0, 0},
-        true
+        {1, 0, 0}
     );
 
     Joint motor_alpha(
         2,
         {2, 1, 0},
-        {0, 0, 1},
-        true
+        {0, 0, 1}
     );
 
     Joint rigid(
@@ -202,9 +200,8 @@ TEST_CASE("Joint initialization", "[Joint]") {
     }
 
     SECTION("Sanity check") {
-        std::string msg;
         for (auto joint : {&wall, &motor_gamma, &motor_alpha, &rigid, &end, &lonely}) {
-            REQUIRE(joint->jointSanityCheck(msg));
+            REQUIRE_NOTHROW(joint->jointSanityCheck());
         }
     }
 

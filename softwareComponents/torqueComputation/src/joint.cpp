@@ -10,10 +10,7 @@ namespace rofi::torqueComputation {
             return std::nullopt;
         }
 
-        std::string msg;
-        if (!jointSanityCheck(msg)) {
-            throw std::logic_error(msg);
-        }
+        jointSanityCheck();
 
         mat forceLhs(3, variableManager.getVariablesCount(), fill::zeros);
 
@@ -119,14 +116,13 @@ namespace rofi::torqueComputation {
         return nullptr;
     }
 
-    bool Joint::jointSanityCheck(std::string& msg) const {
+    void Joint::jointSanityCheck() const {
         if (!isBounded) {
-            return true;
+            return;
         }
 
         if (2 < neighbors.size()) {
-            msg = "Bounded motor can only have at most 2 neighbors";
-            return false;
+            throw std::logic_error("Bounded motor can only have at most 2 neighbors");
         }
 
         for (Joint* neighbor : neighbors) {
@@ -141,11 +137,9 @@ namespace rofi::torqueComputation {
                               "Norm: " << moments.row(2) <<
                               "Link vector: " << linkVector.t() << std::endl;
 
-                    msg = stream.str();
-                    return false;
+                    throw std::logic_error(stream.str());
             }
         }
-        return true;
     }
 
     std::vector<int> Joint::getCanonicNeighborsIds() const {

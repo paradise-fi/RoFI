@@ -50,14 +50,14 @@ std::unordered_map<std::pair<int, int>, int, IntPairHash> traverseRoficomConnect
             result[std::make_pair(fromModule.getId(), fromCompId)] = jointId;
             result[std::make_pair(toModule.getId(), toCompId)] = jointId;
 
-            auto roficomJoint = std::unique_ptr<Joint>(new Joint(
+            auto* roficomJoint = new Joint(
                 jointId,
                 getRoficomPosition(fromModule.components()[fromCompId]),
                 false
-            ));
+            );
             joints.emplace(
                 jointId, 
-                std::move(roficomJoint)
+                std::unique_ptr<Joint>(roficomJoint)
             );
         }      
 
@@ -146,8 +146,7 @@ public:
         auto* motorJoint = new Joint(
                 jointMotorId,
                 origin,
-                norm,
-                true
+                norm
         );
         motorJoint->appendForce(_configuration.weights[ComponentTypeIndex::Motor] * _gravitation);
         _joints.emplace(jointMotorId, std::unique_ptr<Joint>(motorJoint));
@@ -189,8 +188,7 @@ public:
         auto* gammaMotorJoint = new Joint(
                 jointMotorId,
                 _middle,
-                norm,
-                true
+                norm
         );
         gammaMotorJoint->appendForce(_configuration.weights[ComponentTypeIndex::GammaMotor] * _gravitation);
         _joints.emplace(jointMotorId, std::unique_ptr<Joint>(gammaMotorJoint));

@@ -52,10 +52,13 @@ std::string momentsToString(const mat33& moments) {
     return stream.str();
 }
 
-void printJointsInfo(const std::unordered_map<int, std::unique_ptr<Joint>>& joints) {
+void printJointsInfo(
+    const std::unordered_map<int, std::unique_ptr<Joint>>& joints,
+    std::ostream& os
+) {
     long unsigned int size = joints.size();
     long unsigned int i = 1;
-    std::cout << "{\"joints\": {" << std::endl;
+    os << "{\"joints\": {" << std::endl;
 
     for (const auto& [jointId, joint] : joints) {
         vec3 forces_sum = vec::fixed<3>(fill::zeros);
@@ -64,24 +67,61 @@ void printJointsInfo(const std::unordered_map<int, std::unique_ptr<Joint>>& join
         }
         auto norm = joint->getNorm();
 
-        std::cout << "    \"" << jointId << "\" : {\n";
-        std::cout << "        \"id\": " << jointId << ",\n";
-        std::cout << "        \"coors\": " << vecToString(joint->getCoors()) << ",\n";
+        os << "    \"" << jointId << "\" : {\n";
+        os << "        \"id\": " << jointId << ",\n";
+        os << "        \"coors\": " << vecToString(joint->getCoors()) << ",\n";
         if (norm) {
-        std::cout << "        \"norm\": " << vecToString(norm.value()) <<",\n";
+        os << "        \"norm\": " << vecToString(norm.value()) <<",\n";
         }
-        std::cout << "        \"is_wall\": " << (joint->getIsWall() ? "true" : "false") << ",\n";
-        std::cout << "        \"is_bounded\": " << (joint->getIsBounded() ? "true" : "false") << ",\n";
-        std::cout << "        \"neighbors\": " << vecToString(joint->getCanonicNeighborsIds()) <<",\n";
-        std::cout << "        \"forces\": " << vecToString(forces_sum) <<",\n";
-        std::cout << "        \"moments\": [\n";
-        std::cout << momentsToString(joint->getMoments());
-        std::cout << "        ]\n";
-        std::cout << "    }" << (i < size ? "," : "") << std::endl;
+        os << "        \"is_wall\": " << (joint->getIsWall() ? "true" : "false") << ",\n";
+        os << "        \"is_bounded\": " << (joint->getIsBounded() ? "true" : "false") << ",\n";
+        os << "        \"neighbors\": " << vecToString(joint->getCanonicNeighborsIds()) <<",\n";
+        os << "        \"forces\": " << vecToString(forces_sum) <<",\n";
+        os << "        \"moments\": [\n";
+        os << momentsToString(joint->getMoments());
+        os << "        ]\n";
+        os << "    }" << (i < size ? "," : "") << std::endl;
 
         i++;
     }
-    std::cout << "}}" << std::endl;
+    os << "}}" << std::endl;
+}
+
+void printMatrixInfo(
+    const mat& constraintMatrix, 
+    const vec& constraintBounds,
+    const VariableManager& variableManager,
+    std::ostream& os
+) {
+    os << std::endl << "Dimension: " << constraintMatrix.n_rows << " x " << constraintMatrix.n_cols << std::endl << std::endl;
+
+    for (const auto& varName : variableManager.getVariableNames()) {
+        os << varName << ";";
+    }
+    os << std::endl << std::endl;
+    for (unsigned int row = 0; row < constraintMatrix.n_rows; row++) {
+        for (unsigned int col = 0; col < constraintMatrix.n_cols; col++) {
+            os << std::round(100000 * constraintMatrix(row, col)) / 100000 << ";";
+        }
+        os << " = " << constraintBounds(row) << std::endl;
+    }
+    os << std::endl << std::endl;
+    os << "Bound lower:" << std::endl;
+    for (const auto& lb : variableManager.getVariablesLowerBounds()) {
+        os << lb << ";";
+    }
+    os << std::endl << std::endl;
+    os << "Bound upper:" << std::endl;
+    for (const auto& ub : variableManager.getVariablesUpperBounds()) {
+        os << ub << ";";
+    }
+    os << std::endl << std::endl;
+}
+
+void printJointsInfo(
+    const std::unordered_map<int, std::unique_ptr<Joint>>& joints
+) {
+    printJointsInfo(joints, std::cout);
 }
 
 void printMatrixInfo(
@@ -89,27 +129,5 @@ void printMatrixInfo(
     const vec& constraintBounds,
     const VariableManager& variableManager
 ) {
-    std::cout << std::endl << "Dimension: " << constraintMatrix.n_rows << " x " << constraintMatrix.n_cols << std::endl << std::endl;
-
-    for (const auto& varName : variableManager.getVariableNames()) {
-        std::cout << varName << ";";
-    }
-    std::cout << std::endl << std::endl;
-    for (unsigned int row = 0; row < constraintMatrix.n_rows; row++) {
-        for (unsigned int col = 0; col < constraintMatrix.n_cols; col++) {
-            std::cout << std::round(100000 * constraintMatrix(row, col)) / 100000 << ";";
-        }
-        std::cout << " = " << constraintBounds(row) << std::endl;
-    }
-    std::cout << std::endl << std::endl;
-    std::cout << "Bound lower:" << std::endl;
-    for (const auto& lb : variableManager.getVariablesLowerBounds()) {
-        std::cout << lb << ";";
-    }
-    std::cout << std::endl << std::endl;
-    std::cout << "Bound upper:" << std::endl;
-    for (const auto& ub : variableManager.getVariablesUpperBounds()) {
-        std::cout << ub << ";";
-    }
-    std::cout << std::endl << std::endl;
+    printMatrixInfo(constraintMatrix, constraintBounds, variableManager, std::cout);
 }
