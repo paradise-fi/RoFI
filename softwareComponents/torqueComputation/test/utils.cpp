@@ -62,13 +62,15 @@ TEST_CASE("Project matrix onto vector - identity to y", "[projectMatrixOntoVecto
     mat result = projectMatrixOntoVector(matrix, to);
 
     REQUIRE(approx_equal(expected, result, "absdiff", TOLERANCE));
+    
     for (int i = 0; i < 3; i++) {
-        vec row = result.row(i).t();
-        if (arma::norm(row) != 0) {
-            CAPTURE(row);
-            CAPTURE(INVARIANT_FAILED);
-            REQUIRE(isParallel(row, to));
-        }
+        vec result_invariant = result.row(i).t();
+
+        vec expected_invariant = projectVectorOntoAnother(matrix.row(i).t(), to);
+
+        CAPTURE(result_invariant);
+        CAPTURE(INVARIANT_FAILED);
+        REQUIRE(approx_equal(expected_invariant, result_invariant, "absdiff", TOLERANCE));
     }
 }
 
@@ -84,11 +86,15 @@ TEST_CASE("Project matrix onto vector - identity to general", "[projectMatrixOnt
     mat result = projectMatrixOntoVector(matrix, to);
 
     REQUIRE(approx_equal(expected, result, "absdiff", TOLERANCE));
+    
     for (int i = 0; i < 3; i++) {
-        vec row = result.row(i).t();
-        CAPTURE(row);
+        vec result_invariant = result.row(i).t();
+
+        vec expected_invariant = projectVectorOntoAnother(matrix.row(i).t(), to);
+
+        CAPTURE(result_invariant);
         CAPTURE(INVARIANT_FAILED);
-        REQUIRE(isParallel(row, to));
+        REQUIRE(approx_equal(expected_invariant, result_invariant, "absdiff", TOLERANCE));
     }
 }
 
@@ -106,12 +112,17 @@ TEST_CASE("Project matrix onto vector - general independent matrix to general" "
     };
 
     mat result = projectMatrixOntoVector(matrix, to);
+
     REQUIRE(approx_equal(expected, result, "absdiff", TOLERANCE));
+
     for (int i = 0; i < 3; i++) {
-        vec row = result.row(i).t();
-        CAPTURE(row);
+        vec result_invariant = result.row(i).t();
+
+        vec expected_invariant = projectVectorOntoAnother(matrix.row(i).t(), to);
+
+        CAPTURE(result_invariant);
         CAPTURE(INVARIANT_FAILED);
-        REQUIRE(isParallel(row, to));
+        REQUIRE(approx_equal(expected_invariant, result_invariant, "absdiff", TOLERANCE));
     }
 }
 

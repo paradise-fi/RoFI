@@ -23,10 +23,10 @@ public:
 
     /**
      * Register variables for new edge. Moment variable in main direction can be bounded.
-     * @param fromId
-     * @param toId
-     * @param fromBound
-     * @param toBound
+     * @param fromId ID of joint on origin of directed edge
+     * @param toId ID of joint on end of egde
+     * @param fromBound Bound for main moment of joint on origin of directed edge for this edge
+     * @param toBound Bound for main moment of joint on end of directed edge for this edge
      */
     void addEdge(
             int fromId,
@@ -37,47 +37,47 @@ public:
 
     /**
      * Get index of first of three moment variables.
-     * @param fromId
-     * @param toId
-     * @return
+     * @param fromId ID of joint on origin of directed edge
+     * @param toId ID of joint on end of directed edge
+     * @return Index of first of three moment variables
      */
     int getMomentStartIndexForEdge(int fromId, int toId) const;
 
     /**
      * Get index of variable describing force reaction.
-     * @param fromId
-     * @param toId
-     * @return
+     * @param fromId ID of joint on origin of directed edge
+     * @param toId ID of joint on end of directed edge
+     * @return Index of variable describing force reaction
      */
     int getForceReactionIndexForEdge(int fromId, int toId) const;
 
     /**
      * Get variables count.
-     * @return
+     * @return Variables count
      */
     int getVariablesCount() const;
 
     /**
      * Get registered edges count.
-     * @return
+     * @return Edges count
      */
     int getEdgesCount() const;
 
     /**
      * Get lower bounds for variables.
-     * @return
+     * @return Lower bounds for variables
      */
     arma::vec getVariablesLowerBounds() const;
 
     /**
      * Get upper bounds for variables.
-     * @return
+     * @return Upper bounds for variables
      */
     arma::vec getVariablesUpperBounds() const;
 
     /**
      * Get variables names for debugging purposes.
-     * @return
+     * @return Vector of variable names
      */
     std::vector<std::string> getVariableNames() const;
 

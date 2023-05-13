@@ -52,11 +52,12 @@ namespace rofi::torqueComputation {
 
             /**
              * Create all required joints in processed module. Creates links between them and add forces.
-             * @param rofiModule
-             * @param roficomMap
-             * @param joints
-             * @param variableManager
-             * @param gravitation
+             * Created joints are stored in joints map.
+             * @param rofiModule Module to process
+             * @param roficomMap Maps roficoms from different modules to single joint ID
+             * @param joints Maps joint IDs to joints
+             * @param variableManager Registers newly created variable during processing of joints creation
+             * @param gravitation Gravitation vector
              */
             virtual void createJoints(
                 const rofi::configuration::Module& rofiModule, 
@@ -120,12 +121,12 @@ namespace rofi::torqueComputation {
 
     /**
      * Solves CLP problem based on provided rofiWorld and config. Checks if motors of modules can hold its positions.
-     * @param rofiWorld
-     * @param config
-     * @param solveTo
-     * @param printJoints
-     * @param printMatrix
-     * @return
+     * @param rofiWorld RoFI world to process.
+     * @param config Configuration of physical properties of modules. Also contain strategy how each type of module should be processed.
+     * @param solveTo Used to set stage up to algorithm is run. Either up to transform world to joints, compose system of euqations or whole problem is solved.
+     * @param printJoints Print system of joints as JSON, can be used as input for system drawing script.
+     * @param printMatrix Print composed matrix as CSV to see what was done.
+     * @return Result of CLP computation
      */
     OptimizeResult computeTorque(
         const rofi::configuration::RofiWorld& rofiWorld, 

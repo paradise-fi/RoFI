@@ -14,10 +14,10 @@ namespace rofi::torqueComputation {
     public:
         /**
          * Constructor for rigid joint.
-         * @param id
-         * @param coors
-         * @param isWall Whether joint is wall - sum of forces does not have to be 0.
-         * @param norm
+         * @param id ID of joint
+         * @param coors Coordinates of joint
+         * @param isWall <b>Whether joint is wall - sum of forces does not have to be 0.</b>
+         * @param norm Can be used to change moment base of joint, otherwise standard is used.
          */
         Joint(
             int id, 
@@ -27,18 +27,16 @@ namespace rofi::torqueComputation {
         ) : Joint(id, coors, isWall, norm, false) {}
 
         /**
-         * Constructor for moto joint
-         * @param id
-         * @param coors
-         * @param norm Have to be perpendicular to plane of rotation.
-         * @param isBounded
+         * Constructor for motor joint
+         * @param id ID of joint
+         * @param coors Coordinates of joint
+         * @param norm <b>Have to be perpendicular to plane of rotation.</b>
          */
         Joint(
             int id, 
             arma::vec3 coors, 
-            arma::vec3 norm,
-            bool isBounded
-        ) : Joint(id, coors, false, norm, isBounded) {}
+            arma::vec3 norm
+        ) : Joint(id, coors, false, norm, true) {}
 
         /**
          * Compute matrix which rows transforms variable vector to vector expressed
@@ -107,16 +105,20 @@ namespace rofi::torqueComputation {
         void appendForce(arma::vec3 force);
 
         /**
-         * Check if joint is in valid state.
-         * @return
+         * Check if joint is in valid state. Throw std::logic_error with error message otherwise.
          */
-        bool jointSanityCheck(std::string& msg) const;
+        void jointSanityCheck() const;
 
         /**
          * Get sorted neighbor IDs.
          * @return
          */
         std::vector<int> getCanonicNeighborsIds() const;
+
+        /**
+         * Set Joint as wall.
+         */
+        void setIsWall() { isWall = true; }
 
         bool operator==(const Joint& other) const;
 
@@ -126,7 +128,6 @@ namespace rofi::torqueComputation {
         const std::vector<arma::vec3>& getForces() const { return forces; }
         const std::vector<Joint*>& getNeighbors() const { return neighbors; }
         bool getIsWall() const { return isWall; }
-        void setIsWall() { isWall = true; }
         bool getIsBounded() const { return isBounded; }
         const arma::mat33& getMoments() const { return moments; }
         

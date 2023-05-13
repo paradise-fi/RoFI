@@ -14,33 +14,33 @@
 
 /**
  * Compute roficom position as vec3 based on its Component position
- * @param roficom
- * @return
+ * @param roficom Component of Roficom type
+ * @return Position of component
  */
 arma::vec3 getRoficomPosition(const rofi::configuration::Component& roficom);
 
 /**
  * Get position of components transformed to vec3
- * @param component
- * @return
+ * @param component Component of Body/Shoe type
+ * @return Position of component
  */
 arma::vec3 getPosition(const rofi::configuration::Component& component);
 
 /**
  * Extract first three components of vector and returns them as vec3
- * @param vector
- * @return
+ * @param vector Input vector
+ * @return Result vector
  */
 arma::vec3 toVec3(const arma::vec& vector);
 
 /**
  * Update joints based on TorqueConfig - e.g. add custom forces and walls.
- * @tparam Tuple
- * @tparam JointHandler
- * @param source
- * @param roficomMap
- * @param joints
- * @param jointHandler
+ * @tparam Tuple (int, int, ...)
+ * @tparam JointHandler ((int, int, ...), Joint*) -> void {}
+ * @param source List of tuples which update joints
+ * @param roficomMap Maps roficoms from different modules to single joint ID 
+ * @param joints Maps joint IDs to joints
+ * @param jointHandler Function to update processed joint
  */
 template <typename Tuple, typename JointHandler>
 void updateJoints(
@@ -75,9 +75,9 @@ void updateJoints(
 /**
  * Create Joints where modules are jointed.
  * Creates map such that this joint can be addressed from both modules.
- * @param world
- * @param joints
- * @return
+ * @param world World to traverse
+ * @param joints Map of joints
+ * @return Mapping for both modules to created joint
  */
 std::unordered_map<std::pair<int, int>, int, IntPairHash> traverseRoficomConnections(
     const rofi::configuration::RofiWorld& world, 

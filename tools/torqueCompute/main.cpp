@@ -2,6 +2,7 @@
 #include <torqueComputation/serialization.hpp>
 #include <configuration/serialization.hpp>
 #include <configuration/universalModule.hpp>
+#include <parsing/parsing_lite.hpp>
 #include <nlohmann/json.hpp>
 #include <iostream>
 #include <cmath>
@@ -45,22 +46,22 @@ ArgsEnum parseOpts(int argc, char* argv[], std::unordered_map<std::string, int>&
     ArgsEnum args = ArgsEnum::Empty;
     int index = 0;
     int opt;
-    argsMap.emplace("solve", 0);
+    argsMap.emplace("solve", SolveTo::Solve);
     argsMap.emplace("repeat", 10);
 
-    std::string serializeValue;
+    std::string stringOption;
     while ((opt = getopt_long(argc, argv, "hv::s:t:r:", long_options, &index)) != -1) {
         switch (opt) {
             case 's':
-                serializeValue = std::string(optarg);
-                if (serializeValue == "world") {
+                stringOption = std::string(optarg);
+                if (stringOption == "world") {
                     args = static_cast<ArgsEnum>(args | ArgsEnum::SerializeWorld);
                 }
-                else if (serializeValue == "config") {
+                else if (stringOption == "config") {
                     args = static_cast<ArgsEnum>(args | ArgsEnum::SerializeConfig);
                 }
                 else {
-                    throw std::invalid_argument("Invalid option for serialization");
+                    throw std::invalid_argument("Invalid option for --serialize\n");
                 }
                 break;
             case 'v':
@@ -72,7 +73,19 @@ ArgsEnum parseOpts(int argc, char* argv[], std::unordered_map<std::string, int>&
                 }
                 break;
             case 't':
-                argsMap["solve"] = std::stoi(optarg);
+                stringOption = std::string(optarg);
+                if (stringOption == "matrix") {
+                    argsMap["solve"] = SolveTo::MatrixComposition;
+                }
+                else if (stringOption == "joints") {
+                    argsMap["solve"] = SolveTo::JointsCreation;
+                }
+                else if (stringOption == "solve") {
+                    argsMap["solve"] = SolveTo::Solve;
+                }
+                else {
+                    throw std::invalid_argument("Invalid option for --solveTo\n");
+                }
                 break;
             case 'r':
                 argsMap["repeat"] = std::stoi(optarg);
@@ -89,20 +102,10 @@ void printHelp() {
     std::cout << "Usage: <program_name> <pathToWorld> <pathToConfig> [OPTIONS]" << std::endl
               << "    -s <option>, --serialize=<option>   Choose serialization option: world, config" << std::endl
               << "    -v[option]                          Verbose output. Display all joints properties. Option 1 to print matrix." << std::endl
-              << "    -t <option>, --solveTo=<option>     Choose solve option: 0 (solve), 1 (matrix composition), 2 (joints creation) -- default 0" << std::endl
+              << "    -t <option>, --solveTo=<option>     Choose solve option: solve (complete), joints (up to joints creation)," << std::endl
+              << "                                        matrix (up to matrix creation) -- default solve" << std::endl
               << "    -r <option>, --repeat=<option>      How many times should be measurement performed -- default 10." << std::endl
               << "    -h, --help                          Print this help message" << std::endl;
-}
-
-inline void fixateRofiWorld(RofiWorld& world)
-{
-    auto modules = world.modules();
-    assert(!modules.empty());
-    const auto & firstModule = modules.front();
-    assert(!firstModule.components().empty());
-    auto component = !firstModule.bodies().empty() ? firstModule.bodies().front()
-                                                   : firstModule.components().front();
-    connect<RigidJoint>(component, {}, matrices::identity);
 }
 
 RofiWorld createWorld(const std::string& path) {
@@ -121,7 +124,7 @@ RofiWorld createWorld(const std::string& path) {
         world = rofi::configuration::serialization::fromJSON(data);
     } else {
         world = readOldConfigurationFormat(file);
-        fixateRofiWorld(world);
+        rofi::parsing::fixateRofiWorld(world);
     }
     file.close();
     return world;
