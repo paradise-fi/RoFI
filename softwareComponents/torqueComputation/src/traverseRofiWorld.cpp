@@ -123,7 +123,7 @@ public:
                 _rofiModule.components()[_sourceComponentId].getPosition() * 
                 rotationJoint.axis()
         );
-        // Compognent ID is artificially created, is unique (greater than 9)
+        // Component ID is artificially created, is unique (greater than 9)
         int jointMotorId = getJointId(moduleId, _sourceComponentId + _destinationComponentId);
         vec origin = getPosition(shoe);
 

@@ -7,15 +7,21 @@
     "visitModuleStrategies": {
         "pad": {},
         "universal": {
-            "bounds": {
-                "GammaMotor": 0.1,
-                "Motor": 2943.333
-            },
             "weights": {
                 "Roficom": 30.0,
                 "UmBody": 17.0,
                 "UmShoe": 10.0
+            },
+            "bounds": {
+                "Motor": 1778.806,
+                "GammaMotor": 1613.239
             }
         }
-    }
+    },
+    "walls": [
+        {
+            "moduleId": 16,
+            "componentId": 5
+        }
+    ]
 }

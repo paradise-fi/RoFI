@@ -1,0 +1,229 @@
+{
+    "moduleJoints": [
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 0
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "B-Z",
+                "id": 1
+            }
+        },
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 2
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "B-Z",
+                "id": 3
+            }
+        },
+        {
+            "from": {
+                "connector": "B+X",
+                "id": 4
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "A+X",
+                "id": 1
+            }
+        },
+        {
+            "from": {
+                "connector": "B-X",
+                "id": 4
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "A-X",
+                "id": 3
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 4
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "B-X",
+                "id": 5
+            }
+        },
+        {
+            "from": {
+                "connector": "A+X",
+                "id": 4
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "B+X",
+                "id": 6
+            }
+        },
+        {
+            "from": {
+                "connector": "A+X",
+                "id": 5
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "B+X",
+                "id": 7
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 6
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "B-X",
+                "id": 7
+            }
+        },
+        {
+            "from": {
+                "connector": "B-X",
+                "id": 8
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "A+X",
+                "id": 6
+            }
+        },
+        {
+            "from": {
+                "connector": "B-X",
+                "id": 9
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "A-X",
+                "id": 5
+            }
+        }
+    ],
+    "modules": [
+        {
+            "alpha": 90.0,
+            "beta": -90.0,
+            "gamma": 0.0,
+            "id": 0,
+            "type": "universal"
+        },
+        {
+            "alpha": -30.0,
+            "beta": 30.0,
+            "gamma": 0.0,
+            "id": 1,
+            "type": "universal"
+        },
+        {
+            "alpha": 90.0,
+            "beta": -90.0,
+            "gamma": 0.0,
+            "id": 2,
+            "type": "universal"
+        },
+        {
+            "alpha": -30.0,
+            "beta": 30.0,
+            "gamma": 0.0,
+            "id": 3,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 4,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 5,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 6,
+            "type": "universal"
+        },
+        {
+            "alpha": 60.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 7,
+            "type": "universal"
+        },
+        {
+            "alpha": 45.0,
+            "beta": 45.0,
+            "gamma": 0.0,
+            "id": 8,
+            "type": "universal"
+        },
+        {
+            "alpha": -45.0,
+            "beta": -45.0,
+            "gamma": 0.0,
+            "id": 9,
+            "type": "universal"
+        }
+    ],
+    "spaceJoints": [
+        {
+            "joint": {
+                "positions": [],
+                "sourceToDestination": [
+                    [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ]
+                ],
+                "type": "rigid"
+            },
+            "point": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "to": {
+                "component": 6,
+                "id": 0
+            }
+        }
+    ]
+}

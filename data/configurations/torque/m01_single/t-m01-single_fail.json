@@ -2,14 +2,14 @@
     "gravitation": [
         0.0,
         10.0,
-        -10.0
+        0.0
     ],
     "visitModuleStrategies": {
         "pad": {},
         "universal": {
             "bounds": {
-                "GammaMotor": 132.37,
-                "Motor": 6178.88
+                "GammaMotor": 0,
+                "Motor": 1353.316
             },
             "weights": {
                 "Roficom": 30.0,
@@ -17,5 +17,11 @@
                 "UmShoe": 10.0
             }
         }
-    }
+    },
+    "walls": [
+        {
+            "moduleId": 42,
+            "componentId": 0
+        }
+    ]
 }

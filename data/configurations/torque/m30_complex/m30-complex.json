@@ -1,0 +1,578 @@
+{
+    "moduleJoints": [
+        {
+            "from": {
+                "connector": "A+X",
+                "id": 42
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "B-X",
+                "id": 115
+            }
+        },
+        {
+            "from": {
+                "connector": "A+X",
+                "id": 94
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "B-Z",
+                "id": 107
+            }
+        },
+        {
+            "from": {
+                "connector": "B-X",
+                "id": 41
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "B+X",
+                "id": 132
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 12
+            },
+            "orientation": "West",
+            "to": {
+                "connector": "A+X",
+                "id": 58
+            }
+        },
+        {
+            "from": {
+                "connector": "B+X",
+                "id": 45
+            },
+            "orientation": "West",
+            "to": {
+                "connector": "B-Z",
+                "id": 51
+            }
+        },
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 54
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "B-Z",
+                "id": 139
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 86
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "B-Z",
+                "id": 95
+            }
+        },
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 86
+            },
+            "orientation": "West",
+            "to": {
+                "connector": "B-Z",
+                "id": 94
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 115
+            },
+            "orientation": "West",
+            "to": {
+                "connector": "B+X",
+                "id": 139
+            }
+        },
+        {
+            "from": {
+                "connector": "A+X",
+                "id": 95
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "B+X",
+                "id": 129
+            }
+        },
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 95
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "A+X",
+                "id": 127
+            }
+        },
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 50
+            },
+            "orientation": "West",
+            "to": {
+                "connector": "A-X",
+                "id": 58
+            }
+        },
+        {
+            "from": {
+                "connector": "B-X",
+                "id": 50
+            },
+            "orientation": "West",
+            "to": {
+                "connector": "A-X",
+                "id": 127
+            }
+        },
+        {
+            "from": {
+                "connector": "B-X",
+                "id": 108
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "B-Z",
+                "id": 132
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 24
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "A-X",
+                "id": 62
+            }
+        },
+        {
+            "from": {
+                "connector": "A+X",
+                "id": 24
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "B-Z",
+                "id": 76
+            }
+        },
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 24
+            },
+            "orientation": "East",
+            "to": {
+                "connector": "A-Z",
+                "id": 132
+            }
+        },
+        {
+            "from": {
+                "connector": "B+X",
+                "id": 24
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "A-X",
+                "id": 54
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 51
+            },
+            "orientation": "East",
+            "to": {
+                "connector": "A-Z",
+                "id": 127
+            }
+        },
+        {
+            "from": {
+                "connector": "B-X",
+                "id": 51
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "A+X",
+                "id": 62
+            }
+        },
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 129
+            },
+            "orientation": "West",
+            "to": {
+                "connector": "B-X",
+                "id": 143
+            }
+        },
+        {
+            "from": {
+                "connector": "B-X",
+                "id": 129
+            },
+            "orientation": "East",
+            "to": {
+                "connector": "B-Z",
+                "id": 136
+            }
+        },
+        {
+            "from": {
+                "connector": "A+X",
+                "id": 11
+            },
+            "orientation": "West",
+            "to": {
+                "connector": "A-Z",
+                "id": 45
+            }
+        },
+        {
+            "from": {
+                "connector": "B+X",
+                "id": 62
+            },
+            "orientation": "East",
+            "to": {
+                "connector": "B-Z",
+                "id": 77
+            }
+        },
+        {
+            "from": {
+                "connector": "A-Z",
+                "id": 2
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "A+X",
+                "id": 87
+            }
+        },
+        {
+            "from": {
+                "connector": "B-X",
+                "id": 2
+            },
+            "orientation": "South",
+            "to": {
+                "connector": "B+X",
+                "id": 40
+            }
+        },
+        {
+            "from": {
+                "connector": "B+X",
+                "id": 2
+            },
+            "orientation": "East",
+            "to": {
+                "connector": "B+X",
+                "id": 143
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 28
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "B+X",
+                "id": 86
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 1
+            },
+            "orientation": "East",
+            "to": {
+                "connector": "A+X",
+                "id": 139
+            }
+        }
+    ],
+    "modules": [
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 42,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 90.0,
+            "id": 139,
+            "type": "universal"
+        },
+        {
+            "alpha": -90.0,
+            "beta": -90.0,
+            "gamma": 270.0,
+            "id": 94,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 90.0,
+            "gamma": 180.0,
+            "id": 41,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 90.0,
+            "gamma": 270.0,
+            "id": 12,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 90.0,
+            "gamma": 0.0,
+            "id": 132,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 90.0,
+            "id": 45,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 90.0,
+            "gamma": 270.0,
+            "id": 54,
+            "type": "universal"
+        },
+        {
+            "alpha": -90.0,
+            "beta": 90.0,
+            "gamma": 180.0,
+            "id": 86,
+            "type": "universal"
+        },
+        {
+            "alpha": 90.0,
+            "beta": -90.0,
+            "gamma": 0.0,
+            "id": 115,
+            "type": "universal"
+        },
+        {
+            "alpha": -90.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 95,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 180.0,
+            "id": 50,
+            "type": "universal"
+        },
+        {
+            "alpha": 90.0,
+            "beta": -90.0,
+            "gamma": 90.0,
+            "id": 108,
+            "type": "universal"
+        },
+        {
+            "alpha": -90.0,
+            "beta": -90.0,
+            "gamma": 180.0,
+            "id": 24,
+            "type": "universal"
+        },
+        {
+            "alpha": 90.0,
+            "beta": -90.0,
+            "gamma": 0.0,
+            "id": 51,
+            "type": "universal"
+        },
+        {
+            "alpha": 90.0,
+            "beta": -90.0,
+            "gamma": 0.0,
+            "id": 127,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 90.0,
+            "gamma": 0.0,
+            "id": 40,
+            "type": "universal"
+        },
+        {
+            "alpha": 90.0,
+            "beta": 90.0,
+            "gamma": 180.0,
+            "id": 129,
+            "type": "universal"
+        },
+        {
+            "alpha": 90.0,
+            "beta": 90.0,
+            "gamma": 180.0,
+            "id": 11,
+            "type": "universal"
+        },
+        {
+            "alpha": -90.0,
+            "beta": 0.0,
+            "gamma": 90.0,
+            "id": 62,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 270.0,
+            "id": 143,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 180.0,
+            "id": 76,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 90.0,
+            "gamma": 270.0,
+            "id": 2,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 90.0,
+            "gamma": 90.0,
+            "id": 28,
+            "type": "universal"
+        },
+        {
+            "alpha": -90.0,
+            "beta": 0.0,
+            "gamma": 180.0,
+            "id": 87,
+            "type": "universal"
+        },
+        {
+            "alpha": 90.0,
+            "beta": -90.0,
+            "gamma": 180.0,
+            "id": 58,
+            "type": "universal"
+        },
+        {
+            "alpha": -90.0,
+            "beta": -90.0,
+            "gamma": 90.0,
+            "id": 1,
+            "type": "universal"
+        },
+        {
+            "alpha": 90.0,
+            "beta": 90.0,
+            "gamma": 180.0,
+            "id": 107,
+            "type": "universal"
+        },
+        {
+            "alpha": 0.0,
+            "beta": 0.0,
+            "gamma": 90.0,
+            "id": 77,
+            "type": "universal"
+        },
+        {
+            "alpha": 90.0,
+            "beta": -90.0,
+            "gamma": 180.0,
+            "id": 136,
+            "type": "universal"
+        }
+    ],
+    "spaceJoints": [
+        {
+            "joint": {
+                "positions": [],
+                "sourceToDestination": [
+                    [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ]
+                ],
+                "type": "rigid"
+            },
+            "point": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "to": {
+                "component": 6,
+                "id": 42
+            }
+        }
+    ]
+}
