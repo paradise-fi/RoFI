@@ -112,9 +112,9 @@ RofiWorld createWorld(const std::string& path) {
     if (!std::filesystem::exists(path)) {
         throw std::logic_error("World file does not exist!");
     }
-    if (!endsWith(path, "json") && !endsWith(path, "rofi")) {
+    /*if (!endsWith(path, "json") && !endsWith(path, "rofi")) {
         throw std::logic_error("Invalid format");
-    }
+    }*/
 
     RofiWorld world;
     std::ifstream file(path);
