@@ -90,6 +90,7 @@ add_application(examples/hal/wifi)
 add_application(examples/hal/servo)
 add_application(examples/hal/connectorHal)
 add_application(examples/hal/connectorMovementHal)
+add_application(examples/hal/connectorHalStatus)
 
 
 
