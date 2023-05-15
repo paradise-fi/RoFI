@@ -222,6 +222,29 @@ private:
 
 class PowerSwitch {
 public:
+    PowerSwitch(
+        Gpio::Pin intSwitch
+        , Gpio::Pin intVoltage
+        , Gpio::Pin intCurrent
+        , Gpio::Pin extSwitch
+        , Gpio::Pin extVoltage
+        , Gpio::Pin extCurrent
+    )
+    : _intSwitchPin( intSwitch )
+    , _intVoltagePin( intVoltage )
+    , _intCurrentPin( intCurrent )
+    , _extSwitchPin( extSwitch )
+    , _extVoltagePin( extVoltage )
+    , _extCurrentPin( extCurrent )
+    {
+        _intVoltagePin.setupAnalog();
+        _extVoltagePin.setupAnalog();
+        _intCurrentPin.setupAnalog();
+        _extCurrentPin.setupAnalog();
+        _intSwitchPin.setupODOutput( false );
+        _extSwitchPin.setupODOutput( false );
+    }
+
     void run() {
         // ToDo
     }
@@ -232,8 +255,7 @@ public:
      * \return Fixed point <8.8> number in volts
      */
     uint16_t getIntVoltage() {
-        // ToDo
-        return 0;
+        return _intVoltage;
     };
 
     /**
@@ -253,7 +275,7 @@ public:
      */
     uint16_t getIntCurrent() {
         // ToDo
-        return 0;
+        return _intCurrent;
     };
 
     /**
@@ -266,14 +288,35 @@ public:
         return 0;
     };
 
-    void connectInternal( bool /*connect = true*/ ) {
-        // ToDo
+    bool getInternalConnection() {
+        return _intConnected;
     }
 
-    void connectExternal( bool /*connect = true*/ ) {
-        // ToDo
+    bool getExternalConnection() {
+        return _extConnected;
     }
+
+    void connectInternal( bool connect = true ) {
+        _intConnected = connect;
+        _intSwitchPin.write( connect );
+    }
+
+    void connectExternal( bool connect = true ) {
+        _extConnected = connect;
+        _extSwitchPin.write( connect );
+    }
+
 private:
-    uint16_t _intVoltage, intCurrent;
-    uint16_t _extVoltage, extCurrent;
+    uint16_t _intVoltage = 0, _intCurrent = 0;
+    uint16_t _extVoltage = 0, _extCurrent = 0;
+
+    Gpio::Pin _intSwitchPin;
+    Gpio::Pin _intVoltagePin;
+    Gpio::Pin _intCurrentPin;
+    Gpio::Pin _extSwitchPin;
+    Gpio::Pin _extVoltagePin;
+    Gpio::Pin _extCurrentPin;
+
+    bool _intConnected = false, _extConnected = false;
+
 };
