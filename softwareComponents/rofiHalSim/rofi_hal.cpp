@@ -436,6 +436,12 @@ public:
         return result;
     }
 
+    void setDistanceMode( LidarDistanceMode ) override
+    {
+        throw std::logic_error( "Unimplemented in simulator" );
+    }
+
+
 private:
     const int _connectorNumber;
     std::weak_ptr< RoFISim > _rofi;
