@@ -151,6 +151,8 @@ function(setup_stm32cxx PREFIX MCU)
     add_sublib(system
         SRC_GLOB system/assert.cpp system/system.cpp
         LINK_HAL stm32cxx_dma)
+    add_sublib(i2c 
+        LINK_HAL LL_I2C)
 
     if ("${USB_SUPPORTED}")
         add_sublib(usb
