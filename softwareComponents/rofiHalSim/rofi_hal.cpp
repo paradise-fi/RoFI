@@ -245,6 +245,18 @@ public:
         return descriptor;
     }
 
+    Partition getRunningPartition() override {
+        throw std::logic_error( "getRunningPartition not implemented" );
+    }
+
+    UpdatePartition initUpdate() override {
+        throw std::logic_error( "initUpdate not implemented" );
+    }
+
+    void reboot() override {
+        throw std::logic_error( "reboot not implemented" );
+    }
+
     void onJointResp( const msgs::JointResp & resp );
     void onConnectorResp( const msgs::ConnectorResp & resp );
     void onDescriptionResp( const msgs::RofiResp & resp );
