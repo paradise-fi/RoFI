@@ -4,6 +4,7 @@
 #include <concepts>
 #include <functional>
 #include <string>
+#include <tuple>
 #include <variant>
 
 
@@ -57,6 +58,14 @@ namespace detail
         TypePlaceholder() = delete;
     };
 } // namespace detail
+
+/**
+ * \brief A constructible type representing no value.
+ *
+ * The usecase is for functions that do not have return values
+ * but can return error, i.e. `Result<Void, std::string>`.
+ */
+using Void = std::tuple<>;
 
 /**
  * \brief A type that holds either a value or an error.
