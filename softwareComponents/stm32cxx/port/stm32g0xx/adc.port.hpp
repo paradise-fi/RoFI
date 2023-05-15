@@ -53,13 +53,22 @@ public:
     }
 
     void calibrate() {
-        assert( !LL_ADC_IsEnabled( self()._periph ) &&
-            "Cannot calibrate on enabled ADC" );
+        bool enabled = false;
+        if ( LL_ADC_IsEnabled( self()._periph ) ) {
+            LL_ADC_Disable( self()._periph );
+            enabled = true;
+        }
+        // assert( !LL_ADC_IsEnabled( self()._periph ) &&
+        //     "Cannot calibrate on enabled ADC" );
         LL_ADC_StartCalibration( self()._periph );
         while( LL_ADC_IsCalibrationOnGoing( self()._periph ) );
         // At least LL_ADC_DELAY_CALIB_ENABLE_ADC_CYCLES must pass
-        // ToDo: We act safe & slow here, update if necessary
-        HAL_Delay( 1 );
+        int waitCycles = 12000;
+        while ( --waitCycles >= 0 ) {};
+
+        if ( enabled ) {
+            LL_ADC_Enable( self()._periph );
+        }
     }
 
     void disableConversionInterrupts() {
