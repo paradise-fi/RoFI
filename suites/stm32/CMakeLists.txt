@@ -23,6 +23,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} \
 project(firmware)
 
 add_subdirectory(
+    $ENV{ROFI_ROOT}/softwareComponents/atoms
+    atoms)
+
+add_subdirectory(
     $ENV{ROFI_ROOT}/softwareComponents/stm32cxx
     stm32cxx)
 add_subdirectory(
