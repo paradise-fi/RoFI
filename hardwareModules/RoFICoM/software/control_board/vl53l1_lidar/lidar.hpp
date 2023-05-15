@@ -1,7 +1,5 @@
 #pragma once
 
-// REMOVE: its it currently to enable assert in release
-#undef NDEBUG
 #include <cassert>
 #include <cstdint>
 #include <string_view>

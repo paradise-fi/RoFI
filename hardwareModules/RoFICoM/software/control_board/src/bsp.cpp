@@ -13,7 +13,6 @@
 #include <stm32g0xx_ll_i2c.h>
 
 namespace {
-    // TODO ? <stm32cxx/drivers/clock.hpp>
     void setupSystemClock() {
         LL_FLASH_SetLatency( LL_FLASH_LATENCY_2 );
         LL_RCC_HSI_Enable();
@@ -86,6 +85,7 @@ namespace bsp {
         SystemCoreClockUpdate();
 
         Adc1.setup();
+        Adc1.calibrate();
 
         motorTimer = Timer( TIM1, FreqAndRes( 1000, 2000 ) );
 

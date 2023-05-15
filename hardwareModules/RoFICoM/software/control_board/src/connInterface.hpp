@@ -246,7 +246,9 @@ public:
     }
 
     void run() {
-        // ToDo
+        _intVoltage = pinToResult( _intVoltagePin ) * 255.0;
+        _extVoltage = pinToResult( _extVoltagePin ) * 255.0;
+        // ToDo ext and int current which is currently not present on the board
     }
 
     /**
@@ -264,8 +266,7 @@ public:
      * \return Fixed point <8.8> number in volts
      */
     uint16_t getExtVoltage() {
-        // ToDo
-        return 0;
+        return _extVoltage;
     };
 
     /**
@@ -274,7 +275,6 @@ public:
      * \return Fixed point <8.8> number in amperes
      */
     uint16_t getIntCurrent() {
-        // ToDo
         return _intCurrent;
     };
 
@@ -284,8 +284,7 @@ public:
      * \return Fixed point <8.8> number in amperes
      */
     uint16_t getExtCurrent() {
-        // ToDo
-        return 0;
+        return _extCurrent;
     };
 
     bool getInternalConnection() {
@@ -307,6 +306,10 @@ public:
     }
 
 private:
+    float pinToResult( Gpio::Pin pin ) {
+        return float( pin.readAnalog() ) * (100.0 + 6.8) * 3.3 / ( 6.8 * 4096 );
+    }
+
     uint16_t _intVoltage = 0, _intCurrent = 0;
     uint16_t _extVoltage = 0, _extCurrent = 0;
 

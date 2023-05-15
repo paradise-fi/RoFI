@@ -221,7 +221,7 @@ int main() {
     ConnectorStatus connectorStatus ( bsp::connectorSenseA, bsp::connectorSenseB );
     Lidar lidar( &*bsp::i2c, bsp::lidarEnablePin, bsp::lidarIRQPin );
 
-    // lidarInit( lidar, currentLidarMeasurement );
+    lidarInit( lidar, currentLidarMeasurement );
 
     ConnComInterface connComInterface( std::move( bsp::connectorComm ).value() );
 
@@ -253,7 +253,6 @@ int main() {
     Dbg::blockingInfo( "Ready for operation" );
 
     while ( true ) {
-        // TODO: Dbg::blockingInfo( "Raw: %d,\t\tVoltage: %f", read, ( (float)read * 6.8f * 3.3f ) / ( 4096 * ( 100.0f + 6.8f ) ) );
 
         powerInterface.run();
         if ( connectorStatus.run() )
@@ -280,25 +279,10 @@ int main() {
         }
 
         slider.run();
-        Dbg::blockingInfo( "pos: %d,\tgoal: %d\tstate: %d", slider._position(), slider._goal, slider._currentState );
 
         connComInterface.run();
 
         IdleTask::run();
-        // REMOVE:
-        if ( currentLidarMeasurement.has_value() ) {
-            if ( currentLidarMeasurement.value().has_value() ){
-                const auto rangingMeasurementData = currentLidarMeasurement.value().assume_value();
-                Dbg::blockingInfo( "Range status: %hhu, Range: %hu mm, Ambient: %hu\n",
-                    rangingMeasurementData.Status,
-                    rangingMeasurementData.Distance,
-                    rangingMeasurementData.Ambient );
-            } else {
-                Dbg::error( "Error while measuring: %s\n", currentLidarMeasurement.value().assume_error() );
-            }
-        } else {
-            Dbg::blockingInfo( "Data not yet measured\n" );
-        }
     }
 }
 
