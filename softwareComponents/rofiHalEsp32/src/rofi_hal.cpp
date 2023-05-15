@@ -100,8 +100,10 @@ enum ConnectorStateFlags {
     PositionExpanded  = 1 << 0,
     InternalConnected = 1 << 1,
     ExternalConnected = 1 << 2,
+    LidarDistanceMode = 0b11 << 3,
     MatingSide        = 1 << 8,
     Orientation       = 0b11 << 9,
+    LidarStatus       = 0b11 << 11,
 };
 
 struct ConnectorStateImpl: public ConnectorState {
@@ -119,9 +121,13 @@ struct ConnectorStateImpl: public ConnectorState {
 
         s.internal = flags & ConnectorStateFlags::InternalConnected;
         s.external = flags & ConnectorStateFlags::ExternalConnected;
+        s.distanceMode = rofi::hal::LidarDistanceMode( flags & ConnectorStateFlags::LidarDistanceMode >> 3 );
         s.connected = flags & ConnectorStateFlags::MatingSide;
         s.orientation = ConnectorOrientation (
             ( flags & ConnectorStateFlags::Orientation ) >> 9 );
+        s.lidarStatus = rofi::hal::LidarStatus(
+            ( flags & ConnectorStateFlags::LidarStatus ) >> 11
+        );
 
         s.pendingSend = as< uint8_t >( d + 2 );
         s.pendingReceive = as< uint8_t >( d + 3 );
@@ -129,6 +135,8 @@ struct ConnectorStateImpl: public ConnectorState {
         s.internalCurrent = as< int16_t >( d + 6 ) / 255.0;
         s.externalVoltage = as< int16_t >( d + 8 ) / 255.0;
         s.externalCurrent = as< int16_t >( d + 10 ) / 255.0;
+        s.distance = as< uint16_t >( d + 12 );
+
         return s;
     }
 };
@@ -199,7 +207,7 @@ public:
     ConnectorBus( spi_host_device_t bus, gpio_num_t dataPin, gpio_num_t clkPin,
         int clkFrequency)
         : _commandQueue( 64 ),
-          _dmaBuffer( static_cast< uint8_t* >( heap_caps_malloc( 12 , MALLOC_CAP_DMA ) ) )
+          _dmaBuffer( static_cast< uint8_t* >( heap_caps_malloc( 14 , MALLOC_CAP_DMA ) ) )
     {
         using namespace rofi::esp32;
 
@@ -327,10 +335,31 @@ public:
             _issueStatusCmd( 0, ConnectorStateFlags::InternalConnected );
     }
 
+    virtual void setDistanceMode( rofi::hal::LidarDistanceMode mode ) override {
+        _issueStatusCmd( static_cast< uint16_t >( mode ) << 3, ConnectorStateFlags::LidarDistanceMode );
+    }
+
     ConnectorLocal( ConnectorBus *bus, gpio_num_t cs )
         : _bus( bus ), _cs( cs ), _receiveCmdCounter( 0 ), _interruptCounter( 0 )
     {
         _setupCs();
+
+        auto tRet = xTaskCreate([]( void *arg ) {
+                    ConnectorLocal& self = *reinterpret_cast< ConnectorLocal * >( arg );
+
+                    while (true) {
+                        self._issueStatusCmd( 0, 0 );
+                        vTaskDelay( 300 / portTICK_PERIOD_MS );
+                    }
+                },
+                "StatusPoller",
+                4096,   // Stack size
+                this,   // Argument
+                tskIDLE_PRIORITY, // Priority
+                nullptr // The task is never accessed again
+            );
+        if ( tRet != pdPASS )
+            abort();
     }
 private:
     static rofi::esp32::Gpio defaultCsConfig( gpio_num_t c ) {
@@ -492,7 +521,7 @@ void ConnectorBus::run( StatusCommand c ) {
 
     slaveDelay();
 
-    const int payloadSize = 12;
+    const int payloadSize = 14;
     spiRead( _spiDev, _dmaBuffer, payloadSize );
     transaction.end();
 
