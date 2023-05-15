@@ -52,7 +52,7 @@ extern "C" void app_main() {
     // packet handlers are invoked in spi reading thread and add fwupdate content type packets to inputqueue
     registerPacketHandlers( rofi, inputQueue );
 
-    FirmwareUpdaterWorker updateWorker( inputQueue, updateProtocol, 10s, 10s );
+    FirmwareUpdateWorker updateWorker( inputQueue, updateProtocol, 10s, 10s );
     updateWorker.start();  // start a thread that consumes messages from inputQueue and does the upgrade
 //    updaterConsumer.stop();
     // todo: unregister packet handlers
