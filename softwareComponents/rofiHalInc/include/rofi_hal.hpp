@@ -188,6 +188,33 @@ enum class ConnectorLine : bool {
     External = 1,
 };
 
+enum class LidarDistanceMode {
+    /// The `Autonomous` Distance Mode is handled by RoFICoM based on the status of measurements.
+    Autonomous = 0,
+    /// `Short` mode measures up to 1.3 m and is less effected by the ambient light.
+    Short      = 1,
+    /// `Long` mode can measure up to 4 m; however is strongly effected by the ambient light.
+    /// The `LidarStatus` can reflect this mode might not be suitable for current condition by the `OutsideRange` value.
+    Long       = 2,
+};
+
+/**
+ * \brief Status of Lidar measurement
+*/
+enum class LidarStatus : signed char {
+    /// Usually error with lidar communication i.e. Lidar not connected, i2c error, ...
+    Error = 0b00,
+    /// Status command was received before lidar initilized and received measurements.
+    NotMeasured = 0b01,
+    /// Measured data are outside of lidar available range 
+    /// meaning that data could be valid but DOESN'T HAVE TO BE.
+    /// Usually means that measured data is below or above of range we can measure.
+    /// Also could be caused by wrong distance mode, setting different one could resolve this.
+    OutsideRange = 0b10,
+    /// Measured data are fully valid
+    Valid = 0b11,
+};
+
 /**
  * \brief Connector state descriptor.
  */
@@ -198,6 +225,8 @@ struct ConnectorState {
     bool internal = false;
     /// Is the external power bus connected to the connector?
     bool external = false;
+    /// The current distance mode of the RoFICoM's Lidar.
+    LidarDistanceMode distanceMode = LidarDistanceMode::Autonomous;
     /// Is there a mating side connected?
     bool connected = false;
     /// Orientation of the connection. Applicable only when connected.
@@ -210,6 +239,10 @@ struct ConnectorState {
     float externalVoltage = 0.f;
     /// External current of the Connector.
     float externalCurrent = 0.f;
+    /// Status of lidar measurement.
+    LidarStatus lidarStatus = LidarStatus::NotMeasured;
+    /// Lidar measured distance in mm. Validity depends on `lidarStatus`.
+    uint16_t distance = 0;
 };
 
 /**
@@ -257,6 +290,7 @@ public:
         virtual void send( uint16_t contentType, PBuf packet ) = 0;
         virtual void connectPower( ConnectorLine ) = 0;
         virtual void disconnectPower( ConnectorLine ) = 0;
+        virtual void setDistanceMode( LidarDistanceMode ) = 0;
     };
 
     /**
@@ -335,6 +369,14 @@ public:
     void disconnectPower( ConnectorLine line )
     {
         _impl->disconnectPower( line );
+    }
+
+    /**
+     * \brief Sets distance mode for the RoFICoM's Lidar.
+    */
+    void setDistanceMode( LidarDistanceMode mode )
+    {
+        _impl->setDistanceMode( mode );
     }
 
     Connector( std::shared_ptr< Implementation > impl ) : _impl( std::move( impl ) ) {}
