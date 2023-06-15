@@ -30,13 +30,9 @@
 #include <jac/link/mux.h>
 #include <jac/link/encoders/cobs.h>
 
-#include "espFeatures/neopixelFeature.h"
-#include "espFeatures/gpioFeature.h"
+
+// #include "espFeatures/rofiFeature.h"
 #include "espFeatures/freeRTOSEventQueue.h"
-#include "espFeatures/ledcFeature.h"
-#include "espFeatures/adcFeature.h"
-#include "espFeatures/i2cFeature.h"
-#include "espFeatures/rofiFeature.h"
 
 #include "util/uartStream.h"
 
@@ -53,10 +49,10 @@
 
 using namespace std::literals;
 
-// This is a simple utility, so let's make things simple and use global objects
-// so we can reference it from plain C functions required by CLI interface
-std::optional< rofi::hal::RoFI > localRoFI;
-float speedCoef = 1;
+// // This is a simple utility, so let's make things simple and use global objects
+// // so we can reference it from plain C functions required by CLI interface
+// std::optional< rofi::hal::RoFI > localRoFI;
+// float speedCoef = 1;
 
 // localRoFI = rofi::hal::RoFI::getLocalRoFI();
 
@@ -69,12 +65,7 @@ using Machine = jac::ComposeMachine<
     jac::FilesystemFeature,
     jac::ModuleLoaderFeature,
     jac::EventLoopFeature,
-    GpioFeature,
-    LedcFeature,
-    AdcFeature,
-    I2CFeature,
-    NeopixelFeature,
-    RofiFeature,
+    // RofiFeature,
     jac::TimersFeature,
     jac::EventLoopTerminal
 >;

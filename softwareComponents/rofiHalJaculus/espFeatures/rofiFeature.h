@@ -16,15 +16,6 @@ class RofiFeature : public Next {
     // static inline std::set<int> _usedRmtChannels;
 
     struct RofiJointProtoBuilder : public jac::ProtoBuilder::Opaque<rofi::hal::Joint>, public jac::ProtoBuilder::Properties {
-        static rofi::hal::Joint* constructOpaque(JSContext* ctx, std::vector<jac::ValueWeak> args) {
-            return new rofi::hal::Joint();
-        }
-
-        static void destroyOpaque(JSRuntime* rt, rofi::hal::Joint* ptr) noexcept {
-            if (!ptr) return;
-            delete ptr;
-        }
-
         static void addProperties(JSContext* ctx, jac::Object proto) {
             jac::FunctionFactory ff(ctx);
 
@@ -42,14 +33,6 @@ class RofiFeature : public Next {
     };
 
     struct RofiConnectorProtoBuilder : public jac::ProtoBuilder::Opaque<rofi::hal::Connector>, public jac::ProtoBuilder::Properties {
-        static rofi::hal::Connector* constructOpaque(JSContext* ctx, std::vector<jac::ValueWeak> args) {
-            return new rofi::hal::Connector();
-        }
-
-        static void destroyOpaque(JSRuntime* rt, rofi::hal::Connector* ptr) noexcept {
-            if (!ptr) return;
-            delete ptr;
-        }
 
         static void addProperties(JSContext* ctx, jac::Object proto) {
             jac::FunctionFactory ff(ctx);
@@ -67,18 +50,7 @@ class RofiFeature : public Next {
         }
     };
 
-
-
     struct RofiProtoBuilder : public jac::ProtoBuilder::Opaque<rofi::hal::RoFI>, public jac::ProtoBuilder::Properties {
-        static rofi::hal::RoFI* constructOpaque(JSContext* ctx, std::vector<jac::ValueWeak> args) {
-            return new rofi::hal::RoFI();
-        }
-
-        static void destroyOpaque(JSRuntime* rt, rofi::hal::RoFI* ptr) noexcept {
-            if (!ptr) return;
-            delete ptr;
-        }
-
         static void addProperties(JSContext* ctx, jac::Object proto) {
             jac::FunctionFactory ff(ctx);
 
@@ -88,16 +60,17 @@ class RofiFeature : public Next {
             }), jac::PropFlags::Enumerable);
 
 
-            proto.defineProperty("getConnector", ff.newFunctionThis([](jac::ContextRef ctx, jac::ValueWeak thisValue) {
-                // rofi::hal::RoFI& rofi = *getOpaque(ctx, thisValue);
-                // rofi::hal::Connector& connector = rofi.getConnector(index);
-                auto connector = RofiConnectorProtoBuilder::getOpaque(ctx, thisValue);
-
-                jac::Value::to<jac::ObjectWeak>(ctx, connector);
-                return connector;
+            proto.defineProperty("getConnector", ff.newFunctionThis([](jac::ContextRef ctx, jac::ValueWeak thisValue, int index) {
+                rofi::hal::RoFI& rofi = *getOpaque(ctx, thisValue);
+                auto *connectorPointer = new rofi::hal::Connector(rofi.getConnector(index));
+                return RofiConnectorClass::createInstance(ctx, connectorPointer);
             }), jac::PropFlags::Enumerable);
 
-
+            proto.defineProperty("getJoint", ff.newFunctionThis([](jac::ContextRef ctx, jac::ValueWeak thisValue, int index) {
+                rofi::hal::RoFI& rofi = *getOpaque(ctx, thisValue);
+                auto *jointPointer = new rofi::hal::Joint(rofi.getJoint(index));
+                return RofiJointClass::createInstance(ctx, jointPointer);
+            }), jac::PropFlags::Enumerable);
         }
     };
 
@@ -115,15 +88,20 @@ public:
 
     void initialize() {
         Next::initialize();
+        // jac::ContextRef ctx = this->context();
+
+        RofiJointClass::initContext(this->context());
+        RofiConnectorClass::initContext(this->context());
+        RofiClass::initContext(this->context());
+
+        jac::FunctionFactory ff(this->context());
 
         auto& mod = this->newModule("rofi");
-        jac::Function joint = RofiJointClass::getConstructor(this->context());
-        mod.addExport("Joint", joint);
-
-        jac::Function connector = RofiConnectorClass::getConstructor(this->context());
-        mod.addExport("Connector", connector);
-
-        jac::Function rofi = RofiClass::getConstructor(this->context());
-        mod.addExport("RoFI", rofi);
+        mod.addExport("getLocalRofi", ff.newFunction([this]() {
+            // auto *rofiPointer = new rofi::hal::RoFI(std::move(rofi::hal::RoFI::getLocalRoFI()));
+            auto *rofiPointer = new rofi::hal::RoFI(rofi::hal::RoFI::getLocalRoFI());
+            // auto *rofiPointer = new rofi::hal::RoFI();
+            return RofiClass::createInstance(this->context(), rofiPointer);
+        }));
     }
 };

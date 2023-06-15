@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.12)
+cmake_minimum_required(VERSION 3.13)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -55,7 +55,7 @@ endfunction()
 idf_build_process(esp32
     COMPONENTS idf::freertos idf::esptool_py idf::esp_http_client idf::esp_wifi
                idf::lwip idf::console idf::nvs_flash idf::esp_hw_support idf::esp_rom
-               idf::esp_timer idf::vfs idf::spi_flash idf::esp_eth idf::esp_netif idf::newlib
+               idf::esp_timer idf::vfs idf::spi_flash idf::esp_eth idf::esp_netif idf::newlib idf::fatfs idf::pthread
     SDKCONFIG ${CMAKE_CURRENT_LIST_DIR}/sdkconfig
     BUILD_DIR ${CMAKE_BINARY_DIR})
 
@@ -64,7 +64,18 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/cubicap/Jaculus-dcore.git
     GIT_TAG        v0.0.6
 )
-FetchContent_MakeAvailable(Jaculus-dcore)
+
+FetchContent_GetProperties(Jaculus-dcore)
+if(NOT Jaculus-dcore_POPULATED)
+  FetchContent_Populate(jaculus-dcore)
+  add_subdirectory(${jaculus-dcore_SOURCE_DIR} ${jaculus-dcore_BINARY_DIR})
+
+  # Jaculus doesn't link to idf::newlib (which IDF component does automatically, let's fix it
+  target_link_libraries(jac-machine PUBLIC idf::newlib)
+  target_link_libraries(jac-link INTERFACE idf::newlib)
+  target_link_libraries(quickjs PUBLIC idf::newlib -DESP_PLATFORM)
+  target_compile_options(quickjs PUBLIC -mtext-section-literals -mlongcalls)
+endif()
 
 # What follows is a huge, huge hack. Unless we link idf::freertos from the
 # top-level CMakeLists.txt, we get generator error about self-refereincing
