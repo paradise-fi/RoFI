@@ -1,8 +1,6 @@
-console.log("Hello World!1");
-console.log("Hello World!2");
-console.log("Hello World!3");
-console.log("Hello World!4");
+import { getLocalRofi} from "rofi";
+let rofi = getLocalRofi();
 
 setInterval(() => {
-	console.log("Hello World!");
+	console.log("Random number" + rofi.getRandomNumber());
 }, 1000);

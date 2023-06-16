@@ -7,7 +7,10 @@
 #include <noal_func.h>
 #include <memory>
 #include <unordered_map>
-#include "../rofi/rofi_hal.hpp"
+
+#include <rofi_hal.hpp>
+#include <atoms/units.hpp>
+#include <cstdlib>
 
 #include <set>
 
@@ -17,6 +20,7 @@ class RofiFeature : public Next {
 
     struct RofiJointProtoBuilder : public jac::ProtoBuilder::Opaque<rofi::hal::Joint>, public jac::ProtoBuilder::Properties {
         static void addProperties(JSContext* ctx, jac::Object proto) {
+            const int speedCoef = 1;
             jac::FunctionFactory ff(ctx);
 
             proto.defineProperty("setVelocity", ff.newFunctionThis([](jac::ContextRef ctx, jac::ValueWeak thisValue, double velocity) {
@@ -29,6 +33,28 @@ class RofiFeature : public Next {
                 rofi::hal::Joint& joint = *getOpaque(ctx, thisValue);
                 return joint.getVelocity();
             }), jac::PropFlags::Enumerable);
+
+            proto.defineProperty("setPosition", ff.newFunctionThis([](jac::ContextRef ctx, jac::ValueWeak thisValue, double position_raw) {
+                rofi::hal::Joint& joint = *getOpaque(ctx, thisValue);
+
+                auto position = Angle::deg( position_raw );
+                float speed = speedCoef * joint.maxSpeed();
+                if ( position.rad() > joint.maxPosition() || position.rad() < joint.minPosition() )
+                    throw std::runtime_error( "The requested position is out of range" );
+
+                joint.setPosition( position.rad(), speed, [] ( auto ){} );
+            }), jac::PropFlags::Enumerable);
+
+            proto.defineProperty("move", ff.newFunctionThis([](jac::ContextRef ctx, jac::ValueWeak thisValue) {
+                rofi::hal::Joint& joint = *getOpaque(ctx, thisValue);
+                joint.setPosition( -1.5, 1.5, []( rofi::hal::Joint ){ std::cout << "\tDone1\n"; } );
+                vTaskDelay( 2000 / portTICK_PERIOD_MS );
+                joint.setPosition( 1.5, 1.5, []( rofi::hal::Joint ){ std::cout << "\tDone2\n"; } );
+                vTaskDelay( 2000 / portTICK_PERIOD_MS );
+            }), jac::PropFlags::Enumerable);
+
+
+
         }
     };
 
@@ -57,6 +83,10 @@ class RofiFeature : public Next {
             proto.defineProperty("getId", ff.newFunctionThis([](jac::ContextRef ctx, jac::ValueWeak thisValue) {
                 rofi::hal::RoFI& rofi = *getOpaque(ctx, thisValue);
                 return rofi.getId();
+            }), jac::PropFlags::Enumerable);
+
+            proto.defineProperty("getRandomNumber", ff.newFunctionThis([](jac::ContextRef ctx, jac::ValueWeak thisValue) {
+                return rand() % 100;
             }), jac::PropFlags::Enumerable);
 
 

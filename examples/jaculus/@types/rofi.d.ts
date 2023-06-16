@@ -6,6 +6,7 @@ declare module "rofi" {
         getJoint(index: number): Joint;
         getConnector(index: number): Connector;
         reboot(): void;
+        getRandomNumber(): number;
     }
 
     class Joint {
@@ -22,6 +23,8 @@ declare module "rofi" {
         public setTorque(torque: number): void;
 
         public onError(callback: () => void): void;
+
+        public move(): void;
     }
 
     class Connector {

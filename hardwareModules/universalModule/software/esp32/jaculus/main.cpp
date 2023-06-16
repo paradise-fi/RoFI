@@ -31,7 +31,7 @@
 #include <jac/link/encoders/cobs.h>
 
 
-// #include "espFeatures/rofiFeature.h"
+#include "espFeatures/rofiFeature.h"
 #include "espFeatures/freeRTOSEventQueue.h"
 
 #include "util/uartStream.h"
@@ -65,7 +65,7 @@ using Machine = jac::ComposeMachine<
     jac::FilesystemFeature,
     jac::ModuleLoaderFeature,
     jac::EventLoopFeature,
-    // RofiFeature,
+    RofiFeature,
     jac::TimersFeature,
     jac::EventLoopTerminal
 >;
@@ -163,13 +163,13 @@ int main() {
         machine.stdio.in = std::make_unique<jac::LinkReadable<Machine>>(&machine, device.machineIO().in.get());
 
         esp_pthread_cfg_t cfg = esp_pthread_get_default_config();
-        cfg.stack_size = 2 * 1024;
+        cfg.stack_size = 8 * 1024;
         cfg.inherit_cfg = true;
         esp_pthread_set_cfg(&cfg);
     });
 
     esp_pthread_cfg_t cfg = esp_pthread_get_default_config();
-    cfg.stack_size = 10 * 1024;
+    cfg.stack_size = 20 * 1024;
     cfg.inherit_cfg = true;
     esp_pthread_set_cfg(&cfg);
 
