@@ -1,6 +1,7 @@
-import { getLocalRofi} from "rofi";
-let rofi = getLocalRofi();
+console.log("Hello from Jaculus!");
 
+let counter: number = 0;
 setInterval(() => {
-	console.log("Random number" + rofi.getRandomNumber());
+	console.log("Hello from Jaculus for " + counter + " seconds!");
+	counter++;
 }, 1000);
