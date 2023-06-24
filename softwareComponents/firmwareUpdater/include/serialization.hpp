@@ -1,7 +1,7 @@
 #pragma once
 
 #include "messages.hpp"
-#include "networking.hpp"  // PBuf
+#include <lwip++.hpp>  // PBuf
 
 #include <cstddef>  // std::size_t
 #include <cstdint>  // UINT16_MAX
