@@ -20,6 +20,8 @@ libraries are required to be installed:
    ``libgazebo11-dev``. This dependecy can be removed using the build options.
 -  `Z3 <https://github.com/Z3Prover/z3>`__: this dependency is only needed for
    compiling SMT reconfiguration.
+-  `Clp <https://github.com/coin-or/Clp>`__: for APT-based system, install
+    ``coinor-clp coinor-libclp-dev``
 
 On top of the build dependencies, FFMpeg and Inkscape are required to use the
 animation feature of the visualizer.
