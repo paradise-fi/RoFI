@@ -11,10 +11,6 @@
 static int fw_table_size = 0;
 static struct rt_entry fw_table[FW_TABLE_SIZE];
 
-static int edge_segment;
-static char mask_str[48];
-static int pos;
-
 int cmp_masks(const struct rt_entry* a, const struct rt_entry* b) {
 	return a->mask > b->mask;
 }
