@@ -862,8 +862,7 @@ public:
                 throw std::runtime_error( "invalid app image or signature validation failed" );
             case ESP_ERR_NOT_FOUND:
                 throw std::runtime_error( "partition not found" );
-            case ESP_ERR_FLASH_OP_TIMEOUT:
-            case ESP_ERR_FLASH_OP_FAIL:
+            case ESP_ERR_FLASH_BASE:
                 throw std::runtime_error( "flash erase or write failed" );
             default:
                 throw std::runtime_error( "unspecified error" );

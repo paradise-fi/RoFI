@@ -1,4 +1,5 @@
 import { getLocalRofi} from "rofi";
+
 let rofi = getLocalRofi();
 
 setInterval(() => {

@@ -45,6 +45,8 @@ declare module "rofi" {
         reboot(): void;
     }
 
+    type JointError = "Communication" | "Hardware";
+
     class Joint {
 
         /**
@@ -131,7 +133,7 @@ declare module "rofi" {
          * You can call this method with empty function to remove the `callback`.
          * @param callback callback to be called on error
          */
-        public onError(callback: () => void): void;
+        public onError(callback: (error: JointError, message: string) => void): void;
 
 
         /**
@@ -240,7 +242,7 @@ declare module "rofi" {
          * You can call this method with empty function to remove the `callback`.
          * @param callback callback to be called on connector events
          */
-        // public onConnectorEvent(callback: (connector: Connector, event: ConnectorEvent) => void): void;
+        public onConnectorEvent(callback: (event: ConnectorEvent) => void): void;
 
         /**
          * Connect power of mating side to a power line.

@@ -72,7 +72,9 @@ class RofiFeature : public Next {
                 rofi::hal::Joint& joint = *getOpaque(ctx, thisValue);
                 if ( pos > joint.maxPosition() || pos < joint.minPosition() )
                     throw std::runtime_error( "The requested position is out of range" );
-                joint.setPosition( pos, velocity, [] ( auto ){} );
+                joint.setPosition( pos, velocity, [callback = std::move(callback)](rofi::hal::Joint) mutable {
+                    callback.call<void>();
+                });
             }), jac::PropFlags::Enumerable);
 
 
@@ -92,7 +94,9 @@ class RofiFeature : public Next {
             // callback to be called on error
             proto.defineProperty("onError", ff.newFunctionThis([](jac::ContextRef ctx, jac::ValueWeak thisValue, jac::Function callback) {
                 rofi::hal::Joint& joint = *getOpaque(ctx, thisValue);
-                throw std::runtime_error( "Not implemented" );
+                joint.onError([callback = std::move(callback)](rofi::hal::Joint joint, rofi::hal::Joint::Error error, const std::string& msg) mutable {
+                    callback.call<void>(error, msg);
+                });
             }), jac::PropFlags::Enumerable);
 
             // test servo move
@@ -114,8 +118,7 @@ class RofiFeature : public Next {
             // connector state
             proto.defineProperty("getState", ff.newFunctionThis([](jac::ContextRef ctx, jac::ValueWeak thisValue) {
                 rofi::hal::Connector& connector = *getOpaque(ctx, thisValue);
-                throw std::runtime_error("Not implemented");
-                // return connector.getState();
+                return connector.getState();
             }), jac::PropFlags::Enumerable);
 
             // Extend the connector to be ready to accept connection.
@@ -131,9 +134,11 @@ class RofiFeature : public Next {
             }), jac::PropFlags::Enumerable);
 
             // callback to be called on connector events
-            proto.defineProperty("onEvent", ff.newFunctionThis([](jac::ContextRef ctx, jac::ValueWeak thisValue, jac::Function callback) {
+            proto.defineProperty("onConnectorEvent", ff.newFunctionThis([](jac::ContextRef ctx, jac::ValueWeak thisValue, jac::Function callback) {
                 rofi::hal::Connector& connector = *getOpaque(ctx, thisValue);
-                throw std::runtime_error("Not implemented");
+                connector.onConnectorEvent([callback = std::move(callback)](rofi::hal::Connector connector, rofi::hal::ConnectorEvent event) mutable {
+                    callback.call<void>(event);
+                });
             }), jac::PropFlags::Enumerable);
 
             // // callback to be called on a packet

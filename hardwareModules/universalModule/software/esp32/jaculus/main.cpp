@@ -54,7 +54,7 @@ using namespace std::literals;
 // std::optional< rofi::hal::RoFI > localRoFI;
 // float speedCoef = 1;
 
-// localRoFI = rofi::hal::RoFI::getLocalRoFI();
+wl_handle_t storage_wl_handle = WL_INVALID_HANDLE;
 
 using Machine = jac::ComposeMachine<
     jac::MachineBase,
@@ -84,15 +84,23 @@ jac::Device<Machine> device(
         // return oss.str();
         return "not implemented";
     },
-    {{"esp32", "0.0.1"}}
+    {{"esp32", JAC_ESP32_VERSION}}, // version info
+    [](std::filesystem::path path) { // format storage
+        jac::Logger::debug("Formatting storage");
+
+        esp_vfs_fat_spiflash_unmount_rw_wl("/data", storage_wl_handle);
+
+        auto* partition = esp_partition_find_first(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, "storage");
+        if (partition == nullptr) {
+            return;
+        }
+        esp_partition_erase_range(partition, 0, partition->size);
+    }
 );
 
 using Mux_t = jac::Mux<jac::CobsEncoder>;
 std::unique_ptr<Mux_t> muxUart;
 
-#if defined(CONFIG_IDF_TARGET_ESP32S3)
-    std::unique_ptr<Mux_t> muxJtag;
-#endif
 
 void reportMuxError(jac::MuxError error, std::any ctx) {
     std::string message = "Mux error: ";
@@ -131,8 +139,7 @@ int main() {
         .disk_status_check_enable = false
     };
 
-    static wl_handle_t s_wl_handle = WL_INVALID_HANDLE;
-    ESP_ERROR_CHECK(esp_vfs_fat_spiflash_mount_rw_wl("/data", "storage", &conf, &s_wl_handle));
+    ESP_ERROR_CHECK(esp_vfs_fat_spiflash_mount_rw_wl("/data", "storage", &conf, &storage_wl_handle));
 
     // initialize uart connection
     auto uartStream = std::make_unique<UartStream>(UART_NUM_0, 921600, 4096, 0);
@@ -142,17 +149,6 @@ int main() {
     muxUart->setErrorHandler(reportMuxError);
     auto handleUart = device.router().subscribeTx(1, *muxUart);
     muxUart->bindRx(std::make_unique<decltype(handleUart)>(std::move(handleUart)));
-
-#if defined(CONFIG_IDF_TARGET_ESP32S3)
-    // initialize usb connection
-    auto jtagStream = std::make_unique<JtagStream>(4096, 1024);
-    jtagStream->start();
-
-    muxJtag = std::make_unique<Mux_t>(std::move(jtagStream));
-    muxJtag->setErrorHandler(reportMuxError);
-    auto handleUsb = device.router().subscribeTx(2, *muxJtag);
-    muxJtag->bindRx(std::make_unique<decltype(handleUsb)>(std::move(handleUsb)));
-#endif
 
 
     device.onConfigureMachine([&](Machine &machine) {

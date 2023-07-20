@@ -1,4 +1,4 @@
-import { getLocalRofi, Joint} from "rofi";
+import { getLocalRofi, Joint, JointError} from "rofi";
 import {Angle} from "./angle.js"
 
 let rofi = getLocalRofi();
@@ -10,10 +10,16 @@ class ServoMover {
 	constructor(servoId: number) {
 		this.servoId = servoId;
 		this.joint = rofi.getJoint(servoId);
+		this.joint.onError((error: JointError, message: string) => {
+			console.log("Servo ERROR: " + error + " | " + message);
+		});
 	}
 
 	tick() {
-		this.joint.setPosition(this.angle.rad(), this.joint.maxSpeed(), () => {});
+		this.joint.setPosition(this.angle.rad(), this.joint.maxSpeed(), () => {
+			// console.log("Servo " + this.servoId + " reached position " + this.roundAngleRadians(this.joint.getPosition()) + " | " + this.roundAngleDegrees(this.joint.getPosition()));
+			console.log("Position reached");
+		});
 		this.angle.add(Angle.deg(10));
 		if(this.angle.deg() > 90) {
 			this.angle = Angle.deg(-90);

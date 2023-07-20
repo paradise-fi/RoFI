@@ -3,8 +3,8 @@
  */
 
 
-// import "./hello.js";
+import "./hello.js";
 // import "./joint.js";
-import "./connect.js";
+// import "./connect.js";
 // import "./descript.js";
 

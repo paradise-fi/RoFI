@@ -4,20 +4,6 @@
  *
  */
 
-// float - this basic conversion have not been implemented yet in Jaculus Device library
-namespace jac {
-template<>
-struct ConvTraits<float> {
-    static float from(ContextRef ctx, ValueWeak val) {
-        return static_cast<float>(ConvTraits<double>::from(ctx, val));
-    }
-
-    static Value to(ContextRef ctx, float val) {
-        return ConvTraits<double>::to(ctx, val);
-    }
-};
-} // namespace jac
-
 // Descriptor
 template<>
 struct jac::ConvTraits<rofi::hal::RoFI::Descriptor> {
@@ -36,6 +22,33 @@ struct jac::ConvTraits<rofi::hal::RoFI::Descriptor> {
         };
     }
 };
+
+
+// Error
+template<>
+struct jac::ConvTraits<rofi::hal::Joint::Error> {
+	static rofi::hal::Joint::Error from(ContextRef ctx, ValueWeak val) {
+		auto str = val.to<std::string>();
+		if (str == "Communication") {
+			return rofi::hal::Joint::Error::Communication;
+		} else if (str == "Hardware") {
+			return rofi::hal::Joint::Error::Hardware;
+		} else {
+			throw std::runtime_error("Invalid Error");
+		}
+	}
+
+	static Value to(ContextRef ctx, rofi::hal::Joint::Error val) {
+		switch (val) {
+			case rofi::hal::Joint::Error::Communication:
+				return ConvTraits<std::string>::to(ctx, "Communication");
+			case rofi::hal::Joint::Error::Hardware:
+				return ConvTraits<std::string>::to(ctx, "Hardware");
+		}
+	}
+};
+
+
 
 // ConnectorEvent
 template<>
