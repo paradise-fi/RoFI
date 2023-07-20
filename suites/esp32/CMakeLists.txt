@@ -77,6 +77,23 @@ if(NOT Jaculus-dcore_POPULATED)
   target_compile_options(quickjs PUBLIC -mtext-section-literals -mlongcalls)
 endif()
 
+
+# FetchContent_Declare(
+#     Gridui
+#     GIT_REPOSITORY git@github.com:RoboticsBrno/Esp32-RBGridUI.git
+#     GIT_TAG        ee6ca51f4b7fa2e88d627b00c5fcc19f19a5dcf9
+# )
+# FetchContent_GetProperties(Gridui)
+# if(NOT Gridui_POPULATED)
+#   FetchContent_Populate(Gridui)
+#   add_subdirectory(${Gridui_SOURCE_DIR} ${Gridui_BINARY_DIR})
+#   # file(GLOB_RECURSE SRC src/*.cpp src/*.c)
+#   #target_link_libraries(Gridui PUBLIC idf::driver idf::esp_wifi idf::esp_rom idf::esp_timer idf::app_update idf::spiffs idf::nvs_flash atoms rofi::hal::inc)
+
+# endif()
+
+
+
 # What follows is a huge, huge hack. Unless we link idf::freertos from the
 # top-level CMakeLists.txt, we get generator error about self-refereincing
 # sources. Therefore, let's create a dummy binary and link it.
@@ -96,7 +113,7 @@ add_component(rofiHalEsp32)
 add_component(libfi)
 add_component(firmwareUpdater)
 add_component(rofiHalJaculus)
-# add_component(rofiHalGridUi)
+add_component(rofiHalGridUi)
 # Introduce alias
 add_library(rofi::hal ALIAS rofi_hal_esp32)
 
@@ -104,7 +121,7 @@ add_library(rofi::hal ALIAS rofi_hal_esp32)
 add_application(hardwareModules/universalModule/software/esp32/dynamixelConfigurator)
 add_application(hardwareModules/universalModule/software/esp32/console)
 add_application(hardwareModules/universalModule/software/esp32/jaculus)
-# add_application(hardwareModules/universalModule/software/esp32/gridui)
+add_application(hardwareModules/universalModule/software/esp32/gridui)
 
 
 # Add the examples
