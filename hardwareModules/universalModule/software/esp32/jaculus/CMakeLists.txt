@@ -6,3 +6,7 @@ target_link_libraries(umJaculus.elf
 set_partition_table(umJaculus.elf partitions-4m.csv)
 
 target_compile_definitions(umJaculus.elf PRIVATE "JAC_ESP32_VERSION=\"0.0.5\"")
+
+# build image, but not accessible from ESP device - like not flashed or generated successfully
+# returns error: Failed to create FATFS image for partition 'umJaculus.elf'.  Check project configuration if using the correct partition table file.
+fatfs_create_spiflash_image(umJaculus.elf "storage" "strData" 602112)

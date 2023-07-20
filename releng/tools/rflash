@@ -5,6 +5,8 @@ import os
 import subprocess
 from argparse import ArgumentParser
 from common import *
+from pprint import pprint
+from gen_esp32part import PartitionTable, APP_TYPE, PartitionDefinition
 
 def splitList(l, value):
     try:
@@ -24,17 +26,20 @@ def esp32GetTableFile(img):
         return candidate
     return os.path.join(buildDir, img.suite, "partition_table", "partition-table.bin")
 
-def esp32GetAppOffset(tablefile):
-    import gen_esp32part
+def esp32GetPartitionTable(tablefile) -> PartitionTable:
     """
     Read partition file, find the first app partition and return its offset
     """
     with open(tablefile, "rb") as f:
         content = f.read()
-    table = gen_esp32part.PartitionTable.from_binary(content)
+    table = PartitionTable.from_binary(content)
+
+    pprint(table)
+
     for partition in table:
-        if partition.type == gen_esp32part.APP_TYPE:
-            return partition.offset
+        # print(f"Partition: {partition}")
+        if partition.type == APP_TYPE: # for prevent empty app partition
+            return table
     raise RuntimeError(f"No APP partition found in {tablefile}")
 
 
@@ -67,15 +72,32 @@ def flashEsp32Image(img, extra):
         "--flash_size", "detect"]
     command += extra
 
-    pTable = esp32GetTableFile(img)
-    appOffset = esp32GetAppOffset(pTable)
+    pTableFile = esp32GetTableFile(img)
+    print(f"Image: {img.name}")
+    imageFile = img.name.split(".")[0]
+
+    print(f"Partition table: {pTableFile}")
+
+    pTable = esp32GetPartitionTable(pTableFile)
+
+
     command += [
-        "0x8000", os.path.join(buildDir, img.suite, "partition_table", pTable),
-        "0x1000", os.path.join(buildDir, img.suite, "bootloader", "bootloader.bin"),
-        f"0x{appOffset:02x}", img.path]
+        "0x1000", os.path.join(buildDir, img.suite, "bootloader", "bootloader.bin"), # 1. bootloader
+        "0x8000", os.path.join(buildDir, img.suite, "partition_table", pTableFile)] # 2. partition table
+
+    for partition in pTable:
+        partitionPath = os.path.join(buildDir, img.suite, "img", f"{imageFile}.{partition.name}")
+        if not os.path.exists(partitionPath):
+            print(f"Partition {partition.name} not found, skipping")
+            continue
+        command += [f"0x{partition.offset:x}", partitionPath]
+        print(f"Partition: {partition}")
+
+    pprint(command)
+
 
     print(f"Flashing image {img.name} from {img.suite}: {img.path}")
-    print(f"Using partition table: {pTable}, app offset: 0x{appOffset:02x}")
+    # print(f"Using partition table: {pTableFile}, app offset: 0x{appOffset:02x}")
     print(command)
     retcode = subprocess.call(command)
     return retcode

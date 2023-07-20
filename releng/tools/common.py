@@ -32,7 +32,7 @@ def collectImages():
     for suite in configuredSuites():
         for root, dirs, files in os.walk(os.path.join(buildDir, suite, "img")):
             for f in files:
-                if f.endswith(".bin") or f.endswith(".hex"):
+                if f.endswith(".bin") or f.endswith(".hex") or f.endswith(".app"):
                     images[f] = Image(f, suite, os.path.join(root, f))
     return images
 
