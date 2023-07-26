@@ -18,4 +18,4 @@ target_compile_definitions(umGridui.elf PRIVATE
     "WLAN_PASS=\"$ENV{RoFI_WLAN_PASS}\"")
 
 # build image, but not accessible from ESP device - like not flashed or generated successfully
-# spiffs_create_spiflash_image(umGridui.elf "spiffs" "spiffsData" 184320)
+spiffs_create_spiflash_image(umGridui.elf "spiffs" "spiffsData" 184320)

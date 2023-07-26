@@ -48,19 +48,17 @@ function(set_partition_table target tablefile)
     add_dependencies("${target}" "${TABLE_BIN_NAME}")
 endfunction()
 
-function(fatfs_create_spiflash_image TARGET PARTITION_NAME BASE_DIR PARTITION_SIZE)
-    message(STATUS "fatfs_create_spiflash_image: ${TARGET} ${PARTITION_NAME} ${BASE_DIR}")
+function(fatfs_create_spiflash_image_dir TARGET PARTITION_NAME BASE_DIR PARTITION_SIZE)
+    message(STATUS "fatfs_create_spiflash_image_dir: ${TARGET} ${PARTITION_NAME} ${BASE_DIR}")
     get_filename_component(NAME_BASE "${TARGET}" NAME_WLE) # remove extension (umProject.elf -> umProject)
     set(IMG_NAME "${NAME_BASE}.${PARTITION_NAME}") # umProject.{PARTITION_NAME} (umProject.fatfs)
     set(TSTAMP "${IMG_NAME}.bin_timestamp") # save timestamp to umProject.fatfs.bin_timestamp for incremental build
 
 
     # // print variable_requires
-    message(STATUS "TARGET: ${TARGET}")
-    message(STATUS "PARTITION_NAME: ${PARTITION_NAME}")
-    message(STATUS "BASE_DIR: ${BASE_DIR}")
-    message(STATUS "PWD: ${CMAKE_CURRENT_SOURCE_DIR}")
-    message(STATUS "IMG_OUTPUT: ${IMG_DIR}/${IMG_NAME}")
+    # message(STATUS "TARGET: ${TARGET}" "${PARTITION_NAME}" "${BASE_DIR}" "${PARTITION_SIZE}")
+    # message(STATUS "PWD: ${CMAKE_CURRENT_SOURCE_DIR}")
+    # message(STATUS "IMG_NAME: ${IMG_NAME}" "TSTAMP: ${TSTAMP}")
 
     add_custom_command(OUTPUT "${TSTAMP}" # run this
         COMMAND python $ENV{IDF_PATH}/components/fatfs/fatfsgen.py
@@ -83,11 +81,11 @@ function(spiffs_create_spiflash_image TARGET PARTITION_NAME BASE_DIR PARTITION_S
 
 
     # // print variable_requires
-    message(STATUS "TARGET: ${TARGET}")
-    message(STATUS "PARTITION_NAME: ${PARTITION_NAME}")
-    message(STATUS "BASE_DIR: ${BASE_DIR}")
-    message(STATUS "PWD: ${CMAKE_CURRENT_SOURCE_DIR}")
-    message(STATUS "IMG_OUTPUT: ${IMG_DIR}/${IMG_NAME}")
+    # message(STATUS "TARGET: ${TARGET}")
+    # message(STATUS "PARTITION_NAME: ${PARTITION_NAME}")
+    # message(STATUS "BASE_DIR: ${BASE_DIR}")
+    # message(STATUS "PWD: ${CMAKE_CURRENT_SOURCE_DIR}")
+    # message(STATUS "IMG_OUTPUT: ${IMG_DIR}/${IMG_NAME}")
 
     add_custom_command(OUTPUT "${TSTAMP}" # run this
         COMMAND python $ENV{IDF_PATH}/components/spiffs/spiffsgen.py
