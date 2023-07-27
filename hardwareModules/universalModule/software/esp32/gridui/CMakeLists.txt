@@ -2,7 +2,7 @@ add_rofi_firmware(umGridui.elf
     FLASH_SIZE 4MB
     SOURCES main.cpp)
 target_link_libraries(umGridui.elf
-    idf::freertos idf::spi_flash idf::console rofi::hal::esp32_jig rofi::hal::js jac-device idf::vfs idf::fatfs idf::pthread rofi::hal::gridui )
+    idf::freertos idf::spi_flash idf::console rofi::hal::esp32_jig rofi::hal::js jac-device idf::vfs idf::fatfs idf::pthread rofi::hal::rbprotocol rofi::hal::gridui)
 set_partition_table(umGridui.elf partitions.csv)
 
 # Load secrets from env
