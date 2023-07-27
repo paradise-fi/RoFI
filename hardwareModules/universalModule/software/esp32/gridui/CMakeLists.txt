@@ -2,7 +2,7 @@ add_rofi_firmware(umGridui.elf
     FLASH_SIZE 4MB
     SOURCES main.cpp)
 target_link_libraries(umGridui.elf
-    idf::freertos idf::spi_flash idf::console rofi::hal::esp32_jig rofi::hal::js jac-device idf::vfs idf::fatfs idf::pthread rofi::hal::rbprotocol rofi::hal::gridui)
+    idf::freertos idf::spi_flash idf::console rofi::hal rofi::hal::js jac-device idf::vfs idf::fatfs idf::pthread rofi::hal::rbprotocol rofi::hal::gridui libfi)
 set_partition_table(umGridui.elf partitions.csv)
 
 # Load secrets from env
@@ -17,5 +17,5 @@ target_compile_definitions(umGridui.elf PRIVATE
     "WLAN_USER=\"$ENV{ROFI_WLAN_USER}\""
     "WLAN_PASS=\"$ENV{RoFI_WLAN_PASS}\"")
 
-# build image, but not accessible from ESP device - like not flashed or generated successfully
-spiffs_create_spiflash_image(umGridui.elf "spiffs" "spiffsData" 184320)
+# Create spiffs image
+spiffs_create_spiflash_image(umGridui.elf "spiffs" "spiffsData" 0x93000) # last argument is size of spiffs partition

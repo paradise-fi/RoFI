@@ -2560,7 +2560,7 @@ Grid.prototype.setTabCount = function (count) {
       t.style.width = '100%'
       t.style.height = '100%'
       t.style.display = 'none'
-      this.el.appendChild(t) 
+      this.el.appendChild(t)
       this.tabs[i] = t
     }
   } else {
@@ -2708,8 +2708,8 @@ Grid.prototype.addWidgetConstructed = function (widget) {
   widget.updatePosition()
   widget.setEventListener(this.onWidgetEvent.bind(this))
 
-  
-  if (this.tabs.length <= widget.tab) 
+
+  if (this.tabs.length <= widget.tab)
     this.setTabCount(widget.tab + 1)
   this.tabs[widget.tab].appendChild(widget.el)
   this.widgets.push(widget)
@@ -2845,4 +2845,3 @@ window.addEventListener('load', function () {
   var man = new Manager('log', 'grid')
   man.start('ws://localhost:9000')
 })
-

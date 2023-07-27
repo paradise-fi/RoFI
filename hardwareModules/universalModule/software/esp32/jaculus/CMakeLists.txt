@@ -11,4 +11,4 @@ target_compile_definitions(umJaculus.elf PRIVATE "JAC_ESP32_VERSION=\"0.0.5\"")
 # returns error: Failed to create FATFS image for partition 'umJaculus.elf'.  Check project configuration if using the correct partition table file.
 
 message(STATUS "Creating spiflash image for umJaculus.elf")
-fatfs_create_spiflash_image_dir(umJaculus.elf "storage" "strData" 602112)
+# fatfs_create_spiflash_image_dir(umJaculus.elf "storage" "strData" 0x93000) # last argument is size of partition in bytes - from partition table

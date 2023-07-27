@@ -85,8 +85,17 @@ def flashEsp32Image(img, extra):
         "0x1000", os.path.join(buildDir, img.suite, "bootloader", "bootloader.bin"), # 1. bootloader
         "0x8000", os.path.join(buildDir, img.suite, "partition_table", pTableFile)] # 2. partition table
 
+    firstAppFound = False
     for partition in pTable:
-        partitionPath = os.path.join(buildDir, img.suite, "img", f"{imageFile}.{partition.name}")
+        partition_name = partition.name
+
+        # If there is more than one app partition, use the first one (ota_0 -> app)
+        if partition.type == APP_TYPE and not firstAppFound:
+            firstAppFound = True
+            partition_name = "app"
+
+        partitionPath = os.path.join(buildDir, img.suite, "img", f"{imageFile}.{partition_name}")
+
         if not os.path.exists(partitionPath):
             print(f"Partition {partition.name} not found, skipping")
             continue
