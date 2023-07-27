@@ -20,6 +20,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache
+          key: ${{ runner.os }}-build-${{ hashFiles('**/setup.sh') }}
+
       - name: Build
         run: |
           source setup.sh ${{ matrix.environment }}
@@ -29,6 +36,7 @@ jobs:
         run: |
           source setup.sh ${{ matrix.environment }}
           rmake --test --all
+
   build_esp32:
     name: "Build suite esp32"
     runs-on: ubuntu-20.04
@@ -43,6 +51,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache
+          key: ${{ runner.os }}-build-${{ hashFiles('**/setup.sh') }}
+
       - name: Build
         run: |
           source setup.sh -i ${{ matrix.environment }}
@@ -56,6 +71,7 @@ jobs:
           # Configure and build
           rcfg esp32
           rmake esp32
+
   build_stm32:
     name: "Build suite stm32"
     runs-on: ubuntu-20.04
@@ -70,13 +86,19 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache
+          key: ${{ runner.os }}-build-${{ hashFiles('**/setup.sh') }}
+
       - name: Build
         run: |
           source setup.sh ${{ matrix.environment }}
-
-          # Configure and build
           rcfg stm32
           rmake stm32
+
   build_doc:
     name: "Build documentation"
     runs-on: ubuntu-20.04
@@ -89,8 +111,16 @@ jobs:
       # Work-around for https://github.com/actions/runner-images/issues/6775
       - name: Change Owner of Container Working Directory
         run: chown root:root .
+
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Cache
+        uses: actions/cache@v3
+        with:
+          path: ~/.cache
+          key: ${{ runner.os }}-build-${{ hashFiles('**/setup.sh') }}
+
       - name: Build
         run: |
           source setup.sh Debug
@@ -117,6 +147,7 @@ jobs:
           name: documentation
           path: build.Debug/doc/web
           retention-days: 14
+
   deploy:
     name: "Deploy documentation"
     runs-on: ubuntu-20.04
