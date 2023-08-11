@@ -1,7 +1,7 @@
 add_rofi_firmware(wifi_example.elf
     FLASH_SIZE 4MB
     SOURCES main.cpp)
-target_link_libraries(wifi_example.elf PUBLIC rofi::hal libfi)
+target_link_libraries(wifi_example.elf PUBLIC rofi::hal rofi::esp32)
 set_partition_table(wifi_example.elf partitions.csv)
 
 # Load secrets from env

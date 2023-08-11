@@ -1,5 +1,5 @@
-#include "fi.hpp"
-#include "util.hpp"
+#include "wifi.hpp"
+#include <util/readLine.hpp>
 
 #include <esp_http_client.h>
 #include <esp_log.h>
@@ -48,7 +48,7 @@ std::vector< std::string > getWlanFiAuthLinks( const char *username, const char 
         authLinks.push_back(url);
     };
 
-    rofi::util::LineReader lineReader;
+    esp::util::LineReader lineReader;
     lineReader.bind( extractLoginLink );
 
     auto httpCallback = makeHttpDataCallback( [&]( char *data, int len ) {
@@ -93,7 +93,7 @@ void wlanFiFollowAuthLink( const std::string& link,
 {
     // The response of wlan_fi is an SVG image. If auth was correct, green
     // object is present and a non-empty <text> tag is present. Check it.
-    rofi::util::LineReader lineReader;
+    esp::util::LineReader lineReader;
     bool gotGreen = false, gotText = false;
     lineReader.bind( [&]( std::string&& line ) {
         gotGreen |= greenDetected( line );
@@ -120,7 +120,7 @@ void wlanFiFollowAuthLink( const std::string& link,
         throw std::runtime_error( "Cannot authenticate to wlan_fi" );
 }
 
-void rofi::fi::authWlanFi(const char* username, const char* password ) {
+void esp::wifi::authWlanFi(const char* username, const char* password ) {
     for( const auto& authLink : getWlanFiAuthLinks( username, password ) ) {
         if (authLink.find( "ip6" ) != std::string::npos )
             continue; // Ignore IPv6 address

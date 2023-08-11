@@ -5,7 +5,7 @@
 #include <cstring>
 #include <thread>
 
-namespace rofi::net {
+namespace esp::net {
 
 class SocketClient {
 public:
@@ -167,4 +167,4 @@ private:
     std::function< void( SocketClient, sockaddr_in )> _onClient;
 };
 
-} // namespace rofi::net
+} // namespace esp::net

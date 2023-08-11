@@ -2,7 +2,7 @@
 #include "gridui.h"
 #include "rbprotocol.h"
 #include "rbwebserver.h"
-#include <fi.hpp>
+#include <net/wifi.hpp>
 #include <esp_log.h>
 #include <rofi_hal.hpp>
 #include <optional>
@@ -32,8 +32,8 @@ extern "C" void app_main() {
     esp_log_level_set("esp_netif_lwip", ESP_LOG_VERBOSE);
 
     std::cout << "Program starts\n";
-    rofi::fi::initNvs();
-    rofi::fi::WiFiConnector c;
+    esp::wifi::initNvs();
+    esp::wifi::WiFiConnector c;
     if ( c.sync( 5 ).connect(SSID, PASSWORD) )
         std::cout << "Connected: " << c.ipAddrStr() << "\n";
     else
@@ -44,7 +44,7 @@ extern "C" void app_main() {
     // esp_wifi_set_ps (WIFI_PS_NONE);
 
     if ( std::string( SSID ) == "wlan_fi" )
-        rofi::fi::authWlanFi( WLAN_USER, WLAN_PASS );
+        esp::wifi::authWlanFi( WLAN_USER, WLAN_PASS );
     std::cout << "Autenticated!\n";
 
     // Initialize RBProtocol

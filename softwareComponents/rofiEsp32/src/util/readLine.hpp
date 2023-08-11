@@ -1,7 +1,7 @@
 #include <string>
 #include <functional>
 
-namespace rofi::util {
+namespace esp::util {
 class LineReader {
 public:
     template < typename Callback >
@@ -39,4 +39,4 @@ private:
     std::function< void( std::string&& )> _onNewLine;
 };
 
-} // namespace rofi::util
+} // namespace esp::util

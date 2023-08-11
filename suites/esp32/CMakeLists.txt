@@ -134,7 +134,7 @@ add_component(lwip++)
 add_component(lwipcore)
 add_component(rofiHalInc)
 add_component(rofiHalEsp32)
-add_component(libfi)
+add_component(rofiEsp32)
 add_component(firmwareUpdater)
 add_component(rofiHalJaculus)
 # Introduce alias
@@ -143,8 +143,8 @@ add_library(rofi::hal ALIAS rofi_hal_esp32)
 # Add utilities
 add_application(hardwareModules/universalModule/software/esp32/dynamixelConfigurator)
 add_application(hardwareModules/universalModule/software/esp32/console)
-add_application(hardwareModules/universalModule/software/esp32/jaculus)
 add_application(hardwareModules/universalModule/software/esp32/gridui)
+add_application(hardwareModules/universalModule/software/esp32/jaculus)
 
 
 # Add the examples
