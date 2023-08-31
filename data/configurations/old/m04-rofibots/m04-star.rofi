@@ -1,0 +1,10 @@
+C
+M 0 0 0 0
+M 1 0 0 0
+M 2 0 0 0
+M 3 0 0 0
+
+E 0 A +X N -Z A 1
+E 1 A +X N -Z A 2
+E 2 A +X N -Z A 3
+E 3 A +X N -Z A 0
