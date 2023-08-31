@@ -58,7 +58,7 @@ impl<'a, TWorld: VoxelWorld> VoxelSubworld<'a, TWorld> {
                 .as_ranges_array()
                 .zip(complement_size_ranges.as_ranges_array())
                 .map(|(lhs, rhs)| {
-                    std::cmp::min(lhs.start, rhs.start)..std::cmp::max(rhs.start, rhs.end)
+                    std::cmp::min(lhs.start, rhs.start)..std::cmp::max(lhs.end, rhs.end)
                 }),
             world.size_ranges().as_ranges_array(),
         );
