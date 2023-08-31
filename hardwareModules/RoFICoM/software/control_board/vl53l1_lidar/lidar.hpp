@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <string_view>
 #include <optional>
+#include <variant>
 
 #include <atoms/result.hpp>
 
@@ -22,7 +23,7 @@ namespace lidar_inner {
 }
 
 struct Lidar {
-    using Void = atoms::Void;
+    using Void = std::monostate;
 
     template< typename T, typename E = std::string >
     using Result = atoms::Result< T, E >;
