@@ -57,6 +57,9 @@ namespace rofi::configuration::serialization {
     }
 
     inline nlohmann::json matrixToJSON( const Matrix& m ) {
+        if ( rofi::configuration::matrices::equals( m, rofi::configuration::matrices::identity ) ) {
+            return "identity";
+        }
         nlohmann::json j = nlohmann::json::array();
         for ( int i = 0; i < 4; i++ )
             j[ i ] = { m( i, 0 ), m( i, 1 ), m( i, 2 ), m( i, 3 ) };
