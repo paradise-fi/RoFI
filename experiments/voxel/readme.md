@@ -30,9 +30,11 @@ experiments/voxel/gen_tasks_matrix.py - experiments/voxel/args_rofi-voxel.json
 - `args_rofi-voxel.json` - Matrix arguments for `rofi-voxel` command.
 - `environment.Dockerfile` - Dockerfile for the experiment. **Make sure the branch is set correctly.**
 - `gen_tangled_data.py` - Generates source data by randomly tangling rofi worlds by given number of steps.
-- `gen_tasks.py` - Generates task sets. **Make sure to use paths relative to ROFI_ROOT.**
+- `gen_tasks_args.py` - Generates args for task sets to use in further generation. **Make sure to use paths relative to ROFI_ROOT.**
     - e2e - every world to every world (with the same module count)
     - snake - every world to snake (of the same module count)
+- `gen_tasks_matrix.py` - Generates task from the task args and the args matrix.
+- `gen_tasks_fmt.py` - Generates task from the task args given the formats of commands.
 
 ## Folders
 
