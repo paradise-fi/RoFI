@@ -5,7 +5,10 @@ import subprocess
 import sys
 import click
 import json
-from typing import Any, Dict, Iterable, List, TextIO
+from typing import Any, Dict, Iterable, List, TextIO, TypeVar, Union
+
+T = TypeVar("T")
+OneOrMore = Union[T, List[T]]
 
 
 def safe_as_arg(arg: Any) -> str:
@@ -39,22 +42,31 @@ def gen_tasks_matrix(task_args_file: TextIO, cmd_args_file: TextIO, raw_args: bo
     cmd: str = cmd_args["cmd"]
     assert isinstance(cmd, str)
 
-    matrix_args: Dict[str, List[Any]] = cmd_args["args"]
-    assert isinstance(matrix_args, dict)
-    assert all([isinstance(matrix_args[arg], list) for arg in matrix_args])
+    matrix_args_list: OneOrMore[Dict[str, OneOrMore[Any]]] = cmd_args["args"]
+    if not isinstance(matrix_args_list, list):
+        matrix_args_list = [matrix_args_list]
+    for matrix_args in matrix_args_list:
+        assert isinstance(matrix_args, dict)
+        for key in matrix_args:
+            if not isinstance(matrix_args[key], list):
+                matrix_args[key] = [matrix_args[key]]
 
     if not raw_args:
         task_args = [
             {name: safe_as_arg(args[name]) for name in args} for args in task_args
         ]
-        matrix_args = {
-            name: [safe_as_arg(value) for value in matrix_args[name]]
-            for name in matrix_args
-        }
+        matrix_args_list = [
+            {
+                key: [safe_as_arg(value) for value in matrix_args[key]]
+                for key in matrix_args
+            }
+            for matrix_args in matrix_args_list
+        ]
 
     tasks = [
         cmd.format_map(margs | targs)
         for targs in task_args
+        for matrix_args in matrix_args_list
         for margs in all_combinations(matrix_args)
     ]
     dump_json(tasks, sys.stdout)

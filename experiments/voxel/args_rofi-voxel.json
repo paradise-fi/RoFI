@@ -1,11 +1,8 @@
 {
-    "cmd": "rofi-voxel {init} {goal} --init-format {init_fmt} --goal-format {goal_fmt} --alg {alg} --repr {repr} -v",
-    "args": {
-        "alg": [
-            "bfs"
-        ],
-        "repr": [
-            "sortvec"
-        ]
-    }
+  "cmd": "rofi-voxel {init} {goal} --init-format {init_fmt} --goal-format {goal_fmt} --alg {alg} --repr {repr} -v",
+  "args": [
+    { "alg": "bfs", "repr": ["matrix", "map"] },
+    { "alg": "astar-zero", "repr": "map" },
+    { "alg": "astar-naive", "repr": ["matrix", "map", "sortvec"] }
+  ]
 }
