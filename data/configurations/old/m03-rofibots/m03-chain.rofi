@@ -1,0 +1,9 @@
+C
+M 0 0 0 0
+M 1 0 0 0
+M 2 0 0 0
+
+E 0 B -X N +X A 1
+E 1 B -X N +X A 2
+
+E 0 B -Z S -Z A 2
