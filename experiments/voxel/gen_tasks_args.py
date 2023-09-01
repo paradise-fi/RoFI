@@ -15,13 +15,15 @@ class World:
         self.format = format
 
     def module_count(self) -> int:
-        cmd = ['rofi-tool', 'module-count', self.file, '--format', self.format]
+        cmd = ["rofi-tool", "module-count", self.file, "--format", self.format]
         cmd_result = subprocess.run(cmd, capture_output=True)
         sys.stderr.buffer.write(cmd_result.stderr)
 
         if cmd_result.returncode != 0:
-            print(f"Error while getting module count of '{self.file}' (format: {self.format})",
-                  file=sys.stderr)
+            print(
+                f"Error while getting module count of '{self.file}' (format: {self.format})",
+                file=sys.stderr,
+            )
             exit(1)
         return int(cmd_result.stdout)
 
@@ -29,9 +31,11 @@ class World:
         return subprocess.list2cmdline([self.file])
 
     @staticmethod
-    def get_snake_world(module_count: int) -> 'World':
+    def get_snake_world(module_count: int) -> "World":
         assert module_count > 0
-        return World(f'data/configurations/old/snake/m{module_count}_snake.rofi', format='old')
+        return World(
+            f"data/configurations/old/snake/m{module_count}_snake.rofi", format="old"
+        )
 
 
 class Task:
@@ -40,7 +44,12 @@ class Task:
         self.goal = goal
 
     def get_args(self):
-        return {'init': self.init.file, 'goal': self.goal.file, 'init_fmt': self.init.format, 'goal_fmt': self.goal.format}
+        return {
+            "init": self.init.file,
+            "goal": self.goal.file,
+            "init_fmt": self.init.format,
+            "goal_fmt": self.goal.format,
+        }
 
 
 def print_task_args(tasks: List[Task], output: TextIO = sys.stdout):
@@ -49,7 +58,9 @@ def print_task_args(tasks: List[Task], output: TextIO = sys.stdout):
     print(file=output)
 
 
-def generate_e2e_task_args(world_files: List[str], format: str, both_directions: bool) -> List[Task]:
+def generate_e2e_task_args(
+    world_files: List[str], format: str, both_directions: bool
+) -> List[Task]:
     by_module_count: Dict[int, List[World]] = defaultdict(list)
     for world_file in world_files:
         world = World(world_file, format)
@@ -58,18 +69,22 @@ def generate_e2e_task_args(world_files: List[str], format: str, both_directions:
     tasks: List[Task] = []
     for worlds in by_module_count.values():
         if len(worlds) == 1:
-            print(f"World '{worlds[0]}' skipped - only one world with given module count",
-                  file=sys.stderr)
+            print(
+                f"World '{worlds[0]}' skipped - only one world with given module count",
+                file=sys.stderr,
+            )
 
         for i in range(0, len(worlds)):
-            for j in range(i+1, len(worlds)):
+            for j in range(i + 1, len(worlds)):
                 tasks.append(Task(worlds[i], worlds[j]))
                 if both_directions:
                     tasks.append(Task(worlds[j], worlds[i]))
     return tasks
 
 
-def generate_snake_tasks(world_files: List[str], format: str, sizelimit: Optional[int]) -> List[Task]:
+def generate_snake_tasks(
+    world_files: List[str], format: str, sizelimit: Optional[int]
+) -> List[Task]:
     tasks: List[Task] = []
     by_module_counts: Dict[int, int] = defaultdict(int)
     for world_file in world_files:
@@ -87,38 +102,63 @@ def generate_snake_tasks(world_files: List[str], format: str, sizelimit: Optiona
 
 @click.group()
 def gen_task_args_cli():
-    """Generate task set args.
-    """
+    """Generate task set args."""
     pass
 
 
 @gen_task_args_cli.command()
-@click.argument('world_files', type=click.Path(file_okay=True, dir_okay=False, exists=True), nargs=-1)
-@click.option('--format', '-f', type=click.Choice(['json', 'voxel', 'old']), default='old', show_default=True,
-              help='Format of world files')
-@click.option('--both-directions', '-b', is_flag=True, show_default=True,
-              help='Generate both directions for every pair')
+@click.argument(
+    "world_files",
+    type=click.Path(file_okay=True, dir_okay=False, exists=True),
+    nargs=-1,
+)
+@click.option(
+    "--format",
+    "-f",
+    type=click.Choice(["json", "voxel", "old"]),
+    default="old",
+    show_default=True,
+    help="Format of world files",
+)
+@click.option(
+    "--both-directions",
+    "-b",
+    is_flag=True,
+    show_default=True,
+    help="Generate both directions for every pair",
+)
 def e2e(world_files: List[str], format: str, both_directions: bool):
-    """Generate task set args from WORLD_FILES from every world to every other world of the same module count.
-    """
-    tasks = generate_e2e_task_args(world_files, format=format,
-                                   both_directions=both_directions)
+    """Generate task set args from WORLD_FILES from every world to every other world of the same module count."""
+    tasks = generate_e2e_task_args(
+        world_files, format=format, both_directions=both_directions
+    )
     print_task_args(tasks)
 
 
 @gen_task_args_cli.command()
-@click.argument('world_files', type=click.Path(file_okay=True, dir_okay=False, exists=True), nargs=-1)
-@click.option('--format', '-f', type=click.Choice(['json', 'voxel', 'old']), default='old', show_default=True,
-              help='Format of world files')
-@click.option('--sizelimit', type=click.IntRange(1),
-              help="Include at most --sizelimit benchmarks of given module's count")
+@click.argument(
+    "world_files",
+    type=click.Path(file_okay=True, dir_okay=False, exists=True),
+    nargs=-1,
+)
+@click.option(
+    "--format",
+    "-f",
+    type=click.Choice(["json", "voxel", "old"]),
+    default="old",
+    show_default=True,
+    help="Format of world files",
+)
+@click.option(
+    "--sizelimit",
+    type=click.IntRange(1),
+    help="Include at most --sizelimit benchmarks of given module's count",
+)
 def snake(world_files: List[str], format: str, sizelimit: Optional[int]):
-    """Generate task args set from WORLD_FILES to snake configuration.
-    """
-    tasks = generate_snake_tasks(world_files, format=format,
-                                 sizelimit=sizelimit)
+    """Generate task args set from WORLD_FILES to snake configuration."""
+    tasks = generate_snake_tasks(world_files, format=format, sizelimit=sizelimit)
     print_task_args(tasks)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     gen_task_args_cli()
