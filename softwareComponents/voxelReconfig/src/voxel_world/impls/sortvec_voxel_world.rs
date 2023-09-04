@@ -54,6 +54,7 @@ impl<TIndex: SortvecVoxelWorldIndex> std::fmt::Debug for SortvecVoxelWorld<TInde
 
 impl<TIndex: SortvecVoxelWorldIndex> VoxelWorld for SortvecVoxelWorld<TIndex> {
     type IndexType = TIndex;
+    type PosVoxelIter<'a> = impl Iterator<Item = PosVoxel<Self::IndexType>> where Self: 'a;
 
     fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
         SizeRanges::from_sizes(self.sizes())

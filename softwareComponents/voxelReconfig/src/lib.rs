@@ -1,10 +1,9 @@
 #![feature(
     array_methods,
-    array_zip,
     assert_matches,
     associated_type_defaults,
-    is_some_and,
-    map_try_insert
+    map_try_insert,
+    impl_trait_in_assoc_type
 )]
 
 pub mod atoms;

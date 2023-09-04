@@ -1,7 +1,8 @@
 use super::{InvalidVoxelWorldError, NormVoxelWorld, VoxelWorld};
 use crate::atoms;
 use crate::pos::{Pos, SizeRanges, Sizes};
-use crate::voxel::{JointPosition, Voxel};
+use crate::voxel::{JointPosition, PosVoxel, Voxel};
+use iter_fixed::IntoIteratorFixed;
 
 pub fn rotate_voxel(voxel: Voxel, rotation: atoms::Rotation) -> Voxel {
     Voxel::new_with(
@@ -30,14 +31,16 @@ fn combine_size_ranges<TIndex: num::Num + Ord>(
     SizeRanges::new(
         lhs_start
             .as_array()
+            .into_iter_fixed()
             .zip(rhs_start.as_array())
             .map(|(lhs, rhs)| std::cmp::min(lhs, rhs))
-            .into(),
+            .collect(),
         lhs_end
             .as_array()
+            .into_iter_fixed()
             .zip(rhs_end.as_array())
             .map(|(lhs, rhs)| std::cmp::max(lhs, rhs))
-            .into(),
+            .collect(),
     )
 }
 
@@ -151,6 +154,7 @@ where
     TWorld::IndexType: num::Integer,
 {
     type IndexType = TWorld::IndexType;
+    type PosVoxelIter<'a> = impl Iterator<Item = PosVoxel<Self::IndexType>> where Self: 'a;
 
     fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
         let size_ranges = self.world().size_ranges().as_ranges_array();

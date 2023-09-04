@@ -6,8 +6,7 @@ pub trait VoxelWorld {
     type IndexType: std::fmt::Debug + num::Signed + Ord + Copy;
     type PosVoxelIter<'a>: Iterator<Item = PosVoxel<Self::IndexType>>
     where
-        Self: 'a,
-    = Box<dyn 'a + Iterator<Item = PosVoxel<Self::IndexType>>>;
+        Self: 'a;
 
     fn size_ranges(&self) -> SizeRanges<Self::IndexType>;
     fn all_voxels(&self) -> Self::PosVoxelIter<'_>;

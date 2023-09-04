@@ -17,6 +17,7 @@ crate-type = [ "lib", "cdylib", "staticlib" ]
 amplify = "3.14"
 bimap = "0.6"
 enum-iterator = "1.2"
+iter_fixed = "0.3"
 itertools = "0.10"
 litemap = "0.6"
 log = "0.4"

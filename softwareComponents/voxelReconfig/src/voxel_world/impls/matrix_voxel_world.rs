@@ -75,6 +75,7 @@ impl<TIndex: MatrixVoxelWorldIndex> MatrixVoxelWorld<TIndex> {
 
 impl<TIndex: MatrixVoxelWorldIndex> VoxelWorld for MatrixVoxelWorld<TIndex> {
     type IndexType = TIndex;
+    type PosVoxelIter<'a> = impl Iterator<Item = PosVoxel<Self::IndexType>> where Self: 'a;
 
     fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
         SizeRanges::from_sizes(self.sizes())

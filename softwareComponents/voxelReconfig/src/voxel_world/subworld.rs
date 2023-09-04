@@ -3,7 +3,8 @@ pub use complement::ComplementVoxelSubworld;
 use super::VoxelWorld;
 use crate::pos::ord::OrdPos;
 use crate::pos::{minimal_pos_hull, Pos, SizeRanges};
-use crate::voxel::Voxel;
+use crate::voxel::{PosVoxel, Voxel};
+use iter_fixed::IntoIteratorFixed;
 use std::collections::BTreeSet;
 
 /// Can represent a world that is not valid (has voxels with missing other body)
@@ -56,10 +57,12 @@ impl<'a, TWorld: VoxelWorld> VoxelSubworld<'a, TWorld> {
         debug_assert_eq!(
             size_ranges
                 .as_ranges_array()
+                .into_iter_fixed()
                 .zip(complement_size_ranges.as_ranges_array())
                 .map(|(lhs, rhs)| {
                     std::cmp::min(lhs.start, rhs.start)..std::cmp::max(lhs.end, rhs.end)
-                }),
+                })
+                .collect::<[_; 3]>(),
             world.size_ranges().as_ranges_array(),
         );
 
@@ -86,6 +89,7 @@ impl<'a, TWorld: VoxelWorld> VoxelSubworld<'a, TWorld> {
 
 impl<'a, TWorld: VoxelWorld> VoxelWorld for VoxelSubworld<'a, TWorld> {
     type IndexType = TWorld::IndexType;
+    type PosVoxelIter<'b> = impl Iterator<Item = PosVoxel<Self::IndexType>> where Self: 'b;
 
     fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
         self.size_ranges
@@ -111,7 +115,7 @@ impl<'a, TWorld: VoxelWorld> VoxelWorld for VoxelSubworld<'a, TWorld> {
 pub mod complement {
     use super::VoxelSubworld;
     use crate::pos::{Pos, SizeRanges};
-    use crate::voxel::Voxel;
+    use crate::voxel::{PosVoxel, Voxel};
     use crate::voxel_world::{debug_fmt_voxels, VoxelWorld};
     use std::marker::PhantomData;
 
@@ -176,6 +180,7 @@ pub mod complement {
         TWorldRef: std::borrow::Borrow<VoxelSubworld<'a, TWorld>>,
     {
         type IndexType = TWorld::IndexType;
+        type PosVoxelIter<'b> = impl Iterator<Item = PosVoxel<Self::IndexType>> where Self: 'b;
 
         #[allow(clippy::misnamed_getters)] // Getting size_range of the complement's complement
         fn size_ranges(&self) -> SizeRanges<Self::IndexType> {

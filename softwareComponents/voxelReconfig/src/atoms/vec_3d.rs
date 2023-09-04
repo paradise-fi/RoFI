@@ -1,3 +1,5 @@
+use iter_fixed::IntoIteratorFixed;
+
 type Sizes = [usize; 3];
 
 #[derive(Clone, PartialEq, Eq, Hash)]
@@ -39,13 +41,15 @@ impl<T> Vec3D<T> {
 
     fn inner_index(&self, indices: Sizes) -> Option<usize> {
         if indices
+            .into_iter_fixed()
             .zip(self.sizes)
-            .iter()
+            .into_iter()
             .any(|(idx, size)| idx >= size)
         {
             return None;
         }
         let inner_index = indices
+            .into_iter_fixed()
             .zip(self.sizes)
             .into_iter()
             .fold(0, |value, (idx, size)| value * size + idx);
