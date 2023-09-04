@@ -1,6 +1,6 @@
 use super::VoxelWorld;
 use crate::pos::{Pos, SizeRanges};
-use crate::voxel::Voxel;
+use crate::voxel::{PosVoxel, Voxel};
 
 pub struct CenteredVoxelWorld<TWorld, TWorldRef>
 where
@@ -71,6 +71,7 @@ where
     TWorldRef: std::borrow::Borrow<TWorld>,
 {
     type IndexType = TWorld::IndexType;
+    type PosVoxelIter<'a> = impl Iterator<Item = PosVoxel<Self::IndexType>> where Self: 'a;
 
     fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
         let (start, end) = self.world().size_ranges().start_end();

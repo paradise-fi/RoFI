@@ -54,6 +54,7 @@ impl<TIndex: MapVoxelWorldIndex> std::fmt::Debug for MapVoxelWorld<TIndex> {
 
 impl<TIndex: MapVoxelWorldIndex> VoxelWorld for MapVoxelWorld<TIndex> {
     type IndexType = TIndex;
+    type PosVoxelIter<'a> = impl Iterator<Item = PosVoxel<Self::IndexType>> where Self: 'a;
 
     fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
         SizeRanges::from_sizes(self.sizes())

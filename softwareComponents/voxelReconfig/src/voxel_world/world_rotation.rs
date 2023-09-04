@@ -3,6 +3,7 @@ use crate::atoms;
 use crate::pos::{Pos, Sizes};
 use crate::voxel::Voxel;
 use enum_iterator::Sequence;
+use iter_fixed::IntoIteratorFixed;
 
 /// This structure represents rotation of voxel worlds
 ///
@@ -89,6 +90,7 @@ impl WorldRotation {
     {
         let negated_pos = pos
             .as_array()
+            .into_iter_fixed()
             .zip(orig_sizes.get().as_array())
             .zip(self.neg_axis)
             .map(|((pos, size), is_neg)| {
@@ -98,7 +100,7 @@ impl WorldRotation {
                     pos
                 }
             });
-        self.rotate_as_sizes(negated_pos.into())
+        self.rotate_as_sizes(negated_pos.collect())
     }
 
     fn rotate_voxel(&self, voxel: Voxel) -> Voxel {

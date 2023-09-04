@@ -14,6 +14,7 @@ pub use traits::{NormVoxelWorld, VoxelWorld};
 use crate::module_repr::get_other_body;
 use crate::pos::{minimal_pos_hull, Pos, SizeRanges, Sizes};
 use crate::voxel::{get_other_body_pos, PosVoxel};
+use iter_fixed::IntoIteratorFixed;
 use std::assert_matches::debug_assert_matches;
 use world_rotation::WorldRotation;
 
@@ -150,9 +151,10 @@ pub fn check_pos<TIndex: num::Num + Ord + Copy + std::fmt::Debug>(
 ) -> Result<(), InvalidVoxelWorldError<TIndex>> {
     if pos
         .as_array()
+        .into_iter_fixed()
         .zip(size_ranges.as_ranges_array())
-        .iter()
-        .all(|(pos, size_range)| size_range.contains(pos))
+        .into_iter()
+        .all(|(pos, size_range)| size_range.contains(&pos))
     {
         Ok(())
     } else {

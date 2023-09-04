@@ -1,5 +1,6 @@
 pub mod ord;
 
+use iter_fixed::{FromIteratorFixed, IntoIteratorFixed};
 use std::ops::Range;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -80,20 +81,30 @@ impl<'a, TIndex: num::Num> From<&'a Pos<TIndex>> for [&'a TIndex; 3] {
     }
 }
 
+impl<TIndex: num::Num, I: Iterator<Item = TIndex>> FromIteratorFixed<I, 3> for Pos<TIndex> {
+    fn from_iter_fixed(iter_fixed: iter_fixed::IteratorFixed<I, 3>) -> Self {
+        iter_fixed.collect::<[_; 3]>().into()
+    }
+}
+
 impl<TIndex: num::Num> std::ops::Add for Pos<TIndex> {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
-        let lhs = self.as_array();
-        let rhs = rhs.as_array();
-        lhs.zip(rhs).map(|(lhs, rhs)| lhs + rhs).into()
+        self.as_array()
+            .into_iter_fixed()
+            .zip(rhs.as_array())
+            .map(|(lhs, rhs)| lhs + rhs)
+            .collect()
     }
 }
 impl<TIndex: num::Signed> std::ops::Sub for Pos<TIndex> {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
-        let lhs = self.as_array();
-        let rhs = rhs.as_array();
-        lhs.zip(rhs).map(|(lhs, rhs)| lhs - rhs).into()
+        self.as_array()
+            .into_iter_fixed()
+            .zip(rhs.as_array())
+            .map(|(lhs, rhs)| lhs - rhs)
+            .collect()
     }
 }
 impl<TIndex: num::Signed> std::ops::Neg for Pos<TIndex> {
@@ -174,8 +185,10 @@ impl<TIndex: num::Num + Ord> SizeRanges<TIndex> {
     pub fn as_ranges_array(self) -> [Range<TIndex>; 3] {
         self.start
             .as_array()
+            .into_iter_fixed()
             .zip(self.end.as_array())
             .map(|(start, end)| start..end)
+            .collect()
     }
     pub fn from_ranges_array(ranges_array: [Range<TIndex>; 3]) -> Self
     where
@@ -201,8 +214,16 @@ where
         })
         .reduce(|acc, pos| {
             (
-                acc.0.zip(pos.0).map(|(acc, pos)| std::cmp::min(acc, pos)),
-                acc.1.zip(pos.1).map(|(acc, pos)| std::cmp::max(acc, pos)),
+                acc.0
+                    .into_iter_fixed()
+                    .zip(pos.0)
+                    .map(|(acc, pos)| std::cmp::min(acc, pos))
+                    .collect(),
+                acc.1
+                    .into_iter_fixed()
+                    .zip(pos.1)
+                    .map(|(acc, pos)| std::cmp::max(acc, pos))
+                    .collect(),
             )
         })
         .map(|(start, end)| SizeRanges {
