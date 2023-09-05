@@ -42,9 +42,7 @@ where
         .0
         .clone();
 
-    Ok(reconstruct_path_to(goal, &parent_map, |parent_info| {
-        parent_info.0.clone()
-    }))
+    Ok(reconstruct_path_to(goal, parent_map, |p| p.0))
 }
 
 fn compute_parents<TGraph, TMetric>(

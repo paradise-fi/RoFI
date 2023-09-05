@@ -32,6 +32,36 @@ pub trait StateGraph {
 
 fn reconstruct_path_to<TItem: Eq + std::hash::Hash, TParentInfo, S: BuildHasher>(
     goal: TItem,
+    mut parent_map: HashMap<TItem, TParentInfo, S>,
+    mut get_parent: impl FnMut(TParentInfo) -> Option<TItem>,
+) -> Vec<TItem> {
+    assert!(parent_map.contains_key(&goal), "Missing goal parent");
+    let mut path = Vec::new();
+    let mut parent = goal;
+    loop {
+        if let Some(new_parent_info) = parent_map.remove(&parent) {
+            if let Some(new_parent) = get_parent(new_parent_info) {
+                path.push(std::mem::replace(&mut parent, new_parent));
+            } else {
+                path.push(parent);
+                break;
+            }
+        } else {
+            if path.contains(&parent) {
+                panic!("Cyclic dependency in parent graph");
+            } else {
+                panic!("Missing parent info");
+            }
+        }
+    }
+
+    path.reverse();
+    path
+}
+
+#[allow(unused)]
+fn reconstruct_path_to_noconsume<TItem: Eq + std::hash::Hash, TParentInfo, S: BuildHasher>(
+    goal: TItem,
     parent_map: &HashMap<TItem, TParentInfo, S>,
     mut get_parent: impl FnMut(&TParentInfo) -> Option<TItem>,
 ) -> Vec<TItem> {
