@@ -27,7 +27,7 @@ pub fn compute_path<TGraph: StateGraph>(
         .0
         .clone();
 
-    Ok(reconstruct_path_to(goal, &parent_map, Clone::clone))
+    Ok(reconstruct_path_to(goal, parent_map, |p| p))
 }
 
 fn compute_parents<TGraph: StateGraph>(
