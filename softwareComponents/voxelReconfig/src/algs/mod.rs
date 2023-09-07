@@ -1,8 +1,15 @@
-use std::collections::HashMap;
-use std::hash::BuildHasher;
+mod common;
 
 pub mod astar;
 pub mod bfs;
+
+pub mod bidir;
+pub mod onedir;
+
+use rustc_hash::FxHashMap;
+use std::rc::Rc;
+
+pub type ParentMap<TItem, TNodeInfo> = FxHashMap<TItem, (Option<TItem>, TNodeInfo)>;
 
 #[derive(Debug, Clone, Copy, amplify::Display, amplify::Error)]
 #[display(doc_comments)]
@@ -30,52 +37,23 @@ pub trait StateGraph {
     fn next_states(state: &Self::StateType) -> Self::NextStatesIter<'_>;
 }
 
-fn reconstruct_path_to<TItem: Eq + std::hash::Hash, TParentInfo, S: BuildHasher>(
-    goal: TItem,
-    mut parent_map: HashMap<TItem, TParentInfo, S>,
-    mut get_parent: impl FnMut(TParentInfo) -> Option<TItem>,
-) -> Vec<TItem> {
-    assert!(parent_map.contains_key(&goal), "Missing goal parent");
-    let mut path = Vec::new();
-    let mut parent = goal;
-    loop {
-        if let Some(new_parent_info) = parent_map.remove(&parent) {
-            if let Some(new_parent) = get_parent(new_parent_info) {
-                path.push(std::mem::replace(&mut parent, new_parent));
-            } else {
-                path.push(parent);
-                break;
-            }
-        } else {
-            if path.contains(&parent) {
-                panic!("Cyclic dependency in parent graph");
-            } else {
-                panic!("Missing parent info");
-            }
-        }
-    }
+pub trait AlgInfo<TGraph: StateGraph> {
+    type NodeInfo: Default + Clone = ();
+    const EARLY_CHECK: bool;
 
-    path.reverse();
-    path
-}
+    fn new(init: Rc<TGraph::StateType>, goal: &TGraph::StateType) -> Self
+    where
+        Self: Sized;
 
-#[allow(unused)]
-fn reconstruct_path_to_noconsume<TItem: Eq + std::hash::Hash, TParentInfo, S: BuildHasher>(
-    goal: TItem,
-    parent_map: &HashMap<TItem, TParentInfo, S>,
-    mut get_parent: impl FnMut(&TParentInfo) -> Option<TItem>,
-) -> Vec<TItem> {
-    assert!(parent_map.contains_key(&goal), "Missing goal parent");
-    let mut parent = Some(goal);
-    let mut path = std::iter::from_fn(|| {
-        let new_parent = parent_map
-            .get(parent.as_ref()?)
-            .map(&mut get_parent)
-            .expect("Missing prev node");
-        std::mem::replace(&mut parent, new_parent)
-    })
-    .collect::<Vec<_>>();
-
-    path.reverse();
-    path
+    fn visit_next_state(
+        &mut self,
+        parent_map: &ParentMap<Rc<TGraph::StateType>, Self::NodeInfo>,
+    ) -> Option<(Rc<TGraph::StateType>, Self::NodeInfo)>;
+    fn get_node_info(
+        &mut self,
+        parent_node_info: &Self::NodeInfo,
+        new_state: &TGraph::StateType,
+        parent_map: &ParentMap<Rc<TGraph::StateType>, Self::NodeInfo>,
+    ) -> Option<Self::NodeInfo>;
+    fn add_state_to_visit(&mut self, state: Rc<TGraph::StateType>, node_info: Self::NodeInfo);
 }

@@ -103,27 +103,31 @@ where
     TWorld: NormVoxelWorld + Eq + std::hash::Hash,
     TWorld::IndexType: num::Integer + std::hash::Hash + num::ToPrimitive,
 {
+    use algs::onedir::compute_path;
     type StateGraph<T> = VoxelWorldsGraph<T>;
+    use algs::{astar::AstarAlgInfo, bfs::BfsAlgInfo};
+
     match alg_type {
-        AlgorithmType::Bfs => algs::bfs::compute_path::<StateGraph<_>>(init, goal),
+        AlgorithmType::Bfs => compute_path::<StateGraph<_>, BfsAlgInfo<_>>(init, goal),
+
         AlgorithmType::AstarZero => {
-            algs::astar::compute_path::<StateGraph<_>, ZeroMetric>(init, goal)
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, ZeroMetric>>(init, goal)
         }
         AlgorithmType::AstarNaive => {
-            algs::astar::compute_path::<StateGraph<_>, NaiveMetric<_>>(init, goal)
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, NaiveMetric<_>>>(init, goal)
         }
         AlgorithmType::AstarAssignment => {
-            algs::astar::compute_path::<StateGraph<_>, AssignmentMetric<_>>(init, goal)
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, AssignmentMetric<_>>>(init, goal)
         }
 
         AlgorithmType::AstarZeroOpt => {
-            algs::astar::opt::compute_path::<StateGraph<_>, ZeroMetric>(init, goal)
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, ZeroMetric, true>>(init, goal)
         }
         AlgorithmType::AstarNaiveOpt => {
-            algs::astar::opt::compute_path::<StateGraph<_>, NaiveMetric<_>>(init, goal)
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, NaiveMetric<_>, true>>(init, goal)
         }
         AlgorithmType::AstarAssignmentOpt => {
-            algs::astar::opt::compute_path::<StateGraph<_>, AssignmentMetric<_>>(init, goal)
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, AssignmentMetric<_>, true>>(init, goal)
         }
     }
 }
@@ -140,31 +144,34 @@ where
     TWorld: 'static,
     TConnections: 'static,
 {
-    type StateGraph<T, U> = VoxelWorldsWithConnectionsGraph<T, U>;
+    use algs::onedir::compute_path;
+    type StateGraph<TWorld, TConnections> = VoxelWorldsWithConnectionsGraph<TWorld, TConnections>;
+    use algs::bfs::BfsAlgInfo;
+    type AstarAlgInfo<TState, TMetric, const OPTIMAL: bool = false> =
+        algs::astar::AstarAlgInfo<TState, WorldMetricWrapper<TMetric>, OPTIMAL>;
+
     match alg_type {
-        AlgorithmType::Bfs => algs::bfs::compute_path::<StateGraph<_, _>>(init, goal),
+        AlgorithmType::Bfs => compute_path::<StateGraph<_, _>, BfsAlgInfo<_>>(init, goal),
+
         AlgorithmType::AstarZero => {
-            algs::astar::compute_path::<StateGraph<_, _>, ZeroMetric>(init, goal)
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, ZeroMetric>>(init, goal)
         }
-        AlgorithmType::AstarNaive => algs::astar::compute_path::<
-            StateGraph<_, _>,
-            WorldMetricWrapper<NaiveMetric<_>>,
-        >(init, goal),
-        AlgorithmType::AstarAssignment => algs::astar::compute_path::<
-            StateGraph<_, _>,
-            WorldMetricWrapper<AssignmentMetric<_>>,
-        >(init, goal),
+        AlgorithmType::AstarNaive => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, NaiveMetric<_>>>(init, goal)
+        }
+        AlgorithmType::AstarAssignment => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, AssignmentMetric<_>>>(init, goal)
+        }
+
         AlgorithmType::AstarZeroOpt => {
-            algs::astar::opt::compute_path::<StateGraph<_, _>, ZeroMetric>(init, goal)
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, ZeroMetric, true>>(init, goal)
         }
-        AlgorithmType::AstarNaiveOpt => algs::astar::opt::compute_path::<
-            StateGraph<_, _>,
-            WorldMetricWrapper<NaiveMetric<_>>,
-        >(init, goal),
-        AlgorithmType::AstarAssignmentOpt => algs::astar::opt::compute_path::<
-            StateGraph<_, _>,
-            WorldMetricWrapper<AssignmentMetric<_>>,
-        >(init, goal),
+        AlgorithmType::AstarNaiveOpt => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, NaiveMetric<_>, true>>(init, goal)
+        }
+        AlgorithmType::AstarAssignmentOpt => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, AssignmentMetric<_>, true>>(init, goal)
+        }
     }
 }
 
