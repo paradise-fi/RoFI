@@ -9,7 +9,13 @@ from typing import List, Optional, TextIO
 
 
 class Logger:
-    def __init__(self, verbosity: int, no_log_term: bool, log_file: Optional[str], log_json: Optional[str]):
+    def __init__(
+        self,
+        verbosity: int,
+        no_log_term: bool,
+        log_file: Optional[str],
+        log_json: Optional[str],
+    ):
         self.verbosity = verbosity
         self.no_log_term = no_log_term
         self.log_file = log_file
@@ -28,26 +34,28 @@ class Logger:
 
     @staticmethod
     def term_formatter() -> logging.Formatter:
-        log_fmt = logging.Formatter('[{asctime} {levelname:5.5} {module}] {message}',
-                                    style='{')
-        log_fmt.datefmt = '%H:%M:%S'
+        log_fmt = logging.Formatter(
+            "[{asctime} {levelname:5.5} {module}] {message}", style="{"
+        )
+        log_fmt.datefmt = "%H:%M:%S"
         return log_fmt
 
     @staticmethod
     def file_formatter() -> logging.Formatter:
-        log_fmt = logging.Formatter('[{asctime} {levelname:5.5} {module}] {message}',
-                                    style='{')
-        log_fmt.datefmt = '%H:%M:%S'
+        log_fmt = logging.Formatter(
+            "[{asctime} {levelname:5.5} {module}] {message}", style="{"
+        )
+        log_fmt.datefmt = "%H:%M:%S"
         return log_fmt
 
     @staticmethod
     def json_formatter() -> logging.Formatter:
         format = '{{"time":"{asctime}","message":"{message}","module_path":"{module}","file":"{filename}","line":{lineno},"level":"{levelname}","target":"{module}"}}'
-        log_fmt = logging.Formatter(format, style='{')
+        log_fmt = logging.Formatter(format, style="{")
         return log_fmt
 
     @staticmethod
-    def get_term_handler(no_log_term: bool) -> 'logging.StreamHandler[TextIO]':
+    def get_term_handler(no_log_term: bool) -> "logging.StreamHandler[TextIO]":
         term_handler = logging.StreamHandler(sys.stderr)
         if no_log_term:
             term_handler.setLevel(logging.ERROR)
@@ -55,8 +63,10 @@ class Logger:
         return term_handler
 
     @staticmethod
-    def get_file_handler(log_file: str, formatter: logging.Formatter) -> logging.FileHandler:
-        file_handler = logging.FileHandler(log_file, encoding='utf-8')
+    def get_file_handler(
+        log_file: str, formatter: logging.Formatter
+    ) -> logging.FileHandler:
+        file_handler = logging.FileHandler(log_file, encoding="utf-8")
         file_handler.setFormatter(formatter)
         return file_handler
 
@@ -66,131 +76,239 @@ class Logger:
 
         logger.addHandler(Logger.get_term_handler(self.no_log_term))
         if self.log_file is not None:
-            logger.addHandler(Logger.get_file_handler(
-                self.log_file, Logger.file_formatter()))
+            logger.addHandler(
+                Logger.get_file_handler(self.log_file, Logger.file_formatter())
+            )
         if self.log_json is not None:
-            logger.addHandler(Logger.get_file_handler(
-                self.log_json, Logger.json_formatter()))
+            logger.addHandler(
+                Logger.get_file_handler(self.log_json, Logger.json_formatter())
+            )
 
     def cmd_args(self) -> List[str]:
         args: List[str] = []
         if self.verbosity > 0:
             args.append(f"-{'v' * self.verbosity}")
         if not self.no_log_term:
-            args.append('--no-log-term')
+            args.append("--no-log-term")
         if self.log_file is not None:
-            args.extend(['--log-file', self.log_file])
+            args.extend(["--log-file", self.log_file])
         if self.log_json is not None:
-            args.extend(['--log-json', self.log_json])
+            args.extend(["--log-json", self.log_json])
         return args
 
 
-def convert(input_world_file: str, output_world_file: str, input_format: str, output_format: str):
+def convert(
+    input_world_file: str, output_world_file: str, input_format: str, output_format: str
+):
     try:
-        cmd = ['rofi-convert', input_world_file, output_world_file,
-               '--input-format', input_format,
-               '--output-format', output_format,
-               ]
-        logging.debug(f'Running cmd: {subprocess.list2cmdline(cmd)}')
+        cmd = [
+            "rofi-convert",
+            input_world_file,
+            output_world_file,
+            "--input-format",
+            input_format,
+            "--output-format",
+            output_format,
+        ]
+        logging.debug(f"Running cmd: {subprocess.list2cmdline(cmd)}")
         subprocess.check_call(cmd, stdout=sys.stderr)
     except subprocess.CalledProcessError as _:
         logging.fatal(
-            f"Error while converting '{input_world_file}' (format: {input_format}) to '{output_world_file}' (format: {output_format})")
+            f"Error while converting '{input_world_file}' (format: {input_format}) to '{output_world_file}' (format: {output_format})"
+        )
         exit(1)
 
 
-def voxel_reconfig(init_voxel_file: str, goal_voxel_file: str, args: List[str], output: TextIO, logger: Logger):
+def voxel_reconfig(
+    init_voxel_file: str,
+    goal_voxel_file: str,
+    args: List[str],
+    output: TextIO,
+    logger: Logger,
+):
     try:
-        logging.info('Starting voxel reconfiguration')
+        logging.info("Starting voxel reconfiguration")
 
-        cmd = ['rofi-voxel_main', init_voxel_file, goal_voxel_file] \
-            + args + logger.cmd_args()
+        cmd = (
+            ["rofi-voxel_main", init_voxel_file, goal_voxel_file]
+            + args
+            + logger.cmd_args()
+        )
 
-        logging.debug(f'Running cmd: {subprocess.list2cmdline(cmd)}')
+        logging.debug(f"Running cmd: {subprocess.list2cmdline(cmd)}")
         subprocess.check_call(cmd, stdout=output)
 
-        logging.info('Ended voxel reconfiguration')
+        logging.info("Ended voxel reconfiguration")
     except subprocess.CalledProcessError as _:
-        logging.fatal('Error while running voxel reconfig')
+        logging.fatal("Error while running voxel reconfig")
         exit(1)
 
 
-def convert_and_reconfig(init_world_file: str, goal_world_file: str, init_format: str, goal_format: str, args: List[str], output: TextIO, logger: Logger):
-    assert init_world_file != '-' or goal_world_file != '-'
+def convert_and_reconfig(
+    init_world_file: str,
+    goal_world_file: str,
+    init_format: str,
+    goal_format: str,
+    args: List[str],
+    output: TextIO,
+    logger: Logger,
+):
+    assert init_world_file != "-" or goal_world_file != "-"
 
     with tempfile.TemporaryDirectory() as tmp_dir:
-        if init_format == 'voxel':
+        if init_format == "voxel":
             init_voxel_file = init_world_file
         else:
-            init_voxel_file = tempfile.NamedTemporaryFile(suffix='.json',
-                                                          dir=tmp_dir).name
-            convert(init_world_file, init_voxel_file,
-                    input_format=init_format, output_format='voxel')
+            init_voxel_file = tempfile.NamedTemporaryFile(
+                suffix=".json", dir=tmp_dir
+            ).name
+            convert(
+                init_world_file,
+                init_voxel_file,
+                input_format=init_format,
+                output_format="voxel",
+            )
 
-        if goal_format == 'voxel':
+        if goal_format == "voxel":
             goal_voxel_file = goal_world_file
         else:
-            goal_voxel_file = tempfile.NamedTemporaryFile(suffix='.json',
-                                                          dir=tmp_dir).name
-            convert(goal_world_file, goal_voxel_file,
-                    input_format=goal_format, output_format='voxel')
+            goal_voxel_file = tempfile.NamedTemporaryFile(
+                suffix=".json", dir=tmp_dir
+            ).name
+            convert(
+                goal_world_file,
+                goal_voxel_file,
+                input_format=goal_format,
+                output_format="voxel",
+            )
 
-        voxel_reconfig(init_voxel_file, goal_voxel_file, args=args,
-                       output=output, logger=logger)
+        voxel_reconfig(
+            init_voxel_file, goal_voxel_file, args=args, output=output, logger=logger
+        )
 
 
 def check_input_files(files: List[str]):
-    if files.count('-') > 1:
+    if files.count("-") > 1:
         logging.fatal("Multiple input file arguments have value '-' (stdin)")
         exit(1)
 
 
 @click.command()
-@click.argument('init_world_file', type=click.Path(file_okay=True, dir_okay=False, exists=True, allow_dash=True))
-@click.argument('goal_world_file', type=click.Path(file_okay=True, dir_okay=False, exists=True, allow_dash=True))
-@click.option('--output', '-o', type=click.File('w'), default='-',
-              help="Path to file where to store the result")
-@click.option('--format', '-f', type=click.Choice(['json', 'voxel', 'old']), default='json', show_default=True,
-              help='Format of world files')
-@click.option('--init-format', '--if', type=click.Choice(['json', 'voxel', 'old']), default=None,
-              help='Format of init world files (overrides --format)')
-@click.option('--goal-format', '--gf', type=click.Choice(['json', 'voxel', 'old']), default=None,
-              help='Format of goal world files (overrides --format)')
-@click.option('--repr', '-r', type=click.Choice(['map', 'matrix', 'sortvec']), default='sortvec', show_default=True,
-              help='Voxel world representation for reconfig algorithm')
-@click.option('--alg', '-a', type=click.Choice(['bfs',
-                                                'astar-zero', 'astar-zero-nopt',
-                                                'astar-naive', 'astar-naive-nopt',
-                                                ]),
-              default='bfs', show_default=True,
-              help='Algorithm for reconfiguration')
-@click.option('--verbose', '-v', count=True,
-              help='Increase verbosity level')
-@click.option('--no-log-term', is_flag=True,
-              help="Don't log to terminal (does not efect logging errors to stderr)")
-@click.option('--log-file', type=click.Path(file_okay=True, dir_okay=False, exists=False, writable=True, readable=False),
-              help='Log to file in human readable format')
-@click.option('--log-json', type=click.Path(file_okay=True, dir_okay=False, exists=False, writable=True, readable=False),
-              help='Log to file in json format (each log as one json)')
-def rofi_voxel(init_world_file: str, goal_world_file: str, output: TextIO,
-               format: str, init_format: Optional[str], goal_format: Optional[str],
-               repr: str, alg: str,
-               verbose: int, no_log_term: bool, log_file: Optional[str], log_json: Optional[str]):
+@click.argument(
+    "init_world_file",
+    type=click.Path(file_okay=True, dir_okay=False, exists=True, allow_dash=True),
+)
+@click.argument(
+    "goal_world_file",
+    type=click.Path(file_okay=True, dir_okay=False, exists=True, allow_dash=True),
+)
+@click.option(
+    "--output",
+    "-o",
+    type=click.File("w"),
+    default="-",
+    help="Path to file where to store the result",
+)
+@click.option(
+    "--format",
+    "-f",
+    type=click.Choice(["json", "voxel", "old"]),
+    default="json",
+    show_default=True,
+    help="Format of world files",
+)
+@click.option(
+    "--init-format",
+    "--if",
+    type=click.Choice(["json", "voxel", "old"]),
+    default=None,
+    help="Format of init world files (overrides --format)",
+)
+@click.option(
+    "--goal-format",
+    "--gf",
+    type=click.Choice(["json", "voxel", "old"]),
+    default=None,
+    help="Format of goal world files (overrides --format)",
+)
+@click.option(
+    "--repr",
+    "-r",
+    type=click.Choice(["map", "matrix", "sortvec"]),
+    default="sortvec",
+    show_default=True,
+    help="Voxel world representation for reconfig algorithm",
+)
+@click.option(
+    "--alg",
+    "-a",
+    type=click.Choice(
+        [
+            "bfs",
+            "astar-zero",
+            "astar-zero-nopt",
+            "astar-naive",
+            "astar-naive-nopt",
+        ]
+    ),
+    default="bfs",
+    show_default=True,
+    help="Algorithm for reconfiguration",
+)
+@click.option("--verbose", "-v", count=True, help="Increase verbosity level")
+@click.option(
+    "--no-log-term",
+    is_flag=True,
+    help="Don't log to terminal (does not efect logging errors to stderr)",
+)
+@click.option(
+    "--log-file",
+    type=click.Path(
+        file_okay=True, dir_okay=False, exists=False, writable=True, readable=False
+    ),
+    help="Log to file in human readable format",
+)
+@click.option(
+    "--log-json",
+    type=click.Path(
+        file_okay=True, dir_okay=False, exists=False, writable=True, readable=False
+    ),
+    help="Log to file in json format (each log as one json)",
+)
+def rofi_voxel(
+    init_world_file: str,
+    goal_world_file: str,
+    output: TextIO,
+    format: str,
+    init_format: Optional[str],
+    goal_format: Optional[str],
+    repr: str,
+    alg: str,
+    verbose: int,
+    no_log_term: bool,
+    log_file: Optional[str],
+    log_json: Optional[str],
+):
     """Run voxel reconfig.
     Returns the reconfig sequence from world in INIT_WORLD_FILE to world in GOAL_WORLD_FILE in voxel format.
     """
-    logger = Logger(verbosity=verbose, no_log_term=no_log_term,
-                    log_file=log_file, log_json=log_json)
+    logger = Logger(
+        verbosity=verbose, no_log_term=no_log_term, log_file=log_file, log_json=log_json
+    )
     logger.setup_logging()
 
     check_input_files([init_world_file, goal_world_file])
 
-    convert_and_reconfig(init_world_file, goal_world_file,
-                         format if init_format is None else init_format,
-                         format if goal_format is None else goal_format,
-                         args=['--repr', repr, '--alg', alg],
-                         output=output, logger=logger)
+    convert_and_reconfig(
+        init_world_file,
+        goal_world_file,
+        format if init_format is None else init_format,
+        format if goal_format is None else goal_format,
+        args=["--repr", repr, "--alg", alg],
+        output=output,
+        logger=logger,
+    )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     rofi_voxel()
