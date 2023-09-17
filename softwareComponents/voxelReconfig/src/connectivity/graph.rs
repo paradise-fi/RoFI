@@ -7,7 +7,7 @@ use crate::voxel_world::{VoxelSubworld, VoxelWorld};
 use bimap::BiHashMap;
 use rs_graph::algorithms::{subgraph, Item};
 use rs_graph::linkedlistgraph::Node;
-use rs_graph::traits::{GraphSize, Undirected};
+use rs_graph::traits::FiniteGraph;
 use rs_graph::{Buildable, Builder, LinkedListGraph};
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -19,9 +19,9 @@ pub static TRUE_CUTS: atomic::AtomicU64 = atomic::AtomicU64::new(0);
 pub static FALSE_CUTS: atomic::AtomicU64 = atomic::AtomicU64::new(0);
 
 // Fix bug in `rs_graph::algorithms::is_connected`
-pub fn is_connected<'a, TGraph>(graph: &'a TGraph) -> bool
+pub fn is_connected<TGraph>(graph: &TGraph) -> bool
 where
-    TGraph: rs_graph::IndexGraph<'a>,
+    TGraph: rs_graph::IndexGraph,
 {
     graph.num_nodes() <= 1 || rs_graph::algorithms::is_connected(&graph)
 }
@@ -197,9 +197,9 @@ where
     }
 }
 
-fn get_subgraph<TSelection>(graph_base: &GraphType, selection: &TSelection) -> GraphType
+fn get_subgraph<'a, TSelection>(graph_base: &GraphType, selection: &TSelection) -> GraphType
 where
-    TSelection: Fn(<GraphType as rs_graph::traits::GraphType>::Node) -> bool,
+    TSelection: Fn(<GraphType as rs_graph::traits::GraphType>::Node<'a>) -> bool,
 {
     subgraph(graph_base, |i| match i {
         Item::Node(node) => selection(node),
@@ -207,9 +207,9 @@ where
     })
 }
 
-fn is_valid_selection<TSelection>(graph_base: &GraphType, selection: TSelection) -> bool
+fn is_valid_selection<'a, TSelection>(graph_base: &GraphType, selection: TSelection) -> bool
 where
-    TSelection: Fn(<GraphType as rs_graph::traits::GraphType>::Node) -> bool,
+    TSelection: Fn(<GraphType as rs_graph::traits::GraphType>::Node<'a>) -> bool,
 {
     [
         get_subgraph(graph_base, &selection),
