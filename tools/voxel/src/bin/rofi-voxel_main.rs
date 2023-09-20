@@ -58,6 +58,9 @@ struct Cli {
     /// Algorithm for reconfiguration
     #[arg(short, long, default_value_t = AlgorithmType::Bfs)]
     alg: AlgorithmType,
+    /// Use bidirectional path finding
+    #[arg(short, long, default_value_t = false)]
+    bidir: bool,
     /// Use connections with specified representation
     #[arg(short, long)]
     connections: Option<ConnectionsRepr>,
@@ -98,6 +101,22 @@ fn run_reconfig_alg<TWorld>(
     init: &TWorld,
     goal: &TWorld,
     alg_type: AlgorithmType,
+    bidir: bool,
+) -> Result<Vec<Rc<TWorld>>, algs::Error>
+where
+    TWorld: NormVoxelWorld + Eq + std::hash::Hash,
+    TWorld::IndexType: num::Integer + std::hash::Hash + num::ToPrimitive,
+{
+    if bidir {
+        run_reconfig_alg_bidir(init, goal, alg_type)
+    } else {
+        run_reconfig_alg_onedir(init, goal, alg_type)
+    }
+}
+fn run_reconfig_alg_onedir<TWorld>(
+    init: &TWorld,
+    goal: &TWorld,
+    alg_type: AlgorithmType,
 ) -> Result<Vec<Rc<TWorld>>, algs::Error>
 where
     TWorld: NormVoxelWorld + Eq + std::hash::Hash,
@@ -132,7 +151,64 @@ where
     }
 }
 
+fn run_reconfig_alg_bidir<TWorld>(
+    init: &TWorld,
+    goal: &TWorld,
+    alg_type: AlgorithmType,
+) -> Result<Vec<Rc<TWorld>>, algs::Error>
+where
+    TWorld: NormVoxelWorld + Eq + std::hash::Hash,
+    TWorld::IndexType: num::Integer + std::hash::Hash + num::ToPrimitive,
+{
+    use algs::bidir::compute_path;
+    type StateGraph<T> = VoxelWorldsGraph<T>;
+    use algs::{astar::AstarAlgInfo, bfs::BfsAlgInfo};
+
+    match alg_type {
+        AlgorithmType::Bfs => compute_path::<StateGraph<_>, BfsAlgInfo<_>>(init, goal),
+
+        AlgorithmType::AstarZero => {
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, ZeroMetric>>(init, goal)
+        }
+        AlgorithmType::AstarNaive => {
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, NaiveMetric<_>>>(init, goal)
+        }
+        AlgorithmType::AstarAssignment => {
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, AssignmentMetric<_>>>(init, goal)
+        }
+
+        AlgorithmType::AstarZeroOpt => {
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, ZeroMetric, true>>(init, goal)
+        }
+        AlgorithmType::AstarNaiveOpt => {
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, NaiveMetric<_>, true>>(init, goal)
+        }
+        AlgorithmType::AstarAssignmentOpt => {
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, AssignmentMetric<_>, true>>(init, goal)
+        }
+    }
+}
+
 fn run_reconfig_alg_with_connections<TWorld, TConnections>(
+    init: &VoxelWorldWithConnections<TWorld, TConnections>,
+    goal: &VoxelWorldWithConnections<TWorld, TConnections>,
+    alg_type: AlgorithmType,
+    bidir: bool,
+) -> Result<Vec<Rc<VoxelWorldWithConnections<TWorld, TConnections>>>, algs::Error>
+where
+    TWorld: NormVoxelWorld + Eq + std::hash::Hash,
+    TWorld::IndexType: num::Integer + std::hash::Hash + num::ToPrimitive,
+    TConnections: Connections<IndexType = TWorld::IndexType> + Eq + std::hash::Hash + Clone,
+    TWorld: 'static,
+    TConnections: 'static,
+{
+    if bidir {
+        run_reconfig_alg_with_connections_bidir(init, goal, alg_type)
+    } else {
+        run_reconfig_alg_with_connections_onedir(init, goal, alg_type)
+    }
+}
+fn run_reconfig_alg_with_connections_onedir<TWorld, TConnections>(
     init: &VoxelWorldWithConnections<TWorld, TConnections>,
     goal: &VoxelWorldWithConnections<TWorld, TConnections>,
     alg_type: AlgorithmType,
@@ -175,11 +251,55 @@ where
     }
 }
 
+fn run_reconfig_alg_with_connections_bidir<TWorld, TConnections>(
+    init: &VoxelWorldWithConnections<TWorld, TConnections>,
+    goal: &VoxelWorldWithConnections<TWorld, TConnections>,
+    alg_type: AlgorithmType,
+) -> Result<Vec<Rc<VoxelWorldWithConnections<TWorld, TConnections>>>, algs::Error>
+where
+    TWorld: NormVoxelWorld + Eq + std::hash::Hash,
+    TWorld::IndexType: num::Integer + std::hash::Hash + num::ToPrimitive,
+    TConnections: Connections<IndexType = TWorld::IndexType> + Eq + std::hash::Hash + Clone,
+    TWorld: 'static,
+    TConnections: 'static,
+{
+    use algs::bidir::compute_path;
+    type StateGraph<TWorld, TConnections> = VoxelWorldsWithConnectionsGraph<TWorld, TConnections>;
+    use algs::bfs::BfsAlgInfo;
+    type AstarAlgInfo<TState, TMetric, const OPTIMAL: bool = false> =
+        algs::astar::AstarAlgInfo<TState, WorldMetricWrapper<TMetric>, OPTIMAL>;
+
+    match alg_type {
+        AlgorithmType::Bfs => compute_path::<StateGraph<_, _>, BfsAlgInfo<_>>(init, goal),
+
+        AlgorithmType::AstarZero => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, ZeroMetric>>(init, goal)
+        }
+        AlgorithmType::AstarNaive => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, NaiveMetric<_>>>(init, goal)
+        }
+        AlgorithmType::AstarAssignment => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, AssignmentMetric<_>>>(init, goal)
+        }
+
+        AlgorithmType::AstarZeroOpt => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, ZeroMetric, true>>(init, goal)
+        }
+        AlgorithmType::AstarNaiveOpt => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, NaiveMetric<_>, true>>(init, goal)
+        }
+        AlgorithmType::AstarAssignmentOpt => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, AssignmentMetric<_>, true>>(init, goal)
+        }
+    }
+}
+
 fn run_voxel_reconfig<TWorld>(
     init: rofi_voxel_reconfig::serde::VoxelWorld<TWorld::IndexType>,
     goal: rofi_voxel_reconfig::serde::VoxelWorld<TWorld::IndexType>,
     connections_repr: Option<ConnectionsRepr>,
     alg_type: AlgorithmType,
+    bidir: bool,
 ) -> Result<Vec<rofi_voxel_reconfig::serde::VoxelWorld<TWorld::IndexType>>>
 where
     TWorld: NormVoxelWorld + Eq + std::hash::Hash,
@@ -194,7 +314,7 @@ where
 
     match connections_repr {
         None => {
-            let reconfig_sequence = run_reconfig_alg::<TWorld>(&init, &goal, alg_type)?;
+            let reconfig_sequence = run_reconfig_alg::<TWorld>(&init, &goal, alg_type, bidir)?;
             Ok(reconfig_sequence
                 .iter()
                 .map(|world| rofi_voxel_reconfig::serde::VoxelWorld::from_world(world.as_ref()))
@@ -206,6 +326,7 @@ where
                     &VoxelWorldWithConnections::new_all_connected(init),
                     &VoxelWorldWithConnections::new_all_connected(goal),
                     alg_type,
+                    bidir,
                 )?;
             Ok(reconfig_sequence
                 .iter()
@@ -218,6 +339,7 @@ where
                     &VoxelWorldWithConnections::new_all_connected(init),
                     &VoxelWorldWithConnections::new_all_connected(goal),
                     alg_type,
+                    bidir,
                 )?;
             Ok(reconfig_sequence
                 .iter()
@@ -245,15 +367,27 @@ fn main() -> Result<()> {
     let InputWorlds { init, goal } = args.get_worlds()?;
 
     let reconfig_sequence = match args.repr {
-        VoxelWorldRepr::Map => {
-            run_voxel_reconfig::<MapVoxelWorld<_>>(init, goal, args.connections, args.alg)?
-        }
-        VoxelWorldRepr::Matrix => {
-            run_voxel_reconfig::<MatrixVoxelWorld<_>>(init, goal, args.connections, args.alg)?
-        }
-        VoxelWorldRepr::Sortvec => {
-            run_voxel_reconfig::<SortvecVoxelWorld<_>>(init, goal, args.connections, args.alg)?
-        }
+        VoxelWorldRepr::Map => run_voxel_reconfig::<MapVoxelWorld<_>>(
+            init,
+            goal,
+            args.connections,
+            args.alg,
+            args.bidir,
+        )?,
+        VoxelWorldRepr::Matrix => run_voxel_reconfig::<MatrixVoxelWorld<_>>(
+            init,
+            goal,
+            args.connections,
+            args.alg,
+            args.bidir,
+        )?,
+        VoxelWorldRepr::Sortvec => run_voxel_reconfig::<SortvecVoxelWorld<_>>(
+            init,
+            goal,
+            args.connections,
+            args.alg,
+            args.bidir,
+        )?,
     };
 
     if args.short {
