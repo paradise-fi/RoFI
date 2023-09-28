@@ -2,6 +2,8 @@ FROM ghcr.io/paradise-fi/rofi.debian:latest
 
 SHELL ["/bin/bash", "-c"]
 
+RUN apt-get install -y --no-install-recommends time jq moreutils
+
 RUN cd /; \
     git clone https://github.com/paradise-fi/RoFI.git --depth 1 --branch master; \
     cd RoFI; \
