@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
-from concurrent import futures
 import click
 import os
 import shutil
 import subprocess
 import sys
+
+from concurrent import futures
 from concurrent.futures import ThreadPoolExecutor
-from typing import List
 
 
 def run_rofi_tangle(source: str, output: str, steps: int, log: str):
@@ -50,14 +50,14 @@ def run_rofi_tangle(source: str, output: str, steps: int, log: str):
     help="The maximum number of concurrent jobs",
 )
 def gen_tangled_data(
-    world_files: List[str], output_dir: str, steps: int, samples: int, joblimit: int
+    world_files: list[str], output_dir: str, steps: int, samples: int, joblimit: int
 ):
     """Generate source data by randomly tangling rofi worlds (in old format) from WORLD_FILES by given number of steps."""
     assert shutil.which("rofi-tangle") is not None, "Could not find rofi-tangle"
     os.makedirs(output_dir, exist_ok=True)
 
     with ThreadPoolExecutor(max_workers=joblimit) as executor:
-        jobs: List[futures.Future[None]] = []
+        jobs: list[futures.Future[None]] = []
         counter = 1
         for world in world_files:
             basename, ext = os.path.splitext(os.path.basename(world))

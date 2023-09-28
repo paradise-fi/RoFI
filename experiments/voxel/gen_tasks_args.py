@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
+import click
 import json
 import subprocess
 import sys
-from collections import defaultdict
-from typing import Dict, List, Optional, TextIO
 
-import click
+from collections import defaultdict
+from typing import Optional, TextIO
 
 
 class World:
@@ -52,21 +52,21 @@ class Task:
         }
 
 
-def print_task_args(tasks: List[Task], output: TextIO = sys.stdout):
+def print_task_args(tasks: list[Task], output: TextIO = sys.stdout):
     args_lines = [task.get_args() for task in tasks]
     json.dump(args_lines, indent=4, fp=output)
     print(file=output)
 
 
 def generate_e2e_task_args(
-    world_files: List[str], format: str, both_directions: bool
-) -> List[Task]:
-    by_module_count: Dict[int, List[World]] = defaultdict(list)
+    world_files: list[str], format: str, both_directions: bool
+) -> list[Task]:
+    by_module_count: dict[int, list[World]] = defaultdict(list)
     for world_file in world_files:
         world = World(world_file, format)
         by_module_count[world.module_count()].append(world)
 
-    tasks: List[Task] = []
+    tasks: list[Task] = []
     for worlds in by_module_count.values():
         if len(worlds) == 1:
             print(
@@ -83,10 +83,10 @@ def generate_e2e_task_args(
 
 
 def generate_snake_tasks(
-    world_files: List[str], format: str, sizelimit: Optional[int]
-) -> List[Task]:
-    tasks: List[Task] = []
-    by_module_counts: Dict[int, int] = defaultdict(int)
+    world_files: list[str], format: str, sizelimit: Optional[int]
+) -> list[Task]:
+    tasks: list[Task] = []
+    by_module_counts: dict[int, int] = defaultdict(int)
     for world_file in world_files:
         world = World(world_file, format=format)
         module_count = world.module_count()
@@ -127,7 +127,7 @@ def gen_task_args_cli():
     show_default=True,
     help="Generate both directions for every pair",
 )
-def e2e(world_files: List[str], format: str, both_directions: bool):
+def e2e(world_files: list[str], format: str, both_directions: bool):
     """Generate task set args from WORLD_FILES from every world to every other world of the same module count."""
     tasks = generate_e2e_task_args(
         world_files, format=format, both_directions=both_directions
@@ -154,7 +154,7 @@ def e2e(world_files: List[str], format: str, both_directions: bool):
     type=click.IntRange(1),
     help="Include at most --sizelimit benchmarks of given module's count",
 )
-def snake(world_files: List[str], format: str, sizelimit: Optional[int]):
+def snake(world_files: list[str], format: str, sizelimit: Optional[int]):
     """Generate task args set from WORLD_FILES to snake configuration."""
     tasks = generate_snake_tasks(world_files, format=format, sizelimit=sizelimit)
     print_task_args(tasks)

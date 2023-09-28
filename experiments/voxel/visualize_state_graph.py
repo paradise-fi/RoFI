@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 
-from dataclasses import dataclass
 import click
 import itertools
 import json
-from prettytable import PrettyTable
-from typing import Any, Dict, Iterable, List, Literal, Optional, TextIO, Tuple
 
+from dataclasses import dataclass
+from prettytable import PrettyTable
+from typing import Any, Iterable, Literal, Optional, TextIO
 from utils import parse_json
+
 
 TableType = Literal["both", "avg", "sum"]
 
@@ -114,7 +115,7 @@ def get_table_row(label: str, calls: Counters, *, type: TableType, show_percent:
 
 
 def get_table(
-    rows: Iterable[Tuple[str, Counters]],
+    rows: Iterable[tuple[str, Counters]],
     *,
     head: str,
     type: TableType,
@@ -131,7 +132,7 @@ def get_table(
 @dataclass(kw_only=True)
 class CountersResult:
     total: Counters
-    bfs_layers: Optional[List[Counters]]
+    bfs_layers: Optional[list[Counters]]
 
     def get_bfs_table(
         self, *, head: str = "Layer", type: TableType, show_percent: bool = True
@@ -166,7 +167,7 @@ class CounterCell:
         )
 
     def to_string(self, *, type: TableType, show_percent: bool = True) -> str:
-        result: List[str] = []
+        result: list[str] = []
         if type == "both" or type == "sum":
             result.append(f"{self.counter_sum}")
         if type == "both" or type == "avg":
@@ -235,11 +236,11 @@ def bfs_layers(
     help="Don't show percentages",
 )
 def total(
-    counters_data_file: List[TextIO],
+    counters_data_file: list[TextIO],
     type_: Literal["both", "avg", "sum"],
     percent: bool,
 ):
-    all_counters: List[Tuple[str, Counters]] = []
+    all_counters: list[tuple[str, Counters]] = []
     for file in counters_data_file:
         counter_data = json.load(file)
         counter = parse_json(CountersResult, counter_data)
@@ -273,17 +274,17 @@ def total(
 def total_json_summary_results(
     results_file: TextIO, type_: Literal["both", "avg", "sum"], percent: bool
 ):
-    all_counters: List[Tuple[str, Counters]] = []
+    all_counters: list[tuple[str, Counters]] = []
 
-    results: Dict[str, Any] = json.load(results_file)
+    results: dict[str, Any] = json.load(results_file)
     assert isinstance(results, dict)
     assert "tasks" in results
-    tasks: List[Any] = results["tasks"]
+    tasks: list[Any] = results["tasks"]
     assert isinstance(tasks, list)
     for i, task in enumerate(tasks, 1):
         assert isinstance(task, dict)
         assert "result" in task
-        task_results: Optional[Dict[str, Any]] = task["result"]
+        task_results: Optional[dict[str, Any]] = task["result"]
         if task_results is None:
             continue
 
@@ -318,15 +319,15 @@ def total_json_summary_results(
 def bfs_from_summary_results(
     results_file: TextIO, type_: Literal["both", "avg", "sum"], percent: bool
 ):
-    results: Dict[str, Any] = json.load(results_file)
+    results: dict[str, Any] = json.load(results_file)
     assert isinstance(results, dict)
     assert "tasks" in results
-    tasks: List[Any] = results["tasks"]
+    tasks: list[Any] = results["tasks"]
     assert isinstance(tasks, list)
     for i, task in enumerate(tasks, 1):
         assert isinstance(task, dict)
         assert "result" in task
-        task_results: Optional[Dict[str, Any]] = task["result"]
+        task_results: Optional[dict[str, Any]] = task["result"]
         if task_results is None:
             continue
         assert isinstance(task_results, dict)
