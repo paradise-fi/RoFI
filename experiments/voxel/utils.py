@@ -1,12 +1,14 @@
 import dataclasses
 import json
-from os import PathLike
 import types
-from typing import Any, Dict, List, Union
 import typing
+
+from os import PathLike
+from typing import Any, TypeVar, Union
 
 
 Path = Union[str, PathLike[str]]
+T = TypeVar("T")
 
 
 class EnhancedJSONEncoder(json.JSONEncoder):
@@ -16,7 +18,7 @@ class EnhancedJSONEncoder(json.JSONEncoder):
         return super().default(o)
 
 
-def parse_json(cls: type, json_value: Any) -> Any:
+def parse_json(cls: type[T], json_value: Any) -> T:
     if dataclasses.is_dataclass(cls):
         return parse_json_dataclass(cls, json_value)
 
@@ -28,38 +30,40 @@ def parse_json(cls: type, json_value: Any) -> Any:
 
     if not isinstance(cls, type):
         raise NotImplementedError(
-            f"Parsing type {cls} from type {type(json_value)} is not yet implemented"
+            f"Parsing {cls} (of type {type(cls)}) not yet implemented (be sure to update forward references)"
         )
     if not isinstance(json_value, cls):
-        raise ValueError(f"Cannot parse type {cls} from type {type(json_value)}")
+        raise ValueError(
+            f"Cannot parse type {cls} from type {type(json_value)} (value {json_value})"
+        )
     return json_value
 
 
-def parse_generic_json(cls: type, json_value: Any) -> Any:
+def parse_generic_json(cls: type[T], json_value: Any) -> T:
     cls_origin = typing.get_origin(cls)
     cls_args = typing.get_args(cls)
-    assert cls_origin is not None
+    assert cls_origin is not None, f"Type {cls} is not generic"
 
     if cls_origin is dict:
         if not isinstance(json_value, dict):
             raise ValueError(f"Cannot parse {cls} from type {type(json_value)}")
-        json_dict: Dict[Any, Any] = json_value
         if len(cls_args) == 0:
-            return json_dict
+            assert isinstance(json_value, cls), f"Type {cls} is dict with no type args"
+            return json_value
         key_cls, value_cls = cls_args
         return {
             parse_json(key_cls, key): parse_json(value_cls, value)
-            for key, value in json_dict.items()
-        }
+            for key, value in json_value.items()
+        }  # type: ignore
 
     if cls_origin is list:
         if not isinstance(json_value, list):
             raise ValueError(f"Cannot parse {cls} from type {type(json_value)}")
-        json_list: List[Any] = json_value
         if len(cls_args) == 0:
-            return json_list
+            assert isinstance(json_value, cls), f"Type {cls} is list with no type args"
+            return json_value
         (arg_cls,) = cls_args
-        return [parse_json(arg_cls, value) for value in json_list]
+        return [parse_json(arg_cls, value) for value in json_value]  # type: ignore
 
     if cls_origin is types.UnionType or cls_origin is Union:
         for arg_cls in cls_args:
@@ -69,28 +73,34 @@ def parse_generic_json(cls: type, json_value: Any) -> Any:
                 pass
         raise ValueError(f"Cannot parse {cls} from type {type(json_value)}")
 
-    if not isinstance(cls_origin, type):
-        raise NotImplementedError(
-            f"Parsing {cls} (of type {type(cls)}) from type {type(json_value)} not yet implemented"
-        )
+    if cls_origin is typing.Literal:
+        for arg in cls_args:
+            try:
+                value = parse_json(type(arg), json_value)
+                if value == arg:
+                    return value
+            except ValueError:
+                pass
+        raise ValueError(f"Cannot parse {cls} from {json_value}")
 
     raise NotImplementedError(
-        f"Parsing {cls} (of type {type(cls)}) from type {type(json_value)} not yet implemented"
+        f"Parsing {cls} (of type {type(cls)}) not yet implemented"
     )
 
 
-def parse_json_dataclass(cls: type, json_value: Any) -> Any:
-    assert dataclasses.is_dataclass(cls)
+def parse_json_dataclass(cls: type[T], json_value: Any) -> T:
+    assert dataclasses.is_dataclass(cls), f"Type {cls} is not a dataclass"
     if not isinstance(json_value, dict):
         raise ValueError(f"Cannot parse dataclass {cls} from type {type(json_value)}")
 
-    field_values: Dict[str, Any] = json_value
-    assert all(isinstance(name, str) for name in field_values)
+    for key in json_value.keys():
+        if not isinstance(key, str):
+            raise ValueError(f"Cannot parse dataclass key from type {type(key)}")
 
     field_types = {field.name: field.type for field in dataclasses.fields(cls)}
     field_values = {
-        name: parse_json(field_types[name], value) if name in field_types else value
-        for name, value in field_values.items()
+        key: parse_json(field_types[key], value) if key in field_types else value
+        for key, value in json_value.items()
     }
 
     result = cls(**field_values)
