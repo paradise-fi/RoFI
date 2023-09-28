@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
-import subprocess
-import sys
 import click
 import json
-from typing import Any, Dict, List, TextIO
+import subprocess
+import sys
+
+from typing import Any, TextIO
 
 
 def safe_as_arg(arg: Any) -> str:
@@ -23,9 +24,9 @@ def dump_json(value: Any, file: TextIO, *, indent: int = 4):
     "--cmd", "-c", type=str, multiple=True, required=True, help="Formats of the task"
 )
 @click.option("--raw-args", is_flag=True, help="Pass the args as-is")
-def gen_tasks_fmt(task_args_file: TextIO, cmd: List[str], raw_args: bool):
+def gen_tasks_fmt(task_args_file: TextIO, cmd: list[str], raw_args: bool):
     """Generate task set from given format and args from TASK_ARGS_FILE (in json format)."""
-    task_args: List[Dict[str, Any]] = json.load(task_args_file)
+    task_args: list[dict[str, Any]] = json.load(task_args_file)
     assert isinstance(task_args, list)
     assert all([isinstance(args, dict) for args in task_args])
 
