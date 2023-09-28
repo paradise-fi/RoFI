@@ -12,7 +12,7 @@ docker build . -f experiments/voxel/enviroment.Dockerfile -t voxel-experiments
 
 ### Generate rofibots each to each tasks:
 ```sh
-experiments/voxel/gen_tasks_args.py e2e -f old \
+experiments/voxel/gen_tasks_args.py e2e -f old --both-directions \
 $(find data/configurations/old/rofibots/ -type f | sort) |
 experiments/voxel/gen_tasks_matrix.py - experiments/voxel/args_rofi-voxel.json
 ```

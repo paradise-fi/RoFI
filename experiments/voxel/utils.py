@@ -9,6 +9,7 @@ from typing import Any, TypeVar, Union
 
 Path = Union[str, PathLike[str]]
 T = TypeVar("T")
+OneOrMore = Union[list[T], T]
 
 
 class EnhancedJSONEncoder(json.JSONEncoder):
