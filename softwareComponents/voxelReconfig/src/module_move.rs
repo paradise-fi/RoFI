@@ -128,7 +128,7 @@ impl Move {
         }
     }
 
-    fn get_rotation(self, body_a: Voxel, body_b: Voxel) -> atoms::Rotation {
+    pub fn get_rotation(self, body_a: Voxel, body_b: Voxel) -> atoms::Rotation {
         assert!(self.is_possible(body_a, body_b));
         match self.joint() {
             Joint::Alpha => Self::get_alpha_rotation(self.angle(), body_a),

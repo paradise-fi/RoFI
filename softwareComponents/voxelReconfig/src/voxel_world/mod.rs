@@ -91,7 +91,7 @@ pub fn check_voxel_world<TWorld: VoxelWorld>(
     Ok(())
 }
 
-pub fn sizes_normalized<IndexType>(sizes: Sizes<IndexType>) -> bool
+fn sizes_normalized<IndexType>(sizes: Sizes<IndexType>) -> bool
 where
     IndexType: num::Num + Ord,
 {
@@ -162,7 +162,7 @@ pub fn check_pos<TIndex: num::Num + Ord + Copy + std::fmt::Debug>(
     }
 }
 
-pub fn debug_fmt_voxels<IVoxels, TIndex: num::Num + std::fmt::Debug>(
+fn debug_fmt_voxels<IVoxels, TIndex: num::Num + std::fmt::Debug>(
     voxels: IVoxels,
     f: &mut impl std::fmt::Write,
     ws_sep: &str,

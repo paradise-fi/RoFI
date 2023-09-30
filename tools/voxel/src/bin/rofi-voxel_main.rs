@@ -37,7 +37,7 @@ struct Cli {
     /// Voxel world representation
     #[arg(short, long, default_value_t = VoxelWorldRepr::Map)]
     repr: VoxelWorldRepr,
-    /// Voxel world representation
+    /// Algorithm for reconfiguration
     #[arg(short, long, default_value_t = AlgorithmType::Bfs)]
     alg: AlgorithmType,
     /// Log counters to file ('-' for error output)

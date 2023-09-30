@@ -4,9 +4,10 @@
 mod test;
 
 use crate::counters::Counter;
-use crate::reconfig::{all_next_worlds_norm, get_path_to, Error, FxHashMap};
+use crate::reconfig::{all_next_worlds_norm, get_path_to, Error};
 use crate::voxel_world::{as_one_of_norm_eq_world, is_normalized, normalized_eq_worlds};
 use crate::voxel_world::{check_voxel_world, NormVoxelWorld};
+use rustc_hash::FxHashMap;
 use std::assert_matches::{assert_matches, debug_assert_matches};
 use std::collections::VecDeque;
 use std::rc::Rc;
