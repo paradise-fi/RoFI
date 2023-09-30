@@ -1,6 +1,6 @@
 use crate::atoms;
 use crate::module_repr::{get_other_body, is_module_repr};
-use crate::pos::Pos;
+use crate::pos::{minimal_pos_hull, Pos};
 use crate::voxel::{JointPosition, PosVoxel, Voxel};
 use crate::voxel_world::{check_voxel_world, rotate_voxel};
 use crate::voxel_world::{CenteredVoxelWorld, RotatedVoxelWorld, VoxelSubworld};
@@ -10,6 +10,8 @@ use itertools::Itertools;
 use modular_bitfield::prelude::*;
 use static_assertions::const_assert_eq;
 use std::assert_matches::debug_assert_matches;
+use std::collections::HashMap;
+use std::hash::BuildHasher;
 
 #[derive(
     BitfieldSpecifier,
@@ -220,5 +222,50 @@ impl Move {
 
         debug_assert_matches!(check_voxel_world(&result), Ok(_));
         Some(result)
+    }
+
+    /// Takes mapping from arbitrary id to old position and
+    /// returns mapping from id to new position
+    ///
+    /// Note: Will move exactly positions that are not in `split`
+    pub fn apply_to_mapping<TWorld, TId, S: BuildHasher>(
+        self,
+        module: PosVoxel<TWorld::IndexType>,
+        split: &VoxelSubworld<TWorld>,
+        mut mapping: HashMap<TId, Pos<TWorld::IndexType>, S>,
+    ) -> Option<HashMap<TId, Pos<TWorld::IndexType>, S>>
+    where
+        TWorld: VoxelWorld,
+        TWorld::IndexType: num::Integer,
+    {
+        assert!(is_module_repr(module.1));
+        assert_eq!(split.get_voxel(module.0), Some(module.1));
+
+        let other_body = get_other_body(module, &split.complement())
+            .expect("Second split doesn't contain body B");
+
+        assert!(
+            self.is_possible(module.1, other_body.1),
+            "Invalid move {self:?}"
+        );
+
+        let rot_center = self.get_rotation_center(module.0, other_body.0);
+        let rotation = self.get_rotation(module.1, other_body.1);
+
+        for pos in mapping.values_mut() {
+            let centered_pos = *pos - rot_center;
+            if split.get_voxel(*pos).is_some() {
+                *pos = centered_pos;
+            } else {
+                *pos = rotation.rotate(centered_pos.as_array()).into();
+            }
+        }
+
+        let min_hull = minimal_pos_hull(mapping.values().copied());
+        for pos in mapping.values_mut() {
+            *pos = *pos - min_hull.start();
+        }
+
+        Some(mapping)
     }
 }
