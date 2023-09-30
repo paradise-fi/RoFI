@@ -23,7 +23,19 @@ pub struct WorldRotation {
     neg_axis: [bool; 3],
 }
 
+impl Default for WorldRotation {
+    fn default() -> Self {
+        Self::identity()
+    }
+}
+
 impl WorldRotation {
+    pub fn identity() -> Self {
+        Self {
+            x_rotates_to: atoms::Axis::X,
+            neg_axis: [false; 3],
+        }
+    }
     fn swaps_axes_order(&self) -> bool {
         self.neg_axis.iter().filter(|&is_neg| *is_neg).count() % 2 != 0
     }
@@ -56,12 +68,12 @@ impl WorldRotation {
         result.map(Option::unwrap)
     }
 
-    fn rotate_axis(&self, axis: atoms::Axis) -> atoms::Axis {
+    pub fn rotate_axis(&self, axis: atoms::Axis) -> atoms::Axis {
         debug_assert!(axis.as_index() < self.axes_rotate_to().len());
         self.axes_rotate_to()[axis.as_index()]
     }
 
-    fn rotate_direction(&self, direction: atoms::Direction) -> atoms::Direction {
+    pub fn rotate_direction(&self, direction: atoms::Direction) -> atoms::Direction {
         debug_assert!(direction.axis().as_index() < self.neg_axis.len());
         let is_positive = direction.is_positive() ^ self.neg_axis[direction.axis().as_index()];
         atoms::Direction::new_with(self.rotate_axis(direction.axis()), is_positive)
@@ -84,7 +96,7 @@ impl WorldRotation {
         Sizes::new(self.rotate_as_sizes(sizes.get()))
     }
 
-    fn rotate_pos<TIndex>(&self, pos: Pos<TIndex>, orig_sizes: Sizes<TIndex>) -> Pos<TIndex>
+    pub fn rotate_pos<TIndex>(&self, pos: Pos<TIndex>, orig_sizes: Sizes<TIndex>) -> Pos<TIndex>
     where
         TIndex: num::Num + Ord + Copy,
     {

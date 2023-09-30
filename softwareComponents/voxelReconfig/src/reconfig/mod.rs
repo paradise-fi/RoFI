@@ -11,12 +11,9 @@ use crate::module_repr::is_module_repr;
 use crate::module_repr::{get_all_module_reprs, get_other_body};
 use crate::voxel_world::as_one_of_norm_eq_world;
 use crate::voxel_world::NormVoxelWorld;
-use rustc_hash::FxHasher;
 use std::collections::HashMap;
-use std::hash::{BuildHasher, BuildHasherDefault};
+use std::hash::BuildHasher;
 use std::rc::Rc;
-
-pub type FxHashMap<K, V, S = BuildHasherDefault<FxHasher>> = HashMap<K, V, S>;
 
 #[derive(Debug, Clone, Copy, amplify::Display, amplify::Error)]
 #[display(doc_comments)]
@@ -29,7 +26,7 @@ pub enum Error {
 
 fn get_path_to<TWorld: Eq + std::hash::Hash, TParentInfo, S: BuildHasher>(
     goal: &TWorld,
-    parent_map: &FxHashMap<Rc<TWorld>, TParentInfo, S>,
+    parent_map: &HashMap<Rc<TWorld>, TParentInfo, S>,
     mut get_parent: impl FnMut(&TParentInfo) -> Option<Rc<TWorld>>,
 ) -> Vec<Rc<TWorld>> {
     let mut parent = Some(
@@ -68,19 +65,16 @@ where
             assert!(is_module_repr(module.1));
             Counter::new_module();
             let other_body = get_other_body(module, world).unwrap();
-            graph
-                .all_cuts_by_module(module)
-                .map(Rc::new)
-                .flat_map(move |split| {
-                    Move::all_possible_moves(module.1, other_body.1).flat_map(move |module_move| {
-                        Counter::new_move();
-                        let result = module_move.apply(module, split.clone().as_ref());
-                        if result.is_none() {
-                            Counter::move_collided();
-                        }
-                        result
-                    })
+            graph.all_cuts_by_module(module).flat_map(move |split| {
+                Move::all_possible_moves(module.1, other_body.1).filter_map(move |module_move| {
+                    Counter::new_move();
+                    let result = module_move.apply(module, &split);
+                    if result.is_none() {
+                        Counter::move_collided();
+                    }
+                    result
                 })
+            })
         })
 }
 
