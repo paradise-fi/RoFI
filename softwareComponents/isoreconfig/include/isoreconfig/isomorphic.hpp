@@ -4,7 +4,7 @@
 namespace rofi::isoreconfig {
 
 /**
- * @brief "Position" (4x4 matrix)
+ * @brief Position matrix
  */
 using Matrix = arma::mat44;
 /**

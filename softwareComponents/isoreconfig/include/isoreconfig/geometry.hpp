@@ -6,6 +6,11 @@
 
 namespace rofi::isoreconfig {
 
+/**
+ * @brief Point in space
+ */
+using Vector = arma::vec4;
+
 static constexpr double ERROR_MARGIN = 0.01;
 
 /**
@@ -89,7 +94,7 @@ public:
     /**
      * @brief Cloud points as vector< Vector >.
      */
-    Vector toVectors() const
+    std::vector< Vector > toVectors() const
     {
         std::vector< Vector > vecs( size() );
 
