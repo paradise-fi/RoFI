@@ -5,48 +5,55 @@ namespace rofi::isoreconfig {
 
 using namespace rofi::configuration;
 
-Positions decomposeUniversalModule( 
-    const Module& mod )
+Matrix pointMatrix( const Vector& pt )
 {
-    // <mod> must be a UniversalModule
-    assert( mod.type == ModuleType::Universal );
-
-    std::span<const Component> comps = mod.components();
-    Positions result;
-
-    for ( int compIndex = 0; compIndex < 6; ++compIndex )
-    {
-        // First six components of UniversalModule are Roficoms
-        assert( comps[ compIndex ].type == ComponentType::Roficom );
-
-        Matrix absCompPos = comps[ compIndex ].getPosition();
-        // Component position of a UniversalModule is always in the center 
-        // of the shoe it belongs to; to get the "actual" (visual) position,
-        // we want to move it by half a unit on -X
-        result.push_back( absCompPos * matrices::translate( { -0.5, 0, 0 } ) );
-    } 
-
+    Matrix result( arma::eye( 4, 4 ) );
+    result.col(3) = pt;
+    result(3,3) = 1;
     return result;
 }
 
-std::array< Positions, 2 > decomposeRofiWorld( const RofiWorld& rw )
+std::vector< Vector > decomposeModule( const Module& rModule )
+{
+    std::vector< Vector > modulePoints;
+
+    for ( const Component& comp : rModule.components() )
+    {
+        if ( comp.type != ComponentType::Roficom ) 
+            continue;
+
+        // Center of roficoms of a module is in the center 
+        // of the shoe it belongs to; to get the "actual" (visual) position,
+        // move it by half a unit in the direction the roficom is facing (X axis)
+        Matrix posMat = comp.getPosition() * matrices::translate( { -0.5, 0, 0 } );
+        modulePoints.push_back( posMat.col(3) );
+    } 
+
+    return modulePoints;
+}
+
+std::tuple< std::vector< Vector >, std::vector< Vector > > decomposeRofiWorld( 
+    const RofiWorld& rw )
 {
     rw.isValid().get_or_throw_as< std::logic_error >();
 
-    std::array< Positions, 2 > result;
+    std::vector< Vector > modulePoints;
 
     // Decompose modules
     for ( const auto& rModule : rw.modules() )
-        for ( const Matrix& pos : decomposeUniversalModule( rModule ) )
-            result[0].push_back( pos );
+        for ( const auto& pos : decomposeModule( rModule ) )
+            modulePoints.push_back( pos );
+
+    std::vector< Vector > connectionPoints;
 
     // Decompose connections
     for ( const RoficomJoint& connection : rw.roficomConnections() )
     {
-        Matrix pos = connection.getSourceModule( rw ).components()[connection.sourceConnector].getPosition();
+        Matrix posMat = connection.getSourceModule( rw ).components()[connection.sourceConnector].getPosition();
         // Connection position is in the center of the connected module,
         // so it must be translated by half a unit
-        result[1].push_back( pos * matrices::translate( { -0.5, 0, 0 } ) );
+        posMat *= matrices::translate( { -0.5, 0, 0 } );
+        connectionPoints.push_back( posMat.col(3) );
     }
 
     return std::tie( modulePoints, connectionPoints );
