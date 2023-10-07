@@ -3,13 +3,15 @@
 
 namespace rofi::isoreconfig {
 
+using namespace rofi::configuration;
+
 /**
  * @brief Position matrix
  */
 using Matrix = arma::mat44;
 
 /**
- * @brief Extends a point to a matrix.
+ * @brief Extends Vector to a matrix.
  */
 Matrix pointMatrix( const Vector& pt );
 
@@ -18,10 +20,10 @@ Matrix pointMatrix( const Vector& pt );
  * each in the center of one of the RoFIComs.
  * Assumes the RofiWorld the module belongs to has been prepared, 
  * so the RoFIComs have a relative position in space.
- * @param rModule Module from which the points are calculated.
+ * @param mod Module from which the points are calculated.
  * @return Container of points, each in the center of a corresponding RoFICom.
  */
-std::vector< Vector > decomposeModule( const rofi::configuration::Module& rModule );
+std::vector< Vector > decomposeModule( const Module& mod );
 
 /**
  * @brief Decomposes given RofiWorld <rw> into two containers of points;
@@ -32,13 +34,23 @@ std::vector< Vector > decomposeModule( const rofi::configuration::Module& rModul
  * @param rw RofiWorld from which the points are calculated.
  * @return First container contains RoFICom points, second contains connection points.
  */
-std::tuple< std::vector< Vector >, std::vector< Vector > > decomposeRofiWorld( 
-    const rofi::configuration::RofiWorld& rw );
+std::tuple< std::vector< Vector >, std::vector< Vector > > 
+    decomposeRofiWorld( const RofiWorld& rw );
+
+std::vector< std::vector< Vector > > decomposeRofiWorldModules( const RofiWorld& rw );
 
 /**
  * @brief Converts a RofiWorld to a Cloud of Points.
  */
-Cloud rofiWorldToCloud( const rofi::configuration::RofiWorld& rw );
+Cloud rofiWorldToCloud( const RofiWorld& rw );
+
+/**
+ * @brief Converts a RofiWorld to a canonical cloud of points,
+ * which uniquely defines its shape.
+ */
+Cloud rofiWorldToShape( const RofiWorld& rw );
+
+std::array< int, 4 > rofiWorldToEigenValues( const RofiWorld& rw );
 
 /**
  * @brief Calculate the centroid from a given RofiWorld <rw>.
@@ -46,15 +58,7 @@ Cloud rofiWorldToCloud( const rofi::configuration::RofiWorld& rw );
  * @param rw RofiWorld to calculate the centroid from.
  * @return Unweighted average of points defining the RofiWorld.
  */
-Vector centroid( const rofi::configuration::RofiWorld& rw );
-
-/**
- * @brief Calculate the centroid (unweighted average) of given points.
- * Assumes the container is not empty.
- * @param pts Points to calculate the center of gravity from.
- * @return Centroid of given points.
- */
-Vector centroid( const std::vector< Vector >& pts );
+Vector centroid( const RofiWorld& rw );
 
 /**
  * @brief Decides if given rofiworlds have the same physical shape.
@@ -62,8 +66,6 @@ Vector centroid( const std::vector< Vector >& pts );
  * and attempts to find an orthogonal transformation
  * which transforms one set of points into the other.
  */
-bool equalShape( 
-    const rofi::configuration::RofiWorld& rw1, 
-    const rofi::configuration::RofiWorld& rw2 );
+bool equalShape( const RofiWorld& rw1, const RofiWorld& rw2 );
 
 } // namespace rofi::isoreconfig

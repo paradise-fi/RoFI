@@ -1,23 +1,31 @@
+#pragma once
+
 #include <array>
 #include <cassert>
 #include <vector>
+#include <configuration/Matrix.h>
 
 #include <armadillo>
 
 namespace rofi::isoreconfig {
 
-/**
- * @brief Point in space
- */
-using Vector = arma::vec4;
+static constexpr double ERROR_MARGIN = 0.001;
 
-static constexpr double ERROR_MARGIN = 0.01;
+using Vector = arma::vec4;
 
 /**
  * @brief Cloud of Points (CoP) - normalized container of points
  * (transformed using PCA, rounded to int, sorted).
  */
 class Cloud;
+
+/**
+ * @brief Calculate the centroid (unweighted average) of given points.
+ * Assumes the container is not empty.
+ * @param pts Points to calculate the center of gravity from.
+ * @return Centroid of given points.
+ */
+Vector centroid( const std::vector< Vector >& pts );
 
 /**
  * @brief Decides whether given clouds define an equal physical shape.
@@ -27,28 +35,49 @@ class Cloud;
  */
 bool isometric( const Cloud& cop1, Cloud cop2 );
 
+/**
+ * @brief Generates a container of 24 Clouds which have the same shape as the given Cloud.
+ * Each cloud is an orthogonal rotation of the given cloud.
+ */
+std::vector< Cloud > sameShapeClouds( Cloud cop );
+
+/**
+ * @brief Canonical representation of all clouds with the same shape.
+ * Used for hashing a specific shape.
+ */
+Cloud canonCloud( Cloud cop );
+
 class Cloud
 {
     using Point = std::array< int, 3 >;
 
-    std::vector< Point > _points;
+    // Sphere is a vector of points with the same distance from the centroid of the whole Cloud
+    std::vector< std::pair< size_t, std::vector< Point > > > _spheres;
     arma::mat _coeff; // PC coefficients - cols are (base) eigenvectors
+    Vector _eigenValues;
 
 public:
 
+    Cloud() = default; // placeholder empty cloud
+
     explicit Cloud( const std::vector< Vector >& pts ) 
     {
+        assert( !pts.empty() );
+
         arma::mat data;
+        arma::mat latent;
         data.set_size( pts.size(), 3 );
 
         for ( size_t i = 0; i < pts.size(); ++i )
             for ( size_t j = 0; j < 3; ++j )
                 data(i, j) = pts[i](j);
 
-        std::tie( data, _coeff ) = normalize( data );
-        auto rawPoints = dataToPoints( data );
-        _points = roundPoints( rawPoints );
-        sortPoints();
+        std::tie( data, _coeff, latent ) = normalize( data );
+        _eigenValues = { latent(0), latent(1), latent(2), 1 };
+
+        _spheres = dataToSpherePoints( data );
+        sortSpherePoints();
+        sortSpheres();
     }
 
     /**
@@ -58,7 +87,7 @@ public:
     {
         swapAxes( (axis + 1) % 3, (axis + 2) % 3 );
         negateAxis( (axis + 2) % 3 );
-        sortPoints();
+        sortSpherePoints();
     }
 
     /**
@@ -68,7 +97,7 @@ public:
     {
         negateAxis( (axis + 1) % 3 );
         negateAxis( (axis + 2) % 3 );
-        sortPoints();
+        sortSpherePoints();
     }
 
     /**
@@ -78,17 +107,21 @@ public:
     {
         swapAxes( 1, 2 );
         swapAxes( 0, 1 );
-        sortPoints();
+        sortSpherePoints();
     }
 
     /**
-     * @brief Returns the PCA transformation used to convert original points
+     * @brief PCA transformation from original points
      * into the points defining the resulting cloud.
      */
     arma::mat transformation() const
     {
-        // transposed _coeff is PCA transformation matrix
-        return _coeff.t();
+        return _coeff.t(); 
+    }
+
+    Vector eigenValues() const
+    {
+        return _eigenValues;
     }
 
     /**
@@ -96,49 +129,67 @@ public:
      */
     std::vector< Vector > toVectors() const
     {
-        std::vector< Vector > vecs( size() );
+        std::vector< Vector > vecs;
 
-        for ( size_t pt = 0; pt < size(); ++pt )
-            for ( size_t col = 0; col < 3; ++col )
-                vecs[pt](col) = _points[pt][col] * ERROR_MARGIN;
+        for ( const auto& [ radius, spherePoints ] : _spheres )
+            for ( const Point& pt : spherePoints )
+                vecs.push_back( Vector( { 
+                    pt[0] * ERROR_MARGIN, 
+                    pt[1] * ERROR_MARGIN, 
+                    pt[2] * ERROR_MARGIN, 
+                    1 } ) );
 
         return vecs;
     }
 
     bool operator==( const Cloud& o ) const
     {
-        return _points == o._points;
+        return _spheres == o._spheres;
+    }
+
+    bool operator>( const Cloud& o ) const
+    {
+        return _spheres > o._spheres;
+    }
+
+    bool operator<( const Cloud& o ) const
+    {
+        return _spheres < o._spheres;
     }
 
     size_t size() const
     {
-        return _points.size();
+        return _spheres.size();
     }
 
     auto begin() const
     {
-        return _points.begin();
+        return _spheres.begin();
     }
 
     auto begin()
     {
-        return _points.begin();
+        return _spheres.begin();
     }
 
     auto end() const
     {
-        return _points.end();
+        return _spheres.end();
     }
 
     auto end()
     {
-        return _points.end();
+        return _spheres.end();
     }
 
     void print() const
     {
-        for ( const Point& pt : _points )
-            std::cout << pt[0] << "   " << pt[1] << "   " << pt[2] << "\n";
+        for ( const auto& [ radius, spherePoints ] : _spheres )
+        {
+            std::cout << "radius " << radius << ":\n";
+            for ( const Point& pt : spherePoints ) 
+                std::cout << pt[0] << "   " << pt[1] << "   " << pt[2] << "\n";
+        }
     }
 
 private:
@@ -149,7 +200,7 @@ private:
      * so the shape given by the points does not change).
      * Returns normalized data and its transformation matrix.
      */
-    std::tuple< arma::mat, arma::mat > normalize( const arma::mat& data ) const
+    std::tuple< arma::mat, arma::mat, arma::mat > normalize( const arma::mat& data ) const
     {
         arma::mat coeff;
         arma::mat score;
@@ -168,54 +219,58 @@ private:
             coeff.col(0) *= -1;
         } 
 
-        return std::tie( score, coeff );
+        return std::tie( score, coeff, latent );
     }
 
-    std::vector< std::array< double, 3 > > dataToPoints( const arma::mat& data ) const
+    std::vector< std::pair< size_t, std::vector< Point > > > dataToSpherePoints( const arma::mat& data ) const
     {
-        std::vector< std::array< double, 3 > > points( data.n_rows );
-        
+        std::vector< std::pair< size_t, std::vector< Point > > > spheres;
+        std::unordered_map< size_t, std::vector< Point > > spherePointsMap;
+
         for ( size_t pt = 0; pt < data.n_rows; ++pt )
-            for ( size_t col = 0; col < 3; ++col )
-                points[pt][col] = data( pt, col ); 
-    
-        return points;
-    }
-
-    std::vector< Point > roundPoints( 
-        const std::vector< std::array< double, 3 > >& rawPoints ) const
-    {   
-        std::vector< Point > roundedPoints( rawPoints.size() );
-
-        for ( size_t pt = 0; pt < rawPoints.size(); ++pt )
-            for ( size_t col = 0; col < 3; ++col )
-                roundedPoints[pt][col] = static_cast<int>( round( rawPoints[pt][col] / ERROR_MARGIN ) );
-
-        return roundedPoints;
-    }
-
-    void sortPoints()
-    {
-        auto pointComparator = []( const Point& p1, const Point& p2 ) 
         {
-            return p1[0] < p2[0]
-                || ((p1[0] == p2[0] && p1[1] < p2[1]) 
-                || (p1[0] == p2[0] && p1[1] == p2[1] && p1[2] < p2[2])); 
-        };
+            Point roundedPoint;
+            for ( size_t col = 0; col < 3; ++col )
+                roundedPoint[col] = static_cast<int>( round( data( pt, col ) / ERROR_MARGIN ) );
+            // Radius of sphere the point is on = point distance from origin
+            // (after normalization, centroid is in origin)
+            size_t radius = static_cast<size_t>( 
+                round( rofi::configuration::matrices::distance( 
+                    Vector( { data( pt, 0 ), data( pt, 1 ), data( pt, 2 ), 1 } ), 
+                    Vector( { 0, 0, 0, 1 } ) ) 
+                    / ERROR_MARGIN ) );
+            spherePointsMap[radius].push_back( roundedPoint );
+        }
 
-        std::ranges::sort( _points, pointComparator );
+        for ( auto& [ radius, spherePoints ] : spherePointsMap )
+            spheres.push_back( std::make_pair( radius, spherePoints ) );
+    
+        return spheres;
+    }
+
+    void sortSpheres()
+    {
+        std::ranges::sort( _spheres );
+    }
+
+    void sortSpherePoints()
+    {
+        for ( auto& [ radius, spherePoints ] : _spheres )
+            std::ranges::sort( spherePoints );
     }
 
     void swapAxes( size_t ax1, size_t ax2 )
     {
-        for ( Point& pt : _points )
-            std::swap( pt[ax1], pt[ax2] );
+        for ( auto& [ radius, spherePoints ] : _spheres )
+            for ( Point& pt : spherePoints )
+                std::swap( pt[ax1], pt[ax2] );
     }
 
     void negateAxis( size_t ax )
     {
-        for ( Point& pt : _points )
-            pt[ax] = -pt[ax];
+        for ( auto& [ radius, spherePoints ] : _spheres )
+            for ( Point& pt : spherePoints )
+                pt[ax] = -pt[ax];
     }
 };
 

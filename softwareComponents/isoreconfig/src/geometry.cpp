@@ -2,6 +2,19 @@
 
 namespace rofi::isoreconfig {
 
+Vector centroid( const std::vector< Vector >& pts )
+{
+    assert( pts.size() >= 1 );
+
+    Vector result = std::accumulate( ++pts.begin(), pts.end(), pts[0], 
+        []( const Vector& pt1, const Vector& pt2 ){ return pt1 + pt2; } );
+
+    for ( size_t i = 0; i < 3; ++i )
+        result(i) /= double(pts.size());
+
+    return result;
+}
+
 bool isometric( const Cloud& cop1, Cloud cop2 )
 {
     // Assume different number of points implies nonequal shapes
@@ -24,10 +37,32 @@ bool isometric( const Cloud& cop1, Cloud cop2 )
             }
             cop2.rotateBy90Around( 0 ); // Rotating Y and Z around X
         }
-        cop2.rotateBy180Around( 2 ); // Rotate X upside down along Z
+        cop2.rotateBy180Around( 2 ); // Rotate X upside down along Z (bottom octants)
     }
     
     return false;
+}
+
+Cloud canonCloud( Cloud cop )
+{
+    Cloud res = cop;
+
+    for ( size_t hp = 0; hp < 2; ++hp ) 
+    {
+        for ( size_t rot = 0; rot < 4; ++rot ) 
+        {
+            for ( size_t permut = 0; permut < 3; ++permut )  
+            {
+                res = std::max( res, cop );
+                
+                cop.permutateAxes(); // Permute axes in current octant
+            }
+            cop.rotateBy90Around( 0 ); // Rotating Y and Z around X
+        }
+        cop.rotateBy180Around( 2 ); // Rotate X upside down along Z (bottom octants)
+    }
+
+    return res;
 }
 
 } // namespace rofi::isoreconfig
