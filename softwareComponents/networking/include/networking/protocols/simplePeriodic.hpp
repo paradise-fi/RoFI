@@ -57,11 +57,8 @@ class SimplePeriodic : public Protocol {
         if ( !_interfaceWithCb.contains( i.name() ) )
             return;
 
-        std::cout << "BEFORE f()" << std::endl;
         f( std::move( _createMsg( i.name() ) ) );
-        std::cout << "AFTERR f() BEFORE wait" << std::endl;
-        rofi::hal::RoFI::setTimeout( _period, [ =, this, _i = &i ]() { _periodicUpdates( *_i, f, args ); } );
-        std::cout << "AFTER wait" << std::endl;
+        rofi::hal::RoFI::postpone( _period, [ =, this, _i = &i ]() { _periodicUpdates( *_i, f, args ); } );
     }
 
 public:
