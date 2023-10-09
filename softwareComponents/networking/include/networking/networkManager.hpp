@@ -378,6 +378,7 @@ public:
                         return 1; // pbuf was eaten
                     } );
 
+
                 // proto addInterface adds updates into RTEUpdates
                 rteChanged = proto.addInterface( interface ) || rteChanged;
                 rteChanged = processConfigUpdates( proto.getConfigUpdates() ) || rteChanged;
