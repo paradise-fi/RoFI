@@ -56,9 +56,12 @@ class NetworkManager {
             if ( !proto->manages( interface ) )
                 continue;
 
+            std::cout << "BEFORE afterMessage" << std::endl;
             bool changed = proto->afterMessage( interface, [ this, &interface, proto ]( PBuf&& msg ) {
+                                    std::cout << "\t\tperiodic callback" << std::endl;
                                     interface.sendProtocol( proto->address(), std::move( msg ) );
                         }, nullptr );
+            std::cout << "AFTER afterMessage" << std::endl;
             if ( changed ) {
                 processConfigUpdates( proto->getConfigUpdates() );
                 processRouteUpdates( *proto, proto->getRouteUpdates() );
@@ -378,18 +381,26 @@ public:
                         return 1; // pbuf was eaten
                     } );
 
+                std::cout << "Protocol set up on " << interface.name() << std::endl;
+
                 // proto addInterface adds updates into RTEUpdates
                 rteChanged = proto.addInterface( interface ) || rteChanged;
+                std::cout << "proto.addInterface done" << std::endl;
                 rteChanged = processConfigUpdates( proto.getConfigUpdates() ) || rteChanged;
+                std::cout << "processConfigUpdates done" << std::endl;
                 // we pick those updates and add new records / remove old ones in the Routing Table
                 rteChanged = processRouteUpdates( proto, proto.getRouteUpdates() ) || rteChanged;
+                std::cout << "processRouteUpdates done" << std::endl;
                 // and clear updates which we extracted in the previous step
                 proto.clearUpdates();
+                std::cout << "clearUpdates done" << std::endl;
                 break;
             }
         }
 
+        std::cout << "BEFORE propagateRouteUpdates" << std::endl;
         propagateRouteUpdates( &proto );
+        std::cout << "AFTER propagateRouteUpdates" << std::endl;
     }
 
     /**
