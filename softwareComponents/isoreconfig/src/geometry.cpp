@@ -2,119 +2,67 @@
 
 namespace rofi::isoreconfig {
 
-Matrix pointToPos( const Point& point )
+Vector centroid( const std::vector< Vector >& pts )
 {
-    Matrix result( arma::fill::eye );
-    for ( int i = 0; i < 3; ++i )
-        result(i,3) = point(i);
-    return result;
-}
+    assert( pts.size() >= 1 );
 
-Positions cloudToPositions( const Cloud& cop )
-{
-    Positions result;
-    for ( const Point& p : cop ) 
-        result.push_back( pointToPos( p ) );
-    return result;
-}
+    Vector result = std::accumulate( ++pts.begin(), pts.end(), pts[0], 
+        []( const Vector& pt1, const Vector& pt2 ){ return pt1 + pt2; } );
 
-Point posToPoint( const Matrix& position )
-{
-    return Point{ position.at(0,3), position.at(1,3), position.at(2,3) };
-}
-
-Cloud positionsToCloud( const Positions& poss )
-{
-    Cloud result;
-    for ( const Matrix& pos : poss ) 
-        result.push_back( posToPoint( pos ) );
-    return result;
-}
-
-Score cloudToScore( const Cloud& cop )
-{
-    arma::mat result( cop.size(), 3 );
-
-    for ( size_t i = 0; i < cop.size(); ++i )  
-        for ( size_t j = 0; j < 3; ++j )
-            result(i, j) = cop[i](j);
+    for ( size_t i = 0; i < 3; ++i )
+        result(i) /= double(pts.size());
 
     return result;
 }
 
-Cloud scoreToCloud( const Score& score )
+bool isometric( const Cloud& cop1, Cloud cop2 )
 {
-    Cloud result;
+    // Assume different number of points implies nonequal shapes
+    // (even if points overlap)
+    if ( cop1.size() != cop2.size() )
+        return false;
 
-    for ( size_t i = 0; i < score.n_rows; ++i )
-        result.push_back( { score(i,0), score(i, 1), score(i, 2) } );
-
-    return result;
-}
-
-
-Point centroid( const Cloud& cop )
-{
-    assert( cop.size() >= 1 );
-    Point result = { 0, 0, 0 };
-    
-    for ( const Point& point : cop )
-        result += point;
-
-    double pointCount = double(cop.size());
-    return result / Point( { pointCount, pointCount, pointCount } );
-}
-
-Matrix centroid( const Positions& positions )
-{
-    Cloud cop;
-    for ( const Matrix& pos : positions )
-        cop.push_back( posToPoint( pos ) );
-
-    return pointToPos( centroid( cop ) );
-}
-
-double cubeNorm( const Point& vec )
-{
-    return vec( 0 ) * vec( 0 ) + vec( 1 ) * vec( 1 ) + vec( 2 ) * vec( 2 );
-} 
-
-std::array< Cloud, 2 > longestVectors( const Point& center, const Cloud& cop, const double epsilon )
-{
-    std::array< Cloud, 2 > result{ std::vector{center} };
-    double longestNorm = 0;
-    double sndLongestNorm = 0;
-
-    for ( const Point& currPoint : cop )
+    // Go through 24 orthogonal rotations in third dimension
+    // (8 octants, each of which can have the axes arranged in 3 ways)
+    for ( size_t hp = 0; hp < 2; ++hp ) 
     {
-        double nextNorm = cubeNorm( currPoint - center );
+        for ( size_t rot = 0; rot < 4; ++rot ) 
+        {
+            for ( size_t permut = 0; permut < 3; ++permut )  
+            {
+                if ( cop1 == cop2 ) 
+                    return true;
+                
+                cop2.permutateAxes(); // Permute axes in current octant
+            }
+            cop2.rotateBy90Around( 0 ); // Rotating Y and Z around X
+        }
+        cop2.rotateBy180Around( 2 ); // Rotate X upside down along Z (bottom octants)
+    }
+    
+    return false;
+}
 
-        if ( nextNorm - longestNorm > epsilon )
+Cloud canonCloud( Cloud cop )
+{
+    Cloud res = cop;
+
+    for ( size_t hp = 0; hp < 2; ++hp ) 
+    {
+        for ( size_t rot = 0; rot < 4; ++rot ) 
         {
-            // New longest vector, shift old longest to second longest
-            result[1] = std::exchange( result[0], { currPoint } );
-            sndLongestNorm = std::exchange( longestNorm, nextNorm );
+            for ( size_t permut = 0; permut < 3; ++permut )  
+            {
+                res = std::max( res, cop );
+                
+                cop.permutateAxes(); // Permute axes in current octant
+            }
+            cop.rotateBy90Around( 0 ); // Rotating Y and Z around X
         }
-        else if ( std::abs( nextNorm - longestNorm ) <= epsilon )
-            // Another longest vector
-            result[0].push_back( currPoint );
-        else if ( nextNorm - sndLongestNorm > epsilon )
-        {
-            // New second longest vector
-            result[1] = { currPoint };  
-            sndLongestNorm = nextNorm;
-        }
-        else if ( std::abs( nextNorm - sndLongestNorm ) <= epsilon )
-            // Another second longest vector
-            result[1].push_back( currPoint );         
+        cop.rotateBy180Around( 2 ); // Rotate X upside down along Z (bottom octants)
     }
 
-    return result;
-}
-
-std::array< Cloud, 2 > longestVectors( const Cloud& cop, const double eps )
-{
-    return longestVectors( centroid( cop ), cop, eps );
+    return res;
 }
 
 } // namespace rofi::isoreconfig
