@@ -19,11 +19,11 @@ int main()
         auto endCycleFuture = endCyclePromise.get_future();
 
         localRofi.getJoint( 2 ).setTorque( torque );
-        RoFI::wait( 1000, [ & ] {
+        RoFI::postpone( 1000, [ & ] {
             localRofi.getJoint( 2 ).setTorque( -torque );
-            RoFI::wait( 1000, [ & ] {
+            RoFI::postpone( 1000, [ & ] {
                 localRofi.getJoint( 2 ).setTorque( 0 );
-                RoFI::wait( 1000, [ & ] { endCyclePromise.set_value(); } );
+                RoFI::postpone( 1000, [ & ] { endCyclePromise.set_value(); } );
             } );
         } );
 

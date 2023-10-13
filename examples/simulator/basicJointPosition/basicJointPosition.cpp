@@ -30,17 +30,17 @@ int main()
         auto endCycleFuture = endCyclePromise.get_future();
 
         joint.setPosition( 0, speed, [ & ]( Joint ) {
-            RoFI::wait( delayMs, [ & ] {
+            RoFI::postpone( delayMs, [ & ] {
                 joint.setPosition( minPos / 2, speed, [ & ]( Joint ) {
-                    RoFI::wait( delayMs, [ & ] {
+                    RoFI::postpone( delayMs, [ & ] {
                         joint.setPosition( minPos * 9.f / 10, speed, [ & ]( Joint ) {
-                            RoFI::wait( delayMs, [ & ] {
+                            RoFI::postpone( delayMs, [ & ] {
                                 joint.setPosition( maxPos / 2, speed, [ & ]( Joint ) {
-                                    RoFI::wait( delayMs, [ & ] {
+                                    RoFI::postpone( delayMs, [ & ] {
                                         joint.setPosition( maxPos * 9.f / 10,
                                                            speed,
                                                            [ & ]( Joint ) {
-                                                               RoFI::wait( delayMs, [ & ] {
+                                                               RoFI::postpone( delayMs, [ & ] {
                                                                    endCyclePromise.set_value();
                                                                } );
                                                            } );
