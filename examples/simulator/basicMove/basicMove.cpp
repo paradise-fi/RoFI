@@ -33,13 +33,13 @@ void setToLimitPos( Joint joint, bool max, Callback && callback )
     else
     {
         joint.setVelocity( ( max ? 1 : -1 ) * speed );
-        RoFI::wait( 4000, std::forward< Callback >( callback ) );
+        RoFI::postpone( 4000, std::forward< Callback >( callback ) );
     }
 }
 
 void checkConnected( Connector connector_ )
 {
-    RoFI::wait( 2000, [ connectorConst = connector_ ] {
+    RoFI::postpone( 2000, [ connectorConst = connector_ ] {
         Connector connector = connectorConst;
         auto state = connector.getState();
         if ( state.position != ConnectorPosition::Extended || state.connected )
@@ -50,7 +50,7 @@ void checkConnected( Connector connector_ )
 
         std::cout << "Retracting\n";
         connector.disconnect();
-        RoFI::wait( 2000, [ connectorConst = connector ] {
+        RoFI::postpone( 2000, [ connectorConst = connector ] {
             Connector conn = connectorConst;
             std::cout << "Extending\n";
             conn.connect();
@@ -75,14 +75,8 @@ void oneMove( int connector )
     remoteRofi.getConnector( otherConnector ).disconnect();
 
     // Wait 1 second
-    {
-        std::cout << "Wait for 1s\n";
-        std::promise< void > waitPromise;
-        auto waitFuture = waitPromise.get_future();
-
-        RoFI::wait( 1000, [ &waitPromise ] { waitPromise.set_value(); } );
-        waitFuture.get();
-    }
+    std::cout << "Wait for 1s\n";
+    sleep( 1000 );
 
     // Move joints
     {
