@@ -622,22 +622,20 @@ public:
     void reboot() { return _impl->reboot(); }
 
     /**
-     * \brief Call callback after given delay. The call is blocking.
+     * \brief Blocks the execution for given amount of time
      *
-     * You can assume that the callback will always be called exactly once.
      * \param ms delay in milliseconds
-     * \param callback non-empty callback to be called after the delay
      */
-    static void wait( int ms, std::function< void() > callback );
+    static void sleep( int ms );
 
     /**
      * \brief Call callback after given delay. The call is non-blocking.
      *
      * You can assume that the callback will always be called exactly once.
-     * \param ms delay in milliseconds
+     * \param ms wait time in milliseconds
      * \param callback non-empty callback to be called after the delay
      */
-    static void delay( int ms, std::function< void() > callback );
+    static void postpone( int ms, std::function< void() > callback );
 
 private:
     RoFI( std::shared_ptr< Implementation > impl ) : _impl( std::move( impl ) ) {}

@@ -77,8 +77,8 @@ PYBIND11_MODULE( pyRofiHal, m ) {
         .def( "getJoint", &RoFI::getJoint )
         .def( "getConnector", &RoFI::getConnector )
         .def_property_readonly( "descriptor", &RoFI::getDescriptor )
-        .def( "wait", &RoFI::wait )
-        .def( "delay", &RoFI::delay )
+        .def( "sleep", &RoFI::sleep )
+        .def( "postpone", &RoFI::postpone )
         .def_static( "getLocal", &RoFI::getLocalRoFI )
         .def_static( "getRemote", &RoFI::getRemoteRoFI );
 

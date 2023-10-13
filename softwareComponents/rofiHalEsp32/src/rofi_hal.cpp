@@ -996,21 +996,16 @@ private:
 
 namespace rofi::hal {
 
-void RoFI::wait( int ms, std::function< void() > callback )
+void RoFI::sleep( int ms )
 {
-    if ( !callback ) {
-        throw std::invalid_argument( "empty callback" );
-    }
-
     if ( ms < 0 ) {
-        throw std::invalid_argument( "negative wait time" );
+        throw std::invalid_argument( "negative sleep time" );
     }
 
     vTaskDelay( ms / portTICK_PERIOD_MS );
-    callback();
 }
 
-void RoFI::delay( int ms, std::function< void() > callback )
+void RoFI::postpone( int ms, std::function< void() > callback )
 {
     if ( !callback ) {
         throw std::invalid_argument( "empty callback" );

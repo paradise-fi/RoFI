@@ -263,19 +263,16 @@ public:
     void onWaitResp( const msgs::RofiResp & resp );
     void onResponse( const msgs::RofiResp & resp );
 
-    void wait( int ms, std::function< void() > callback )
+    void sleep( int ms )
     {
-        assert( callback );
         assert( ms >= 0 );
 
         auto waitEndPromise = std::promise< void >();
-        delay( static_cast< int >( ms ), [ &waitEndPromise ] { waitEndPromise.set_value(); } );
+        postpone( static_cast< int >( ms ), [ &waitEndPromise ] { waitEndPromise.set_value(); } );
         waitEndPromise.get_future().get();
-
-        callback();
     }
 
-    void delay( int ms, std::function< void() > callback )
+    void postpone( int ms, std::function< void() > callback )
     {
         assert( callback );
         assert( ms >= 0 );
@@ -824,22 +821,18 @@ RoFI RoFI::getRemoteRoFI( RoFI::Id remoteId )
     return RoFI( std::move( remoteRoFI ) );
 }
 
-void RoFI::wait( int ms, std::function< void() > callback )
+void RoFI::sleep( int ms )
 {
-    if ( !callback ) {
-        throw std::invalid_argument( "empty callback" );
-    }
-
     if ( ms < 0 ) {
         throw std::invalid_argument( "negative wait time" );
     }
 
     auto localRoFI = std::dynamic_pointer_cast< RoFISim >( RoFI::getLocalRoFI()._impl );
     assert( localRoFI );
-    localRoFI->wait( ms, std::move( callback ) );
+    localRoFI->sleep( ms );
 }
 
-void RoFI::delay( int ms, std::function< void() > callback )
+void RoFI::postpone( int ms, std::function< void() > callback )
 {
     if ( !callback ) {
         throw std::invalid_argument( "empty callback" );
@@ -851,7 +844,7 @@ void RoFI::delay( int ms, std::function< void() > callback )
 
     auto localRoFI = std::dynamic_pointer_cast< RoFISim >( RoFI::getLocalRoFI()._impl );
     assert( localRoFI );
-    localRoFI->delay( ms, std::move( callback ) );
+    localRoFI->postpone( ms, std::move( callback ) );
 }
 
 } // namespace rofi::hal
