@@ -3,7 +3,7 @@
 #include <string_view>
 
 #include <atoms/resources.hpp>
-#include <isoreconfig/isomorphic.hpp>
+#include <shapeReconfig/isomorphic.hpp>
 
 #include <vtkActor.h>
 #include <vtkAxesActor.h>
@@ -395,7 +395,7 @@ void addPointToScene( vtkRenderer & renderer,
 
 void buildRofiWorldPointsScene( vtkRenderer & renderer, RofiWorld world, bool showModules )
 {
-    using namespace rofi::isoreconfig;
+    using namespace rofi::shapereconfig;
 
     world.validate().get_or_throw_as< std::logic_error >();
     auto [ modulePoints, connectionPoints ] = decomposeRofiWorld( world );

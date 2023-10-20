@@ -1,8 +1,8 @@
 #include <configuration/rofiworld.hpp>
 
-#include <isoreconfig/geometry.hpp>
+#include <shapeReconfig/geometry.hpp>
 
-namespace rofi::isoreconfig {
+namespace rofi::shapereconfig {
 
 size_t combineHash( size_t h1, size_t h2 );
 

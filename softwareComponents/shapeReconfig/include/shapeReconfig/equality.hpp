@@ -1,6 +1,6 @@
 #include <configuration/rofiworld.hpp>
 
-namespace rofi::isoreconfig {
+namespace rofi::shapereconfig {
 
 bool equalConfiguration( const rofi::configuration::RofiWorld& rw1, const rofi::configuration::RofiWorld& rw2 );
 

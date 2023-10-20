@@ -15,12 +15,12 @@
 #include <configuration/universalModule.hpp>
 #include <parsing/parsing_lite.hpp>
 
-#include <isoreconfig/isomorphic.hpp>
-#include <isoreconfig/equality.hpp>
-#include <isoreconfig/hashing.hpp>
+#include <shapeReconfig/isomorphic.hpp>
+#include <shapeReconfig/equality.hpp>
+#include <shapeReconfig/hashing.hpp>
 
 #include <nlohmann/json.hpp>
-namespace rofi::isoreconfig { // types and functions
+namespace rofi::shapereconfig { // types and functions
 
 /**
  * BFStrict - BFS with strict RofiWorld equality
@@ -103,9 +103,9 @@ struct Node
         }
 };
 
-} // namespace rofi::isoreconfig
+} // namespace rofi::shapereconfig
 
-namespace rofi::isoreconfig::detail { // auxiliary structs and adjacent configurations generators
+namespace rofi::shapereconfig::detail { // auxiliary structs and adjacent configurations generators
 
 template < NodeType _NodeType >
 struct EqualNode;
@@ -444,9 +444,9 @@ std::vector< rofi::configuration::RofiWorld > getPredecessors(
     return plan;
 }
 
-} // namespace rofi::isoreconfig::detail
+} // namespace rofi::shapereconfig::detail
 
-namespace rofi::isoreconfig {
+namespace rofi::shapereconfig {
 
 class Reporter
 {
@@ -535,7 +535,7 @@ std::vector< rofi::configuration::RofiWorld > bfs(
     const rofi::configuration::RofiWorld& start, const rofi::configuration::RofiWorld& target,
     float step, Reporter& rep, size_t maxDepth )
 {
-    using namespace rofi::isoreconfig::detail;
+    using namespace rofi::shapereconfig::detail;
 
     std::vector< std::unique_ptr< Node > > nodePtrs;
     std::unordered_set< Node*, HashNodePtr< _NodeType >, EqualNodePtr< _NodeType > > visitedNodes;
@@ -605,7 +605,7 @@ template < NodeType _NodeType >
 std::vector< Node > bfsTraverse( 
     const rofi::configuration::RofiWorld& start, float step, size_t maxDepth )
 {
-    using namespace rofi::isoreconfig::detail;
+    using namespace rofi::shapereconfig::detail;
 
     std::vector< std::unique_ptr< Node > > nodePtrs;
     std::unordered_set< const Node*, HashNodePtr< _NodeType >, EqualNodePtr< _NodeType > > visitedNodes;
@@ -739,7 +739,7 @@ size_t modShapesDistance( const std::vector< size_t >& shapeCounts1, const std::
 size_t modShapesDistanceWithTable( std::vector< size_t > shapeCounts1, const std::vector< size_t >& shapeCounts2, 
     const arma::Mat< size_t >& convTable )
 {
-    using namespace rofi::isoreconfig::detail;
+    using namespace rofi::shapereconfig::detail;
 
     assert( shapeCounts1.size() == shapeCounts2.size() );
     assert( shapeCounts1.size() > 0 );
@@ -834,8 +834,8 @@ std::vector< rofi::configuration::RofiWorld > shapeStar(
     float step,
     Reporter& rep )
 {
-    using namespace rofi::isoreconfig::detail;
-
+    using namespace rofi::shapereconfig::detail;
+    
     // We are not able to gain or lose modules while reconfiguring
     if ( start.modules().size() != target.modules().size() )
         return {};
@@ -949,4 +949,4 @@ std::vector< rofi::configuration::RofiWorld > shapeStar(
     return {};
 }
 
-} // namespace rofi::isoreconfig
+} // namespace rofi::shapereconfig

@@ -1,7 +1,7 @@
 #include <cassert>
-#include <isoreconfig/isomorphic.hpp>
+#include <shapeReconfig/isomorphic.hpp>
 
-namespace rofi::isoreconfig {
+namespace rofi::shapereconfig {
 
 using namespace rofi::configuration;
 
@@ -135,4 +135,4 @@ bool equalShape( const RofiWorld& rw1, const RofiWorld& rw2 )
     return isometric( rofiWorldToCloud( rw1 ), rofiWorldToCloud( rw2 ) );
 }
 
-} // namespace rofi::isoreconfig
+} // namespace rofi::shapereconfig

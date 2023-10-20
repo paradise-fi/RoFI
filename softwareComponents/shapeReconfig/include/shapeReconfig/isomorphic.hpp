@@ -1,7 +1,7 @@
 #include <configuration/rofiworld.hpp>
-#include <isoreconfig/geometry.hpp>
+#include <shapeReconfig/geometry.hpp>
 
-namespace rofi::isoreconfig {
+namespace rofi::shapereconfig {
 
 using namespace rofi::configuration;
 
@@ -68,4 +68,4 @@ Vector centroid( const RofiWorld& rw );
  */
 bool equalShape( const RofiWorld& rw1, const RofiWorld& rw2 );
 
-} // namespace rofi::isoreconfig
+} // namespace rofi::shapereconfig

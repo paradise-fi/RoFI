@@ -1,6 +1,6 @@
-#include <isoreconfig/equality.hpp>
+#include <shapeReconfig/equality.hpp>
 
-namespace rofi::isoreconfig {
+namespace rofi::shapereconfig {
  
 constexpr auto precision = 0.0001f;
 
@@ -64,4 +64,4 @@ bool equalConfiguration( const rofi::configuration::RofiWorld& rw1, const rofi::
         && std::ranges::equal( rw1.roficomConnections(), rw2.roficomConnections(), equalRoficomJoint );
 }
 
-} // namespace rofi::isoreconfig
+} // namespace rofi::shapereconfig
