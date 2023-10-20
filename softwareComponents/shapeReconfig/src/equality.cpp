@@ -1,6 +1,6 @@
-#include <isoreconfig/equality.hpp>
+#include <shapeReconfig/equality.hpp>
 
-namespace rofi::isoreconfig {
+namespace rofi::shapereconfig {
 
 using namespace rofi::configuration;
  
@@ -64,4 +64,4 @@ bool equalConfiguration( const RofiWorld& rw1, const RofiWorld& rw2 )
         && std::ranges::equal( rw1.roficomConnections(), rw2.roficomConnections(), equalRoficomJoint );
 }
 
-} // namespace rofi::isoreconfig
+} // namespace rofi::shapereconfig

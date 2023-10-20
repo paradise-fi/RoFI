@@ -2,10 +2,10 @@
 #include <atoms/cmdline_utils.hpp>
 #include <configuration/rofiworld.hpp>
 #include <parsing/parsing.hpp>
-#include <isoreconfig/algorithms.hpp>
+#include <shapeReconfig/algorithms.hpp>
 
 using namespace rofi::configuration;
-using namespace rofi::isoreconfig;
+using namespace rofi::shapereconfig;
 using namespace rofi::parsing;
 
 int main(int argc, char** argv) 

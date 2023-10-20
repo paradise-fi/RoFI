@@ -15,12 +15,12 @@
 #include <configuration/universalModule.hpp>
 #include <parsing/parsing_lite.hpp>
 
-#include <isoreconfig/isomorphic.hpp>
-#include <isoreconfig/equality.hpp>
-#include <isoreconfig/hashing.hpp>
+#include <shapeReconfig/isomorphic.hpp>
+#include <shapeReconfig/equality.hpp>
+#include <shapeReconfig/hashing.hpp>
 
 #include <nlohmann/json.hpp>
-namespace rofi::isoreconfig { // types and functions
+namespace rofi::shapereconfig { // types and functions
 
 using namespace rofi::configuration;
 
@@ -83,12 +83,12 @@ struct Node
         }
 };
 
-} // namespace rofi::isoreconfig
+} // namespace rofi::shapereconfig
 
-namespace rofi::isoreconfig::detail { // auxiliary structs and adjacent configurations generators
+namespace rofi::shapereconfig::detail { // auxiliary structs and adjacent configurations generators
 
 using namespace rofi::configuration;
-using namespace rofi::isoreconfig;
+using namespace rofi::shapereconfig;
 
 template < NodeType _NodeType >
 struct EqualNode;
@@ -411,11 +411,11 @@ std::vector< RofiWorld > getPredecessors( const NodeId& targetId, const NodeId& 
     return plan;
 }
 
-} // namespace rofi::isoreconfig::detail
+} // namespace rofi::shapereconfig::detail
 
-namespace rofi::isoreconfig {
+namespace rofi::shapereconfig {
 
-using namespace rofi::isoreconfig::detail;
+using namespace rofi::shapereconfig::detail;
 
 class Reporter
 {
@@ -852,4 +852,4 @@ std::vector< RofiWorld > shapeStar(
     return {};
 }
 
-} // namespace rofi::isoreconfig
+} // namespace rofi::shapereconfig

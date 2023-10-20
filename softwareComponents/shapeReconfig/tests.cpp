@@ -3,11 +3,11 @@
 #include <configuration/universalModule.hpp> 
 #include <configuration/serialization.hpp>
 
-#include <isoreconfig/isomorphic.hpp>
-#include <isoreconfig/equality.hpp>
+#include <shapeReconfig/isomorphic.hpp>
+#include <shapeReconfig/equality.hpp>
 
 using namespace rofi::configuration;
-using namespace rofi::isoreconfig;
+using namespace rofi::shapereconfig;
 
 RofiWorld parseRofiWorld( const std::string& path )
 {

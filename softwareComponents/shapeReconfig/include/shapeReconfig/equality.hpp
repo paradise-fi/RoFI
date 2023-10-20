@@ -1,6 +1,6 @@
 #include <configuration/rofiworld.hpp>
 
-namespace rofi::isoreconfig {
+namespace rofi::shapereconfig {
 
 using namespace rofi::configuration;
 
@@ -14,4 +14,4 @@ struct StrictRofiWorldEquality
     }
 };
 
-} // namespace rofi::isoreconfig
+} // namespace rofi::shapereconfig

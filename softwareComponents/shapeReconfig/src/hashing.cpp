@@ -1,6 +1,6 @@
-#include <isoreconfig/hashing.hpp>
+#include <shapeReconfig/hashing.hpp>
 
-namespace rofi::isoreconfig {
+namespace rofi::shapereconfig {
 
 using namespace rofi::configuration;
 
@@ -95,4 +95,4 @@ size_t HashCloud::operator()( const Cloud& cop ) const
         } );
 }
 
-} // namespace rofi::isoreconfig
+} // namespace rofi::shapereconfig
