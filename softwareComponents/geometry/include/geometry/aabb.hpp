@@ -1,10 +1,20 @@
 #pragma once
 
+#include <deque>
 #include <memory>
 #include <optional>
 
 #include "shapes.hpp"
 
+/*
+  Standard implementation of Axis-Aligned Bounding Box trees. In order to store
+  an object within this tree, collisions need to be defined between two objects
+  of that type as well as between the object and boxes.
+
+  AABBs are binary trees, where each node holds a bounding box of its children,
+  with each child being another bounding box node or a leaf shape. It serves for
+  efficient collision checking between geometric objects.
+  */
 
 namespace rofi::geometry {
 
@@ -32,6 +42,7 @@ struct AABB_Leaf {
     bool rigid = true;
     /* Bounding box of the object */
     Box bound;
+
     node_t* parent = nullptr;
 
     explicit AABB_Leaf( LeafShape shape, AABB_Node< LeafShape >* parent = nullptr )
@@ -123,7 +134,7 @@ struct AABB_Node {
         };
         for( auto idx : { 0, 1 } ){
             if( children[ idx ] ){
-                if( std::visit( coll, *children[ 0 ] ) ){
+                if( std::visit( coll, *children[ idx ] ) ){
                     return true;
                 }
             }
@@ -149,7 +160,7 @@ struct AABB_Node {
 
     void erase_empty(){
         if( !children[ 0 ] && !children[ 1 ] && parent ){
-            if( this == std::get_if< node_t >( parent->children[ 0 ].get() ) ){
+            if( parent->children[ 0 ] && this == std::get_if< node_t >( parent->children[ 0 ].get() ) ){
                 parent->children[ 0 ] = nullptr;
             } else {
                 parent->children[ 1 ] = nullptr;
@@ -178,10 +189,6 @@ class AABB {
             auto* root = std::get_if< node_t >( _root.get() );
             root->children[ 0 ] = std::make_unique< var_t >( leaf_t( shape, std::get_if< node_t >( _root.get() ) ) );
             return std::get_if< leaf_t >( root->children[ 0 ].get() );
-        }
-
-        if( collides( shape ) ){
-            return nullptr;
         }
 
         auto [ child, parent ] = find_relatives( shape );
@@ -221,6 +228,10 @@ class AABB {
         return _root.get();
     }
 
+    void clear(){
+        _root = nullptr;
+    }
+
     bool collides( const LeafShape& shape ){
         if( !_root ){
             return false;
@@ -228,26 +239,68 @@ class AABB {
         return std::visit( [&]( auto&& node ){ return node.collides( shape ); }, *_root );
     }
 
-    bool erase( const LeafShape& shape ){
-        auto* node = find_leaf( shape );
-        if( !node ){
+    leaf_t* find_leaf( const LeafShape& shape ){
+        if( _root ){
+            return std::visit( [&]( auto&& node ){ return node.find_leaf( shape ); }, *_root );
+        }
+        return nullptr;
+    }
+
+    template< typename Shape >
+    std::vector< LeafShape > colliding_leaves( const Shape& shape ) const {
+        auto get_bound = []( auto&& node ){ return node.bound; };
+
+        std::deque< var_t* > queue;
+        if( _root ){
+            queue.push_back( _root.get() );
+        }
+        std::vector< LeafShape > colliding;
+
+        while( !queue.empty() ){
+            var_t* current = queue.front();
+            queue.pop_front();
+            if( std::holds_alternative< leaf_t >( *current ) ){
+                leaf_t* leaf = std::get_if< leaf_t >( current );
+                if( collide( leaf->shape, shape ) && leaf->rigid ){
+                    colliding.push_back( leaf->shape );
+                }
+            } else {
+                node_t* node = std::get_if< node_t >( current );
+                for( auto idx : { 0, 1 } ){
+                    if( node->children[ idx ] && collide( std::visit( get_bound, *node->children[ idx ] ), shape ) ){
+                        queue.push_back( node->children[ idx ].get() );
+                    }
+                }
+            }
+        }
+        return colliding;
+    }
+
+    bool erase( leaf_t* leaf ){
+        if( !leaf ){
             return false;
         }
-        if( node->parent ){
-            if( node->is_left_child() ){
-                 node->parent->children[ 0 ] = nullptr;
+
+        if( leaf->parent ){
+            if( leaf->is_left_child() ){
+                 leaf->parent->children[ 0 ] = nullptr;
             } else {
-                node->parent->children[ 1 ] = nullptr;
+                leaf->parent->children[ 1 ] = nullptr;
             }
-            // recursively erase parents if they have no remaining children
-            node->parent->erase_empty();
+            leaf->parent->erase_empty();
         }
-        // erase root if tree is empty
-        node_t* root = to_node( _root.get() );
+
+        auto* root = std::get_if< node_t >( _root.get() );
         if( !root->children[ 0 ] && !root->children[ 1 ] ){
             _root = nullptr;
         }
+
         return true;
+    }
+
+    bool erase( const LeafShape& shape ){
+        auto* node = find_leaf( shape );
+        return erase( node );
     }
 
     auto begin() const {
@@ -298,12 +351,6 @@ class AABB {
         return nullptr;
     }
 
-    leaf_t* find_leaf( const LeafShape& shape ){
-        if( _root ){
-            return std::visit( [&]( auto&& node ){ return node.find_leaf( shape ); }, *_root );
-        }
-        return nullptr;
-    }
 
     // return pair ( sibling, parent )
     std::pair< leaf_t*, node_t* > find_relatives( const LeafShape& shape ){
@@ -322,7 +369,8 @@ class AABB {
             std::array< double, 2 > costs;
             auto get_bound = []( auto&& node ){ return node.bound; };
             for( auto idx : { 0, 1 } ){
-                costs[ idx ] = bounding_box( shape, std::visit( get_bound, *node->children[ idx ] ) ).volume()
+                costs[ idx ] = bounding_box( shape.bounding_box(),
+                                             std::visit( get_bound, *node->children[ idx ] ) ).volume()
                     + std::visit( get_bound, *node->children[ 1 - idx ] ).volume();
             }
 
@@ -374,7 +422,13 @@ class AABB {
             if( !current ){
                 return;
             }
-            node_t* parent = std::visit( []( auto&& node ){ return node.parent; }, *current );;
+            node_t* parent = std::visit( []( auto&& node ){ return node.parent; }, *current );
+            while( parent && ( current == parent->children[ 1 ].get() ) ){
+                if( parent->parent && !parent->is_left_child() ){
+                    current = parent->parent->children[ 1 ] ? parent->parent->children[ 1 ].get() : nullptr;
+                }
+                parent = parent->parent;
+            }
             while( parent && !parent->children[ 1 ] ){
                 parent = parent->parent;
             }

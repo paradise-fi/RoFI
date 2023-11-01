@@ -1,6 +1,5 @@
 #include <catch2/catch.hpp>
 #include <geometry/aabb.hpp>
-//#include "../include/aabb.hpp"
 
 using namespace rofi::geometry;
 
@@ -31,7 +30,6 @@ TEST_CASE( "Colliding objects" ){
     REQUIRE( aabb.size() == 0 );
     REQUIRE( aabb.insert( Sphere( { 0, 0, 0, 1 } ) ) );
     REQUIRE( aabb.collides( Sphere( { 0, 0.1, 0, 1 } ) ) );
-    REQUIRE( !aabb.insert( Sphere( { 0, 0.1, 0, 1 } ) ) );
     REQUIRE( !aabb.collides( Sphere( { 0, 1, 0, 1 } ) ) );
 }
 
@@ -74,4 +72,33 @@ TEST_CASE( "Simple iterator" ){
     for( const auto& s : aabb ){
         REQUIRE( s == Sphere( Vector{ 10, 10, 10, 1 } ) );
     }
+}
+
+TEST_CASE( "Colliding leaves" ){
+    AABB< Sphere > aabb;
+    auto s1 = Sphere( Vector{ 0, 0, 0, 1 } );
+    auto s2 = Sphere( Vector{ 0, 0, 1, 1 } );
+    aabb.insert( s1 );
+    aabb.insert( s2 );
+    auto colliding_all = aabb.colliding_leaves( Sphere( Vector{ 0, 0, 0.5, 1 } ) );
+    REQUIRE( colliding_all.size() == 2 );
+    bool equal = colliding_all[ 0 ] == s1 && colliding_all[ 1 ] == s2 ||
+                 colliding_all[ 0 ] == s2 && colliding_all[ 1 ] == s1;
+    REQUIRE( equal );
+
+    auto colliding_one = aabb.colliding_leaves( Sphere( Vector{ 0.5, 0, 0, 1 } ) );
+    REQUIRE( colliding_one.size() == 1 );
+    REQUIRE( colliding_one[ 0 ] == s1 );
+}
+
+TEST_CASE( "Raycasting" ){
+    AABB< Sphere > aabb;
+    auto s1 = Sphere( Vector{ 0, 0, 0, 1 } );
+    auto s2 = Sphere( Vector{ 0, 0, 1, 1 } );
+    aabb.insert( s1 );
+    aabb.insert( s2 );
+    REQUIRE( aabb.colliding_leaves( Segment( { 0, 0, 0 }, { 0, 0, 1 } ) ).size() == 2 );
+    REQUIRE( aabb.colliding_leaves( Segment( { 0, 0, 0 }, { 0, 0, -1 } ) ).size() == 1 );
+    REQUIRE( aabb.colliding_leaves( Segment( { 0, 0, 2 }, { 0, 0, 1 } ) ).size() == 1 );
+    REQUIRE( aabb.colliding_leaves( Segment( { 0, -1, 0 }, { 0, 0, -1 } ) ).size() == 0 );
 }
