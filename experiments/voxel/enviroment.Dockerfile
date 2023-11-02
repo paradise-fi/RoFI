@@ -17,9 +17,6 @@ RUN echo $'#!/usr/bin/env bash\n\
     util/monitorMemUsage.sh /artefact/results.json $@\n' > /bin/rofiInvoke; \
     chmod +x /bin/rofiInvoke
 
-# Uncomment if you want to enable debug assertions in Rust
-# RUN export RUSTFLAGS="-C debug-assertions -C overflow-checks"
-
 WORKDIR /RoFI
 
 ENTRYPOINT ["rofiInvoke"]
