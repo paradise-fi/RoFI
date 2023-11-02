@@ -43,15 +43,15 @@ impl Direction {
     where
         T: num::Signed + Ord + Copy,
     {
-        let [first_x, first_y, first_z] = &from;
-        let [second_x, second_y, second_z] = &to;
+        let [from_x, from_y, from_z] = &from;
+        let [to_x, to_y, to_z] = &to;
 
-        let result = if first_x != second_x {
-            Self::new_with(Axis::X, first_x > second_x)
-        } else if first_y != second_y {
-            Self::new_with(Axis::Y, first_y > second_y)
-        } else if first_z != second_z {
-            Self::new_with(Axis::Z, first_z > second_z)
+        let result = if from_x != to_x {
+            Self::new_with(Axis::X, to_x > from_x)
+        } else if from_y != to_y {
+            Self::new_with(Axis::Y, to_y > from_y)
+        } else if from_z != to_z {
+            Self::new_with(Axis::Z, to_z > from_z)
         } else {
             return None;
         };
@@ -60,6 +60,25 @@ impl Direction {
             Some(result)
         } else {
             None
+        }
+    }
+}
+
+#[test]
+fn test_from_adjacent_positions() {
+    for from in [[0; 3], [3; 3], [-5; 3], [1, 2, 3], [5, -3, -1]] {
+        for change_axis in [Axis::X, Axis::Y, Axis::Z] {
+            for is_positive in [true, false] {
+                let mut to = from;
+                to[change_axis.as_index()] += if is_positive { 1 } else { -1 };
+
+                let result = Direction::from_adjacent_positions(from, to);
+                assert_eq!(
+                    result,
+                    Some(Direction::new_with(change_axis, is_positive)),
+                    "from: {from:?}, to: {to:?}"
+                );
+            }
         }
     }
 }
