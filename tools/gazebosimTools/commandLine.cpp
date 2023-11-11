@@ -7,6 +7,7 @@
 #include <gazebo/gazebo_client.hh>
 
 #include "rofi_hal.hpp"
+#include "macros.hpp"
 
 enum class JointCmd
 {
@@ -126,6 +127,52 @@ std::string toString( rofi::hal::ConnectorOrientation orientation )
 }
 
 
+class Jobs
+{
+private:
+
+    Jobs() {}
+    Jobs( const Jobs& ) = delete;
+
+    std::unordered_map< int, std::promise<void> > _jobs;
+    int _nextId = 0;
+
+public:
+
+    static Jobs& get()
+    {
+        static Jobs jobsInstance;
+        return jobsInstance;
+    }
+
+    int startNew()
+    {
+        _jobs.insert( { _nextId, std::promise<void>() } );
+        return _nextId++;
+    }
+
+    void finish( int job )
+    {
+        _jobs[job].set_value();
+        // _jobs.delete( job ); // should it be removed, or only after synchronization?
+    }
+
+    void waitFor( int job )
+    {
+        _jobs[job].get_future().get();
+        // _jobs.delete( job ); // should it be removed, or only after synchronization?
+    }
+
+    void synchronize()
+    {
+        for ( auto& [ _, prom ] : _jobs )
+            prom.get_future().get();
+
+        _jobs.clear();
+    }
+
+};
+
 JointCmd getJointCmdType( std::string_view token )
 {
     const std::map< std::string_view, JointCmd > map = {
@@ -172,6 +219,7 @@ void printHelp()
     std::cerr << "\nUsage:\n";
     std::cerr << "\tquit (q)\n";
     std::cerr << "\texec (e) <command_file>\n";
+    std::cerr << "\tsynchronize (s)\n";
     std::cerr << "\tmodule (m) <module_id> <module_command>\n";
 
     std::cerr<< "\nModule Commands:\n";
@@ -252,9 +300,14 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
             {
                 throw std::runtime_error( "Wrong number of arguments" );
             }
+            int job = Jobs::get().startNew();
             joint.setPosition( readFloat( tokens[ 3 ] ),
                                readFloat( tokens[ 4 ] ),
-                               []( rofi::hal::Joint ) { std::cout << "Position reached\n"; } );
+                               [ job ]( rofi::hal::Joint ) 
+                                { 
+                                    std::cout << "Position reached\n"; 
+                                    Jobs::get().finish( job ); 
+                                } );
             break;
         }
         case JointCmd::GET_TORQUE:
@@ -403,6 +456,14 @@ void processCmds(
             {
                 if ( logFile ) *logFile << line << std::endl;
                 processModuleCmd( modules, tokens );
+                continue;
+            }
+
+            if ( tokens.front() == "s" || tokens.front() == "synchronize" )
+            {
+                if ( logFile ) *logFile << line << std::endl;
+                Jobs::get().synchronize();
+                std::cout << "Synchronized\n"; 
                 continue;
             }
 
