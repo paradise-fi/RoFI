@@ -6,6 +6,8 @@ edition = "2021"
 [profile.rel-with-deb-info]
 inherits = "release"
 debug = true
+debug-assertions = true
+overflow-checks = true
 [profile.min-size-rel]
 inherits = "release"
 opt-level = "s"
