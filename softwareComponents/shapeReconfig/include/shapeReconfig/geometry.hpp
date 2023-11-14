@@ -7,7 +7,7 @@
 
 #include <armadillo>
 
-namespace rofi::isoreconfig {
+namespace rofi::shapereconfig {
 
 static constexpr double ERROR_MARGIN = 0.001;
 
@@ -274,4 +274,4 @@ private:
     }
 };
 
-} // namespace rofi::isoreconfig
+} // namespace rofi::shapereconfig

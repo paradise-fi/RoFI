@@ -21,4 +21,4 @@ set(ROFI_TOOL_SRCS
 )
 
 add_executable(rofi-tool ${ROFI_TOOL_SRCS} ${MODEL_RESOURCES})
-target_link_libraries(rofi-tool PRIVATE dimcli atoms-heavy configuration parsing isoreconfig ${VTK_LIBRARIES})
+target_link_libraries(rofi-tool PRIVATE dimcli atoms-heavy configuration parsing shapereconfig ${VTK_LIBRARIES})

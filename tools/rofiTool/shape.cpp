@@ -1,6 +1,6 @@
 #include <atoms/cmdline_utils.hpp>
 #include <configuration/rofiworld.hpp>
-#include <isoreconfig/isomorphic.hpp>
+#include <shapeReconfig/isomorphic.hpp>
 #include <dimcli/cli.h>
 #include <parsing/parsing.hpp>
 
@@ -66,7 +66,7 @@ void shape( Dim::Cli & cli )
         return;
     }
 
-    if ( !rofi::isoreconfig::equalShape( *firstWorld, *secondWorld ) ) {
+    if ( !rofi::shapereconfig::equalShape( *firstWorld, *secondWorld ) ) {
         exit( EXIT_FAILURE ); // Avoid dimcli error message
     }
 }

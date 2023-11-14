@@ -1,6 +1,6 @@
-#include <isoreconfig/geometry.hpp>
+#include <shapeReconfig/geometry.hpp>
 
-namespace rofi::isoreconfig {
+namespace rofi::shapereconfig {
 
 Vector centroid( const std::vector< Vector >& pts )
 {
@@ -65,4 +65,4 @@ Cloud canonCloud( Cloud cop )
     return res;
 }
 
-} // namespace rofi::isoreconfig
+} // namespace rofi::shapereconfig
