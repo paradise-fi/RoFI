@@ -23,4 +23,3 @@ E 6 A +X S -X B 2
 E 6 B -X S +X A 2
 E 7 A -X S +X B 6
 E 7 B +X S -X A 6
-
