@@ -64,5 +64,3 @@ add_pcb(roficom_cable
     FAB jlcpcb --no-drc
     SCHEMATICS ${CMAKE_CURRENT_SOURCE_DIR}/control_board/control_board.kicad_sch
 )
-
-

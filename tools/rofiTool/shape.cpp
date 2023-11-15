@@ -70,4 +70,3 @@ void shape( Dim::Cli & cli )
         exit( EXIT_FAILURE ); // Avoid dimcli error message
     }
 }
-

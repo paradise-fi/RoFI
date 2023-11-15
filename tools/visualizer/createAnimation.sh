@@ -138,7 +138,3 @@ rofi-vis $VIS && rofi-vis-build-video $VID
 
 # clean up temporary images
 rm -r $PICTURESPATH
-
-
-
-

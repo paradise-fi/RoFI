@@ -7,4 +7,3 @@ Gpio GpioB( GPIOB );
 #ifdef GPIOC
     Gpio GpioC( GPIOC );
 #endif
-

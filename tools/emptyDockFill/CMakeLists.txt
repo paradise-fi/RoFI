@@ -3,4 +3,3 @@ project(rofi)
 
 add_executable(rofi-emptyDockFill emptyDockFill.cpp)
 target_link_libraries(rofi-emptyDockFill PUBLIC legacy-configuration)
-

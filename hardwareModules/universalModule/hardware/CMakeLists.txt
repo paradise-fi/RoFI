@@ -130,4 +130,3 @@ add_pcb(um_devkit
     SOURCE ${CMAKE_CURRENT_SOURCE_DIR}/umDevKit/umDevKit.kicad_pcb
     FAB jlcpcb --no-drc
 )
-

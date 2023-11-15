@@ -70,5 +70,3 @@ void VtkSupp::buildScene(Configuration* current_cfg, vtkSmartPointer<vtkRenderer
         }
     }
 }
-
-
