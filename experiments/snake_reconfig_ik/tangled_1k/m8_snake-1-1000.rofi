@@ -14,4 +14,3 @@ E 1 B +X N -Z A 3
 E 0 A -Z N -Z B 2
 E 0 B -X E +X A 4
 E 0 B -Z N -Z A 1
-

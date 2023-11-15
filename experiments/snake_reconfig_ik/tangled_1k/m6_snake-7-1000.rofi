@@ -11,4 +11,3 @@ E 1 A +X W +X B 2
 E 1 B +X S -X A 3
 E 0 A +X S -X B 1
 E 0 B +X N -X A 2
-

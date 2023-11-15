@@ -6,4 +6,3 @@ M 0 -90 0 90
 E 2 B -Z E -Z A 3
 E 1 A -Z N -Z B 3
 E 0 A -Z N +X B 1
-

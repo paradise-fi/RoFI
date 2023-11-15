@@ -71,4 +71,3 @@ E 23 A -X S -X B 25
 E 24 B -Z N -Z A 25
 E 25 B +X S +X A 26
 E 28 A -Z E -Z B 32
-

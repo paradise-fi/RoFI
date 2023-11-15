@@ -16,4 +16,3 @@ E 2 B -X N -Z A 3
 E 1 B -Z S -X A 5
 E 0 A -Z S +X B 6
 E 0 B -X E -Z A 7
-

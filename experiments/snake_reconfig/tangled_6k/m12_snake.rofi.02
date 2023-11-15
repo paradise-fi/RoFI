@@ -22,4 +22,3 @@ E 1 A -X E -X B 8
 E 1 B -Z N -X A 7
 E 0 A +X E -X B 2
 E 0 B +X E +X A 1
-

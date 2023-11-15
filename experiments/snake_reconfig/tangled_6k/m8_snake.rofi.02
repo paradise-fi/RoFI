@@ -15,4 +15,3 @@ E 1 A -Z N -X B 6
 E 1 B -X E -Z A 4
 E 0 A +X E +X B 7
 E 0 B +X N -X A 7
-

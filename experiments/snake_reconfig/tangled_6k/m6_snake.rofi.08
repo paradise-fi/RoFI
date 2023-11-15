@@ -10,4 +10,3 @@ E 2 B -Z W +X A 3
 E 1 A -X E -Z B 4
 E 1 B -X W -Z A 3
 E 0 B -X N +X A 2
-

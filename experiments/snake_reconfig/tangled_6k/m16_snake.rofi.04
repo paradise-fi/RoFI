@@ -30,4 +30,3 @@ E 10 A -X E -X B 13
 E 11 B +X W -X A 14
 E 11 B -X W +X A 12
 E 12 B -Z E -Z A 13
-

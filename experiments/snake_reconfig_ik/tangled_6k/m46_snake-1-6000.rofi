@@ -94,4 +94,3 @@ E 22 A -X N -Z B 26
 E 24 B -Z N -Z A 25
 E 28 A +X E -X B 36
 E 28 B +X N -X A 29
-
