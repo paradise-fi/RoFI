@@ -83,4 +83,3 @@ public:
 RofiWorld readOldConfigurationFormat( std::istream& s );
 
 } // namespace rofi::configuration
-

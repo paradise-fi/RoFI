@@ -363,4 +363,3 @@ private:
     const address_type _defaultAddress = 0x52;
     const DistanceMode _defaultMode = DistanceMode::Short;
 };
-

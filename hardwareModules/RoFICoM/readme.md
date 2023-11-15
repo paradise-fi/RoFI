@@ -20,9 +20,3 @@ There are two directories:
   versions of the firmware:
   - `AvrDock` for Arduino which should simulate the connector
   - `control_board` which runs on the actual connector
-
-
-
-
-
-

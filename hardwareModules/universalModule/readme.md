@@ -18,5 +18,3 @@ There are two directories:
 - `software`: contains the firmware for the control board and RoFIDriver - a
   library linked to all user programs, which implements networking and hardware
   abstraction.
-
-

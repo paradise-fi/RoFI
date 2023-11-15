@@ -681,4 +681,3 @@ namespace detail {
     }
 
 } // namespace detail
-

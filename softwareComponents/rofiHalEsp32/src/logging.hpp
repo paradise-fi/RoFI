@@ -61,4 +61,3 @@ void debug(const std::string_view& message,
 }
 
 } // namespace rofi::log
-

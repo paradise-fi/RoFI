@@ -720,4 +720,3 @@ private:
     std::array< UsbEndpoint *, 7 > _hostToDevEndp = {};
     std::array< UsbEndpoint *, 7 > _devToHostEndp = {};
 };
-

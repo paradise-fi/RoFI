@@ -89,5 +89,3 @@ find_package_handle_standard_args(CLP  DEFAULT_MSG
 mark_as_advanced(CLP_INCLUDE_DIR CLP_LIBRARY)
 
 endif( NOT CLP_FOUND)
-
-

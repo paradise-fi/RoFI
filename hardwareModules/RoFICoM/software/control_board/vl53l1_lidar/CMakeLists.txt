@@ -33,4 +33,3 @@ target_include_directories(lidar PUBLIC
 target_link_libraries(lidar
         g0_stm32cxx_i2c g0_stm32cxx_gpio atoms)
 target_compile_definitions(lidar PUBLIC PAL_EXTENDED=1)
-

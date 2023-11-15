@@ -164,4 +164,3 @@ void EspTunnelManager::enableBootloader( bool v ) {
 void EspTunnelManager::disableBootloader() {
     enableBootloader( false );
 }
-
