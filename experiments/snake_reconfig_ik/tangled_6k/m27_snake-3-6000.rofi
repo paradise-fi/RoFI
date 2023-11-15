@@ -54,4 +54,3 @@ E 10 B -Z S -X A 15
 E 11 A +X N -X B 14
 E 11 B +X N +X A 12
 E 12 B -X N -X A 16
-

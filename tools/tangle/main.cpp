@@ -43,7 +43,7 @@ int main( int argc, char* argv[] ) {
         configuration = *cfg;
     }
 
-    outputStream << IO::toString( configuration ) << "\n";
+    outputStream << IO::toString( configuration );
 
     return 0;
 }

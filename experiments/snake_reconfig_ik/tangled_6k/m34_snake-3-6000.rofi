@@ -66,4 +66,3 @@ E 24 A -X W -X B 28
 E 24 B -X S -X A 29
 E 26 A +X E +X B 33
 E 28 B +X E +X A 30
-

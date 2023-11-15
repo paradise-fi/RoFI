@@ -79,4 +79,3 @@ E 23 A -X W -X B 34
 E 24 A -X S -X B 31
 E 25 B +X S -X A 26
 E 25 B -X E -X A 32
-

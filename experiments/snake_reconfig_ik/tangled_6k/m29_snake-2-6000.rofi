@@ -59,4 +59,3 @@ E 9 A -Z N -X B 23
 E 9 B -X N -X A 21
 E 10 B -X E +X A 18
 E 11 B +X E +X A 16
-

@@ -26,4 +26,3 @@ E 1 A -X S +X B 10
 E 1 A -Z N -X B 8
 E 0 A -Z N +X B 6
 E 0 B -X S +X A 6
-

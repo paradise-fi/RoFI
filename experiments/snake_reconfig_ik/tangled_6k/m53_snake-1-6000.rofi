@@ -106,4 +106,3 @@ E 22 A -X S +X B 38
 E 23 A -X E +X B 24
 E 23 B +X W -X A 31
 E 23 B -Z N +X A 52
-

@@ -22,4 +22,3 @@ E 2 B -X W -X A 5
 E 1 A +X E +X B 9
 E 0 A -X W +X B 3
 E 0 B +X E +X A 8
-
