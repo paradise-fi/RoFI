@@ -15,6 +15,7 @@
 
 #include "gazebo_node_handler.hpp"
 #include "message_logger.hpp"
+#include "session_id.hpp"
 #include "subscriber_wrapper.hpp"
 
 #include <distributorReq.pb.h>
@@ -110,6 +111,7 @@ private:
 
         rofi::messages::DistributorReq req;
         req.set_reqtype( rofi::messages::DistributorReq::GET_INFO );
+        req.set_sessionid( SessionId::get().bytes() );
         publish( std::move( req ) );
 
         _onRofiTopicsUpdate.wait( lock, [ this, rofiId ] {

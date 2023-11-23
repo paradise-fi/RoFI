@@ -34,7 +34,7 @@ void Distributor::onRequest( const rofi::messages::DistributorReq & req )
             if ( req.rofiid() != 0 ) {
                 std::cerr << "Got GET_INFO distributor request with non-zero id\n";
             }
-            sendResponse( onGetInfoReq() );
+            sendResponse( onGetInfoReq( req.sessionid() ) );
             break;
         }
         case DistributorReq::LOCK_ONE:
@@ -64,10 +64,11 @@ void Distributor::onRequest( const rofi::messages::DistributorReq & req )
     }
 }
 
-rofi::messages::DistributorResp Distributor::onGetInfoReq()
+rofi::messages::DistributorResp Distributor::onGetInfoReq( SessionId sessionId )
 {
     rofi::messages::DistributorResp resp;
     resp.set_resptype( rofi::messages::DistributorReq::GET_INFO );
+    resp.set_sessionid( sessionId );
 
     _modulesCommunication.forEachLockedModule(
             [ &resp ]( ModuleId moduleId, const std::string & topic ) {
