@@ -13,11 +13,10 @@
 #include <thread>
 #include <utility>
 
-#include <boost/uuid/random_generator.hpp>
-
 #include "connector_worker.hpp"
 #include "joint_worker.hpp"
 #include "publish_worker.hpp"
+#include "session_id.hpp"
 #include "wait_worker.hpp"
 
 #include <distributorReq.pb.h>
@@ -25,58 +24,11 @@
 #include <rofiCmd.pb.h>
 #include <rofiResp.pb.h>
 
-#ifndef SESSION_ID
-#define SESSION_ID boost::uuids::random_generator()()
-#endif
-
 
 namespace
 {
 using namespace rofi::hal;
 namespace msgs = rofi::messages;
-
-class SessionId {
-public:
-    static const SessionId & get()
-    {
-        static SessionId instance = SessionId( SESSION_ID );
-        return instance;
-    }
-
-    const std::string & bytes() const
-    {
-        return _bytes;
-    }
-
-private:
-    template < typename T, std::enable_if_t< std::is_integral_v< T >, int > = 0 >
-    constexpr SessionId( T id )
-    {
-        _bytes.reserve( sizeof( T ) );
-
-        for ( size_t i = 0; i < sizeof( T ); i++ ) {
-            _bytes.push_back( *( reinterpret_cast< char * >( &id ) + i ) );
-        }
-    }
-
-    template < typename T,
-               std::enable_if_t< sizeof( typename T::value_type ) == sizeof( char ), int > = 0 >
-    constexpr SessionId( T id )
-    {
-        _bytes.reserve( id.size() );
-
-        for ( auto & c : id ) {
-            static_assert( sizeof( decltype( c ) ) == sizeof( char ) );
-            _bytes.push_back( reinterpret_cast< char & >( c ) );
-        }
-    }
-
-    SessionId( const SessionId & other ) = delete;
-    SessionId & operator=( const SessionId & other ) = delete;
-
-private:
-    std::string _bytes;
-};
 
 class ConnectorSim;
 class JointSim;
