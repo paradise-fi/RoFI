@@ -13,8 +13,8 @@ docker build . -f experiments/voxel/enviroment.Dockerfile -t voxel-experiments
 ### Generate rofibots each to each tasks:
 ```sh
 experiments/voxel/gen_tasks_args.py e2e -f old --both-directions \
-$(find data/configurations/old/rofibots/ -type f | sort) |
-experiments/voxel/gen_tasks_matrix.py - experiments/voxel/args_rofi-voxel.json
+$(find data/configurations/old/m03-rofibots/ -type f | sort) |
+experiments/voxel/gen_tasks_matrix.py - experiments/voxel/args-voxel.json
 ```
 
 ### Generate tangled to snake tasks:
@@ -22,7 +22,7 @@ experiments/voxel/gen_tasks_matrix.py - experiments/voxel/args_rofi-voxel.json
 experiments/voxel/gen_tasks_args.py snake -f old \
 $(find experiments/voxel/snake_10_tangled_10/ -type f | sort) \
 $(find experiments/voxel/snake_5_tangled_100/ -type f | sort) |
-experiments/voxel/gen_tasks_matrix.py - experiments/voxel/args_rofi-voxel.json
+experiments/voxel/gen_tasks_matrix.py - experiments/voxel/args-voxel.json
 ```
 
 ## Files
