@@ -14,6 +14,7 @@ Distributor::Distributor( gazebo::transport::Node & node,
     if ( !_pub ) {
         throw std::runtime_error( "Publisher could not be created" );
     }
+    _logger.logSubscribe( "~/distributor/request" );
     _sub = node.Subscribe( "~/distributor/request", &Distributor::onRequestCallback, this );
     if ( !_sub ) {
         throw std::runtime_error( "Subcriber could not be created" );

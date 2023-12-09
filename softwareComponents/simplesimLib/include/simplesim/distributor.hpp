@@ -39,6 +39,7 @@ public:
     ~Distributor()
     {
         assert( _sub );
+        _logger.logUnsubscribe( _sub->GetTopic() );
         _sub->Unsubscribe();
     }
 
