@@ -24,6 +24,8 @@ public:
             throw std::runtime_error( "empty callback" );
         }
 
+        logSubscription( _topic, true );
+
         _sub = _node->Subscribe( _topic, &SubscriberWrapper::onMsg, this );
     }
 
@@ -33,6 +35,7 @@ public:
     ~SubscriberWrapper()
     {
         if ( _sub ) {
+            logSubscription( _sub->GetTopic(), false );
             _sub->Unsubscribe();
         }
     }

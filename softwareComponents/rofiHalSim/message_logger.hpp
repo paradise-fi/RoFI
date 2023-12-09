@@ -37,4 +37,19 @@ inline void logMessage( [[maybe_unused]] const std::string & topic,
 #endif
 }
 
+inline void logSubscription( [[maybe_unused]] const std::string & topic,
+                        [[maybe_unused]] bool starting )
+{
+#if LOG_MESSAGES
+    auto now = std::chrono::system_clock::to_time_t( std::chrono::system_clock::now() );
+    if ( starting ) {
+        std::cerr << std::put_time( std::localtime( &now ), "%T" ) << " Subscribing to '" << topic
+                  << std::endl;
+    } else {
+        std::cerr << std::put_time( std::localtime( &now ), "%T" ) << " Unsubscribing from '" << topic
+                  << std::endl;
+    }
+#endif
+}
+
 } // namespace rofi::hal
