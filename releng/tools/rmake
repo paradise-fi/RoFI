@@ -30,22 +30,23 @@ usage="""Usage:
 
     rmake clean                  Clean all suite builds
     rmake clean-<suitename>...   Clean given suite
+
+    Use -jN to set N max threads to use during compilation; default is maximum cores
 """
 
-def invokeBuild(wd, targets):
+def invokeBuild(wd, targets, maxThreads):
     """
     Invoke ninja or make based on the environment for targets in a working
     directory
     """
-    maxThreads = 2 + multiprocessing.cpu_count()
     command = ["cmake", "--build", wd, f"-j{maxThreads}"]
     if len(targets) > 0:
         command += ["--target"] + targets
     subprocess.check_call(command, cwd=wd)
 
-def compileTargets(targets):
+def compileTargets(targets, maxThreads):
     """
-    Compile given targets. Be as parallel as possible
+    Compile given targets. Unless specified, be as parallel as possible
     """
     for s in configuredSuites():
         sTargets = [x.target for x in targets if x.suite == s]
@@ -53,14 +54,14 @@ def compileTargets(targets):
             continue
         print(f"Compiling targets from suite {s}: {', '.join(sTargets)}")
         try:
-            invokeBuild(os.path.join(buildDir, s), sTargets)
+            invokeBuild(os.path.join(buildDir, s), sTargets, maxThreads)
         except Exception as e:
             sys.exit(f"Build of target {', '.join(sTargets)} failed with {e}. See output above\n")
 
-def compileSuite(suite):
+def compileSuite(suite, maxThreads):
     print(f"Compiling suite {suite}")
     try:
-        invokeBuild(os.path.join(buildDir, suite), [])
+        invokeBuild(os.path.join(buildDir, suite), [], maxThreads)
     except Exception as e:
         sys.exit(f"Build of suite {suite} failed with {e}. See output above\n")
 
@@ -132,7 +133,7 @@ def matchPattern(pattern, allowedSuites, allowedTargets, suitesToCompile,
     if not used:
         sys.exit(f"Invalid target pattern specified: '{pattern}'")
 
-def build(patterns):
+def build(patterns, maxThreads):
     if not allAreTargets(patterns):
         sys.exit("Invalid usage!\n\n" + usage)
 
@@ -153,19 +154,19 @@ def build(patterns):
     targetsToCompile.sort(key=lambda x: x.suite)
 
     for s in suitesToClean:
-        cleanSuite(s)
+        cleanSuite(s, maxThreads)
 
     for s in suitesToCompile:
-        compileSuite(s)
-    compileTargets(targetsToCompile)
+        compileSuite(s, maxThreads)
+    compileTargets(targetsToCompile, maxThreads)
 
-def buildAll():
+def buildAll(maxThreads):
     for suite in configuredSuites():
         if os.path.exists(os.path.join(buildDir, suite)):
-            compileSuite(suite)
+            compileSuite(suite, maxThreads)
     sys.exit(0)
 
-def test(patterns):
+def test(patterns, maxThreads):
     aSuites = configuredSuites()
     aTargets = availableTestTargets()
 
@@ -195,9 +196,9 @@ def test(patterns):
     targetsToCompile.sort(key=lambda x: x.suite)
 
     for s in suitesToClean:
-        cleanSuite(s)
+        cleanSuite(s, maxThreads)
 
-    compileTargets(targetsToCompile)
+    compileTargets(targetsToCompile, maxThreads)
 
     for t in targetsToCompile:
         runTest(t)
@@ -336,6 +337,19 @@ def tidy(patterns):
         sys.exit(1)
 
 def main():
+    maxThreads = 2 + multiprocessing.cpu_count()
+    for i in range(1, len(sys.argv)):
+        if sys.argv[i][:2] != "-j":
+            continue
+            
+        if not sys.argv[i][2:].isdecimal() or int(sys.argv[i][2:]) == 0:
+            sys.exit("Invalid number of threads to use")
+        
+        maxThreads = int(sys.argv[i][2:])
+        sys.argv.pop(i)
+        break
+
+
     if len(sys.argv) < 2:
         sys.exit("Invalid usage!\n\n" + usage)
 
@@ -366,7 +380,7 @@ def main():
         sys.exit(0)
 
     if command == "--test":
-        test(sys.argv[2:])
+        test(sys.argv[2:], maxThreads)
         sys.exit(0)
 
     if command == "--tidy":
@@ -376,10 +390,10 @@ def main():
     if command == "--all":
         if len(sys.argv) != 2:
             sys.exit("Invalid usage!\n\n" + usage)
-        buildAll()
+        buildAll(maxThreads)
         sys.exit(0)
 
-    build(sys.argv[1:])
+    build(sys.argv[1:], maxThreads)
 
 if __name__ == "__main__":
     try:
