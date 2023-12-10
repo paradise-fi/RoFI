@@ -211,6 +211,8 @@ struct ModularRotationJoint: public atoms::Visitable< Joint, ModularRotationJoin
     /**
      * Construct rotation joint by specifing the same axis and origin point in
      * source coordinate system and destination coordinate system.
+     * Joint parameter can reach arbitrary values, and can be normalized to fall
+     * within [0, modMax] (jointLimits) using modulo.
      */
     ModularRotationJoint( Vector sourceOrigin, Vector sourceAxis, Vector destOrigin,
                    Vector desAxis, Angle modMax )
@@ -226,10 +228,11 @@ struct ModularRotationJoint: public atoms::Visitable< Joint, ModularRotationJoin
      * transformation.
      */
     ModularRotationJoint( Matrix pre, Vector axis, Matrix post, Angle modMax )
-        : Visitable( std::vector{ std::pair{ 0.0f, modMax.rad() } } ),
+        : Visitable( std::vector{ std::pair{ std::numeric_limits<float>::lowest(), std::numeric_limits<float>::max() } } ),
           _axis( axis ),
           _pre( pre ),
-          _post( post )
+          _post( post ),
+          _modVal( modMax.rad() )
     {}
 
     Matrix sourceToDest() const override {
@@ -244,16 +247,11 @@ struct ModularRotationJoint: public atoms::Visitable< Joint, ModularRotationJoin
         return Angle::rad( positions()[ 0 ] );
     }
 
+    // Does not need to check limits
     void setPositions( std::span< const float > pos )
     {
         assert( pos.size() == 1 && "Incorrect number of parameters to set" );
-
-        float rem = fmodf( pos[0], jointLimits()[ 0 ].second );
-        if( rem < 0 ) // fmodf remainder has same sign as first arg
-            rem += jointLimits()[ 0 ].second;
-        assert( 0 <= rem && rem <= jointLimits()[ 0 ].second );
-
-        _positions[0] = rem;
+        _positions[0] = pos[0];
     }
 
     void setPosition( Angle pos ) {
@@ -261,18 +259,36 @@ struct ModularRotationJoint: public atoms::Visitable< Joint, ModularRotationJoin
         return setPositions( positions );
     }
 
+    // Normalize the joint position to be within [0, _modVal] using modulo
+    void normalize()
+    {
+        float rem = fmodf( _positions[0], _modVal );
+        if ( rem < 0 ) // fmodf remainder has same sign as first arg
+            rem += _modVal;
+        assert( 0 <= rem && rem <= _modVal );
+
+        _positions[0] = rem;
+    }
+
+    // Changes angle by diff and normalizes
     atoms::Result< std::monostate > changePositionsBy( std::span< const float > diff )
     {
         assert( diff.size() == 1 && "Incorrect number of parameters to set" );
-        auto newPos = std::array{ diff[0] + positions()[0] };
-        setPositions( newPos );
+
+        // Overflow check - if diff is too large, normalize first (can still overflow if _modVal is too big)
+        float currentAngle = positions()[0];
+        if (( diff[0] > 0 && currentAngle > 0 && jointLimits()[0].second - currentAngle < diff[0] ) ||
+            ( diff[0] < 0 && currentAngle < 0 && jointLimits()[0].first - currentAngle > diff[0] ))
+            normalize();
+        
+        _positions[0] += diff[0];
+        normalize();
 
         return atoms::result_value( std::monostate() );
     }
 
     Angle moduloLimit() const {
-        auto modMax = jointLimits()[ 0 ].second;
-        return Angle::rad( modMax );
+        return Angle::rad( _modVal );
     }
 
     const Matrix pre() const  { return _pre;  }
@@ -287,6 +303,7 @@ private:
     Vector _axis; ///< axis of rotation around with origin in point (0, 0, 0)
     Matrix _pre; ///< transformation to apply before rotating
     Matrix _post; ///< transformation to apply after rotating
+    float _modVal; ///< value to use for normalization - sets angle to [0, modVal]
 };
 
 /**
