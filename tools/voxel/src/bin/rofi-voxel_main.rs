@@ -3,8 +3,13 @@ use clap::Parser;
 use rofi_voxel_cli::{FileErrOutput, FileInput, LogArgs};
 use rofi_voxel_reconfig::algs;
 use rofi_voxel_reconfig::counters::Counter;
-use rofi_voxel_reconfig::reconfig::metric::assignment::AssignmentMetric;
-use rofi_voxel_reconfig::reconfig::metric::{naive::NaiveMetric, ZeroMetric};
+use rofi_voxel_reconfig::reconfig::metric::assignment::{
+    JointAssgMetric, JointAssgPotFn, PosAssgMetric, PosAssgPotFn, PosJointAssgMetric,
+    PosJointAssgPotFn,
+};
+use rofi_voxel_reconfig::reconfig::metric::naive::{NaiveMetric, NaivePotential};
+use rofi_voxel_reconfig::reconfig::metric::potential_fn::Sum;
+use rofi_voxel_reconfig::reconfig::metric::ZeroMetric;
 use rofi_voxel_reconfig::reconfig::voxel_worlds_graph::VoxelWorldsGraph;
 use rofi_voxel_reconfig::voxel_world::as_one_of_norm_eq_world;
 use rofi_voxel_reconfig::voxel_world::impls::{MapVoxelWorld, MatrixVoxelWorld, SortvecVoxelWorld};
@@ -39,10 +44,13 @@ enum AlgorithmType {
     Bfs,
     AstarZero,
     AstarNaive,
-    AstarAssignment,
-    AstarZeroOpt,
     AstarNaiveOpt,
-    AstarAssignmentOpt,
+    AstarAssgPosjoint,
+    AstarAssgPosjointOpt,
+    AstarAssgPos,
+    AstarAssgPosOpt,
+    AstarAssgJoint,
+    AstarAssgJointOpt,
 }
 
 /// Compute RoFI reconfiguration from init to goal by using voxels
@@ -135,19 +143,32 @@ where
         AlgorithmType::AstarNaive => {
             compute_path::<StateGraph<_>, AstarAlgInfo<_, NaiveMetric<_>>>(init, goal)
         }
-        AlgorithmType::AstarAssignment => {
-            compute_path::<StateGraph<_>, AstarAlgInfo<_, AssignmentMetric<_>>>(init, goal)
+        AlgorithmType::AstarAssgPos => {
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, PosAssgMetric<_>>>(init, goal)
+        }
+        AlgorithmType::AstarAssgJoint => {
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, JointAssgMetric<_>>>(init, goal)
+        }
+        AlgorithmType::AstarAssgPosjoint => {
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, PosJointAssgMetric<_>>>(init, goal)
         }
 
-        AlgorithmType::AstarZeroOpt => {
-            compute_path::<StateGraph<_>, AstarAlgInfo<_, ZeroMetric, true>>(init, goal)
-        }
-        AlgorithmType::AstarNaiveOpt => {
-            compute_path::<StateGraph<_>, AstarAlgInfo<_, NaiveMetric<_>, true>>(init, goal)
-        }
-        AlgorithmType::AstarAssignmentOpt => {
-            compute_path::<StateGraph<_>, AstarAlgInfo<_, AssignmentMetric<_>, true>>(init, goal)
-        }
+        AlgorithmType::AstarNaiveOpt => compute_path::<
+            StateGraph<_>,
+            AstarAlgInfo<_, Sum<_, NaivePotential<_>>, true>,
+        >(init, goal),
+        AlgorithmType::AstarAssgPosOpt => compute_path::<
+            StateGraph<_>,
+            AstarAlgInfo<_, Sum<_, PosAssgPotFn<_>>, true>,
+        >(init, goal),
+        AlgorithmType::AstarAssgJointOpt => compute_path::<
+            StateGraph<_>,
+            AstarAlgInfo<_, Sum<_, JointAssgPotFn<_>>, true>,
+        >(init, goal),
+        AlgorithmType::AstarAssgPosjointOpt => compute_path::<
+            StateGraph<_>,
+            AstarAlgInfo<_, Sum<_, PosJointAssgPotFn<_>>, true>,
+        >(init, goal),
     }
 }
 
@@ -173,19 +194,32 @@ where
         AlgorithmType::AstarNaive => {
             compute_path::<StateGraph<_>, AstarAlgInfo<_, NaiveMetric<_>>>(init, goal)
         }
-        AlgorithmType::AstarAssignment => {
-            compute_path::<StateGraph<_>, AstarAlgInfo<_, AssignmentMetric<_>>>(init, goal)
+        AlgorithmType::AstarAssgPos => {
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, PosAssgMetric<_>>>(init, goal)
+        }
+        AlgorithmType::AstarAssgJoint => {
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, JointAssgMetric<_>>>(init, goal)
+        }
+        AlgorithmType::AstarAssgPosjoint => {
+            compute_path::<StateGraph<_>, AstarAlgInfo<_, PosJointAssgMetric<_>>>(init, goal)
         }
 
-        AlgorithmType::AstarZeroOpt => {
-            compute_path::<StateGraph<_>, AstarAlgInfo<_, ZeroMetric, true>>(init, goal)
-        }
-        AlgorithmType::AstarNaiveOpt => {
-            compute_path::<StateGraph<_>, AstarAlgInfo<_, NaiveMetric<_>, true>>(init, goal)
-        }
-        AlgorithmType::AstarAssignmentOpt => {
-            compute_path::<StateGraph<_>, AstarAlgInfo<_, AssignmentMetric<_>, true>>(init, goal)
-        }
+        AlgorithmType::AstarNaiveOpt => compute_path::<
+            StateGraph<_>,
+            AstarAlgInfo<_, Sum<_, NaivePotential<_>>, true>,
+        >(init, goal),
+        AlgorithmType::AstarAssgPosOpt => compute_path::<
+            StateGraph<_>,
+            AstarAlgInfo<_, Sum<_, PosAssgPotFn<_>>, true>,
+        >(init, goal),
+        AlgorithmType::AstarAssgJointOpt => compute_path::<
+            StateGraph<_>,
+            AstarAlgInfo<_, Sum<_, JointAssgPotFn<_>>, true>,
+        >(init, goal),
+        AlgorithmType::AstarAssgPosjointOpt => compute_path::<
+            StateGraph<_>,
+            AstarAlgInfo<_, Sum<_, PosJointAssgPotFn<_>>, true>,
+        >(init, goal),
     }
 }
 
@@ -235,19 +269,32 @@ where
         AlgorithmType::AstarNaive => {
             compute_path::<StateGraph<_, _>, AstarAlgInfo<_, NaiveMetric<_>>>(init, goal)
         }
-        AlgorithmType::AstarAssignment => {
-            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, AssignmentMetric<_>>>(init, goal)
+        AlgorithmType::AstarAssgPos => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, PosAssgMetric<_>>>(init, goal)
+        }
+        AlgorithmType::AstarAssgJoint => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, JointAssgMetric<_>>>(init, goal)
+        }
+        AlgorithmType::AstarAssgPosjoint => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, PosJointAssgMetric<_>>>(init, goal)
         }
 
-        AlgorithmType::AstarZeroOpt => {
-            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, ZeroMetric, true>>(init, goal)
-        }
-        AlgorithmType::AstarNaiveOpt => {
-            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, NaiveMetric<_>, true>>(init, goal)
-        }
-        AlgorithmType::AstarAssignmentOpt => {
-            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, AssignmentMetric<_>, true>>(init, goal)
-        }
+        AlgorithmType::AstarNaiveOpt => compute_path::<
+            StateGraph<_, _>,
+            AstarAlgInfo<_, Sum<_, NaivePotential<_>>, true>,
+        >(init, goal),
+        AlgorithmType::AstarAssgPosOpt => compute_path::<
+            StateGraph<_, _>,
+            AstarAlgInfo<_, Sum<_, PosAssgPotFn<_>>, true>,
+        >(init, goal),
+        AlgorithmType::AstarAssgJointOpt => compute_path::<
+            StateGraph<_, _>,
+            AstarAlgInfo<_, Sum<_, JointAssgPotFn<_>>, true>,
+        >(init, goal),
+        AlgorithmType::AstarAssgPosjointOpt => compute_path::<
+            StateGraph<_, _>,
+            AstarAlgInfo<_, Sum<_, PosJointAssgPotFn<_>>, true>,
+        >(init, goal),
     }
 }
 
@@ -278,19 +325,32 @@ where
         AlgorithmType::AstarNaive => {
             compute_path::<StateGraph<_, _>, AstarAlgInfo<_, NaiveMetric<_>>>(init, goal)
         }
-        AlgorithmType::AstarAssignment => {
-            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, AssignmentMetric<_>>>(init, goal)
+        AlgorithmType::AstarAssgPos => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, PosAssgMetric<_>>>(init, goal)
+        }
+        AlgorithmType::AstarAssgJoint => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, JointAssgMetric<_>>>(init, goal)
+        }
+        AlgorithmType::AstarAssgPosjoint => {
+            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, PosJointAssgMetric<_>>>(init, goal)
         }
 
-        AlgorithmType::AstarZeroOpt => {
-            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, ZeroMetric, true>>(init, goal)
-        }
-        AlgorithmType::AstarNaiveOpt => {
-            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, NaiveMetric<_>, true>>(init, goal)
-        }
-        AlgorithmType::AstarAssignmentOpt => {
-            compute_path::<StateGraph<_, _>, AstarAlgInfo<_, AssignmentMetric<_>, true>>(init, goal)
-        }
+        AlgorithmType::AstarNaiveOpt => compute_path::<
+            StateGraph<_, _>,
+            AstarAlgInfo<_, Sum<_, NaivePotential<_>>, true>,
+        >(init, goal),
+        AlgorithmType::AstarAssgPosOpt => compute_path::<
+            StateGraph<_, _>,
+            AstarAlgInfo<_, Sum<_, PosAssgPotFn<_>>, true>,
+        >(init, goal),
+        AlgorithmType::AstarAssgJointOpt => compute_path::<
+            StateGraph<_, _>,
+            AstarAlgInfo<_, Sum<_, JointAssgPotFn<_>>, true>,
+        >(init, goal),
+        AlgorithmType::AstarAssgPosjointOpt => compute_path::<
+            StateGraph<_, _>,
+            AstarAlgInfo<_, Sum<_, PosJointAssgPotFn<_>>, true>,
+        >(init, goal),
     }
 }
 

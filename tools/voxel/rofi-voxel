@@ -246,11 +246,14 @@ def check_input_files(files: List[str]):
         [
             "bfs",
             "astar-zero",
-            "astar-zero-opt",
             "astar-naive",
             "astar-naive-opt",
-            "astar-assignment",
-            "astar-assignment-opt",
+            "astar-assg-posjoint",
+            "astar-assg-posjoint-opt",
+            "astar-assg-pos",
+            "astar-assg-pos-opt",
+            "astar-assg-joint",
+            "astar-assg-joint-opt",
         ]
     ),
     default="bfs",

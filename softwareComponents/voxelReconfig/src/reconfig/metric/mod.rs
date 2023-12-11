@@ -1,6 +1,7 @@
 pub mod assignment;
 pub mod cost;
 pub mod naive;
+pub mod potential_fn;
 
 use self::cost::Cost;
 use crate::pos::Pos;
@@ -24,10 +25,7 @@ impl<TState> Metric<TState> for ZeroMetric {
     type Potential = ();
     type EstimatedCost = usize;
 
-    fn new(_goal: &TState) -> Self
-    where
-        Self: Sized,
-    {
+    fn new(_goal: &TState) -> Self {
         Self
     }
     fn get_potential(&mut self, _state: &TState) -> Self::Potential {}
