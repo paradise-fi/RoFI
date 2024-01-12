@@ -1,0 +1,23 @@
+{
+    "modules": [
+        {
+            "id": 0,
+            "type": "support",
+            "width": 4,
+            "height": 4
+        }
+    ],
+    "spaceJoints": [
+        {
+            "point": [ 0, 0, 0 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity",
+                "positions": []
+            },
+            "to": { "id" : 0, "component": 0 }
+        }
+    ],
+    "moduleJoints": [
+    ]
+}

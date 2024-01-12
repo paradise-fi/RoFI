@@ -1,0 +1,70 @@
+m 0 j 0 sp -90
+m 1 j 0 sp -90
+m 2 j 0 sp -90
+s
+m 0 c 5 c
+m 100 c 0 d
+m 0 j 0 sp 90
+s
+m 1 c 5 c
+m 0 c 5 d
+m 0 j 0 sp -90
+m 0 j 1 sp 90
+m 0 j 2 sp 90
+m 1 j 0 sp 90
+s
+m 0 c 5 c
+m 101 c 0 d
+m 2 c 5 c
+m 1 c 5 d
+m 0 j 0 sp 90
+m 0 j 1 sp 0
+m 0 j 2 sp 0
+m 2 j 0 sp 90
+m 1 j 0 sp -90
+s
+m 1 c 5 c
+m 0 c 5 d
+m 100 c 1 c
+m 2 c 5 d
+m 2 j 0 sp -90
+m 1 j 0 sp 90
+m 0 j 0 sp -90
+m 0 j 1 sp 90
+m 0 j 2 sp -90
+s
+m 0 c 5 c
+m 102 c 0 d
+m 2 c 5 c
+m 1 c 5 d
+m 0 j 2 sp 0
+m 0 j 1 sp 0
+m 0 j 0 sp 90
+m 1 j 0 sp -90
+m 2 j 2 sp 90
+m 2 j 1 sp 90
+m 2 j 0 sp 90
+s
+m 101 c 1 c
+m 2 c 5 d
+m 1 c 5 c
+m 0 c 5 d
+m 0 j 0 sp 0
+m 1 j 0 sp 90
+m 2 j 2 sp 0
+m 2 j 1 sp 0
+m 2 j 0 sp -90
+s
+m 2 c 5 c
+m 1 c 5 d
+m 2 j 2 sp 90
+m 2 j 1 sp -90
+m 2 j 0 sp 90
+m 1 j 0 sp 0
+s
+m 102 c 0 c
+m 2 c 5 d
+m 2 j 2 sp 0
+m 2 j 1 sp 0
+m 2 j 0 sp 0
+s

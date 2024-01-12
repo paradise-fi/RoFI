@@ -1,0 +1,16 @@
+m 0 c 2 c
+m 11 c 1 d
+e smove0 smove0
+s
+m 11 c 1 c
+m 11 c 13 c
+m 0 c 1 d
+e move0Af move0Bf move0Af
+s
+m 0 c 3 c
+m 11 c 1 d
+m 11 c 13 d
+e smove0B smove0 smove0A
+s
+m 11 c 13 c
+m 0 c 5 d

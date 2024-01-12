@@ -1,0 +1,68 @@
+{
+    "modules": [
+        {
+            "id": 0,
+            "type": "universal",
+            "alpha": 0,
+            "beta": 0,
+            "gamma": 0
+        },
+        {
+            "id": 42,
+            "type": "pad",
+            "width": 5,
+            "height": 10
+        },
+        {
+            "id": 43,
+            "type": "pad",
+            "width": 5,
+            "height": 10
+        },
+        {
+            "id": 10,
+            "type": "support",
+            "width": 1,
+            "height": 4
+        },
+        {
+            "id": 11,
+            "type": "support",
+            "width": 1,
+            "height": 4
+        }
+    ],
+    "spaceJoints": [
+        {
+            "point": [ 0, 0, 0 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity",
+                "positions": []
+            },
+            "to": { "id" : 42, "component": 0 }
+        }
+    ],
+    "moduleJoints": [
+        {
+            "from": { "id" : 0, "connector": "A+X" },
+            "to":   { "id" : 42, "connector": 1 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 10, "connector": 1 },
+            "to":   { "id" : 42, "connector": 49 },
+            "orientation": "South"
+        },
+        {
+            "from": { "id" : 10, "connector": 13 },
+            "to":   { "id" : 43, "connector": 9 },
+            "orientation": "South"
+        },
+        {
+            "from": { "id" : 11, "connector": 1 },
+            "to":   { "id" : 42, "connector": 2 },
+            "orientation": "South"
+        }
+    ]
+}

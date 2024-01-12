@@ -1,0 +1,13 @@
+m 0 j 0 sp 90
+m 0 j 2 sp 90
+s
+m 0 c 3 c
+m 0 c 2 d
+m 0 j 1 sp -90
+s
+m 0 c 2 c
+m 0 c 3 d
+m 0 j 0 sp 0
+m 0 j 1 sp 0
+m 0 j 2 sp 0
+s

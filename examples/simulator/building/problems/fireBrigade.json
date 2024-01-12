@@ -1,0 +1,86 @@
+{
+    "modules": [
+        {
+            "id": 0,
+            "type": "universal",
+            "alpha": 0,
+            "beta": 0,
+            "gamma": 0
+        },
+        {
+            "id": 1,
+            "type": "universal",
+            "alpha": 0,
+            "beta": 0,
+            "gamma": 0
+        },
+        {
+            "id": 2,
+            "type": "universal",
+            "alpha": 0,
+            "beta": 0,
+            "gamma": 0
+        },
+        {
+            "id": 42,
+            "type": "pad",
+            "width": 13,
+            "height": 3
+        },
+        {
+            "id": 100,
+            "type": "cube"
+        },
+        {
+            "id": 101,
+            "type": "cube"
+        },
+        {
+            "id": 102,
+            "type": "cube"
+        }
+    ],
+    "spaceJoints": [
+        {
+            "point": [ 0, 0, 0 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity",
+                "positions": []
+            },
+            "to": { "id" : 42, "component": 0 }
+        }
+    ],
+    "moduleJoints": [
+        {
+            "from": { "id" : 0, "connector": "A-Z" },
+            "to":   { "id" : 42, "connector": 7 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 1, "connector": "A-Z" },
+            "to":   { "id" : 42, "connector": 19 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 2, "connector": "A-Z" },
+            "to":   { "id" : 42, "connector": 31 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 100, "connector": 0 },
+            "to":   { "id" : 42, "connector": 1 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 101, "connector": 0 },
+            "to":   { "id" : 42, "connector": 3 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 102, "connector": 0 },
+            "to":   { "id" : 42, "connector": 5 },
+            "orientation": "North"
+        }
+    ]
+}

@@ -1,0 +1,185 @@
+{
+    "modules": [
+        {
+            "id": 0,
+            "type": "support",
+            "width": 1,
+            "height": 4
+        },
+        {
+            "id": 1000,
+            "type": "cube"
+        },
+        {
+            "id": 1001,
+            "type": "cube"
+        },
+        {
+            "id": 1002,
+            "type": "cube"
+        },
+        {
+            "id": 1003,
+            "type": "cube"
+        },
+        {
+            "id": 1004,
+            "type": "cube"
+        },
+        {
+            "id": 1005,
+            "type": "cube"
+        },
+        {
+            "id": 1006,
+            "type": "cube"
+        },
+        {
+            "id": 1007,
+            "type": "cube"
+        },
+        {
+            "id": 1008,
+            "type": "cube"
+        },
+        {
+            "id": 1009,
+            "type": "cube"
+        },
+        {
+            "id": 1010,
+            "type": "cube"
+        },
+        {
+            "id": 1011,
+            "type": "cube"
+        },
+        {
+            "id": 1012,
+            "type": "cube"
+        },
+        {
+            "id": 1013,
+            "type": "cube"
+        },
+        {
+            "id": 1014,
+            "type": "cube"
+        },
+        {
+            "id": 1015,
+            "type": "cube"
+        },
+        {
+            "id": 1016,
+            "type": "cube"
+        },
+        {
+            "id": 1017,
+            "type": "cube"
+        }
+    ],
+    "spaceJoints": [
+        {
+            "point": [ 0, 0, 0 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity",
+                "positions": []
+            },
+            "to": { "id" : 0, "component": 0 }
+        }
+    ],
+    "moduleJoints": [
+        {
+            "from": { "id" : 0, "connector": 0 },
+            "to":   { "id" : 1000, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 1 },
+            "to":   { "id" : 1001, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 2 },
+            "to":   { "id" : 1002, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 3 },
+            "to":   { "id" : 1003, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 4 },
+            "to":   { "id" : 1004, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 5 },
+            "to":   { "id" : 1005, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 6 },
+            "to":   { "id" : 1006, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 7 },
+            "to":   { "id" : 1007, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 8 },
+            "to":   { "id" : 1008, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 9 },
+            "to":   { "id" : 1009, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 10 },
+            "to":   { "id" : 1010, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 11 },
+            "to":   { "id" : 1011, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 12 },
+            "to":   { "id" : 1012, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 13 },
+            "to":   { "id" : 1013, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 14 },
+            "to":   { "id" : 1014, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 15 },
+            "to":   { "id" : 1015, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 16 },
+            "to":   { "id" : 1016, "connector": 0 },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 0, "connector": 17 },
+            "to":   { "id" : 1017, "connector": 0 },
+            "orientation": "North"
+        }
+    ]
+}
