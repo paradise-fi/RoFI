@@ -8,6 +8,7 @@
 #include "configuration/serialization.hpp"
 #include "configuration/universalModule.hpp"
 #include "message_server.hpp"
+#include "simplesim/collision.hpp"
 #include "simplesim/packet_filters/py_filter.hpp"
 #include "simplesim/simplesim.hpp"
 #include "simplesim_server.hpp"
@@ -85,6 +86,14 @@ int main( int argc, char * argv[] )
     }
     auto packetFilter = opts.getPyPacketFilter();
 
+    // Collision model selection
+    auto result = getCollisionPtr( opts.collision );
+    if ( !result.has_value() ) {
+        cli.fail( EXIT_FAILURE, result.assume_error() );
+        return cli.printError( std::cerr );
+    }
+    std::shared_ptr< rofi::configuration::Collision > collModel = result.assume_value();
+
     std::cout << "Starting simplesim" << std::endl;
     auto gzMaster = rofi::msgs::Server::createAndLoopInThread( "simplesim" );
 
@@ -96,6 +105,7 @@ int main( int argc, char * argv[] )
                     return packetFilter.filter( std::move( packet ) );
                 }
                 : simplesim::PacketFilter::FilterFunction{},
+            collModel,
             opts.verbose );
 
     // Listen for settings cmds

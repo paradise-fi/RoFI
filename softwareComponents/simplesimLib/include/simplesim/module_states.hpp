@@ -251,7 +251,9 @@ public:
     using RofiWorldConfigurationPtr = std::shared_ptr< const rofi::configuration::RofiWorld >;
 
 
-    explicit ModuleStates( RofiWorldConfigurationPtr rofiworldConfiguration, bool verbose )
+    explicit ModuleStates( RofiWorldConfigurationPtr rofiworldConfiguration, 
+                           std::shared_ptr< rofi::configuration::Collision > collModel,
+                           bool verbose )
             : _physicalModulesConfiguration(
                     rofiworldConfiguration
                             ? std::move( rofiworldConfiguration )
@@ -261,10 +263,11 @@ public:
                           assert( configPtr );
                           return initInnerStatesFromConfiguration( *configPtr, verbose );
                       } ) )
+            , _collModel( collModel )
     {
-        assert( _physicalModulesConfiguration.visit( []( const auto & configuration ) {
+        assert( _physicalModulesConfiguration.visit( [ &collModel ]( const auto & configuration ) {
             assert( configuration );
-            return configuration->isValid( rofi::configuration::SimpleCollision() );
+            return configuration->isValid( *collModel );
         } ) );
     }
 
@@ -369,6 +372,7 @@ private:
 private:
     atoms::Guarded< RofiWorldConfigurationPtr > _physicalModulesConfiguration;
     std::map< ModuleId, ModuleInnerState > _moduleInnerStates;
+    std::shared_ptr< rofi::configuration::Collision > _collModel;
 
     atoms::Guarded< std::vector< RofiWorldConfigurationPtr > > _configurationHistory;
 };

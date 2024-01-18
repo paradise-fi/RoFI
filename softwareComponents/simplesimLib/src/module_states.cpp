@@ -336,7 +336,7 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
     // Workaround for a bug in configuration (not setting the prepared flag properly)
     newConfiguration->prepare().get_or_throw_as< std::logic_error >();
 
-    if ( auto ok = newConfiguration->validate( SimpleCollision{} ); !ok ) {
+    if ( auto ok = newConfiguration->validate( *_collModel ); !ok ) {
         std::cerr << "Error after joint update: '" << ok.assume_error() << "'\n";
         throw std::runtime_error( std::move( ok ).assume_error() );
     }
@@ -346,7 +346,7 @@ auto ModuleStates::computeNextIteration( std::chrono::duration< float > simStepT
             connectorUpdateEvents.connectorsToFinalizePosition );
     updateEvents.connectionsChanged = std::move( connectorUpdateEvents.connectionsChanged );
 
-    if ( auto ok = newConfiguration->validate( SimpleCollision{} ); !ok ) {
+    if ( auto ok = newConfiguration->validate( *_collModel ); !ok ) {
         std::cerr << "Error after connector update: '" << ok.assume_error() << "'\n";
         throw std::runtime_error( std::move( ok ).assume_error() );
     }
