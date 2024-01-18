@@ -9,11 +9,13 @@
 #include <map>
 #include <ranges>
 
-#include <atoms/containers.hpp>
 #include <atoms/result.hpp>
 #include <atoms/units.hpp>
+#include <atoms/containers.hpp>
 #include <atoms/util.hpp>
 #include <fmt/format.h>
+
+
 
 #include <configuration/joints.hpp>
 
@@ -420,34 +422,37 @@ private:
     friend class RofiWorld;
 };
 
-/**
- * \brief Collision model ignoring collision
- */
-class NoCollision {
+class Collision {
 public:
     /**
      * \brief Decide if two modules collide
      */
-    bool operator()( const Module& /* a */, const Module& /* b */, Matrix /* posA */, Matrix /* posB */ ) {
+    virtual bool operator()( const Module& /* a */, const Module& /* b */, Matrix /* posA */, Matrix /* posB */ ) const = 0;
+
+    virtual ~Collision() = default; 
+};
+
+/**
+ * \brief Completely ignores any collisions
+ */
+class NoCollision : public Collision {
+public:
+    bool operator()( const Module& /* a */, const Module& /* b */, Matrix /* posA */, Matrix /* posB */ ) const {
         return false;
     }
 };
 
 /**
- * \brief Collision model taking into account only spherical collisions of the
- * shoes
+ * \brief Each module component takes up a unit sphere of space
  */
-class SimpleCollision {
+class SimpleCollision : public Collision {
 public:
-    /**
-     * \brief Decide if two modules collide
-     */
-    bool operator()( const Module& a, const Module& b, Matrix posA, Matrix posB ) {
+    bool operator()( const Module& a, const Module& b, Matrix posA, Matrix posB ) const {
         using namespace rofi::configuration::matrices;
-
+        
         for ( auto pA : a.getOccupiedRelativePositions() ) {
             for ( auto pB : b.getOccupiedRelativePositions() ) {
-                if ( distance( center( posA * pA ), center( posB * pB ) ) < 1 )
+                if ( distance( center( posA * pA ), center( posB * pB ) ) < 1 ) // unit sphere
                     return true;
             }
         }
@@ -654,8 +659,7 @@ public:
      *
      * \returns result - the error gives textual description of the reason for invalidity
      */
-    template < typename Collision = SimpleCollision >
-    atoms::Result< std::monostate > isValid( Collision collisionModel = Collision() ) const {
+    atoms::Result< std::monostate > isValid( const Collision& collisionModel = SimpleCollision() ) const {
         if ( !_prepared ) {
             return atoms::result_error< std::string >( "Configuration is not prepared" );
         }
@@ -684,8 +688,7 @@ public:
      *
      * \returns result - the error gives textual description of the reason for invalidity
      */
-    template < typename Collision = SimpleCollision >
-    atoms::Result< std::monostate > validate( Collision collisionModel = Collision() ) {
+    atoms::Result< std::monostate > validate( const Collision& collisionModel = SimpleCollision() ) {
         if ( !_prepared ) {
             if ( auto result = prepare(); !result ) {
                 return result;

@@ -88,9 +88,11 @@ public:
 
     Simplesim( std::shared_ptr< const rofi::configuration::RofiWorld > worldConfiguration,
                PacketFilter::FilterFunction packetFilter,
+               std::shared_ptr< rofi::configuration::Collision > collModel,
                bool verbose )
             : _simulation( std::make_shared< Simulation >( std::move( worldConfiguration ),
                                                            std::move( packetFilter ),
+                                                           std::move( collModel ),
                                                            verbose ) )
             , _communication(
                       std::make_shared< Communication >( _simulation->commandHandler(), verbose ) )
