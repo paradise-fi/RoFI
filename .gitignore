@@ -8,3 +8,6 @@ sdkconfig.old
 **/.vscode/
 !**/.vscode/launch.json
 !**/.vscode/c_cpp_properties.json
+
+# For macOS
+.DS_Store

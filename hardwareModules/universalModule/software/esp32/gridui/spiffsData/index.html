@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>RBController test</title>
+    <meta name="viewport" content="width=device-width, user-scalable=no" />
+
+    <style>
+      body {
+        padding: 0px;
+        margin: 0px;
+        height: 100%;
+        width: 100%;
+      }
+      html {
+        height: 100%;
+        width: 100%;
+      }
+
+      #log {
+        padding: 3px;
+        font-size: 10px;
+        font-family: monospace;
+        background-color: black;
+        color: #62f442;
+        white-space: pre-line;
+        overflow-y: scroll;
+      }
+      .log-short {
+        height: 40px;
+      }
+      .log-full {
+        width: 100%;
+        height: 100%;
+        position: absolute;
+        left: 0;
+        top: 0;
+        z-index: 1000;
+      }
+
+      #grid {
+        position: absolute;
+        overflow: hidden;
+        top: 46px;
+        bottom: 0px;
+        left: 0px;
+        right: 0px;
+      }
+    </style>
+  </head>
+
+  <body id="body">
+    <div id="log" class="log-short"></div>
+
+    <div id="grid"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/reconnecting-websocket/1.0.0/reconnecting-websocket.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/nipplejs/0.7.3/nipplejs.min.js"></script>
+    <script src="combined.js"></script>
+  </body>
+</html>

@@ -15,7 +15,7 @@
 #include <freertos/FreeRTOS.h>
 #include <freertos/event_groups.h>
 
-namespace rofi::fi::detail {
+namespace esp::wifi::detail {
 
 enum WiFiBits {
     ConnectedBit = 1 << 0,
@@ -23,9 +23,9 @@ enum WiFiBits {
     GotIPBit = 1 << 2
 };
 
-} // namespace rofi::fi::detail
+} // namespace esp::wifi::detail
 
-namespace rofi::fi {
+namespace esp::wifi {
 
 inline void initNvs() {
     esp_err_t ret = nvs_flash_init();
@@ -188,13 +188,9 @@ private:
     esp_ip4_addr_t _ipAddr;
 };
 
-inline void delayMs( int msCount ) {
-    vTaskDelay( msCount / portTICK_PERIOD_MS );
-}
-
 /**
  * Perform authentication for wlan_fi
  */
 void authWlanFi(const char* username, const char* password );
 
-} // namespace rofi::fi
+} // namespace esp::wifi

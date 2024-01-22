@@ -22,7 +22,7 @@ returnCodes=[]
 def run(port):
     for i in range (5):
         command = upload_cmd.replace('--port ""', '--port "' + port + '"')
-        command = command +" "+ env.subst('$BUILD_DIR/$PROGNAME') +".bin"
+        command = command +" "+ env.subst('$BUILD_DIR/$PROGNAME') +".app"
         errorCode = env.Execute(command)
         if errorCode == 0:
             returnCodes.append( (port, errorCode) )

@@ -84,7 +84,7 @@ setGazeboVariables() {
 }
 
 setupIdf() {
-    IDF_REQUIRED_VERSION=v5.0-beta1
+    IDF_REQUIRED_VERSION=v5.0.2
 
     # We allow the user to set a global path to build dependencies that are
     # fetched autonomously, e.g., in the script ~/rofi.pre.env. If there is no
