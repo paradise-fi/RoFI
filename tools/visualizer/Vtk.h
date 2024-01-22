@@ -1,7 +1,13 @@
 #pragma once
 
-// #include <vtkGenericOpenGLRenderWindow.h> // VTK 8.2 and newer
+#include <vtkVersion.h>
 
+#if (VTK_MAJOR_VERSION == 8 && VTK_MINOR_VERSION >= 2) || VTK_MAJOR_VERSION > 8
+#include <vtkGenericOpenGLRenderWindow.h>
+#endif
+
+#include <vtkInformation.h>
+#include <vtkInformationIntegerKey.h>
 #include <vtkSmartPointer.h>
 #include <vtkSphereSource.h>
 #include <vtkPolyDataMapper.h>
@@ -89,6 +95,10 @@ const int colors[10][3] = { {255, 255, 255},
                             {250, 176, 162},
                             {234, 110, 111}};
 
+/**
+ * Color for highlighting selected part of a module.
+ */
+const int selectedColor[3] = {255, 0, 255};
 
 /**
  * @brief buildScene
@@ -99,5 +109,22 @@ const int colors[10][3] = { {255, 255, 255},
  * Colors of individual models circulate among VtkSupp:colors.
  */
 void buildScene(Configuration* current_cfg, vtkSmartPointer<vtkRenderer> &renderer );
+
+static const char* ROFI_KEY_LOCATION = "rofi";
+static const char* PART_TYPE = "part_type";
+static const char* MODULE_ID = "module_id";
+static const char* SHOE_ID = "shoe_id";
+static const char* CONNECTOR_ID = "connector_id";
+
+// HACK: Needs to be the same object in all uses.
+extern vtkInformationIntegerKey* partTypeKey;
+extern vtkInformationIntegerKey* moduleIdKey;
+extern vtkInformationIntegerKey* shoeIdKey;
+extern vtkInformationIntegerKey* connectorIdKey;
 }
 
+enum ModelPartType {
+    BODY,
+    SHOE,
+    CONNECTOR,
+};
