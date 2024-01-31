@@ -29,6 +29,7 @@ enum class ComponentType {
     UmBody,
     UmShoe,
     CubeBody,
+    Cylinder
 };
 
 enum class ModuleType {
@@ -36,6 +37,7 @@ enum class ModuleType {
     Universal,
     Pad,
     Cube,
+    Support
 };
 
 namespace roficom {

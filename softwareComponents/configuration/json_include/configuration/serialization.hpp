@@ -6,6 +6,7 @@
 #include <configuration/universalModule.hpp>
 #include <configuration/pad.hpp>
 #include <configuration/cube.hpp>
+#include <configuration/support.hpp>
 #include <configuration/unknownModule.hpp>
 
 #include <nlohmann/json.hpp>
@@ -22,6 +23,8 @@ namespace rofi::configuration::serialization {
                 return "UM shoe";
             case ComponentType::CubeBody:
                 return "Cube body";
+            case ComponentType::Cylinder:
+                return "Cylinder";
         }
         ROFI_UNREACHABLE( "Unknown component type" );
     }
@@ -35,6 +38,8 @@ namespace rofi::configuration::serialization {
             return atoms::result_value( ComponentType::UmShoe );
         if ( str == "Cube body" )
             return atoms::result_value( ComponentType::CubeBody );
+        if ( str == "Cylinder" )
+            return atoms::result_value( ComponentType::Cylinder );
 
         return atoms::result_error< std::string >( "String does not represent a component type" );
     }
@@ -253,6 +258,33 @@ namespace rofi::configuration::serialization {
     };
 
     template< typename Callback >
+    inline nlohmann::json moduleToJSON( const Support& m, Callback& attrCb ) {
+        using namespace nlohmann;
+        json j;
+        j[ "id" ]     = m.getId();
+        j[ "type"   ] = "support";
+        j[ "width"  ] = m.width;
+        j[ "height" ] = m.height;
+
+        addAttributes( j, attrCb, m );
+        return j;
+    }
+
+    template< typename Callback >
+    struct partial_spec< Support, Callback > {
+        static inline Support moduleFromJSON( const nlohmann::json& j, Callback& cb ) {
+            assert( j[ "type" ] == "support" );
+
+            ModuleId id = j[ "id" ];
+            int width  = j[ "width" ];
+            int height = j[ "height" ];
+            Support m( id, width, height );
+            processAttributes( j, cb, m );
+            return m;
+        }
+    };
+
+    template< typename Callback >
     inline nlohmann::json moduleToJSON( const UnknownModule& m, Callback& attrCb ) {
         using namespace nlohmann;
         json j;
@@ -367,6 +399,8 @@ namespace rofi::configuration::serialization {
                 return details::moduleToJSON( dynamic_cast< const Pad& >( mod ), attrCb );
             case ModuleType::Cube:
                 return details::moduleToJSON( dynamic_cast< const Cube& >( mod ), attrCb );
+            case ModuleType::Support:
+                return details::moduleToJSON( dynamic_cast< const Support& >( mod ), attrCb );
         }
         ROFI_UNREACHABLE( "Unknown type of a module" );
     }
@@ -465,6 +499,8 @@ namespace rofi::configuration::serialization {
                 world.insert( details::moduleFromJSON< Pad >( jm, attrCb ) );
             else if ( jm[ "type" ] == "cube" )
                 world.insert( details::moduleFromJSON< Cube >( jm, attrCb ) );
+            else if ( jm[ "type" ] == "support" )
+                world.insert( details::moduleFromJSON< Support >( jm, attrCb ) );
             else
                 throw std::logic_error( "Unknown type of a module" );
         }

@@ -23,6 +23,8 @@ namespace rofi::torqueComputation {
                 return "Pad";
             case ModuleType::Cube:
                 return "Cube";
+            case ModuleType::Support:
+                return "Support";
             default:
                 throw std::out_of_range("Invalid module type");
         }
@@ -38,6 +40,8 @@ namespace rofi::torqueComputation {
             return ModuleType::Pad;
         } else if (lower == "cube") {
             return ModuleType::Cube;
+        } else if (lower == "support") {
+            return ModuleType::Support;
         } else {
             throw std::invalid_argument("Invalid module type string: " + str);
         }
@@ -53,6 +57,8 @@ namespace rofi::torqueComputation {
                 return "UmShoe";
             case ComponentTypeIndex::CubeBody:
                 return "CubeBody";
+            case ComponentTypeIndex::Cylinder:
+                return "Cylinder";
             case ComponentTypeIndex::GammaMotor:
                 return "GammaMotor";
             case ComponentTypeIndex::Motor:
@@ -72,6 +78,8 @@ namespace rofi::torqueComputation {
             return ComponentTypeIndex::UmShoe;
         } else if (lower == "cubebody") {
             return ComponentTypeIndex::CubeBody;
+        } else if (lower == "cylinder") {
+            return ComponentTypeIndex::Cylinder;
         } else if (lower == "gammamotor") {
             return ComponentTypeIndex::GammaMotor;
         } else if (lower == "motor") {

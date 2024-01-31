@@ -7,6 +7,7 @@ add_resources(MODEL_RESOURCES
     "model/shoe.obj"
     "model/point.obj"
     "model/cube.obj"
+    "model/cylinder.obj"
 )
 
 set(ROFI_TOOL_SRCS

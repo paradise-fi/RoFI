@@ -6,6 +6,7 @@ set(RESOURCE_FILES
     model/connector.obj
     model/shoe.obj
     model/cube.obj
+    model/cylinder.obj
 )
 
 set(FILES

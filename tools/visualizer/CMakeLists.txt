@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.6)
 project(rofi)
 
 
-add_resources(modelResources "model/body.obj" "model/connector.obj" "model/shoe.obj" "model/cube.obj" "model/point.obj")
+add_resources(modelResources "model/body.obj" "model/connector.obj" "model/shoe.obj" "model/cube.obj" "model/cylinder.obj" "model/point.obj")
 
 message("Model resources: ${modelResources}")
 

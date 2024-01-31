@@ -17,6 +17,7 @@ namespace rofi::torqueComputation {
         UmBody,
         UmShoe,
         CubeBody,
+        Cylinder,
         GammaMotor,
         Motor,
         /**
