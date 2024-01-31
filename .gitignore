@@ -4,6 +4,10 @@ __pycache__
 
 sdkconfig.old
 
+/archive
+/errors.txt
+/.clang-format
+
 # VSCode
 **/.vscode/
 !**/.vscode/launch.json
