@@ -2,11 +2,11 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <filesystem>
 
 #include <gazebo/gazebo_client.hh>
 
 #include "rofi_hal.hpp"
-
 
 enum class JointCmd
 {
@@ -171,6 +171,10 @@ void printHelp()
 {
     std::cerr << "\nUsage:\n";
     std::cerr << "\tquit (q)\n";
+    std::cerr << "\texec (e) <command_file>\n";
+    std::cerr << "\tmodule (m) <module_id> <module_command>\n";
+
+    std::cerr<< "\nModule Commands:\n";
     std::cerr << "\tdescriptor (d)\n";
     std::cerr << "\tjoint (j) <joint_number> <joint_command>\n";
     std::cerr << "\tconnector (c) <connector_number> <connector_command>\n";
@@ -192,6 +196,11 @@ void printHelp()
     // std::cerr << "\tconnectpower (cp)\n"; // not implemented
     // std::cerr << "\tdisconnectpower (dp)\n"; // not implemented
 }
+
+void processCmds( 
+    std::istream & commandStream,
+    std::unordered_map< int, rofi::hal::RoFI > & modules, 
+    std::ofstream* logFile = nullptr );
 
 void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_view > & tokens )
 {
@@ -311,82 +320,114 @@ void processConnectorCmd( rofi::hal::RoFI & rofi, const std::vector< std::string
     }
 }
 
-rofi::hal::RoFI getRoFI( std::optional< rofi::hal::RoFI::Id > id )
+void processModuleCmd( std::unordered_map< int, rofi::hal::RoFI > & modules, std::vector< std::string_view > & tokens )
 {
-    if ( id )
+    if ( tokens.size() < 3 )
+        throw std::runtime_error( "Wrong number of arguments" );
+
+    int rofiId = readInt( tokens[ 1 ] );
+
+    if ( !modules.contains( rofiId ) )
+        modules.emplace( rofiId, rofi::hal::RoFI::getRemoteRoFI( rofiId ) );
+
+    auto [ _, rofi ] = *(modules.find( rofiId ));
+
+    tokens.erase( tokens.begin(), tokens.begin() + 2 );
+
+    if ( tokens.front() == "d" || tokens.front() == "descriptor" )
     {
-        return rofi::hal::RoFI::getRemoteRoFI( *id );
+        auto descriptor = rofi.getDescriptor();
+        std::cout << "Joint count: " << descriptor.jointCount << "\n";
+        std::cout << "Connector count: " << descriptor.connectorCount << "\n";
+        return;
     }
-    return rofi::hal::RoFI::getLocalRoFI();
+    
+    if ( tokens.front() == "j" || tokens.front() == "joint" )
+    {
+        processJointCmd( rofi, tokens );
+        return;
+    }
+
+    if ( tokens.front() == "c" || tokens.front() == "connector" )
+    {
+        processConnectorCmd( rofi, tokens );
+        return;
+    }
+
+    std::cerr << "Unknown module command\n";
+    printHelp();
 }
 
+void processExecCmd( std::unordered_map< int, rofi::hal::RoFI > & modules, std::vector< std::string_view > & tokens )
+{
+    assert( tokens[ 0 ] == "e" || tokens[ 0 ] == "exec" );
+    tokens.erase( tokens.begin() );
+
+    for ( const auto& filePath : tokens )
+    {
+        std::ifstream commandFile{ std::string( filePath ) };
+
+        if ( !commandFile ) 
+            throw std::runtime_error( "Command file \"" + std::string( filePath ) + "\" cannot be opened" );
+
+        // record only the exec command itself, not all executed subcommands
+        processCmds( commandFile, modules );
+    }
+}
+
+void processCmds( 
+    std::istream & commandStream,
+    std::unordered_map< int, rofi::hal::RoFI > & modules, 
+    std::ofstream* logFile )
+{
+    for ( std::string line; std::getline( commandStream, line ); )
+    {
+        try
+        {
+            auto tokens = split( line );
+
+            if ( tokens.empty() )
+                continue;
+
+            if ( tokens.front() == "q" || tokens.front() == "quit" )
+                break;
+
+            if ( tokens.front() == "e" || tokens.front() == "exec" )
+            {
+                if ( logFile ) *logFile << line << std::endl;
+                processExecCmd( modules, tokens );
+                continue;
+            }
+
+            if ( tokens.front() == "m" || tokens.front() == "module" )
+            {
+                if ( logFile ) *logFile << line << std::endl;
+                processModuleCmd( modules, tokens );
+                continue;
+            }
+
+            std::cerr << "Unknown command\n";
+            printHelp();
+        }
+        catch ( const std::runtime_error & e )
+        {
+            std::cerr << "ERROR: " << e.what() << "\n";
+        }
+    }
+}
 
 int main( int argc, char ** argv )
 {
     try
     {
-        std::optional< rofi::hal::RoFI::Id > rofiId;
+        std::ofstream logFile;
 
         if ( argc > 1 )
-        {
-            rofiId = readInt( argv[ 1 ] );
-        }
+            logFile = std::ofstream( argv[ 1 ] );
 
-        if ( rofiId )
-        {
-            std::cerr << "Connecting to RoFI " << *rofiId << "\n";
-        }
-        else
-        {
-            std::cerr << "Connecting to local RoFI\n";
-        }
+        std::unordered_map< int, rofi::hal::RoFI > modules;
 
-        auto rofi = getRoFI( rofiId );
-        std::cerr << "Connected to RoFI " << rofi.getId() << "\n";
-
-        for ( std::string line; std::getline( std::cin, line ); )
-        {
-            try
-            {
-                auto tokens = split( line );
-                if ( tokens.empty() )
-                {
-                    continue;
-                }
-
-                if ( tokens.front() == "q" || tokens.front() == "quit" )
-                {
-                    break;
-                }
-
-                if ( tokens.front() == "d" || tokens.front() == "descriptor" )
-                {
-                    auto descriptor = rofi.getDescriptor();
-                    std::cout << "Joint count: " << descriptor.jointCount << "\n";
-                    std::cout << "Connector count: " << descriptor.connectorCount << "\n";
-                    continue;
-                }
-
-                if ( tokens.front() == "j" || tokens.front() == "joint" )
-                {
-                    processJointCmd( rofi, tokens );
-                    continue;
-                }
-
-                if ( tokens.front() == "c" || tokens.front() == "connector" )
-                {
-                    processConnectorCmd( rofi, tokens );
-                    continue;
-                }
-
-                std::cerr << "Unknown command\n";
-                printHelp();
-            }
-            catch ( const std::runtime_error & e )
-            {
-                std::cerr << "ERROR: " << e.what() << "\n";
-            }
-        }
+        processCmds( std::cin, modules, &logFile );
     }
     catch ( const gazebo::common::Exception & e )
     {
