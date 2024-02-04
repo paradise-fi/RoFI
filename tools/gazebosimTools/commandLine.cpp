@@ -301,7 +301,7 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
                 throw std::runtime_error( "Wrong number of arguments" );
             }
             int job = Jobs::get().startNew();
-            joint.setPosition( readFloat( tokens[ 3 ] ),
+            joint.setPosition( Angle::deg( readFloat( tokens[ 3 ] ) ).rad(),
                                readFloat( tokens[ 4 ] ),
                                [ job ]( rofi::hal::Joint ) 
                                 { 
