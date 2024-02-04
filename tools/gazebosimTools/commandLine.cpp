@@ -22,6 +22,8 @@ enum class JointCmd
 
 enum class ConnectorCmd
 {
+    RETRACT,
+    EXTEND,
     CONNECT,
     DISCONNECT,
     GET_STATE,
@@ -153,14 +155,15 @@ public:
 
     void finish( int job )
     {
+        if ( !_jobs.contains( job ) ) throw std::runtime_error( "Job does not exist" );
         _jobs[job].set_value();
-        // _jobs.delete( job ); // should it be removed, or only after synchronization?
     }
 
     void waitFor( int job )
     {
+        if ( !_jobs.contains( job ) ) throw std::runtime_error( "Job does not exist" );
         _jobs[job].get_future().get();
-        // _jobs.delete( job ); // should it be removed, or only after synchronization?
+        _jobs.erase( job ); 
     }
 
     void synchronize()
@@ -196,6 +199,10 @@ inline ConnectorCmd getConnectorCmdType( std::string_view token )
     const std::map< std::string_view, ConnectorCmd > map = {
         { "gs", ConnectorCmd::GET_STATE },
         { "getstate", ConnectorCmd::GET_STATE },
+        { "r", ConnectorCmd::RETRACT },
+        { "retract", ConnectorCmd::RETRACT },
+        { "e", ConnectorCmd::DISCONNECT },
+        { "extend", ConnectorCmd::EXTEND },
         { "c", ConnectorCmd::CONNECT },
         { "connect", ConnectorCmd::CONNECT },
         { "d", ConnectorCmd::DISCONNECT },
@@ -238,6 +245,8 @@ void printHelp()
 
     std::cerr << "\nConnector commands:\n";
     std::cerr << "\tgetstate (gs)\n";
+    std::cerr << "\tretract (r)\n";
+    std::cerr << "\textend (e)\n";
     std::cerr << "\tconnect (c)\n";
     std::cerr << "\tdisconnect (d)\n";
     // std::cerr << "\tsendpacket (sp)\n"; // not implemented
@@ -339,16 +348,94 @@ void processConnectorCmd( rofi::hal::RoFI & rofi, const std::vector< std::string
 
     switch ( getConnectorCmdType( tokens[ 2 ] ) )
     {
+        case ConnectorCmd::RETRACT:
+        {
+            auto state = connector.getState();
+            if ( state.position == ConnectorPosition::Retracted ) {
+                std::cout << "Connector is already retracted" << std::endl;
+                break;
+            }
+
+            connector.disconnect();
+            std::cout << "Retracting connector" << std::endl;
+            break;
+        }
+        case ConnectorCmd::EXTEND:
+        {
+            auto state = connector.getState();
+            if ( state.position == ConnectorPosition::Extended ) {
+                std::cout << "Connector is already extended" << std::endl;
+                break;
+            }
+
+            connector.connect();
+            std::cout << "Extending connector" << std::endl;
+            break;
+        }
         case ConnectorCmd::CONNECT:
         {
+            auto state = connector.getState();
+
+            if ( state.connected )
+                throw std::runtime_error( "Connector is already connected" );
+
+            if ( state.position == ConnectorPosition::Extended )
+            {
+                connector.disconnect();
+                std::cout << "Retracting connector" << std::endl;
+            }
+
+            int job = Jobs::get().startNew();
+            auto onceFlag = std::once_flag{}; // does the once flag matter?
+            connector.onConnectorEvent( [ & ]( Connector, ConnectorEvent event ) {
+                std::cout << "Something happened in con" << std::endl;
+                if ( event == ConnectorEvent::Connected ) {
+                    // does not hold - why?
+                    // assert( state.connected && state.position == ConnectorPosition::Extended ); 
+                    std::cout << "Connected" << std::endl;
+                    std::call_once( onceFlag, [ & ]() {  
+                        Jobs::get().finish( job );
+                        std::cout << "Once called conn" << std::endl;
+                    } );
+                }
+            });
             connector.connect();
-            std::cout << "Connecting\n";
+            std::cout << "Extending connector" << std::endl;
+            Jobs::get().waitFor( job ); // assumes there is a connector to connect to, otherwise cycles
+
+            // Clear callback to avoid dangling references in lambda
+            connector.onConnectorEvent( nullptr );
             break;
         }
         case ConnectorCmd::DISCONNECT:
         {
+            auto state = connector.getState();
+
+            if ( !state.connected )
+                throw std::runtime_error( "Connector is already disconnected" );
+
+            assert( state.position == ConnectorPosition::Extended );
+
+            int job = Jobs::get().startNew();
+            auto onceFlag = std::once_flag{}; // does the once flag matter?
+            connector.onConnectorEvent( [ & ]( Connector, ConnectorEvent event ) {
+                std::cout << "Something happened in dis" << std::endl;
+                if ( event == ConnectorEvent::Disconnected ) {
+                    // does not hold - why?
+                    // assert( !state.connected && state.position == ConnectorPosition::Retracted ); 
+                    std::cout << "Disconnected" << std::endl;
+                    std::call_once( onceFlag, [ & ]() {  
+                        Jobs::get().finish( job );
+                        std::cout << "Once called dis" << std::endl;
+                    } );
+                }
+            });
             connector.disconnect();
-            std::cout << "Disconnecting\n";
+            std::cout << "Retracting connector" << std::endl;
+            Jobs::get().waitFor( job ); // assumes there is a connector to connect to, otherwise cycles
+
+            // Clear callback to avoid dangling references in lambda
+            connector.onConnectorEvent( nullptr );
             break;
         }
         case ConnectorCmd::GET_STATE:
@@ -479,6 +566,8 @@ void processCmds(
 
 int main( int argc, char ** argv )
 {
+    printHelp();
+
     try
     {
         std::ofstream logFile;
