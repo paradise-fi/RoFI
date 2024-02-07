@@ -6,6 +6,7 @@ add_resources(MODEL_RESOURCES
     "model/connector.obj"
     "model/shoe.obj"
     "model/point.obj"
+    "model/cube.obj"
 )
 
 set(ROFI_TOOL_SRCS
