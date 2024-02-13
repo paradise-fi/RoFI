@@ -52,10 +52,13 @@ def parse_generic_json(cls: type[T], json_value: Any) -> T:
             assert isinstance(json_value, cls), f"Type {cls} is dict with no type args"
             return json_value
         key_cls, value_cls = cls_args
-        return {
-            parse_json(key_cls, key): parse_json(value_cls, value)
-            for key, value in json_value.items()
-        }  # type: ignore
+        try:
+            return {
+                parse_json(key_cls, key): parse_json(value_cls, value)
+                for key, value in json_value.items()
+            }  # type: ignore
+        except ValueError as e:
+            raise ValueError(f"Error parsing {cls}: {e}") from e
 
     if cls_origin is list:
         if not isinstance(json_value, list):
@@ -64,7 +67,10 @@ def parse_generic_json(cls: type[T], json_value: Any) -> T:
             assert isinstance(json_value, cls), f"Type {cls} is list with no type args"
             return json_value
         (arg_cls,) = cls_args
-        return [parse_json(arg_cls, value) for value in json_value]  # type: ignore
+        try:
+            return [parse_json(arg_cls, value) for value in json_value]  # type: ignore
+        except ValueError as e:
+            raise ValueError(f"Error parsing {cls}: {e}") from e
 
     if cls_origin is types.UnionType or cls_origin is Union:
         for arg_cls in cls_args:
@@ -99,10 +105,19 @@ def parse_json_dataclass(cls: type[T], json_value: Any) -> T:
             raise ValueError(f"Cannot parse dataclass key from type {type(key)}")
 
     field_types = {field.name: field.type for field in dataclasses.fields(cls)}
-    field_values = {
-        key: parse_json(field_types[key], value) if key in field_types else value
-        for key, value in json_value.items()
-    }
+
+    def parse_field(json_key: str, json_value: Any):
+        try:
+            if json_key in field_types:
+                return parse_json(field_types[json_key], json_value)
+            else:
+                return json_value
+        except ValueError as e:
+            raise ValueError(
+                f"Error parsing field {json_key!r} from {cls.__name__}: {e}"
+            ) from e
+
+    field_values = {key: parse_field(key, value) for key, value in json_value.items()}
 
     result = cls(**field_values)
     assert isinstance(result, cls)
