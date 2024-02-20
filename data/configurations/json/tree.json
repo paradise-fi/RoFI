@@ -1,0 +1,98 @@
+{
+    "modules": [
+        {
+            "id": 1,
+            "type": "universal",
+            "alpha": 0,
+            "beta": 0,
+            "gamma": 0
+        },
+        {
+            "id": 2,
+            "type": "universal",
+            "alpha": 45,
+            "beta": 45,
+            "gamma": 0
+        },
+        {
+            "id": 3,
+            "type": "universal",
+            "alpha": 45,
+            "beta": 45,
+            "gamma": 0
+        },
+        {
+            "id": 4,
+            "type": "universal",
+            "alpha": 45,
+            "beta": 45,
+            "gamma": 0
+        },
+        {
+            "id": 12,
+            "type": "universal",
+            "alpha": -45,
+            "beta": -45,
+            "gamma": 0
+        },
+        {
+            "id": 13,
+            "type": "universal",
+            "alpha": -45,
+            "beta": -45,
+            "gamma": 0
+        },
+        {
+            "id": 14,
+            "type": "universal",
+            "alpha": -45,
+            "beta": -45,
+            "gamma": 0
+        }
+    ],
+    "spaceJoints": [
+        {
+            "point": [ 0, 0, 0 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity"
+            },
+            "to": {
+                "id": 1,
+                "component": 0
+            }
+        }
+    ],
+    "moduleJoints": [
+        {
+            "from": { "id" : 1, "connector": "A-X" },
+            "to":   { "id" : 2, "connector": "B-Z" },
+            "orientation": "West"
+        },
+        {
+            "from": { "id" : 2, "connector": "A-X" },
+            "to":   { "id" : 3, "connector": "B-Z" },
+            "orientation": "West"
+        },
+        {
+            "from": { "id" : 2, "connector": "A+X" },
+            "to":   { "id" : 4, "connector": "B-Z" },
+            "orientation": "East"
+        },
+        {
+            "from": { "id" : 1, "connector": "A+X" },
+            "to":   { "id" : 12, "connector": "B-Z" },
+            "orientation": "West"
+        },
+        {
+            "from": { "id" : 12, "connector": "A-X" },
+            "to":   { "id" : 13, "connector": "B-Z" },
+            "orientation": "East"
+        },
+        {
+            "from": { "id" : 12, "connector": "A+X" },
+            "to":   { "id" : 14, "connector": "B-Z" },
+            "orientation": "West"
+        }
+    ]
+}

@@ -1,0 +1,70 @@
+{
+    "modules": [
+        {
+            "id": 1,
+            "type": "universal",
+            "alpha": 0,
+            "beta": 0,
+            "gamma": 0
+        },
+        {
+           "id": 2,
+           "type": "universal",
+           "alpha": 0,
+           "beta": 0,
+           "gamma": 0
+        },
+        {
+           "id": 3,
+           "type": "universal",
+           "alpha": 0,
+           "beta": 0,
+           "gamma": 0
+        },
+        {
+           "id": 4,
+           "type": "universal",
+           "alpha": 0,
+           "beta": 0,
+           "gamma": 0
+        }
+    ],
+    "spaceJoints": [
+        {
+            "point": [ 0, 0, 0 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity",
+                "positions": []
+            },
+            "to": { "id" : 1, "component": 0 }
+        },
+        {
+            "point": [ 0, 0, -6 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": [[-1, 0, 0, 0], [0, -1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
+                "positions": []
+            },
+            "to": { "id" : 4, "component": 0 }
+        }
+ 
+    ],
+    "moduleJoints": [
+        {
+            "from": { "id" : 1, "connector": "A-Z" },
+            "to":   { "id" : 2, "connector": "B-Z" },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 2, "connector": "A-Z" },
+            "to":   { "id" : 3, "connector": "B-Z" },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 3, "connector": "A-Z" },
+            "to":   { "id" : 4, "connector": "B-Z" },
+            "orientation": "North"
+        }
+    ]
+}

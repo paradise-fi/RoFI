@@ -7,5 +7,5 @@ set_property(TARGET firmwareUpdater PROPERTY CXX_STANDARD 20)
 set_property(TARGET firmwareUpdater PROPERTY CXX_STANDARD_REQUIRED ON)
 
 add_library(rofi::firmwareUpdater ALIAS firmwareUpdater)
-target_link_libraries(firmwareUpdater PRIVATE rofi_hal_inc)
+target_link_libraries(firmwareUpdater PRIVATE rofi_hal_inc networking)
 target_include_directories(firmwareUpdater PUBLIC include)

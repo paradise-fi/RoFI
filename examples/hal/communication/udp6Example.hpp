@@ -11,7 +11,7 @@ using namespace rofi::net;
 inline void onMasterPacket( void *,
                             struct udp_pcb * pcb,
                             struct pbuf * p,
-                            const ip6_addr_t* addr,
+                            const ip_addr_t* addr,
                             u16_t port )
 {
     if ( !p )
@@ -20,10 +20,10 @@ inline void onMasterPacket( void *,
     }
 
     auto packet = rofi::hal::PBuf::own( p );
-    std::cout << Ip6Addr( *addr ) << "; port: " << port << " sent: " << packet.asString()
+    std::cout << Ip6Addr( *ip_2_ip6( addr ) ) << "; port: " << port << " sent: " << packet.asString()
               << std::endl;
 
-    auto res = udp_sendto( pcb, packet.release(), addr, port );
+    auto res = udp_sendto( pcb, packet.release(), reinterpret_cast< const ip_addr_t* >( addr ), port );
     if ( res != ERR_OK )
         std::cout << "udp_sendto returned " << lwip_strerr( res ) << "\n";
 }
@@ -31,7 +31,7 @@ inline void onMasterPacket( void *,
 inline void onSlavePacket( void *,
                            struct udp_pcb *,
                            struct pbuf * p,
-                           const ip6_addr_t * addr,
+                           const ip_addr_t * addr,
                            u16_t port )
 {
     if ( !p )
@@ -40,7 +40,7 @@ inline void onSlavePacket( void *,
     }
 
     auto packet = rofi::hal::PBuf::own( p );
-    std::cout << Ip6Addr( *addr ) << "; port: " << port
+    std::cout << Ip6Addr( *ip_2_ip6( addr ) ) << "; port: " << port
               << " responded: " << packet.asString() << std::endl;
 }
 
@@ -104,7 +104,7 @@ inline void runSlave( const char * masterAddr )
                   << addr << std::endl;
 
         LOCK_TCPIP_CORE();
-        res = udp_sendto( pcb, buffer.release(), &addr, 7777 );
+        res = udp_sendto( pcb, buffer.release(),  reinterpret_cast< const ip_addr_t* >( &addr ), 7777 );
         UNLOCK_TCPIP_CORE();
 
         if ( res != ERR_OK )

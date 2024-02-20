@@ -1,0 +1,114 @@
+{
+    "modules": [
+        {
+            "id": 1,
+            "type": "universal",
+            "alpha": 90,
+            "beta": 0,
+            "gamma": 0
+        },
+        {
+           "id": 2,
+           "type": "universal",
+           "alpha": 90,
+           "beta": 0,
+           "gamma": 0
+        },
+        {
+           "id": 3,
+           "type": "universal",
+           "alpha": 90,
+           "beta": 0,
+           "gamma": 0
+        },
+        {
+           "id": 4,
+           "type": "universal",
+           "alpha": 90,
+           "beta": 0,
+           "gamma": 0
+        },
+        {
+           "id": 5,
+           "type": "universal",
+           "alpha": 0,
+           "beta": 0,
+           "gamma": 0
+        },
+        {
+           "id": 6,
+           "type": "universal",
+           "alpha": 0,
+           "beta": 0,
+           "gamma": 0
+        },
+        {
+           "id": 7,
+           "type": "universal",
+           "alpha": 0,
+           "beta": 0,
+           "gamma": 0
+        },
+        {
+           "id": 8,
+           "type": "universal",
+           "alpha": 0,
+           "beta": 0,
+           "gamma": 0
+        }
+    ],
+    "spaceJoints": [
+        {
+            "point": [ 0, 0, 0 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity",
+                "positions": []
+            },
+            "to": { "id" : 1, "component": 0 }
+        }
+ 
+    ],
+    "moduleJoints": [
+        {
+            "from": { "id" : 1, "connector": "A+X" },
+            "to":   { "id" : 2, "connector": "B-Z" },
+            "orientation": "East"
+        },
+        {
+            "from": { "id" : 2, "connector": "A+X" },
+            "to":   { "id" : 3, "connector": "B-Z" },
+            "orientation": "East"
+        },
+        {
+            "from": { "id" : 3, "connector": "A+X" },
+            "to":   { "id" : 4, "connector": "B-Z" },
+            "orientation": "East"
+        },
+        {
+            "from": { "id" : 4, "connector": "A+X" },
+            "to":   { "id" : 1, "connector": "B-Z" },
+            "orientation": "East"
+        },
+        {
+            "from": { "id" : 1, "connector": "A-Z" },
+            "to":   { "id" : 5, "connector": "B-Z" },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 2, "connector": "A-Z" },
+            "to":   { "id" : 6, "connector": "B-Z" },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 3, "connector": "A-Z" },
+            "to":   { "id" : 7, "connector": "B-Z" },
+            "orientation": "North"
+        },
+        {
+            "from": { "id" : 4, "connector": "A-Z" },
+            "to":   { "id" : 8, "connector": "B-Z" },
+            "orientation": "North"
+        }
+    ]
+}
