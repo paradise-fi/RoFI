@@ -268,7 +268,7 @@ void Manipulator::reaching( const Manipulator& other, bool check_collisions ) {
                 collision_tree->erase( end );
             }
         }
-        polar = rad_to_angle( std::clamp( polar.rad(), -M_PI_2f, M_PI_2f ) );
+        polar = rad_to_angle( std::clamp( polar.rad(), float( -M_PI_2 ), float( M_PI_2 ) ) );
         set_joint( i, polar, azimuth );
 
         if( check_collisions ){
