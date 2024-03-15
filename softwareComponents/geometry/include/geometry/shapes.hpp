@@ -19,9 +19,13 @@ namespace rofi::geometry {
 
 using namespace rofi::configuration::matrices;
 
-constexpr double epsilon = 1.0e-10;
+constexpr double epsilon = 1.0e-5;
 
 /* Utility operations */
+
+inline bool approx_equal( double a, double b ){
+    return std::fabs( a - b ) < epsilon;
+}
 
 /* dot product */
 inline double operator*( const Vector& a, const Vector& b ){
@@ -32,6 +36,32 @@ inline double magnitude( const Vector& vector ){
     return std::sqrt( std::pow( vector[ 0 ], 2 ) +
                       std::pow( vector[ 1 ], 2 ) +
                       std::pow( vector[ 2 ], 2 ) );
+}
+
+inline Vector normalize( const Vector& a ){
+    return a / magnitude( a );
+}
+
+inline Vector midpoint( const Vector& a, const Vector& b ){
+    Vector diff = b - a;
+    return a + diff / 2;
+}
+
+inline Vector matrix_to_angles( const Matrix& R ){
+    return { std::atan2( R.at( 2, 1 ), R.at( 2, 2 ) ),
+             std::atan2( -R.at( 2, 0 ), std::sqrt( R.at( 2, 1 ) * R.at( 2, 1 ) +
+                                                   R.at( 2, 2 ) * R.at( 2, 2 ) ) ),
+             std::atan2( R.at( 1, 0 ), R.at( 0, 0 ) ) };
+}
+
+inline Matrix angles_to_matrix( const Vector& angles ){
+    return rotate( angles[ 2 ], { 0, 0, 1 } )
+         * rotate( angles[ 1 ], { 0, 1, 0 } )
+         * rotate( angles[ 0 ], { 1, 0, 0 } );
+}
+
+inline Vector interpolate( Vector start, Vector end, double time, double total ){
+    return ( 1 - time / total ) * start + ( time / total ) * end;
 }
 
 /*
@@ -281,9 +311,13 @@ inline bool collide( const Box& box, const Segment& segment ){
     return collide( segment, box );
 }
 
+inline double dist( const Plane& plane, const Sphere& ball ){
+    return ( ball.center - plane.origin ) * plane.normal;
+}
+
 inline bool collide( const Plane& plane, const Sphere& ball ){
     double dist = ( ball.center - plane.origin ) * plane.normal;
-    return dist + plane.width < ball.radius;
+    return std::fabs( dist ) < ball.radius + plane.width;
 }
 
 inline bool collide( const Sphere& ball, const Plane& plane ){
@@ -300,6 +334,8 @@ inline bool collide( const Plane& plane, const Box& box ){
     double s = plane.normal * box.center - plane.normal * plane.origin;
 
     // Intersection occurs when distance s falls within [-r,+r] interval
+    //std::cout << "box dim: " << box.dimensions << "\nbox pos: " << box.center << "\nplane norm: " << plane.normal << "\nplane origin" << plane.origin
+        //<< "collide: " << (std::fabs( s ) <= radius + plane.width) << '\n';
     return std::fabs( s ) <= radius + plane.width;
 }
 

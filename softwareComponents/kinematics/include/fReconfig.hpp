@@ -9,16 +9,18 @@
 
 #include <legacy/configuration/Configuration.h>
 #include <legacy/configuration/IO.h>
+#include <geometry/aabb.hpp>
 #include "calculations.hpp"
 
 /* Custom precision for considering matrices equal, more relaxed than Matrix.h/equals */
-bool eq( const Matrix& a, const Matrix& b );
-bool eq( const Vector& a, const Vector& b );
+bool eq( const Matrix& a, const Matrix& b, double prec = 0.02 );
+bool eq( const Vector& a, const Vector& b, double prec = 0.02 );
 
 /* Simple representation for arms consisting of joints */
 struct joint {
     ID id;
     ShoeId side;
+    rofi::geometry::AABB_Leaf< rofi::geometry::Sphere >* leaf = nullptr;
 
     bool operator==( joint b ) const {
         return id == b.id && side == b.side;
@@ -70,25 +72,37 @@ struct treeConfigInspection {
     virtual void onArmConnectionEnd() {};
 };
 
+std::pair< double, double > simplify( double pol, double az );
+
 /* Reconfiguration machine */
 struct treeConfig {
 
-    /* Configuration and it's center */
+    /* Configuration and its center */
     Configuration config;
-    ID root;
+    Configuration last_config;
+    Configuration last_backarm;
+    joint root;
+    Matrix center = identity;
 
     /* Distance from root */
     std::map< ID, int > depths;
 
     /* Iteration limit for fabrik */
-    size_t max_iterations = 1000;
+    size_t max_iterations = 100;
+
+    double rotation_limit = 90.0;
+    double last;
+
+    /* AABB for holding sphere positions and outside obstacles */
+    bool has_tree = true;
+    rofi::geometry::AABB< rofi::geometry::Sphere > collisionTree;
 
     /* Save and reset inner state on failure */
     treeConfig saveState();
     void resetState( const treeConfig& old );
 
     /* Flags for reconfiguration */
-    collisionStrategy collisions;
+    collisionStrategy collisions = collisionStrategy::online;
     straightening straight;
 
     /* Logging of steps taken to reconfigure */
@@ -100,10 +114,11 @@ struct treeConfig {
     std::unique_ptr< treeConfigInspection > inspector;
 
     /* Initialize and treefy configuration */
+    treeConfig() = default;
     treeConfig( const std::string& path );
     treeConfig( const std::string& path, ID r );
     treeConfig( Configuration c );
-    treeConfig( Configuration c, ID r );
+    treeConfig( Configuration c, joint r, const Matrix& center = identity );
     void makeTree();
 
     /* Initialize arm for single arm configurations */
@@ -133,11 +148,11 @@ struct treeConfig {
     Configuration link( joints& arm1, joints& arm2 );
 
     /* Fabrik itself, takes arm of the configuration and tries to reach target */
-    bool fabrik( const joints& arm, const Matrix& target );
+    bool fabrik( joints& arm, const Matrix& target );
 
     /* Helper functions for FABRIK */
     Configuration initBackArm( const joints& arm, const Matrix& target );
-    void reaching( const joints& arm, Configuration& backArm, const Matrix& target );
+    void reaching( joints& arm, Configuration& backArm, const Matrix& target );
 
     Edge edgeBetween( const joint& j1, const joint& j2 );
 
@@ -154,8 +169,10 @@ struct treeConfig {
                                                Configuration& currentConfig,
                                                Configuration& otherConfig,
                                                bool forward );
+
     void rotateJoints( const joints& arm, size_t currentJoint,
-                       Configuration& currentConfig, double polar, double azimuth );
+                       Configuration& currentConfig, double polar, double azimuth,
+                       bool limit = false );
 
     void rotateTowards( const joints& arm, size_t currentJoint, const Matrix& target );
 
@@ -167,9 +184,13 @@ struct treeConfig {
 
     bool goodConnections( const joints& arm );
 
-    std::set< joint > collidingJoints( joint j );
-    std::pair< Vector, double > intersectionCircle( joint current, joint colliding );
+    std::vector< Vector > collidingPositions( joint j );
+
+    std::pair< Vector, double > intersectionCircle( joint current, Vector position );
+
     void fixCollisions( const joints& arm, size_t currentJoint );
+
+
     /* Option for debugging step by step */
     bool debug = false;
 };

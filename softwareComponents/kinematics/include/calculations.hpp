@@ -3,9 +3,7 @@
 #include <legacy/configuration/Configuration.h>
 #include <legacy/configuration/IO.h>
 
-#include <cassert>
 #include <cmath>
-#include <iostream>
 #include <vector>
 
 namespace {
@@ -34,7 +32,7 @@ inline double rotz( const Vector& a, const Vector& b ){
     return std::atan2( a[ 0 ] * b[ 1 ] - a[ 1 ] * b[ 0 ], a[ 0 ] * b[ 0 ] + a[ 1 ] * b[ 1 ] );
 }
 
-inline double equals( const double a, const double b ){
+inline bool equals( double a, double b ){
     return std::fabs( a - b ) < 0.001;
 }
 
@@ -45,26 +43,6 @@ inline double mod( const double a, const double b ){
     }
     return res;
 }
-
-// inline Vector operator*( double num, const Vector& vec ){
-//     return Vector({ vec[ 0 ] * num,
-//                     vec[ 1 ] * num,
-//                     vec[ 2 ] * num,
-//                     vec[ 3 ] });
-// }
-// inline Vector operator+( const Vector& a, const Vector& b ){
-//     return Vector({ a[ 0 ] + b[ 0 ],
-//                     a[ 1 ] + b[ 1 ],
-//                     a[ 2 ] + b[ 2 ],
-//                     1.0 });
-// }
-
-// inline Vector operator-( const Vector& a, const Vector& b ){
-//     return Vector({ a[ 0 ] - b[ 0 ],
-//                     a[ 1 ] - b[ 1 ],
-//                     a[ 2 ] - b[ 2 ],
-//                     1.0 });
-// }
 
 inline Vector operator/( const Vector& vec, double num ){
     return Vector({ vec[ 0 ] / num,
@@ -80,11 +58,11 @@ inline Vector cross_product( const Vector& a, const Vector& b ){
                     0.0 } );
 }
 
-inline double magnitude( const Vector& vector ){
-    return std::sqrt( std::pow( vector[ 0 ], 2 ) +
-                      std::pow( vector[ 1 ], 2 ) +
-                      std::pow( vector[ 2 ], 2 ) );
-}
+// inline double magnitude( const Vector& vector ){
+//     return std::sqrt( std::pow( vector[ 0 ], 2 ) +
+//                       std::pow( vector[ 1 ], 2 ) +
+//                       std::pow( vector[ 2 ], 2 ) );
+// }
 
 inline double arbitrary_magnitude( const arma::vec& vector ){
     double sum = 0;
@@ -99,9 +77,9 @@ inline double operator*( const Vector& a, const Vector& b ){
     return a[ 0 ] * b[ 0 ] + a[ 1 ] * b[ 1 ] + a[ 2 ] * b[ 2 ];
 }
 
-inline Vector operator-( const Vector& a ){
-    return { -a[ 0 ], -a[ 1 ], -a[ 2 ], a[ 3 ] };
-}
+// inline Vector operator-( const Vector& a ){
+//     return { -a[ 0 ], -a[ 1 ], -a[ 2 ], a[ 3 ] };
+// }
 
 /* projects a point onto a plane defined by normal and a point */
 inline Vector project( const Vector& normal, const Vector& on_plane,
@@ -112,18 +90,17 @@ inline Vector project( const Vector& normal, const Vector& on_plane,
 
 /* To invert the rotation, you transpose it. To invert a translation,
  * negate it. This matrix is the result of both */
-inline Matrix inverse( Matrix m ){
-    Matrix translate = identity;
-    Matrix rotation = identity;
+inline Matrix inverse( const Matrix& m ){
+    Matrix transform = identity;
     for( int i = 0; i < 3; ++i ){
         for( int j = 0; j < 3; ++j ){
-            rotation.at( i, j ) = m.at( j, i );
+            transform.at( i, j ) = m.at( j, i );
         }
     }
     for( int i = 0; i < 3; ++i ){
-        translate.at( i, 3 ) = -m.at( i, 3 );
+        transform.at( i, 3 ) = -m.at( 0, 3 ) * transform.at( i, 0 ) - m.at( 1, 3 ) * transform.at( i, 1 ) - m.at( 2, 3 ) * transform( i, 2 );
     }
-    return rotation * translate;
+    return transform;
 }
 
 template <typename T> int sgn(T val) {
@@ -137,7 +114,7 @@ inline double radial( const Vector& point ){
 }
 
 inline double polar( const Vector& point ){
-    return acos( point[ 2 ] / radial( point ) );
+    return rofi::configuration::matrices::equals( point, Vector{ 0.0, 0.0, 0.0, 1.0 } ) ? 0 : acos( point[ 2 ] / radial( point ) );
 }
 
 inline double azimuth( const Vector& point ){

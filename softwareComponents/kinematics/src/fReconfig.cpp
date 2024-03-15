@@ -3,13 +3,16 @@
 
 const Edge invalidEdge = { -1, A, ZMinus, North, ZMinus, A, -1 };
 
+using namespace rofi::geometry;
+using namespace rofi::configuration::matrices;
+
 /* Helper functions  */
-bool eq( const Matrix& a, const Matrix& b ){
-    return arma::approx_equal( a, b, "absdiff", 0.02 );
+bool eq( const Matrix& a, const Matrix& b, double prec ){
+    return arma::approx_equal( a, b, "absdiff", prec );
 }
 
-bool eq( const Vector& a, const Vector& b ){
-    return arma::approx_equal( a, b, "absdiff", 0.02 );
+bool eq( const Vector& a, const Vector& b, double prec ){
+    return arma::approx_equal( a, b, "absdiff", prec );
 }
 
 std::string toString( collisionStrategy coll ){
@@ -69,11 +72,11 @@ ID closestMass( const Configuration& init ){
 /* Use the symmetry of the modules to find the minimal amount of movement
    e.g. 90 polar 180 azimuth is the same as -90 polar 0 azimuth */
 std::pair< double, double > simplify( double pol, double az ){
-    while( ( az > M_PI || equals( az, M_PI ) ) ){
+    while( ( az > M_PI_2 || equals( az, M_PI_2 ) ) ){
         pol *= -1;
         az -= M_PI;
     }
-    while( ( az < -M_PI || equals( az, -M_PI ) ) ){
+    while( ( az < -M_PI_2 || equals( az, -M_PI_2 ) ) ){
         pol *= -1;
         az += M_PI;
     }
@@ -119,23 +122,22 @@ treeConfig::treeConfig( const std::string& path, ID r ){
     std::ifstream input( path );
     Configuration c;
     IO::readConfiguration( input, c );
-    *this = treeConfig( c, r );
+    *this = treeConfig( c, { r, A, nullptr } );
 }
 
 treeConfig::treeConfig( Configuration c ){
     c.computeMatrices();
-    *this = treeConfig( c, closestMass( c ) );
+    *this = treeConfig( c, { closestMass( c ), A, nullptr } );
 }
 
 void treeConfig::makeTree(){
     std::deque< std::pair< ID, int > > queue;
     std::unordered_set< ID > seen;
-    int depth = 0;
     Configuration treed = config;
     treed.clearEdges();
 
-    queue.emplace_back( root, depth );
-    seen.insert( root );
+    queue.emplace_back( root.id, 0 );
+    seen.insert( root.id );
 
     while( !queue.empty() ){
         auto [ id, depth ] = queue.front();
@@ -152,12 +154,12 @@ void treeConfig::makeTree(){
         }
 
     }
-    treed.setFixed( root, A, identity );
+    treed.setFixed( root.id, root.side, center );
     treed.computeMatrices();
     config = treed;
 }
 
-treeConfig::treeConfig( Configuration c, ID r ) : config( c ), root( r ),
+treeConfig::treeConfig( Configuration c, joint r, const Matrix& center ) : config( c ), root( r ), center( center ),
                                                   inspector( new treeConfigInspection())
 {
     makeTree();
@@ -175,13 +177,19 @@ void treeConfig::resetState( const treeConfig& old ){
     config = old.config;
     root = old.root;
     depths = old.depths;
+    collisionTree.clear();
+    for( const auto& [ id, ar ] : config.getMatrices() ){
+        for( auto side : { A, B } ){
+            collisionTree.insert( Sphere( ar[ side ] * Vector{ 0, 0, 0, 1 } ) );
+        }
+    }
 }
 
 joints treeConfig::getFreeArm(){
     std::unordered_set< ID > seen = {};
     for( ID id : config.getIDs() ){
         for( ShoeId side : { A, B } ){
-            if( id != root && connections( id, side, id ) == 0 ){
+            if( ( id != root.id || side != root.side ) && connections( id, side, id ) == 0 ){
                 return initArm( id, side, seen );
             }
         }
@@ -216,13 +224,13 @@ joints treeConfig::initArm( ID id, ShoeId side, std::unordered_set< ID >& seen )
 
 std::vector< joints > treeConfig::getFreeArms(){
     std::vector< joints > arms;
-    root = closestMass( config );
+    root = { closestMass( config ), A, nullptr };
     makeTree();
     config.computeMatrices();
 
     for( ID id : config.getIDs() ){
         for( ShoeId side : { A, B } ){
-            if( connections( id, side, id ) == 0 && id != root ){
+            if( connections( id, side, id ) == 0 && id != root.id ){
                 arms.emplace_back( joints{ { id, side == A ? B : A }, { id, side } } );
             }
         }
@@ -268,6 +276,13 @@ bool treeConfig::tryConnections(){
 
     auto arms = getFreeArms();
 
+    collisionTree.clear();
+    for( const auto& [ id, ar ] : config.getMatrices() ){
+        for( auto side : { A, B } ){
+            collisionTree.insert( Sphere( ar[ side ] * Vector{ 0, 0, 0, 1 } ) );
+        }
+    }
+
     if( arms.size() == 1 ){
         return fixConnections( arms );
     }
@@ -276,7 +291,7 @@ bool treeConfig::tryConnections(){
         extend( arms[ 0 ], arms[ 1 ] );
         auto connectedRoot = [&]( const joints& arm ){
             for( const auto& edge : config.getEdges( arm.front().id ) ){
-                if( edge.id2() == root ){
+                if( edge.id2() == root.id ){
                     return true;
                 }
             }
@@ -327,10 +342,10 @@ bool treeConfig::fixConnections( std::vector< joints >& arms ){
     }
 
     if( arms.size() == 1 ){
-        Edge rootEdge = config.getEdges( root ).front();
+        Edge rootEdge = config.getEdges( root.id ).front();
         joints rootArm;
-        rootArm.emplace_back( rootEdge.side1() == A ? joint{ root, A } : joint{ root, B } );
-        rootArm.emplace_back( rootEdge.side1() == A ? joint{ root, B } : joint{ root, A } );
+        rootArm.emplace_back( rootEdge.side1() == A ? joint{ root.id, A } : joint{ root.id, B } );
+        rootArm.emplace_back( rootEdge.side1() == A ? joint{ root.id, B } : joint{ root.id, A } );
 
         treeConfig old = saveState();
         if( connect( rootArm, arms.front(), false ) ){
@@ -345,11 +360,11 @@ bool treeConfig::fixConnections( std::vector< joints >& arms ){
     auto connectTwo = [&]( int current ){
         int other = current == 0 ? 1 : 0;
         auto rootArm = arms[ current ];
-        Edge rootEdge = edgeBetween( rootArm.front(), { root, B } );
+        Edge rootEdge = edgeBetween( rootArm.front(), { root.id, B } );
 
         if( rootEdge.id1() != -1 ){
-            rootArm.emplace_front( joint{ root, B } );
-            rootArm.emplace_front( joint{ root, A } );
+            rootArm.emplace_front( joint{ root.id, B } );
+            rootArm.emplace_front( joint{ root.id, A } );
         }
 
 
@@ -414,20 +429,6 @@ bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
 
     bool result = fabrik( arm1, target );
 
-    if( straight == straightening::onCollision ){
-        auto arms = getFreeArms();
-        for( auto j : arm1 ){
-            auto colliding = collidingJoints( j );
-            for( auto coll : colliding ){
-                for( const auto& arm : arms ){
-                    if( find( arm.begin(), arm.end(), coll ) != arm.end() ){
-                        straightenArm( arm );
-                    }
-                }
-            }
-        }
-    }
-
     if( collisions == collisionStrategy::naive && !config.isValid() ){
         result = false;
     }
@@ -441,7 +442,7 @@ bool treeConfig::connect( joints arm1, joints arm2, bool straighten ){
             config.execute( Action( Action::Reconnect( false, newDisconnect ) ) );
             waitingDisconnects.push_back( setDisconnect( newDisconnect ) );
         }
-        for( auto [ id, side ] : arm1 ){
+        for( auto [ id, side, _ ] : arm1 ){
             for( auto j : { Alpha, Beta, Gamma } ){
                 reconfigurationSteps.push_back( setRotation( id, j, config.getModule( id ).getJoint( j ) ) );
             }
@@ -503,6 +504,14 @@ void treeConfig::extend( joints& arm1, joints& arm2 ){
             pushPrevious( arm2 );
         }
     }
+
+    auto find_leaves = [&]( joints& arm ){
+        for( auto& j : arm ){
+            j.leaf = collisionTree.find_leaf( Sphere( config.getMatrices().at( j.id ).at( j.side ) * Vector{ 0, 0, 0, 1 } ) );
+        }
+    };
+    find_leaves( arm1 );
+    find_leaves( arm2 );
 }
 
 Configuration treeConfig::link( joints& arm1, joints& arm2 ){
@@ -543,21 +552,38 @@ Configuration treeConfig::link( joints& arm1, joints& arm2 ){
     config.execute( Action( Action::Reconnect( true, newEdge ) ) );
     waitingConnections.emplace_back( setConnection( newEdge ) );
 
-    config.setFixed( root, A, identity );
+    config.setFixed( root.id, root.side, center );
     config.computeMatrices();
+
+    for( auto& j : arm1 ){
+        Vector old_position = oldConfig.getMatrices().at( j.id ).at( j.side ) * Vector{ 0, 0, 0, 1 };
+        Vector position = config.getMatrices().at( j.id ).at( j.side ) * Vector{ 0, 0, 0, 1 };
+        if( eq( old_position, position ) ){
+            j.leaf = collisionTree.find_leaf( Sphere( position ) );
+        } else {
+            collisionTree.erase( Sphere( old_position ) );
+            j.leaf = collisionTree.insert( Sphere( position ) );
+        }
+    }
     return oldConfig;
 }
 
-bool treeConfig::fabrik( const joints& arm, const Matrix& target ){
+bool treeConfig::fabrik( joints& arm, const Matrix& target ){
     config.computeMatrices();
     Configuration backArm = initBackArm( arm, target );
+    last_config = config;
 
     const auto& matrices = config.getMatrices();
     Matrix base = matrices.at( arm.front().id ).at( arm.front().side );
 
-    // TODO: reject immediately if target is out of reach
+    Vector a = rofi::configuration::matrices::center( base );
+    Vector b = rofi::configuration::matrices::center( target );
+    if( distance( a, b ) > double( arm.size() ) ){
+        return false;
+    }
+
     size_t iterations = 0;
-    while( !eq( config.getMatrices().at( arm.back().id ).at( arm.back().side ), target )
+    while( !eq( config.getMatrices().at( arm.back().id ).at( arm.back().side ), target, 0.05 )
            || ( collisions == collisionStrategy::online && !config.isValid() ) )
     {
         reaching( arm, backArm, target );
@@ -594,10 +620,10 @@ void treeConfig::rotateTowards( const joints& arm, size_t currentJoint, const Ma
     }
 }
 
-void treeConfig::reaching( const joints& arm, Configuration& backArm, const Matrix& target ){
+void treeConfig::reaching( joints& arm, Configuration& backArm, const Matrix& target ){
     for( size_t i = arm.size(); i --> 1; ){
         auto [ p, a ] = computeJoints( arm, i, backArm, config, true );
-        rotateJoints( arm, i, backArm, p, a );
+        rotateJoints( arm, i, backArm, p, a, true );
         if( debug ){
             std::cout << "p: " << p << " a: " << a << " i: " << i << '\n';
             getchar();
@@ -607,20 +633,32 @@ void treeConfig::reaching( const joints& arm, Configuration& backArm, const Matr
         std::cout << IO::toString( backArm );
     }
 
+    if( has_tree ){
+        for( size_t i = 1; i < arm.size(); i++ ){
+            auto& j = arm[ i ];
+            collisionTree.erase( j.leaf );
+            j.leaf = nullptr;
+        }
+    }
+    //std::cout << "2\n";
     for( size_t i = 0; i < arm.size() - 1; ++i ){
+        //std::cout << i << '\n'
         auto [ p, a ] = computeJoints( arm, i, config, backArm, false );
-        rotateJoints( arm, i, config, p, a );
+        rotateJoints( arm, i, config, p, a, true );
         if( collisions == collisionStrategy::online ){
             fixCollisions( arm, i );
+            arm[ i + 1 ].leaf = collisionTree.insert( Sphere( config.getMatrices().at( arm[ i + 1 ].id ).at( arm[ i + 1 ].side ) * Vector{ 0, 0, 0, 1 } ) );
         }
 
         if( debug ){
             std::cout << "p: " << p << " a: " << a << '\n';
             getchar();
         }
-
     }
+
+
     rotateTowards( arm, arm.size() - 1, target );
+
     if( debug )
         std::cout << IO::toString( config );
 }
@@ -630,7 +668,9 @@ Configuration treeConfig::initBackArm( const joints& arm, const Matrix& target )
 
     for( size_t i = 0; i < arm.size(); ++i ){
         if( i == 0 || arm[ i - 1 ].id != arm[ i ].id )
-            backArm.addModule( 0, 0, 0, arm[ i ].id );
+            backArm.addModule( config.getModule( arm[ i ].id ).getJoint( Alpha ),
+                               config.getModule( arm[ i ].id ).getJoint( Beta ),
+                               config.getModule( arm[ i ].id ).getJoint( Gamma ), arm[ i ].id );
         if( i != 0 && arm[ i ].id != arm[ i - 1 ].id ){
             backArm.addEdge( edgeBetween( arm[ i - 1 ], arm[ i ] ) );
         }
@@ -678,6 +718,8 @@ std::pair< double, double > treeConfig::computeJoints( const joints& arm, size_t
 
     Joint j = arm[ currentJoint ].side == A ? Alpha : Beta;
     double p = currentConfig.getModule( arm[ currentJoint ].id ).getJoint( j );
+    last = p;
+
     rotateJoints( arm, currentJoint, currentConfig, -to_rad( p ), 0 );
 
     currentConfig.computeMatrices();
@@ -774,7 +816,7 @@ std::pair< double, double > treeConfig::computeAngles( const joints& arm, size_t
 }
 
 void treeConfig::rotateJoints( const joints& arm, size_t currentJoint, Configuration& currentConfig,
-                            double polar, double azimuth )
+                            double polar, double azimuth, bool limit )
 {
     double az = to_deg( azimuth );
     double pol = to_deg( polar );
@@ -783,26 +825,38 @@ void treeConfig::rotateJoints( const joints& arm, size_t currentJoint, Configura
         pol = 0;
     }
     double gamma = currentConfig.getModule( arm[ currentJoint ].id ).getJoint( Gamma );
-    if( gamma + az > 180 ){
-        az -= 360;
+
+    if( az > 90.0 ){
+        az -= 180.0;
+        pol *= -1;
     }
-    if( gamma + az < -180 ){
-        az += 360;
+    if( az < -90.0 ){
+        az += 180.0;
+        pol *= -1;
     }
 
-    if( arm[ currentJoint ].side == A ){
-        double cur = currentConfig.getModule( arm[ currentJoint ].id ).getJoint( Alpha );
-        pol = std::clamp( pol , -90.0 - cur, 90.0 - cur );
-
-        currentConfig.execute( Action( Action::Rotate( arm[ currentJoint ].id, Alpha, pol ) ) );
-        currentConfig.execute( Action( Action::Rotate( arm[ currentJoint ].id, Gamma, az ) ) );
-    } else {
-        double cur = currentConfig.getModule( arm[ currentJoint ].id ).getJoint( Beta );
-        pol = std::clamp( pol, -90.0  - cur, 90.0  - cur );
-
-        currentConfig.execute( Action( Action::Rotate( arm[ currentJoint ].id, Beta, pol ) ) );
-        currentConfig.execute( Action( Action::Rotate( arm[ currentJoint ].id, Gamma, az ) ) );
+    while( gamma + az > 180.0 ){
+        az -= 360.0;
     }
+    while( gamma + az < -180.0 ){
+        az += 360.0;
+    }
+
+
+    auto j = arm[ currentJoint ].side == A ? Alpha : Beta;
+
+    double cur = currentConfig.getModule( arm[ currentJoint ].id ).getJoint( j );
+
+    double min = -90.0;
+    double max = 90.0;
+    if( limit ){
+        min = std::max( -90.0, ( last - rotation_limit ) );
+        max = std::min( 90.0, ( last + rotation_limit ) );
+    }
+    pol = std::clamp( pol, min - cur, max - cur );
+
+    currentConfig.execute( Action( Action::Rotate( arm[ currentJoint ].id, j, pol ) ) );
+    currentConfig.execute( Action( Action::Rotate( arm[ currentJoint ].id, Gamma, az ) ) );
 
     currentConfig.computeMatrices();
 }
@@ -818,7 +872,7 @@ Edge treeConfig::edgeBetween( const joint& j1, const joint& j2 ){
 }
 
 void treeConfig::straightenArm( const joints& arm ){
-    for( auto [ id, side ] : arm ){
+    for( auto [ id, side, _ ] : arm ){
         Joint j = side == A ? Alpha : Beta;
         config.getModule( id ).setJoint( j, 0 );
         config.getModule( id ).setJoint( Gamma, 0 );
@@ -827,28 +881,34 @@ void treeConfig::straightenArm( const joints& arm ){
     }
 }
 
-std::set< joint > treeConfig::collidingJoints( joint j ){
-    auto matrices = config.getMatrices();
-    Vector position = matrices.at( j.id ).at( j.side ) * Vector{ 0, 0, 0, 1 };
-    std::set< joint > collidingJoints;
+std::vector< Vector > treeConfig::collidingPositions( joint j ){
+    Vector position = config.getMatrices().at( j.id ).at( j.side ) * Vector{ 0, 0, 0, 1 };
+    std::vector< Vector > collidingPositions;
+    if( !has_tree ){
+        const auto& matrices = config.getMatrices();
+        for( auto [ id, ar ] : matrices ){
+            for( auto side : { A, B } ){
+                if( id == j.id && side == j.side )
+                    continue;
 
-    for( auto [ id, ar ] : matrices ){
-        for( auto side : { A, B } ){
-            if( id == j.id && side == j.side )
-                continue;
-
-            Vector current = ar[ side ] * Vector{ 0, 0, 0, 1 };
-            if( std::fabs( radial( position - current ) ) < 0.99 ){
-                collidingJoints.insert( { id, side } );
+                Vector current = ar[ side ] * Vector{ 0, 0, 0, 1 };
+                if( std::fabs( radial( position - current ) ) < 0.99 ){
+                    collidingPositions.push_back( current );
+                }
             }
         }
+    } else {
+        for( const auto& shape : collisionTree.colliding_leaves( rofi::geometry::Sphere( position ) ) ){
+            collidingPositions.push_back( shape.center );
+        }
     }
-    return collidingJoints;
+
+    return collidingPositions;
 }
 
-std::pair< Vector, double > treeConfig::intersectionCircle( joint current, joint colliding ){
+std::pair< Vector, double > treeConfig::intersectionCircle( joint current, Vector position ){
     Matrix mat = config.getMatrices().at( current.id ).at( current.side );
-    Vector collidingPos = inverse( mat ) * config.getMatrices().at( colliding.id ).at( colliding.side ) * Vector{ 0, 0, 0, 1 };
+    Vector collidingPos = inverse( mat ) * position;
 
     Vector center = project( X, Vector{ 0, 0, 0, 1 }, collidingPos );
     double radius = 1 - radial( collidingPos - center ) * radial( collidingPos - center );
@@ -872,7 +932,7 @@ void treeConfig::fixCollisions( const joints& arm, size_t currentJoint )
         return;
     }
 
-    auto colliding = collidingJoints( arm[ nextJoint ] );
+    auto colliding = collidingPositions( arm[ nextJoint ] );
 
     if( colliding.empty() ){
         return;
@@ -884,7 +944,7 @@ void treeConfig::fixCollisions( const joints& arm, size_t currentJoint )
 
     std::pair< double, double > outer = { -M_PI_2, M_PI_2 };
     std::pair< double, double > inner = { 0.0, 0.0 };
-    for( auto coll : colliding ){
+    for( const auto& coll : colliding ){
         auto [ center, radius ] = intersectionCircle( arm[ currentJoint ], coll );
         auto intersections = xCircleIntersections( Zero, center, 1, radius + 0.5 );
         auto [ p1, a1 ] = simplify( polar( intersections[ 0 ] ), azimuth( intersections[ 0 ] ) );

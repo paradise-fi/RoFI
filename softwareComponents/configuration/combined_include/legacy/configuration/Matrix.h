@@ -13,7 +13,7 @@ namespace rofi::configuration::matrices {
 using Vector = arma::vec4;
 using Matrix = arma::mat44;
 
-inline const double precision = 1000.0;
+inline const double precision = 10.0;
 
 inline const Matrix identity = arma::mat(4, 4, arma::fill::eye);
 inline const Vector X = arma::vec4({1,0,0,0});
@@ -44,7 +44,7 @@ inline double distance(const Vector& a, const Vector& b)
 {
     Vector diff = a - b;
     double res = 0;
-    for (int i = 0; i < 4; ++i)
+    for (int i = 0; i < 3; ++i)
     {
         res += diff(i) * diff(i);
     }

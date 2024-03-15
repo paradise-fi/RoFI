@@ -68,7 +68,11 @@ struct AABB_Leaf {
     }
 
     bool is_left_child() const {
-        return parent->children[ 0 ] && this == std::get_if< leaf_t >( parent->children[ 0 ].get() );
+        if( parent == nullptr || parent->children[ 0 ] == nullptr )
+        {
+            return false;
+        }
+        return this == std::get_if< leaf_t >( parent->children[ 0 ].get() );
     }
 
 };
@@ -283,7 +287,7 @@ class AABB {
 
         if( leaf->parent ){
             if( leaf->is_left_child() ){
-                 leaf->parent->children[ 0 ] = nullptr;
+                leaf->parent->children[ 0 ] = nullptr;
             } else {
                 leaf->parent->children[ 1 ] = nullptr;
             }
@@ -423,13 +427,10 @@ class AABB {
                 return;
             }
             node_t* parent = std::visit( []( auto&& node ){ return node.parent; }, *current );
-            while( parent && ( current == parent->children[ 1 ].get() ) ){
+            while( parent && ( !parent->children[ 1 ] || current == parent->children[ 1 ].get() ) ){
                 if( parent->parent && !parent->is_left_child() ){
                     current = parent->parent->children[ 1 ] ? parent->parent->children[ 1 ].get() : nullptr;
                 }
-                parent = parent->parent;
-            }
-            while( parent && !parent->children[ 1 ] ){
                 parent = parent->parent;
             }
             if( !parent ){
