@@ -5,7 +5,7 @@
 #include <atoms/cmdline_utils.hpp>
 #include <configuration/serialization.hpp>
 #include <parsing/parsing_lite.hpp>
-#include <planning.hpp>
+#include <manipulator.hpp>
 
 
 namespace {

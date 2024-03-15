@@ -629,7 +629,7 @@ std::vector< RofiWorld > Manipulator::reach( const Matrix& target, const RofiWor
         if( positions.empty() || positions.size() < 1 ){
             // std::cout << "interpolation failed\n";
         }
-        if( positions.size() < 1 && fuckit ){
+        if( positions.size() < 1 && skip ){
             normalize_configurations( original, w );
             return { w };
         }
