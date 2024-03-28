@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RoFI HAL &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="RoFILib" href="../rofilib/index.html" />
+    <link rel="prev" title="Simulator Tutorial" href="../tutorials/simulator.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro/index.html">Introduction, compiling and structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../releng/index.html">Release engineering notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">RoFI HAL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#types-and-constants">Types and Constants</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#classes">Classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#networking">Networking</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rofilib/index.html">RoFILib</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">RoFI HAL</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/rofihal/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rofi-hal">
+<h1>RoFI HAL<a class="headerlink" href="#rofi-hal" title="Permalink to this headline"></a></h1>
+<p>RoFI Hardware Abstraction Layer, RoFI HAL for short, allows to use the same
+code for both the physical RoFIs and for the simulated ones.</p>
+<section id="types-and-constants">
+<h2>Types and Constants<a class="headerlink" href="#types-and-constants" title="Permalink to this headline"></a></h2>
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal17ConnectorPositionE">
+<span id="_CPPv3N4rofi3hal17ConnectorPositionE"></span><span id="_CPPv2N4rofi3hal17ConnectorPositionE"></span><span class="target" id="namespacerofi_1_1hal_1a0ec8544b3ce7e7e14e231e01a75a8d9a"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">hal</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">ConnectorPosition</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal17ConnectorPositionE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a> position. </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal17ConnectorPosition9RetractedE">
+<span id="_CPPv3N4rofi3hal17ConnectorPosition9RetractedE"></span><span id="_CPPv2N4rofi3hal17ConnectorPosition9RetractedE"></span><span class="target" id="namespacerofi_1_1hal_1a0ec8544b3ce7e7e14e231e01a75a8d9aa1f0130b43982b88780ac5f9ec4a91ef2"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Retracted</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal17ConnectorPosition9RetractedE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal17ConnectorPosition8ExtendedE">
+<span id="_CPPv3N4rofi3hal17ConnectorPosition8ExtendedE"></span><span id="_CPPv2N4rofi3hal17ConnectorPosition8ExtendedE"></span><span class="target" id="namespacerofi_1_1hal_1a0ec8544b3ce7e7e14e231e01a75a8d9aaf23578fcd2a868168854ab714e7de537"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Extended</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal17ConnectorPosition8ExtendedE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal20ConnectorOrientationE">
+<span id="_CPPv3N4rofi3hal20ConnectorOrientationE"></span><span id="_CPPv2N4rofi3hal20ConnectorOrientationE"></span><span class="target" id="namespacerofi_1_1hal_1aa9ca7f9b4b8407e841076bdb35a960b1"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">hal</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">ConnectorOrientation</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="kt"><span class="pre">signed</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal20ConnectorOrientationE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Connection orientation. </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal20ConnectorOrientation5NorthE">
+<span id="_CPPv3N4rofi3hal20ConnectorOrientation5NorthE"></span><span id="_CPPv2N4rofi3hal20ConnectorOrientation5NorthE"></span><span class="target" id="namespacerofi_1_1hal_1aa9ca7f9b4b8407e841076bdb35a960b1a601560b94fbb188919dd1d36c8ab70a4"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">North</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal20ConnectorOrientation5NorthE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal20ConnectorOrientation4EastE">
+<span id="_CPPv3N4rofi3hal20ConnectorOrientation4EastE"></span><span id="_CPPv2N4rofi3hal20ConnectorOrientation4EastE"></span><span class="target" id="namespacerofi_1_1hal_1aa9ca7f9b4b8407e841076bdb35a960b1aa99dc62d017d04cf67266593f9c3761e"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">East</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal20ConnectorOrientation4EastE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal20ConnectorOrientation5SouthE">
+<span id="_CPPv3N4rofi3hal20ConnectorOrientation5SouthE"></span><span id="_CPPv2N4rofi3hal20ConnectorOrientation5SouthE"></span><span class="target" id="namespacerofi_1_1hal_1aa9ca7f9b4b8407e841076bdb35a960b1a263d7b2cf53802c9ed127b718c0bf9fd"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">South</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal20ConnectorOrientation5SouthE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal20ConnectorOrientation4WestE">
+<span id="_CPPv3N4rofi3hal20ConnectorOrientation4WestE"></span><span id="_CPPv2N4rofi3hal20ConnectorOrientation4WestE"></span><span class="target" id="namespacerofi_1_1hal_1aa9ca7f9b4b8407e841076bdb35a960b1abf495fc048d8d44b7f32536df5cf3930"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">West</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal20ConnectorOrientation4WestE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal13ConnectorLineE">
+<span id="_CPPv3N4rofi3hal13ConnectorLineE"></span><span id="_CPPv2N4rofi3hal13ConnectorLineE"></span><span class="target" id="namespacerofi_1_1hal_1a045884cf6155fee13d97e4787a60ba66"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">hal</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">ConnectorLine</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal13ConnectorLineE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a> power line. </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal13ConnectorLine8InternalE">
+<span id="_CPPv3N4rofi3hal13ConnectorLine8InternalE"></span><span id="_CPPv2N4rofi3hal13ConnectorLine8InternalE"></span><span class="target" id="namespacerofi_1_1hal_1a045884cf6155fee13d97e4787a60ba66aafbf0897a5a83fdd873dfb032ec695d3"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Internal</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal13ConnectorLine8InternalE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal13ConnectorLine8ExternalE">
+<span id="_CPPv3N4rofi3hal13ConnectorLine8ExternalE"></span><span id="_CPPv2N4rofi3hal13ConnectorLine8ExternalE"></span><span class="target" id="namespacerofi_1_1hal_1a045884cf6155fee13d97e4787a60ba66ab206a1b4ea1097761f78e8876f6da779"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">External</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal13ConnectorLine8ExternalE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorEventE">
+<span id="_CPPv3N4rofi3hal14ConnectorEventE"></span><span id="_CPPv2N4rofi3hal14ConnectorEventE"></span><span class="target" id="namespacerofi_1_1hal_1aeb5b105a380a310f142b6a0e23bd225a"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">hal</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">ConnectorEvent</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="kt"><span class="pre">signed</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorEventE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a> event. </p>
+<p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorEvent9ConnectedE">
+<span id="_CPPv3N4rofi3hal14ConnectorEvent9ConnectedE"></span><span id="_CPPv2N4rofi3hal14ConnectorEvent9ConnectedE"></span><span class="target" id="namespacerofi_1_1hal_1aeb5b105a380a310f142b6a0e23bd225aa2ec0d16e4ca169baedb9b2d50ec5c6d7"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Connected</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorEvent9ConnectedE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Connection with other <a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a> started. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorEvent12DisconnectedE">
+<span id="_CPPv3N4rofi3hal14ConnectorEvent12DisconnectedE"></span><span id="_CPPv2N4rofi3hal14ConnectorEvent12DisconnectedE"></span><span class="target" id="namespacerofi_1_1hal_1aeb5b105a380a310f142b6a0e23bd225aaef70e46fd3bbc21e3e1f0b6815e750c0"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Disconnected</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorEvent12DisconnectedE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Connection with other <a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a> ended. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorEvent12PowerChangedE">
+<span id="_CPPv3N4rofi3hal14ConnectorEvent12PowerChangedE"></span><span id="_CPPv2N4rofi3hal14ConnectorEvent12PowerChangedE"></span><span class="target" id="namespacerofi_1_1hal_1aeb5b105a380a310f142b6a0e23bd225aa99ad919f5bf7080fb650354f6180da67"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PowerChanged</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorEvent12PowerChangedE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Power status (voltage or current) changed. </p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorStateE">
+<span id="_CPPv3N4rofi3hal14ConnectorStateE"></span><span id="_CPPv2N4rofi3hal14ConnectorStateE"></span><span id="rofi::hal::ConnectorState"></span><span class="target" id="structrofi_1_1hal_1_1_connector_state"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ConnectorState</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorStateE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a> state descriptor. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorState8positionE">
+<span id="_CPPv3N4rofi3hal14ConnectorState8positionE"></span><span id="_CPPv2N4rofi3hal14ConnectorState8positionE"></span><span id="rofi::hal::ConnectorState::position__ConnectorPosition"></span><span class="target" id="structrofi_1_1hal_1_1_connector_state_1abd7a4da3be841d7d1800553b09fb8ccc"></span><a class="reference internal" href="#_CPPv4N4rofi3hal17ConnectorPositionE" title="rofi::hal::ConnectorPosition"><span class="n"><span class="pre">ConnectorPosition</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">position</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal17ConnectorPositionE" title="rofi::hal::ConnectorPosition"><span class="n"><span class="pre">ConnectorPosition</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N4rofi3hal17ConnectorPosition9RetractedE" title="rofi::hal::ConnectorPosition::Retracted"><span class="n"><span class="pre">Retracted</span></span></a><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorState8positionE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Position of the <a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorState8internalE">
+<span id="_CPPv3N4rofi3hal14ConnectorState8internalE"></span><span id="_CPPv2N4rofi3hal14ConnectorState8internalE"></span><span id="rofi::hal::ConnectorState::internal__b"></span><span class="target" id="structrofi_1_1hal_1_1_connector_state_1a0619171cf852485cfc3bced8fb13a8c8"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">internal</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorState8internalE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Is internal power bus connected to the connector? </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorState8externalE">
+<span id="_CPPv3N4rofi3hal14ConnectorState8externalE"></span><span id="_CPPv2N4rofi3hal14ConnectorState8externalE"></span><span id="rofi::hal::ConnectorState::external__b"></span><span class="target" id="structrofi_1_1hal_1_1_connector_state_1a840a754ab50b87fc9dcaa5d197a5258a"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">external</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorState8externalE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Is the external power bus connected to the connector? </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorState9connectedE">
+<span id="_CPPv3N4rofi3hal14ConnectorState9connectedE"></span><span id="_CPPv2N4rofi3hal14ConnectorState9connectedE"></span><span id="rofi::hal::ConnectorState::connected__b"></span><span class="target" id="structrofi_1_1hal_1_1_connector_state_1a56597be3d2a93b0da9b7c55e44e15dd9"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">connected</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorState9connectedE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Is there a mating side connected? </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorState11orientationE">
+<span id="_CPPv3N4rofi3hal14ConnectorState11orientationE"></span><span id="_CPPv2N4rofi3hal14ConnectorState11orientationE"></span><span id="rofi::hal::ConnectorState::orientation__ConnectorOrientation"></span><span class="target" id="structrofi_1_1hal_1_1_connector_state_1a8d6659b8157487bddc84eace22516bc5"></span><a class="reference internal" href="#_CPPv4N4rofi3hal20ConnectorOrientationE" title="rofi::hal::ConnectorOrientation"><span class="n"><span class="pre">ConnectorOrientation</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">orientation</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal20ConnectorOrientationE" title="rofi::hal::ConnectorOrientation"><span class="n"><span class="pre">ConnectorOrientation</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N4rofi3hal20ConnectorOrientation5NorthE" title="rofi::hal::ConnectorOrientation::North"><span class="n"><span class="pre">North</span></span></a><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorState11orientationE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Orientation of the connection. Applicable only when connected. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorState15internalVoltageE">
+<span id="_CPPv3N4rofi3hal14ConnectorState15internalVoltageE"></span><span id="_CPPv2N4rofi3hal14ConnectorState15internalVoltageE"></span><span id="rofi::hal::ConnectorState::internalVoltage__float"></span><span class="target" id="structrofi_1_1hal_1_1_connector_state_1af6dd38b395eb8e6d96f41ea8f3bff11e"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">internalVoltage</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.f</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorState15internalVoltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Internal voltage of the <a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorState15internalCurrentE">
+<span id="_CPPv3N4rofi3hal14ConnectorState15internalCurrentE"></span><span id="_CPPv2N4rofi3hal14ConnectorState15internalCurrentE"></span><span id="rofi::hal::ConnectorState::internalCurrent__float"></span><span class="target" id="structrofi_1_1hal_1_1_connector_state_1acd3bca3d288fb915d555358d7621027c"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">internalCurrent</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.f</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorState15internalCurrentE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Internal current of the <a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorState15externalVoltageE">
+<span id="_CPPv3N4rofi3hal14ConnectorState15externalVoltageE"></span><span id="_CPPv2N4rofi3hal14ConnectorState15externalVoltageE"></span><span id="rofi::hal::ConnectorState::externalVoltage__float"></span><span class="target" id="structrofi_1_1hal_1_1_connector_state_1a3e437404fd541833c24f5ef544336b2f"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">externalVoltage</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.f</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorState15externalVoltageE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>External voltage of the <a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal14ConnectorState15externalCurrentE">
+<span id="_CPPv3N4rofi3hal14ConnectorState15externalCurrentE"></span><span id="_CPPv2N4rofi3hal14ConnectorState15externalCurrentE"></span><span id="rofi::hal::ConnectorState::externalCurrent__float"></span><span class="target" id="structrofi_1_1hal_1_1_connector_state_1a82e7c951ce7640c5b38561b3ac038c23"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">externalCurrent</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0.f</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal14ConnectorState15externalCurrentE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>External current of the <a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a>. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline"></a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4RoFIE">
+<span id="_CPPv3N4rofi3hal4RoFIE"></span><span id="_CPPv2N4rofi3hal4RoFIE"></span><span id="rofi::hal::RoFI"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">RoFI</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4RoFIE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Proxy for accessing <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a> hardware. </p>
+<p>The class has a private constructor - you can obtain an instance by calling static methods <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i_1a7484a1c10b9ba6b7ecca560f1a18db9b"><span class="std std-ref">RoFI::getLocalRoFI</span></a> and <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i_1a69267dd2b40091e8ee8df48f5c618a09"><span class="std std-ref">RoFI::getRemoteRoFI</span></a>.</p>
+<p>Since the class is only a proxy it can be safely copied and passed around. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4RoFI2IdE">
+<span id="_CPPv3N4rofi3hal4RoFI2IdE"></span><span id="_CPPv2N4rofi3hal4RoFI2IdE"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i_1ae7f7720342e48a4a357034881469b806"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Id</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4RoFI2IdE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Unique <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a> identifier. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal4RoFI5getIdEv">
+<span id="_CPPv3NK4rofi3hal4RoFI5getIdEv"></span><span id="_CPPv2NK4rofi3hal4RoFI5getIdEv"></span><span id="rofi::hal::RoFI::getIdC"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i_1a943fec4985eac4b27cc0b0298cc7e9ee"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4RoFI2IdE" title="rofi::hal::RoFI::Id"><span class="n"><span class="pre">Id</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getId</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal4RoFI5getIdEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a> Id. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a> Id </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4RoFI8getJointEi">
+<span id="_CPPv3N4rofi3hal4RoFI8getJointEi"></span><span id="_CPPv2N4rofi3hal4RoFI8getJointEi"></span><span id="rofi::hal::RoFI::getJoint__i"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i_1a7183485698e0361de4e64a19b8beed3c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal5JointE" title="rofi::hal::Joint"><span class="n"><span class="pre">Joint</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getJoint</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">index</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4RoFI8getJointEi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get proxy for controlling <a class="reference internal" href="#classrofi_1_1hal_1_1_joint"><span class="std std-ref">Joint</span></a>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>index</strong> – index of the <a class="reference internal" href="#classrofi_1_1hal_1_1_joint"><span class="std std-ref">Joint</span></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>proxy for controlling <a class="reference internal" href="#classrofi_1_1hal_1_1_joint"><span class="std std-ref">Joint</span></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4RoFI12getConnectorEi">
+<span id="_CPPv3N4rofi3hal4RoFI12getConnectorEi"></span><span id="_CPPv2N4rofi3hal4RoFI12getConnectorEi"></span><span id="rofi::hal::RoFI::getConnector__i"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i_1ab73cc659ecbdf36b45235eb053a149e7"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal9ConnectorE" title="rofi::hal::Connector"><span class="n"><span class="pre">Connector</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getConnector</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">index</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4RoFI12getConnectorEi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get proxy for controlling <a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>index</strong> – index of the <a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>proxy for controlling <a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal4RoFI13getDescriptorEv">
+<span id="_CPPv3NK4rofi3hal4RoFI13getDescriptorEv"></span><span id="_CPPv2NK4rofi3hal4RoFI13getDescriptorEv"></span><span id="rofi::hal::RoFI::getDescriptorC"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i_1a4c4c0b376a64bdde5058691ef71c27ac"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4RoFI10DescriptorE" title="rofi::hal::RoFI::Descriptor"><span class="n"><span class="pre">Descriptor</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getDescriptor</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal4RoFI13getDescriptorEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a> <a class="reference internal" href="#structrofi_1_1hal_1_1_ro_f_i_1_1_descriptor"><span class="std std-ref">Descriptor</span></a>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a> <a class="reference internal" href="#structrofi_1_1hal_1_1_ro_f_i_1_1_descriptor"><span class="std std-ref">Descriptor</span></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4RoFI12getLocalRoFIEv">
+<span id="_CPPv3N4rofi3hal4RoFI12getLocalRoFIEv"></span><span id="_CPPv2N4rofi3hal4RoFI12getLocalRoFIEv"></span><span id="rofi::hal::RoFI::getLocalRoFI"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i_1a7484a1c10b9ba6b7ecca560f1a18db9b"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4RoFIE" title="rofi::hal::RoFI"><span class="n"><span class="pre">RoFI</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getLocalRoFI</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4RoFI12getLocalRoFIEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get proxy for controlling local <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>proxy for controlling local <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4RoFI13getRemoteRoFIE2Id">
+<span id="_CPPv3N4rofi3hal4RoFI13getRemoteRoFIE2Id"></span><span id="_CPPv2N4rofi3hal4RoFI13getRemoteRoFIE2Id"></span><span id="rofi::hal::RoFI::getRemoteRoFI__Id"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i_1a69267dd2b40091e8ee8df48f5c618a09"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4RoFIE" title="rofi::hal::RoFI"><span class="n"><span class="pre">RoFI</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getRemoteRoFI</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi3hal4RoFI2IdE" title="rofi::hal::RoFI::Id"><span class="n"><span class="pre">Id</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">remoteId</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4RoFI13getRemoteRoFIE2Id" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get proxy for controlling a remote <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a> identified by Id. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>remoteId</strong> – Id of the remote <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>proxy for controlling remote <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4RoFI4waitEiNSt8functionIFvvEEE">
+<span id="_CPPv3N4rofi3hal4RoFI4waitEiNSt8functionIFvvEEE"></span><span id="_CPPv2N4rofi3hal4RoFI4waitEiNSt8functionIFvvEEE"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i_1a77ead9384d149850f26102b95e0920ed"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">wait</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ms</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">callback</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4RoFI4waitEiNSt8functionIFvvEEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Call callback after given delay. </p>
+<p>You can assume that the callback will always be called exactly once. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ms</strong> – delay in milliseconds </p></li>
+<li><p><strong>callback</strong> – non-empty callback to be called after the delay </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4RoFI10DescriptorE">
+<span id="_CPPv3N4rofi3hal4RoFI10DescriptorE"></span><span id="_CPPv2N4rofi3hal4RoFI10DescriptorE"></span><span id="rofi::hal::RoFI::Descriptor"></span><span class="target" id="structrofi_1_1hal_1_1_ro_f_i_1_1_descriptor"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Descriptor</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4RoFI10DescriptorE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Module shape and capabilities description. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4RoFI10Descriptor10jointCountE">
+<span id="_CPPv3N4rofi3hal4RoFI10Descriptor10jointCountE"></span><span id="_CPPv2N4rofi3hal4RoFI10Descriptor10jointCountE"></span><span id="rofi::hal::RoFI::Descriptor::jointCount__i"></span><span class="target" id="structrofi_1_1hal_1_1_ro_f_i_1_1_descriptor_1a111e6e90e87b11f026931802b4fa7c69"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">jointCount</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4RoFI10Descriptor10jointCountE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4RoFI10Descriptor14connectorCountE">
+<span id="_CPPv3N4rofi3hal4RoFI10Descriptor14connectorCountE"></span><span id="_CPPv2N4rofi3hal4RoFI10Descriptor14connectorCountE"></span><span id="rofi::hal::RoFI::Descriptor::connectorCount__i"></span><span class="target" id="structrofi_1_1hal_1_1_ro_f_i_1_1_descriptor_1a1df9952387dc00a84083ca789e474955"></span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">connectorCount</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4RoFI10Descriptor14connectorCountE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4RoFI14ImplementationE">
+<span id="_CPPv3N4rofi3hal4RoFI14ImplementationE"></span><span id="_CPPv2N4rofi3hal4RoFI14ImplementationE"></span><span id="rofi::hal::RoFI::Implementation"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i_1_1_implementation"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Implementation</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4RoFI14ImplementationE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Interface of the actual implementation - either physical local, physical remote or a simulation one. </p>
+<p>To provide an implementation, simply inherit from this class and implement the <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i_1a7484a1c10b9ba6b7ecca560f1a18db9b"><span class="std std-ref">RoFI::getLocalRoFI()</span></a> and <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i_1a69267dd2b40091e8ee8df48f5c618a09"><span class="std std-ref">RoFI::getRemoteRoFI()</span></a> in a cpp file to return <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a> initialized with an instance of your implementation.</p>
+<p>For method description, see description of <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a>. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal4RoFI14Implementation5getIdEv">
+<span id="_CPPv3NK4rofi3hal4RoFI14Implementation5getIdEv"></span><span id="_CPPv2NK4rofi3hal4RoFI14Implementation5getIdEv"></span><span id="rofi::hal::RoFI::Implementation::getIdC"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i_1_1_implementation_1a9caa0aadbaf3f09c9f813fa85a00e424"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4RoFI2IdE" title="rofi::hal::RoFI::Id"><span class="n"><span class="pre">Id</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getId</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal4RoFI14Implementation5getIdEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4RoFI14Implementation8getJointEi">
+<span id="_CPPv3N4rofi3hal4RoFI14Implementation8getJointEi"></span><span id="_CPPv2N4rofi3hal4RoFI14Implementation8getJointEi"></span><span id="rofi::hal::RoFI::Implementation::getJoint__i"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i_1_1_implementation_1aea3981cbd113cf23895f5cc126d21860"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal5JointE" title="rofi::hal::Joint"><span class="n"><span class="pre">Joint</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getJoint</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">index</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4RoFI14Implementation8getJointEi" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4RoFI14Implementation12getConnectorEi">
+<span id="_CPPv3N4rofi3hal4RoFI14Implementation12getConnectorEi"></span><span id="_CPPv2N4rofi3hal4RoFI14Implementation12getConnectorEi"></span><span id="rofi::hal::RoFI::Implementation::getConnector__i"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i_1_1_implementation_1ac1c88883bbc7e90fec9d5669d3b15dd2"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal9ConnectorE" title="rofi::hal::Connector"><span class="n"><span class="pre">Connector</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getConnector</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">index</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4RoFI14Implementation12getConnectorEi" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal4RoFI14Implementation13getDescriptorEv">
+<span id="_CPPv3NK4rofi3hal4RoFI14Implementation13getDescriptorEv"></span><span id="_CPPv2NK4rofi3hal4RoFI14Implementation13getDescriptorEv"></span><span id="rofi::hal::RoFI::Implementation::getDescriptorC"></span><span class="target" id="classrofi_1_1hal_1_1_ro_f_i_1_1_implementation_1a51f1c9ba28b80035ff83aeac1d4a03f1"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4RoFI10DescriptorE" title="rofi::hal::RoFI::Descriptor"><span class="n"><span class="pre">Descriptor</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getDescriptor</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal4RoFI14Implementation13getDescriptorEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5JointE">
+<span id="_CPPv3N4rofi3hal5JointE"></span><span id="_CPPv2N4rofi3hal5JointE"></span><span id="rofi::hal::Joint"></span><span class="target" id="classrofi_1_1hal_1_1_joint"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Joint</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5JointE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Proxy for controlling a single joint of <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a>. </p>
+<p><a class="reference internal" href="#classrofi_1_1hal_1_1_joint"><span class="std std-ref">Joint</span></a> cannot be instantiated on its own; you can obtain its instance from <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i_1a7183485698e0361de4e64a19b8beed3c"><span class="std std-ref">RoFI::getJoint()</span></a>.</p>
+<p>Since the class is only a proxy it can be safely copied and passed around. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint5ErrorE">
+<span id="_CPPv3N4rofi3hal5Joint5ErrorE"></span><span id="_CPPv2N4rofi3hal5Joint5ErrorE"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1aa10a33b92f3d72df42617de4803c3f65"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Error</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint5ErrorE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint5Error13CommunicationE">
+<span id="_CPPv3N4rofi3hal5Joint5Error13CommunicationE"></span><span id="_CPPv2N4rofi3hal5Joint5Error13CommunicationE"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1aa10a33b92f3d72df42617de4803c3f65a07a3dd247ad6bec7fe401aa11619959f"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Communication</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint5Error13CommunicationE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Cannot communicate with the servo motor. </p>
+</dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint5Error8HardwareE">
+<span id="_CPPv3N4rofi3hal5Joint5Error8HardwareE"></span><span id="_CPPv2N4rofi3hal5Joint5Error8HardwareE"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1aa10a33b92f3d72df42617de4803c3f65a3c02a379965ab0dfcd77b1c484450433"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Hardware</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint5Error8HardwareE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Servo motor responded with an error. </p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal5Joint11maxPositionEv">
+<span id="_CPPv3NK4rofi3hal5Joint11maxPositionEv"></span><span id="_CPPv2NK4rofi3hal5Joint11maxPositionEv"></span><span id="rofi::hal::Joint::maxPositionC"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1a04e618c537ca8a64df0cecce10c51e5b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">maxPosition</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal5Joint11maxPositionEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get maximal joint position. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>maximal joint position in rad </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal5Joint11minPositionEv">
+<span id="_CPPv3NK4rofi3hal5Joint11minPositionEv"></span><span id="_CPPv2NK4rofi3hal5Joint11minPositionEv"></span><span id="rofi::hal::Joint::minPositionC"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1aa6f5e7a46ffa672ef83a80b94dd07c84"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">minPosition</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal5Joint11minPositionEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get minimal joint position. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>minimal joint position in rad </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal5Joint8maxSpeedEv">
+<span id="_CPPv3NK4rofi3hal5Joint8maxSpeedEv"></span><span id="_CPPv2NK4rofi3hal5Joint8maxSpeedEv"></span><span id="rofi::hal::Joint::maxSpeedC"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1a21856e9f54345ea73ec1e710d77155a6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">maxSpeed</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal5Joint8maxSpeedEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get maximal joint speed. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>maximal joint speed in rad / s </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal5Joint8minSpeedEv">
+<span id="_CPPv3NK4rofi3hal5Joint8minSpeedEv"></span><span id="_CPPv2NK4rofi3hal5Joint8minSpeedEv"></span><span id="rofi::hal::Joint::minSpeedC"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1a662b1b99aff01b75f04a320420d37fd4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">minSpeed</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal5Joint8minSpeedEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get minimal joint speed. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>minimal joint speed in rad / s </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal5Joint9maxTorqueEv">
+<span id="_CPPv3NK4rofi3hal5Joint9maxTorqueEv"></span><span id="_CPPv2NK4rofi3hal5Joint9maxTorqueEv"></span><span id="rofi::hal::Joint::maxTorqueC"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1afc7fada18928bae6d73a27e3881f3227"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">maxTorque</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal5Joint9maxTorqueEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get maximal joint torque. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>maximal joint torque in N * m </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint11getVelocityEv">
+<span id="_CPPv3N4rofi3hal5Joint11getVelocityEv"></span><span id="_CPPv2N4rofi3hal5Joint11getVelocityEv"></span><span id="rofi::hal::Joint::getVelocity"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1a104476d288ce92d7e4aa225c14354148"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getVelocity</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint11getVelocityEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get current joint velocity setpoint. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>velocity setpoint in rad / s </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint11setVelocityEf">
+<span id="_CPPv3N4rofi3hal5Joint11setVelocityEf"></span><span id="_CPPv2N4rofi3hal5Joint11setVelocityEf"></span><span id="rofi::hal::Joint::setVelocity__float"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1a2681fb9f03b79efc0c52e8558f12c7ca"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setVelocity</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">velocity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint11setVelocityEf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Change the joint’s control mode to velocity and move at velocity. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>velocity</strong> – velocity setpoint in rad / s </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint11getPositionEv">
+<span id="_CPPv3N4rofi3hal5Joint11getPositionEv"></span><span id="_CPPv2N4rofi3hal5Joint11getPositionEv"></span><span id="rofi::hal::Joint::getPosition"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1a014a4ebf87881be798c6bee6dbf94b05"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getPosition</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint11getPositionEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get current joint position. </p>
+<p>This works in all three control modes - position, velocity and torque mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>current position in rad </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint11setPositionEffNSt8functionIFv5JointEEE">
+<span id="_CPPv3N4rofi3hal5Joint11setPositionEffNSt8functionIFv5JointEEE"></span><span id="_CPPv2N4rofi3hal5Joint11setPositionEffNSt8functionIFv5JointEEE"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1a1beb5253be775dc51704190984237eb5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setPosition</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pos</span></span>, <span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">velocity</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="#_CPPv4N4rofi3hal5JointE" title="rofi::hal::Joint"><span class="n"><span class="pre">Joint</span></span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">callback</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint11setPositionEffNSt8functionIFv5JointEEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Change the joint’s control mode to position and move to position. </p>
+<p>Calling any joint control method (<code class="docutils literal notranslate"><a class="reference internal" href="#classrofi_1_1hal_1_1_joint_1a1beb5253be775dc51704190984237eb5"><span class="std std-ref"><span class="pre">Joint::setPosition</span></span></a></code>, <code class="docutils literal notranslate"><a class="reference internal" href="#classrofi_1_1hal_1_1_joint_1a2681fb9f03b79efc0c52e8558f12c7ca"><span class="std std-ref"><span class="pre">Joint::setVelocity</span></span></a></code> or <code class="docutils literal notranslate"><a class="reference internal" href="#classrofi_1_1hal_1_1_joint_1a667e4dd018b8f68df4218caa1623176a"><span class="std std-ref"><span class="pre">Joint::setTorque</span></span></a></code>) before the position is reached will result in the <code class="docutils literal notranslate"><span class="pre">callback</span></code> never beeing called. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>pos</strong> – position setpoint in rad </p></li>
+<li><p><strong>velocity</strong> – velocity limit in rad / s, required to be positive and non-zero </p></li>
+<li><p><strong>callback</strong> – callback to be called once the position is reached </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint9getTorqueEv">
+<span id="_CPPv3N4rofi3hal5Joint9getTorqueEv"></span><span id="_CPPv2N4rofi3hal5Joint9getTorqueEv"></span><span id="rofi::hal::Joint::getTorque"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1ac8d5f4433ae62d68933f327d00d6c205"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getTorque</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint9getTorqueEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get current joint torque. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>current torque in N * m </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint9setTorqueEf">
+<span id="_CPPv3N4rofi3hal5Joint9setTorqueEf"></span><span id="_CPPv2N4rofi3hal5Joint9setTorqueEf"></span><span id="rofi::hal::Joint::setTorque__float"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1a667e4dd018b8f68df4218caa1623176a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setTorque</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">torque</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint9setTorqueEf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Change the joint’s control mode to torque and provide torque. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>torque</strong> – torque setpoint in N * m </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint7onErrorENSt8functionIFv5Joint5ErrorRKNSt6stringEEEE">
+<span id="_CPPv3N4rofi3hal5Joint7onErrorENSt8functionIFv5Joint5ErrorRKNSt6stringEEEE"></span><span id="_CPPv2N4rofi3hal5Joint7onErrorENSt8functionIFv5Joint5ErrorRKNSt6stringEEEE"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1a19cc86ff2bbde2e99d389899193563d4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onError</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="#_CPPv4N4rofi3hal5JointE" title="rofi::hal::Joint"><span class="n"><span class="pre">Joint</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal5Joint5ErrorE" title="rofi::hal::Joint::Error"><span class="n"><span class="pre">Error</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">callback</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint7onErrorENSt8functionIFv5Joint5ErrorRKNSt6stringEEEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set error handling callback. </p>
+<p>Calling this method again (on the same <code class="docutils literal notranslate"><a class="reference internal" href="#classrofi_1_1hal_1_1_joint"><span class="std std-ref"><span class="pre">Joint</span></span></a></code>) will overwrite the previous <code class="docutils literal notranslate"><span class="pre">callback</span></code>. You can call this method with empty function to remove the <code class="docutils literal notranslate"><span class="pre">callback</span></code>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>callback</strong> – callback to be called on error </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint5JointENSt10shared_ptrI14ImplementationEE">
+<span id="_CPPv3N4rofi3hal5Joint5JointENSt10shared_ptrI14ImplementationEE"></span><span id="_CPPv2N4rofi3hal5Joint5JointENSt10shared_ptrI14ImplementationEE"></span><span id="rofi::hal::Joint::Joint__std::shared_ptr:Implementation:"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1a70fd43b118b28454d6f1f27b6a598a52"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Joint</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4rofi3hal5Joint14ImplementationE" title="rofi::hal::Joint::Implementation"><span class="n"><span class="pre">Implementation</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">impl</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint5JointENSt10shared_ptrI14ImplementationEE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14ImplementationE">
+<span id="_CPPv3N4rofi3hal5Joint14ImplementationE"></span><span id="_CPPv2N4rofi3hal5Joint14ImplementationE"></span><span id="rofi::hal::Joint::Implementation"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1_1_implementation"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Implementation</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14ImplementationE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Interface of the actual implementation - either physical local, physical remote or a simulation one. </p>
+<p>To provide an implementation, simply inherit from this class.</p>
+<p>For method description, see description of <a class="reference internal" href="#classrofi_1_1hal_1_1_joint"><span class="std std-ref">Joint</span></a>. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation15getCapabilitiesEv">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation15getCapabilitiesEv"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation15getCapabilitiesEv"></span><span id="rofi::hal::Joint::Implementation::getCapabilities"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1_1_implementation_1a716334a40ad080082439c5496d594780"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal5Joint14Implementation12CapabilitiesE" title="rofi::hal::Joint::Implementation::Capabilities"><span class="n"><span class="pre">Capabilities</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getCapabilities</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation15getCapabilitiesEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation11getVelocityEv">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation11getVelocityEv"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation11getVelocityEv"></span><span id="rofi::hal::Joint::Implementation::getVelocity"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1_1_implementation_1a8c804cec7e56bb523dec04c5b92f3b2b"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getVelocity</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation11getVelocityEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation11setVelocityEf">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation11setVelocityEf"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation11setVelocityEf"></span><span id="rofi::hal::Joint::Implementation::setVelocity__float"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1_1_implementation_1a84d3aedb7ee6e1d2a837f40cd4fb7e43"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setVelocity</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">velocity</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation11setVelocityEf" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation11getPositionEv">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation11getPositionEv"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation11getPositionEv"></span><span id="rofi::hal::Joint::Implementation::getPosition"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1_1_implementation_1ac4525bcff56580998a30a44a6926dc78"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getPosition</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation11getPositionEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation11setPositionEffNSt8functionIFv5JointEEE">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation11setPositionEffNSt8functionIFv5JointEEE"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation11setPositionEffNSt8functionIFv5JointEEE"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1_1_implementation_1ae420cbb5e4862c174caa5afe4a8f9a11"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setPosition</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">pos</span></span>, <span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">velocity</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="#_CPPv4N4rofi3hal5JointE" title="rofi::hal::Joint"><span class="n"><span class="pre">Joint</span></span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">callback</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation11setPositionEffNSt8functionIFv5JointEEE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation9getTorqueEv">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation9getTorqueEv"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation9getTorqueEv"></span><span id="rofi::hal::Joint::Implementation::getTorque"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1_1_implementation_1a29d5d8e071e24b1e75fe818ef645e402"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getTorque</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation9getTorqueEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation9setTorqueEf">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation9setTorqueEf"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation9setTorqueEf"></span><span id="rofi::hal::Joint::Implementation::setTorque__float"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1_1_implementation_1a615295d9246c333a525f2531745e77d5"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setTorque</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">torque</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation9setTorqueEf" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation7onErrorENSt8functionIFv5Joint5ErrorRKNSt6stringEEEE">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation7onErrorENSt8functionIFv5Joint5ErrorRKNSt6stringEEEE"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation7onErrorENSt8functionIFv5Joint5ErrorRKNSt6stringEEEE"></span><span class="target" id="classrofi_1_1hal_1_1_joint_1_1_implementation_1abf354f3b9b95b49bddfadff07c7f5845"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onError</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="#_CPPv4N4rofi3hal5JointE" title="rofi::hal::Joint"><span class="n"><span class="pre">Joint</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal5Joint5ErrorE" title="rofi::hal::Joint::Error"><span class="n"><span class="pre">Error</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">callback</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation7onErrorENSt8functionIFv5Joint5ErrorRKNSt6stringEEEE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation12CapabilitiesE">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation12CapabilitiesE"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation12CapabilitiesE"></span><span id="rofi::hal::Joint::Implementation::Capabilities"></span><span class="target" id="structrofi_1_1hal_1_1_joint_1_1_implementation_1_1_capabilities"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Capabilities</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation12CapabilitiesE" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation12Capabilities11maxPositionE">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation12Capabilities11maxPositionE"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation12Capabilities11maxPositionE"></span><span id="rofi::hal::Joint::Implementation::Capabilities::maxPosition__float"></span><span class="target" id="structrofi_1_1hal_1_1_joint_1_1_implementation_1_1_capabilities_1a0f69058d0f9f006f3c64e35f401b1261"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">maxPosition</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation12Capabilities11maxPositionE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation12Capabilities11minPositionE">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation12Capabilities11minPositionE"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation12Capabilities11minPositionE"></span><span id="rofi::hal::Joint::Implementation::Capabilities::minPosition__float"></span><span class="target" id="structrofi_1_1hal_1_1_joint_1_1_implementation_1_1_capabilities_1a8c6c0683766e7129db94d148ab062186"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">minPosition</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation12Capabilities11minPositionE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation12Capabilities8maxSpeedE">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation12Capabilities8maxSpeedE"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation12Capabilities8maxSpeedE"></span><span id="rofi::hal::Joint::Implementation::Capabilities::maxSpeed__float"></span><span class="target" id="structrofi_1_1hal_1_1_joint_1_1_implementation_1_1_capabilities_1a2d92faa5a7c175e3f80d590e2167ded1"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">maxSpeed</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation12Capabilities8maxSpeedE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation12Capabilities8minSpeedE">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation12Capabilities8minSpeedE"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation12Capabilities8minSpeedE"></span><span id="rofi::hal::Joint::Implementation::Capabilities::minSpeed__float"></span><span class="target" id="structrofi_1_1hal_1_1_joint_1_1_implementation_1_1_capabilities_1ad6b5b7ad50aad54be4fdbfe055d184df"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">minSpeed</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation12Capabilities8minSpeedE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal5Joint14Implementation12Capabilities9maxTorqueE">
+<span id="_CPPv3N4rofi3hal5Joint14Implementation12Capabilities9maxTorqueE"></span><span id="_CPPv2N4rofi3hal5Joint14Implementation12Capabilities9maxTorqueE"></span><span id="rofi::hal::Joint::Implementation::Capabilities::maxTorque__float"></span><span class="target" id="structrofi_1_1hal_1_1_joint_1_1_implementation_1_1_capabilities_1a1901992bcf8541aac84e1b07501708a0"></span><span class="kt"><span class="pre">float</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">maxTorque</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal5Joint14Implementation12Capabilities9maxTorqueE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9ConnectorE">
+<span id="_CPPv3N4rofi3hal9ConnectorE"></span><span id="_CPPv2N4rofi3hal9ConnectorE"></span><span id="rofi::hal::Connector"></span><span class="target" id="classrofi_1_1hal_1_1_connector"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Connector</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal9ConnectorE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Proxy for controlling a single connector of <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i"><span class="std std-ref">RoFI</span></a>. </p>
+<p><a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a> cannot be instantiated on its own; you can obtain its instance from <a class="reference internal" href="#classrofi_1_1hal_1_1_ro_f_i_1ab73cc659ecbdf36b45235eb053a149e7"><span class="std std-ref">RoFI::getConnector()</span></a>.</p>
+<p>Since the class is only a proxy it can be safely copied and passed around. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector8getStateEv">
+<span id="_CPPv3N4rofi3hal9Connector8getStateEv"></span><span id="_CPPv2N4rofi3hal9Connector8getStateEv"></span><span id="rofi::hal::Connector::getState"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1a1a0027617ac9d96fb87f98c32a9985ac"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal14ConnectorStateE" title="rofi::hal::ConnectorState"><span class="n"><span class="pre">ConnectorState</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getState</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector8getStateEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get connector state. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>connector state </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector7connectEv">
+<span id="_CPPv3N4rofi3hal9Connector7connectEv"></span><span id="_CPPv2N4rofi3hal9Connector7connectEv"></span><span id="rofi::hal::Connector::connect"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1ac94084a4de28254b67f54732fac34f29"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">connect</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector7connectEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Extend the connector to be ready to accept connection. </p>
+<p>This action does not establish connection. To react to connections, register a callback via <a class="reference internal" href="#classrofi_1_1hal_1_1_connector_1afbdb86a243d95134e28ef94220670f1d"><span class="std std-ref">Connector::onConnectorEvent()</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector10disconnectEv">
+<span id="_CPPv3N4rofi3hal9Connector10disconnectEv"></span><span id="_CPPv2N4rofi3hal9Connector10disconnectEv"></span><span id="rofi::hal::Connector::disconnect"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1a53b42af0c82ec8a6ba1df26c420cb54e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">disconnect</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector10disconnectEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Retract the connector. </p>
+<p>Does not release a connection immediately. After the connection is broken physically, calls callback registered via <a class="reference internal" href="#classrofi_1_1hal_1_1_connector_1afbdb86a243d95134e28ef94220670f1d"><span class="std std-ref">Connector::onConnectorEvent()</span></a>. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector16onConnectorEventENSt8functionIFv9Connector14ConnectorEventEEE">
+<span id="_CPPv3N4rofi3hal9Connector16onConnectorEventENSt8functionIFv9Connector14ConnectorEventEEE"></span><span id="_CPPv2N4rofi3hal9Connector16onConnectorEventENSt8functionIFv9Connector14ConnectorEventEEE"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1afbdb86a243d95134e28ef94220670f1d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onConnectorEvent</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="#_CPPv4N4rofi3hal9ConnectorE" title="rofi::hal::Connector"><span class="n"><span class="pre">Connector</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal14ConnectorEventE" title="rofi::hal::ConnectorEvent"><span class="n"><span class="pre">ConnectorEvent</span></span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">callback</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector16onConnectorEventENSt8functionIFv9Connector14ConnectorEventEEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Register callback for connector events. </p>
+<p>Calling this method again (on the same <code class="docutils literal notranslate"><a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref"><span class="pre">Connector</span></span></a></code>) will overwrite the previous <code class="docutils literal notranslate"><span class="pre">callback</span></code>. You can call this method with empty function to remove the <code class="docutils literal notranslate"><span class="pre">callback</span></code>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>callback</strong> – callback to be called on connector events </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector8onPacketENSt8functionIFv9Connector8uint16_t4PBufEEE">
+<span id="_CPPv3N4rofi3hal9Connector8onPacketENSt8functionIFv9Connector8uint16_t4PBufEEE"></span><span id="_CPPv2N4rofi3hal9Connector8onPacketENSt8functionIFv9Connector8uint16_t4PBufEEE"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1a9657d75caf6d8a5de6950d398f3a5dc8"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onPacket</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="#_CPPv4N4rofi3hal9ConnectorE" title="rofi::hal::Connector"><span class="n"><span class="pre">Connector</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">uint16_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBufE" title="rofi::hal::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">callback</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector8onPacketENSt8functionIFv9Connector8uint16_t4PBufEEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Register callback for incoming packets. </p>
+<p>The callback takes connector which received the packet, contentType and the packet.</p>
+<p>Calling this method again (on the same <code class="docutils literal notranslate"><a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref"><span class="pre">Connector</span></span></a></code>) will overwrite the previous <code class="docutils literal notranslate"><span class="pre">callback</span></code>. You can call this method with empty function to remove the <code class="docutils literal notranslate"><span class="pre">callback</span></code>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>callback</strong> – callback to be called on a packet </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector4sendE8uint16_t4PBuf">
+<span id="_CPPv3N4rofi3hal9Connector4sendE8uint16_t4PBuf"></span><span id="_CPPv2N4rofi3hal9Connector4sendE8uint16_t4PBuf"></span><span id="rofi::hal::Connector::send__uint16_t.PBuf"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1acacbd867b211a035d8c6f9d9170aee21"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">send</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">contentType</span></span>, <a class="reference internal" href="#_CPPv4N4rofi3hal4PBufE" title="rofi::hal::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">packet</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector4sendE8uint16_t4PBuf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Send a packet to mating side. </p>
+<p>If no mating side is present, packet is discarded. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector12connectPowerE13ConnectorLine">
+<span id="_CPPv3N4rofi3hal9Connector12connectPowerE13ConnectorLine"></span><span id="_CPPv2N4rofi3hal9Connector12connectPowerE13ConnectorLine"></span><span id="rofi::hal::Connector::connectPower__ConnectorLine"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1a8e9e98c5f6917b8f5045bed3cce5d54e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">connectPower</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi3hal13ConnectorLineE" title="rofi::hal::ConnectorLine"><span class="n"><span class="pre">ConnectorLine</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">line</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector12connectPowerE13ConnectorLine" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Connect power of mating side to a power line. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector15disconnectPowerE13ConnectorLine">
+<span id="_CPPv3N4rofi3hal9Connector15disconnectPowerE13ConnectorLine"></span><span id="_CPPv2N4rofi3hal9Connector15disconnectPowerE13ConnectorLine"></span><span id="rofi::hal::Connector::disconnectPower__ConnectorLine"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1a950f6c44fa1e45bb1175a5fbd4c273df"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">disconnectPower</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi3hal13ConnectorLineE" title="rofi::hal::ConnectorLine"><span class="n"><span class="pre">ConnectorLine</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">line</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector15disconnectPowerE13ConnectorLine" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Disconnect power of mating side from a power line. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector9ConnectorENSt10shared_ptrI14ImplementationEE">
+<span id="_CPPv3N4rofi3hal9Connector9ConnectorENSt10shared_ptrI14ImplementationEE"></span><span id="_CPPv2N4rofi3hal9Connector9ConnectorENSt10shared_ptrI14ImplementationEE"></span><span id="rofi::hal::Connector::Connector__std::shared_ptr:Implementation:"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1a05a1e336dfd2484324dde91e2588ddfe"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Connector</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4rofi3hal9Connector14ImplementationE" title="rofi::hal::Connector::Implementation"><span class="n"><span class="pre">Implementation</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">impl</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector9ConnectorENSt10shared_ptrI14ImplementationEE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector14ImplementationE">
+<span id="_CPPv3N4rofi3hal9Connector14ImplementationE"></span><span id="_CPPv2N4rofi3hal9Connector14ImplementationE"></span><span id="rofi::hal::Connector::Implementation"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1_1_implementation"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Implementation</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector14ImplementationE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Interface of the actual implementation - either physical local, physical remote or a simulation one. </p>
+<p>To provide an implementation, simply inherit from this class.</p>
+<p>For method description, see description of <a class="reference internal" href="#classrofi_1_1hal_1_1_connector"><span class="std std-ref">Connector</span></a>. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector14Implementation8getStateEv">
+<span id="_CPPv3N4rofi3hal9Connector14Implementation8getStateEv"></span><span id="_CPPv2N4rofi3hal9Connector14Implementation8getStateEv"></span><span id="rofi::hal::Connector::Implementation::getState"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1_1_implementation_1ae4bde71ce29e2c30da96f9736ee0ba67"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal14ConnectorStateE" title="rofi::hal::ConnectorState"><span class="n"><span class="pre">ConnectorState</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getState</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector14Implementation8getStateEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector14Implementation7connectEv">
+<span id="_CPPv3N4rofi3hal9Connector14Implementation7connectEv"></span><span id="_CPPv2N4rofi3hal9Connector14Implementation7connectEv"></span><span id="rofi::hal::Connector::Implementation::connect"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1_1_implementation_1a740f0c7a838e01fec4d0edc251d5a490"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">connect</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector14Implementation7connectEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector14Implementation10disconnectEv">
+<span id="_CPPv3N4rofi3hal9Connector14Implementation10disconnectEv"></span><span id="_CPPv2N4rofi3hal9Connector14Implementation10disconnectEv"></span><span id="rofi::hal::Connector::Implementation::disconnect"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1_1_implementation_1a3cf809c3c0c35acdf54c0ebaf4c477c9"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">disconnect</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector14Implementation10disconnectEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector14Implementation16onConnectorEventENSt8functionIFv9Connector14ConnectorEventEEE">
+<span id="_CPPv3N4rofi3hal9Connector14Implementation16onConnectorEventENSt8functionIFv9Connector14ConnectorEventEEE"></span><span id="_CPPv2N4rofi3hal9Connector14Implementation16onConnectorEventENSt8functionIFv9Connector14ConnectorEventEEE"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1_1_implementation_1a7d71b7cbb2b000115e53eb36b6f5fb9f"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onConnectorEvent</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="#_CPPv4N4rofi3hal9ConnectorE" title="rofi::hal::Connector"><span class="n"><span class="pre">Connector</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal14ConnectorEventE" title="rofi::hal::ConnectorEvent"><span class="n"><span class="pre">ConnectorEvent</span></span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">callback</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector14Implementation16onConnectorEventENSt8functionIFv9Connector14ConnectorEventEEE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector14Implementation8onPacketENSt8functionIFv9Connector8uint16_t4PBufEEE">
+<span id="_CPPv3N4rofi3hal9Connector14Implementation8onPacketENSt8functionIFv9Connector8uint16_t4PBufEEE"></span><span id="_CPPv2N4rofi3hal9Connector14Implementation8onPacketENSt8functionIFv9Connector8uint16_t4PBufEEE"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1_1_implementation_1a31e1faf0b2eb3471ea51eedf152a647d"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onPacket</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">function</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">(</span></span><a class="reference internal" href="#_CPPv4N4rofi3hal9ConnectorE" title="rofi::hal::Connector"><span class="n"><span class="pre">Connector</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="n"><span class="pre">contentType</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBufE" title="rofi::hal::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="p"><span class="pre">)</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">callback</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector14Implementation8onPacketENSt8functionIFv9Connector8uint16_t4PBufEEE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector14Implementation4sendE8uint16_t4PBuf">
+<span id="_CPPv3N4rofi3hal9Connector14Implementation4sendE8uint16_t4PBuf"></span><span id="_CPPv2N4rofi3hal9Connector14Implementation4sendE8uint16_t4PBuf"></span><span id="rofi::hal::Connector::Implementation::send__uint16_t.PBuf"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1_1_implementation_1a875ef869e3e29cfe946d5ad10b1e4565"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">send</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">contentType</span></span>, <a class="reference internal" href="#_CPPv4N4rofi3hal4PBufE" title="rofi::hal::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">packet</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector14Implementation4sendE8uint16_t4PBuf" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector14Implementation12connectPowerE13ConnectorLine">
+<span id="_CPPv3N4rofi3hal9Connector14Implementation12connectPowerE13ConnectorLine"></span><span id="_CPPv2N4rofi3hal9Connector14Implementation12connectPowerE13ConnectorLine"></span><span id="rofi::hal::Connector::Implementation::connectPower__ConnectorLine"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1_1_implementation_1a080552dc98985d9dde3389c21e96be3f"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">connectPower</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi3hal13ConnectorLineE" title="rofi::hal::ConnectorLine"><span class="n"><span class="pre">ConnectorLine</span></span></a><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector14Implementation12connectPowerE13ConnectorLine" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal9Connector14Implementation15disconnectPowerE13ConnectorLine">
+<span id="_CPPv3N4rofi3hal9Connector14Implementation15disconnectPowerE13ConnectorLine"></span><span id="_CPPv2N4rofi3hal9Connector14Implementation15disconnectPowerE13ConnectorLine"></span><span id="rofi::hal::Connector::Implementation::disconnectPower__ConnectorLine"></span><span class="target" id="classrofi_1_1hal_1_1_connector_1_1_implementation_1a96e522cd19d28cea05fa7579d2350d0a"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">disconnectPower</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi3hal13ConnectorLineE" title="rofi::hal::ConnectorLine"><span class="n"><span class="pre">ConnectorLine</span></span></a><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">0</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal9Connector14Implementation15disconnectPowerE13ConnectorLine" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="networking">
+<h2>Networking<a class="headerlink" href="#networking" title="Permalink to this headline"></a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBufE">
+<span id="_CPPv3N4rofi3hal4PBufE"></span><span id="_CPPv2N4rofi3hal4PBufE"></span><span id="rofi::hal::PBuf"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PBuf</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBufE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>RAII wrapper over LwIP pbuff. </p>
+<p>Makes the <a class="reference internal" href="#classrofi_1_1hal_1_1_p_buf"><span class="std std-ref">PBuf</span></a> non-copyable, but movable. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf4PBufERK4PBuf">
+<span id="_CPPv3N4rofi3hal4PBuf4PBufERK4PBuf"></span><span id="_CPPv2N4rofi3hal4PBuf4PBufERK4PBuf"></span><span id="rofi::hal::PBuf::PBuf__PBufCR"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1a76877a2f19640a15e8bfd5ad6eab9d19"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PBuf</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBuf4PBufERK4PBuf" title="rofi::hal::PBuf::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf4PBufERK4PBuf" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBufaSE4PBuf">
+<span id="_CPPv3N4rofi3hal4PBufaSE4PBuf"></span><span id="_CPPv2N4rofi3hal4PBufaSE4PBuf"></span><span id="rofi::hal::PBuf::assign-operator__PBuf"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1ab6aff41042cc65108014b41929b96a65"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBufE" title="rofi::hal::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBufE" title="rofi::hal::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBufaSE4PBuf" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf4PBufERR4PBuf">
+<span id="_CPPv3N4rofi3hal4PBuf4PBufERR4PBuf"></span><span id="_CPPv2N4rofi3hal4PBuf4PBufERR4PBuf"></span><span id="rofi::hal::PBuf::PBuf__PBufRR"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1a1c54f7348e4dbddc4ef63bbe83ca6292"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">PBuf</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBuf4PBufERR4PBuf" title="rofi::hal::PBuf::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf4PBufERR4PBuf" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBufaSERR4PBuf">
+<span id="_CPPv3N4rofi3hal4PBufaSERR4PBuf"></span><span id="_CPPv2N4rofi3hal4PBufaSERR4PBuf"></span><span id="rofi::hal::PBuf::assign-operator__PBufRR"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1a8d94cf088bb6200233711f62690a5450"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBufE" title="rofi::hal::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBufE" title="rofi::hal::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBufaSERR4PBuf" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBufD0Ev">
+<span id="_CPPv3N4rofi3hal4PBufD0Ev"></span><span id="_CPPv2N4rofi3hal4PBufD0Ev"></span><span id="rofi::hal::PBuf::~PBuf"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1aefbc50c0abde42522f7186584b3bd177"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">~PBuf</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBufD0Ev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf4swapER4PBuf">
+<span id="_CPPv3N4rofi3hal4PBuf4swapER4PBuf"></span><span id="_CPPv2N4rofi3hal4PBuf4swapER4PBuf"></span><span id="rofi::hal::PBuf::swap__PBufR"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1af353529f41f02180ff74b0baa3803391"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">swap</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBufE" title="rofi::hal::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">o</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf4swapER4PBuf" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf7releaseEv">
+<span id="_CPPv3N4rofi3hal4PBuf7releaseEv"></span><span id="_CPPv2N4rofi3hal4PBuf7releaseEv"></span><span id="rofi::hal::PBuf::release"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1a1232b46e679dbeec3276ffdcaf1a2f97"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">pbuf</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">release</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf7releaseEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Release owenership of the packet. </p>
+<p>This function should be called when the packet is passed to a C interface which manages its lifetime. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf3getEv">
+<span id="_CPPv3N4rofi3hal4PBuf3getEv"></span><span id="_CPPv2N4rofi3hal4PBuf3getEv"></span><span id="rofi::hal::PBuf::get"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1aceeea33985aa342e8adbf73d0c3ad02f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">pbuf</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">get</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf3getEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal4PBufcvbEv">
+<span id="_CPPv3NK4rofi3hal4PBufcvbEv"></span><span id="_CPPv2NK4rofi3hal4PBufcvbEv"></span><span id="rofi::hal::PBuf::castto-b-operatorC"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1a5638ca1b512b1e247d98707f9644773d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal4PBufcvbEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal4PBuf6simpleEv">
+<span id="_CPPv3NK4rofi3hal4PBuf6simpleEv"></span><span id="_CPPv2NK4rofi3hal4PBuf6simpleEv"></span><span id="rofi::hal::PBuf::simpleC"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1ac47e465a79f90c4b4ab89389ee66d559"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">simple</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal4PBuf6simpleEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf7payloadEv">
+<span id="_CPPv3N4rofi3hal4PBuf7payloadEv"></span><span id="_CPPv2N4rofi3hal4PBuf7payloadEv"></span><span id="rofi::hal::PBuf::payload"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1aae2a88f0b7acd69542be6d73bd0ed403"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">payload</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf7payloadEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal4PBuf7payloadEv">
+<span id="_CPPv3NK4rofi3hal4PBuf7payloadEv"></span><span id="_CPPv2NK4rofi3hal4PBuf7payloadEv"></span><span id="rofi::hal::PBuf::payloadC"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1a334a393a7cff78675e110d0b1cf9e9d8"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">payload</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal4PBuf7payloadEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal4PBuf4sizeEv">
+<span id="_CPPv3NK4rofi3hal4PBuf4sizeEv"></span><span id="_CPPv2NK4rofi3hal4PBuf4sizeEv"></span><span id="rofi::hal::PBuf::sizeC"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1a9cf1eb39180b33b7750823c28e71a5f4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">size</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal4PBuf4sizeEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBufixEi">
+<span id="_CPPv3N4rofi3hal4PBufixEi"></span><span id="_CPPv2N4rofi3hal4PBufixEi"></span><span id="rofi::hal::PBuf::subscript-operator__i"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1ade546761e98d09e6dc9bff6b283bbf72"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">[]</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">idx</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBufixEi" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal4PBufixEi">
+<span id="_CPPv3NK4rofi3hal4PBufixEi"></span><span id="_CPPv2NK4rofi3hal4PBufixEi"></span><span id="rofi::hal::PBuf::subscript-operator__iC"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1afa201311330f99d78d62dbe0243c0841"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">[]</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">idx</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal4PBufixEi" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf11chunksBeginEv">
+<span id="_CPPv3N4rofi3hal4PBuf11chunksBeginEv"></span><span id="_CPPv2N4rofi3hal4PBuf11chunksBeginEv"></span><span id="rofi::hal::PBuf::chunksBegin"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1a7b94b3374c64ee9ce8b9dac3c0112ca2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBuf7ChunkItE" title="rofi::hal::PBuf::ChunkIt"><span class="n"><span class="pre">ChunkIt</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">chunksBegin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf11chunksBeginEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf9chunksEndEv">
+<span id="_CPPv3N4rofi3hal4PBuf9chunksEndEv"></span><span id="_CPPv2N4rofi3hal4PBuf9chunksEndEv"></span><span id="rofi::hal::PBuf::chunksEnd"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1ae2168df72d7612111e7d254cafcea7c2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBuf7ChunkItE" title="rofi::hal::PBuf::ChunkIt"><span class="n"><span class="pre">ChunkIt</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">chunksEnd</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf9chunksEndEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf8asStringEv">
+<span id="_CPPv3N4rofi3hal4PBuf8asStringEv"></span><span id="_CPPv2N4rofi3hal4PBuf8asStringEv"></span><span id="rofi::hal::PBuf::asString"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1a99ee993bf36c7bbfaf1af358ecb5b86f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">asString</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf8asStringEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf8allocateEi">
+<span id="_CPPv3N4rofi3hal4PBuf8allocateEi"></span><span id="_CPPv2N4rofi3hal4PBuf8allocateEi"></span><span id="rofi::hal::PBuf::allocate__i"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1a487f0612a5946d4d8aac29137e723316"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBufE" title="rofi::hal::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">allocate</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">size</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf8allocateEi" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf9referenceEP4pbuf">
+<span id="_CPPv3N4rofi3hal4PBuf9referenceEP4pbuf"></span><span id="_CPPv2N4rofi3hal4PBuf9referenceEP4pbuf"></span><span id="rofi::hal::PBuf::reference__pbufP"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1abfb0df010c157eb7aa89e2891d6f26cc"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBufE" title="rofi::hal::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reference</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">pbuf</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf9referenceEP4pbuf" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf3ownEP4pbuf">
+<span id="_CPPv3N4rofi3hal4PBuf3ownEP4pbuf"></span><span id="_CPPv2N4rofi3hal4PBuf3ownEP4pbuf"></span><span id="rofi::hal::PBuf::own__pbufP"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1ab2fc962461b71c02a087a13d3a12587b"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBufE" title="rofi::hal::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">own</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">pbuf</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">b</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf3ownEP4pbuf" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf5emptyEv">
+<span id="_CPPv3N4rofi3hal4PBuf5emptyEv"></span><span id="_CPPv2N4rofi3hal4PBuf5emptyEv"></span><span id="rofi::hal::PBuf::empty"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1a3a72c14f209cdf9527723971390a7260"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBufE" title="rofi::hal::PBuf"><span class="n"><span class="pre">PBuf</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">empty</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf5emptyEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf5ChunkE">
+<span id="_CPPv3N4rofi3hal4PBuf5ChunkE"></span><span id="_CPPv2N4rofi3hal4PBuf5ChunkE"></span><span id="rofi::hal::PBuf::Chunk"></span><span class="target" id="structrofi_1_1hal_1_1_p_buf_1_1_chunk"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Chunk</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf5ChunkE" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf5Chunk3memEv">
+<span id="_CPPv3N4rofi3hal4PBuf5Chunk3memEv"></span><span id="_CPPv2N4rofi3hal4PBuf5Chunk3memEv"></span><span id="rofi::hal::PBuf::Chunk::mem"></span><span class="target" id="structrofi_1_1hal_1_1_p_buf_1_1_chunk_1ab5bd6ca406de4e189bb40e1c84842e13"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">mem</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf5Chunk3memEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf5Chunk4sizeEv">
+<span id="_CPPv3N4rofi3hal4PBuf5Chunk4sizeEv"></span><span id="_CPPv2N4rofi3hal4PBuf5Chunk4sizeEv"></span><span id="rofi::hal::PBuf::Chunk::size"></span><span class="target" id="structrofi_1_1hal_1_1_p_buf_1_1_chunk_1a45c88b478193fc081c43585be9a14f1c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">size</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf5Chunk4sizeEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf5Chunk4_bufE">
+<span id="_CPPv3N4rofi3hal4PBuf5Chunk4_bufE"></span><span id="_CPPv2N4rofi3hal4PBuf5Chunk4_bufE"></span><span id="rofi::hal::PBuf::Chunk::_buf__pbufCP"></span><span class="target" id="structrofi_1_1hal_1_1_p_buf_1_1_chunk_1ad9109741808ee68e29e0dd834585a2ce"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">pbuf</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">_buf</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf5Chunk4_bufE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf7ChunkItE">
+<span id="_CPPv3N4rofi3hal4PBuf7ChunkItE"></span><span id="_CPPv2N4rofi3hal4PBuf7ChunkItE"></span><span id="rofi::hal::PBuf::ChunkIt"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1_1_chunk_it"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ChunkIt</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf7ChunkItE" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf7ChunkIt10value_typeE">
+<span id="_CPPv3N4rofi3hal4PBuf7ChunkIt10value_typeE"></span><span id="_CPPv2N4rofi3hal4PBuf7ChunkIt10value_typeE"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1_1_chunk_it_1a7f8794bdb3917eb2435f54b172a2f032"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">value_type</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBuf5ChunkE" title="rofi::hal::PBuf::Chunk"><span class="n"><span class="pre">Chunk</span></span></a><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf7ChunkIt10value_typeE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf7ChunkIt9referenceE">
+<span id="_CPPv3N4rofi3hal4PBuf7ChunkIt9referenceE"></span><span id="_CPPv2N4rofi3hal4PBuf7ChunkIt9referenceE"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1_1_chunk_it_1a479717f841abe1b7ed42948c8b3cf13a"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reference</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBuf5ChunkE" title="rofi::hal::PBuf::Chunk"><span class="n"><span class="pre">Chunk</span></span></a><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf7ChunkIt9referenceE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf7ChunkIt7pointerE">
+<span id="_CPPv3N4rofi3hal4PBuf7ChunkIt7pointerE"></span><span id="_CPPv2N4rofi3hal4PBuf7ChunkIt7pointerE"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1_1_chunk_it_1a0136e846f4eb1e9ebf7078e876a9007c"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pointer</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBuf5ChunkE" title="rofi::hal::PBuf::Chunk"><span class="n"><span class="pre">Chunk</span></span></a><span class="p"><span class="pre">*</span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf7ChunkIt7pointerE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf7ChunkIt15difference_typeE">
+<span id="_CPPv3N4rofi3hal4PBuf7ChunkIt15difference_typeE"></span><span id="_CPPv2N4rofi3hal4PBuf7ChunkIt15difference_typeE"></span><span id="rofi::hal::PBuf::ChunkIt::difference_type"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1_1_chunk_it_1ac828a5e3ed4658d6eabbb13e7a430f95"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">difference_type</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf7ChunkIt15difference_typeE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf7ChunkIt17iterator_categoryE">
+<span id="_CPPv3N4rofi3hal4PBuf7ChunkIt17iterator_categoryE"></span><span id="_CPPv2N4rofi3hal4PBuf7ChunkIt17iterator_categoryE"></span><span id="rofi::hal::PBuf::ChunkIt::iterator_category"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1_1_chunk_it_1a783a5f0b50f5d768b23653bb6d52f8cf"></span><span class="k"><span class="pre">typedef</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">forward_iterator_tag</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">iterator_category</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf7ChunkIt17iterator_categoryE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf7ChunkIt7ChunkItEP4pbuf">
+<span id="_CPPv3N4rofi3hal4PBuf7ChunkIt7ChunkItEP4pbuf"></span><span id="_CPPv2N4rofi3hal4PBuf7ChunkIt7ChunkItEP4pbuf"></span><span id="rofi::hal::PBuf::ChunkIt::ChunkIt__pbufP"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1_1_chunk_it_1a2242d072eaee6a9930fe124a9ab0af2e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ChunkIt</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">pbuf</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">buf</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">nullptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf7ChunkIt7ChunkItEP4pbuf" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf7ChunkItppEi">
+<span id="_CPPv3N4rofi3hal4PBuf7ChunkItppEi"></span><span id="_CPPv2N4rofi3hal4PBuf7ChunkItppEi"></span><span id="rofi::hal::PBuf::ChunkIt::inc-operator__i"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1_1_chunk_it_1a03c72be2c6150b3cbe2230549975d7a5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBuf7ChunkItE" title="rofi::hal::PBuf::ChunkIt"><span class="n"><span class="pre">ChunkIt</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">++</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf7ChunkItppEi" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf7ChunkItppEv">
+<span id="_CPPv3N4rofi3hal4PBuf7ChunkItppEv"></span><span id="_CPPv2N4rofi3hal4PBuf7ChunkItppEv"></span><span id="rofi::hal::PBuf::ChunkIt::inc-operator"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1_1_chunk_it_1a04e521a60247f099067ad8d74f87f48d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBuf7ChunkItE" title="rofi::hal::PBuf::ChunkIt"><span class="n"><span class="pre">ChunkIt</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">++</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf7ChunkItppEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf7ChunkItmlEv">
+<span id="_CPPv3N4rofi3hal4PBuf7ChunkItmlEv"></span><span id="_CPPv2N4rofi3hal4PBuf7ChunkItmlEv"></span><span id="rofi::hal::PBuf::ChunkIt::mul-operator"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1_1_chunk_it_1adef74b499d7809a2e4c43fb052112797"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBuf7ChunkIt9referenceE" title="rofi::hal::PBuf::ChunkIt::reference"><span class="n"><span class="pre">reference</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">*</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf7ChunkItmlEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3hal4PBuf7ChunkItptEv">
+<span id="_CPPv3N4rofi3hal4PBuf7ChunkItptEv"></span><span id="_CPPv2N4rofi3hal4PBuf7ChunkItptEv"></span><span id="rofi::hal::PBuf::ChunkIt::pointer-operator"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1_1_chunk_it_1a027b18bbc042008005790ac3dfd27f43"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBuf7ChunkIt7pointerE" title="rofi::hal::PBuf::ChunkIt::pointer"><span class="n"><span class="pre">pointer</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">-&gt;</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3hal4PBuf7ChunkItptEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal4PBuf7ChunkIteqERK7ChunkIt">
+<span id="_CPPv3NK4rofi3hal4PBuf7ChunkIteqERK7ChunkIt"></span><span id="_CPPv2NK4rofi3hal4PBuf7ChunkIteqERK7ChunkIt"></span><span id="rofi::hal::PBuf::ChunkIt::eq-operator__ChunkItCRC"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1_1_chunk_it_1a8f408df268d0d35b038086d55acca8de"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">==</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBuf7ChunkItE" title="rofi::hal::PBuf::ChunkIt"><span class="n"><span class="pre">ChunkIt</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">o</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal4PBuf7ChunkIteqERK7ChunkIt" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3hal4PBuf7ChunkItneERK7ChunkIt">
+<span id="_CPPv3NK4rofi3hal4PBuf7ChunkItneERK7ChunkIt"></span><span id="_CPPv2NK4rofi3hal4PBuf7ChunkItneERK7ChunkIt"></span><span id="rofi::hal::PBuf::ChunkIt::neq-operator__ChunkItCRC"></span><span class="target" id="classrofi_1_1hal_1_1_p_buf_1_1_chunk_it_1a1c68fd441095e945cd1b7bb19022cd1d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">!=</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3hal4PBuf7ChunkItE" title="rofi::hal::PBuf::ChunkIt"><span class="n"><span class="pre">ChunkIt</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">o</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3hal4PBuf7ChunkItneERK7ChunkIt" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../tutorials/simulator.html" class="btn btn-neutral float-left" title="Simulator Tutorial" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../rofilib/index.html" class="btn btn-neutral float-right" title="RoFILib" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

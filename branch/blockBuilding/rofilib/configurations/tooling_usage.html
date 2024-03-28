@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Flags for Configurations in Tools &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Parsing Configurations in C++" href="parsing_in_cpp.html" />
+    <link rel="prev" title="Configurations" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../intro/index.html">Introduction, compiling and structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../releng/index.html">Release engineering notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofihal/index.html">RoFI HAL</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">RoFILib</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Configurations</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#configuration-usage">Configuration Usage</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Flags for Configurations in Tools</a></li>
+<li class="toctree-l4"><a class="reference internal" href="parsing_in_cpp.html">Parsing Configurations in C++</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#different-configurations">Different Configurations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#serializations">Serializations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../atoms/index.html">Atoms</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">RoFILib</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Configurations</a></li>
+      <li class="breadcrumb-item active">Flags for Configurations in Tools</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/rofilib/configurations/tooling_usage.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="flags-for-configurations-in-tools">
+<h1>Flags for Configurations in Tools<a class="headerlink" href="#flags-for-configurations-in-tools" title="Permalink to this headline"></a></h1>
+<ul>
+<li><dl>
+<dt><cite>-f VALUE</cite> or <cite>–format VALUE</cite></dt><dd><p>Specifies the format of the configuration file.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>See <a class="reference internal" href="parsing_in_cpp.html#_CPPv4N4rofi7parsing15RofiWorldFormatE" title="rofi::parsing::RofiWorldFormat"><code class="xref cpp cpp-enum docutils literal notranslate"><span class="pre">rofi::parsing::RofiWorldFormat</span></code></a>
+for all possible configuration formats
+(not all formats have to be supported).</p>
+</div>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><cite>–seq</cite> or <cite>–sequence</cite></dt><dd><p>If specified, the configuration file will be treated as it contains
+a sequence of configurations.</p>
+<p>For Json formats this means a Json array of configurations.</p>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt><cite>-b</cite> or <cite>–by-one</cite></dt><dd><div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This flag is only applicable for voxel format.</p>
+</div>
+<p>Specifies whether to fixate each module to the world separately
+instead of connecting the modules together.</p>
+<p>This can be useful when e.g. visualizing
+<a class="reference internal" href="voxel.html#_CPPv4N4rofi5voxel10VoxelWorldE" title="rofi::voxel::VoxelWorld"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">rofi::voxel::VoxelWorld</span></code></a> that is not connected.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>The flag corresponds to the <cite>fixateModulesByOne</cite> parameter
+of <a class="reference internal" href="voxel.html#_CPPv4NK4rofi5voxel10VoxelWorld11toRofiWorldEb" title="rofi::voxel::VoxelWorld::toRofiWorld"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::voxel::VoxelWorld::toRofiWorld()</span></code></a>.</p>
+</div>
+</dd>
+</dl>
+</li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Configurations" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="parsing_in_cpp.html" class="btn btn-neutral float-right" title="Parsing Configurations in C++" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

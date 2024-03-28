@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Writing and running tests &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="RoFiCoM" href="../roficom/index.html" />
+    <link rel="prev" title="Project Structure" href="structure.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Introduction, compiling and structure</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="compiling.html">RoFI Compilation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure.html">Project Structure</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Writing and running tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#running-the-test">Running the test</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#writing-tests">Writing tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#writing-test-for-c">Writing test for C++</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../roficom/index.html">RoFiCoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rofilib/index.html">RoFILib</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../universalModule/index.html">Universal Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rofisim/index.html">RoFISim</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Introduction, compiling and structure</a></li>
+      <li class="breadcrumb-item active">Writing and running tests</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/intro/testing.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="writing-and-running-tests">
+<h1>Writing and running tests<a class="headerlink" href="#writing-and-running-tests" title="Permalink to this headline"></a></h1>
+<p>The project features a number of unit tests. If you develop a new part of the
+project, your are encouraged to write them. Not only it makes your life easier
+(as it is much easier to code and debug against tests), but you also ensure that
+nobody will break your code in the future without knowing about it.</p>
+<p>All tests are run on every commit and pull request on GitHub automatically. If
+the tests fail, you will be notified via email.</p>
+<section id="running-the-test">
+<h2>Running the test<a class="headerlink" href="#running-the-test" title="Permalink to this headline"></a></h2>
+<p>You can easily run the test via <code class="docutils literal notranslate"><span class="pre">rmake</span> <span class="pre">--test</span> <span class="pre">&lt;argument&gt;</span></code>. You can specify the
+following arguments:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">rmake</span><span class="w"> </span><span class="o">--</span><span class="n">test</span><span class="w"> </span><span class="o">--</span><span class="n">all</span><span class="w">               </span><span class="n">Compile</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">run</span><span class="w"> </span><span class="n">all</span><span class="w"> </span><span class="n">configured</span><span class="w"> </span><span class="n">tests</span>
+<span class="n">rmake</span><span class="w"> </span><span class="o">--</span><span class="n">test</span><span class="w"> </span><span class="o">&lt;</span><span class="n">testTargetName</span><span class="o">&gt;</span><span class="p">...</span><span class="w"> </span><span class="n">Compile</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">run</span><span class="w"> </span><span class="n">test</span><span class="w"> </span><span class="k">for</span><span class="w"> </span><span class="n">target</span>
+<span class="n">rmake</span><span class="w"> </span><span class="o">--</span><span class="n">test</span><span class="w"> </span><span class="o">&lt;</span><span class="n">pathName</span><span class="o">&gt;</span><span class="p">...</span><span class="w">       </span><span class="n">Compile</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">run</span><span class="w"> </span><span class="n">tests</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">given</span><span class="w"> </span><span class="n">path</span><span class="w"> </span><span class="n">prefix</span>
+<span class="n">rmake</span><span class="w"> </span><span class="o">--</span><span class="n">test</span><span class="w"> </span><span class="o">&lt;</span><span class="n">suitename</span><span class="o">&gt;</span><span class="p">...</span><span class="w">      </span><span class="n">Compile</span><span class="w"> </span><span class="k">and</span><span class="w"> </span><span class="n">run</span><span class="w"> </span><span class="n">tests</span><span class="w"> </span><span class="n">from</span><span class="w"> </span><span class="n">given</span><span class="w"> </span><span class="n">suite</span>
+</pre></div>
+</div>
+<p>The command will compile and run specified tests. Also, the tab-completion shows
+you the available options. Note that only tests from configured suites are
+available.</p>
+<p>You can specify the test based on the same criterion as <a class="reference external" href="compiling.html#compilation-targets">compilation targets</a>. So you can run tests for the whole
+suite, given a test or all tests in the specified path prefix. For the sake of
+simplicity, you currently cannot pass any arguments to the tests. If you need
+to do so, you can always invoke the test executable directly.</p>
+</section>
+<section id="writing-tests">
+<h2>Writing tests<a class="headerlink" href="#writing-tests" title="Permalink to this headline"></a></h2>
+<p>For the purposes of RoFI, a test is an executable in <code class="docutils literal notranslate"><span class="pre">PATH</span></code> that satisfies the
+following:</p>
+<ul class="simple">
+<li><p>its name starts with the prefix <cite>test-</cite>,</p></li>
+<li><p>it has an associated CMake target in one of the projects,</p></li>
+<li><p>it can run with no command line arguments,</p></li>
+<li><p>if and only if the tests fails, the return code is non-zero, and</p></li>
+<li><p>it gives user-readable output on the stdout/stderr indicating what went wrong
+in the case of failure.</p></li>
+</ul>
+<p>Usually, a test will a be <a class="reference external" href="https://github.com/catchorg/Catch2">Catch2</a> binary
+registered in CMake. But it can also be e.g., a shell script or Python script
+that setups much more complex tests. In case of hardware, it can be a script
+that flashes the target microcontroller with a test binary and captures the
+output on a debug serial line.</p>
+</section>
+<section id="writing-test-for-c">
+<h2>Writing test for C++<a class="headerlink" href="#writing-test-for-c" title="Permalink to this headline"></a></h2>
+<p>As most of the components for RoFI are written in C++, we provide a simple guide
+for writing C++ tests. We use <a class="reference external" href="https://github.com/catchorg/Catch2">Catch2</a> as
+the primary testing framework. You should use it if don’t have a particular
+reason to not use it.</p>
+<p>Most of the compilation suites already provide it, so simply include it in your
+CMake like this:</p>
+<p>And that’s everything you need. Now you can just write test source files in the
+<cite>test</cite> directory. See <a class="reference external" href="https://github.com/catchorg/Catch2/blob/v2.x/docs/tutorial.md">Catch2 tutorial</a> for more
+details.</p>
+<p>If your software module is not header-only, it makes sense to extract it into a
+static library and link that library to your executable and tests. It will
+significantly speed-up the compilation as you don’t have to compile all sources
+twice.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="structure.html" class="btn btn-neutral float-left" title="Project Structure" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../roficom/index.html" class="btn btn-neutral float-right" title="RoFiCoM" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

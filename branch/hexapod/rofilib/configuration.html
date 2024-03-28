@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Universal Module" href="../universalModule/index.html" />
+    <link rel="prev" title="Containers" href="atoms/containers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro/index.html">Introduction, compiling and structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roficom/index.html">RoFiCoM</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">RoFILib</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="atoms/index.html">Atoms</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Configuration</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#types-and-constants">Types and Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#classes">Classes</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../universalModule/index.html">Universal Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rofisim/index.html">RoFISim</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">RoFILib</a></li>
+      <li class="breadcrumb-item active">Configuration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/rofilib/configuration.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="configuration">
+<h1>Configuration<a class="headerlink" href="#configuration" title="Permalink to this headline"></a></h1>
+<p>Here you are supposed to say the general idea behind the configuration
+representation and also list its capabilities. (e.g., you create and instance,
+put modules, then you have to compute the matrix, etc.)</p>
+<p>Feel free to add code examples.</p>
+<section id="types-and-constants">
+<h2>Types and Constants<a class="headerlink" href="#types-and-constants" title="Permalink to this headline"></a></h2>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv42ID">
+<span id="_CPPv32ID"></span><span id="_CPPv22ID"></span><span class="target" id="_configuration_8h_1aaceddcd75d35fdb90f538bd7402b15ca"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ID</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><a class="headerlink" href="#_CPPv42ID" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv45Joint">
+<span id="_CPPv35Joint"></span><span id="_CPPv25Joint"></span><span class="target" id="_configuration_8h_1ac59007d612b1e2624efd27182f4362f5"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Joint</span></span></span><a class="headerlink" href="#_CPPv45Joint" title="Permalink to this definition"></a><br /></dt>
+<dd><p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N5Joint5AlphaE">
+<span id="_CPPv3N5Joint5AlphaE"></span><span id="_CPPv2N5Joint5AlphaE"></span><span class="target" id="_configuration_8h_1ac59007d612b1e2624efd27182f4362f5ab8e4fd775ba181b65c0fb6929cc7c6b3"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Alpha</span></span></span><a class="headerlink" href="#_CPPv4N5Joint5AlphaE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N5Joint4BetaE">
+<span id="_CPPv3N5Joint4BetaE"></span><span id="_CPPv2N5Joint4BetaE"></span><span class="target" id="_configuration_8h_1ac59007d612b1e2624efd27182f4362f5aefbfbaaca302a957185ade21ac0f8fd2"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Beta</span></span></span><a class="headerlink" href="#_CPPv4N5Joint4BetaE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N5Joint5GammaE">
+<span id="_CPPv3N5Joint5GammaE"></span><span id="_CPPv2N5Joint5GammaE"></span><span class="target" id="_configuration_8h_1ac59007d612b1e2624efd27182f4362f5a963f5e0d34eb5d82de2aced931dc501c"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Gamma</span></span></span><a class="headerlink" href="#_CPPv4N5Joint5GammaE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv46ShoeId">
+<span id="_CPPv36ShoeId"></span><span id="_CPPv26ShoeId"></span><span class="target" id="_configuration_8h_1aa3c442f23c80fd8b32241487f4b4653a"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ShoeId</span></span></span><a class="headerlink" href="#_CPPv46ShoeId" title="Permalink to this definition"></a><br /></dt>
+<dd><p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6ShoeId1AE">
+<span id="_CPPv3N6ShoeId1AE"></span><span id="_CPPv2N6ShoeId1AE"></span><span class="target" id="_configuration_8h_1aa3c442f23c80fd8b32241487f4b4653aa42a4ade1acd55a49164099104990e09f"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">A</span></span></span><a class="headerlink" href="#_CPPv4N6ShoeId1AE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N6ShoeId1BE">
+<span id="_CPPv3N6ShoeId1BE"></span><span id="_CPPv2N6ShoeId1BE"></span><span class="target" id="_configuration_8h_1aa3c442f23c80fd8b32241487f4b4653aa3f2a77ecd272aa6d6b5902faa5e5fc68"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">B</span></span></span><a class="headerlink" href="#_CPPv4N6ShoeId1BE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum">
+<dt class="sig sig-object cpp" id="_CPPv411ConnectorId">
+<span id="_CPPv311ConnectorId"></span><span id="_CPPv211ConnectorId"></span><span class="target" id="_configuration_8h_1ae387ebc365d59a0957bd893a28b09551"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ConnectorId</span></span></span><a class="headerlink" href="#_CPPv411ConnectorId" title="Permalink to this definition"></a><br /></dt>
+<dd><p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N11ConnectorId5XPlusE">
+<span id="_CPPv3N11ConnectorId5XPlusE"></span><span id="_CPPv2N11ConnectorId5XPlusE"></span><span class="target" id="_configuration_8h_1ae387ebc365d59a0957bd893a28b09551ae936d2bba2b0982287c35eecd3ea4f25"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">XPlus</span></span></span><a class="headerlink" href="#_CPPv4N11ConnectorId5XPlusE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N11ConnectorId6XMinusE">
+<span id="_CPPv3N11ConnectorId6XMinusE"></span><span id="_CPPv2N11ConnectorId6XMinusE"></span><span class="target" id="_configuration_8h_1ae387ebc365d59a0957bd893a28b09551aa9a1d8d50da22fcefb8c33633451e84c"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">XMinus</span></span></span><a class="headerlink" href="#_CPPv4N11ConnectorId6XMinusE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N11ConnectorId6ZMinusE">
+<span id="_CPPv3N11ConnectorId6ZMinusE"></span><span id="_CPPv2N11ConnectorId6ZMinusE"></span><span class="target" id="_configuration_8h_1ae387ebc365d59a0957bd893a28b09551a1708687cc6bb007d83f990da5d6f7927"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ZMinus</span></span></span><a class="headerlink" href="#_CPPv4N11ConnectorId6ZMinusE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi11OrientationE">
+<span id="_CPPv3N4rofi11OrientationE"></span><span id="_CPPv2N4rofi11OrientationE"></span><span class="target" id="namespacerofi_1afd1faa7ae2a12328817344f60dbe0b1a"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">Orientation</span></span></span><a class="headerlink" href="#_CPPv4N4rofi11OrientationE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi11Orientation5NorthE">
+<span id="_CPPv3N4rofi11Orientation5NorthE"></span><span id="_CPPv2N4rofi11Orientation5NorthE"></span><span class="target" id="namespacerofi_1afd1faa7ae2a12328817344f60dbe0b1aa601560b94fbb188919dd1d36c8ab70a4"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">North</span></span></span><a class="headerlink" href="#_CPPv4N4rofi11Orientation5NorthE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi11Orientation4EastE">
+<span id="_CPPv3N4rofi11Orientation4EastE"></span><span id="_CPPv2N4rofi11Orientation4EastE"></span><span class="target" id="namespacerofi_1afd1faa7ae2a12328817344f60dbe0b1aaa99dc62d017d04cf67266593f9c3761e"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">East</span></span></span><a class="headerlink" href="#_CPPv4N4rofi11Orientation4EastE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi11Orientation5SouthE">
+<span id="_CPPv3N4rofi11Orientation5SouthE"></span><span id="_CPPv2N4rofi11Orientation5SouthE"></span><span class="target" id="namespacerofi_1afd1faa7ae2a12328817344f60dbe0b1aa263d7b2cf53802c9ed127b718c0bf9fd"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">South</span></span></span><a class="headerlink" href="#_CPPv4N4rofi11Orientation5SouthE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi11Orientation4WestE">
+<span id="_CPPv3N4rofi11Orientation4WestE"></span><span id="_CPPv2N4rofi11Orientation4WestE"></span><span class="target" id="namespacerofi_1afd1faa7ae2a12328817344f60dbe0b1aabf495fc048d8d44b7f32536df5cf3930"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">West</span></span></span><a class="headerlink" href="#_CPPv4N4rofi11Orientation4WestE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="classes">
+<h2>Classes<a class="headerlink" href="#classes" title="Permalink to this headline"></a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv46Module">
+<span id="_CPPv36Module"></span><span id="_CPPv26Module"></span><span id="Module"></span><span class="target" id="class_module"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Module</span></span></span><a class="headerlink" href="#_CPPv46Module" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Subclassed by DistributedModuleProperties</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6Module6ModuleEddd2ID">
+<span id="_CPPv3N6Module6ModuleEddd2ID"></span><span id="_CPPv2N6Module6ModuleEddd2ID"></span><span id="Module::Module__double.double.double.ID"></span><span class="target" id="class_module_1a25d63ee5b5b11a97bad400f3c095170d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Module</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">alpha</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">beta</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">gamma</span></span>, <a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">id</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6Module6ModuleEddd2ID" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Module5getIdEv">
+<span id="_CPPv3NK6Module5getIdEv"></span><span id="_CPPv2NK6Module5getIdEv"></span><span id="Module::getIdC"></span><span class="target" id="class_module_1ab9bd3661dfd5a71c30e377fc9f7e8e7e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getId</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Module5getIdEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Module8getJointE5Joint">
+<span id="_CPPv3NK6Module8getJointE5Joint"></span><span id="_CPPv2NK6Module8getJointE5Joint"></span><span id="Module::getJoint__JointC"></span><span class="target" id="class_module_1a9f0eaaea9dc8c9099b14504a8337b535"></span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getJoint</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv45Joint" title="Joint"><span class="n"><span class="pre">Joint</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">a</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Module8getJointE5Joint" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6Module11rotateJointE5Jointd">
+<span id="_CPPv3N6Module11rotateJointE5Jointd"></span><span id="_CPPv2N6Module11rotateJointE5Jointd"></span><span id="Module::rotateJoint__Joint.double"></span><span class="target" id="class_module_1ab922da7ec265082319c4fa3b6ea89104"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rotateJoint</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv45Joint" title="Joint"><span class="n"><span class="pre">Joint</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">joint</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">val</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6Module11rotateJointE5Jointd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Rotates joint. </p>
+<p>Failure (returning <code class="docutils literal notranslate"><span class="pre">false</span></code>) in this method leaves the joint unchanged.</p>
+<p>
+Throws error if <code class="docutils literal notranslate"><span class="pre">joint</span></code> is not in enum </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">false</span></code> if adding <code class="docutils literal notranslate"><span class="pre">val</span></code> makes value of <code class="docutils literal notranslate"><span class="pre">joint</span></code> overflow out of accepted range.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6Module8setJointE5Jointd">
+<span id="_CPPv3N6Module8setJointE5Jointd"></span><span id="_CPPv2N6Module8setJointE5Jointd"></span><span id="Module::setJoint__Joint.double"></span><span class="target" id="class_module_1ab354edaba31559410483e888e13ebbaa"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setJoint</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv45Joint" title="Joint"><span class="n"><span class="pre">Joint</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">joint</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">val</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6Module8setJointE5Jointd" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Sets joint. </p>
+<p>
+Throws error if <code class="docutils literal notranslate"><span class="pre">joint</span></code> is not in enum </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">false</span></code> if <code class="docutils literal notranslate"><span class="pre">val</span></code> wasn’t in accepted range and thus value of joint wasn’t changed</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6ModuleeqERK6Module">
+<span id="_CPPv3NK6ModuleeqERK6Module"></span><span id="_CPPv2NK6ModuleeqERK6Module"></span><span id="Module::eq-operator__ModuleCRC"></span><span class="target" id="class_module_1aef58c305152a3541e8911558f991e718"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">==</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv46Module" title="Module"><span class="n"><span class="pre">Module</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6ModuleeqERK6Module" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv44Edge">
+<span id="_CPPv34Edge"></span><span id="_CPPv24Edge"></span><span id="Edge"></span><span class="target" id="class_edge"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Edge</span></span></span><a class="headerlink" href="#_CPPv44Edge" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Edge4EdgeE2ID6ShoeId11ConnectorIdj11ConnectorId6ShoeId2IDd">
+<span id="_CPPv3N4Edge4EdgeE2ID6ShoeId11ConnectorIdj11ConnectorId6ShoeId2IDd"></span><span id="_CPPv2N4Edge4EdgeE2ID6ShoeId11ConnectorIdj11ConnectorId6ShoeId2IDd"></span><span id="Edge::Edge__ID.ShoeId.ConnectorId.unsigned-i.ConnectorId.ShoeId.ID.double"></span><span class="target" id="class_edge_1a2ebbf4f80d262a0bf13be451cf3ed800"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Edge</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">id1</span></span>, <a class="reference internal" href="#_CPPv46ShoeId" title="ShoeId"><span class="n"><span class="pre">ShoeId</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">side1</span></span>, <a class="reference internal" href="#_CPPv411ConnectorId" title="ConnectorId"><span class="n"><span class="pre">ConnectorId</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">dock1</span></span>, <span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ori</span></span>, <a class="reference internal" href="#_CPPv411ConnectorId" title="ConnectorId"><span class="n"><span class="pre">ConnectorId</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">dock2</span></span>, <a class="reference internal" href="#_CPPv46ShoeId" title="ShoeId"><span class="n"><span class="pre">ShoeId</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">side2</span></span>, <a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">id2</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">onCoeff</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="m"><span class="pre">1</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Edge4EdgeE2ID6ShoeId11ConnectorIdj11ConnectorId6ShoeId2IDd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4Edge3id1Ev">
+<span id="_CPPv3NK4Edge3id1Ev"></span><span id="_CPPv2NK4Edge3id1Ev"></span><span id="Edge::id1C"></span><span class="target" id="class_edge_1a09cf589ce5db66200e45448169357a89"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">id1</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4Edge3id1Ev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4Edge3id2Ev">
+<span id="_CPPv3NK4Edge3id2Ev"></span><span id="_CPPv2NK4Edge3id2Ev"></span><span id="Edge::id2C"></span><span class="target" id="class_edge_1a04f2016b84ad1ce7e2c021a615c71b0f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">id2</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4Edge3id2Ev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4Edge5side1Ev">
+<span id="_CPPv3NK4Edge5side1Ev"></span><span id="_CPPv2NK4Edge5side1Ev"></span><span id="Edge::side1C"></span><span class="target" id="class_edge_1a79bbf2b6e5fffd9fb49540ffe258d2c3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv46ShoeId" title="ShoeId"><span class="n"><span class="pre">ShoeId</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">side1</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4Edge5side1Ev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4Edge5side2Ev">
+<span id="_CPPv3NK4Edge5side2Ev"></span><span id="_CPPv2NK4Edge5side2Ev"></span><span id="Edge::side2C"></span><span class="target" id="class_edge_1a27dd5d95f39222fbfe7c55e8841257f7"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv46ShoeId" title="ShoeId"><span class="n"><span class="pre">ShoeId</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">side2</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4Edge5side2Ev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4Edge5dock1Ev">
+<span id="_CPPv3NK4Edge5dock1Ev"></span><span id="_CPPv2NK4Edge5dock1Ev"></span><span id="Edge::dock1C"></span><span class="target" id="class_edge_1ad204ae35442ab410b74db92598c7cc9e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv411ConnectorId" title="ConnectorId"><span class="n"><span class="pre">ConnectorId</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dock1</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4Edge5dock1Ev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4Edge5dock2Ev">
+<span id="_CPPv3NK4Edge5dock2Ev"></span><span id="_CPPv2NK4Edge5dock2Ev"></span><span id="Edge::dock2C"></span><span class="target" id="class_edge_1a1dc37438210bc370244182aa8b4ec61c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv411ConnectorId" title="ConnectorId"><span class="n"><span class="pre">ConnectorId</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dock2</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4Edge5dock2Ev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4Edge3oriEv">
+<span id="_CPPv3NK4Edge3oriEv"></span><span id="_CPPv2NK4Edge3oriEv"></span><span id="Edge::oriC"></span><span class="target" id="class_edge_1a87e99849a6fe13933ea750240415cf1f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ori</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4Edge3oriEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4Edge7onCoeffEv">
+<span id="_CPPv3NK4Edge7onCoeffEv"></span><span id="_CPPv2NK4Edge7onCoeffEv"></span><span id="Edge::onCoeffC"></span><span class="target" id="class_edge_1a10db1e9ed6725ca3731dec35f666628e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">onCoeff</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4Edge7onCoeffEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4Edge10setOnCoeffEd">
+<span id="_CPPv3N4Edge10setOnCoeffEd"></span><span id="_CPPv2N4Edge10setOnCoeffEd"></span><span id="Edge::setOnCoeff__double"></span><span class="target" id="class_edge_1ab7f6b7592b3d9ad3ee91e2537b8fe35c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setOnCoeff</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">value</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4Edge10setOnCoeffEd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4EdgeeqERK4Edge">
+<span id="_CPPv3NK4EdgeeqERK4Edge"></span><span id="_CPPv2NK4EdgeeqERK4Edge"></span><span id="Edge::eq-operator__EdgeCRC"></span><span class="target" id="class_edge_1ab6c35dc1902b8eb155fb0194a2afcdb1"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">==</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv44Edge" title="Edge"><span class="n"><span class="pre">Edge</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4EdgeeqERK4Edge" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4EdgeneERK4Edge">
+<span id="_CPPv3NK4EdgeneERK4Edge"></span><span id="_CPPv2NK4EdgeneERK4Edge"></span><span id="Edge::neq-operator__EdgeCRC"></span><span class="target" id="class_edge_1a1828cc63e945ef1538a2ca69865c3cd1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">!=</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv44Edge" title="Edge"><span class="n"><span class="pre">Edge</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4EdgeneERK4Edge" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv46Action">
+<span id="_CPPv36Action"></span><span id="_CPPv26Action"></span><span id="Action"></span><span class="target" id="class_action"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Action</span></span></span><a class="headerlink" href="#_CPPv46Action" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6Action6ActionENSt6vectorI6RotateEENSt6vectorI9ReconnectEE">
+<span id="_CPPv3N6Action6ActionENSt6vectorI6RotateEENSt6vectorI9ReconnectEE"></span><span id="_CPPv2N6Action6ActionENSt6vectorI6RotateEENSt6vectorI9ReconnectEE"></span><span id="Action::Action__std::vector:Rotate:.std::vector:Reconnect:"></span><span class="target" id="class_action_1aea9927b97d4e72e3bddfb2dc6bb1c786"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Action</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6Action6RotateE" title="Action::Rotate"><span class="n"><span class="pre">Rotate</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">rot</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6Action9ReconnectE" title="Action::Reconnect"><span class="n"><span class="pre">Reconnect</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">rec</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6Action6ActionENSt6vectorI6RotateEENSt6vectorI9ReconnectEE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6Action6ActionERK6Rotate">
+<span id="_CPPv3N6Action6ActionERK6Rotate"></span><span id="_CPPv2N6Action6ActionERK6Rotate"></span><span id="Action::Action__RotateCR"></span><span class="target" id="class_action_1adac2ba4d8f1ca15a9a134d965c50d402"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Action</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6Action6RotateE" title="Action::Rotate"><span class="n"><span class="pre">Rotate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rot</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6Action6ActionERK6Rotate" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6Action6ActionERK9Reconnect">
+<span id="_CPPv3N6Action6ActionERK9Reconnect"></span><span id="_CPPv2N6Action6ActionERK9Reconnect"></span><span id="Action::Action__ReconnectCR"></span><span class="target" id="class_action_1a2f77b0728ddd27bfa5267e2281063e19"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Action</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6Action9ReconnectE" title="Action::Reconnect"><span class="n"><span class="pre">Reconnect</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rec</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6Action6ActionERK9Reconnect" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Action6divideEd">
+<span id="_CPPv3NK6Action6divideEd"></span><span id="_CPPv2NK6Action6divideEd"></span><span id="Action::divide__doubleC"></span><span class="target" id="class_action_1aa4e51668e1167eb0847ac8ab00e26f7f"></span><a class="reference internal" href="#_CPPv46Action" title="Action"><span class="n"><span class="pre">Action</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">divide</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">factor</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Action6divideEd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Action9rotationsEv">
+<span id="_CPPv3NK6Action9rotationsEv"></span><span id="_CPPv2NK6Action9rotationsEv"></span><span id="Action::rotationsC"></span><span class="target" id="class_action_1aa0c4f9aaaeab9efda909d6059d8d25b7"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6Action6RotateE" title="Action::Rotate"><span class="n"><span class="pre">Rotate</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">rotations</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Action9rotationsEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Action13reconnectionsEv">
+<span id="_CPPv3NK6Action13reconnectionsEv"></span><span id="_CPPv2NK6Action13reconnectionsEv"></span><span id="Action::reconnectionsC"></span><span class="target" id="class_action_1a938edd21002d7e3119110746e96dec42"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N6Action9ReconnectE" title="Action::Reconnect"><span class="n"><span class="pre">Reconnect</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reconnections</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Action13reconnectionsEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Action5emptyEv">
+<span id="_CPPv3NK6Action5emptyEv"></span><span id="_CPPv2NK6Action5emptyEv"></span><span id="Action::emptyC"></span><span class="target" id="class_action_1a31eb94c9e0de5178fa040fc6dccaf43c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">empty</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Action5emptyEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6Action9ReconnectE">
+<span id="_CPPv3N6Action9ReconnectE"></span><span id="_CPPv2N6Action9ReconnectE"></span><span id="Action::Reconnect"></span><span class="target" id="class_action_1_1_reconnect"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Reconnect</span></span></span><a class="headerlink" href="#_CPPv4N6Action9ReconnectE" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6Action9Reconnect9ReconnectEv">
+<span id="_CPPv3N6Action9Reconnect9ReconnectEv"></span><span id="_CPPv2N6Action9Reconnect9ReconnectEv"></span><span id="Action::Reconnect::Reconnect"></span><span class="target" id="class_action_1_1_reconnect_1a1ae45f4e5c539af446485f824a9df6f0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Reconnect</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6Action9Reconnect9ReconnectEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6Action9Reconnect9ReconnectEbRK4Edge">
+<span id="_CPPv3N6Action9Reconnect9ReconnectEbRK4Edge"></span><span id="_CPPv2N6Action9Reconnect9ReconnectEbRK4Edge"></span><span id="Action::Reconnect::Reconnect__b.EdgeCR"></span><span class="target" id="class_action_1_1_reconnect_1a8b05feadd5a9498ed657553639da7c9c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Reconnect</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">add</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv44Edge" title="Edge"><span class="n"><span class="pre">Edge</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">edge</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6Action9Reconnect9ReconnectEbRK4Edge" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Action9Reconnect3addEv">
+<span id="_CPPv3NK6Action9Reconnect3addEv"></span><span id="_CPPv2NK6Action9Reconnect3addEv"></span><span id="Action::Reconnect::addC"></span><span class="target" id="class_action_1_1_reconnect_1aee696e31186fcf13f05dab107d4badd8"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">add</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Action9Reconnect3addEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Action9Reconnect4edgeEv">
+<span id="_CPPv3NK6Action9Reconnect4edgeEv"></span><span id="_CPPv2NK6Action9Reconnect4edgeEv"></span><span id="Action::Reconnect::edgeC"></span><span class="target" id="class_action_1_1_reconnect_1a6f07e040c1d7bd0e8c19ea9339ca341d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv44Edge" title="Edge"><span class="n"><span class="pre">Edge</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">edge</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Action9Reconnect4edgeEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Action9ReconnecteqERK9Reconnect">
+<span id="_CPPv3NK6Action9ReconnecteqERK9Reconnect"></span><span id="_CPPv2NK6Action9ReconnecteqERK9Reconnect"></span><span id="Action::Reconnect::eq-operator__ReconnectCRC"></span><span class="target" id="class_action_1_1_reconnect_1a1f227b02341ed83c02a3bef0ae4a6337"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">==</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6Action9ReconnectE" title="Action::Reconnect"><span class="n"><span class="pre">Reconnect</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Action9ReconnecteqERK9Reconnect" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Action9ReconnectneERK9Reconnect">
+<span id="_CPPv3NK6Action9ReconnectneERK9Reconnect"></span><span id="_CPPv2NK6Action9ReconnectneERK9Reconnect"></span><span id="Action::Reconnect::neq-operator__ReconnectCRC"></span><span class="target" id="class_action_1_1_reconnect_1a244a2725575020a8986a2a67874e4952"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">!=</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6Action9ReconnectE" title="Action::Reconnect"><span class="n"><span class="pre">Reconnect</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Action9ReconnectneERK9Reconnect" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N6Action6RotateE">
+<span id="_CPPv3N6Action6RotateE"></span><span id="_CPPv2N6Action6RotateE"></span><span id="Action::Rotate"></span><span class="target" id="class_action_1_1_rotate"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Rotate</span></span></span><a class="headerlink" href="#_CPPv4N6Action6RotateE" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6Action6Rotate6RotateEv">
+<span id="_CPPv3N6Action6Rotate6RotateEv"></span><span id="_CPPv2N6Action6Rotate6RotateEv"></span><span id="Action::Rotate::Rotate"></span><span class="target" id="class_action_1_1_rotate_1a069006f596bfb20968509fe2d0644035"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Rotate</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6Action6Rotate6RotateEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N6Action6Rotate6RotateE2ID5Jointd">
+<span id="_CPPv3N6Action6Rotate6RotateE2ID5Jointd"></span><span id="_CPPv2N6Action6Rotate6RotateE2ID5Jointd"></span><span id="Action::Rotate::Rotate__ID.Joint.double"></span><span class="target" id="class_action_1_1_rotate_1abeca28967e5d202b139c563cff65751b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Rotate</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">id</span></span>, <a class="reference internal" href="#_CPPv45Joint" title="Joint"><span class="n"><span class="pre">Joint</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">joint</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">angle</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N6Action6Rotate6RotateE2ID5Jointd" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Action6Rotate2idEv">
+<span id="_CPPv3NK6Action6Rotate2idEv"></span><span id="_CPPv2NK6Action6Rotate2idEv"></span><span id="Action::Rotate::idC"></span><span class="target" id="class_action_1_1_rotate_1a0dae7cc8e726025cc4eaaf35f124e857"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">id</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Action6Rotate2idEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Action6Rotate5jointEv">
+<span id="_CPPv3NK6Action6Rotate5jointEv"></span><span id="_CPPv2NK6Action6Rotate5jointEv"></span><span id="Action::Rotate::jointC"></span><span class="target" id="class_action_1_1_rotate_1ab2d4caa8a7118ac8293d4a7be8466dda"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv45Joint" title="Joint"><span class="n"><span class="pre">Joint</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">joint</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Action6Rotate5jointEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Action6Rotate5angleEv">
+<span id="_CPPv3NK6Action6Rotate5angleEv"></span><span id="_CPPv2NK6Action6Rotate5angleEv"></span><span id="Action::Rotate::angleC"></span><span class="target" id="class_action_1_1_rotate_1ad9d68d8811b914d2f64683f017dffd2e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">angle</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Action6Rotate5angleEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Action6RotateeqERK6Rotate">
+<span id="_CPPv3NK6Action6RotateeqERK6Rotate"></span><span id="_CPPv2NK6Action6RotateeqERK6Rotate"></span><span id="Action::Rotate::eq-operator__RotateCRC"></span><span class="target" id="class_action_1_1_rotate_1a720a3045d5ddde8309d7c9016f695054"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">==</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6Action6RotateE" title="Action::Rotate"><span class="n"><span class="pre">Rotate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Action6RotateeqERK6Rotate" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK6Action6RotateneERK6Rotate">
+<span id="_CPPv3NK6Action6RotateneERK6Rotate"></span><span id="_CPPv2NK6Action6RotateneERK6Rotate"></span><span id="Action::Rotate::neq-operator__RotateCRC"></span><span class="target" id="class_action_1_1_rotate_1a2cbcd8a43a7d83faa1601ddd2ecf8f15"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">!=</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N6Action6RotateE" title="Action::Rotate"><span class="n"><span class="pre">Rotate</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK6Action6RotateneERK6Rotate" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv413Configuration">
+<span id="_CPPv313Configuration"></span><span id="_CPPv213Configuration"></span><span id="Configuration"></span><span class="target" id="class_configuration"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Configuration</span></span></span><a class="headerlink" href="#_CPPv413Configuration" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration5emptyEv">
+<span id="_CPPv3NK13Configuration5emptyEv"></span><span id="_CPPv2NK13Configuration5emptyEv"></span><span id="Configuration::emptyC"></span><span class="target" id="class_configuration_1aa60b200f3b2aad25a90d88cd3aa47553"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">empty</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration5emptyEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13Configuration10getModulesEv">
+<span id="_CPPv3N13Configuration10getModulesEv"></span><span id="_CPPv2N13Configuration10getModulesEv"></span><span id="Configuration::getModules"></span><span class="target" id="class_configuration_1a03353f8dc9b2ca94563dad752ce3744e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleMap</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getModules</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13Configuration10getModulesEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration10getModulesEv">
+<span id="_CPPv3NK13Configuration10getModulesEv"></span><span id="_CPPv2NK13Configuration10getModulesEv"></span><span id="Configuration::getModulesC"></span><span class="target" id="class_configuration_1a7519f3793695d66ff9641d7014a9b13a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">ModuleMap</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getModules</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration10getModulesEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration8getEdgesEv">
+<span id="_CPPv3NK13Configuration8getEdgesEv"></span><span id="_CPPv2NK13Configuration8getEdgesEv"></span><span id="Configuration::getEdgesC"></span><span class="target" id="class_configuration_1a93f4272040e7bf849c9cdd1907a9b4c3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">EdgeMap</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getEdges</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration8getEdgesEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration11getMatricesEv">
+<span id="_CPPv3NK13Configuration11getMatricesEv"></span><span id="_CPPv2NK13Configuration11getMatricesEv"></span><span id="Configuration::getMatricesC"></span><span class="target" id="class_configuration_1a5657115a8ac9078ec5eb4dd36b215894"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">MatrixMap</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getMatrices</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration11getMatricesEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration10getFixedIdEv">
+<span id="_CPPv3NK13Configuration10getFixedIdEv"></span><span id="_CPPv2NK13Configuration10getFixedIdEv"></span><span id="Configuration::getFixedIdC"></span><span class="target" id="class_configuration_1a92582d4283b239a2f634dba3113b731a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getFixedId</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration10getFixedIdEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration12getFixedSideEv">
+<span id="_CPPv3NK13Configuration12getFixedSideEv"></span><span id="_CPPv2NK13Configuration12getFixedSideEv"></span><span id="Configuration::getFixedSideC"></span><span class="target" id="class_configuration_1aa7dd7678518982e0f4e58580cf40abd8"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv46ShoeId" title="ShoeId"><span class="n"><span class="pre">ShoeId</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getFixedSide</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration12getFixedSideEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13Configuration9getModuleE2ID">
+<span id="_CPPv3N13Configuration9getModuleE2ID"></span><span id="_CPPv2N13Configuration9getModuleE2ID"></span><span id="Configuration::getModule__ID"></span><span class="target" id="class_configuration_1a0deaad3d3b861df34a5f71adc408931c"></span><a class="reference internal" href="#_CPPv46Module" title="Module"><span class="n"><span class="pre">Module</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getModule</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">id</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13Configuration9getModuleE2ID" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration9getModuleE2ID">
+<span id="_CPPv3NK13Configuration9getModuleE2ID"></span><span id="_CPPv2NK13Configuration9getModuleE2ID"></span><span id="Configuration::getModule__IDC"></span><span class="target" id="class_configuration_1aa591afa00a1edb8dda4d5b85afd3770a"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv46Module" title="Module"><span class="n"><span class="pre">Module</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getModule</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">id</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration9getModuleE2ID" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration6getIDsEv">
+<span id="_CPPv3NK13Configuration6getIDsEv"></span><span id="_CPPv2NK13Configuration6getIDsEv"></span><span id="Configuration::getIDsC"></span><span class="target" id="class_configuration_1a5885942222611df28d116cddd684b1cf"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getIDs</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration6getIDsEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration8getEdgesE2ID">
+<span id="_CPPv3NK13Configuration8getEdgesE2ID"></span><span id="_CPPv2NK13Configuration8getEdgesE2ID"></span><span id="Configuration::getEdges__IDC"></span><span class="target" id="class_configuration_1aa75dced9c9a4919f0bb17dd54bde5ec8"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv44Edge" title="Edge"><span class="n"><span class="pre">Edge</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getEdges</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">id</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration8getEdgesE2ID" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration8getEdgesE2IDRKNSt13unordered_setI2IDEE">
+<span id="_CPPv3NK13Configuration8getEdgesE2IDRKNSt13unordered_setI2IDEE"></span><span id="_CPPv2NK13Configuration8getEdgesE2IDRKNSt13unordered_setI2IDEE"></span><span id="Configuration::getEdges__ID.std::unordered_set:ID:CRC"></span><span class="target" id="class_configuration_1abd907d06797b845eb48e40c9113312a1"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv44Edge" title="Edge"><span class="n"><span class="pre">Edge</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getEdges</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">id</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unordered_set</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">exclude</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration8getEdgesE2IDRKNSt13unordered_setI2IDEE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration15getSpanningSuccEv">
+<span id="_CPPv3NK13Configuration15getSpanningSuccEv"></span><span id="_CPPv2NK13Configuration15getSpanningSuccEv"></span><span id="Configuration::getSpanningSuccC"></span><span class="target" id="class_configuration_1aeb20e49feda6d03968b28e637a8a62a1"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unordered_map</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv44Edge" title="Edge"><span class="n"><span class="pre">Edge</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">6</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getSpanningSucc</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration15getSpanningSuccEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration20getSpanningSuccCountEv">
+<span id="_CPPv3NK13Configuration20getSpanningSuccCountEv"></span><span id="_CPPv2NK13Configuration20getSpanningSuccCountEv"></span><span id="Configuration::getSpanningSuccCountC"></span><span class="target" id="class_configuration_1a68d96e2bdff814201100b4c2d9728ee3"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unordered_map</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getSpanningSuccCount</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration20getSpanningSuccCountEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration15getSpanningPredEv">
+<span id="_CPPv3NK13Configuration15getSpanningPredEv"></span><span id="_CPPv2NK13Configuration15getSpanningPredEv"></span><span id="Configuration::getSpanningPredC"></span><span class="target" id="class_configuration_1a93a1ee716f5ebd39fcdc3e39e1b7d16a"></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unordered_map</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">pair</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv46ShoeId" title="ShoeId"><span class="n"><span class="pre">ShoeId</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">getSpanningPred</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration15getSpanningPredEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13Configuration9addModuleEddd2ID">
+<span id="_CPPv3N13Configuration9addModuleEddd2ID"></span><span id="_CPPv2N13Configuration9addModuleEddd2ID"></span><span id="Configuration::addModule__double.double.double.ID"></span><span class="target" id="class_configuration_1ab8ad02a51136f4ae6c9a6d3da2882c53"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">addModule</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">alpha</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">beta</span></span>, <span class="kt"><span class="pre">double</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">gamma</span></span>, <a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">id</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13Configuration9addModuleEddd2ID" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13Configuration7addEdgeERK4Edge">
+<span id="_CPPv3N13Configuration7addEdgeERK4Edge"></span><span id="_CPPv2N13Configuration7addEdgeERK4Edge"></span><span id="Configuration::addEdge__EdgeCR"></span><span class="target" id="class_configuration_1a972b1861d9de5aeee467014b0c4618c5"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">addEdge</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv44Edge" title="Edge"><span class="n"><span class="pre">Edge</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">edge</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13Configuration7addEdgeERK4Edge" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13Configuration10removeEdgeERK4Edge">
+<span id="_CPPv3N13Configuration10removeEdgeERK4Edge"></span><span id="_CPPv2N13Configuration10removeEdgeERK4Edge"></span><span id="Configuration::removeEdge__EdgeCR"></span><span class="target" id="class_configuration_1a7e74fbe295ee8df8e219ee971f4c60b2"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">removeEdge</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv44Edge" title="Edge"><span class="n"><span class="pre">Edge</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">edge</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13Configuration10removeEdgeERK4Edge" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration8findEdgeERK4Edge">
+<span id="_CPPv3NK13Configuration8findEdgeERK4Edge"></span><span id="_CPPv2NK13Configuration8findEdgeERK4Edge"></span><span id="Configuration::findEdge__EdgeCRC"></span><span class="target" id="class_configuration_1afe061101f7403f7755feec7a8aa38616"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">findEdge</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv44Edge" title="Edge"><span class="n"><span class="pre">Edge</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">edge</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration8findEdgeERK4Edge" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration14findConnectionERK4Edge">
+<span id="_CPPv3NK13Configuration14findConnectionERK4Edge"></span><span id="_CPPv2NK13Configuration14findConnectionERK4Edge"></span><span id="Configuration::findConnection__EdgeCRC"></span><span class="target" id="class_configuration_1af70634b0ccec6098feda8593b713a165"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">findConnection</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv44Edge" title="Edge"><span class="n"><span class="pre">Edge</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">edge</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration14findConnectionERK4Edge" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13Configuration8setFixedE2ID6ShoeIdRK6Matrix">
+<span id="_CPPv3N13Configuration8setFixedE2ID6ShoeIdRK6Matrix"></span><span id="_CPPv2N13Configuration8setFixedE2ID6ShoeIdRK6Matrix"></span><span id="Configuration::setFixed__ID.ShoeId.MatrixCR"></span><span class="target" id="class_configuration_1abf444aa4ea2886bfe82c17fd13ee0569"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setFixed</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">initID</span></span>, <a class="reference internal" href="#_CPPv46ShoeId" title="ShoeId"><span class="n"><span class="pre">ShoeId</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">initSide</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Matrix</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">initRotation</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13Configuration8setFixedE2ID6ShoeIdRK6Matrix" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13Configuration7isValidEv">
+<span id="_CPPv3N13Configuration7isValidEv"></span><span id="_CPPv2N13Configuration7isValidEv"></span><span id="Configuration::isValid"></span><span class="target" id="class_configuration_1af60a8d93c21127bd78ef8427f6188f39"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">isValid</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13Configuration7isValidEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13Configuration15computeMatricesEv">
+<span id="_CPPv3N13Configuration15computeMatricesEv"></span><span id="_CPPv2N13Configuration15computeMatricesEv"></span><span id="Configuration::computeMatrices"></span><span class="target" id="class_configuration_1a6fd6a7522dad29df8599d583a01f8714"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">computeMatrices</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13Configuration15computeMatricesEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Computes matrices for all shoes. </p>
+<p>This method is called in method isValid.</p>
+<p>User should call this if they create new configuration or they change some angles and they don’t call method isValid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">false</span></code> if there is inconsistency in computing matrices, i.e. matrix for one shoe was computed two different ways and the results aren’t equal (rotated module, that couldn’t be rotated) </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration22computeConnectedMatrixE4Edge">
+<span id="_CPPv3NK13Configuration22computeConnectedMatrixE4Edge"></span><span id="_CPPv2NK13Configuration22computeConnectedMatrixE4Edge"></span><span id="Configuration::computeConnectedMatrix__EdgeC"></span><span class="target" id="class_configuration_1a084d47c180433b5701fafa81834c1985"></span><span class="n"><span class="pre">Matrix</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">computeConnectedMatrix</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv44Edge" title="Edge"><span class="n"><span class="pre">Edge</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">edge</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration22computeConnectedMatrixE4Edge" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Computes matrix for shoe at the end of <code class="docutils literal notranslate"><span class="pre">edge</span></code> from shoe at the begining of <code class="docutils literal notranslate"><span class="pre">edge</span></code>. </p>
+<p>For example, module with id = 1 is connected from shoe A to shoe B of module with id = 2. It takes matrix of shoe A of module 1 and computes matrix of shoe B of module 2 from that.</p>
+<p>If neither matrix of shoes of the first module is computed, error is thrown.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Matrix of the shoe connected to the end of <code class="docutils literal notranslate"><span class="pre">edge</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration22computeOtherSideMatrixE2ID6ShoeId">
+<span id="_CPPv3NK13Configuration22computeOtherSideMatrixE2ID6ShoeId"></span><span id="_CPPv2NK13Configuration22computeOtherSideMatrixE2ID6ShoeId"></span><span id="Configuration::computeOtherSideMatrix__ID.ShoeIdC"></span><span class="target" id="class_configuration_1a01b1f2ca86aec319d722ae221ffbd909"></span><span class="n"><span class="pre">Matrix</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">computeOtherSideMatrix</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">id</span></span>, <a class="reference internal" href="#_CPPv46ShoeId" title="ShoeId"><span class="n"><span class="pre">ShoeId</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">side</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration22computeOtherSideMatrixE2ID6ShoeId" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Given <code class="docutils literal notranslate"><span class="pre">id</span></code> and <code class="docutils literal notranslate"><span class="pre">side</span></code> computes matrix for the other shoe of the given module. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Matrix of the other shoe of the given module </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13Configuration9connectedEv">
+<span id="_CPPv3N13Configuration9connectedEv"></span><span id="_CPPv2N13Configuration9connectedEv"></span><span id="Configuration::connected"></span><span class="target" id="class_configuration_1a55af863c7683b48e083c0fa8c1133df4"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">connected</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13Configuration9connectedEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration9connectedEv">
+<span id="_CPPv3NK13Configuration9connectedEv"></span><span id="_CPPv2NK13Configuration9connectedEv"></span><span id="Configuration::connectedC"></span><span class="target" id="class_configuration_1a1df5b405fa430ebb7d73f6cc78392290"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">connected</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration9connectedEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13Configuration13collisionFreeEv">
+<span id="_CPPv3N13Configuration13collisionFreeEv"></span><span id="_CPPv2N13Configuration13collisionFreeEv"></span><span id="Configuration::collisionFree"></span><span class="target" id="class_configuration_1a06ec062280ada643436a56357da19f8a"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">collisionFree</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13Configuration13collisionFreeEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration13collisionFreeEv">
+<span id="_CPPv3NK13Configuration13collisionFreeEv"></span><span id="_CPPv2NK13Configuration13collisionFreeEv"></span><span id="Configuration::collisionFreeC"></span><span class="target" id="class_configuration_1a89f2605c8e3cc801a1a3ca98a4e6a728"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">collisionFree</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration13collisionFreeEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration10massCenterEv">
+<span id="_CPPv3NK13Configuration10massCenterEv"></span><span id="_CPPv2NK13Configuration10massCenterEv"></span><span id="Configuration::massCenterC"></span><span class="target" id="class_configuration_1a8473f28755c35b860c1f9511ff9909b9"></span><span class="n"><span class="pre">Vector</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">massCenter</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration10massCenterEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration13getModuleMassE2ID">
+<span id="_CPPv3NK13Configuration13getModuleMassE2ID"></span><span id="_CPPv2NK13Configuration13getModuleMassE2ID"></span><span id="Configuration::getModuleMass__IDC"></span><span class="target" id="class_configuration_1aa0a233980495e21ca8df94f8342bac9c"></span><span class="n"><span class="pre">Vector</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getModuleMass</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv42ID" title="ID"><span class="n"><span class="pre">ID</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">id</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration13getModuleMassE2ID" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13Configuration7executeERK6Action">
+<span id="_CPPv3N13Configuration7executeERK6Action"></span><span id="_CPPv2N13Configuration7executeERK6Action"></span><span id="Configuration::execute__ActionCR"></span><span class="target" id="class_configuration_1ad50e2eff8bceaa23399d5b509c6e3c09"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">execute</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv46Action" title="Action"><span class="n"><span class="pre">Action</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">action</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13Configuration7executeERK6Action" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Tries to execute given <code class="docutils literal notranslate"><span class="pre">action</span></code>. </p>
+<p><code class="docutils literal notranslate"><span class="pre">False</span></code> is returned if either you try to add edge to already occupied dock, erase non-existent edge, perform invalid rotation or configuration wasn’t connected before executing.</p>
+<p>This function does NOT check if two modules collide during rotations. For this functionality use <code class="docutils literal notranslate"><span class="pre">executeIfValid</span></code> from <code class="docutils literal notranslate"><span class="pre">Generators.h</span></code></p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if <code class="docutils literal notranslate"><span class="pre">action</span></code> was executed without problems. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13Configuration4diffERK13Configuration">
+<span id="_CPPv3NK13Configuration4diffERK13Configuration"></span><span id="_CPPv2NK13Configuration4diffERK13Configuration"></span><span id="Configuration::diff__ConfigurationCRC"></span><span class="target" id="class_configuration_1a7272fcc52b393a4530c704fe3f040174"></span><a class="reference internal" href="#_CPPv46Action" title="Action"><span class="n"><span class="pre">Action</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">diff</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv413Configuration" title="Configuration"><span class="n"><span class="pre">Configuration</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13Configuration4diffERK13Configuration" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13ConfigurationeqERK13Configuration">
+<span id="_CPPv3NK13ConfigurationeqERK13Configuration"></span><span id="_CPPv2NK13ConfigurationeqERK13Configuration"></span><span id="Configuration::eq-operator__ConfigurationCRC"></span><span class="target" id="class_configuration_1ad5d4cc57ae1d66fdc17f7c4f75907d2b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">==</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv413Configuration" title="Configuration"><span class="n"><span class="pre">Configuration</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13ConfigurationeqERK13Configuration" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK13ConfigurationneERK13Configuration">
+<span id="_CPPv3NK13ConfigurationneERK13Configuration"></span><span id="_CPPv2NK13ConfigurationneERK13Configuration"></span><span id="Configuration::neq-operator__ConfigurationCRC"></span><span class="target" id="class_configuration_1a6975fe31e3b521f5625f006948b9f190"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">!=</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv413Configuration" title="Configuration"><span class="n"><span class="pre">Configuration</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK13ConfigurationneERK13Configuration" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13Configuration10clearEdgesEv">
+<span id="_CPPv3N13Configuration10clearEdgesEv"></span><span id="_CPPv2N13Configuration10clearEdgesEv"></span><span id="Configuration::clearEdges"></span><span class="target" id="class_configuration_1a2834710139f65b7bf2140996dbd794c3"></span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clearEdges</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13Configuration10clearEdgesEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N13Configuration19computeSpanningTreeEv">
+<span id="_CPPv3N13Configuration19computeSpanningTreeEv"></span><span id="_CPPv2N13Configuration19computeSpanningTreeEv"></span><span id="Configuration::computeSpanningTree"></span><span class="target" id="class_configuration_1a7dbdbd1fb9b2908740ffc3a343c1e8e9"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">computeSpanningTree</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N13Configuration19computeSpanningTreeEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Computes spanning tree of configuration. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">True</span></code> if configuration is connected, <code class="docutils literal notranslate"><span class="pre">False</span></code> if not. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp">
+<span class="target" id="class_configuration_1a26047dcf9a532518401ad47b98ecb5ee"></span><span class="sig-name descname"><span class="pre">friend</span> <span class="pre">ConfigurationHash</span></span></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="atoms/containers.html" class="btn btn-neutral float-left" title="Containers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../universalModule/index.html" class="btn btn-neutral float-right" title="Universal Module" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

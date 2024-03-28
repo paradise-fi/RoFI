@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Simulator Tutorial &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="RoFI HAL" href="../rofihal/index.html" />
+    <link rel="prev" title="Tutorials" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../intro/index.html">Introduction, compiling and structure</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Tutorials</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Simulator Tutorial</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#task-0-setup">Task 0: Setup</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#compile-and-run-simplesim">Compile and run SimpleSim</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#create-a-folder-for-your-solution">Create a folder for your solution</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#task-1-create-a-configuration">Task 1: Create a Configuration</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#walkthrough">Walkthrough</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#task-2-create-hello-world-for-universal-module">Task 2: Create Hello World for Universal Module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id1">Walkthrough</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#task-3-move-universal-module">Task 3: Move Universal Module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id2">Walkthrough</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#task-4-multiple-modules-with-same-code">Task 4: Multiple Modules with Same Code</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id3">Walkthrough</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#task-5-module-communication">Task 5: Module Communication</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id4">Walkthrough</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#task-6-packet-filter">Task 6: Packet Filter</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#id5">Walkthrough</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../rofihal/index.html">RoFI HAL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rofilib/index.html">RoFILib</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Tutorials</a></li>
+      <li class="breadcrumb-item active">Simulator Tutorial</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/tutorials/simulator.md.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="simulator-tutorial">
+<h1>Simulator Tutorial<a class="headerlink" href="#simulator-tutorial" title="Permalink to this headline"></a></h1>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>It is recommended that after each task you try to compile and run your code.</p>
+</div>
+<section id="task-0-setup">
+<h2>Task 0: Setup<a class="headerlink" href="#task-0-setup" title="Permalink to this headline"></a></h2>
+<section id="compile-and-run-simplesim">
+<h3>Compile and run SimpleSim<a class="headerlink" href="#compile-and-run-simplesim" title="Permalink to this headline"></a></h3>
+<p>See <a class="reference external" href="https://paradise-fi.github.io/RoFI/intro/compiling">RoFI Compilation</a>.
+For this tutorial you will need the
+<a class="reference external" href="https://paradise-fi.github.io/RoFI/intro/suites/desktop">desktop suite</a>.</p>
+<p>After installing all the prerequisities, run Simplesim using the
+<a class="reference external" href="https://paradise-fi.github.io/RoFI/intro/compiling#simplesim">Quick start SimpleSim example</a>.</p>
+</section>
+<section id="create-a-folder-for-your-solution">
+<h3>Create a folder for your solution<a class="headerlink" href="#create-a-folder-for-your-solution" title="Permalink to this headline"></a></h3>
+<p>Create a directory for your solution in <code class="docutils literal notranslate"><span class="pre">tutorials/simulator/</span></code>
+(with any name that you like).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You may be able to create the directory anywhere, but right now the easiest
+way to include everything is to work inside the <code class="docutils literal notranslate"><span class="pre">RoFI</span></code> repository.</p>
+</div>
+</section>
+</section>
+<section id="task-1-create-a-configuration">
+<h2>Task 1: Create a Configuration<a class="headerlink" href="#task-1-create-a-configuration" title="Permalink to this headline"></a></h2>
+<p>Create a file <code class="docutils literal notranslate"><span class="pre">configuration.json</span></code> that will contain a configuration with:</p>
+<ul class="simple">
+<li><p>id 12: Universal module</p></li>
+<li><p>id 42: Pad 6×3</p></li>
+</ul>
+<p>Connect the Universal module by the <code class="docutils literal notranslate"><span class="pre">A-Z</span></code> connector to the pad with <code class="docutils literal notranslate"><span class="pre">North</span></code>
+orientation at position:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span>
+<span class="n">X</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span>
+<span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You can also try to create the configuration in code and serialize it using the library.</p>
+</div>
+<section id="walkthrough">
+<h3>Walkthrough<a class="headerlink" href="#walkthrough" title="Permalink to this headline"></a></h3>
+<p>Go to documentation for
+<a class="reference external" href="https://paradise-fi.github.io/RoFI/rofilib/configuration#serialization">configuration serialization</a>.</p>
+</section>
+</section>
+<section id="task-2-create-hello-world-for-universal-module">
+<h2>Task 2: Create Hello World for Universal Module<a class="headerlink" href="#task-2-create-hello-world-for-universal-module" title="Permalink to this headline"></a></h2>
+<p>Create a file <code class="docutils literal notranslate"><span class="pre">module_code.cpp</span></code> that will print <code class="docutils literal notranslate"><span class="pre">&quot;Hello</span> <span class="pre">world</span> <span class="pre">{id}!&quot;</span></code>
+with the local module’s id to the standard output.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>Try running more clients (your module executable) and see what it does.<br>
+When the client seems to be cycling, it probably couldn’t be assigned any module.</p>
+</div>
+<section id="id1">
+<h3>Walkthrough<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h3>
+<ol class="arabic">
+<li><p>Create file <code class="docutils literal notranslate"><span class="pre">module_code.cpp</span></code> and <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> in your solution folder.</p></li>
+<li><p>Add the executable in <code class="docutils literal notranslate"><span class="pre">CMakeLists.txt</span></code> and link library <code class="docutils literal notranslate"><span class="pre">rofi::hal</span></code>.</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span><span class="c"># CMakeLists.txt</span>
+
+<span class="nb">add_executable</span><span class="p">(</span><span class="s">tutorial-simulation</span><span class="w"> </span><span class="s">module_code.cpp</span><span class="p">)</span>
+<span class="nb">target_link_libraries</span><span class="p">(</span><span class="s">tutorial-simulation</span><span class="w"> </span><span class="s">rofi::hal</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p>Update <code class="docutils literal notranslate"><span class="pre">tutorials/simulator/CMakeLists.txt</span></code> to include your directory
+(by adding it to the list <code class="docutils literal notranslate"><span class="pre">SOLUTION_DIRS</span></code>).</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is the only time in this tutorial that you won’t create your own file,
+but rather change an existing one.</p>
+</div>
+</li>
+<li><p>Create the <code class="docutils literal notranslate"><span class="pre">module_code.cpp</span></code> file with <code class="docutils literal notranslate"><span class="pre">main</span></code> function that will print
+the required information.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>See <a class="reference external" href="https://paradise-fi.github.io/RoFI/rofihal">RoFI HAL documentation</a>.</p>
+</div>
+</li>
+</ol>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>After compiling your code (using <code class="docutils literal notranslate"><span class="pre">rmake</span></code>), the executable will be in your path
+when you are in RoFI environment.</p>
+</div>
+</section>
+</section>
+<section id="task-3-move-universal-module">
+<h2>Task 3: Move Universal Module<a class="headerlink" href="#task-3-move-universal-module" title="Permalink to this headline"></a></h2>
+<p>Modify <code class="docutils literal notranslate"><span class="pre">module_code.cpp</span></code> such that the Universal module will move to the position:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span>
+<span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">X</span>
+<span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span>
+</pre></div>
+</div>
+<p>The module should be connected by connector <code class="docutils literal notranslate"><span class="pre">B-Z</span></code> with <code class="docutils literal notranslate"><span class="pre">North</span></code> orientation.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>The default position of <code class="docutils literal notranslate"><span class="pre">rofi::hal::Connector</span></code> is extended.</p>
+<p>So you don’t need to extend the connectors of Pad,
+but you need to retract a connector before connecting.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The RoFI HAL is asynchronous by design.
+However this tutorial is not about asynchronous programming,
+so you can use <code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">std::promise</span></code> to synchronize the calls.</p>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>There is no guarantee that the thread in which the callback is called will end.
+So use <code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">std::promise::set_value()</span></code> instead of
+<code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">std::promise::set_value_at_thread_exit()</span></code>.</p>
+</div>
+</div>
+<section id="id2">
+<h3>Walkthrough<a class="headerlink" href="#id2" title="Permalink to this headline"></a></h3>
+<p>This walkthrough will synchronize everything.
+It may not be the best practice, but the best practice for RoFI HAL
+in real code will probably be not to use it directly.</p>
+<ol class="arabic">
+<li><p>Add blocking versions of <a class="reference internal" href="../rofihal/index.html#_CPPv4N4rofi3hal5Joint11setPositionEffNSt8functionIFv5JointEEE" title="rofi::hal::Joint::setPosition"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::hal::Joint::setPosition()</span></code></a>
+and <a class="reference internal" href="../rofihal/index.html#_CPPv4N4rofi3hal4RoFI4waitEiNSt8functionIFvvEEE" title="rofi::hal::RoFI::wait"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::hal::RoFI::wait()</span></code></a>.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="kt">void</span><span class="w"> </span><span class="nf">blockingFunc</span><span class="p">()</span>
+<span class="p">{</span>
+<span class="w">    </span><span class="k">auto</span><span class="w"> </span><span class="n">funcPromise</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">promise</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">void</span><span class="w"> </span><span class="o">&gt;</span><span class="p">();</span>
+<span class="w">    </span><span class="n">func</span><span class="p">(</span><span class="w"> </span><span class="p">[</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="p">]</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">funcPromise</span><span class="p">.</span><span class="n">set_value</span><span class="p">();</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">);</span>
+<span class="w">    </span><span class="n">funcPromise</span><span class="p">.</span><span class="n">get_future</span><span class="p">().</span><span class="n">get</span><span class="p">();</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+</li>
+<li><p>Add blocking versions of <a class="reference internal" href="../rofihal/index.html#_CPPv4N4rofi3hal9Connector7connectEv" title="rofi::hal::Connector::connect"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::hal::Connector::connect()</span></code></a> and
+<a class="reference internal" href="../rofihal/index.html#_CPPv4N4rofi3hal9Connector10disconnectEv" title="rofi::hal::Connector::disconnect"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::hal::Connector::disconnect()</span></code></a> using
+<code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::hal::Connector::onEvent()</span></code>.</p>
+<p>Don’t forget to avoid dangling references.</p>
+</li>
+<li><p>Put it all together.</p>
+<div class="admonition tip">
+<p class="admonition-title">Tip</p>
+<p>You can use <code class="docutils literal notranslate"><span class="pre">atoms::Angle</span></code> to convert degrees to radians.</p>
+</div>
+</li>
+</ol>
+</section>
+</section>
+<section id="task-4-multiple-modules-with-same-code">
+<h2>Task 4: Multiple Modules with Same Code<a class="headerlink" href="#task-4-multiple-modules-with-same-code" title="Permalink to this headline"></a></h2>
+<p>Create a second Universal module with id <code class="docutils literal notranslate"><span class="pre">99</span></code> connected to the Pad at position Y:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span>
+<span class="n">X</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">Y</span>
+<span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span>
+</pre></div>
+</div>
+<p>Update the code in such a way so that both Universal modules meet at the middle
+and connect to each other and print the connection orientation.</p>
+<p>The Universal modules should be connected together with the <code class="docutils literal notranslate"><span class="pre">A-Z</span></code> connectors
+and they should be connected to the pad at the following positions:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span>
+<span class="n">O</span><span class="w"> </span><span class="n">X</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">Y</span><span class="w"> </span><span class="n">O</span>
+<span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span><span class="w"> </span><span class="n">O</span>
+</pre></div>
+</div>
+<p>Try to program the module code in such a way that it works no matter what ids
+the modules have.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>You may need to think about the orientation in which to connect the second
+Universal module to the pad in the configuration.</p>
+</div>
+<section id="id3">
+<h3>Walkthrough<a class="headerlink" href="#id3" title="Permalink to this headline"></a></h3>
+<ol class="arabic">
+<li><p>Add a check that code is run in an Universal Module.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Modules in simulator will get populated by code from the lowest
+<code class="docutils literal notranslate"><span class="pre">rofi::hal::RoFI::Id</span></code> to the highest.</p>
+</div>
+</li>
+<li><p>Update code such that both Universal Modules stop in the middle.</p></li>
+<li><p>Get and print the orientation by <a class="reference internal" href="../rofihal/index.html#_CPPv4N4rofi3hal9Connector8getStateEv" title="rofi::hal::Connector::getState"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::hal::Connector::getState()</span></code></a>.</p></li>
+</ol>
+</section>
+</section>
+<section id="task-5-module-communication">
+<h2>Task 5: Module Communication<a class="headerlink" href="#task-5-module-communication" title="Permalink to this headline"></a></h2>
+<p>Update the code in such a way so that after both Universal modules meet
+in the middle, they:</p>
+<ol class="arabic">
+<li><p>Select a direction to a side.</p></li>
+<li><p>Disconnect from each other.</p></li>
+<li><p>Move in the selected direction.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>You will need to rotate with the gamma joint.</p>
+</div>
+</li>
+<li><p>Connect to each other at the new position.</p>
+<p>The Universal modules should be again connected together with the <code class="docutils literal notranslate"><span class="pre">A-Z</span></code> connectors.
+They should now be connected to the pad <strong>right next to each other</strong>.</p>
+</li>
+</ol>
+<p>Again, try to program the module code in such a way that it works no matter
+what ids the modules have.</p>
+<section id="id4">
+<h3>Walkthrough<a class="headerlink" href="#id4" title="Permalink to this headline"></a></h3>
+<ol class="arabic">
+<li><p>Add a function that will use <a class="reference internal" href="../rofihal/index.html#_CPPv4N4rofi3hal9Connector8onPacketENSt8functionIFv9Connector8uint16_t4PBufEEE" title="rofi::hal::Connector::onPacket"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::hal::Connector::onPacket()</span></code></a>
+and return whether this module is the master or not.</p>
+<div class="admonition hint">
+<p class="admonition-title">Hint</p>
+<p>You can use the <code class="docutils literal notranslate"><span class="pre">rofi::hal::RoFI::Id</span></code> since it is always different for
+different modules.</p>
+</div>
+<div class="admonition caution">
+<p class="admonition-title">Caution</p>
+<p>Make sure that you set the callback before the other module sends
+the packet.</p>
+</div>
+</li>
+<li><p>Use the knowledge whether the current module id the master to split
+the code where you need to.</p></li>
+</ol>
+</section>
+</section>
+<section id="task-6-packet-filter">
+<h2>Task 6: Packet Filter<a class="headerlink" href="#task-6-packet-filter" title="Permalink to this headline"></a></h2>
+<p>Create a packet filter <code class="docutils literal notranslate"><span class="pre">discard_half.py</span></code> that discards every second packet
+(counted for each sender module separately).</p>
+<p>Create a configuration and code to test that it works.</p>
+<section id="id5">
+<h3>Walkthrough<a class="headerlink" href="#id5" title="Permalink to this headline"></a></h3>
+<ol class="arabic">
+<li><p>Create a file <code class="docutils literal notranslate"><span class="pre">discard_half.py</span></code> and create a python function
+<code class="docutils literal notranslate"><span class="pre">filter(packet,</span> <span class="pre">sender,</span> <span class="pre">receiver)</span></code>.</p>
+<p>The function should return <code class="docutils literal notranslate"><span class="pre">(new_packet,</span> <span class="pre">delay_ms)</span></code>.
+The packet is lost if <code class="docutils literal notranslate"><span class="pre">delay_ms</span> <span class="pre">==</span> <span class="pre">-1</span></code>.
+The behaviour when you return other negative values is not specified.</p>
+</li>
+<li><p>Create a variable to store the number of packets sent by each module
+and throw away every second packet (by returning <code class="docutils literal notranslate"><span class="pre">-1</span></code> delay).</p></li>
+<li><p>Create a configuration of two modules connected together.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Don’t forget to fix the position of the modules in space.</p>
+</div>
+</li>
+<li><p>Add code to test the packet filter.</p></li>
+<li><p>Run the simulator using the <code class="docutils literal notranslate"><span class="pre">-p</span></code> command line option.</p></li>
+</ol>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Tutorials" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../rofihal/index.html" class="btn btn-neutral float-right" title="RoFI HAL" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

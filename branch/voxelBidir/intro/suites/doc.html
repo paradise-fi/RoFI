@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Documentation Suite &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Project Structure" href="../structure.html" />
+    <link rel="prev" title="Desktop Suite" href="desktop.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Introduction, compiling and structure</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../compiling.html">RoFI Compilation</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../compiling.html#build-environment">Build environment</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../compiling.html#compilation-suites">Compilation suites</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="desktop.html">Desktop Suite</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Documentation Suite</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../compiling.html#compilation-targets">Compilation targets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../compiling.html#flashing-robots-and-hardware-modules">Flashing robots and hardware modules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../compiling.html#advanced-configuration-of-the-build-process">Advanced configuration of the build process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../compiling.html#quick-start-example">Quick start example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../compiling.html#quick-start-simulator-example">Quick start Simulator example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../structure.html">Project Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testing.html">Writing and running tests</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../releng/index.html">Release engineering notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofihal/index.html">RoFI HAL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofilib/index.html">RoFILib</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Introduction, compiling and structure</a></li>
+          <li class="breadcrumb-item"><a href="../compiling.html">RoFI Compilation</a></li>
+      <li class="breadcrumb-item active">Documentation Suite</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/intro/suites/doc.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="documentation-suite">
+<h1>Documentation Suite<a class="headerlink" href="#documentation-suite" title="Permalink to this headline"></a></h1>
+<p>This suite builds this documentation. The documentation is build using Sphinx
+and Breathe.</p>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline"></a></h2>
+<p>To build the documentation, Sphinx, Breathe, Sphinx-RTD-Theme, MyST,
+Doxygen and Graphviz are required.</p>
+<p>On APT based system, these dependencies can be installed via:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>doxygen<span class="w"> </span>graphviz
+$<span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>sphinx<span class="w"> </span>breathe<span class="w"> </span>myst_parser<span class="w"> </span>sphinx-rtd-theme
+</pre></div>
+</div>
+<p>If you intend to use <cite>rmake –doc</cite> command, you need to install additional package</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>inotify-tools
+</pre></div>
+</div>
+</section>
+<section id="build-options">
+<h2>Build options<a class="headerlink" href="#build-options" title="Permalink to this headline"></a></h2>
+<p>There are no build options.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="desktop.html" class="btn btn-neutral float-left" title="Desktop Suite" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../structure.html" class="btn btn-neutral float-right" title="Project Structure" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

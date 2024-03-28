@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Introduction, compiling and structure &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="RoFI Compilation" href="compiling.html" />
+    <link rel="prev" title="RoFI - Technical Documentation" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Introduction, compiling and structure</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="compiling.html">RoFI Compilation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure.html">Project Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Writing and running tests</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../roficom/index.html">RoFiCoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rofilib/index.html">RoFILib</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../universalModule/index.html">Universal Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rofisim/index.html">RoFISim</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Introduction, compiling and structure</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/intro/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="introduction-compiling-and-structure">
+<h1>Introduction, compiling and structure<a class="headerlink" href="#introduction-compiling-and-structure" title="Permalink to this headline"></a></h1>
+<p>Welcome to the RoFI project. In this chapter we will give you the basic overview
+on the sources &amp; data organization in the repository. We will also show you, how
+to compile the project.</p>
+<p>First, start by cloning the project repository:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/paradise-fi/RoFI.git
+$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:paradise-fi/RoFI.git<span class="w"> </span><span class="c1"># If you have SSH keys set up</span>
+</pre></div>
+</div>
+<p>Then proceed to the following sections:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="compiling.html">RoFI Compilation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="compiling.html#build-environment">Build environment</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compiling.html#compilation-suites">Compilation suites</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="suites/desktop.html">Desktop Suite</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="suites/desktop.html#dependencies">Dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="suites/desktop.html#build-options">Build options</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="suites/doc.html">Documentation Suite</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="suites/doc.html#dependencies">Dependencies</a></li>
+<li class="toctree-l4"><a class="reference internal" href="suites/doc.html#build-options">Build options</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="compiling.html#compilation-targets">Compilation targets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compiling.html#quick-start-example">Quick start example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compiling.html#quick-start-gazebosim-example">Quick start GazeboSim example</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="structure.html">Project Structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="testing.html">Writing and running tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#running-the-test">Running the test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#writing-tests">Writing tests</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html#writing-test-for-c">Writing test for C++</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="RoFI - Technical Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="compiling.html" class="btn btn-neutral float-right" title="RoFI Compilation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

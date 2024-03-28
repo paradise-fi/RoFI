@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interface &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Routing table" href="routingTable.html" />
+    <link rel="prev" title="Netwokring" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../intro/index.html">Introduction, compiling and structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../releng/index.html">Release engineering notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofihal/index.html">RoFI HAL</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">RoFILib</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../configurations/index.html">Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../atoms/index.html">Atoms</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Netwokring</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="index.html#network-manager">Network Manager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#protocols">Protocols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#components">Components</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Interface</a></li>
+<li class="toctree-l4"><a class="reference internal" href="routingTable.html">Routing table</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">RoFILib</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Netwokring</a></li>
+      <li class="breadcrumb-item active">Interface</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/rofilib/networking/interface.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="interface">
+<h1>Interface<a class="headerlink" href="#interface" title="Permalink to this headline"></a></h1>
+<p>This class represents the interface. In the networking, we distinguish two types
+of interfaces; the first one are physical/non-virtual interfaces which correspond
+to the connector of the module, the second one is so-called virtual interface
+which is an additional interface of each module which serves as the main interface.</p>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9InterfaceE">
+<span id="_CPPv3N4rofi3net9InterfaceE"></span><span id="_CPPv2N4rofi3net9InterfaceE"></span><span id="rofi::net::Interface"></span><span class="target" id="classrofi_1_1net_1_1_interface"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Interface</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3net9InterfaceE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Class representing the interface of a Module. </p>
+<p>Supports both, physical (i.e., with a physical connector) and virtual flavours. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface4DHCPE">
+<span id="_CPPv3N4rofi3net9Interface4DHCPE"></span><span id="_CPPv2N4rofi3net9Interface4DHCPE"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a0ef68298fb4d84c74deb5eb505e0ec40"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">DHCP</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface4DHCPE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface4DHCP5SLAACE">
+<span id="_CPPv3N4rofi3net9Interface4DHCP5SLAACE"></span><span id="_CPPv2N4rofi3net9Interface4DHCP5SLAACE"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a0ef68298fb4d84c74deb5eb505e0ec40a8642454ea969abf58bd25d9106d4125c"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">SLAAC</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface4DHCP5SLAACE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface4DHCP9STATEFULLE">
+<span id="_CPPv3N4rofi3net9Interface4DHCP9STATEFULLE"></span><span id="_CPPv2N4rofi3net9Interface4DHCP9STATEFULLE"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a0ef68298fb4d84c74deb5eb505e0ec40a48d372ffb40c2712db4cc1a4aa2bc88a"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">STATEFULL</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface4DHCP9STATEFULLE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface4NameE">
+<span id="_CPPv3N4rofi3net9Interface4NameE"></span><span id="_CPPv2N4rofi3net9Interface4NameE"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a29804d847ba790e08fcaf3ffdca08ac1"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Name</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface4NameE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Type alias for the <a class="reference internal" href="#classrofi_1_1net_1_1_interface"><span class="std std-ref">Interface</span></a>’s name. Use this instead of string, it may change in the future. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN4rofi3net9Interface9InterfaceERK8PhysAddrNSt8optionalI9ConnectorEERK7NetmgCB">
+<span id="_CPPv3I00EN4rofi3net9Interface9InterfaceERK8PhysAddrNSt8optionalI9ConnectorEERK7NetmgCB"></span><span id="_CPPv2I00EN4rofi3net9Interface9InterfaceERK8PhysAddrNSt8optionalI9ConnectorEERK7NetmgCB"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">NetmgCB</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">is_invocable_r</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4rofi3net9Interface9InterfaceERK8PhysAddrNSt8optionalI9ConnectorEERK7NetmgCB" title="rofi::net::Interface::Interface::NetmgCB"><span class="n"><span class="pre">NetmgCB</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4rofi3net9Interface9InterfaceERK8PhysAddrNSt8optionalI9ConnectorEERK7NetmgCB" title="rofi::net::Interface::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">hal</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../../rofihal/index.html#_CPPv4N4rofi3hal14ConnectorEventE" title="rofi::hal::ConnectorEvent"><span class="n"><span class="pre">ConnectorEvent</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classrofi_1_1net_1_1_interface_1ac04522d6cdbe1b4d4bb2cf090143613e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Interface</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PhysAddr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">pAddr</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">Connector</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">connector</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4rofi3net9Interface9InterfaceERK8PhysAddrNSt8optionalI9ConnectorEERK7NetmgCB" title="rofi::net::Interface::Interface::NetmgCB"><span class="n"><span class="pre">NetmgCB</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">networkManagerEventCB</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I00EN4rofi3net9Interface9InterfaceERK8PhysAddrNSt8optionalI9ConnectorEERK7NetmgCB" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN4rofi3net9Interface9InterfaceERK8PhysAddrN6Logger11LogFunctionENSt8optionalI9ConnectorEERK7NetmgCB">
+<span id="_CPPv3I00EN4rofi3net9Interface9InterfaceERK8PhysAddrN6Logger11LogFunctionENSt8optionalI9ConnectorEERK7NetmgCB"></span><span id="_CPPv2I00EN4rofi3net9Interface9InterfaceERK8PhysAddrN6Logger11LogFunctionENSt8optionalI9ConnectorEERK7NetmgCB"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">NetmgCB</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">is_invocable_r</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">void</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4rofi3net9Interface9InterfaceERK8PhysAddrN6Logger11LogFunctionENSt8optionalI9ConnectorEERK7NetmgCB" title="rofi::net::Interface::Interface::NetmgCB"><span class="n"><span class="pre">NetmgCB</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4rofi3net9Interface9InterfaceERK8PhysAddrN6Logger11LogFunctionENSt8optionalI9ConnectorEERK7NetmgCB" title="rofi::net::Interface::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">hal</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../../rofihal/index.html#_CPPv4N4rofi3hal14ConnectorEventE" title="rofi::hal::ConnectorEvent"><span class="n"><span class="pre">ConnectorEvent</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classrofi_1_1net_1_1_interface_1a928039d2c21bced915ba7ea5d9a91a07"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Interface</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">PhysAddr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">pAddr</span></span>, <span class="n"><span class="pre">Logger</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">LogFunction</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">lf</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">Connector</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">connector</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4rofi3net9Interface9InterfaceERK8PhysAddrN6Logger11LogFunctionENSt8optionalI9ConnectorEERK7NetmgCB" title="rofi::net::Interface::Interface::NetmgCB"><span class="n"><span class="pre">NetmgCB</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">networkManagerEventCB</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I00EN4rofi3net9Interface9InterfaceERK8PhysAddrN6Logger11LogFunctionENSt8optionalI9ConnectorEERK7NetmgCB" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9InterfaceD0Ev">
+<span id="_CPPv3N4rofi3net9InterfaceD0Ev"></span><span id="_CPPv2N4rofi3net9InterfaceD0Ev"></span><span id="rofi::net::Interface::~Interface"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a997a65ba1bbee89a961186bbba62ceea"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">~Interface</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net9InterfaceD0Ev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface9InterfaceERK9Interface">
+<span id="_CPPv3N4rofi3net9Interface9InterfaceERK9Interface"></span><span id="_CPPv2N4rofi3net9Interface9InterfaceERK9Interface"></span><span id="rofi::net::Interface::Interface__InterfaceCR"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a702ed4872f940fcbc61de29e88f96566"></span><span class="sig-name descname"><span class="n"><span class="pre">Interface</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net9Interface9InterfaceERK9Interface" title="rofi::net::Interface::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">delete</span></span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface9InterfaceERK9Interface" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9InterfaceaSERK9Interface">
+<span id="_CPPv3N4rofi3net9InterfaceaSERK9Interface"></span><span id="_CPPv2N4rofi3net9InterfaceaSERK9Interface"></span><span id="rofi::net::Interface::assign-operator__InterfaceCR"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a37abf304fe75db5a57ed85f70dcee5b7"></span><a class="reference internal" href="#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">delete</span></span><a class="headerlink" href="#_CPPv4N4rofi3net9InterfaceaSERK9Interface" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface5setUpEv">
+<span id="_CPPv3N4rofi3net9Interface5setUpEv"></span><span id="_CPPv2N4rofi3net9Interface5setUpEv"></span><span id="rofi::net::Interface::setUp"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a7d6aea73770551ec87d92098c04434ee"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setUp</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface5setUpEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set the interface up so it starts processing traffic. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if the interface was set up correctly. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface7setDownEv">
+<span id="_CPPv3N4rofi3net9Interface7setDownEv"></span><span id="_CPPv2N4rofi3net9Interface7setDownEv"></span><span id="rofi::net::Interface::setDown"></span><span class="target" id="classrofi_1_1net_1_1_interface_1ada6802c1935025de4254137cec80535f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setDown</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface7setDownEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set the interface down so it stops processing traffic. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net9Interface4isUpEv">
+<span id="_CPPv3NK4rofi3net9Interface4isUpEv"></span><span id="_CPPv2NK4rofi3net9Interface4isUpEv"></span><span id="rofi::net::Interface::isUpC"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a6e70b0b5eba3ec3c5547d7ebc3cc8484"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">isUp</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net9Interface4isUpEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Query on the state of the interface. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if the interface is up. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net9Interface6isDownEv">
+<span id="_CPPv3NK4rofi3net9Interface6isDownEv"></span><span id="_CPPv2NK4rofi3net9Interface6isDownEv"></span><span id="rofi::net::Interface::isDownC"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a035d6361b873bda3ba3f1df743b3db53"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">isDown</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net9Interface6isDownEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Query on the state of the interface. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if the interface is down. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface11isConnectedEv">
+<span id="_CPPv3N4rofi3net9Interface11isConnectedEv"></span><span id="_CPPv2N4rofi3net9Interface11isConnectedEv"></span><span id="rofi::net::Interface::isConnected"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a126f76d41c300b80ccfe860e4dbc1e9d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">isConnected</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface11isConnectedEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Query on the state of the underlying connector. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if the connector of the interface is connected. For virtual interface this returns always false. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net9Interface9isVirtualEv">
+<span id="_CPPv3NK4rofi3net9Interface9isVirtualEv"></span><span id="_CPPv2NK4rofi3net9Interface9isVirtualEv"></span><span id="rofi::net::Interface::isVirtualC"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a1ed238bdd11f2c5c1c66784728a4e389"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">isVirtual</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net9Interface9isVirtualEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns true if the interface is virtual (i.e., does not have a physical connector). </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN4rofi3net9Interface11setProtocolEvRK7Ip6AddrRR9OnMessage">
+<span id="_CPPv3I00EN4rofi3net9Interface11setProtocolERK7Ip6AddrRR9OnMessage"></span><span id="_CPPv2I00EN4rofi3net9Interface11setProtocolERK7Ip6AddrRR9OnMessage"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">OnMessage</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">is_invocable_r</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">err_t</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4rofi3net9Interface11setProtocolEvRK7Ip6AddrRR9OnMessage" title="rofi::net::Interface::setProtocol::OnMessage"><span class="n"><span class="pre">OnMessage</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">raw_pcb</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">pbuf</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">ip_addr_t</span></span><span class="p"><span class="pre">*</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classrofi_1_1net_1_1_interface_1a84434a39e5d481da7400299609437b3d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setProtocol</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">listenerAddr</span></span>, <a class="reference internal" href="#_CPPv4I00EN4rofi3net9Interface11setProtocolEvRK7Ip6AddrRR9OnMessage" title="rofi::net::Interface::setProtocol::OnMessage"><span class="n"><span class="pre">OnMessage</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">onMessage</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I00EN4rofi3net9Interface11setProtocolEvRK7Ip6AddrRR9OnMessage" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Set up a protocol listener on given address with given callback function. </p>
+<p>Throws an exception if the protocol is already running on given interface. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface14removeProtocolERK7Ip6Addr">
+<span id="_CPPv3N4rofi3net9Interface14removeProtocolERK7Ip6Addr"></span><span id="_CPPv2N4rofi3net9Interface14removeProtocolERK7Ip6Addr"></span><span id="rofi::net::Interface::removeProtocol__Ip6AddrCR"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a65c2ce9aced414ebbf08da39b8de78ef"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">removeProtocol</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">listenerAddr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface14removeProtocolERK7Ip6Addr" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Remove protocol corresponding to the given address. </p>
+<p>Stops corresponding listener. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface12sendProtocolERK7Ip6AddrRR4PBuf">
+<span id="_CPPv3N4rofi3net9Interface12sendProtocolERK7Ip6AddrRR4PBuf"></span><span id="_CPPv2N4rofi3net9Interface12sendProtocolERK7Ip6AddrRR4PBuf"></span><span id="rofi::net::Interface::sendProtocol__Ip6AddrCR.PBufRR"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a3d5dd319481b3798c8b438a00a77d9cf"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">sendProtocol</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">listenerAddr</span></span>, <span class="n"><span class="pre">PBuf</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">msg</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface12sendProtocolERK7Ip6AddrRR4PBuf" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Sends a message onto the given address using the protocol corresponding to the handle. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if the message was sent correctly. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net9Interface10getAddressEi">
+<span id="_CPPv3NK4rofi3net9Interface10getAddressEi"></span><span id="_CPPv2NK4rofi3net9Interface10getAddressEi"></span><span id="rofi::net::Interface::getAddress__iC"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a58933025492e56e7ae586dd86acc2e65"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">pair</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">Ip6Addr</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">uint8_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getAddress</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">int</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">index</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net9Interface10getAddressEi" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get an address on the given interface. </p>
+<p>Number of addresses is determined by the underlying lwip library, namely by LWIP_IPV6_NUM_ADDRESSES macro.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>a pair – corresponding to IP address and the subnet mask. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net9Interface10getAddressEv">
+<span id="_CPPv3NK4rofi3net9Interface10getAddressEv"></span><span id="_CPPv2NK4rofi3net9Interface10getAddressEv"></span><span id="rofi::net::Interface::getAddressC"></span><span class="target" id="classrofi_1_1net_1_1_interface_1ab70d33325ac8eed1cdc5dc7dd5909ba9"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">pair</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">Ip6Addr</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">uint8_t</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getAddress</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net9Interface10getAddressEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net9Interface4nameEv">
+<span id="_CPPv3NK4rofi3net9Interface4nameEv"></span><span id="_CPPv2NK4rofi3net9Interface4nameEv"></span><span id="rofi::net::Interface::nameC"></span><span class="target" id="classrofi_1_1net_1_1_interface_1af1e4e6a44ddb1b1d73c00c196229b3c6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net9Interface4NameE" title="rofi::net::Interface::Name"><span class="n"><span class="pre">Name</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">name</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net9Interface4nameEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns a name of the interface. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface7setNameERK4Name">
+<span id="_CPPv3N4rofi3net9Interface7setNameERK4Name"></span><span id="_CPPv2N4rofi3net9Interface7setNameERK4Name"></span><span id="rofi::net::Interface::setName__NameCR"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a4a601a017d6fc612880b6d6078a8a6b1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">setName</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net9Interface4NameE" title="rofi::net::Interface::Name"><span class="n"><span class="pre">Name</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">name</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface7setNameERK4Name" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Sets the name of the interface. </p>
+<p>The name has to be in form of two characters followed with up to 3 digits. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface10addAddressERK7Ip6Addr7uint8_t">
+<span id="_CPPv3N4rofi3net9Interface10addAddressERK7Ip6Addr7uint8_t"></span><span id="_CPPv2N4rofi3net9Interface10addAddressERK7Ip6Addr7uint8_t"></span><span id="rofi::net::Interface::addAddress__Ip6AddrCR.uint8_t"></span><span class="target" id="classrofi_1_1net_1_1_interface_1acd8fcc23cae7d2cdf8803545a034c737"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">addAddress</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ip</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mask</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface10addAddressERK7Ip6Addr7uint8_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Add given address with the given mask to the interface. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if the address was correctly added. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface13removeAddressERK7Ip6Addr7uint8_t">
+<span id="_CPPv3N4rofi3net9Interface13removeAddressERK7Ip6Addr7uint8_t"></span><span id="_CPPv2N4rofi3net9Interface13removeAddressERK7Ip6Addr7uint8_t"></span><span id="rofi::net::Interface::removeAddress__Ip6AddrCR.uint8_t"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a38648267db94395518e927354fd6f88a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">removeAddress</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ip</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mask</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface13removeAddressERK7Ip6Addr7uint8_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Removes given address with the given mask to the interface. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if the address was correctly removed. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9Interface4sendERR4PBuf8uint16_t">
+<span id="_CPPv3N4rofi3net9Interface4sendERR4PBuf8uint16_t"></span><span id="_CPPv2N4rofi3net9Interface4sendERR4PBuf8uint16_t"></span><span id="rofi::net::Interface::send__PBufRR.uint16_t"></span><span class="target" id="classrofi_1_1net_1_1_interface_1aaa9d692a8d0879b89990f0357e387da4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">send</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">PBuf</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">packet</span></span>, <span class="n"><span class="pre">uint16_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">contentType</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net9Interface4sendERR4PBuf8uint16_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Send given packet with the content type via the interface. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net9Interface8dataSentEv">
+<span id="_CPPv3NK4rofi3net9Interface8dataSentEv"></span><span id="_CPPv2NK4rofi3net9Interface8dataSentEv"></span><span id="rofi::net::Interface::dataSentC"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a00cda407d7dffd3c2f8aeeba7b3b666c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dataSent</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net9Interface8dataSentEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Function that returns the amount of data sent (in bytes). </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net9Interface12dataReceivedEv">
+<span id="_CPPv3NK4rofi3net9Interface12dataReceivedEv"></span><span id="_CPPv2NK4rofi3net9Interface12dataReceivedEv"></span><span id="rofi::net::Interface::dataReceivedC"></span><span class="target" id="classrofi_1_1net_1_1_interface_1a0cc7c09398f018dd6bea136721d68e68"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="kt"><span class="pre">long</span></span><span class="w"> </span><span class="kt"><span class="pre">unsigned</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dataReceived</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net9Interface12dataReceivedEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Function that returns the amount of data received (in bytes). </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-friends">Friends</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9InterfaceeqERK9InterfaceRK9Interface">
+<span id="_CPPv3N4rofi3net9InterfaceeqERK9InterfaceRK9Interface"></span><span id="_CPPv2N4rofi3net9InterfaceeqERK9InterfaceRK9Interface"></span><span id="rofi::net::Interface::eq-operator__InterfaceCR.InterfaceCR"></span><span class="target" id="classrofi_1_1net_1_1_interface_1af1355827296cadab05e6dd3179db2c50"></span><span class="k"><span class="pre">friend</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">==</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">i1</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">i2</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net9InterfaceeqERK9InterfaceRK9Interface" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net9InterfacelsERNSt7ostreamERK9Interface">
+<span id="_CPPv3N4rofi3net9InterfacelsERNSt7ostreamERK9Interface"></span><span id="_CPPv2N4rofi3net9InterfacelsERNSt7ostreamERK9Interface"></span><span id="rofi::net::Interface::lshift-operator__osR.InterfaceCR"></span><span class="target" id="classrofi_1_1net_1_1_interface_1ac4841ef68ef50303077308715c10b55b"></span><span class="k"><span class="pre">friend</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ostream</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">&lt;&lt;</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ostream</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">o</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">i</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net9InterfacelsERNSt7ostreamERK9Interface" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Outputs info about the interface. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Netwokring" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="routingTable.html" class="btn btn-neutral float-right" title="Routing table" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Containers &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Result" href="result.html" />
+    <link rel="prev" title="Patterns" href="patterns.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../intro/index.html">Introduction, compiling and structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofihal/index.html">RoFI HAL</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">RoFILib</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html">Configuration</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Atoms</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="patterns.html">Patterns</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Containers</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#classes-reference">Classes reference</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="result.html">Result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="resources.html">Embedded Resources Management</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">RoFILib</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Atoms</a></li>
+      <li class="breadcrumb-item active">Containers</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/rofilib/atoms/containers.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="containers">
+<h1>Containers<a class="headerlink" href="#containers" title="Permalink to this headline"></a></h1>
+<p>Atoms provide the following containers:</p>
+<ul class="simple">
+<li><p><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">atoms::HandledSet</span></code> - container for storing a elements with
+automatically assigned identifier.</p></li>
+</ul>
+<section id="classes-reference">
+<h2>Classes reference<a class="headerlink" href="#classes-reference" title="Permalink to this headline"></a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN5atoms9HandleSetE">
+<span id="_CPPv3I0EN5atoms9HandleSetE"></span><span id="_CPPv2I0EN5atoms9HandleSetE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_handle_set"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">HandleSet</span></span></span><a class="headerlink" href="#_CPPv4I0EN5atoms9HandleSetE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>std::vector-based set representation providing reusable integer handles for the inserted elements. </p>
+<p>You are supposed to insert elements via <a class="reference internal" href="#classatoms_1_1_handle_set_1a72198a39b3a803a545b6b54852d39ac5"><span class="std std-ref">HandleSet::insert()</span></a>, which returns unique element handle. Then you can acces this element using <a class="reference internal" href="#classatoms_1_1_handle_set_1aaf9f593e9655567d7cf9a9f3243c493c"><span class="std std-ref">HandleSet::operator[]()</span></a> or erase it using <a class="reference internal" href="#classatoms_1_1_handle_set_1a599eb225d90266f7881bd075cc84960e"><span class="std std-ref">HandleSet::erase()</span></a>. The insertion is performed in amortized constant time, deletion and element access is performed in constant time.</p>
+<p>Otherwise this container behaves the same as containers from the standard library. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet11handle_typeE">
+<span id="_CPPv3N5atoms9HandleSet11handle_typeE"></span><span id="_CPPv2N5atoms9HandleSet11handle_typeE"></span><span class="target" id="classatoms_1_1_handle_set_1ab17110b52fab33917a821d41fadcc045"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">handle_type</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="n"><span class="pre">Container</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_type</span></span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet11handle_typeE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><em>Values:</em></p>
+</dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet10value_typeE">
+<span id="_CPPv3N5atoms9HandleSet10value_typeE"></span><span id="_CPPv2N5atoms9HandleSet10value_typeE"></span><span class="target" id="classatoms_1_1_handle_set_1a75fc828658078b6f06187b268f9835bb"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">value_type</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN5atoms9HandleSetE" title="atoms::HandleSet::T"><span class="n"><span class="pre">T</span></span></a><a class="headerlink" href="#_CPPv4N5atoms9HandleSet10value_typeE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet9size_typeE">
+<span id="_CPPv3N5atoms9HandleSet9size_typeE"></span><span id="_CPPv2N5atoms9HandleSet9size_typeE"></span><span class="target" id="classatoms_1_1_handle_set_1ad500ba5ffdcc33cbfd50d5b7eaf72bde"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">size_type</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="n"><span class="pre">Container</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_type</span></span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet9size_typeE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet15difference_typeE">
+<span id="_CPPv3N5atoms9HandleSet15difference_typeE"></span><span id="_CPPv2N5atoms9HandleSet15difference_typeE"></span><span class="target" id="classatoms_1_1_handle_set_1a2c515278196f2e8fbe4270a68e6621c4"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">difference_type</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="n"><span class="pre">Container</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">difference_type</span></span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet15difference_typeE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet9referenceE">
+<span id="_CPPv3N5atoms9HandleSet9referenceE"></span><span id="_CPPv2N5atoms9HandleSet9referenceE"></span><span class="target" id="classatoms_1_1_handle_set_1a5c9fb6777dd177c531f0af261e0da2d3"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reference</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN5atoms9HandleSetE" title="atoms::HandleSet::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet9referenceE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet15const_referenceE">
+<span id="_CPPv3N5atoms9HandleSet15const_referenceE"></span><span id="_CPPv2N5atoms9HandleSet15const_referenceE"></span><span class="target" id="classatoms_1_1_handle_set_1ae712ea3a5b4b435d173dc05f8509183a"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">const_reference</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN5atoms9HandleSetE" title="atoms::HandleSet::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet15const_referenceE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet7pointerE">
+<span id="_CPPv3N5atoms9HandleSet7pointerE"></span><span id="_CPPv2N5atoms9HandleSet7pointerE"></span><span class="target" id="classatoms_1_1_handle_set_1a21308bfcbd51e6f15237fb6ea4b1c00a"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pointer</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN5atoms9HandleSetE" title="atoms::HandleSet::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">*</span></span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet7pointerE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet13const_pointerE">
+<span id="_CPPv3N5atoms9HandleSet13const_pointerE"></span><span id="_CPPv2N5atoms9HandleSet13const_pointerE"></span><span class="target" id="classatoms_1_1_handle_set_1a13a85e1d7dec3da6bc5f0c5fb97aa39c"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">const_pointer</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN5atoms9HandleSetE" title="atoms::HandleSet::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">*</span></span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet13const_pointerE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet8iteratorE">
+<span id="_CPPv3N5atoms9HandleSet8iteratorE"></span><span id="_CPPv2N5atoms9HandleSet8iteratorE"></span><span class="target" id="classatoms_1_1_handle_set_1a5ee7ea8a553b7f708479d7d3ef8123c5"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">iterator</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">Iterator</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">false</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet8iteratorE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet14const_iteratorE">
+<span id="_CPPv3N5atoms9HandleSet14const_iteratorE"></span><span id="_CPPv2N5atoms9HandleSet14const_iteratorE"></span><span class="target" id="classatoms_1_1_handle_set_1a200bd5cedee1c246e3d71fdee89b6a84"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">const_iterator</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">Iterator</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">true</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet14const_iteratorE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet4swapER9HandleSet">
+<span id="_CPPv3N5atoms9HandleSet4swapER9HandleSet"></span><span id="_CPPv2N5atoms9HandleSet4swapER9HandleSet"></span><span id="atoms::HandleSet::swap__HandleSetR"></span><span class="target" id="classatoms_1_1_handle_set_1aaea17fd279e5f15ccbbe99d6320f4fce"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">swap</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN5atoms9HandleSetE" title="atoms::HandleSet"><span class="n"><span class="pre">HandleSet</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet4swapER9HandleSet" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Exchange the contents of the container with <code class="docutils literal notranslate"><span class="pre">other</span></code></p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms9HandleSet5emptyEv">
+<span id="_CPPv3NK5atoms9HandleSet5emptyEv"></span><span id="_CPPv2NK5atoms9HandleSet5emptyEv"></span><span id="atoms::HandleSet::emptyC"></span><span class="target" id="classatoms_1_1_handle_set_1a56124c2541c62810cda81912f08e8748"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">empty</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK5atoms9HandleSet5emptyEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Check if the container has no elements. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms9HandleSet4sizeEv">
+<span id="_CPPv3NK5atoms9HandleSet4sizeEv"></span><span id="_CPPv2NK5atoms9HandleSet4sizeEv"></span><span id="atoms::HandleSet::sizeC"></span><span class="target" id="classatoms_1_1_handle_set_1aed9fd5ad91c23dd96e7063c6da8c79c1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet9size_typeE" title="atoms::HandleSet::size_type"><span class="n"><span class="pre">size_type</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">size</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK5atoms9HandleSet4sizeEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return the number of elements in the container. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet13shrink_to_fitEv">
+<span id="_CPPv3N5atoms9HandleSet13shrink_to_fitEv"></span><span id="_CPPv2N5atoms9HandleSet13shrink_to_fitEv"></span><span id="atoms::HandleSet::shrink_to_fit"></span><span class="target" id="classatoms_1_1_handle_set_1ae090d49a5981820816dad19b95042a83"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">shrink_to_fit</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet13shrink_to_fitEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Request the removal of unused capacity. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet7reserveE9size_type">
+<span id="_CPPv3N5atoms9HandleSet7reserveE9size_type"></span><span id="_CPPv2N5atoms9HandleSet7reserveE9size_type"></span><span id="atoms::HandleSet::reserve__size_type"></span><span class="target" id="classatoms_1_1_handle_set_1aaff753a8f77543e469e7e3d5999ab480"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">reserve</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet9size_typeE" title="atoms::HandleSet::size_type"><span class="n"><span class="pre">size_type</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">newCapacity</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet7reserveE9size_type" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Increase capacity so it’s greater or equal to <code class="docutils literal notranslate"><span class="pre">newCapacity</span></code></p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet5clearEv">
+<span id="_CPPv3N5atoms9HandleSet5clearEv"></span><span id="_CPPv2N5atoms9HandleSet5clearEv"></span><span id="atoms::HandleSet::clear"></span><span class="target" id="classatoms_1_1_handle_set_1a9d568d0d53b0392610f654b21f4b6773"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clear</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet5clearEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Erase all elements from the container. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4IDpEN5atoms9HandleSet7emplaceE11handle_typeDpRR4Args">
+<span id="_CPPv3IDpEN5atoms9HandleSet7emplaceEDpRR4Args"></span><span id="_CPPv2IDpEN5atoms9HandleSet7emplaceEDpRR4Args"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname"><span class="n"><span class="pre">Args</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_handle_set_1add417f478b1ba73e9cf9c106dfc3c3b3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet11handle_typeE" title="atoms::HandleSet::handle_type"><span class="n"><span class="pre">handle_type</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">emplace</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4IDpEN5atoms9HandleSet7emplaceE11handle_typeDpRR4Args" title="atoms::HandleSet::emplace::Args"><span class="n"><span class="pre">Args</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">args</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4IDpEN5atoms9HandleSet7emplaceE11handle_typeDpRR4Args" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Emplace new element and get its handle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet6insertERK1T">
+<span id="_CPPv3N5atoms9HandleSet6insertERK1T"></span><span id="_CPPv2N5atoms9HandleSet6insertERK1T"></span><span id="atoms::HandleSet::insert__TCR"></span><span class="target" id="classatoms_1_1_handle_set_1a72198a39b3a803a545b6b54852d39ac5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet11handle_typeE" title="atoms::HandleSet::handle_type"><span class="n"><span class="pre">handle_type</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">insert</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN5atoms9HandleSetE" title="atoms::HandleSet::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">value</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet6insertERK1T" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Insert new element and get its handle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet6insertERR1T">
+<span id="_CPPv3N5atoms9HandleSet6insertERR1T"></span><span id="_CPPv2N5atoms9HandleSet6insertERR1T"></span><span id="atoms::HandleSet::insert__TRR"></span><span class="target" id="classatoms_1_1_handle_set_1a2f9e77e640fb1ee40644a4e965fb1947"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet11handle_typeE" title="atoms::HandleSet::handle_type"><span class="n"><span class="pre">handle_type</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">insert</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN5atoms9HandleSetE" title="atoms::HandleSet::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">value</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet6insertERR1T" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Insert new element and get its handle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet5eraseE11handle_type">
+<span id="_CPPv3N5atoms9HandleSet5eraseE11handle_type"></span><span id="_CPPv2N5atoms9HandleSet5eraseE11handle_type"></span><span id="atoms::HandleSet::erase__handle_type"></span><span class="target" id="classatoms_1_1_handle_set_1a599eb225d90266f7881bd075cc84960e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">erase</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet11handle_typeE" title="atoms::HandleSet::handle_type"><span class="n"><span class="pre">handle_type</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">handle</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet5eraseE11handle_type" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Erase element based on its handle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet5beginEv">
+<span id="_CPPv3N5atoms9HandleSet5beginEv"></span><span id="_CPPv2N5atoms9HandleSet5beginEv"></span><span id="atoms::HandleSet::begin"></span><span class="target" id="classatoms_1_1_handle_set_1ac26ec9376115f1fa0d63338ce3b76643"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet8iteratorE" title="atoms::HandleSet::iterator"><span class="n"><span class="pre">iterator</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">begin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet5beginEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return an iterator to the first element. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms9HandleSet5beginEv">
+<span id="_CPPv3NK5atoms9HandleSet5beginEv"></span><span id="_CPPv2NK5atoms9HandleSet5beginEv"></span><span id="atoms::HandleSet::beginC"></span><span class="target" id="classatoms_1_1_handle_set_1a84015ae11c9ca37e335f6196ca447449"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet14const_iteratorE" title="atoms::HandleSet::const_iterator"><span class="n"><span class="pre">const_iterator</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">begin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK5atoms9HandleSet5beginEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return an iterator to the first element. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms9HandleSet6cbeginEv">
+<span id="_CPPv3NK5atoms9HandleSet6cbeginEv"></span><span id="_CPPv2NK5atoms9HandleSet6cbeginEv"></span><span id="atoms::HandleSet::cbeginC"></span><span class="target" id="classatoms_1_1_handle_set_1a7483fc4ce872e0fd3dc8c7f8a11f8534"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet14const_iteratorE" title="atoms::HandleSet::const_iterator"><span class="n"><span class="pre">const_iterator</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cbegin</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK5atoms9HandleSet6cbeginEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return an iterator to the first element. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet3endEv">
+<span id="_CPPv3N5atoms9HandleSet3endEv"></span><span id="_CPPv2N5atoms9HandleSet3endEv"></span><span id="atoms::HandleSet::end"></span><span class="target" id="classatoms_1_1_handle_set_1abc6f1feea98a81742b93f413c28646c1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet8iteratorE" title="atoms::HandleSet::iterator"><span class="n"><span class="pre">iterator</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">end</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet3endEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return the past-the-end iterator. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms9HandleSet3endEv">
+<span id="_CPPv3NK5atoms9HandleSet3endEv"></span><span id="_CPPv2NK5atoms9HandleSet3endEv"></span><span id="atoms::HandleSet::endC"></span><span class="target" id="classatoms_1_1_handle_set_1a05091ed6ab17b69227f1763dcb136cb0"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet14const_iteratorE" title="atoms::HandleSet::const_iterator"><span class="n"><span class="pre">const_iterator</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">end</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK5atoms9HandleSet3endEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return the past-the-end iterator. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms9HandleSet4cendEv">
+<span id="_CPPv3NK5atoms9HandleSet4cendEv"></span><span id="_CPPv2NK5atoms9HandleSet4cendEv"></span><span id="atoms::HandleSet::cendC"></span><span class="target" id="classatoms_1_1_handle_set_1aaf8c63638bee8baf36ccfcc23dbcabcf"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet14const_iteratorE" title="atoms::HandleSet::const_iterator"><span class="n"><span class="pre">const_iterator</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cend</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK5atoms9HandleSet4cendEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return the past-the-end iterator. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms9HandleSetixE11handle_type">
+<span id="_CPPv3NK5atoms9HandleSetixE11handle_type"></span><span id="_CPPv2NK5atoms9HandleSetixE11handle_type"></span><span id="atoms::HandleSet::subscript-operator__handle_typeC"></span><span class="target" id="classatoms_1_1_handle_set_1aaf9f593e9655567d7cf9a9f3243c493c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet15const_referenceE" title="atoms::HandleSet::const_reference"><span class="n"><span class="pre">const_reference</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">[]</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet11handle_typeE" title="atoms::HandleSet::handle_type"><span class="n"><span class="pre">handle_type</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">handle</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK5atoms9HandleSetixE11handle_type" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Access element based on its handle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSetixE11handle_type">
+<span id="_CPPv3N5atoms9HandleSetixE11handle_type"></span><span id="_CPPv2N5atoms9HandleSetixE11handle_type"></span><span id="atoms::HandleSet::subscript-operator__handle_type"></span><span class="target" id="classatoms_1_1_handle_set_1abf4b42a5ae6d5e3c0c2afc16d62182b2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet9referenceE" title="atoms::HandleSet::reference"><span class="n"><span class="pre">reference</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">[]</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet11handle_typeE" title="atoms::HandleSet::handle_type"><span class="n"><span class="pre">handle_type</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">handle</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms9HandleSetixE11handle_type" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Access element based on its handle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms9HandleSet8containsE11handle_type">
+<span id="_CPPv3NK5atoms9HandleSet8containsE11handle_type"></span><span id="_CPPv2NK5atoms9HandleSet8containsE11handle_type"></span><span id="atoms::HandleSet::contains__handle_typeC"></span><span class="target" id="classatoms_1_1_handle_set_1a2ad1a8a676f16bdf30bbb9a1683d570d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">contains</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet11handle_typeE" title="atoms::HandleSet::handle_type"><span class="n"><span class="pre">handle_type</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">handle</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK5atoms9HandleSet8containsE11handle_type" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Check if the container contains element based on its handle. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9HandleSet4findE11handle_type">
+<span id="_CPPv3N5atoms9HandleSet4findE11handle_type"></span><span id="_CPPv2N5atoms9HandleSet4findE11handle_type"></span><span id="atoms::HandleSet::find__handle_type"></span><span class="target" id="classatoms_1_1_handle_set_1aa57421fa137fbfc3223a2fccab6a417a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet8iteratorE" title="atoms::HandleSet::iterator"><span class="n"><span class="pre">iterator</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">find</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet11handle_typeE" title="atoms::HandleSet::handle_type"><span class="n"><span class="pre">handle_type</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">handle</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms9HandleSet4findE11handle_type" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return iterator to element based on its handle Returns past-the-end iterator if no such element exists. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms9HandleSet4findE11handle_type">
+<span id="_CPPv3NK5atoms9HandleSet4findE11handle_type"></span><span id="_CPPv2NK5atoms9HandleSet4findE11handle_type"></span><span id="atoms::HandleSet::find__handle_typeC"></span><span class="target" id="classatoms_1_1_handle_set_1a11337c6f3dda7380b18d474e70609931"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet14const_iteratorE" title="atoms::HandleSet::const_iterator"><span class="n"><span class="pre">const_iterator</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">find</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5atoms9HandleSet11handle_typeE" title="atoms::HandleSet::handle_type"><span class="n"><span class="pre">handle_type</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">handle</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK5atoms9HandleSet4findE11handle_type" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Return iterator to element based on its handle Returns past-the-end iterator if no such element exists. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="patterns.html" class="btn btn-neutral float-left" title="Patterns" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="result.html" class="btn btn-neutral float-right" title="Result" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

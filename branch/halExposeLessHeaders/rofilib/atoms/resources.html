@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Embedded Resources Management &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="RoFICoM" href="../../roficom/index.html" />
+    <link rel="prev" title="Result" href="result.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../intro/index.html">Introduction, compiling and structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofihal/index.html">RoFI HAL</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">RoFILib</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html">Configuration</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Atoms</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="patterns.html">Patterns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="result.html">Result</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Embedded Resources Management</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#classes-reference">Classes reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#macro-reference">Macro reference</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">RoFILib</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Atoms</a></li>
+      <li class="breadcrumb-item active">Embedded Resources Management</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/rofilib/atoms/resources.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="embedded-resources-management">
+<h1>Embedded Resources Management<a class="headerlink" href="#embedded-resources-management" title="Permalink to this headline"></a></h1>
+<p>There are some APIs (e.g., VTK) which can load resources (models, textures) only
+from files specified by a name, not by a file handle or memory location. This
+APIs prevent embedding the resources into the binary. Embedding the resources
+into binary makes it portable and install-location independent.</p>
+<p><a class="reference internal" href="#_CPPv415ResourceManager" title="ResourceManager"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">ResourceManager</span></code></a> and <a class="reference internal" href="#_CPPv412ResourceFile" title="ResourceFile"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">ResourceFile</span></code></a> help to create a
+temporary file from a resource embedded in the binary, and therefore, provide a
+file name for such resource.</p>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline"></a></h2>
+<p>To use an embedded resource you have to:</p>
+<ul class="simple">
+<li><p>embed the resource into the binary as a blob,</p></li>
+<li><p>load it in the program,</p></li>
+<li><p>get filename.</p></li>
+</ul>
+<p>Embedding of the resources is handled by a CMake macro:</p>
+<div class="highlight-cmake notranslate"><div class="highlight"><pre><span></span># resources can be an arbitrary, but unique name
+# multiple resource files are allowed
+add_resources(resources &quot;resouceFile1.bmp&quot; resourceFile2.obj&quot;)
+# Then you specify resources as one of the sources for you executable/library
+add_executable(myProject ${resources} main.cpp)
+</pre></div>
+</div>
+<p>Then you can use the resource in your code:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="c1">// Slashes and dots in file names are replaced by an underscore</span>
+<span class="c1">// Note that the resource name is not string (it is a symbol actually)</span>
+<span class="n">ResourceFile</span><span class="w"> </span><span class="n">myResource</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">LOAD_RESOURCE_FILE</span><span class="p">(</span><span class="w"> </span><span class="n">resouceFile1_bmp</span><span class="w"> </span><span class="p">);</span>
+<span class="c1">// Call the api with file name:</span>
+<span class="n">loadTexture</span><span class="p">(</span><span class="w"> </span><span class="n">myResource</span><span class="p">.</span><span class="n">name</span><span class="p">()</span><span class="w"> </span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="classes-reference">
+<h2>Classes reference<a class="headerlink" href="#classes-reference" title="Permalink to this headline"></a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv415ResourceManager">
+<span id="_CPPv315ResourceManager"></span><span id="_CPPv215ResourceManager"></span><span id="ResourceManager"></span><span class="target" id="class_resource_manager"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ResourceManager</span></span></span><a class="headerlink" href="#_CPPv415ResourceManager" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Manager of embedded resources. </p>
+<p><a class="reference internal" href="#class_resource_manager"><span class="std std-ref">ResourceManager</span></a> allows the user to register a resource and obtain a file name for it. The class is a singleton, obtain instance by calling <a class="reference internal" href="#class_resource_manager_1a5f82b834173a9bbdd7e746f07517a444"><span class="std std-ref">ResourceManager::inst()</span></a>.</p>
+<p>This class is usually not needed when working with resources specified via CMake macro. Look at <a class="reference internal" href="#class_resource_file"><span class="std std-ref">ResourceFile</span></a> and LOAD_RESOURCE_FILE instead. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N15ResourceManagerD0Ev">
+<span id="_CPPv3N15ResourceManagerD0Ev"></span><span id="_CPPv2N15ResourceManagerD0Ev"></span><span id="ResourceManager::~ResourceManager"></span><span class="target" id="class_resource_manager_1a671c186e4630599e7e36d000c53eaf80"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">~ResourceManager</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N15ResourceManagerD0Ev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N15ResourceManager3addEPKcNSt9ptrdiff_tE">
+<span id="_CPPv3N15ResourceManager3addEPKcNSt9ptrdiff_tE"></span><span id="_CPPv2N15ResourceManager3addEPKcNSt9ptrdiff_tE"></span><span id="ResourceManager::add__cCP.std::ptrdiff_t"></span><span class="target" id="class_resource_manager_1ade19694902730d5039b752093cb35b82"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">filesystem</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">path</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">add</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">data</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ptrdiff_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">count</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N15ResourceManager3addEPKcNSt9ptrdiff_tE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Add a resource and obtain a valid file path for it. </p>
+<p>If the resource on given address was already added, existing file is returned. The resource is specified by address and its size in bytes. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N15ResourceManager4instEv">
+<span id="_CPPv3N15ResourceManager4instEv"></span><span id="_CPPv2N15ResourceManager4instEv"></span><span id="ResourceManager::inst"></span><span class="target" id="class_resource_manager_1a5f82b834173a9bbdd7e746f07517a444"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv415ResourceManager" title="ResourceManager"><span class="n"><span class="pre">ResourceManager</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">inst</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N15ResourceManager4instEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get an instance of the manager. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv412ResourceFile">
+<span id="_CPPv312ResourceFile"></span><span id="_CPPv212ResourceFile"></span><span id="ResourceFile"></span><span class="target" id="class_resource_file"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ResourceFile</span></span></span><a class="headerlink" href="#_CPPv412ResourceFile" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Represents a single resource with na associated filename. </p>
+<p>If you are using resources specified by the CMake macro, do not create instances of the class directly, but use macro LOAD_RESOURCE_FILE. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N12ResourceFile12ResourceFileEPKcPKc">
+<span id="_CPPv3N12ResourceFile12ResourceFileEPKcPKc"></span><span id="_CPPv2N12ResourceFile12ResourceFileEPKcPKc"></span><span id="ResourceFile::ResourceFile__cCP.cCP"></span><span class="target" id="class_resource_file_1a37d73cbecc05d04d83e5eb97bb3e2aa3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ResourceFile</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">start</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">end</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12ResourceFile12ResourceFileEPKcPKc" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N12ResourceFile12ResourceFileEPKcNSt9ptrdiff_tE">
+<span id="_CPPv3N12ResourceFile12ResourceFileEPKcNSt9ptrdiff_tE"></span><span id="_CPPv2N12ResourceFile12ResourceFileEPKcNSt9ptrdiff_tE"></span><span id="ResourceFile::ResourceFile__cCP.std::ptrdiff_t"></span><span class="target" id="class_resource_file_1a49b8f43a5500ce55824026a096763ba2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ResourceFile</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="kt"><span class="pre">char</span></span><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">data</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ptrdiff_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">count</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N12ResourceFile12ResourceFileEPKcNSt9ptrdiff_tE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK12ResourceFile4nameEv">
+<span id="_CPPv3NK12ResourceFile4nameEv"></span><span id="_CPPv2NK12ResourceFile4nameEv"></span><span id="ResourceFile::nameC"></span><span class="target" id="class_resource_file_1aea97a7513675185ec4f3179c67b27e75"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">filesystem</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">path</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">name</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK12ResourceFile4nameEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get filename associated with given resource. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+<section id="macro-reference">
+<h2>Macro reference<a class="headerlink" href="#macro-reference" title="Permalink to this headline"></a></h2>
+<dl class="cpp macro">
+<dt class="sig sig-object cpp" id="c.LOAD_RESOURCE_FILE">
+<span class="target" id="resources_8hpp_1a4aa0cd06f821f5dce4a476e65d0a8356"></span><span class="sig-name descname"><span class="n"><span class="pre">LOAD_RESOURCE_FILE</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">x</span></span><span class="sig-paren">)</span><a class="headerlink" href="#c.LOAD_RESOURCE_FILE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Obtain an instance of <a class="reference internal" href="#class_resource_file"><span class="std std-ref">ResourceFile</span></a> for given resource specified by the CMake macro. </p>
+<p>Specify the resource name directly, without string quotes, and replace special symbols by and underscore. E.g., for resource <code class="docutils literal notranslate"><span class="pre">test/file.bmp</span></code> use <code class="docutils literal notranslate"><span class="pre">test_file_bmp</span></code>. </p>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="result.html" class="btn btn-neutral float-left" title="Result" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../roficom/index.html" class="btn btn-neutral float-right" title="RoFICoM" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

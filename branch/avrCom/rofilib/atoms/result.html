@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Result &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Embedded Resources Management" href="resources.html" />
+    <link rel="prev" title="Containers" href="containers.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../intro/index.html">Introduction, compiling and structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofihal/index.html">RoFI HAL</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">RoFILib</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html">Configuration</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Atoms</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="patterns.html">Patterns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Result</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#usage">Usage</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#classes-reference">Classes reference</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#functions-reference">Functions reference</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="resources.html">Embedded Resources Management</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">RoFILib</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Atoms</a></li>
+      <li class="breadcrumb-item active">Result</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/rofilib/atoms/result.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="result">
+<h1>Result<a class="headerlink" href="#result" title="Permalink to this headline"></a></h1>
+<p>Result provides a way to return a value or an error.
+The concept is similar to <a class="reference external" href="https://hackage.haskell.org/package/base-4.7.0.1/docs/Data-Either.html">Either</a>
+in Haskell or <a class="reference external" href="https://doc.rust-lang.org/std/result/">Result</a> in Rust.</p>
+<section id="usage">
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this headline"></a></h2>
+<p>Use <cite>value</cite>, <cite>error</cite>, <cite>emplace_value</cite> and <cite>emplace_error</cite> to create new <cite>Result</cite>.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">value42</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">Result</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">value</span><span class="p">(</span><span class="w"> </span><span class="mi">22</span><span class="w"> </span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">value0</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">Result</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">emplace_value</span><span class="p">();</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">errStr</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">Result</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">error</span><span class="p">(</span><span class="w"> </span><span class="s">&quot;string is default error type&quot;</span><span class="w"> </span><span class="p">);</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">errExcept</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">Result</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">int</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">emplace_error</span><span class="p">(</span><span class="w"> </span><span class="s">&quot;passed to constructor&quot;</span><span class="w"> </span><span class="p">);</span>
+</pre></div>
+</div>
+<p>When returning <cite>Result</cite> from a function, you can use helper creation functions.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">atoms</span><span class="o">::</span><span class="n">Result</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">div</span><span class="p">(</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">lhs</span><span class="p">,</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">rhs</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">rhs</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">result_error</span><span class="o">&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&gt;</span><span class="p">(</span><span class="w"> </span><span class="s">&quot;division by 0&quot;</span><span class="w"> </span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">result_value</span><span class="p">(</span><span class="w"> </span><span class="n">lhs</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">rhs</span><span class="w"> </span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Use <cite>make_</cite> helper creation function variants to pass arguments directly to constuctors.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">atoms</span><span class="o">::</span><span class="n">Result</span><span class="o">&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">vector</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">repeat</span><span class="p">(</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="kt">double</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">count</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="mi">0</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">make_result_error</span><span class="o">&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&gt;</span><span class="p">(</span><span class="w"> </span><span class="s">&quot;count is negative&quot;</span><span class="w"> </span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span>
+<span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">make_result_value</span><span class="p">(</span><span class="w"> </span><span class="n">count</span><span class="p">,</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>You can check if a <cite>Result</cite> contains a value and dereference the <cite>Result</cite> to get it.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">Result</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">value</span><span class="p">(</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">);</span>
+
+<span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="c1">// or `result.has_value()`</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Have result &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="o">*</span><span class="n">result</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w"> </span><span class="c1">// or `result.assume_value()`</span>
+<span class="p">}</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Have error &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">assume_error</span><span class="p">()</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>You can use monadic methods based on <cite>std::optional</cite>.
+Note that when using monadic methods, the other type has to be copy/move constructible.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">auto</span><span class="w"> </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">Result</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">value</span><span class="p">(</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">);</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">newResult</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">result</span><span class="p">.</span><span class="n">and_then</span><span class="p">(</span><span class="w"> </span><span class="p">[](</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">result_error</span><span class="p">(</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">to_string</span><span class="p">(</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">or_else</span><span class="p">(</span><span class="w"> </span><span class="p">[](</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">value</span><span class="p">(</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">&gt;</span><span class="p">(</span><span class="w"> </span><span class="n">str</span><span class="p">.</span><span class="n">size</span><span class="p">()</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">or_else</span><span class="p">(</span><span class="w"> </span><span class="p">[]()</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">value</span><span class="p">(</span><span class="w"> </span><span class="mi">12</span><span class="w"> </span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">transform</span><span class="p">(</span><span class="w"> </span><span class="p">[](</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="k">static_cast</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">unsigned</span><span class="w"> </span><span class="o">&gt;</span><span class="p">(</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="mi">2</span><span class="w"> </span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="p">);</span>
+
+<span class="c1">// If you `std::move` the result, the content will be moved as well</span>
+<span class="kt">unsigned</span><span class="w"> </span><span class="n">newValue</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="w"> </span><span class="n">newResult</span><span class="w"> </span><span class="p">).</span><span class="n">transform_error</span><span class="p">(</span><span class="w"> </span><span class="p">[](</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="p">){</span>
+<span class="w">        </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;Error: &quot;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="w"> </span><span class="n">str</span><span class="w"> </span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="p">)</span>
+<span class="w">    </span><span class="p">.</span><span class="n">value_or</span><span class="p">(</span><span class="w"> </span><span class="p">[](</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="p">){</span>
+<span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">runtime_error</span><span class="p">(</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">move</span><span class="p">(</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">);</span>
+<span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="p">);</span>
+</pre></div>
+</div>
+<p>For matching on a result, you can use <cite>Result::match</cite> methods.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="cp">#include</span><span class="w"> </span><span class="cpf">&lt;atoms/util.hpp&gt;</span><span class="c1"> // for `overloaded`</span>
+
+<span class="c1">// ...</span>
+
+<span class="k">auto</span><span class="w"> </span><span class="n">correctAnswer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">Result</span><span class="o">&lt;</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">value</span><span class="p">(</span><span class="w"> </span><span class="mi">10</span><span class="w"> </span><span class="p">);</span>
+
+<span class="n">correctAnswer</span><span class="p">.</span><span class="n">match</span><span class="p">(</span><span class="w"> </span><span class="n">overloaded</span><span class="p">{</span>
+<span class="w">    </span><span class="p">[](</span><span class="w"> </span><span class="kt">int</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got answer &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">[](</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got error: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span><span class="w"> </span><span class="p">);</span>
+
+<span class="c1">// With compatible value and error types</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">correctStrAnswer</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">Result</span><span class="o">&lt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="p">,</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&gt;::</span><span class="n">value</span><span class="p">(</span><span class="w"> </span><span class="s">&quot;Apple&quot;</span><span class="w"> </span><span class="p">);</span>
+
+<span class="cm">/**</span>
+<span class="cm"> * Doesn&#39;t compile (compiler cannot deduce value/error from type)</span>
+<span class="cm"> * Also doesn&#39;t work on compatible types (e.g. int/unsigned) for the programmer&#39;s safety.</span>
+<span class="cm"> */</span>
+<span class="c1">// correctAnswer.match( overloaded{</span>
+<span class="c1">//     []( const std::string &amp; value ) { std::cout &lt;&lt; &quot;Got answer &quot; &lt;&lt; value &lt;&lt; &quot;\n&quot;; }</span>
+<span class="c1">//     []( const std::string &amp; error ) { std::cerr &lt;&lt; &quot;Got error: &quot; &lt;&lt; error &lt;&lt; &quot;\n&quot;; }</span>
+<span class="c1">// } );</span>
+
+<span class="n">correctAnswer</span><span class="p">.</span><span class="n">match</span><span class="p">(</span><span class="w"> </span><span class="n">overloaded</span><span class="p">{</span>
+<span class="w">    </span><span class="p">[](</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">true_type</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got answer &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">value</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="w">    </span><span class="p">[](</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">false_type</span><span class="p">,</span><span class="w"> </span><span class="k">const</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="o">&amp;</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">cerr</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;Got error: &quot;</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">error</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="p">}</span><span class="w"> </span><span class="p">);</span>
+</pre></div>
+</div>
+</section>
+<section id="classes-reference">
+<h2>Classes reference<a class="headerlink" href="#classes-reference" title="Permalink to this headline"></a></h2>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN5atoms6ResultE">
+<span id="_CPPv3I00EN5atoms6ResultE"></span><span id="_CPPv2I00EN5atoms6ResultE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">E</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Result</span></span></span><a class="headerlink" href="#_CPPv4I00EN5atoms6ResultE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>A type that holds either a value or an error. </p>
+<p>The usecase is similar to that of <code class="docutils literal notranslate"><span class="pre">std::optional</span></code> except it can hold additional info about the failure.</p>
+<p>The <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> class template is designed to be an almost drop-in replacement for <code class="docutils literal notranslate"><span class="pre">std::optional</span></code> except the construction. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-member-types">Member types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms6Result10value_typeE">
+<span id="_CPPv3N5atoms6Result10value_typeE"></span><span id="_CPPv2N5atoms6Result10value_typeE"></span><span class="target" id="classatoms_1_1_result_1ad6817c9f5b552fb97df5b9cb9c0bef71"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">value_type</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result::T"><span class="n"><span class="pre">T</span></span></a><a class="headerlink" href="#_CPPv4N5atoms6Result10value_typeE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms6Result10error_typeE">
+<span id="_CPPv3N5atoms6Result10error_typeE"></span><span id="_CPPv2N5atoms6Result10error_typeE"></span><span class="target" id="classatoms_1_1_result_1ad81107c4d873a370247190c7c9f08256"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">error_type</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result::E"><span class="n"><span class="pre">E</span></span></a><a class="headerlink" href="#_CPPv4N5atoms6Result10error_typeE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-constructing-static-member-functions">Constructing static member functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms6Result5valueERK10value_type">
+<span id="_CPPv3N5atoms6Result5valueERK10value_type"></span><span id="_CPPv2N5atoms6Result5valueERK10value_type"></span><span id="atoms::Result::value__value_typeCRCE"></span><span class="target" id="classatoms_1_1_result_1a0f6e1adb7665cb298559b9fedda82531"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">value</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">val</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms6Result5valueERK10value_type" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constructs the contained value by the copy constructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms6Result5valueERR10value_type">
+<span id="_CPPv3N5atoms6Result5valueERR10value_type"></span><span id="_CPPv2N5atoms6Result5valueERR10value_type"></span><span id="atoms::Result::value__value_typeRRCE"></span><span class="target" id="classatoms_1_1_result_1a8708d417465b541f4ee6dc678d4c2202"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">value</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">val</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms6Result5valueERR10value_type" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constructs the contained value by the move constructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms6Result13emplace_valueEDpRRDa">
+<span id="_CPPv3N5atoms6Result13emplace_valueEDpRRDa"></span><span id="_CPPv2N5atoms6Result13emplace_valueEDpRRDa"></span><span id="atoms::Result::emplace_value__autoRRDpCE"></span><span class="target" id="classatoms_1_1_result_1a91ed3aa961e42bf722668419c0a1e976"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">emplace_value</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">auto</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">args</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms6Result13emplace_valueEDpRRDa" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constructs the contained value in-place. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms6Result5errorERK10error_type">
+<span id="_CPPv3N5atoms6Result5errorERK10error_type"></span><span id="_CPPv2N5atoms6Result5errorERK10error_type"></span><span id="atoms::Result::error__error_typeCRCE"></span><span class="target" id="classatoms_1_1_result_1a1f6db32cb84864eafa22fc000fa60cb0"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">error</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">err</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms6Result5errorERK10error_type" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constructs the contained error by the copy constructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms6Result5errorERR10error_type">
+<span id="_CPPv3N5atoms6Result5errorERR10error_type"></span><span id="_CPPv2N5atoms6Result5errorERR10error_type"></span><span id="atoms::Result::error__error_typeRRCE"></span><span class="target" id="classatoms_1_1_result_1ae13fcfa4947b555e8b1c92b778fd9838"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">error</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">err</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms6Result5errorERR10error_type" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constructs the contained error by the move constructor. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms6Result13emplace_errorEDpRRDa">
+<span id="_CPPv3N5atoms6Result13emplace_errorEDpRRDa"></span><span id="_CPPv2N5atoms6Result13emplace_errorEDpRRDa"></span><span id="atoms::Result::emplace_error__autoRRDpCE"></span><span class="target" id="classatoms_1_1_result_1a9aa2f87de651f4befc95693744f9760f"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">emplace_error</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">auto</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">args</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms6Result13emplace_errorEDpRRDa" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Constructs the contained error in-place. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-implicit-conversions">Implicit conversions</p>
+<p>Implicit conversions when one of types is <code class="docutils literal notranslate"><a class="reference internal" href="#structatoms_1_1detail_1_1_type_placeholder"><span class="std std-ref"><span class="pre">detail::TypePlaceholder</span></span></a></code></p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0ENKR5atoms6Resultcv6ResultI6ValueT10error_typeEEv">
+<span id="_CPPv3I0ENKR5atoms6Resultcv6ResultI6ValueT10error_typeEEv"></span><span id="_CPPv2I0ENKR5atoms6Resultcv6ResultI6ValueT10error_typeEEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ValueT</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1ab679281daec2f072b23e8b30e437edfe"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0ENKR5atoms6Resultcv6ResultI6ValueT10error_typeEEv" title="atoms::Result::operator Result&lt;ValueT, error_type&gt;::ValueT"><span class="n"><span class="pre">ValueT</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&gt;</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I0ENKR5atoms6Resultcv6ResultI6ValueT10error_typeEEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Changes the <code class="docutils literal notranslate"><span class="pre">value_type</span></code> from <code class="docutils literal notranslate"><a class="reference internal" href="#structatoms_1_1detail_1_1_type_placeholder"><span class="std std-ref"><span class="pre">detail::TypePlaceholder</span></span></a></code> by copying. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0ENO5atoms6Resultcv6ResultI6ValueT10error_typeEEv">
+<span id="_CPPv3I0ENO5atoms6Resultcv6ResultI6ValueT10error_typeEEv"></span><span id="_CPPv2I0ENO5atoms6Resultcv6ResultI6ValueT10error_typeEEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ValueT</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1ae84b88722f9062d04903ce6bc53daa01"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0ENO5atoms6Resultcv6ResultI6ValueT10error_typeEEv" title="atoms::Result::operator Result&lt;ValueT, error_type&gt;::ValueT"><span class="n"><span class="pre">ValueT</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&gt;</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4I0ENO5atoms6Resultcv6ResultI6ValueT10error_typeEEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Changes the <code class="docutils literal notranslate"><span class="pre">value_type</span></code> from <code class="docutils literal notranslate"><a class="reference internal" href="#structatoms_1_1detail_1_1_type_placeholder"><span class="std std-ref"><span class="pre">detail::TypePlaceholder</span></span></a></code> by moving. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0ENKR5atoms6Resultcv6ResultI10value_type6ErrorTEEv">
+<span id="_CPPv3I0ENKR5atoms6Resultcv6ResultI10value_type6ErrorTEEv"></span><span id="_CPPv2I0ENKR5atoms6Resultcv6ResultI10value_type6ErrorTEEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ErrorT</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a25018a5c4573906d4914ba53ee5c850a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0ENKR5atoms6Resultcv6ResultI10value_type6ErrorTEEv" title="atoms::Result::operator Result&lt;value_type, ErrorT&gt;::ErrorT"><span class="n"><span class="pre">ErrorT</span></span></a><span class="p"><span class="pre">&gt;</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I0ENKR5atoms6Resultcv6ResultI10value_type6ErrorTEEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Changes the <code class="docutils literal notranslate"><span class="pre">error_type</span></code> from <code class="docutils literal notranslate"><a class="reference internal" href="#structatoms_1_1detail_1_1_type_placeholder"><span class="std std-ref"><span class="pre">detail::TypePlaceholder</span></span></a></code> by copying. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0ENO5atoms6Resultcv6ResultI10value_type6ErrorTEEv">
+<span id="_CPPv3I0ENO5atoms6Resultcv6ResultI10value_type6ErrorTEEv"></span><span id="_CPPv2I0ENO5atoms6Resultcv6ResultI10value_type6ErrorTEEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ErrorT</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1af076c14a3ef569204c73bf9efff2411b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0ENO5atoms6Resultcv6ResultI10value_type6ErrorTEEv" title="atoms::Result::operator Result&lt;value_type, ErrorT&gt;::ErrorT"><span class="n"><span class="pre">ErrorT</span></span></a><span class="p"><span class="pre">&gt;</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4I0ENO5atoms6Resultcv6ResultI10value_type6ErrorTEEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Changes the <code class="docutils literal notranslate"><span class="pre">error_type</span></code> from <code class="docutils literal notranslate"><a class="reference internal" href="#structatoms_1_1detail_1_1_type_placeholder"><span class="std std-ref"><span class="pre">detail::TypePlaceholder</span></span></a></code> by moving. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-observers">Observers</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms6Result9has_valueEv">
+<span id="_CPPv3NK5atoms6Result9has_valueEv"></span><span id="_CPPv2NK5atoms6Result9has_valueEv"></span><span id="atoms::Result::has_valueCCE"></span><span class="target" id="classatoms_1_1_result_1af7c68cc6d6ae1ae1a3c72e99b6e6d5b6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">has_value</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK5atoms6Result9has_valueEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Checks whether <code class="docutils literal notranslate"><span class="pre">*this</span></code> contains a value. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Return values</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>true</strong> – if <code class="docutils literal notranslate"><span class="pre">*this</span></code> contains a value. </p></li>
+<li><p><strong>false</strong> – if <code class="docutils literal notranslate"><span class="pre">*this</span></code> contains an error. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms6ResultcvbEv">
+<span id="_CPPv3NK5atoms6ResultcvbEv"></span><span id="_CPPv2NK5atoms6ResultcvbEv"></span><span id="atoms::Result::castto-b-operatorCCE"></span><span class="target" id="classatoms_1_1_result_1a14ff90b40b10c73470ce6ec39ae35306"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK5atoms6ResultcvbEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Checks whether <code class="docutils literal notranslate"><span class="pre">*this</span></code> contains a value. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Return values</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>true</strong> – if <code class="docutils literal notranslate"><span class="pre">*this</span></code> contains a value. </p></li>
+<li><p><strong>false</strong> – if <code class="docutils literal notranslate"><span class="pre">*this</span></code> contains an error. </p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-accessors">Accessors</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms6ResultptEv">
+<span id="_CPPv3N5atoms6ResultptEv"></span><span id="_CPPv2N5atoms6ResultptEv"></span><span id="atoms::Result::pointer-operatorCE"></span><span class="target" id="classatoms_1_1_result_1ad1b50e73a36f7c7b1d2c81900c1724f3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">-&gt;</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N5atoms6ResultptEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Accesses the contained value. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Pointer to the contained value. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms6ResultptEv">
+<span id="_CPPv3NK5atoms6ResultptEv"></span><span id="_CPPv2NK5atoms6ResultptEv"></span><span id="atoms::Result::pointer-operatorCCE"></span><span class="target" id="classatoms_1_1_result_1a7a7006825d805dd1945dc0cde891e88e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">-&gt;</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK5atoms6ResultptEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Accesses the contained value. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Pointer to the contained value. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NR5atoms6ResultmlEv">
+<span id="_CPPv3NR5atoms6ResultmlEv"></span><span id="_CPPv2NR5atoms6ResultmlEv"></span><span id="atoms::Result::mul-operatorRCE"></span><span class="target" id="classatoms_1_1_result_1aa6ea5840c4d4d70aa1c3d1895fb2633c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">*</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NR5atoms6ResultmlEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Accesses the contained value. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Reference to the contained value. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NKR5atoms6ResultmlEv">
+<span id="_CPPv3NKR5atoms6ResultmlEv"></span><span id="_CPPv2NKR5atoms6ResultmlEv"></span><span id="atoms::Result::mul-operatorCRCE"></span><span class="target" id="classatoms_1_1_result_1aa1023b9836432a632159ac73e5b63e0f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">*</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NKR5atoms6ResultmlEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Accesses the contained value. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Reference to the contained value. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NO5atoms6ResultmlEv">
+<span id="_CPPv3NO5atoms6ResultmlEv"></span><span id="_CPPv2NO5atoms6ResultmlEv"></span><span id="atoms::Result::mul-operatorOCE"></span><span class="target" id="classatoms_1_1_result_1ab6b1fe7ba68766f56cbc23507458ff87"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">*</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NO5atoms6ResultmlEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Accesses the contained value. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Reference to the contained value. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NR5atoms6Result12assume_valueEv">
+<span id="_CPPv3NR5atoms6Result12assume_valueEv"></span><span id="_CPPv2NR5atoms6Result12assume_valueEv"></span><span id="atoms::Result::assume_valueRCE"></span><span class="target" id="classatoms_1_1_result_1a04099df58002cae79b3d889622d2f129"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">assume_value</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NR5atoms6Result12assume_valueEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Assume that the result contains a value. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Reference to the contained value. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NKR5atoms6Result12assume_valueEv">
+<span id="_CPPv3NKR5atoms6Result12assume_valueEv"></span><span id="_CPPv2NKR5atoms6Result12assume_valueEv"></span><span id="atoms::Result::assume_valueCRCE"></span><span class="target" id="classatoms_1_1_result_1a069c55e5d8cb0d8c1ee76621c3ea2f2e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">assume_value</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NKR5atoms6Result12assume_valueEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Assume that the result contains a value. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Reference to the contained value. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NO5atoms6Result12assume_valueEv">
+<span id="_CPPv3NO5atoms6Result12assume_valueEv"></span><span id="_CPPv2NO5atoms6Result12assume_valueEv"></span><span id="atoms::Result::assume_valueOCE"></span><span class="target" id="classatoms_1_1_result_1a49282a0acd78d1043752e632b82e21ca"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">assume_value</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NO5atoms6Result12assume_valueEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Assume that the result contains a value. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Reference to the contained value. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NR5atoms6Result12assume_errorEv">
+<span id="_CPPv3NR5atoms6Result12assume_errorEv"></span><span id="_CPPv2NR5atoms6Result12assume_errorEv"></span><span id="atoms::Result::assume_errorRCE"></span><span class="target" id="classatoms_1_1_result_1a865f887dd2d931d5a0a307e7de146dbd"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">assume_error</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NR5atoms6Result12assume_errorEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Assume that the result contains an error. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Reference to the contained error. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NKR5atoms6Result12assume_errorEv">
+<span id="_CPPv3NKR5atoms6Result12assume_errorEv"></span><span id="_CPPv2NKR5atoms6Result12assume_errorEv"></span><span id="atoms::Result::assume_errorCRCE"></span><span class="target" id="classatoms_1_1_result_1a02116fde241d1d1ad303b966c4eb2a68"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">assume_error</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NKR5atoms6Result12assume_errorEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Assume that the result contains an error. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Reference to the contained error. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NO5atoms6Result12assume_errorEv">
+<span id="_CPPv3NO5atoms6Result12assume_errorEv"></span><span id="_CPPv2NO5atoms6Result12assume_errorEv"></span><span id="atoms::Result::assume_errorOCE"></span><span class="target" id="classatoms_1_1_result_1af9239724a9764c4bd70672fdfacac2ad"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">assume_error</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NO5atoms6Result12assume_errorEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Assume that the result contains an error. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Reference to the contained error. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-get-or-throw-operations">Get or throw operations</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NR5atoms6Result12get_or_throwEv">
+<span id="_CPPv3NR5atoms6Result12get_or_throwEv"></span><span id="_CPPv2NR5atoms6Result12get_or_throwEv"></span><span id="atoms::Result::get_or_throwRCE"></span><span class="target" id="classatoms_1_1_result_1afa94caafed72d0346a8bfdaeddd926ae"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">get_or_throw</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4NR5atoms6Result12get_or_throwEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value if it contains a value. </p>
+<p>Otherwise, throws the contained error as an exception.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Throws</dt>
+<dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">If</span></span></span> – the result type contains an error throws exception of type <code class="docutils literal notranslate"><span class="pre">error_type</span></code>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The contained value or doesn’t return normally. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NKR5atoms6Result12get_or_throwEv">
+<span id="_CPPv3NKR5atoms6Result12get_or_throwEv"></span><span id="_CPPv2NKR5atoms6Result12get_or_throwEv"></span><span id="atoms::Result::get_or_throwCRCE"></span><span class="target" id="classatoms_1_1_result_1a1b038dd35f3120dd540a3af0acd95194"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">get_or_throw</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4NKR5atoms6Result12get_or_throwEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value if it contains a value. </p>
+<p>Otherwise, throws the contained error as an exception.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Throws</dt>
+<dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">If</span></span></span> – the result type contains an error throws exception of type <code class="docutils literal notranslate"><span class="pre">error_type</span></code>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The contained value or doesn’t return normally. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NO5atoms6Result12get_or_throwEv">
+<span id="_CPPv3NO5atoms6Result12get_or_throwEv"></span><span id="_CPPv2NO5atoms6Result12get_or_throwEv"></span><span id="atoms::Result::get_or_throwOCE"></span><span class="target" id="classatoms_1_1_result_1a4533aca4602fbbc7dd396469a477e426"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">get_or_throw</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4NO5atoms6Result12get_or_throwEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value if it contains a value. </p>
+<p>Otherwise, throws the contained error as an exception.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Throws</dt>
+<dd class="field-odd"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">If</span></span></span> – the result type contains an error throws exception of type <code class="docutils literal notranslate"><span class="pre">error_type</span></code>.</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The contained value or doesn’t return normally. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt18constructible_fromIR10error_typeEEENR5atoms6Result15get_or_throw_asER10value_typev">
+<span id="_CPPv3I_NSt18constructible_fromIR10error_typeEEENR5atoms6Result15get_or_throw_asEv"></span><span id="_CPPv2I_NSt18constructible_fromIR10error_typeEEENR5atoms6Result15get_or_throw_asEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">constructible_from</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ExceptionT</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a0e0acf476e74aff1c0ea63e9dd7f391b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">get_or_throw_as</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt18constructible_fromIR10error_typeEEENR5atoms6Result15get_or_throw_asER10value_typev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value if this contains a value. </p>
+<p>Otherwise, throws the <code class="docutils literal notranslate"><span class="pre">ExceptionT</span></code> constructed from the error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters</dt>
+<dd class="field-odd"><p><strong>ExceptionT</strong> – exception type constructable from <code class="docutils literal notranslate"><span class="pre">value_type</span> <span class="pre">&amp;</span></code></p>
+</dd>
+<dt class="field-even">Throws</dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">If</span></span></span> – the result type contains an error throws exception of type <code class="docutils literal notranslate"><span class="pre">ExceptionT</span></code>.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The contained value or doesn’t return normally. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt18constructible_fromIRK10error_typeEEENKR5atoms6Result15get_or_throw_asERK10value_typev">
+<span id="_CPPv3I_NSt18constructible_fromIRK10error_typeEEENKR5atoms6Result15get_or_throw_asEv"></span><span id="_CPPv2I_NSt18constructible_fromIRK10error_typeEEENKR5atoms6Result15get_or_throw_asEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">constructible_from</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ExceptionT</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a14cb6a5b66acd4446ec67f162a52ac57"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">get_or_throw_as</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt18constructible_fromIRK10error_typeEEENKR5atoms6Result15get_or_throw_asERK10value_typev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value if this contains a value. </p>
+<p>Otherwise, throws the <code class="docutils literal notranslate"><span class="pre">ExceptionT</span></code> constructed from the error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters</dt>
+<dd class="field-odd"><p><strong>ExceptionT</strong> – exception type constructable from <code class="docutils literal notranslate"><span class="pre">value_type</span> <span class="pre">&amp;</span></code></p>
+</dd>
+<dt class="field-even">Throws</dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">If</span></span></span> – the result type contains an error throws exception of type <code class="docutils literal notranslate"><span class="pre">ExceptionT</span></code>.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The contained value or doesn’t return normally. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt18constructible_fromIRR10error_typeEEENO5atoms6Result15get_or_throw_asERR10value_typev">
+<span id="_CPPv3I_NSt18constructible_fromIRR10error_typeEEENO5atoms6Result15get_or_throw_asEv"></span><span id="_CPPv2I_NSt18constructible_fromIRR10error_typeEEENO5atoms6Result15get_or_throw_asEv"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">constructible_from</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ExceptionT</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a22a7f6faf6dadf41b7d2986c50d56c61"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="n"><span class="pre">get_or_throw_as</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt18constructible_fromIRR10error_typeEEENO5atoms6Result15get_or_throw_asERR10value_typev" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value if this contains a value. </p>
+<p>Otherwise, throws the <code class="docutils literal notranslate"><span class="pre">ExceptionT</span></code> constructed from the error.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters</dt>
+<dd class="field-odd"><p><strong>ExceptionT</strong> – exception type constructable from <code class="docutils literal notranslate"><span class="pre">value_type</span> <span class="pre">&amp;</span></code></p>
+</dd>
+<dt class="field-even">Throws</dt>
+<dd class="field-even"><p><span><span class="cpp-expr sig sig-inline cpp"><span class="n">If</span></span></span> – the result type contains an error throws exception of type <code class="docutils literal notranslate"><span class="pre">ExceptionT</span></code>.</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The contained value or doesn’t return normally. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-monadic-operations">Monadic operations</p>
+<p>Inspired by and designed to be compatible with monadic operations of <code class="docutils literal notranslate"><span class="pre">std::optional</span></code> from C++23. </p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIR10value_typeEEENR5atoms6Result8and_thenEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIR10value_typeEEENR5atoms6Result8and_thenERR1F"></span><span id="_CPPv2I_NSt9invocableIR10value_typeEEENR5atoms6Result8and_thenERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a9f78cd25f2880af48bdd1d20fe7126a4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">and_then</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIR10value_typeEEENR5atoms6Result8and_thenEDaRR1F" title="atoms::Result::and_then::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIR10value_typeEEENR5atoms6Result8and_thenEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">f</span></code> on the contained value if it exists. </p>
+<p>Otherwise, returns the contained error in the return type.</p>
+<p>The return type must be a specialization of <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the same error type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns a <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The result of <code class="docutils literal notranslate"><span class="pre">f</span></code> or the contained error. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIRK10value_typeEEENKR5atoms6Result8and_thenEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIRK10value_typeEEENKR5atoms6Result8and_thenERR1F"></span><span id="_CPPv2I_NSt9invocableIRK10value_typeEEENKR5atoms6Result8and_thenERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a2e5f187b565ff2a8c8ae3a2dc4933899"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">and_then</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIRK10value_typeEEENKR5atoms6Result8and_thenEDaRR1F" title="atoms::Result::and_then::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIRK10value_typeEEENKR5atoms6Result8and_thenEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">f</span></code> on the contained value if it exists. </p>
+<p>Otherwise, returns the contained error in the return type.</p>
+<p>The return type must be a specialization of <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the same error type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns a <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The result of <code class="docutils literal notranslate"><span class="pre">f</span></code> or the contained error. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIRR10value_typeEEENO5atoms6Result8and_thenEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIRR10value_typeEEENO5atoms6Result8and_thenERR1F"></span><span id="_CPPv2I_NSt9invocableIRR10value_typeEEENO5atoms6Result8and_thenERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1ad7fdd7bdf116d817eee69a477ce25d9d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">and_then</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIRR10value_typeEEENO5atoms6Result8and_thenEDaRR1F" title="atoms::Result::and_then::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIRR10value_typeEEENO5atoms6Result8and_thenEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">f</span></code> on the contained value if it exists. </p>
+<p>Otherwise, returns the contained error in the return type.</p>
+<p>The return type must be a specialization of <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the same error type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns a <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The result of <code class="docutils literal notranslate"><span class="pre">f</span></code> or the contained error. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIR10error_typeEEENR5atoms6Result7or_elseEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIR10error_typeEEENR5atoms6Result7or_elseERR1F"></span><span id="_CPPv2I_NSt9invocableIR10error_typeEEENR5atoms6Result7or_elseERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a353300107cc077efaa7fd18c2925ece5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">or_else</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIR10error_typeEEENR5atoms6Result7or_elseEDaRR1F" title="atoms::Result::or_else::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIR10error_typeEEENR5atoms6Result7or_elseEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value in the return type if it contains a value. </p>
+<p>Otherwise, returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">f</span></code> on the contained error.</p>
+<p>The return type must be a specialization of <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the same value type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns a <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The contained value or the result of <code class="docutils literal notranslate"><span class="pre">f</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIRK10error_typeEEENKR5atoms6Result7or_elseEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIRK10error_typeEEENKR5atoms6Result7or_elseERR1F"></span><span id="_CPPv2I_NSt9invocableIRK10error_typeEEENKR5atoms6Result7or_elseERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a010081ebbd661b7f2f8c66c3172aaca5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">or_else</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIRK10error_typeEEENKR5atoms6Result7or_elseEDaRR1F" title="atoms::Result::or_else::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIRK10error_typeEEENKR5atoms6Result7or_elseEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value in the return type if it contains a value. </p>
+<p>Otherwise, returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">f</span></code> on the contained error.</p>
+<p>The return type must be a specialization of <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the same value type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns a <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The contained value or the result of <code class="docutils literal notranslate"><span class="pre">f</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIRR10error_typeEEENO5atoms6Result7or_elseEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIRR10error_typeEEENO5atoms6Result7or_elseERR1F"></span><span id="_CPPv2I_NSt9invocableIRR10error_typeEEENO5atoms6Result7or_elseERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a7c724dcdb73b510288e87486bc975e77"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">or_else</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIRR10error_typeEEENO5atoms6Result7or_elseEDaRR1F" title="atoms::Result::or_else::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIRR10error_typeEEENO5atoms6Result7or_elseEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value in the return type if it contains a value. </p>
+<p>Otherwise, returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">f</span></code> on the contained error.</p>
+<p>The return type must be a specialization of <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the same value type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns a <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The contained value or the result of <code class="docutils literal notranslate"><span class="pre">f</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIEEENK5atoms6Result7or_elseEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIEEENK5atoms6Result7or_elseERR1F"></span><span id="_CPPv2I_NSt9invocableIEEENK5atoms6Result7or_elseERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a4d20a28830330c57138e9c641e5ade77"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">or_else</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIEEENK5atoms6Result7or_elseEDaRR1F" title="atoms::Result::or_else::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIEEENK5atoms6Result7or_elseEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value in the return type if it contains a value. </p>
+<p>Otherwise, returns the result of <code class="docutils literal notranslate"><span class="pre">f</span></code> .</p>
+<p>The return type must be a specialization of <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the same value type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns a <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The contained value or the result of <code class="docutils literal notranslate"><span class="pre">f</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIEEENO5atoms6Result7or_elseEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIEEENO5atoms6Result7or_elseERR1F"></span><span id="_CPPv2I_NSt9invocableIEEENO5atoms6Result7or_elseERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a2d6c474241da05df5f8fcc5b0b3234f9"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">or_else</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIEEENO5atoms6Result7or_elseEDaRR1F" title="atoms::Result::or_else::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIEEENO5atoms6Result7or_elseEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value in the return type if it contains a value. </p>
+<p>Otherwise, returns the result of <code class="docutils literal notranslate"><span class="pre">f</span></code> .</p>
+<p>The return type must be a specialization of <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the same value type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns a <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The contained value or the result of <code class="docutils literal notranslate"><span class="pre">f</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-transform-operations">Transform operations</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIR10value_typeEEENR5atoms6Result9transformEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIR10value_typeEEENR5atoms6Result9transformERR1F"></span><span id="_CPPv2I_NSt9invocableIR10value_typeEEENR5atoms6Result9transformERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a28c626e0a63bb4c43ed8fb96e43ff083"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">transform</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIR10value_typeEEENR5atoms6Result9transformEDaRR1F" title="atoms::Result::transform::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIR10value_typeEEENR5atoms6Result9transformEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the result of invocation of <code class="docutils literal notranslate"><span class="pre">f</span></code> on the contained value as the new value if it exists. </p>
+<p>Otherwise, returns the contained error in the return type.</p>
+<p>The return type of <code class="docutils literal notranslate"><span class="pre">f</span></code> will be the value type of the returned <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns the new value type</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The result of <code class="docutils literal notranslate"><span class="pre">f</span></code> or the contained error. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIRK10value_typeEEENKR5atoms6Result9transformEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIRK10value_typeEEENKR5atoms6Result9transformERR1F"></span><span id="_CPPv2I_NSt9invocableIRK10value_typeEEENKR5atoms6Result9transformERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a51f13ce6e4bbd24e772550e439ce50d4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">transform</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIRK10value_typeEEENKR5atoms6Result9transformEDaRR1F" title="atoms::Result::transform::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIRK10value_typeEEENKR5atoms6Result9transformEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the result of invocation of <code class="docutils literal notranslate"><span class="pre">f</span></code> on the contained value as the new value if it exists. </p>
+<p>Otherwise, returns the contained error in the return type.</p>
+<p>The return type of <code class="docutils literal notranslate"><span class="pre">f</span></code> will be the value type of the returned <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns the new value type</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The result of <code class="docutils literal notranslate"><span class="pre">f</span></code> or the contained error. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIRR10value_typeEEENO5atoms6Result9transformEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIRR10value_typeEEENO5atoms6Result9transformERR1F"></span><span id="_CPPv2I_NSt9invocableIRR10value_typeEEENO5atoms6Result9transformERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a5cd5886ae5632507a290426db10c4f5d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">transform</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIRR10value_typeEEENO5atoms6Result9transformEDaRR1F" title="atoms::Result::transform::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIRR10value_typeEEENO5atoms6Result9transformEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the result of invocation of <code class="docutils literal notranslate"><span class="pre">f</span></code> on the contained value as the new value if it exists. </p>
+<p>Otherwise, returns the contained error in the return type.</p>
+<p>The return type of <code class="docutils literal notranslate"><span class="pre">f</span></code> will be the value type of the returned <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns the new value type</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The result of <code class="docutils literal notranslate"><span class="pre">f</span></code> or the contained error. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIR10error_typeEEENR5atoms6Result15transform_errorEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIR10error_typeEEENR5atoms6Result15transform_errorERR1F"></span><span id="_CPPv2I_NSt9invocableIR10error_typeEEENR5atoms6Result15transform_errorERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a59ad1c342de4dece33434e076ea4ee90"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">transform_error</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIR10error_typeEEENR5atoms6Result15transform_errorEDaRR1F" title="atoms::Result::transform_error::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIR10error_typeEEENR5atoms6Result15transform_errorEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value in the return type if it contains a value. </p>
+<p>Otherwise, returns <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the result of invocation of <code class="docutils literal notranslate"><span class="pre">f</span></code> on the contained error as the new error.</p>
+<p>The return type of <code class="docutils literal notranslate"><span class="pre">f</span></code> will be the error type of the returned <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns a <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The contained value or the result of <code class="docutils literal notranslate"><span class="pre">f</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIRK10error_typeEEENKR5atoms6Result15transform_errorEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIRK10error_typeEEENKR5atoms6Result15transform_errorERR1F"></span><span id="_CPPv2I_NSt9invocableIRK10error_typeEEENKR5atoms6Result15transform_errorERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1abe421645130fb15d1c10ade27068a912"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">transform_error</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIRK10error_typeEEENKR5atoms6Result15transform_errorEDaRR1F" title="atoms::Result::transform_error::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIRK10error_typeEEENKR5atoms6Result15transform_errorEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value in the return type if it contains a value. </p>
+<p>Otherwise, returns <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the result of invocation of <code class="docutils literal notranslate"><span class="pre">f</span></code> on the contained error as the new error.</p>
+<p>The return type of <code class="docutils literal notranslate"><span class="pre">f</span></code> will be the error type of the returned <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns a <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The contained value or the result of <code class="docutils literal notranslate"><span class="pre">f</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt9invocableIRR10error_typeEEENO5atoms6Result15transform_errorEDaRR1F">
+<span id="_CPPv3I_NSt9invocableIRR10error_typeEEENO5atoms6Result15transform_errorERR1F"></span><span id="_CPPv2I_NSt9invocableIRR10error_typeEEENO5atoms6Result15transform_errorERR1F"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invocable</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a37c49493bcec771b952534a840c82d85"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">transform_error</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_NSt9invocableIRR10error_typeEEENO5atoms6Result15transform_errorEDaRR1F" title="atoms::Result::transform_error::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">f</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4I_NSt9invocableIRR10error_typeEEENO5atoms6Result15transform_errorEDaRR1F" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the contained value in the return type if it contains a value. </p>
+<p>Otherwise, returns <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with the result of invocation of <code class="docutils literal notranslate"><span class="pre">f</span></code> on the contained error as the new error.</p>
+<p>The return type of <code class="docutils literal notranslate"><span class="pre">f</span></code> will be the error type of the returned <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>f</strong> – a suitable function or Callable object that returns a <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The contained value or the result of <code class="docutils literal notranslate"><span class="pre">f</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-match-operations">Match operations</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_N6detail18hint_match_visitorIR10value_typeR10error_typeEEENR5atoms6Result5matchEDaRR3Vis">
+<span id="_CPPv3I_N6detail18hint_match_visitorIR10value_typeR10error_typeEEENR5atoms6Result5matchERR3Vis"></span><span id="_CPPv2I_N6detail18hint_match_visitorIR10value_typeR10error_typeEEENR5atoms6Result5matchERR3Vis"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">hint_match_visitor</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Vis</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a8bd6add04c78644fc5a7a9e008e59b8a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">match</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_N6detail18hint_match_visitorIR10value_typeR10error_typeEEENR5atoms6Result5matchEDaRR3Vis" title="atoms::Result::match::Vis"><span class="n"><span class="pre">Vis</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">vis</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_N6detail18hint_match_visitorIR10value_typeR10error_typeEEENR5atoms6Result5matchEDaRR3Vis" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">vis</span></code> on <code class="docutils literal notranslate"><span class="pre">std::true_type</span></code> and the contained value if it exists. </p>
+<p>Otherwise, returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">vis</span></code> on <code class="docutils literal notranslate"><span class="pre">std::false_type</span></code> and the contained error.</p>
+<p><code class="docutils literal notranslate"><span class="pre">vis</span></code> has to be invocable with <code class="docutils literal notranslate"><span class="pre">std::true_type,</span> <span class="pre">value_type</span> <span class="pre">&amp;</span></code> and with <code class="docutils literal notranslate"><span class="pre">std::false_type,</span> <span class="pre">error_type</span> <span class="pre">&amp;</span></code> and has to have the same return type.</p>
+<p><code class="docutils literal notranslate"><span class="pre">vis</span></code> cannot be invocable just with <code class="docutils literal notranslate"><span class="pre">value_type</span> <span class="pre">&amp;</span></code> or just with <code class="docutils literal notranslate"><span class="pre">error_type</span> <span class="pre">&amp;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>vis</strong> – a suitable function or Callable object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The result of <code class="docutils literal notranslate"><span class="pre">vis</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_N6detail18hint_match_visitorIRK10value_typeRK10error_typeEEENKR5atoms6Result5matchEDaRR3Vis">
+<span id="_CPPv3I_N6detail18hint_match_visitorIRK10value_typeRK10error_typeEEENKR5atoms6Result5matchERR3Vis"></span><span id="_CPPv2I_N6detail18hint_match_visitorIRK10value_typeRK10error_typeEEENKR5atoms6Result5matchERR3Vis"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">hint_match_visitor</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Vis</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a79625e3a6e93c7aaca385f65e8e9292b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">match</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_N6detail18hint_match_visitorIRK10value_typeRK10error_typeEEENKR5atoms6Result5matchEDaRR3Vis" title="atoms::Result::match::Vis"><span class="n"><span class="pre">Vis</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">vis</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_N6detail18hint_match_visitorIRK10value_typeRK10error_typeEEENKR5atoms6Result5matchEDaRR3Vis" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">vis</span></code> on <code class="docutils literal notranslate"><span class="pre">std::true_type</span></code> and the contained value if it exists. </p>
+<p>Otherwise, returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">vis</span></code> on <code class="docutils literal notranslate"><span class="pre">std::false_type</span></code> and the contained error.</p>
+<p><code class="docutils literal notranslate"><span class="pre">vis</span></code> has to be invocable with <code class="docutils literal notranslate"><span class="pre">std::true_type,</span> <span class="pre">const</span> <span class="pre">value_type</span> <span class="pre">&amp;</span></code> and with <code class="docutils literal notranslate"><span class="pre">std::false_type,</span> <span class="pre">const</span> <span class="pre">error_type</span> <span class="pre">&amp;</span></code> and has to have the same return type.</p>
+<p><code class="docutils literal notranslate"><span class="pre">vis</span></code> cannot be invocable just with <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">value_type</span> <span class="pre">&amp;</span></code> or just with <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">error_type</span> <span class="pre">&amp;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>vis</strong> – a suitable function or Callable object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The result of <code class="docutils literal notranslate"><span class="pre">vis</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_N6detail18hint_match_visitorIRR10value_typeRR10error_typeEEENO5atoms6Result5matchEDaRR3Vis">
+<span id="_CPPv3I_N6detail18hint_match_visitorIRR10value_typeRR10error_typeEEENO5atoms6Result5matchERR3Vis"></span><span id="_CPPv2I_N6detail18hint_match_visitorIRR10value_typeRR10error_typeEEENO5atoms6Result5matchERR3Vis"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">hint_match_visitor</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Vis</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a8353db35c8f29b99f416f83ecda0bba5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">match</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_N6detail18hint_match_visitorIRR10value_typeRR10error_typeEEENO5atoms6Result5matchEDaRR3Vis" title="atoms::Result::match::Vis"><span class="n"><span class="pre">Vis</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">vis</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4I_N6detail18hint_match_visitorIRR10value_typeRR10error_typeEEENO5atoms6Result5matchEDaRR3Vis" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">vis</span></code> on <code class="docutils literal notranslate"><span class="pre">std::true_type</span></code> and the contained value if it exists. </p>
+<p>Otherwise, returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">vis</span></code> on <code class="docutils literal notranslate"><span class="pre">std::false_type</span></code> and the contained error.</p>
+<p><code class="docutils literal notranslate"><span class="pre">vis</span></code> has to be invocable with <code class="docutils literal notranslate"><span class="pre">std::true_type,</span> <span class="pre">value_type</span> <span class="pre">&amp;&amp;</span></code> and with <code class="docutils literal notranslate"><span class="pre">std::false_type,</span> <span class="pre">error_type</span> <span class="pre">&amp;&amp;</span></code> and has to have the same return type.</p>
+<p><code class="docutils literal notranslate"><span class="pre">vis</span></code> cannot be invocable just with <code class="docutils literal notranslate"><span class="pre">value_type</span> <span class="pre">&amp;&amp;</span></code> or just with <code class="docutils literal notranslate"><span class="pre">error_type</span> <span class="pre">&amp;&amp;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>vis</strong> – a suitable function or Callable object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The result of <code class="docutils literal notranslate"><span class="pre">vis</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_N6detail21no_hint_match_visitorIR10value_typeR10error_typeEEENR5atoms6Result5matchEDaRR3Vis">
+<span id="_CPPv3I_N6detail21no_hint_match_visitorIR10value_typeR10error_typeEEENR5atoms6Result5matchERR3Vis"></span><span id="_CPPv2I_N6detail21no_hint_match_visitorIR10value_typeR10error_typeEEENR5atoms6Result5matchERR3Vis"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">no_hint_match_visitor</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Vis</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a8bd6add04c78644fc5a7a9e008e59b8a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">match</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_N6detail21no_hint_match_visitorIR10value_typeR10error_typeEEENR5atoms6Result5matchEDaRR3Vis" title="atoms::Result::match::Vis"><span class="n"><span class="pre">Vis</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">vis</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_N6detail21no_hint_match_visitorIR10value_typeR10error_typeEEENR5atoms6Result5matchEDaRR3Vis" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">vis</span></code> on the contained value if it exists. </p>
+<p>Otherwise, returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">vis</span></code> on the contained error.</p>
+<p><code class="docutils literal notranslate"><span class="pre">vis</span></code> has to be invocable with <code class="docutils literal notranslate"><span class="pre">value_type</span> <span class="pre">&amp;</span></code> and with <code class="docutils literal notranslate"><span class="pre">error_type</span> <span class="pre">&amp;</span></code> and has to have the same return type.</p>
+<p><code class="docutils literal notranslate"><span class="pre">vis</span></code> cannot be invocable with <code class="docutils literal notranslate"><span class="pre">std::true_type,</span> <span class="pre">value_type</span> <span class="pre">&amp;</span></code> or with <code class="docutils literal notranslate"><span class="pre">std::false_type,</span> <span class="pre">error_type</span> <span class="pre">&amp;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>vis</strong> – a suitable function or Callable object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The result of <code class="docutils literal notranslate"><span class="pre">vis</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_N6detail21no_hint_match_visitorIRK10value_typeRK10error_typeEEENKR5atoms6Result5matchEDaRR3Vis">
+<span id="_CPPv3I_N6detail21no_hint_match_visitorIRK10value_typeRK10error_typeEEENKR5atoms6Result5matchERR3Vis"></span><span id="_CPPv2I_N6detail21no_hint_match_visitorIRK10value_typeRK10error_typeEEENKR5atoms6Result5matchERR3Vis"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">no_hint_match_visitor</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Vis</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a79625e3a6e93c7aaca385f65e8e9292b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">match</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_N6detail21no_hint_match_visitorIRK10value_typeRK10error_typeEEENKR5atoms6Result5matchEDaRR3Vis" title="atoms::Result::match::Vis"><span class="n"><span class="pre">Vis</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">vis</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><a class="headerlink" href="#_CPPv4I_N6detail21no_hint_match_visitorIRK10value_typeRK10error_typeEEENKR5atoms6Result5matchEDaRR3Vis" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">vis</span></code> on the contained value if it exists. </p>
+<p>Otherwise, returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">vis</span></code> on the contained error.</p>
+<p><code class="docutils literal notranslate"><span class="pre">vis</span></code> has to be invocable with <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">value_type</span> <span class="pre">&amp;</span></code> and with <code class="docutils literal notranslate"><span class="pre">const</span> <span class="pre">error_type</span> <span class="pre">&amp;</span></code> and has to have the same return type.</p>
+<p><code class="docutils literal notranslate"><span class="pre">vis</span></code> cannot be invocable with <code class="docutils literal notranslate"><span class="pre">std::true_type,</span> <span class="pre">const</span> <span class="pre">value_type</span> <span class="pre">&amp;</span></code> or with <code class="docutils literal notranslate"><span class="pre">std::false_type,</span> <span class="pre">const</span> <span class="pre">error_type</span> <span class="pre">&amp;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>vis</strong> – a suitable function or Callable object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The result of <code class="docutils literal notranslate"><span class="pre">vis</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_N6detail21no_hint_match_visitorIRR10value_typeRR10error_typeEEENO5atoms6Result5matchEDaRR3Vis">
+<span id="_CPPv3I_N6detail21no_hint_match_visitorIRR10value_typeRR10error_typeEEENO5atoms6Result5matchERR3Vis"></span><span id="_CPPv2I_N6detail21no_hint_match_visitorIRR10value_typeRR10error_typeEEENO5atoms6Result5matchERR3Vis"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">no_hint_match_visitor</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N5atoms6Result10value_typeE" title="atoms::Result::value_type"><span class="n"><span class="pre">value_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms6Result10error_typeE" title="atoms::Result::error_type"><span class="n"><span class="pre">error_type</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Vis</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_result_1a8353db35c8f29b99f416f83ecda0bba5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">match</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I_N6detail21no_hint_match_visitorIRR10value_typeRR10error_typeEEENO5atoms6Result5matchEDaRR3Vis" title="atoms::Result::match::Vis"><span class="n"><span class="pre">Vis</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">vis</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">&amp;&amp;</span></span><a class="headerlink" href="#_CPPv4I_N6detail21no_hint_match_visitorIRR10value_typeRR10error_typeEEENO5atoms6Result5matchEDaRR3Vis" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">vis</span></code> on the contained value if it exists. </p>
+<p>Otherwise, returns the result of invocation of <code class="docutils literal notranslate"><span class="pre">vis</span></code> on the contained error.</p>
+<p><code class="docutils literal notranslate"><span class="pre">vis</span></code> has to be invocable with <code class="docutils literal notranslate"><span class="pre">value_type</span> <span class="pre">&amp;&amp;</span></code> and with <code class="docutils literal notranslate"><span class="pre">error_type</span> <span class="pre">&amp;&amp;</span></code> and has to have the same return type.</p>
+<p><code class="docutils literal notranslate"><span class="pre">vis</span></code> cannot be invocable with <code class="docutils literal notranslate"><span class="pre">std::true_type,</span> <span class="pre">value_type</span> <span class="pre">&amp;&amp;</span></code> or with <code class="docutils literal notranslate"><span class="pre">std::false_type,</span> <span class="pre">error_type</span> <span class="pre">&amp;&amp;</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>vis</strong> – a suitable function or Callable object</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The result of <code class="docutils literal notranslate"><span class="pre">vis</span></code> . </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-comparison-operator">Comparison operator</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms6ResulteqERK6Result">
+<span id="_CPPv3NK5atoms6ResulteqERK6Result"></span><span id="_CPPv2NK5atoms6ResulteqERK6Result"></span><span id="atoms::Result::eq-operator__ResultCRC"></span><span class="target" id="classatoms_1_1_result_1a609668b973b0bf1c1893c6192d2cdef1"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">==</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4NK5atoms6ResulteqERK6Result" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Checks equality of two results. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>other</strong> – result to check equality against</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>whether both <code class="docutils literal notranslate"><span class="pre">*this</span></code> and <code class="docutils literal notranslate"><span class="pre">other</span></code> contain value and the values are equal or both contain error and the errors are equal. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms6detail15TypePlaceholderE">
+<span id="_CPPv3N5atoms6detail15TypePlaceholderE"></span><span id="_CPPv2N5atoms6detail15TypePlaceholderE"></span><span id="atoms::detail::TypePlaceholder"></span><span class="target" id="structatoms_1_1detail_1_1_type_placeholder"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">TypePlaceholder</span></span></span><a class="headerlink" href="#_CPPv4N5atoms6detail15TypePlaceholderE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref">Result</span></a> value/error type placeholder. </p>
+<p>Used as a type placeholder so the other type of result doesn’t have to be specified by the user.</p>
+<p>The functionality of <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with <code class="docutils literal notranslate"><a class="reference internal" href="#structatoms_1_1detail_1_1_type_placeholder"><span class="std std-ref"><span class="pre">TypePlaceholder</span></span></a></code> is similar to <code class="docutils literal notranslate"><span class="pre">std::nullopt_t</span></code>. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms6detail15TypePlaceholder15TypePlaceholderEv">
+<span id="_CPPv3N5atoms6detail15TypePlaceholder15TypePlaceholderEv"></span><span id="_CPPv2N5atoms6detail15TypePlaceholder15TypePlaceholderEv"></span><span id="atoms::detail::TypePlaceholder::TypePlaceholder"></span><span class="target" id="structatoms_1_1detail_1_1_type_placeholder_1a8603428a48bfb77d040a594a743b30f1"></span><span class="sig-name descname"><span class="n"><span class="pre">TypePlaceholder</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">delete</span></span><a class="headerlink" href="#_CPPv4N5atoms6detail15TypePlaceholder15TypePlaceholderEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+<section id="functions-reference">
+<h2>Functions reference<a class="headerlink" href="#functions-reference" title="Permalink to this headline"></a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN5atoms12result_valueE6ResultI6ValueTN6detail15TypePlaceholderEE6ValueT">
+<span id="_CPPv3I0EN5atoms12result_valueE6ValueT"></span><span id="_CPPv2I0EN5atoms12result_valueE6ValueT"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ValueT</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatoms_1a837e22131e13dd3ffc49a83f1082db21"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">result_value</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN5atoms12result_valueE6ResultI6ValueTN6detail15TypePlaceholderEE6ValueT" title="atoms::result_value::ValueT"><span class="n"><span class="pre">ValueT</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">value</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN5atoms12result_valueE6ResultI6ValueTN6detail15TypePlaceholderEE6ValueT" title="atoms::result_value::ValueT"><span class="n"><span class="pre">ValueT</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N5atoms6detail15TypePlaceholderE" title="atoms::detail::TypePlaceholder"><span class="n"><span class="pre">TypePlaceholder</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0EN5atoms12result_valueE6ResultI6ValueTN6detail15TypePlaceholderEE6ValueT" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Creates <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> from value. </p>
+<p>The created <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> is implicitly convertible to <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with any error type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> – the value to construct the <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> object with</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the contructed <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> object. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0DpEN5atoms17make_result_valueE6ResultI6ValueTN6detail15TypePlaceholderEEDpRR4Args">
+<span id="_CPPv3I0DpEN5atoms17make_result_valueEDpRR4Args"></span><span id="_CPPv2I0DpEN5atoms17make_result_valueEDpRR4Args"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ValueT</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname"><span class="n"><span class="pre">Args</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatoms_1a5bc4913f662998b4015d6866baa7fbc5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_result_value</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0DpEN5atoms17make_result_valueE6ResultI6ValueTN6detail15TypePlaceholderEEDpRR4Args" title="atoms::make_result_value::Args"><span class="n"><span class="pre">Args</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">args</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0DpEN5atoms17make_result_valueE6ResultI6ValueTN6detail15TypePlaceholderEEDpRR4Args" title="atoms::make_result_value::ValueT"><span class="n"><span class="pre">ValueT</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N5atoms6detail15TypePlaceholderE" title="atoms::detail::TypePlaceholder"><span class="n"><span class="pre">TypePlaceholder</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0DpEN5atoms17make_result_valueE6ResultI6ValueTN6detail15TypePlaceholderEEDpRR4Args" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Creates <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with value constructed in-place from <code class="docutils literal notranslate"><span class="pre">args</span></code>… . </p>
+<p>The created <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> is implicitly convertible to <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with any error type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>args</strong> – arguments to be passed to the constructor of value</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the contructed <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> object. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN5atoms12result_errorE6ResultIN6detail15TypePlaceholderE6ErrorTE6ErrorT">
+<span id="_CPPv3I0EN5atoms12result_errorE6ErrorT"></span><span id="_CPPv2I0EN5atoms12result_errorE6ErrorT"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ErrorT</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatoms_1a444ba7a43d4325eba85edce968bee14e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">result_error</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN5atoms12result_errorE6ResultIN6detail15TypePlaceholderE6ErrorTE6ErrorT" title="atoms::result_error::ErrorT"><span class="n"><span class="pre">ErrorT</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">error</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N5atoms6detail15TypePlaceholderE" title="atoms::detail::TypePlaceholder"><span class="n"><span class="pre">TypePlaceholder</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN5atoms12result_errorE6ResultIN6detail15TypePlaceholderE6ErrorTE6ErrorT" title="atoms::result_error::ErrorT"><span class="n"><span class="pre">ErrorT</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0EN5atoms12result_errorE6ResultIN6detail15TypePlaceholderE6ErrorTE6ErrorT" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Creates <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> from error. </p>
+<p>The created <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> is implicitly convertible to <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with any value type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>error</strong> – the error to construct the <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> object with</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the contructed <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> object. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0DpEN5atoms17make_result_errorE6ResultIN6detail15TypePlaceholderE6ErrorTEDpRR4Args">
+<span id="_CPPv3I0DpEN5atoms17make_result_errorEDpRR4Args"></span><span id="_CPPv2I0DpEN5atoms17make_result_errorEDpRR4Args"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ErrorT</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname"><span class="n"><span class="pre">Args</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatoms_1a29211f5f40e1fcf6bbd0c7618b0cc179"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">constexpr</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">make_result_error</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0DpEN5atoms17make_result_errorE6ResultIN6detail15TypePlaceholderE6ErrorTEDpRR4Args" title="atoms::make_result_error::Args"><span class="n"><span class="pre">Args</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">args</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="#_CPPv4N5atoms6detail15TypePlaceholderE" title="atoms::detail::TypePlaceholder"><span class="n"><span class="pre">TypePlaceholder</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0DpEN5atoms17make_result_errorE6ResultIN6detail15TypePlaceholderE6ErrorTEDpRR4Args" title="atoms::make_result_error::ErrorT"><span class="n"><span class="pre">ErrorT</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0DpEN5atoms17make_result_errorE6ResultIN6detail15TypePlaceholderE6ErrorTEDpRR4Args" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Creates <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with error constructed in-place from <code class="docutils literal notranslate"><span class="pre">args</span></code>… . </p>
+<p>The created <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> is implicitly convertible to <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> with any value type.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>args</strong> – arguments to be passed to the constructor of error</p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the contructed <code class="docutils literal notranslate"><a class="reference internal" href="#classatoms_1_1_result"><span class="std std-ref"><span class="pre">Result</span></span></a></code> object. </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="containers.html" class="btn btn-neutral float-left" title="Containers" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="resources.html" class="btn btn-neutral float-right" title="Embedded Resources Management" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

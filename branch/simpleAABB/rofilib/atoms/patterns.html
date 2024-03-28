@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Patterns &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Containers" href="containers.html" />
+    <link rel="prev" title="Atoms" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../intro/index.html">Introduction, compiling and structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../releng/index.html">Release engineering notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofihal/index.html">RoFI HAL</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">RoFILib</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../configuration.html">Configuration</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Atoms</a><ul class="current">
+<li class="toctree-l3 current"><a class="current reference internal" href="#">Patterns</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#visitor-pattern">Visitor Pattern</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#cloneable-object-hiearchy-valueptr">Cloneable Object Hiearchy &amp; ValuePtr</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="result.html">Result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="resources.html">Embedded Resources Management</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">RoFILib</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Atoms</a></li>
+      <li class="breadcrumb-item active">Patterns</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/rofilib/atoms/patterns.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="patterns">
+<h1>Patterns<a class="headerlink" href="#patterns" title="Permalink to this headline"></a></h1>
+<p>Patterns aim for removing unnecessary boilerplate code from your project for
+commonly used programming patterns.</p>
+<section id="visitor-pattern">
+<h2>Visitor Pattern<a class="headerlink" href="#visitor-pattern" title="Permalink to this headline"></a></h2>
+<p>Visitors allow you to separate algorithms from your data structures in object
+hierarchy. It allows you to implement new functionality for existing classes
+without modifying them (i.e., adding new virtual methods). See <a class="reference external" href="https://en.wikipedia.org/wiki/Visitor_pattern">Wikipedia</a> for more details.</p>
+<p>To remove boilerplate, you can use Atoms.</p>
+<p>Consider a simple class hiearchy of animals:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Animal</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="k">virtual</span><span class="w"> </span><span class="o">~</span><span class="n">Animal</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">default</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Cat</span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">Animal</span><span class="w"> </span><span class="p">{};</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Dog</span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">Animal</span><span class="w"> </span><span class="p">{};</span>
+</pre></div>
+</div>
+<p>To make them visitable via atoms, you need to modify your definition a little
+bit:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Cat</span><span class="p">;</span><span class="w"> </span><span class="c1">// Forward declaration, so we can define Visitor</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Dog</span><span class="p">;</span><span class="w"> </span><span class="c1">// Forward declaration, so we can define Visitor</span>
+
+<span class="c1">// Our visitor base class has to be defined before the base class, so we can</span>
+<span class="c1">// specify the visitor type in the definition</span>
+<span class="k">using</span><span class="w"> </span><span class="n">AnimalVisitor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">Visits</span><span class="o">&lt;</span><span class="w"> </span><span class="n">Cat</span><span class="p">,</span><span class="w"> </span><span class="n">Dog</span><span class="w"> </span><span class="o">&gt;</span><span class="p">;</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Animal</span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">VisitableBase</span><span class="o">&lt;</span><span class="w"> </span><span class="n">Animal</span><span class="p">,</span><span class="w"> </span><span class="n">AnimalVisitor</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="k">virtual</span><span class="w"> </span><span class="o">~</span><span class="n">Animal</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">default</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Cat</span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">Visitable</span><span class="o">&lt;</span><span class="w"> </span><span class="n">Animal</span><span class="p">,</span><span class="w"> </span><span class="n">Cat</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="p">{};</span><span class="w"> </span><span class="c1">// Make cat visitable</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Dog</span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">Visitable</span><span class="o">&lt;</span><span class="w"> </span><span class="n">Animal</span><span class="p">,</span><span class="w"> </span><span class="n">Dog</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="p">{};</span><span class="w"> </span><span class="c1">// Make dog visitable</span>
+</pre></div>
+</div>
+<p>Now you can hand-craft a traditional visitor and use it:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">TypeVisitor</span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">AnimalVisitor</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="k">operator</span><span class="p">()(</span><span class="w"> </span><span class="n">Cat</span><span class="o">&amp;</span><span class="w"> </span><span class="n">a</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;cat&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="kt">void</span><span class="w"> </span><span class="k">operator</span><span class="p">()(</span><span class="w"> </span><span class="n">Dog</span><span class="o">&amp;</span><span class="w"> </span><span class="n">b</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="k">override</span><span class="w"> </span><span class="p">{</span>
+<span class="w">        </span><span class="n">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">&quot;dog&quot;</span><span class="p">;</span>
+<span class="w">    </span><span class="p">}</span>
+
+<span class="w">    </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="n">result</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="c1">// ...and when you want to use it:</span>
+<span class="n">Cat</span><span class="w"> </span><span class="n">cat</span><span class="p">;</span>
+<span class="n">Dog</span><span class="w"> </span><span class="n">dog</span><span class="p">;</span>
+<span class="n">Animal</span><span class="w"> </span><span class="o">*</span><span class="n">hiddenCat</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">cat</span><span class="p">;</span>
+<span class="n">Animal</span><span class="w"> </span><span class="o">*</span><span class="n">hiddenDog</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="o">&amp;</span><span class="n">dog</span><span class="p">;</span>
+
+<span class="n">TypeVisitor</span><span class="w"> </span><span class="n">visitor</span><span class="p">;</span>
+<span class="n">cat</span><span class="p">.</span><span class="n">accept</span><span class="p">(</span><span class="w"> </span><span class="n">visitor</span><span class="w"> </span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">visitor</span><span class="p">.</span><span class="n">result</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="n">dog</span><span class="p">.</span><span class="n">accept</span><span class="p">(</span><span class="w"> </span><span class="n">visitor</span><span class="w"> </span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">visitor</span><span class="p">.</span><span class="n">result</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="n">hiddenCat</span><span class="o">-&gt;</span><span class="n">accept</span><span class="p">(</span><span class="w"> </span><span class="n">visitor</span><span class="w"> </span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">visitor</span><span class="p">.</span><span class="n">result</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+
+<span class="n">hiddenDog</span><span class="o">-&gt;</span><span class="n">accept</span><span class="p">(</span><span class="w"> </span><span class="n">visitor</span><span class="w"> </span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">visitor</span><span class="p">.</span><span class="n">result</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>With atoms, you can even construct a visitor in place from an ordinary function
+or/and lambdas:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="nf">catType</span><span class="p">(</span><span class="w"> </span><span class="n">Cat</span><span class="o">&amp;</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;cat&quot;</span><span class="p">;</span><span class="w"> </span><span class="p">}</span>
+<span class="k">auto</span><span class="w"> </span><span class="n">visitor</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">AnimalVisitor</span><span class="o">::</span><span class="n">make</span><span class="p">(</span>
+<span class="w">    </span><span class="n">catType</span><span class="p">,</span><span class="w">  </span><span class="c1">// Cat is visited by an ordinary function</span>
+<span class="w">    </span><span class="p">[](</span><span class="w"> </span><span class="n">Dog</span><span class="o">&amp;</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="o">-&gt;</span><span class="w"> </span><span class="n">std</span><span class="o">::</span><span class="n">string</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;dog&quot;</span><span class="w"> </span><span class="p">});</span><span class="w"> </span><span class="c1">// Dog is visited by a lambda</span>
+<span class="c1">// Note that you have to cover all cases, otherwise your program won&#39;t compile</span>
+
+<span class="c1">// Then we can use it like before</span>
+<span class="n">hiddenCat</span><span class="o">-&gt;</span><span class="n">accept</span><span class="p">(</span><span class="w"> </span><span class="n">visitor</span><span class="w"> </span><span class="p">);</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">visitor</span><span class="p">.</span><span class="n">result</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>This is not all, with Atoms, you can avoid the annoying “accept then result”
+construction and visit object like function call:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">visit</span><span class="p">(</span><span class="w"> </span><span class="n">hiddenCat</span><span class="p">,</span><span class="w"> </span><span class="n">visitor</span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+<span class="c1">// You can even define the visitor in place:</span>
+<span class="n">std</span><span class="o">::</span><span class="n">cout</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="n">atoms</span><span class="o">::</span><span class="n">visit</span><span class="p">(</span><span class="w"> </span><span class="n">hiddenCat</span><span class="p">,</span>
+<span class="w">    </span><span class="p">[](</span><span class="w"> </span><span class="n">Cat</span><span class="o">&amp;</span><span class="w"> </span><span class="n">cat</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;cat&quot;</span><span class="p">;</span><span class="w"> </span><span class="p">},</span>
+<span class="w">    </span><span class="p">[](</span><span class="w"> </span><span class="n">Dog</span><span class="o">&amp;</span><span class="w"> </span><span class="n">dog</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="k">return</span><span class="w"> </span><span class="s">&quot;dog&quot;</span><span class="p">;</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="o">&lt;&lt;</span><span class="w"> </span><span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>Bellow, you can find the references of the provided classes and functions:</p>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4IDpEN5atoms6VisitsE">
+<span id="_CPPv3IDpEN5atoms6VisitsE"></span><span id="_CPPv2IDpEN5atoms6VisitsE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname"><span class="n"><span class="pre">Hosts</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="structatoms_1_1_visits"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Visits</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Visits</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4IDpEN5atoms6VisitsE" title="atoms::Visits::Hosts"><span class="n"><span class="pre">Hosts</span></span></a><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4IDpEN5atoms6VisitsE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><a class="reference internal" href="#structatoms_1_1_visitor"><span class="std std-ref">Visitor</span></a> type for given set of derived classes (Hosts). </p>
+<p>Typical use case is <code class="docutils literal notranslate"><span class="pre">using</span> <span class="pre">MyTypeVisitor</span> <span class="pre">=</span> <a class="reference internal" href="#structatoms_1_1_visits"><span class="std std-ref"><span class="pre">atoms::Visits</span></span></a><span class="pre">&lt;</span> <span class="pre">Derived1,</span> <span class="pre">Derived2</span> <span class="pre">&gt;</span></code></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4IDpEN5atoms6Visits4makeEDaDp2Fs">
+<span id="_CPPv3IDpEN5atoms6Visits4makeEDp2Fs"></span><span id="_CPPv2IDpEN5atoms6Visits4makeEDp2Fs"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname"><span class="n"><span class="pre">Fs</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="structatoms_1_1_visits_1adb6061d7e32fc6ba2c526da7aea9b968"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">make</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4IDpEN5atoms6Visits4makeEDaDp2Fs" title="atoms::Visits::make::Fs"><span class="n"><span class="pre">Fs</span></span></a><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">fs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4IDpEN5atoms6Visits4makeEDaDp2Fs" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Build a visitor out of collables (functors, free functions) </p>
+<p>It expects that all callables have the same return value and each of the accepts exactly one overload of the base class. </p>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN5atoms13VisitableBaseE">
+<span id="_CPPv3I00EN5atoms13VisitableBaseE"></span><span id="_CPPv2I00EN5atoms13VisitableBaseE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Self</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Visitor</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="structatoms_1_1_visitable_base"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VisitableBase</span></span></span><a class="headerlink" href="#_CPPv4I00EN5atoms13VisitableBaseE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Make a base class visitable. </p>
+<p>This is a CRTP class, inherit from it in your base class and pass the base class type and a base visitor type as template arguments. The base visitor type should be created as a using to <a class="reference internal" href="#structatoms_1_1_visits"><span class="std std-ref">Visits</span></a>.</p>
+<p>Typical use case <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">Base:</span> <span class="pre">public</span> <a class="reference internal" href="#structatoms_1_1_visitable_base"><span class="std std-ref"><span class="pre">atoms::VisitableBase</span></span></a><span class="pre">&lt;</span> <span class="pre">Base,</span> <span class="pre">BaseVisitor</span> <span class="pre">&gt;</span> <span class="pre">{};</span></code></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms13VisitableBase11VisitorTypeE">
+<span id="_CPPv3N5atoms13VisitableBase11VisitorTypeE"></span><span id="_CPPv2N5atoms13VisitableBase11VisitorTypeE"></span><span class="target" id="structatoms_1_1_visitable_base_1a85c5ed0e18fee6c1e62ee5100e802af5"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VisitorType</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms13VisitableBaseE" title="atoms::VisitableBase::Visitor"><span class="n"><span class="pre">Visitor</span></span></a><a class="headerlink" href="#_CPPv4N5atoms13VisitableBase11VisitorTypeE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms13VisitableBaseD0Ev">
+<span id="_CPPv3N5atoms13VisitableBaseD0Ev"></span><span id="_CPPv2N5atoms13VisitableBaseD0Ev"></span><span id="atoms::VisitableBase::~VisitableBase"></span><span class="target" id="structatoms_1_1_visitable_base_1aa2994d5c6afbb4c482a950fba168403f"></span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">~VisitableBase</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N5atoms13VisitableBaseD0Ev" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms13VisitableBase6acceptER11VisitorType">
+<span id="_CPPv3N5atoms13VisitableBase6acceptER11VisitorType"></span><span id="_CPPv2N5atoms13VisitableBase6acceptER11VisitorType"></span><span id="atoms::VisitableBase::accept__VisitorTypeR"></span><span class="target" id="structatoms_1_1_visitable_base_1a7bac9b2e5b0d9fd7ce58050d568d04f1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">virtual</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">accept</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5atoms13VisitableBase11VisitorTypeE" title="atoms::VisitableBase::VisitorType"><span class="n"><span class="pre">VisitorType</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms13VisitableBase6acceptER11VisitorType" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN5atoms9VisitableE">
+<span id="_CPPv3I00EN5atoms9VisitableE"></span><span id="_CPPv2I00EN5atoms9VisitableE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Base</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Self</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="structatoms_1_1_visitable"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Visitable</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms9VisitableE" title="atoms::Visitable::Base"><span class="n"><span class="pre">Base</span></span></a><a class="headerlink" href="#_CPPv4I00EN5atoms9VisitableE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Implement visits interface in derived class. </p>
+<p>This is a CRTP class, inherit from it in you class and pass base class and your derived class as the template arguments.</p>
+<p>Typical use case <code class="docutils literal notranslate"><span class="pre">class</span> <span class="pre">Derived:</span> <span class="pre">public</span> <a class="reference internal" href="#structatoms_1_1_visitable"><span class="std std-ref"><span class="pre">Visitable</span></span></a><span class="pre">&lt;</span> <span class="pre">Base,</span> <span class="pre">Derived</span> <span class="pre">&gt;</span> <span class="pre">{};</span></code></p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4IDpEN5atoms9Visitable9VisitableEDpRR2Ts">
+<span id="_CPPv3IDpEN5atoms9Visitable9VisitableEDpRR2Ts"></span><span id="_CPPv2IDpEN5atoms9Visitable9VisitableEDpRR2Ts"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname"><span class="n"><span class="pre">Ts</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="structatoms_1_1_visitable_1a6ceab97a8995e2a9250a9c5ea7ebe97d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Visitable</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4IDpEN5atoms9Visitable9VisitableEDpRR2Ts" title="atoms::Visitable::Visitable::Ts"><span class="n"><span class="pre">Ts</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ts</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4IDpEN5atoms9Visitable9VisitableEDpRR2Ts" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms9Visitable6acceptERN4Base11VisitorTypeE">
+<span id="_CPPv3N5atoms9Visitable6acceptERN4Base11VisitorTypeE"></span><span id="_CPPv2N5atoms9Visitable6acceptERN4Base11VisitorTypeE"></span><span id="atoms::Visitable::accept__Base::VisitorTypeR"></span><span class="target" id="structatoms_1_1_visitable_1a9d8227c38de17728487dd1c0d0c83688"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">accept</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms9VisitableE" title="atoms::Visitable::Base"><span class="n"><span class="pre">Base</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">VisitorType</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">visitor</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">override</span></span><a class="headerlink" href="#_CPPv4N5atoms9Visitable6acceptERN4Base11VisitorTypeE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4I00DpEN5atoms7VisitorE">
+<span id="_CPPv3I00DpEN5atoms7VisitorE"></span><span id="_CPPv2I00DpEN5atoms7VisitorE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Base</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">F</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname"><span class="n"><span class="pre">Fs</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="structatoms_1_1_visitor"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Visitor</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="k"><span class="pre">public</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Visitor</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00DpEN5atoms7VisitorE" title="atoms::Visitor::Base"><span class="n"><span class="pre">Base</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="n"><span class="pre">FunctionTraits</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00DpEN5atoms7VisitorE" title="atoms::Visitor::F"><span class="n"><span class="pre">F</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">returnType</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00DpEN5atoms7VisitorE" title="atoms::Visitor::F"><span class="n"><span class="pre">F</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00DpEN5atoms7VisitorE" title="atoms::Visitor::Fs"><span class="n"><span class="pre">Fs</span></span></a><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I00DpEN5atoms7VisitorE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This type takes a desired visitor type (created by templateing <a class="reference internal" href="#structatoms_1_1_visits"><span class="std std-ref">Visits</span></a>), list of callables and produces a visitor out of the callable. </p>
+<p>Prefer calling <a class="reference internal" href="#structatoms_1_1_visits_1adb6061d7e32fc6ba2c526da7aea9b968"><span class="std std-ref">Visits::make()</span></a> for creating instances as it automatically deduces all the types. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms7Visitor10ReturnTypeE">
+<span id="_CPPv3N5atoms7Visitor10ReturnTypeE"></span><span id="_CPPv2N5atoms7Visitor10ReturnTypeE"></span><span class="target" id="structatoms_1_1_visitor_1a038bf4fdab660373342a528814cbe5fc"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ReturnType</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="n"><span class="pre">FunctionTraits</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00DpEN5atoms7VisitorE" title="atoms::Visitor::F"><span class="n"><span class="pre">F</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">returnType</span></span><a class="headerlink" href="#_CPPv4N5atoms7Visitor10ReturnTypeE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms7Visitor9SuccessorE">
+<span id="_CPPv3N5atoms7Visitor9SuccessorE"></span><span id="_CPPv2N5atoms7Visitor9SuccessorE"></span><span class="target" id="structatoms_1_1_visitor_1ab01d7502f9998dd165be62f800b5da0e"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Successor</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">detail</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Visitor</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00DpEN5atoms7VisitorE" title="atoms::Visitor::Base"><span class="n"><span class="pre">Base</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N5atoms7Visitor10ReturnTypeE" title="atoms::Visitor::ReturnType"><span class="n"><span class="pre">ReturnType</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00DpEN5atoms7VisitorE" title="atoms::Visitor::F"><span class="n"><span class="pre">F</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00DpEN5atoms7VisitorE" title="atoms::Visitor::Fs"><span class="n"><span class="pre">Fs</span></span></a><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N5atoms7Visitor9SuccessorE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms7Visitor7VisitorE1FDp2Fs">
+<span id="_CPPv3N5atoms7Visitor7VisitorE1FDp2Fs"></span><span id="_CPPv2N5atoms7Visitor7VisitorE1FDp2Fs"></span><span id="atoms::Visitor::Visitor__F.FsDp"></span><span class="target" id="structatoms_1_1_visitor_1aafa6efe99cf04791934c633418e6dba7"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Visitor</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00DpEN5atoms7VisitorE" title="atoms::Visitor::F"><span class="n"><span class="pre">F</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">f</span></span>, <a class="reference internal" href="#_CPPv4I00DpEN5atoms7VisitorE" title="atoms::Visitor::Fs"><span class="n"><span class="pre">Fs</span></span></a><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">fs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms7Visitor7VisitorE1FDp2Fs" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0DpEN5atoms5visitEDaR1TDp2Fs">
+<span id="_CPPv3I0DpEN5atoms5visitER1TDp2Fs"></span><span id="_CPPv2I0DpEN5atoms5visitER1TDp2Fs"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="p"><span class="pre">...</span></span><span class="sig-name descname"><span class="n"><span class="pre">Fs</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatoms_1a00c6b0d43b2a05e3134dff7ad3067893"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">visit</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0DpEN5atoms5visitEDaR1TDp2Fs" title="atoms::visit::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">object</span></span>, <a class="reference internal" href="#_CPPv4I0DpEN5atoms5visitEDaR1TDp2Fs" title="atoms::visit::Fs"><span class="n"><span class="pre">Fs</span></span></a><span class="p"><span class="pre">...</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">fs</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I0DpEN5atoms5visitEDaR1TDp2Fs" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Visit given object by se of callables. </p>
+<p>Expects that T inherits from <a class="reference internal" href="#structatoms_1_1_visitable_base"><span class="std std-ref">atoms::VisitableBase</span></a>.</p>
+<p>Expects that all callables have the same return value and each of them accepts exactly one overload of T. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN5atoms5visitENSt11enable_if_tINSt12is_base_of_vIN1T11VisitorTypeE7VisitorEEN7Visitor10ReturnTypeEEER1T7Visitor">
+<span id="_CPPv3I00EN5atoms5visitER1T7Visitor"></span><span id="_CPPv2I00EN5atoms5visitER1T7Visitor"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Visitor</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespaceatoms_1a8fb203cc3e4c1fa0d475fb5660a82b52"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">visit</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I00EN5atoms5visitENSt11enable_if_tINSt12is_base_of_vIN1T11VisitorTypeE7VisitorEEN7Visitor10ReturnTypeEEER1T7Visitor" title="atoms::visit::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">object</span></span>, <a class="reference internal" href="#_CPPv4I00EN5atoms5visitENSt11enable_if_tINSt12is_base_of_vIN1T11VisitorTypeE7VisitorEEN7Visitor10ReturnTypeEEER1T7Visitor" title="atoms::visit::Visitor"><span class="n"><span class="pre">Visitor</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">visitor</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">enable_if_t</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">is_base_of_v</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms5visitENSt11enable_if_tINSt12is_base_of_vIN1T11VisitorTypeE7VisitorEEN7Visitor10ReturnTypeEEER1T7Visitor" title="atoms::visit::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">VisitorType</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms5visitENSt11enable_if_tINSt12is_base_of_vIN1T11VisitorTypeE7VisitorEEN7Visitor10ReturnTypeEEER1T7Visitor" title="atoms::visit::Visitor"><span class="n"><span class="pre">Visitor</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN5atoms5visitENSt11enable_if_tINSt12is_base_of_vIN1T11VisitorTypeE7VisitorEEN7Visitor10ReturnTypeEEER1T7Visitor" title="atoms::visit::Visitor"><span class="n"><span class="pre">Visitor</span></span></a><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ReturnType</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I00EN5atoms5visitENSt11enable_if_tINSt12is_base_of_vIN1T11VisitorTypeE7VisitorEEN7Visitor10ReturnTypeEEER1T7Visitor" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Visit given object by a visitor. </p>
+<p>Gives visiting the same interface as std::visits provides and removes the hassle of extracting the return value out of the visitor.</p>
+<p>Expects that T inherits from <a class="reference internal" href="#structatoms_1_1_visitable_base"><span class="std std-ref">atoms::VisitableBase</span></a>.</p>
+<p>Expects that <a class="reference internal" href="#structatoms_1_1_visitor_1a038bf4fdab660373342a528814cbe5fc"><span class="std std-ref">Visitor::ReturnType</span></a> and Visitor::result (in case of non-void return type) exists. Both of these are guaranteed if <a class="reference internal" href="#structatoms_1_1_visitor"><span class="std std-ref">atoms::Visitor</span></a> is used. </p>
+</dd></dl>
+
+</section>
+<section id="cloneable-object-hiearchy-valueptr">
+<h2>Cloneable Object Hiearchy &amp; ValuePtr<a class="headerlink" href="#cloneable-object-hiearchy-valueptr" title="Permalink to this headline"></a></h2>
+<p>Atoms provide means to simply implement cloneable virtual hiearchies. Consider
+the following code:</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Animal</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="k">virtual</span><span class="w"> </span><span class="o">~</span><span class="n">Animal</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">default</span><span class="p">;</span>
+<span class="p">};</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Dog</span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">Animal</span><span class="w"> </span><span class="p">{};</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">Cat</span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">Animal</span><span class="w"> </span><span class="p">{};</span>
+
+<span class="c1">// Our code:</span>
+<span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="w"> </span><span class="n">Animal</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">ptr</span><span class="p">(</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Dog</span><span class="p">()</span><span class="w"> </span><span class="p">);</span>
+<span class="c1">// Let&#39;s make a copy - how to do so? We don&#39;t know what is behind Animal.</span>
+<span class="c1">// The following attempt won&#39;t work:</span>
+<span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="w"> </span><span class="n">Animal</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">ptrCopy</span><span class="p">(</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Animal</span><span class="p">(</span><span class="w"> </span><span class="o">*</span><span class="n">ptr</span><span class="p">.</span><span class="n">get</span><span class="p">()</span><span class="w"> </span><span class="p">)</span><span class="w"> </span><span class="p">);</span><span class="w"> </span><span class="c1">// Does not compile</span>
+</pre></div>
+</div>
+<p>To make the it work we can add a virtual <code class="docutils literal notranslate"><span class="pre">clone</span></code> method. This process can be
+tedious, so Atoms provide several macros to easy the task. By the way, we use
+macro-based approach over CRTP-based approach as we consider it more readable
+and easier to maintain.</p>
+<div class="highlight-cpp notranslate"><div class="highlight"><pre><span></span><span class="k">class</span><span class="w"> </span><span class="nc">Animal</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="k">virtual</span><span class="w"> </span><span class="o">~</span><span class="n">Animal</span><span class="p">()</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">default</span><span class="p">;</span>
+<span class="w">    </span><span class="n">ATOMS_CLONEABLE_BASE</span><span class="p">(</span><span class="w"> </span><span class="n">Animal</span><span class="w"> </span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Dog</span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">Animal</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="n">ATOMS_CLONEABLE</span><span class="p">(</span><span class="w"> </span><span class="n">Dog</span><span class="w"> </span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="k">class</span><span class="w"> </span><span class="nc">Cat</span><span class="o">:</span><span class="w"> </span><span class="k">public</span><span class="w"> </span><span class="n">Animal</span><span class="w"> </span><span class="p">{</span>
+<span class="k">public</span><span class="o">:</span>
+<span class="w">    </span><span class="n">ATOMS_CLONEABLE</span><span class="p">(</span><span class="w"> </span><span class="n">Cat</span><span class="w"> </span><span class="p">);</span>
+<span class="p">};</span>
+
+<span class="c1">// Our code:</span>
+<span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="w"> </span><span class="n">Animal</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">ptr</span><span class="p">(</span><span class="w"> </span><span class="k">new</span><span class="w"> </span><span class="n">Dog</span><span class="p">()</span><span class="w"> </span><span class="p">);</span>
+<span class="c1">// Let&#39;s make a copy:</span>
+<span class="n">std</span><span class="o">::</span><span class="n">unique_ptr</span><span class="o">&lt;</span><span class="w"> </span><span class="n">Animal</span><span class="w"> </span><span class="o">&gt;</span><span class="w"> </span><span class="n">ptrCopy</span><span class="p">(</span><span class="w"> </span><span class="n">ptr</span><span class="o">-&gt;</span><span class="n">clone</span><span class="p">()</span><span class="w"> </span><span class="p">);</span>
+</pre></div>
+</div>
+<p>Sometimes, you need to store a such hierarchy in class which you want to make
+copyable. With <code class="docutils literal notranslate"><span class="pre">unique_ptr</span></code> you have to manually define all the copy and move
+constructors. This can be tedious, therefore, atoms provide
+<a class="reference internal" href="#_CPPv4I0EN5atoms8ValuePtrE" title="atoms::ValuePtr"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">atoms::ValuePtr</span></code></a> which stores objects on heap, but provides copy
+semantics for them. It is somewhat similar to proposed <code class="docutils literal notranslate"><span class="pre">std::polymorphic_value</span></code>,
+however, it does not feature small-buffer optimization to provide stable
+references.</p>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN5atoms8ValuePtrE">
+<span id="_CPPv3I0EN5atoms8ValuePtrE"></span><span id="_CPPv2I0EN5atoms8ValuePtrE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_value_ptr"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ValuePtr</span></span></span><a class="headerlink" href="#_CPPv4I0EN5atoms8ValuePtrE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Store object on a heap (to allow virtual function calls and to provide stable address on move) and provide deep copies. </p>
+<p>It requires that T provides <code class="docutils literal notranslate"><span class="pre">T</span> <span class="pre">*clone()</span> <span class="pre">const</span></code>. Use <code class="docutils literal notranslate"><span class="pre">ATOMS_CLONEABLE_BASE</span></code> and <code class="docutils literal notranslate"><span class="pre">ATOMS_CLONEABLE</span></code> for providing this method. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms8ValuePtr8ValuePtrEv">
+<span id="_CPPv3N5atoms8ValuePtr8ValuePtrEv"></span><span id="_CPPv2N5atoms8ValuePtr8ValuePtrEv"></span><span id="atoms::ValuePtr::ValuePtr"></span><span class="target" id="classatoms_1_1_value_ptr_1ae657d082715a4a302b4491a1012bc3f7"></span><span class="sig-name descname"><span class="n"><span class="pre">ValuePtr</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N5atoms8ValuePtr8ValuePtrEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms8ValuePtr8ValuePtrENSt10unique_ptrI1TEE">
+<span id="_CPPv3N5atoms8ValuePtr8ValuePtrENSt10unique_ptrI1TEE"></span><span id="_CPPv2N5atoms8ValuePtr8ValuePtrENSt10unique_ptrI1TEE"></span><span id="atoms::ValuePtr::ValuePtr__std::unique_ptr:T:"></span><span class="target" id="classatoms_1_1_value_ptr_1acae7ef13c212075a4bb05dfd08300f00"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ValuePtr</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unique_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN5atoms8ValuePtrE" title="atoms::ValuePtr::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms8ValuePtr8ValuePtrENSt10unique_ptrI1TEE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms8ValuePtr8ValuePtrERK1T">
+<span id="_CPPv3N5atoms8ValuePtr8ValuePtrERK1T"></span><span id="_CPPv2N5atoms8ValuePtr8ValuePtrERK1T"></span><span id="atoms::ValuePtr::ValuePtr__TCR"></span><span class="target" id="classatoms_1_1_value_ptr_1a2628679314c205c8d41ec2efe507bb3d"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ValuePtr</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN5atoms8ValuePtrE" title="atoms::ValuePtr::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">t</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N5atoms8ValuePtr8ValuePtrERK1T" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I_NSt12derived_fromI1TEEEN5atoms8ValuePtr8ValuePtrENSt10unique_ptrI1TEE">
+<span id="_CPPv3I_NSt12derived_fromI1TEEEN5atoms8ValuePtr8ValuePtrENSt10unique_ptrI1TEE"></span><span id="_CPPv2I_NSt12derived_fromI1TEEEN5atoms8ValuePtr8ValuePtrENSt10unique_ptrI1TEE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">derived_from</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN5atoms8ValuePtrE" title="atoms::ValuePtr::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Derived</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="classatoms_1_1_value_ptr_1a1b0ccc6f50548f074303b8ae46d3f147"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ValuePtr</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">unique_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN5atoms8ValuePtrE" title="atoms::ValuePtr::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">ptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4I_NSt12derived_fromI1TEEEN5atoms8ValuePtr8ValuePtrENSt10unique_ptrI1TEE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms8ValuePtr8ValuePtrERR8ValuePtr">
+<span id="_CPPv3N5atoms8ValuePtr8ValuePtrERR8ValuePtr"></span><span id="_CPPv2N5atoms8ValuePtr8ValuePtrERR8ValuePtr"></span><span id="atoms::ValuePtr::ValuePtr__ValuePtrRR"></span><span class="target" id="classatoms_1_1_value_ptr_1aebc11304013dac2466a7bd314cb88142"></span><span class="sig-name descname"><span class="n"><span class="pre">ValuePtr</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N5atoms8ValuePtr8ValuePtrERR8ValuePtr" title="atoms::ValuePtr::ValuePtr"><span class="n"><span class="pre">ValuePtr</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N5atoms8ValuePtr8ValuePtrERR8ValuePtr" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms8ValuePtraSERR8ValuePtr">
+<span id="_CPPv3N5atoms8ValuePtraSERR8ValuePtr"></span><span id="_CPPv2N5atoms8ValuePtraSERR8ValuePtr"></span><span id="atoms::ValuePtr::assign-operator__ValuePtrRR"></span><span class="target" id="classatoms_1_1_value_ptr_1a94d9375e8378ed4b0bdd34bb71cd0c13"></span><a class="reference internal" href="#_CPPv4I0EN5atoms8ValuePtrE" title="atoms::ValuePtr"><span class="n"><span class="pre">ValuePtr</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">=</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN5atoms8ValuePtrE" title="atoms::ValuePtr"><span class="n"><span class="pre">ValuePtr</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4N5atoms8ValuePtraSERR8ValuePtr" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms8ValuePtr5cloneEv">
+<span id="_CPPv3NK5atoms8ValuePtr5cloneEv"></span><span id="_CPPv2NK5atoms8ValuePtr5cloneEv"></span><span id="atoms::ValuePtr::cloneC"></span><span class="target" id="classatoms_1_1_value_ptr_1a9888e333fea935f2cd9eecc32aa34ea5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN5atoms8ValuePtrE" title="atoms::ValuePtr"><span class="n"><span class="pre">ValuePtr</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">clone</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK5atoms8ValuePtr5cloneEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N5atoms8ValuePtr4swapER8ValuePtr">
+<span id="_CPPv3N5atoms8ValuePtr4swapER8ValuePtr"></span><span id="_CPPv2N5atoms8ValuePtr4swapER8ValuePtr"></span><span id="atoms::ValuePtr::swap__ValuePtrR"></span><span class="target" id="classatoms_1_1_value_ptr_1ad18ba52a2c11177ece8846d5dcd751b2"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">swap</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4I0EN5atoms8ValuePtrE" title="atoms::ValuePtr"><span class="n"><span class="pre">ValuePtr</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">other</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4N5atoms8ValuePtr4swapER8ValuePtr" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms8ValuePtrmlEv">
+<span id="_CPPv3NK5atoms8ValuePtrmlEv"></span><span id="_CPPv2NK5atoms8ValuePtrmlEv"></span><span id="atoms::ValuePtr::mul-operatorC"></span><span class="target" id="classatoms_1_1_value_ptr_1a94489ad329ec18e3d81dd5be93da6f85"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN5atoms8ValuePtrE" title="atoms::ValuePtr::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">*</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK5atoms8ValuePtrmlEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms8ValuePtrptEv">
+<span id="_CPPv3NK5atoms8ValuePtrptEv"></span><span id="_CPPv2NK5atoms8ValuePtrptEv"></span><span id="atoms::ValuePtr::pointer-operatorC"></span><span class="target" id="classatoms_1_1_value_ptr_1a224c4d6898166e08e050d56288587119"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN5atoms8ValuePtrE" title="atoms::ValuePtr::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">-&gt;</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK5atoms8ValuePtrptEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms8ValuePtr3getEv">
+<span id="_CPPv3NK5atoms8ValuePtr3getEv"></span><span id="_CPPv2NK5atoms8ValuePtr3getEv"></span><span id="atoms::ValuePtr::getC"></span><span class="target" id="classatoms_1_1_value_ptr_1add86a3a4b13f31deb7299b73e83263a8"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I0EN5atoms8ValuePtrE" title="atoms::ValuePtr::T"><span class="n"><span class="pre">T</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">get</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK5atoms8ValuePtr3getEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK5atoms8ValuePtrcvbEv">
+<span id="_CPPv3NK5atoms8ValuePtrcvbEv"></span><span id="_CPPv2NK5atoms8ValuePtrcvbEv"></span><span id="atoms::ValuePtr::castto-b-operatorC"></span><span class="target" id="classatoms_1_1_value_ptr_1a41ab9e9053b0cc09b49300f2e0300650"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">explicit</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="k"><span class="pre">noexcept</span></span><a class="headerlink" href="#_CPPv4NK5atoms8ValuePtrcvbEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Atoms" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="containers.html" class="btn btn-neutral float-right" title="Containers" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

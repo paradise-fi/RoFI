@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Voxel Configuration &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Json Serialization" href="serializations/json.html" />
+    <link rel="prev" title="RoFI Configuration" href="rofiworld.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../intro/index.html">Introduction, compiling and structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../releng/index.html">Release engineering notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofihal/index.html">RoFI HAL</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">RoFILib</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Configurations</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="index.html#configuration-usage">Configuration Usage</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#different-configurations">Different Configurations</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="rofiworld.html">RoFI Configuration</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Voxel Configuration</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#serializations">Serializations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../atoms/index.html">Atoms</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">RoFILib</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Configurations</a></li>
+      <li class="breadcrumb-item active">Voxel Configuration</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/rofilib/configurations/voxel.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="voxel-configuration">
+<h1><a class="toc-backref" href="#id1">Voxel Configuration</a><a class="headerlink" href="#voxel-configuration" title="Permalink to this headline"></a></h1>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p>The Voxel configuration is mainly developed in
+<a class="reference external" href="https://www.rust-lang.org/">Rust</a>
+and as such has its own documentation.</p>
+</div>
+<p>Voxel configuration tries to minimize
+the information needed to represent a world with RoFI modules.</p>
+<p>For this reason there are some limitations in expresivity of Voxel
+configuration, which allows for a more space efficient representation
+and for more efficient algorithms when using this representation:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>All modules have to be a Universal module.</p></li>
+<li><p>All joint values have to be a multiple of 90 degrees.</p></li>
+<li><p>Modules are not distinguishable.</p></li>
+<li><p>Shoes of modules and rotations are not distinguishable
+if they can be mapped to each other.</p></li>
+<li><p>The configuration is not fixed in space.</p></li>
+</ul>
+</div></blockquote>
+<p>These limitations imply that symmetries are baked into the representation.</p>
+<div class="contents topic" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#voxel-configuration" id="id1">Voxel Configuration</a></p>
+<ul>
+<li><p><a class="reference internal" href="#explicit-connections" id="id2">Explicit Connections</a></p></li>
+<li><p><a class="reference internal" href="#voxel-configuration-in-cpp" id="id3">Voxel Configuration in Cpp</a></p>
+<ul>
+<li><p><a class="reference internal" href="#types-constants-and-support-classes" id="id4">Types, Constants and Support Classes</a></p></li>
+<li><p><a class="reference internal" href="#classes" id="id5">Classes</a></p></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The name <a class="reference external" href="https://en.wikipedia.org/wiki/Voxel">Voxel</a>
+comes from the original idea representing the world as a 3D grid
+of values that are either empty or contain a shoe of a RoFI module.</p>
+<p>Since then the representation of the voxel world has shifted and
+it is no longer stored as a 3D vector of values, but the meaning
+and name <cite>Voxel</cite> stayed the same.</p>
+</div>
+<section id="explicit-connections">
+<h2><a class="toc-backref" href="#id2">Explicit Connections</a><a class="headerlink" href="#explicit-connections" title="Permalink to this headline"></a></h2>
+<p>Voxel world allows specifying explicit connections,
+but this is not yet reflected in cpp code.</p>
+</section>
+<section id="voxel-configuration-in-cpp">
+<h2><a class="toc-backref" href="#id3">Voxel Configuration in Cpp</a><a class="headerlink" href="#voxel-configuration-in-cpp" title="Permalink to this headline"></a></h2>
+<p>The class representing Voxel configuration in cpp
+is <a class="reference internal" href="#_CPPv4N4rofi5voxel10VoxelWorldE" title="rofi::voxel::VoxelWorld"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">rofi::voxel::VoxelWorld</span></code></a>.
+<a class="reference internal" href="#_CPPv4N4rofi5voxel10VoxelWorldE" title="rofi::voxel::VoxelWorld"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">rofi::voxel::VoxelWorld</span></code></a> can be easily converted to and from
+<a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">rofi::configuration::RofiWorld</span></code></a>
+by <a class="reference internal" href="#_CPPv4NK4rofi5voxel10VoxelWorld11toRofiWorldEb" title="rofi::voxel::VoxelWorld::toRofiWorld"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::voxel::VoxelWorld::toRofiWorld()</span></code></a>
+and <a class="reference internal" href="#_CPPv4N4rofi5voxel10VoxelWorld13fromRofiWorldERKN4rofi13configuration9RofiWorldE" title="rofi::voxel::VoxelWorld::fromRofiWorld"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::voxel::VoxelWorld::fromRofiWorld()</span></code></a> respectively.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When converting from <a class="reference internal" href="#_CPPv4N4rofi5voxel10VoxelWorldE" title="rofi::voxel::VoxelWorld"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">rofi::voxel::VoxelWorld</span></code></a>
+to <a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">rofi::configuration::RofiWorld</span></code></a>,
+<a class="reference internal" href="#_CPPv4NK4rofi5voxel10VoxelWorld11toRofiWorldEb" title="rofi::voxel::VoxelWorld::toRofiWorld"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::voxel::VoxelWorld::toRofiWorld()</span></code></a> expects
+that the <a class="reference internal" href="#_CPPv4N4rofi5voxel10VoxelWorldE" title="rofi::voxel::VoxelWorld"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">rofi::voxel::VoxelWorld</span></code></a> is connected.</p>
+<p>If you want to convert <a class="reference internal" href="#_CPPv4N4rofi5voxel10VoxelWorldE" title="rofi::voxel::VoxelWorld"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">rofi::voxel::VoxelWorld</span></code></a> that
+isn’t connected, you can set parameter <cite>fixateModulesByOne</cite>.</p>
+</div>
+<section id="types-constants-and-support-classes">
+<h3><a class="toc-backref" href="#id4">Types, Constants and Support Classes</a><a class="headerlink" href="#types-constants-and-support-classes" title="Permalink to this headline"></a></h3>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel8PositionE">
+<span id="_CPPv3N4rofi5voxel8PositionE"></span><span id="_CPPv2N4rofi5voxel8PositionE"></span><span class="target" id="namespacerofi_1_1voxel_1ac7eff6b6bcbc74180ab2c0d990fd3174"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">voxel</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">Position</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel8PositionE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel4AxisE">
+<span id="_CPPv3N4rofi5voxel4AxisE"></span><span id="_CPPv2N4rofi5voxel4AxisE"></span><span class="target" id="namespacerofi_1_1voxel_1add51f5ddcf54a5cde030b9b446938d6f"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">voxel</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">Axis</span></span></span><span class="w"> </span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel4AxisE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel4Axis1XE">
+<span id="_CPPv3N4rofi5voxel4Axis1XE"></span><span id="_CPPv2N4rofi5voxel4Axis1XE"></span><span class="target" id="namespacerofi_1_1voxel_1add51f5ddcf54a5cde030b9b446938d6fa02129bb861061d1a052c592e2dc6b383"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">X</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel4Axis1XE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel4Axis1YE">
+<span id="_CPPv3N4rofi5voxel4Axis1YE"></span><span id="_CPPv2N4rofi5voxel4Axis1YE"></span><span class="target" id="namespacerofi_1_1voxel_1add51f5ddcf54a5cde030b9b446938d6fa57cec4137b614c87cb4e24a3d003a3e0"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Y</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel4Axis1YE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel4Axis1ZE">
+<span id="_CPPv3N4rofi5voxel4Axis1ZE"></span><span id="_CPPv2N4rofi5voxel4Axis1ZE"></span><span class="target" id="namespacerofi_1_1voxel_1add51f5ddcf54a5cde030b9b446938d6fa21c2e59531c8710156d34a3c30ac81d5"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Z</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel4Axis1ZE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel13JointPositionE">
+<span id="_CPPv3N4rofi5voxel13JointPositionE"></span><span id="_CPPv2N4rofi5voxel13JointPositionE"></span><span class="target" id="namespacerofi_1_1voxel_1a92f7bae21553b5bc93b735fe0d21cccc"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">voxel</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">JointPosition</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel13JointPositionE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel13JointPosition4ZeroE">
+<span id="_CPPv3N4rofi5voxel13JointPosition4ZeroE"></span><span id="_CPPv2N4rofi5voxel13JointPosition4ZeroE"></span><span class="target" id="namespacerofi_1_1voxel_1a92f7bae21553b5bc93b735fe0d21ccccad7ed4ee1df437474d005188535f74875"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Zero</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel13JointPosition4ZeroE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel13JointPosition6Plus90E">
+<span id="_CPPv3N4rofi5voxel13JointPosition6Plus90E"></span><span id="_CPPv2N4rofi5voxel13JointPosition6Plus90E"></span><span class="target" id="namespacerofi_1_1voxel_1a92f7bae21553b5bc93b735fe0d21cccca3fc04d92490ad463c5bd5bbc96fff2e6"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Plus90</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel13JointPosition6Plus90E" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel13JointPosition7Minus90E">
+<span id="_CPPv3N4rofi5voxel13JointPosition7Minus90E"></span><span id="_CPPv2N4rofi5voxel13JointPosition7Minus90E"></span><span class="target" id="namespacerofi_1_1voxel_1a92f7bae21553b5bc93b735fe0d21cccca62120fcee58b723d2f048797d2e9d367"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Minus90</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel13JointPosition7Minus90E" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel9DirectionE">
+<span id="_CPPv3N4rofi5voxel9DirectionE"></span><span id="_CPPv2N4rofi5voxel9DirectionE"></span><span id="rofi::voxel::Direction"></span><span class="target" id="structrofi_1_1voxel_1_1_direction"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Direction</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel9DirectionE" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi5voxel9Direction12movePositionE8Position">
+<span id="_CPPv3NK4rofi5voxel9Direction12movePositionE8Position"></span><span id="_CPPv2NK4rofi5voxel9Direction12movePositionE8Position"></span><span id="rofi::voxel::Direction::movePosition__PositionC"></span><span class="target" id="structrofi_1_1voxel_1_1_direction_1acb1672cff8c1deb10496e8d6256847a5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">movePosition</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi5voxel8PositionE" title="rofi::voxel::Position"><span class="n"><span class="pre">Position</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">position</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi5voxel8PositionE" title="rofi::voxel::Position"><span class="n"><span class="pre">Position</span></span></a><a class="headerlink" href="#_CPPv4NK4rofi5voxel9Direction12movePositionE8Position" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi5voxel9Direction8oppositeEv">
+<span id="_CPPv3NK4rofi5voxel9Direction8oppositeEv"></span><span id="_CPPv2NK4rofi5voxel9Direction8oppositeEv"></span><span id="rofi::voxel::Direction::oppositeC"></span><span class="target" id="structrofi_1_1voxel_1_1_direction_1a9083c2c5c215924876e0c86cfe6e9b6c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">opposite</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi5voxel9DirectionE" title="rofi::voxel::Direction"><span class="n"><span class="pre">Direction</span></span></a><a class="headerlink" href="#_CPPv4NK4rofi5voxel9Direction8oppositeEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi5voxel9DirectionssERK9Direction">
+<span id="_CPPv3NK4rofi5voxel9DirectionssERK9Direction"></span><span id="_CPPv2NK4rofi5voxel9DirectionssERK9Direction"></span><span class="target" id="structrofi_1_1voxel_1_1_direction_1a9e74e1237deec7be41e38dc196949213"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">&lt;=&gt;</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi5voxel9DirectionE" title="rofi::voxel::Direction"><span class="n"><span class="pre">Direction</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4NK4rofi5voxel9DirectionssERK9Direction" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel9Direction4axisE">
+<span id="_CPPv3N4rofi5voxel9Direction4axisE"></span><span id="_CPPv2N4rofi5voxel9Direction4axisE"></span><span id="rofi::voxel::Direction::axis__Axis"></span><span class="target" id="structrofi_1_1voxel_1_1_direction_1ab745c5e3c150b06bbc8e28255ab096fb"></span><a class="reference internal" href="#_CPPv4N4rofi5voxel4AxisE" title="rofi::voxel::Axis"><span class="n"><span class="pre">Axis</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">axis</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel9Direction4axisE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel9Direction11is_positiveE">
+<span id="_CPPv3N4rofi5voxel9Direction11is_positiveE"></span><span id="_CPPv2N4rofi5voxel9Direction11is_positiveE"></span><span id="rofi::voxel::Direction::is_positive__b"></span><span class="target" id="structrofi_1_1voxel_1_1_direction_1a3fa9d9380ec93c5c69c78a9415c2045d"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">is_positive</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel9Direction11is_positiveE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel9Direction10fromVectorERKNSt5arrayIiXL3EEEE">
+<span id="_CPPv3N4rofi5voxel9Direction10fromVectorERKNSt5arrayIiXL3EEEE"></span><span id="_CPPv2N4rofi5voxel9Direction10fromVectorERKNSt5arrayIiX3EEE"></span><span id="rofi::voxel::Direction::fromVector__std::array:i.3:CR"></span><span class="target" id="structrofi_1_1voxel_1_1_direction_1a1d7d43693bc4f8e5d32c26d030c4c9d0"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">fromVector</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><span class="kt"><span class="pre">int</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">3</span></span><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">direction</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4rofi5voxel9DirectionE" title="rofi::voxel::Direction"><span class="n"><span class="pre">Direction</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel9Direction10fromVectorERKNSt5arrayIiXL3EEEE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel9Direction10fromVectorERKN4rofi13configuration8matrices6VectorE">
+<span id="_CPPv3N4rofi5voxel9Direction10fromVectorERKN4rofi13configuration8matrices6VectorE"></span><span id="_CPPv2N4rofi5voxel9Direction10fromVectorERKN4rofi13configuration8matrices6VectorE"></span><span id="rofi::voxel::Direction::fromVector__rofi::configuration::matrices::VectorCR"></span><span class="target" id="structrofi_1_1voxel_1_1_direction_1a82a7abdd0e4556822dda20581f8b65b5"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">fromVector</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">matrices</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Vector</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">direction</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4rofi5voxel9DirectionE" title="rofi::voxel::Direction"><span class="n"><span class="pre">Direction</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel9Direction10fromVectorERKN4rofi13configuration8matrices6VectorE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+<section id="classes">
+<h3><a class="toc-backref" href="#id5">Classes</a><a class="headerlink" href="#classes" title="Permalink to this headline"></a></h3>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5VoxelE">
+<span id="_CPPv3N4rofi5voxel5VoxelE"></span><span id="_CPPv2N4rofi5voxel5VoxelE"></span><span id="rofi::voxel::Voxel"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Voxel</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel5VoxelE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>This documentation is copy from Rust <code class="docutils literal notranslate"><a class="reference internal" href="#structrofi_1_1voxel_1_1_voxel"><span class="std std-ref"><span class="pre">voxel::Voxel</span></span></a></code></p>
+<p>Canonized representation:<ul class="simple">
+<li><p>when <code class="docutils literal notranslate"><span class="pre">body_dir.is_dir_to_plus</span></code> is true, the <a class="reference internal" href="#structrofi_1_1voxel_1_1_voxel"><span class="std std-ref">Voxel</span></a> is assumed a BodyA otherwise it’s assumed BodyB</p></li>
+<li><p>when <code class="docutils literal notranslate"><span class="pre">shoe_rotated</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code>, X-connectors are in the next axis<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">body_dir.axis</span></code> is <code class="docutils literal notranslate"><a class="reference internal" href="#namespacerofi_1_1voxel_1add51f5ddcf54a5cde030b9b446938d6fa02129bb861061d1a052c592e2dc6b383"><span class="std std-ref"><span class="pre">Axis::X</span></span></a></code> =&gt; X-connectors are in Y axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">body_dir.axis</span></code> is <code class="docutils literal notranslate"><a class="reference internal" href="#namespacerofi_1_1voxel_1add51f5ddcf54a5cde030b9b446938d6fa57cec4137b614c87cb4e24a3d003a3e0"><span class="std std-ref"><span class="pre">Axis::Y</span></span></a></code> =&gt; X-connectors are in Z axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">body_dir.axis</span></code> is <code class="docutils literal notranslate"><a class="reference internal" href="#namespacerofi_1_1voxel_1add51f5ddcf54a5cde030b9b446938d6fa21c2e59531c8710156d34a3c30ac81d5"><span class="std std-ref"><span class="pre">Axis::Z</span></span></a></code> =&gt; X-connectors are in X axis otherwise X-connectors are in the previous axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">body_dir.axis</span></code> is <code class="docutils literal notranslate"><a class="reference internal" href="#namespacerofi_1_1voxel_1add51f5ddcf54a5cde030b9b446938d6fa02129bb861061d1a052c592e2dc6b383"><span class="std std-ref"><span class="pre">Axis::X</span></span></a></code> =&gt; X-connectors are in Z axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">body_dir.axis</span></code> is <code class="docutils literal notranslate"><a class="reference internal" href="#namespacerofi_1_1voxel_1add51f5ddcf54a5cde030b9b446938d6fa57cec4137b614c87cb4e24a3d003a3e0"><span class="std std-ref"><span class="pre">Axis::Y</span></span></a></code> =&gt; X-connectors are in X axis</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">body_dir.axis</span></code> is <code class="docutils literal notranslate"><a class="reference internal" href="#namespacerofi_1_1voxel_1add51f5ddcf54a5cde030b9b446938d6fa21c2e59531c8710156d34a3c30ac81d5"><span class="std std-ref"><span class="pre">Axis::Z</span></span></a></code> =&gt; X-connectors are in Y axis</p></li>
+</ul>
+</p></li>
+<li><p>when <code class="docutils literal notranslate"><span class="pre">joint_pos</span></code> is <code class="docutils literal notranslate"><span class="pre">Zero</span></code>, the shoe joint is in the zero position when <code class="docutils literal notranslate"><span class="pre">joint_pos</span></code> is <code class="docutils literal notranslate"><span class="pre">Plus90</span></code> the Z-connector is towards the plus axis otherwise the Z-connector is towards the minus axis </p></li>
+</ul>
+</p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi5voxel5Voxel15getOtherBodyPosEv">
+<span id="_CPPv3NK4rofi5voxel5Voxel15getOtherBodyPosEv"></span><span id="_CPPv2NK4rofi5voxel5Voxel15getOtherBodyPosEv"></span><span id="rofi::voxel::Voxel::getOtherBodyPosC"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1a96b4d0f06f71b944d7fcf71a57ed7204"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getOtherBodyPos</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi5voxel8PositionE" title="rofi::voxel::Position"><span class="n"><span class="pre">Position</span></span></a><a class="headerlink" href="#_CPPv4NK4rofi5voxel5Voxel15getOtherBodyPosEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p><a class="reference internal" href="#structrofi_1_1voxel_1_1_voxel"><span class="std std-ref">Voxel</span></a> -&gt; Rofi Module. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi5voxel5Voxel14zConnDirectionEv">
+<span id="_CPPv3NK4rofi5voxel5Voxel14zConnDirectionEv"></span><span id="_CPPv2NK4rofi5voxel5Voxel14zConnDirectionEv"></span><span id="rofi::voxel::Voxel::zConnDirectionC"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1a5957f417cc264596b36296610fa958ac"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">zConnDirection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi5voxel9DirectionE" title="rofi::voxel::Direction"><span class="n"><span class="pre">Direction</span></span></a><a class="headerlink" href="#_CPPv4NK4rofi5voxel5Voxel14zConnDirectionEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi5voxel5Voxel18xPlusConnDirectionEv">
+<span id="_CPPv3NK4rofi5voxel5Voxel18xPlusConnDirectionEv"></span><span id="_CPPv2NK4rofi5voxel5Voxel18xPlusConnDirectionEv"></span><span id="rofi::voxel::Voxel::xPlusConnDirectionC"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1a1558e59bb2332819a5d624a055cdd7bd"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">xPlusConnDirection</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi5voxel9DirectionE" title="rofi::voxel::Direction"><span class="n"><span class="pre">Direction</span></span></a><a class="headerlink" href="#_CPPv4NK4rofi5voxel5Voxel18xPlusConnDirectionEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi5voxel5Voxel26getXPlusConnMatrixRotationEv">
+<span id="_CPPv3NK4rofi5voxel5Voxel26getXPlusConnMatrixRotationEv"></span><span id="_CPPv2NK4rofi5voxel5Voxel26getXPlusConnMatrixRotationEv"></span><span id="rofi::voxel::Voxel::getXPlusConnMatrixRotationC"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1abe12fba07076288a06c9d5a6f4fdcaf6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getXPlusConnMatrixRotation</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">matrices</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">Matrix</span></span><a class="headerlink" href="#_CPPv4NK4rofi5voxel5Voxel26getXPlusConnMatrixRotationEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi5voxel5VoxeleqERK5Voxel">
+<span id="_CPPv3NK4rofi5voxel5VoxeleqERK5Voxel"></span><span id="_CPPv2NK4rofi5voxel5VoxeleqERK5Voxel"></span><span id="rofi::voxel::Voxel::eq-operator__VoxelCRC"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1a2059520e66951f6a5dea74ee2d8f89c5"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">==</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi5voxel5VoxelE" title="rofi::voxel::Voxel"><span class="n"><span class="pre">Voxel</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4NK4rofi5voxel5VoxeleqERK5Voxel" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5Voxel3posE">
+<span id="_CPPv3N4rofi5voxel5Voxel3posE"></span><span id="_CPPv2N4rofi5voxel5Voxel3posE"></span><span id="rofi::voxel::Voxel::pos__Position"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1ac3762e3cc497048abb87c0f2ec874765"></span><a class="reference internal" href="#_CPPv4N4rofi5voxel8PositionE" title="rofi::voxel::Position"><span class="n"><span class="pre">Position</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pos</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel5Voxel3posE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5Voxel8body_dirE">
+<span id="_CPPv3N4rofi5voxel5Voxel8body_dirE"></span><span id="_CPPv2N4rofi5voxel5Voxel8body_dirE"></span><span id="rofi::voxel::Voxel::body_dir__Direction"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1ae3a0e7e355111cd83631e14ec51dfa6b"></span><a class="reference internal" href="#_CPPv4N4rofi5voxel9DirectionE" title="rofi::voxel::Direction"><span class="n"><span class="pre">Direction</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">body_dir</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel5Voxel8body_dirE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5Voxel12shoe_rotatedE">
+<span id="_CPPv3N4rofi5voxel5Voxel12shoe_rotatedE"></span><span id="_CPPv2N4rofi5voxel5Voxel12shoe_rotatedE"></span><span id="rofi::voxel::Voxel::shoe_rotated__b"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1a494574b83d01a95840bfdacf0c3421f5"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">shoe_rotated</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel5Voxel12shoe_rotatedE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5Voxel9joint_posE">
+<span id="_CPPv3N4rofi5voxel5Voxel9joint_posE"></span><span id="_CPPv2N4rofi5voxel5Voxel9joint_posE"></span><span id="rofi::voxel::Voxel::joint_pos__JointPosition"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1aee441d2f2253ad22ce04c0622a7c830c"></span><a class="reference internal" href="#_CPPv4N4rofi5voxel13JointPositionE" title="rofi::voxel::JointPosition"><span class="n"><span class="pre">JointPosition</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">joint_pos</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel5Voxel9joint_posE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5Voxel14fromRofiModuleERKN4rofi13configuration15UniversalModuleE">
+<span id="_CPPv3N4rofi5voxel5Voxel14fromRofiModuleERKN4rofi13configuration15UniversalModuleE"></span><span id="_CPPv2N4rofi5voxel5Voxel14fromRofiModuleERKN4rofi13configuration15UniversalModuleE"></span><span id="rofi::voxel::Voxel::fromRofiModule__rofi::configuration::UniversalModuleCR"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1a898fc966416636bbada4652ec9a91c3b"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">fromRofiModule</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration15UniversalModuleE" title="rofi::configuration::UniversalModule"><span class="n"><span class="pre">UniversalModule</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rofiModule</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4rofi5voxel5VoxelE" title="rofi::voxel::Voxel"><span class="n"><span class="pre">Voxel</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">2</span></span><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel5Voxel14fromRofiModuleERKN4rofi13configuration15UniversalModuleE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5Voxel13getConnectorsE5Voxel5Voxel">
+<span id="_CPPv3N4rofi5voxel5Voxel13getConnectorsE5Voxel5Voxel"></span><span id="_CPPv2N4rofi5voxel5Voxel13getConnectorsE5Voxel5Voxel"></span><span id="rofi::voxel::Voxel::getConnectors__Voxel.Voxel"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1aff8b80d1222225a1a513d7a90adae283"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getConnectors</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi5voxel5VoxelE" title="rofi::voxel::Voxel"><span class="n"><span class="pre">Voxel</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">shoeA</span></span>, <a class="reference internal" href="#_CPPv4N4rofi5voxel5VoxelE" title="rofi::voxel::Voxel"><span class="n"><span class="pre">Voxel</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">shoeB</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">array</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4rofi5voxel5Voxel9ConnectorE" title="rofi::voxel::Voxel::Connector"><span class="n"><span class="pre">Connector</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="m"><span class="pre">6</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel5Voxel13getConnectorsE5Voxel5Voxel" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5Voxel18getConnOrientationE9Direction9Direction9Direction">
+<span id="_CPPv3N4rofi5voxel5Voxel18getConnOrientationE9Direction9Direction9Direction"></span><span id="_CPPv2N4rofi5voxel5Voxel18getConnOrientationE9Direction9Direction9Direction"></span><span id="rofi::voxel::Voxel::getConnOrientation__Direction.Direction.Direction"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1a92223aec8f7a632c679e08df2196ebb4"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">getConnOrientation</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi5voxel9DirectionE" title="rofi::voxel::Direction"><span class="n"><span class="pre">Direction</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">connDirection</span></span>, <a class="reference internal" href="#_CPPv4N4rofi5voxel9DirectionE" title="rofi::voxel::Direction"><span class="n"><span class="pre">Direction</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">connOrientationVector</span></span>, <a class="reference internal" href="#_CPPv4N4rofi5voxel9DirectionE" title="rofi::voxel::Direction"><span class="n"><span class="pre">Direction</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">otherOrientationVector</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">roficom</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration7roficom11OrientationE" title="rofi::configuration::roficom::Orientation"><span class="n"><span class="pre">Orientation</span></span></a><a class="headerlink" href="#_CPPv4N4rofi5voxel5Voxel18getConnOrientationE9Direction9Direction9Direction" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5Voxel12toRofiModuleE5Voxel5VoxelN4rofi13configuration8ModuleIdE">
+<span id="_CPPv3N4rofi5voxel5Voxel12toRofiModuleE5Voxel5VoxelN4rofi13configuration8ModuleIdE"></span><span id="_CPPv2N4rofi5voxel5Voxel12toRofiModuleE5Voxel5VoxelN4rofi13configuration8ModuleIdE"></span><span id="rofi::voxel::Voxel::toRofiModule__Voxel.Voxel.rofi::configuration::ModuleId"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1aedb408c9c86004c32577f6dbcfc8644a"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">toRofiModule</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi5voxel5VoxelE" title="rofi::voxel::Voxel"><span class="n"><span class="pre">Voxel</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">shoeA</span></span>, <a class="reference internal" href="#_CPPv4N4rofi5voxel5VoxelE" title="rofi::voxel::Voxel"><span class="n"><span class="pre">Voxel</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">shoeB</span></span>, <span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration8ModuleIdE" title="rofi::configuration::ModuleId"><span class="n"><span class="pre">ModuleId</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">moduleId</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration15UniversalModuleE" title="rofi::configuration::UniversalModule"><span class="n"><span class="pre">UniversalModule</span></span></a><a class="headerlink" href="#_CPPv4N4rofi5voxel5Voxel12toRofiModuleE5Voxel5VoxelN4rofi13configuration8ModuleIdE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5Voxel9ConnectorE">
+<span id="_CPPv3N4rofi5voxel5Voxel9ConnectorE"></span><span id="_CPPv2N4rofi5voxel5Voxel9ConnectorE"></span><span id="rofi::voxel::Voxel::Connector"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1_1_connector"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Connector</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel5Voxel9ConnectorE" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5Voxel9Connector4nameE">
+<span id="_CPPv3N4rofi5voxel5Voxel9Connector4nameE"></span><span id="_CPPv2N4rofi5voxel5Voxel9Connector4nameE"></span><span id="rofi::voxel::Voxel::Connector::name__std::string_view"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1_1_connector_1a6904dbca868cc9fa4ce3dae909e5b02f"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">string_view</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">name</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel5Voxel9Connector4nameE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5Voxel9Connector3posE">
+<span id="_CPPv3N4rofi5voxel5Voxel9Connector3posE"></span><span id="_CPPv2N4rofi5voxel5Voxel9Connector3posE"></span><span id="rofi::voxel::Voxel::Connector::pos__Position"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1_1_connector_1a87073fb48af51aac1bfbff25c8905648"></span><a class="reference internal" href="#_CPPv4N4rofi5voxel8PositionE" title="rofi::voxel::Position"><span class="n"><span class="pre">Position</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">pos</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel5Voxel9Connector3posE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5Voxel9Connector3dirE">
+<span id="_CPPv3N4rofi5voxel5Voxel9Connector3dirE"></span><span id="_CPPv2N4rofi5voxel5Voxel9Connector3dirE"></span><span id="rofi::voxel::Voxel::Connector::dir__Direction"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1_1_connector_1af5b088033cda8ad8b60f43080cc1bf79"></span><a class="reference internal" href="#_CPPv4N4rofi5voxel9DirectionE" title="rofi::voxel::Direction"><span class="n"><span class="pre">Direction</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">dir</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel5Voxel9Connector3dirE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel5Voxel9Connector6oriVecE">
+<span id="_CPPv3N4rofi5voxel5Voxel9Connector6oriVecE"></span><span id="_CPPv2N4rofi5voxel5Voxel9Connector6oriVecE"></span><span id="rofi::voxel::Voxel::Connector::oriVec__Direction"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_1_1_connector_1a680f4093715985027cb1f3b3536ac879"></span><a class="reference internal" href="#_CPPv4N4rofi5voxel9DirectionE" title="rofi::voxel::Direction"><span class="n"><span class="pre">Direction</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">oriVec</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel5Voxel9Connector6oriVecE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="cpp struct">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel10VoxelWorldE">
+<span id="_CPPv3N4rofi5voxel10VoxelWorldE"></span><span id="_CPPv2N4rofi5voxel10VoxelWorldE"></span><span id="rofi::voxel::VoxelWorld"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_world"></span><span class="k"><span class="pre">struct</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">VoxelWorld</span></span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel10VoxelWorldE" title="Permalink to this definition"></a><br /></dt>
+<dd><div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi5voxel10VoxelWorld11toRofiWorldEb">
+<span id="_CPPv3NK4rofi5voxel10VoxelWorld11toRofiWorldEb"></span><span id="_CPPv2NK4rofi5voxel10VoxelWorld11toRofiWorldEb"></span><span id="rofi::voxel::VoxelWorld::toRofiWorld__bC"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_world_1ab5a9d27531a3eb0d4d7616b63155b4ca"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">toRofiWorld</span></span></span><span class="sig-paren">(</span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">fixateModulesByOne</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4NK4rofi5voxel10VoxelWorld11toRofiWorldEb" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Converts <code class="docutils literal notranslate"><a class="reference internal" href="#structrofi_1_1voxel_1_1_voxel_world"><span class="std std-ref"><span class="pre">VoxelWorld</span></span></a></code> to <code class="docutils literal notranslate"><a class="reference internal" href="rofiworld.html#classrofi_1_1configuration_1_1_rofi_world"><span class="std std-ref"><span class="pre">rofi::configuration::RofiWorld</span></span></a></code>. </p>
+<p><code class="docutils literal notranslate"><a class="reference internal" href="#structrofi_1_1voxel_1_1_voxel_world"><span class="std std-ref"><span class="pre">VoxelWorld</span></span></a></code> should be connected and the resulting RofiWorld will be fixed on one component to the world at the according position.</p>
+<p>If you want to convert <code class="docutils literal notranslate"><a class="reference internal" href="#structrofi_1_1voxel_1_1_voxel_world"><span class="std std-ref"><span class="pre">VoxelWorld</span></span></a></code> that isn’t connected, you can set <em>fixateModulesByOne</em>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>fixateModulesByOne</strong> – specifies whether to connect each module to the world separately by a <code class="docutils literal notranslate"><a class="reference internal" href="rofiworld.html#structrofi_1_1configuration_1_1_rigid_joint"><span class="std std-ref"><span class="pre">rofi::configuration::RigidJoint</span></span></a></code> instead of connecting modules together by <code class="docutils literal notranslate"><a class="reference internal" href="rofiworld.html#structrofi_1_1configuration_1_1_roficom_joint"><span class="std std-ref"><span class="pre">rofi::configuration::RoficomJoint</span></span></a></code>s </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi5voxel10VoxelWorldeqERK10VoxelWorld">
+<span id="_CPPv3NK4rofi5voxel10VoxelWorldeqERK10VoxelWorld"></span><span id="_CPPv2NK4rofi5voxel10VoxelWorldeqERK10VoxelWorld"></span><span id="rofi::voxel::VoxelWorld::eq-operator__VoxelWorldCRC"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_world_1a1631c4392cdd20af4404efe5d08e6b9f"></span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">==</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi5voxel10VoxelWorldE" title="rofi::voxel::VoxelWorld"><span class="n"><span class="pre">VoxelWorld</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4NK4rofi5voxel10VoxelWorldeqERK10VoxelWorld" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-members">Public Members</p>
+<dl class="cpp var">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel10VoxelWorld6bodiesE">
+<span id="_CPPv3N4rofi5voxel10VoxelWorld6bodiesE"></span><span id="_CPPv2N4rofi5voxel10VoxelWorld6bodiesE"></span><span id="rofi::voxel::VoxelWorld::bodies__std::vector:Voxel:"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_world_1ac69bf7c4d06597380affdc76ab741ac2"></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4rofi5voxel5VoxelE" title="rofi::voxel::Voxel"><span class="n"><span class="pre">Voxel</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">bodies</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="p"><span class="pre">{</span></span><span class="p"><span class="pre">}</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel10VoxelWorld6bodiesE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-static-functions">Public Static Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi5voxel10VoxelWorld13fromRofiWorldERKN4rofi13configuration9RofiWorldE">
+<span id="_CPPv3N4rofi5voxel10VoxelWorld13fromRofiWorldERKN4rofi13configuration9RofiWorldE"></span><span id="_CPPv2N4rofi5voxel10VoxelWorld13fromRofiWorldERKN4rofi13configuration9RofiWorldE"></span><span id="rofi::voxel::VoxelWorld::fromRofiWorld__rofi::configuration::RofiWorldCR"></span><span class="target" id="structrofi_1_1voxel_1_1_voxel_world_1a529f9f7faeac2e31e5e2c9dd3da88709"></span><span class="k"><span class="pre">static</span></span><span class="w"> </span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">fromRofiWorld</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rofiWorld</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4rofi5voxel10VoxelWorldE" title="rofi::voxel::VoxelWorld"><span class="n"><span class="pre">VoxelWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi5voxel10VoxelWorld13fromRofiWorldERKN4rofi13configuration9RofiWorldE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Converts <code class="docutils literal notranslate"><a class="reference internal" href="rofiworld.html#classrofi_1_1configuration_1_1_rofi_world"><span class="std std-ref"><span class="pre">rofi::configuration::RofiWorld</span></span></a></code> to <code class="docutils literal notranslate"><a class="reference internal" href="#structrofi_1_1voxel_1_1_voxel_world"><span class="std std-ref"><span class="pre">VoxelWorld</span></span></a></code>. </p>
+<p>Requires that:<ul class="simple">
+<li><p>all the modules are <code class="docutils literal notranslate"><a class="reference internal" href="rofiworld.html#classrofi_1_1configuration_1_1_universal_module"><span class="std std-ref"><span class="pre">rofi::configuration::UniversalModule</span></span></a></code>,</p></li>
+<li><p>all joint values are multiple of 90 degrees,</p></li>
+<li><p>all positions have to be whole integers.</p></li>
+</ul>
+</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Does not check if the resulting <code class="docutils literal notranslate"><a class="reference internal" href="#structrofi_1_1voxel_1_1_voxel_world"><span class="std std-ref"><span class="pre">VoxelWorld</span></span></a></code> is connected. </p>
+</div>
+</dd></dl>
+
+</div>
+</dd></dl>
+
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="rofiworld.html" class="btn btn-neutral float-left" title="RoFI Configuration" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="serializations/json.html" class="btn btn-neutral float-right" title="Json Serialization" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

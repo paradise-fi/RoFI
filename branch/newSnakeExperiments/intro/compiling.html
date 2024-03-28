@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>RoFI Compilation &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Desktop Suite" href="suites/desktop.html" />
+    <link rel="prev" title="Introduction, compiling and structure" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">Introduction, compiling and structure</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">RoFI Compilation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#build-environment">Build environment</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#compilation-suites">Compilation suites</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="suites/desktop.html">Desktop Suite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="suites/doc.html">Documentation Suite</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#compilation-targets">Compilation targets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quick-start-example">Quick start example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#quick-start-gazebosim-example">Quick start GazeboSim example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="structure.html">Project Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="testing.html">Writing and running tests</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../roficom/index.html">RoFiCoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rofilib/index.html">RoFILib</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../universalModule/index.html">Universal Module</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rofisim/index.html">RoFISim</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="index.html">Introduction, compiling and structure</a></li>
+      <li class="breadcrumb-item active">RoFI Compilation</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/intro/compiling.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="rofi-compilation">
+<h1>RoFI Compilation<a class="headerlink" href="#rofi-compilation" title="Permalink to this headline"></a></h1>
+<p>We provide an overview of the build process of the project. One important note,
+the RoFI build process works on Linux nad MacOS. You cannot build the project on
+Windows at the moment.</p>
+<p>To compile the project, ensure that you have Python 3, CMake and make installed.
+The compilation suites might require additional dependencies; see the suites
+pages in the menu on the left for more details.</p>
+<p>If you are interested only in the “step-by-step tutorial” on building, feel free
+to skip to the section <a class="reference internal" href="#example"><span class="std std-ref">Quick start example</span></a>.</p>
+<section id="build-environment">
+<span id="environment"></span><h2>Build environment<a class="headerlink" href="#build-environment" title="Permalink to this headline"></a></h2>
+<p>To lift the burden of compiling and running targets we provide a script to setup
+proper development environment. This setups <code class="docutils literal notranslate"><span class="pre">PATH</span></code> to management tools,
+compiled binaries and also provides other environmental variables required by
+the build.</p>
+<p>When you set up the environment, you specify which type of environment you want:
+either <code class="docutils literal notranslate"><span class="pre">Release</span></code> (the default) or <code class="docutils literal notranslate"><span class="pre">Debug</span></code>.</p>
+<p>So whenever you want to work with the project, invoke in your shell:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>setup.sh<span class="w"> </span>-f<span class="w"> </span>Release
+</pre></div>
+</div>
+<p>This will setup your current shell for RoFI. This is indicated by a robot icon
+prepended to you prompt:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>🤖<span class="w"> </span>R<span class="w"> </span>$
+</pre></div>
+</div>
+<p>If you don’t want to alter you shell, simply omit <code class="docutils literal notranslate"><span class="pre">-f</span></code>. The letter after the
+robot icon indicates which configuration is currently active. If you want to
+change the configuration, simply invoke <code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">setup.sh</span> <span class="pre">-f</span> <span class="pre">Debug</span></code> to e.g.,
+switch to a debug configuration. Or invoke <code class="docutils literal notranslate"><span class="pre">teardown</span></code> to return your shell to
+original state.</p>
+<p>Once you setup the environment, you have management commands available in your
+shell (e.g., <code class="docutils literal notranslate"><span class="pre">rcfg</span></code> and <code class="docutils literal notranslate"><span class="pre">rmake</span></code>). Then you can proceed to configuration of
+compilation suites and building targets.</p>
+<p>Note that if you would like to make <code class="docutils literal notranslate"><span class="pre">setup.sh</span></code> silent (e.g., when benchmarking
+or running in CI), you can pass the option <code class="docutils literal notranslate"><span class="pre">-s</span></code> to make it silent.</p>
+</section>
+<section id="compilation-suites">
+<h2>Compilation suites<a class="headerlink" href="#compilation-suites" title="Permalink to this headline"></a></h2>
+<p>The project compilation is organized into so-called <em>suites</em>. Suite is a
+collection of entities (not necessarily programs), that are build in a similar
+fashion (e.g., using a standard desktop compiler, compiler for microcontrollers,
+documentation building tool). Note that the suites are organized mainly
+according to build process, they might not be grouped logically. A suite is the
+smallest unit, you can <em>configure for compilation</em>.</p>
+<p>Currently, there are the following suites:</p>
+<ul class="simple">
+<li><p><strong>desktop</strong>: Programs and libraries running on a desktop computer. That
+includes simulators, benchmarking tools etc.</p></li>
+<li><p><strong>hardware</strong>: Hardware components for RoFI. Building this
+target creates e.g., <cite>.stl</cite> files for printing, ZIP packages containing
+gerber files for PCB production, bill-of-materials, etc.</p></li>
+<li><p><strong>firmware</strong>: Firmware for the microcontrollers on hardware modules. This
+does not include the RoFI programs. Think of this as the part of the
+hardware, that just have to be build separately.</p></li>
+<li><p><strong>rofiFirmware</strong>: The actual programs that are deployed to the RoFI modules.</p></li>
+<li><p><strong>doc</strong>: This documentation.</p></li>
+</ul>
+<p>The suites are represented by directories in <code class="docutils literal notranslate"><span class="pre">${PROJECT_ROOT}/suites</span></code>.
+Basically, each suite is a separate CMake project defining the build process for
+the given suite. If a suite has development dependencies, they are specified in
+the <code class="docutils literal notranslate"><span class="pre">readme.md</span></code> file in the suite directory.</p>
+<p>You can setup the compilation units via invoking:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>🤖<span class="w"> </span>R<span class="w"> </span>$<span class="w"> </span>rcfg<span class="w"> </span>desktop<span class="w"> </span>firmware<span class="w">                 </span><span class="c1"># Setup desktop and firmware suites</span>
+🤖<span class="w"> </span>R<span class="w"> </span>$<span class="w"> </span>rcfg<span class="w"> </span>desktop<span class="w"> </span>--<span class="w"> </span>-DBUILD_HEADLESS<span class="o">=</span><span class="nb">true</span><span class="w"> </span><span class="c1"># Setup desktop with headless build option</span>
+🤖<span class="w"> </span>R<span class="w"> </span>$<span class="w"> </span>rcfg<span class="w"> </span>-desktop<span class="w">                         </span><span class="c1"># Unconfigure the desktop suite</span>
+</pre></div>
+</div>
+<p>Note that tab-completion works for this command. Once you setup the suites, you
+can proceed to the compilation. You can also pass extra options to the
+underlying CMake project via <code class="docutils literal notranslate"><span class="pre">--</span></code> – everything after <code class="docutils literal notranslate"><span class="pre">--</span></code> is passed to the
+CMake.</p>
+<p>We recommend you to configure only the suites your are interested in so you can
+minimize the number of dependencies you have to met (e.g., it makes no sense to
+configure the firmware, thus install the embedded compiles, if you only plan to
+develop desktop applications).</p>
+<p>You can learn about the suite-specific configurations in the following sections:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="suites/desktop.html">Desktop Suite</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="suites/desktop.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="suites/desktop.html#build-options">Build options</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="suites/doc.html">Documentation Suite</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="suites/doc.html#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="suites/doc.html#build-options">Build options</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="compilation-targets">
+<h2>Compilation targets<a class="headerlink" href="#compilation-targets" title="Permalink to this headline"></a></h2>
+<p>Each suite provides usually several compilation targets (just like CMake or make
+does). Targets are the smallest unit you can build. Once you have configured
+suites, you can list all possible targets via:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>rmake<span class="w"> </span>--list
+</pre></div>
+</div>
+<p>With output similar to the following:</p>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>Available suites: firmware, desktop, rofiFirmware, hardware, doc
+
+Available targets for suite firmware:
+    None
+
+Available targets for suite desktop:
+    atoms-test: softwareComponents/atoms
+    configuration: softwareComponents/configuration
+    generators: softwareComponents/configuration
+    configuration-test: softwareComponents/configuration
+    rofi-reconfig: softwareComponents/reconfig
+    reconfig: softwareComponents/reconfig
+    reconfig-test: softwareComponents/reconfig
+    smt-reconfig-lib: softwareComponents/smtreconfig
+    smt-reconfig: softwareComponents/smtreconfig
+    smt-reconfig-test: softwareComponents/smtreconfig
+    rofi-vis: tools/visualizer
+    rofi-vis-test: tools/visualizer
+    rofi-app: tools/visualizer
+    rofi-generate: tools/generate
+    rofi-emptyDockFill: tools/emptyDockFill
+    rofi-topology2dot: tools/topology2dot
+
+Available targets for suite rofiFirmware:
+    None
+
+Available targets for suite hardware:
+    None
+
+Available targets for suite doc:
+    doc: doc
+</pre></div>
+</div>
+<p>The output gives you list of all suites, targets and their location in the
+source tree. Note that only configured targets are shown. To actually compile a
+target, you can specify one more targets to <code class="docutils literal notranslate"><span class="pre">rmake</span></code>:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>🤖<span class="w"> </span>R<span class="w"> </span>$<span class="w"> </span>rmake<span class="w"> </span>desktop<span class="w">    </span><span class="c1"># Compile all targets from the suite desktop</span>
+🤖<span class="w"> </span>R<span class="w"> </span>$<span class="w"> </span>rmake<span class="w"> </span>rofi-vis<span class="w">   </span><span class="c1"># Compile only target rofi-vis (and its dependencies)</span>
+🤖<span class="w"> </span>R<span class="w"> </span>$<span class="w"> </span>rmake<span class="w"> </span>tools/<span class="w">     </span><span class="c1"># Compile all targets that are in the source tree under prefix</span>
+🤖<span class="w"> </span>R<span class="w"> </span>$<span class="w"> </span>rmake<span class="w"> </span>tools/<span class="w"> </span>doc<span class="w"> </span><span class="c1"># You can mix various types of targets</span>
+🤖<span class="w"> </span>R<span class="w"> </span>$<span class="w"> </span>rmake<span class="w"> </span>--all<span class="w">      </span><span class="c1"># Compile everything</span>
+</pre></div>
+</div>
+<p>Note that once you compile a target, you can directly run the binaries as they
+are in <code class="docutils literal notranslate"><span class="pre">PATH</span></code>. If you would like to inspect the build artifacts, they are
+located in the directory <code class="docutils literal notranslate"><span class="pre">build.{Configuration}/{suiteName}</span></code>.</p>
+<p><code class="docutils literal notranslate"><span class="pre">rmake</span></code> also recognizes phony targets <code class="docutils literal notranslate"><span class="pre">clean</span></code> and <code class="docutils literal notranslate"><span class="pre">clean-&lt;suitename&gt;</span></code> that
+clean all suites or given suite respectively.</p>
+</section>
+<section id="quick-start-example">
+<span id="example"></span><h2>Quick start example<a class="headerlink" href="#quick-start-example" title="Permalink to this headline"></a></h2>
+<p>To quickly start with RoFI development, we provide a short step-by-step guide:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>setup.sh<span class="w"> </span>-f<span class="w"> </span>Debug<span class="w"> </span><span class="c1"># Setup your terminal for compiling RoFI in Debug mode.</span>
+<span class="w">                           </span><span class="c1"># Your prompt will change to indicate the environment</span>
+🤖<span class="w"> </span>D<span class="w"> </span>$<span class="w"> </span>rcfg<span class="w"> </span>desktop<span class="w"> </span>doc<span class="w">     </span><span class="c1"># Configure the suites you want</span>
+🤖<span class="w"> </span>D<span class="w"> </span>$<span class="w"> </span>rmake<span class="w"> </span>--all<span class="w">          </span><span class="c1"># Build everything you have configured</span>
+🤖<span class="w"> </span>D<span class="w"> </span>$<span class="w"> </span>rmake<span class="w"> </span>tools/<span class="w">         </span><span class="c1"># ... or build only all tools</span>
+🤖<span class="w"> </span>D<span class="w"> </span>$<span class="w"> </span>rofi-vis<span class="w">             </span><span class="c1"># Run the compiled tool</span>
+</pre></div>
+</div>
+</section>
+<section id="quick-start-gazebosim-example">
+<h2>Quick start GazeboSim example<a class="headerlink" href="#quick-start-gazebosim-example" title="Permalink to this headline"></a></h2>
+<p>To quickly start with simulating RoFI using GazeboSim, we provide a short step-by-step guide:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>setup.sh<span class="w"> </span>-f<span class="w"> </span>Debug<span class="w">                      </span><span class="c1"># Setup your terminal for compiling RoFI in Debug mode.</span>
+<span class="w">                                                </span><span class="c1"># This also sets the necessary gazebo variables</span>
+🤖<span class="w"> </span>D<span class="w"> </span>$<span class="w"> </span>rcfg<span class="w"> </span>desktop<span class="w">                              </span><span class="c1"># Configure the desktop suite</span>
+🤖<span class="w"> </span>D<span class="w"> </span>$<span class="w"> </span>rmake<span class="w"> </span>--all<span class="w">                               </span><span class="c1"># Build everything you have configured</span>
+🤖<span class="w"> </span>D<span class="w"> </span>$<span class="w"> </span>gazebo<span class="w"> </span>worlds/two_modules.world<span class="w"> </span>--verbose<span class="w"> </span><span class="c1"># Run gazebo. We recommend using --verbose for more info</span>
+</pre></div>
+</div>
+<p>In a different terminal, run the module code for each module that you want to control:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span><span class="nb">source</span><span class="w"> </span>setup.sh<span class="w"> </span>-f<span class="w"> </span>Debug<span class="w"> </span><span class="c1"># Setup your terminal</span>
+🤖<span class="w"> </span>D<span class="w"> </span>$<span class="w"> </span>basicJointPosition<span class="w">   </span><span class="c1"># Run the compiled module code</span>
+</pre></div>
+</div>
+<p>If you are interested in controlling the simulation via Python instead of C++,
+you can follow example <cite>examples/simulator/pythonInterface</cite>:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>🤖<span class="w"> </span>D<span class="w"> </span>$<span class="w"> </span>python3<span class="w"> </span>examples/simulator/pythonInterface/oscilate.py
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="index.html" class="btn btn-neutral float-left" title="Introduction, compiling and structure" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="suites/desktop.html" class="btn btn-neutral float-right" title="Desktop Suite" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

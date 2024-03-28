@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Parsing Configurations in C++ &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="RoFI Configuration" href="rofiworld.html" />
+    <link rel="prev" title="Flags for Configurations in Tools" href="tooling_usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../intro/index.html">Introduction, compiling and structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../releng/index.html">Release engineering notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofihal/index.html">RoFI HAL</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">RoFILib</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Configurations</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#configuration-usage">Configuration Usage</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="tooling_usage.html">Flags for Configurations in Tools</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Parsing Configurations in C++</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#different-configurations">Different Configurations</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#serializations">Serializations</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../atoms/index.html">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../networking/index.html">Netwokring</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">RoFILib</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Configurations</a></li>
+      <li class="breadcrumb-item active">Parsing Configurations in C++</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/rofilib/configurations/parsing_in_cpp.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="parsing-configurations-in-c">
+<h1>Parsing Configurations in C++<a class="headerlink" href="#parsing-configurations-in-c" title="Permalink to this headline"></a></h1>
+<p>When parsing configurations in C++ tools, the configurations get usually
+converted into <a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><code class="xref cpp cpp-class docutils literal notranslate"><span class="pre">rofi::configuration::RofiWorld</span></code></a>.
+For this, tools can use the parsing function
+<a class="reference internal" href="#_CPPv4N4rofi7parsing14parseRofiWorldERNSt7istreamE15RofiWorldFormatb" title="rofi::parsing::parseRofiWorld"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::parsing::parseRofiWorld()</span></code></a>
+or <a class="reference internal" href="#_CPPv4N4rofi7parsing17parseRofiWorldSeqERNSt7istreamE15RofiWorldFormatb" title="rofi::parsing::parseRofiWorldSeq"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::parsing::parseRofiWorldSeq()</span></code></a>.</p>
+<p>For the other conversion, tools can use
+<a class="reference internal" href="#_CPPv4N4rofi7parsing14writeRofiWorldERNSt7ostreamERKN4rofi13configuration9RofiWorldE15RofiWorldFormat" title="rofi::parsing::writeRofiWorld"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::parsing::writeRofiWorld()</span></code></a>
+or <a class="reference internal" href="#_CPPv4N4rofi7parsing17writeRofiWorldSeqERNSt7ostreamENSt4spanIKN4rofi13configuration9RofiWorldEEE15RofiWorldFormat" title="rofi::parsing::writeRofiWorldSeq"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::parsing::writeRofiWorldSeq()</span></code></a>.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>When parsing you may want to check whether the configuration is empty
+or whether the configuration is fixed in space.</p>
+<p>If you want to allow for not fixed configurations and be able to prepare
+them (without regards to the real position), you can use
+<a class="reference internal" href="#_CPPv4N4rofi7parsing15fixateRofiWorldERN4rofi13configuration9RofiWorldE" title="rofi::parsing::fixateRofiWorld"><code class="xref cpp cpp-func docutils literal notranslate"><span class="pre">rofi::parsing::fixateRofiWorld()</span></code></a>.</p>
+<p>Also don’t forget to validate the configuration if needed.</p>
+</div>
+<section id="helper-functions">
+<h2>Helper Functions<a class="headerlink" href="#helper-functions" title="Permalink to this headline"></a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing9parseJsonERNSt7istreamE">
+<span id="_CPPv3N4rofi7parsing9parseJsonERNSt7istreamE"></span><span id="_CPPv2N4rofi7parsing9parseJsonERNSt7istreamE"></span><span id="rofi::parsing::parseJson__isR"></span><span class="target" id="namespacerofi_1_1parsing_1aadc53451d1e1e845abb6139ff514eb14"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">parseJson</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">istream</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">istr</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">nlohmann</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">json</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing9parseJsonERNSt7istreamE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Calls <code class="docutils literal notranslate"><span class="pre">nlohmann::json::parse</span></code>, but returns <code class="docutils literal notranslate"><a class="reference internal" href="../atoms/result.html#classatoms_1_1_result"><span class="std std-ref"><span class="pre">atoms::Result</span></span></a></code> instead of throwing. </p>
+<p>Returns an error if parsing throws an exception. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>istr</strong> – input stream </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>parsed json </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I0EN4rofi7parsing11getFromJsonEN5atoms6ResultI1TEERKN8nlohmann4jsonE">
+<span id="_CPPv3I0EN4rofi7parsing11getFromJsonERKN8nlohmann4jsonE"></span><span id="_CPPv2I0EN4rofi7parsing11getFromJsonERKN8nlohmann4jsonE"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">T</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacerofi_1_1parsing_1a258dccebd029918beb652a1632dd0f7f"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getFromJson</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">nlohmann</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">json</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">json</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I0EN4rofi7parsing11getFromJsonEN5atoms6ResultI1TEERKN8nlohmann4jsonE" title="rofi::parsing::getFromJson::T"><span class="n"><span class="pre">T</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I0EN4rofi7parsing11getFromJsonEN5atoms6ResultI1TEERKN8nlohmann4jsonE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Calls <code class="docutils literal notranslate"><span class="pre">nlohmann::json::get</span></code>, but returns <code class="docutils literal notranslate"><a class="reference internal" href="../atoms/result.html#classatoms_1_1_result"><span class="std std-ref"><span class="pre">atoms::Result</span></span></a></code> instead of throwing. </p>
+<p>Returns an error if converting throws an exception. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Template Parameters</dt>
+<dd class="field-odd"><p><strong>T</strong> – value type to be returned </p>
+</dd>
+<dt class="field-even">Parameters</dt>
+<dd class="field-even"><p><strong>json</strong> – input json </p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>converted value </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="helper-rofiworld-functions">
+<h2>Helper RofiWorld Functions<a class="headerlink" href="#helper-rofiworld-functions" title="Permalink to this headline"></a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing15fixateRofiWorldERN4rofi13configuration9RofiWorldE">
+<span id="_CPPv3N4rofi7parsing15fixateRofiWorldERN4rofi13configuration9RofiWorldE"></span><span id="_CPPv2N4rofi7parsing15fixateRofiWorldERN4rofi13configuration9RofiWorldE"></span><span id="rofi::parsing::fixateRofiWorld__rofi::configuration::RofiWorldR"></span><span class="target" id="namespacerofi_1_1parsing_1a5cb0db44899574f4c199948e0f508cdb"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">fixateRofiWorld</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">world</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi7parsing15fixateRofiWorldERN4rofi13configuration9RofiWorldE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Fixates given <code class="docutils literal notranslate"><span class="pre">world</span></code> in space using a <code class="docutils literal notranslate"><span class="pre">RigidJoint</span></code> between (0, 0, 0) and first body of first module. </p>
+<p>Assumes the world modules is not empty. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>world</strong> – rofi world to be fixated in space </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing19toSharedAndValidateEN4rofi13configuration9RofiWorldE">
+<span id="_CPPv3N4rofi7parsing19toSharedAndValidateEN4rofi13configuration9RofiWorldE"></span><span id="_CPPv2N4rofi7parsing19toSharedAndValidateEN4rofi13configuration9RofiWorldE"></span><span id="rofi::parsing::toSharedAndValidate__rofi::configuration::RofiWorld"></span><span class="target" id="namespacerofi_1_1parsing_1a0af96eb4fdcf83199a14f4a11714ecb4"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">toSharedAndValidate</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">rofiWorld</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">shared_ptr</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing19toSharedAndValidateEN4rofi13configuration9RofiWorldE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Converts <code class="docutils literal notranslate"><span class="pre">rofiWorld</span></code> to <code class="docutils literal notranslate"><span class="pre">std::shared_ptr</span></code> and validates the world. </p>
+<p>Returns an error if <code class="docutils literal notranslate"><span class="pre">rofiWorld</span></code> is not valid. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Expected use with <code class="docutils literal notranslate"><a class="reference internal" href="../atoms/result.html#classatoms_1_1_result_1a9f78cd25f2880af48bdd1d20fe7126a4"><span class="std std-ref"><span class="pre">atoms::Result::and_then</span></span></a></code>. </p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Uses <code class="docutils literal notranslate"><span class="pre">std::shared_ptr</span></code> because moving <code class="docutils literal notranslate"><a class="reference internal" href="rofiworld.html#classrofi_1_1configuration_1_1_rofi_world"><span class="std std-ref"><span class="pre">rofi::configuration::RofiWorld</span></span></a></code> unprepares it. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rofiWorld</strong> – input rofi world </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the validated <code class="docutils literal notranslate"><span class="pre">rofiWorld</span></code> inside a <code class="docutils literal notranslate"><span class="pre">std::shared_ptr</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing20validateRofiWorldSeqENSt4spanIN4rofi13configuration9RofiWorldEEE">
+<span id="_CPPv3N4rofi7parsing20validateRofiWorldSeqENSt4spanIN4rofi13configuration9RofiWorldEEE"></span><span id="_CPPv2N4rofi7parsing20validateRofiWorldSeqENSt4spanIN4rofi13configuration9RofiWorldEEE"></span><span id="rofi::parsing::validateRofiWorldSeq__std::span:rofi::configuration::RofiWorld:"></span><span class="target" id="namespacerofi_1_1parsing_1a5ee6e350cc1fe0f73b6e79efd2e653c5"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">validateRofiWorldSeq</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">span</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">rofiWorldSeq</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">monostate</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing20validateRofiWorldSeqENSt4spanIN4rofi13configuration9RofiWorldEEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Validates rofi worlds in <code class="docutils literal notranslate"><span class="pre">rofiWorldSeq</span></code> . </p>
+<p>Returns an error if any world in <code class="docutils literal notranslate"><span class="pre">rofiWorldSeq</span></code> is not valid. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rofiWorldSeq</strong> – input rofi world sequence </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing21validatedRofiWorldSeqENSt6vectorIN4rofi13configuration9RofiWorldEEE">
+<span id="_CPPv3N4rofi7parsing21validatedRofiWorldSeqENSt6vectorIN4rofi13configuration9RofiWorldEEE"></span><span id="_CPPv2N4rofi7parsing21validatedRofiWorldSeqENSt6vectorIN4rofi13configuration9RofiWorldEEE"></span><span id="rofi::parsing::validatedRofiWorldSeq__std::vector:rofi::configuration::RofiWorld:"></span><span class="target" id="namespacerofi_1_1parsing_1a388dd7a7aff7acb8720b2d8a59b1c9d1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">validatedRofiWorldSeq</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">rofiWorldSeq</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing21validatedRofiWorldSeqENSt6vectorIN4rofi13configuration9RofiWorldEEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Validates rofi worlds in <code class="docutils literal notranslate"><span class="pre">rofiWorldSeq</span></code> . </p>
+<p>Returns an error if any world in <code class="docutils literal notranslate"><span class="pre">rofiWorldSeq</span></code> is not valid. </p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Expected use with <code class="docutils literal notranslate"><a class="reference internal" href="../atoms/result.html#classatoms_1_1_result_1a9f78cd25f2880af48bdd1d20fe7126a4"><span class="std std-ref"><span class="pre">atoms::Result::and_then</span></span></a></code>. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rofiWorldSeq</strong> – input rofi world sequence </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>validated <code class="docutils literal notranslate"><span class="pre">rofiWorldSeq</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="conversion-functions">
+<h2>Conversion Functions<a class="headerlink" href="#conversion-functions" title="Permalink to this headline"></a></h2>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing20getRofiWorldFromJsonERKN8nlohmann4jsonE">
+<span id="_CPPv3N4rofi7parsing20getRofiWorldFromJsonERKN8nlohmann4jsonE"></span><span id="_CPPv2N4rofi7parsing20getRofiWorldFromJsonERKN8nlohmann4jsonE"></span><span id="rofi::parsing::getRofiWorldFromJson__nlohmann::jsonCR"></span><span class="target" id="namespacerofi_1_1parsing_1a74a07a54d98cf8109177e4090fd4a8d7"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getRofiWorldFromJson</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">nlohmann</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">json</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">json</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing20getRofiWorldFromJsonERKN8nlohmann4jsonE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Calls <code class="docutils literal notranslate"><a class="reference internal" href="serializations/json.html#namespacerofi_1_1configuration_1_1serialization_1a8dad1f9b41ecc540c2691fb1ff5eb99a"><span class="std std-ref"><span class="pre">rofi::configuration::serialization::fromJSON</span></span></a></code>, but returns <code class="docutils literal notranslate"><a class="reference internal" href="../atoms/result.html#classatoms_1_1_result"><span class="std std-ref"><span class="pre">atoms::Result</span></span></a></code> instead of throwing. </p>
+<p>Returns an error if converting throws an exception. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>json</strong> – input json </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>converted rofi world </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing23getRofiWorldSeqFromJsonERKN8nlohmann4jsonE">
+<span id="_CPPv3N4rofi7parsing23getRofiWorldSeqFromJsonERKN8nlohmann4jsonE"></span><span id="_CPPv2N4rofi7parsing23getRofiWorldSeqFromJsonERKN8nlohmann4jsonE"></span><span id="rofi::parsing::getRofiWorldSeqFromJson__nlohmann::jsonCR"></span><span class="target" id="namespacerofi_1_1parsing_1a12ad7abb5cd9dd396a243c1f8867704b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">getRofiWorldSeqFromJson</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">nlohmann</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">json</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">json</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing23getRofiWorldSeqFromJsonERKN8nlohmann4jsonE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Converts <code class="docutils literal notranslate"><span class="pre">nlohmann::json</span></code> to rofi world sequence. </p>
+<p>Returns an error if converting throws an exception. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>json</strong> – input json </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>converted rofi world sequence </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing25convertRofiWorldSeqToJsonENSt4spanIKN4rofi13configuration9RofiWorldEEE">
+<span id="_CPPv3N4rofi7parsing25convertRofiWorldSeqToJsonENSt4spanIKN4rofi13configuration9RofiWorldEEE"></span><span id="_CPPv2N4rofi7parsing25convertRofiWorldSeqToJsonENSt4spanIKN4rofi13configuration9RofiWorldEEE"></span><span id="rofi::parsing::convertRofiWorldSeqToJson__std::span:rofi::configuration::RofiWorldC:"></span><span class="target" id="namespacerofi_1_1parsing_1a74a2f383210779a9e45c763d56fed66b"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">convertRofiWorldSeqToJson</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">span</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">rofiWorldSeq</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">nlohmann</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">json</span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing25convertRofiWorldSeqToJsonENSt4spanIKN4rofi13configuration9RofiWorldEEE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Converts rofi world sequence to <code class="docutils literal notranslate"><span class="pre">nlohmann::json</span></code>. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rofiWorldSeq</strong> – input rofi world sequence </p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>converted json </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN4rofi7parsing23convertFromRofiWorldSeqEN5atoms6ResultINSt6vectorI6WorldTEEEENSt4spanIKN4rofi13configuration9RofiWorldEEE8Callback">
+<span id="_CPPv3I00EN4rofi7parsing23convertFromRofiWorldSeqENSt4spanIKN4rofi13configuration9RofiWorldEEE8Callback"></span><span id="_CPPv2I00EN4rofi7parsing23convertFromRofiWorldSeqENSt4spanIKN4rofi13configuration9RofiWorldEEE8Callback"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Callback</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">WorldT</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">invoke_result_t</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00EN4rofi7parsing23convertFromRofiWorldSeqEN5atoms6ResultINSt6vectorI6WorldTEEEENSt4spanIKN4rofi13configuration9RofiWorldEEE8Callback" title="rofi::parsing::convertFromRofiWorldSeq::Callback"><span class="n"><span class="pre">Callback</span></span></a><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">value_type</span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacerofi_1_1parsing_1a506c9b416fab8c9baaf71c256a11a158"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">convertFromRofiWorldSeq</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">span</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">rofiWorldSeq</span></span>, <a class="reference internal" href="#_CPPv4I00EN4rofi7parsing23convertFromRofiWorldSeqEN5atoms6ResultINSt6vectorI6WorldTEEEENSt4spanIKN4rofi13configuration9RofiWorldEEE8Callback" title="rofi::parsing::convertFromRofiWorldSeq::Callback"><span class="n"><span class="pre">Callback</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">convertCallback</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4I00EN4rofi7parsing23convertFromRofiWorldSeqEN5atoms6ResultINSt6vectorI6WorldTEEEENSt4spanIKN4rofi13configuration9RofiWorldEEE8Callback" title="rofi::parsing::convertFromRofiWorldSeq::WorldT"><span class="n"><span class="pre">WorldT</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I00EN4rofi7parsing23convertFromRofiWorldSeqEN5atoms6ResultINSt6vectorI6WorldTEEEENSt4spanIKN4rofi13configuration9RofiWorldEEE8Callback" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Converts <code class="docutils literal notranslate"><span class="pre">rofiWorldSeq</span></code> to a sequence of new worlds. </p>
+<p>Uses <code class="docutils literal notranslate"><span class="pre">convertCallback</span></code> for conversion to <code class="docutils literal notranslate"><span class="pre">WorldT</span></code> . Returns an error if any call to <code class="docutils literal notranslate"><span class="pre">convertCallback</span></code> fails including information about the position of the failed world.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Behaves as transform and collect on <code class="docutils literal notranslate"><a class="reference internal" href="../atoms/result.html#classatoms_1_1_result"><span class="std std-ref"><span class="pre">atoms::Result</span></span></a></code> and also includes info about which conversion failed. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>rofiWorldSeq</strong> – input rofi world sequence </p></li>
+<li><p><strong>convertCallback</strong> – callback for converting rofi world to new world </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>converted sequence of new worlds </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4I00EN4rofi7parsing21convertToRofiWorldSeqEN5atoms6ResultINSt6vectorIN4rofi13configuration9RofiWorldEEEEENSt4spanIK6WorldTEE8Callback">
+<span id="_CPPv3I00EN4rofi7parsing21convertToRofiWorldSeqENSt4spanIK6WorldTEE8Callback"></span><span id="_CPPv2I00EN4rofi7parsing21convertToRofiWorldSeqENSt4spanIK6WorldTEE8Callback"></span><span class="k"><span class="pre">template</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">WorldT</span></span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="k"><span class="pre">typename</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Callback</span></span></span><span class="p"><span class="pre">&gt;</span></span><br /><span class="target" id="namespacerofi_1_1parsing_1afc9d2478f11ffe16c563120d5248d437"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">convertToRofiWorldSeq</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">span</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4I00EN4rofi7parsing21convertToRofiWorldSeqEN5atoms6ResultINSt6vectorIN4rofi13configuration9RofiWorldEEEEENSt4spanIK6WorldTEE8Callback" title="rofi::parsing::convertToRofiWorldSeq::WorldT"><span class="n"><span class="pre">WorldT</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">worldSeq</span></span>, <a class="reference internal" href="#_CPPv4I00EN4rofi7parsing21convertToRofiWorldSeqEN5atoms6ResultINSt6vectorIN4rofi13configuration9RofiWorldEEEEENSt4spanIK6WorldTEE8Callback" title="rofi::parsing::convertToRofiWorldSeq::Callback"><span class="n"><span class="pre">Callback</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">convertCallback</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4I00EN4rofi7parsing21convertToRofiWorldSeqEN5atoms6ResultINSt6vectorIN4rofi13configuration9RofiWorldEEEEENSt4spanIK6WorldTEE8Callback" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Converts <code class="docutils literal notranslate"><span class="pre">worldSeq</span></code> to a rofi world sequence. </p>
+<p>Uses <code class="docutils literal notranslate"><span class="pre">convertCallback</span></code> for conversion to rofi world. Returns an error if any call to <code class="docutils literal notranslate"><span class="pre">convertCallback</span></code> fails including information about the position of the failed world.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Behaves as transform and collect on <code class="docutils literal notranslate"><a class="reference internal" href="../atoms/result.html#classatoms_1_1_result"><span class="std std-ref"><span class="pre">atoms::Result</span></span></a></code> and also includes info about which conversion failed. </p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>worldSeq</strong> – input world sequence </p></li>
+<li><p><strong>convertCallback</strong> – callback for converting world to rofi world </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>converted rofi world sequence </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing17parseOldCfgFormatERNSt7istreamEb">
+<span id="_CPPv3N4rofi7parsing17parseOldCfgFormatERNSt7istreamEb"></span><span id="_CPPv2N4rofi7parsing17parseOldCfgFormatERNSt7istreamEb"></span><span id="rofi::parsing::parseOldCfgFormat__isR.b"></span><span class="target" id="namespacerofi_1_1parsing_1af16294d4c96139f7a1248fbee5d490dc"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">parseOldCfgFormat</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">istream</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">istr</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">fixate</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing17parseOldCfgFormatERNSt7istreamEb" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Parses rofi world from given <code class="docutils literal notranslate"><span class="pre">istr</span></code> . </p>
+<p>Assumes that the input is in old (Viki) format. Returns an error if the format is incorrect. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>istr</strong> – input stream containing the rofi world </p></li>
+<li><p><strong>fixate</strong> – whether to fixate the world after parsing </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the parsed rofi world </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<section id="multi-format-conversions">
+<h2>Multi-Format Conversions<a class="headerlink" href="#multi-format-conversions" title="Permalink to this headline"></a></h2>
+<dl class="cpp enum-class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing15RofiWorldFormatE">
+<span id="_CPPv3N4rofi7parsing15RofiWorldFormatE"></span><span id="_CPPv2N4rofi7parsing15RofiWorldFormatE"></span><span class="target" id="namespacerofi_1_1parsing_1a3c2bea5a0f96114bfa224b064076fcd4"></span><span class="k"><span class="pre">enum</span></span><span class="w"> </span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">RofiWorldFormat</span></span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing15RofiWorldFormatE" title="Permalink to this definition"></a><br /></dt>
+<dd><p><em>Values:</em></p>
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing15RofiWorldFormat3OldE">
+<span id="_CPPv3N4rofi7parsing15RofiWorldFormat3OldE"></span><span id="_CPPv2N4rofi7parsing15RofiWorldFormat3OldE"></span><span class="target" id="namespacerofi_1_1parsing_1a3c2bea5a0f96114bfa224b064076fcd4ac7268757fbabf48019f4984933539d8a"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Old</span></span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing15RofiWorldFormat3OldE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing15RofiWorldFormat4JsonE">
+<span id="_CPPv3N4rofi7parsing15RofiWorldFormat4JsonE"></span><span id="_CPPv2N4rofi7parsing15RofiWorldFormat4JsonE"></span><span class="target" id="namespacerofi_1_1parsing_1a3c2bea5a0f96114bfa224b064076fcd4aeed8d85b888a6c015834240885ee6333"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Json</span></span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing15RofiWorldFormat4JsonE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp enumerator">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing15RofiWorldFormat5VoxelE">
+<span id="_CPPv3N4rofi7parsing15RofiWorldFormat5VoxelE"></span><span id="_CPPv2N4rofi7parsing15RofiWorldFormat5VoxelE"></span><span class="target" id="namespacerofi_1_1parsing_1a3c2bea5a0f96114bfa224b064076fcd4acd13ebe8bb9492ea092ba4f7ed7ab801"></span><span class="k"><span class="pre">enumerator</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Voxel</span></span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing15RofiWorldFormat5VoxelE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing14parseRofiWorldERNSt7istreamE15RofiWorldFormatb">
+<span id="_CPPv3N4rofi7parsing14parseRofiWorldERNSt7istreamE15RofiWorldFormatb"></span><span id="_CPPv2N4rofi7parsing14parseRofiWorldERNSt7istreamE15RofiWorldFormatb"></span><span id="rofi::parsing::parseRofiWorld__isR.RofiWorldFormat.b"></span><span class="target" id="namespacerofi_1_1parsing_1aacaf776e39afa50a884dc6b4c8231866"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">parseRofiWorld</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">istream</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">istr</span></span>, <a class="reference internal" href="#_CPPv4N4rofi7parsing15RofiWorldFormatE" title="rofi::parsing::RofiWorldFormat"><span class="n"><span class="pre">RofiWorldFormat</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">worldFormat</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">fixateByOne</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing14parseRofiWorldERNSt7istreamE15RofiWorldFormatb" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Parses rofi world from given <code class="docutils literal notranslate"><span class="pre">istr</span></code> . </p>
+<p>Parses the input according to <code class="docutils literal notranslate"><span class="pre">worldFormat</span></code> . If the world is in old format, fixates the world. Returns an error if the format is incorrect. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>istr</strong> – input stream containing the rofi world </p></li>
+<li><p><strong>worldFormat</strong> – format of input world </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the parsed rofi world </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing14writeRofiWorldERNSt7ostreamERKN4rofi13configuration9RofiWorldE15RofiWorldFormat">
+<span id="_CPPv3N4rofi7parsing14writeRofiWorldERNSt7ostreamERKN4rofi13configuration9RofiWorldE15RofiWorldFormat"></span><span id="_CPPv2N4rofi7parsing14writeRofiWorldERNSt7ostreamERKN4rofi13configuration9RofiWorldE15RofiWorldFormat"></span><span id="rofi::parsing::writeRofiWorld__osR.rofi::configuration::RofiWorldCR.RofiWorldFormat"></span><span class="target" id="namespacerofi_1_1parsing_1a2b2931e602eef33bb5735a8b65ed0580"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">writeRofiWorld</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ostream</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ostr</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">rofiWorld</span></span>, <a class="reference internal" href="#_CPPv4N4rofi7parsing15RofiWorldFormatE" title="rofi::parsing::RofiWorldFormat"><span class="n"><span class="pre">RofiWorldFormat</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">worldFormat</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">monostate</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing14writeRofiWorldERNSt7ostreamERKN4rofi13configuration9RofiWorldE15RofiWorldFormat" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Writes rofi world to given <code class="docutils literal notranslate"><span class="pre">ostr</span></code> in the format specified by <code class="docutils literal notranslate"><span class="pre">worldFormat</span></code> . </p>
+<p>Returns an error if the format is incorrect or if the old format is specified. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>istr</strong> – input stream containing the rofi world </p></li>
+<li><p><strong>worldFormat</strong> – format of input world </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the parsed rofi world </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing17parseRofiWorldSeqERNSt7istreamE15RofiWorldFormatb">
+<span id="_CPPv3N4rofi7parsing17parseRofiWorldSeqERNSt7istreamE15RofiWorldFormatb"></span><span id="_CPPv2N4rofi7parsing17parseRofiWorldSeqERNSt7istreamE15RofiWorldFormatb"></span><span id="rofi::parsing::parseRofiWorldSeq__isR.RofiWorldFormat.b"></span><span class="target" id="namespacerofi_1_1parsing_1aff3080c45204bd3a9afd90bfa3d2ee53"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">parseRofiWorldSeq</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">istream</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">istr</span></span>, <a class="reference internal" href="#_CPPv4N4rofi7parsing15RofiWorldFormatE" title="rofi::parsing::RofiWorldFormat"><span class="n"><span class="pre">RofiWorldFormat</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">worldFormat</span></span>, <span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">fixateByOne</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">false</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing17parseRofiWorldSeqERNSt7istreamE15RofiWorldFormatb" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Parses rofi world sequence from given <code class="docutils literal notranslate"><span class="pre">istr</span></code> . </p>
+<p>Parses the input according to <code class="docutils literal notranslate"><span class="pre">worldFormat</span></code> . Returns an error if the format is incorrect. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>istr</strong> – input stream containing the rofi world sequence </p></li>
+<li><p><strong>worldFormat</strong> – format of input world sequence </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the parsed rofi world sequence </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi7parsing17writeRofiWorldSeqERNSt7ostreamENSt4spanIKN4rofi13configuration9RofiWorldEEE15RofiWorldFormat">
+<span id="_CPPv3N4rofi7parsing17writeRofiWorldSeqERNSt7ostreamENSt4spanIKN4rofi13configuration9RofiWorldEEE15RofiWorldFormat"></span><span id="_CPPv2N4rofi7parsing17writeRofiWorldSeqERNSt7ostreamENSt4spanIKN4rofi13configuration9RofiWorldEEE15RofiWorldFormat"></span><span id="rofi::parsing::writeRofiWorldSeq__osR.std::span:rofi::configuration::RofiWorldC:.RofiWorldFormat"></span><span class="target" id="namespacerofi_1_1parsing_1ab379b7969add0b123a3df50c26dfcd24"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-prename descclassname"><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">parsing</span></span><span class="p"><span class="pre">::</span></span></span><span class="sig-name descname"><span class="n"><span class="pre">writeRofiWorldSeq</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ostream</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ostr</span></span>, <span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">span</span></span><span class="p"><span class="pre">&lt;</span></span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">rofi</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">configuration</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="rofiworld.html#_CPPv4N4rofi13configuration9RofiWorldE" title="rofi::configuration::RofiWorld"><span class="n"><span class="pre">RofiWorld</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">rofiWorldSeq</span></span>, <a class="reference internal" href="#_CPPv4N4rofi7parsing15RofiWorldFormatE" title="rofi::parsing::RofiWorldFormat"><span class="n"><span class="pre">RofiWorldFormat</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">worldFormat</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="o"><span class="pre">-&gt;</span></span><span class="w"> </span><span class="n"><span class="pre">atoms</span></span><span class="p"><span class="pre">::</span></span><a class="reference internal" href="../atoms/result.html#_CPPv4I00EN5atoms6ResultE" title="atoms::Result"><span class="n"><span class="pre">Result</span></span></a><span class="p"><span class="pre">&lt;</span></span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">monostate</span></span><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi7parsing17writeRofiWorldSeqERNSt7ostreamENSt4spanIKN4rofi13configuration9RofiWorldEEE15RofiWorldFormat" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Writes rofi world sequence to given <code class="docutils literal notranslate"><span class="pre">ostr</span></code> in the format specified by <code class="docutils literal notranslate"><span class="pre">worldFormat</span></code> . </p>
+<p>Returns an error if the format is incorrect or if the old format is specified. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>istr</strong> – input stream containing the rofi world sequence </p></li>
+<li><p><strong>worldFormat</strong> – format of input world sequence </p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>the parsed rofi world sequence </p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tooling_usage.html" class="btn btn-neutral float-left" title="Flags for Configurations in Tools" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="rofiworld.html" class="btn btn-neutral float-right" title="RoFI Configuration" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

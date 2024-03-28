@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Desktop Suite &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Documentation Suite" href="doc.html" />
+    <link rel="prev" title="RoFI Compilation" href="../compiling.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Introduction, compiling and structure</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="../compiling.html">RoFI Compilation</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="../compiling.html#build-environment">Build environment</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="../compiling.html#compilation-suites">Compilation suites</a><ul class="current">
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Desktop Suite</a></li>
+<li class="toctree-l4"><a class="reference internal" href="doc.html">Documentation Suite</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="../compiling.html#compilation-targets">Compilation targets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../compiling.html#flashing-robots-and-hardware-modules">Flashing robots and hardware modules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../compiling.html#advanced-configuration-of-the-build-process">Advanced configuration of the build process</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../compiling.html#quick-start-example">Quick start example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="../compiling.html#quick-start-simulator-example">Quick start Simulator example</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../structure.html">Project Structure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../testing.html">Writing and running tests</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofihal/index.html">RoFI HAL</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofilib/index.html">RoFILib</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Introduction, compiling and structure</a></li>
+          <li class="breadcrumb-item"><a href="../compiling.html">RoFI Compilation</a></li>
+      <li class="breadcrumb-item active">Desktop Suite</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/intro/suites/desktop.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="desktop-suite">
+<h1>Desktop Suite<a class="headerlink" href="#desktop-suite" title="Permalink to this headline"></a></h1>
+<p>The basic suite containing mainly the tools for defining and manipulating RoFI
+shape, algorithmic libraries and benchmarks.</p>
+<section id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline"></a></h2>
+<p>Refer to <code class="docutils literal notranslate"><span class="pre">suites/desktop/Dockerfile</span></code> for the up-to-date reference build and
+development environment. On top of basic C/C++ dependencies, the following extra
+libraries are required to be installed:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="http://arma.sourceforge.net/">Armadillo</a>: for APT-based system, install
+<code class="docutils literal notranslate"><span class="pre">libarmadillo-dev</span></code></p></li>
+<li><p><a class="reference external" href="http://vtk.org/">VTK &gt;=7</a>: for APT-based system, install <code class="docutils literal notranslate"><span class="pre">libvtk7-dev</span></code></p></li>
+<li><p><a class="reference external" href="http://qt.io/">QT 5 and QT-VTK</a>: for APT-based system, install
+<code class="docutils literal notranslate"><span class="pre">libvtk7-qt-dev</span> <span class="pre">qtdeclarative5-dev</span></code></p></li>
+<li><p><a class="reference external" href="http://gazebosim.org/">GazeboSim &gt;=11</a>: for APT-based system, install
+<code class="docutils literal notranslate"><span class="pre">libgazebo11-dev</span></code>. This dependecy can be removed using the build options.</p></li>
+<li><p><a class="reference external" href="https://github.com/Z3Prover/z3">Z3</a>: this dependency is only needed for
+compiling SMT reconfiguration.</p></li>
+</ul>
+<p>On top of the build dependencies, FFMpeg and Inkscape are required to use the
+animation feature of the visualizer.</p>
+</section>
+<section id="build-options">
+<h2>Build options<a class="headerlink" href="#build-options" title="Permalink to this headline"></a></h2>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">BUILD_HEADLESS</span></code> (default <code class="docutils literal notranslate"><span class="pre">FALSE</span></code>): Build only parts of the project that
+can run headlessly. I.e., does not compile visualizer nor rofi-app.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BUILD_GAZEBO</span></code> (default <code class="docutils literal notranslate"><span class="pre">TRUE</span></code>): Build parts that require gazebo libraries.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BUILD_RUST</span></code> (default <code class="docutils literal notranslate"><span class="pre">TRUE</span></code>): Build parts that contain or depend on Rust.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">BUILD_SMTRECONFIG</span></code> (default <code class="docutils literal notranslate"><span class="pre">FALSE</span></code>): Defines whether to build the
+library for reconfiguration via reduction to SMT. The library is not directly
+applicable and also brings heavy dependency in the form of Z3, thus it makes
+sense to do not compile it by-default.</p></li>
+</ul>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../compiling.html" class="btn btn-neutral float-left" title="RoFI Compilation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="doc.html" class="btn btn-neutral float-right" title="Documentation Suite" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

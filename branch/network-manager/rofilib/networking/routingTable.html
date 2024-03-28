@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Routing table &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="RoFICoM" href="../../roficom/index.html" />
+    <link rel="prev" title="Interface" href="interface.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../intro/index.html">Introduction, compiling and structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../releng/index.html">Release engineering notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofihal/index.html">RoFI HAL</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">RoFILib</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../configurations/index.html">Configurations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../atoms/index.html">Atoms</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="index.html">Netwokring</a><ul class="current">
+<li class="toctree-l3"><a class="reference internal" href="index.html#network-manager">Network Manager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#protocols">Protocols</a></li>
+<li class="toctree-l3"><a class="reference internal" href="index.html#command-line-interface-cli">Command Line Interface (CLI)</a></li>
+<li class="toctree-l3 current"><a class="reference internal" href="index.html#components">Components</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="interface.html">Interface</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">Routing table</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">RoFILib</a></li>
+          <li class="breadcrumb-item"><a href="index.html">Netwokring</a></li>
+      <li class="breadcrumb-item active">Routing table</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/rofilib/networking/routingTable.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="routing-table">
+<h1>Routing table<a class="headerlink" href="#routing-table" title="Permalink to this headline"></a></h1>
+<p>The routing table contains all routes known to the networking within the <cite>NetworkManager</cite> of given
+module. The table itself manages underlying lwip’s forwarding table (an addition of the RoFI
+platform) which should be left intact by the user.</p>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTableE">
+<span id="_CPPv3N4rofi3net12RoutingTableE"></span><span id="_CPPv2N4rofi3net12RoutingTableE"></span><span id="rofi::net::RoutingTable"></span><span class="target" id="classrofi_1_1net_1_1_routing_table"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">RoutingTable</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTableE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Class representing routing table of the platform. </p>
+<p>This class also manages the underlying lwip library, therefore users should not interfere and manage the forwarding table in lwip themselves. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-types">Public Types</p>
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable4CostE">
+<span id="_CPPv3N4rofi3net12RoutingTable4CostE"></span><span id="_CPPv2N4rofi3net12RoutingTable4CostE"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1a972ea39bc7f95e9626e84f94738d4638"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Cost</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="kt"><span class="pre">int</span></span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable4CostE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp type">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable7RecordsE">
+<span id="_CPPv3N4rofi3net12RoutingTable7RecordsE"></span><span id="_CPPv2N4rofi3net12RoutingTable7RecordsE"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1a4310b3b6a09d02af8528db05d521ba73"></span><span class="k"><span class="pre">using</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Records</span></span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">vector</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable6RecordE" title="rofi::net::RoutingTable::Record"><span class="n"><span class="pre">Record</span></span></a><span class="p"><span class="pre">&gt;</span></span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable7RecordsE" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable4sizeEv">
+<span id="_CPPv3NK4rofi3net12RoutingTable4sizeEv"></span><span id="_CPPv2NK4rofi3net12RoutingTable4sizeEv"></span><span id="rofi::net::RoutingTable::sizeC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1a3a4219f961c0913b5bd09dc5bccea023"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">size</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable4sizeEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the count of records (number of known networks). </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable5emptyEv">
+<span id="_CPPv3NK4rofi3net12RoutingTable5emptyEv"></span><span id="_CPPv2NK4rofi3net12RoutingTable5emptyEv"></span><span id="rofi::net::RoutingTable::emptyC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1aa391e688db8d3ff39d928266a4b2f97e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">empty</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable5emptyEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Check if the table contains any record. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if there are no records. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable4findERK7Ip6Addr7uint8_t">
+<span id="_CPPv3N4rofi3net12RoutingTable4findERK7Ip6Addr7uint8_t"></span><span id="_CPPv2N4rofi3net12RoutingTable4findERK7Ip6Addr7uint8_t"></span><span id="rofi::net::RoutingTable::find__Ip6AddrCR.uint8_t"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1a87bb0fba08c88d7d46a5d8c360ccc3f3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable6RecordE" title="rofi::net::RoutingTable::Record"><span class="n"><span class="pre">Record</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">find</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ip</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mask</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable4findERK7Ip6Addr7uint8_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Find a record for given network. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable3addERK6RecordPK8Protocol">
+<span id="_CPPv3N4rofi3net12RoutingTable3addERK6RecordPK8Protocol"></span><span id="_CPPv2N4rofi3net12RoutingTable3addERK6RecordPK8Protocol"></span><span id="rofi::net::RoutingTable::add__RecordCR.ProtocolCP"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1ac0878bcdee8acc6e921bd1ca006bd28c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">add</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable6RecordE" title="rofi::net::RoutingTable::Record"><span class="n"><span class="pre">Record</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">r</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="index.html#_CPPv4N4rofi3net8ProtocolE" title="rofi::net::Protocol"><span class="n"><span class="pre">Protocol</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">learnedFrom</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">nullptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable3addERK6RecordPK8Protocol" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Add a new network to the table. </p>
+<p>If the record exists, it merges gateways of both records.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if a record was added or (in case it exists) merging added a new gateway. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable3addERK7Ip6Addr7uint8_tRKN9Interface4NameE4CostPK8Protocol">
+<span id="_CPPv3N4rofi3net12RoutingTable3addERK7Ip6Addr7uint8_tRKN9Interface4NameE4CostPK8Protocol"></span><span id="_CPPv2N4rofi3net12RoutingTable3addERK7Ip6Addr7uint8_tRKN9Interface4NameE4CostPK8Protocol"></span><span id="rofi::net::RoutingTable::add__Ip6AddrCR.uint8_t.Interface::NameCR.Cost.ProtocolCP"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1aa470385054c246ce7f79f4fe2c160a57"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">add</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ip</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mask</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9Interface4NameE" title="rofi::net::Interface::Name"><span class="n"><span class="pre">Name</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">n</span></span>, <a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable4CostE" title="rofi::net::RoutingTable::Cost"><span class="n"><span class="pre">Cost</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">c</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="index.html#_CPPv4N4rofi3net8ProtocolE" title="rofi::net::Protocol"><span class="n"><span class="pre">Protocol</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">learned</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">nullptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable3addERK7Ip6Addr7uint8_tRKN9Interface4NameE4CostPK8Protocol" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Overloaded version of <code class="docutils literal notranslate"><span class="pre">add</span></code>. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable6removeERK6Record">
+<span id="_CPPv3N4rofi3net12RoutingTable6removeERK6Record"></span><span id="_CPPv2N4rofi3net12RoutingTable6removeERK6Record"></span><span id="rofi::net::RoutingTable::remove__RecordCR"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1a24e2d86c6851bd68e28e1d95bab62436"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">remove</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable6RecordE" title="rofi::net::RoutingTable::Record"><span class="n"><span class="pre">Record</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">r</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable6removeERK6Record" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Remove given record. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if record was removed. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable6removeERK7Ip6Addr7uint8_tRK7Gateway">
+<span id="_CPPv3N4rofi3net12RoutingTable6removeERK7Ip6Addr7uint8_tRK7Gateway"></span><span id="_CPPv2N4rofi3net12RoutingTable6removeERK7Ip6Addr7uint8_tRK7Gateway"></span><span id="rofi::net::RoutingTable::remove__Ip6AddrCR.uint8_t.GatewayCR"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1acae30026c85c9db306e3887ccc98d082"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">remove</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ip</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mask</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable7GatewayE" title="rofi::net::RoutingTable::Gateway"><span class="n"><span class="pre">Gateway</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">gw</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable6removeERK7Ip6Addr7uint8_tRK7Gateway" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Remove all gateways from the given network record with given Gateways. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable13removeNetworkERK7Ip6Addr7uint8_t">
+<span id="_CPPv3N4rofi3net12RoutingTable13removeNetworkERK7Ip6Addr7uint8_t"></span><span id="_CPPv2N4rofi3net12RoutingTable13removeNetworkERK7Ip6Addr7uint8_t"></span><span id="rofi::net::RoutingTable::removeNetwork__Ip6AddrCR.uint8_t"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1a35858b64686d246affd95583acd00291"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">removeNetwork</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ip</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mask</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable13removeNetworkERK7Ip6Addr7uint8_t" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Removes record for given network with all of its gateways. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable15removeInterfaceERK7Ip6Addr7uint8_tRKN9Interface4NameE">
+<span id="_CPPv3N4rofi3net12RoutingTable15removeInterfaceERK7Ip6Addr7uint8_tRKN9Interface4NameE"></span><span id="_CPPv2N4rofi3net12RoutingTable15removeInterfaceERK7Ip6Addr7uint8_tRKN9Interface4NameE"></span><span id="rofi::net::RoutingTable::removeInterface__Ip6AddrCR.uint8_t.Interface::NameCR"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1a4eb95b1e7f3521fe3ba5b9be11bc34a6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">removeInterface</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ip</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mask</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9Interface4NameE" title="rofi::net::Interface::Name"><span class="n"><span class="pre">Name</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">gwn</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable15removeInterfaceERK7Ip6Addr7uint8_tRKN9Interface4NameE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Remove all gateways from the given network record with given output interface. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable5purgeERKN9Interface4NameE">
+<span id="_CPPv3N4rofi3net12RoutingTable5purgeERKN9Interface4NameE"></span><span id="_CPPv2N4rofi3net12RoutingTable5purgeERKN9Interface4NameE"></span><span id="rofi::net::RoutingTable::purge__Interface::NameCR"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1aaa03e09ff86338e7dee822c17842c132"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">void</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">purge</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9Interface4NameE" title="rofi::net::Interface::Name"><span class="n"><span class="pre">Name</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable5purgeERKN9Interface4NameE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Remove all gateways using given interface as the output. </p>
+<p>Removes records that would end up empty (i.e., without any gateway). </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable18recordsLearnedFromERK8Protocol">
+<span id="_CPPv3NK4rofi3net12RoutingTable18recordsLearnedFromERK8Protocol"></span><span id="_CPPv2NK4rofi3net12RoutingTable18recordsLearnedFromERK8Protocol"></span><span id="rofi::net::RoutingTable::recordsLearnedFrom__ProtocolCRC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1a785d94cd82581c056df73c90730e0b01"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable7RecordsE" title="rofi::net::RoutingTable::Records"><span class="n"><span class="pre">Records</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">recordsLearnedFrom</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="index.html#_CPPv4N4rofi3net8ProtocolE" title="rofi::net::Protocol"><span class="n"><span class="pre">Protocol</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">proto</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable18recordsLearnedFromERK8Protocol" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Function for getting all records learned through given protocol. </p>
+</dd></dl>
+
+</div>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-friends">Friends</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTablelsERNSt7ostreamERK12RoutingTable">
+<span id="_CPPv3N4rofi3net12RoutingTablelsERNSt7ostreamERK12RoutingTable"></span><span id="_CPPv2N4rofi3net12RoutingTablelsERNSt7ostreamERK12RoutingTable"></span><span id="rofi::net::RoutingTable::lshift-operator__osR.RoutingTableCR"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1ab68c9b2d3ce1dcf2db350a6d556089a3"></span><span class="k"><span class="pre">friend</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ostream</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">&lt;&lt;</span></span></span><span class="sig-paren">(</span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">ostream</span></span><span class="p"><span class="pre">&amp;</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTableE" title="rofi::net::RoutingTable"><span class="n"><span class="pre">RoutingTable</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTablelsERNSt7ostreamERK12RoutingTable" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable7GatewayE">
+<span id="_CPPv3N4rofi3net12RoutingTable7GatewayE"></span><span id="_CPPv2N4rofi3net12RoutingTable7GatewayE"></span><span id="rofi::net::RoutingTable::Gateway"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_gateway"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Gateway</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable7GatewayE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Class representing single gateway with its cost, output interface, and protocol via witch the gateway was discovered. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable7Gateway7GatewayERKN9Interface4NameE4Cost">
+<span id="_CPPv3N4rofi3net12RoutingTable7Gateway7GatewayERKN9Interface4NameE4Cost"></span><span id="_CPPv2N4rofi3net12RoutingTable7Gateway7GatewayERKN9Interface4NameE4Cost"></span><span id="rofi::net::RoutingTable::Gateway::Gateway__Interface::NameCR.Cost"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_gateway_1a434ba7660acb293aa276f3af3955b3e1"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Gateway</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9Interface4NameE" title="rofi::net::Interface::Name"><span class="n"><span class="pre">Name</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">i</span></span>, <a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable4CostE" title="rofi::net::RoutingTable::Cost"><span class="n"><span class="pre">Cost</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">c</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable7Gateway7GatewayERKN9Interface4NameE4Cost" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable7Gateway7GatewayERKN9Interface4NameE4CostPK8Protocol">
+<span id="_CPPv3N4rofi3net12RoutingTable7Gateway7GatewayERKN9Interface4NameE4CostPK8Protocol"></span><span id="_CPPv2N4rofi3net12RoutingTable7Gateway7GatewayERKN9Interface4NameE4CostPK8Protocol"></span><span id="rofi::net::RoutingTable::Gateway::Gateway__Interface::NameCR.Cost.ProtocolCP"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_gateway_1a0bab138980e2d2c9ed135db1d7834a36"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Gateway</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9Interface4NameE" title="rofi::net::Interface::Name"><span class="n"><span class="pre">Name</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">i</span></span>, <a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable4CostE" title="rofi::net::RoutingTable::Cost"><span class="n"><span class="pre">Cost</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">c</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="index.html#_CPPv4N4rofi3net8ProtocolE" title="rofi::net::Protocol"><span class="n"><span class="pre">Protocol</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">learnedFrom</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable7Gateway7GatewayERKN9Interface4NameE4CostPK8Protocol" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable7Gateway4costEv">
+<span id="_CPPv3NK4rofi3net12RoutingTable7Gateway4costEv"></span><span id="_CPPv2NK4rofi3net12RoutingTable7Gateway4costEv"></span><span id="rofi::net::RoutingTable::Gateway::costC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_gateway_1a78af13433292031d906ab3a721334900"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable4CostE" title="rofi::net::RoutingTable::Cost"><span class="n"><span class="pre">Cost</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">cost</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable7Gateway4costEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable7Gateway4nameEv">
+<span id="_CPPv3NK4rofi3net12RoutingTable7Gateway4nameEv"></span><span id="_CPPv2NK4rofi3net12RoutingTable7Gateway4nameEv"></span><span id="rofi::net::RoutingTable::Gateway::nameC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_gateway_1a1ac0156df2faaf67b15bd4f37fcb53f3"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9Interface4NameE" title="rofi::net::Interface::Name"><span class="n"><span class="pre">Name</span></span></a><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">name</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable7Gateway4nameEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable7Gateway11learnedFromEv">
+<span id="_CPPv3NK4rofi3net12RoutingTable7Gateway11learnedFromEv"></span><span id="_CPPv2NK4rofi3net12RoutingTable7Gateway11learnedFromEv"></span><span id="rofi::net::RoutingTable::Gateway::learnedFromC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_gateway_1a9691d7e7a30c1b1c4fd7f69784cbaeec"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="index.html#_CPPv4N4rofi3net8ProtocolE" title="rofi::net::Protocol"><span class="n"><span class="pre">Protocol</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="sig-name descname"><span class="n"><span class="pre">learnedFrom</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable7Gateway11learnedFromEv" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable7Gateway11improveCostE4Cost">
+<span id="_CPPv3N4rofi3net12RoutingTable7Gateway11improveCostE4Cost"></span><span id="_CPPv2N4rofi3net12RoutingTable7Gateway11improveCostE4Cost"></span><span id="rofi::net::RoutingTable::Gateway::improveCost__Cost"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_gateway_1a98835d8307c090f58c7aa2ca2eed9f76"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">improveCost</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable4CostE" title="rofi::net::RoutingTable::Cost"><span class="n"><span class="pre">Cost</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">c</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable7Gateway11improveCostE4Cost" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Update the cost with a new value, if the new value is lower. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if the cost changed, false otherwise </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable7GatewayssERK7Gateway">
+<span id="_CPPv3NK4rofi3net12RoutingTable7GatewayssERK7Gateway"></span><span id="_CPPv2NK4rofi3net12RoutingTable7GatewayssERK7Gateway"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_gateway_1a56d8fdecfe0e21aafa1433f5ffa587a8"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">&lt;=&gt;</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable7GatewayE" title="rofi::net::RoutingTable::Gateway"><span class="n"><span class="pre">Gateway</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable7GatewayssERK7Gateway" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+<dl class="cpp class">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable6RecordE">
+<span id="_CPPv3N4rofi3net12RoutingTable6RecordE"></span><span id="_CPPv2N4rofi3net12RoutingTable6RecordE"></span><span id="rofi::net::RoutingTable::Record"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record"></span><span class="k"><span class="pre">class</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Record</span></span></span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable6RecordE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Class representing a record of the routing table. </p>
+<p>Each network (i.e., ip + mask) has its own record. </p>
+<div class="breathe-sectiondef docutils container">
+<p class="breathe-sectiondef-title rubric" id="breathe-section-title-public-functions">Public Functions</p>
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable6Record6RecordERK7Ip6Addr7uint8_t">
+<span id="_CPPv3N4rofi3net12RoutingTable6Record6RecordERK7Ip6Addr7uint8_t"></span><span id="_CPPv2N4rofi3net12RoutingTable6Record6RecordERK7Ip6Addr7uint8_t"></span><span id="rofi::net::RoutingTable::Record::Record__Ip6AddrCR.uint8_t"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1a8182429bb6d7beefeed214de56e11e04"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Record</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ip</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mask</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable6Record6RecordERK7Ip6Addr7uint8_t" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable6Record6RecordERK7Ip6Addr7uint8_tRKN9Interface4NameE4CostPK8Protocol">
+<span id="_CPPv3N4rofi3net12RoutingTable6Record6RecordERK7Ip6Addr7uint8_tRKN9Interface4NameE4CostPK8Protocol"></span><span id="_CPPv2N4rofi3net12RoutingTable6Record6RecordERK7Ip6Addr7uint8_tRKN9Interface4NameE4CostPK8Protocol"></span><span id="rofi::net::RoutingTable::Record::Record__Ip6AddrCR.uint8_t.Interface::NameCR.Cost.ProtocolCP"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1a5831bd95f0b48a9f992077a3a4a4fd7a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">Record</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ip</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mask</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9Interface4NameE" title="rofi::net::Interface::Name"><span class="n"><span class="pre">Name</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">n</span></span>, <a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable4CostE" title="rofi::net::RoutingTable::Cost"><span class="n"><span class="pre">Cost</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">c</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="index.html#_CPPv4N4rofi3net8ProtocolE" title="rofi::net::Protocol"><span class="n"><span class="pre">Protocol</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">from</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">nullptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable6Record6RecordERK7Ip6Addr7uint8_tRKN9Interface4NameE4CostPK8Protocol" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable6Record10addGatewayERKN9Interface4NameE4Cost">
+<span id="_CPPv3N4rofi3net12RoutingTable6Record10addGatewayERKN9Interface4NameE4Cost"></span><span id="_CPPv2N4rofi3net12RoutingTable6Record10addGatewayERKN9Interface4NameE4Cost"></span><span id="rofi::net::RoutingTable::Record::addGateway__Interface::NameCR.Cost"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1a71e7f84b4f56d71fbbda901e90560a13"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">addGateway</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9Interface4NameE" title="rofi::net::Interface::Name"><span class="n"><span class="pre">Name</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">n</span></span>, <a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable4CostE" title="rofi::net::RoutingTable::Cost"><span class="n"><span class="pre">Cost</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">c</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable6Record10addGatewayERKN9Interface4NameE4Cost" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Add a new gateway for the given record. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if the gateway was added. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable6Record10addGatewayEN9Interface4NameE4CostPK8Protocol">
+<span id="_CPPv3N4rofi3net12RoutingTable6Record10addGatewayEN9Interface4NameE4CostPK8Protocol"></span><span id="_CPPv2N4rofi3net12RoutingTable6Record10addGatewayEN9Interface4NameE4CostPK8Protocol"></span><span id="rofi::net::RoutingTable::Record::addGateway__Interface::Name.Cost.ProtocolCP"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1ab5895f0c5c5be222fa9ad03ff2621b09"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">addGateway</span></span></span><span class="sig-paren">(</span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9Interface4NameE" title="rofi::net::Interface::Name"><span class="n"><span class="pre">Name</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">n</span></span>, <a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable4CostE" title="rofi::net::RoutingTable::Cost"><span class="n"><span class="pre">Cost</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">c</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="index.html#_CPPv4N4rofi3net8ProtocolE" title="rofi::net::Protocol"><span class="n"><span class="pre">Protocol</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">learnedFrom</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable6Record10addGatewayEN9Interface4NameE4CostPK8Protocol" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Overloaded version of the previous function. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable6Record13removeGatewayERK7Gateway">
+<span id="_CPPv3N4rofi3net12RoutingTable6Record13removeGatewayERK7Gateway"></span><span id="_CPPv2N4rofi3net12RoutingTable6Record13removeGatewayERK7Gateway"></span><span id="rofi::net::RoutingTable::Record::removeGateway__GatewayCR"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1a20a84c432c6534b6d29ec35e5960071c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">removeGateway</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable7GatewayE" title="rofi::net::RoutingTable::Gateway"><span class="n"><span class="pre">Gateway</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">gw</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable6Record13removeGatewayERK7Gateway" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Remove given gateway. </p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>true if the gateway was succesfully removed. </p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable6Record13removeGatewayERKN9Interface4NameE4CostPK8Protocol">
+<span id="_CPPv3N4rofi3net12RoutingTable6Record13removeGatewayERKN9Interface4NameE4CostPK8Protocol"></span><span id="_CPPv2N4rofi3net12RoutingTable6Record13removeGatewayERKN9Interface4NameE4CostPK8Protocol"></span><span id="rofi::net::RoutingTable::Record::removeGateway__Interface::NameCR.Cost.ProtocolCP"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1a9f8b8dd01853b075cdec18a30d14c9ce"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">removeGateway</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9Interface4NameE" title="rofi::net::Interface::Name"><span class="n"><span class="pre">Name</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">n</span></span>, <a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable4CostE" title="rofi::net::RoutingTable::Cost"><span class="n"><span class="pre">Cost</span></span></a><span class="w"> </span><span class="n sig-param"><span class="pre">c</span></span>, <span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="index.html#_CPPv4N4rofi3net8ProtocolE" title="rofi::net::Protocol"><span class="n"><span class="pre">Protocol</span></span></a><span class="w"> </span><span class="p"><span class="pre">*</span></span><span class="n sig-param"><span class="pre">learnedFrom</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">nullptr</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable6Record13removeGatewayERKN9Interface4NameE4CostPK8Protocol" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Overloaded version of removeGateway. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4N4rofi3net12RoutingTable6Record13removeGatewayERKN9Interface4NameE">
+<span id="_CPPv3N4rofi3net12RoutingTable6Record13removeGatewayERKN9Interface4NameE"></span><span id="_CPPv2N4rofi3net12RoutingTable6Record13removeGatewayERKN9Interface4NameE"></span><span id="rofi::net::RoutingTable::Record::removeGateway__Interface::NameCR"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1a2b87e9c568e85b0932316b524f049589"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">removeGateway</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9InterfaceE" title="rofi::net::Interface"><span class="n"><span class="pre">Interface</span></span></a><span class="p"><span class="pre">::</span></span><a class="reference internal" href="interface.html#_CPPv4N4rofi3net9Interface4NameE" title="rofi::net::Interface::Name"><span class="n"><span class="pre">Name</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">n</span></span><span class="sig-paren">)</span><a class="headerlink" href="#_CPPv4N4rofi3net12RoutingTable6Record13removeGatewayERKN9Interface4NameE" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Remove all gateways from the record with given interface name. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable6Record2ipEv">
+<span id="_CPPv3NK4rofi3net12RoutingTable6Record2ipEv"></span><span id="_CPPv2NK4rofi3net12RoutingTable6Record2ipEv"></span><span id="rofi::net::RoutingTable::Record::ipC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1a0fac4decd76b578a2931df1eed95acc6"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">ip</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable6Record2ipEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get <a class="reference internal" href="#classrofi_1_1net_1_1_routing_table_1_1_record"><span class="std std-ref">Record</span></a>’s IP. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable6Record4maskEv">
+<span id="_CPPv3NK4rofi3net12RoutingTable6Record4maskEv"></span><span id="_CPPv2NK4rofi3net12RoutingTable6Record4maskEv"></span><span id="rofi::net::RoutingTable::Record::maskC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1a38a97499bc71212ed90fb12df5aee729"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">mask</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable6Record4maskEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get <a class="reference internal" href="#classrofi_1_1net_1_1_routing_table_1_1_record"><span class="std std-ref">Record</span></a>’s mask. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable6Record4sizeEv">
+<span id="_CPPv3NK4rofi3net12RoutingTable6Record4sizeEv"></span><span id="_CPPv2NK4rofi3net12RoutingTable6Record4sizeEv"></span><span id="rofi::net::RoutingTable::Record::sizeC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1a116e8056ff40b46c0be7019c78814a30"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">size_t</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">size</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable6Record4sizeEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get number of gateways. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable6Record4bestEv">
+<span id="_CPPv3NK4rofi3net12RoutingTable6Record4bestEv"></span><span id="_CPPv2NK4rofi3net12RoutingTable6Record4bestEv"></span><span id="rofi::net::RoutingTable::Record::bestC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1a7af9cb5ac6100c4b92bd4b1f15909e65"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="n"><span class="pre">std</span></span><span class="p"><span class="pre">::</span></span><span class="n"><span class="pre">optional</span></span><span class="p"><span class="pre">&lt;</span></span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable7GatewayE" title="rofi::net::RoutingTable::Gateway"><span class="n"><span class="pre">Gateway</span></span></a><span class="p"><span class="pre">&gt;</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">best</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable6Record4bestEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get the best (with the lowest cost) gateway for given network if it exists. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable6Record8containsERK7Gateway">
+<span id="_CPPv3NK4rofi3net12RoutingTable6Record8containsERK7Gateway"></span><span id="_CPPv2NK4rofi3net12RoutingTable6Record8containsERK7Gateway"></span><span id="rofi::net::RoutingTable::Record::contains__GatewayCRC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1ad8c689508c0568cfc625c726e14fe56a"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">contains</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable7GatewayE" title="rofi::net::RoutingTable::Gateway"><span class="n"><span class="pre">Gateway</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">gw</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable6Record8containsERK7Gateway" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Check if a given gateway is present in the record. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable6Record8gatewaysEv">
+<span id="_CPPv3NK4rofi3net12RoutingTable6Record8gatewaysEv"></span><span id="_CPPv2NK4rofi3net12RoutingTable6Record8gatewaysEv"></span><span id="rofi::net::RoutingTable::Record::gatewaysC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1ae4ece9dfd4ed8aaa31183dbe1182759e"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">gateways</span></span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable6Record8gatewaysEv" title="Permalink to this definition"></a><br /></dt>
+<dd><p>Get iterable range of <a class="reference internal" href="#classrofi_1_1net_1_1_routing_table_1_1_record"><span class="std std-ref">Record</span></a>’s gateways. </p>
+</dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable6Record15compareNetworksERK6Record">
+<span id="_CPPv3NK4rofi3net12RoutingTable6Record15compareNetworksERK6Record"></span><span id="_CPPv2NK4rofi3net12RoutingTable6Record15compareNetworksERK6Record"></span><span id="rofi::net::RoutingTable::Record::compareNetworks__RecordCRC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1ab569b32deda9bf220222e5b31c7e5b0c"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">compareNetworks</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable6RecordE" title="rofi::net::RoutingTable::Record"><span class="n"><span class="pre">Record</span></span></a><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">r</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable6Record15compareNetworksERK6Record" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable6Record15compareNetworksERK7Ip6Addr7uint8_t">
+<span id="_CPPv3NK4rofi3net12RoutingTable6Record15compareNetworksERK7Ip6Addr7uint8_t"></span><span id="_CPPv2NK4rofi3net12RoutingTable6Record15compareNetworksERK7Ip6Addr7uint8_t"></span><span id="rofi::net::RoutingTable::Record::compareNetworks__Ip6AddrCR.uint8_tC"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1a19f3bf236d7a69e5675df28e4b21aa8f"></span><span class="k"><span class="pre">inline</span></span><span class="w"> </span><span class="kt"><span class="pre">bool</span></span><span class="w"> </span><span class="sig-name descname"><span class="n"><span class="pre">compareNetworks</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="n"><span class="pre">Ip6Addr</span></span><span class="w"> </span><span class="p"><span class="pre">&amp;</span></span><span class="n sig-param"><span class="pre">ip</span></span>, <span class="n"><span class="pre">uint8_t</span></span><span class="w"> </span><span class="n sig-param"><span class="pre">mask</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable6Record15compareNetworksERK7Ip6Addr7uint8_t" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+<dl class="cpp function">
+<dt class="sig sig-object cpp" id="_CPPv4NK4rofi3net12RoutingTable6RecordssERK6Record">
+<span id="_CPPv3NK4rofi3net12RoutingTable6RecordssERK6Record"></span><span id="_CPPv2NK4rofi3net12RoutingTable6RecordssERK6Record"></span><span class="target" id="classrofi_1_1net_1_1_routing_table_1_1_record_1a5789527c9722d27164bdb1b2e1972fcc"></span><span class="kt"><span class="pre">auto</span></span><span class="w"> </span><span class="sig-name descname"><span class="k"><span class="pre">operator</span></span><span class="o"><span class="pre">&lt;=&gt;</span></span></span><span class="sig-paren">(</span><span class="k"><span class="pre">const</span></span><span class="w"> </span><a class="reference internal" href="#_CPPv4N4rofi3net12RoutingTable6RecordE" title="rofi::net::RoutingTable::Record"><span class="n"><span class="pre">Record</span></span></a><span class="p"><span class="pre">&amp;</span></span><span class="sig-paren">)</span><span class="w"> </span><span class="k"><span class="pre">const</span></span><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="k"><span class="pre">default</span></span><a class="headerlink" href="#_CPPv4NK4rofi3net12RoutingTable6RecordssERK6Record" title="Permalink to this definition"></a><br /></dt>
+<dd></dd></dl>
+
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="interface.html" class="btn btn-neutral float-left" title="Interface" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../roficom/index.html" class="btn btn-neutral float-right" title="RoFICoM" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
