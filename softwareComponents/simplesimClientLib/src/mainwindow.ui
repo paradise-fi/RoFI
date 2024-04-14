@@ -14,7 +14,7 @@
    <string>RoFI SimpleSim</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QGridLayout" name="gridLayout" columnstretch="50,200,0" columnminimumwidth="50,200,50">
+   <layout class="QGridLayout" name="gridLayout" columnstretch="50,0,0">
     <item row="1" column="1">
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="1,1,20">
       <property name="spacing">
@@ -58,13 +58,20 @@
       </item>
      </layout>
     </item>
-    <item row="0" column="2">
-     <widget class="QTreeWidget" name="treeWidget">
-      <column>
-       <property name="text">
-        <string>Configuration</string>
-       </property>
-      </column>
+    <item row="0" column="0" colspan="2">
+     <widget class="QVTKWidget" name="widget" native="true">
+      <property name="minimumSize">
+       <size>
+        <width>484</width>
+        <height>512</height>
+       </size>
+      </property>
+      <property name="baseSize">
+       <size>
+        <width>0</width>
+        <height>0</height>
+       </size>
+      </property>
      </widget>
     </item>
     <item row="1" column="0">
@@ -85,20 +92,21 @@
       </property>
      </widget>
     </item>
-    <item row="0" column="0" colspan="2">
-     <widget class="QVTKWidget" name="widget" native="true">
-      <property name="minimumSize">
-       <size>
-        <width>484</width>
-        <height>512</height>
-       </size>
+    <item row="0" column="2">
+     <widget class="QTreeWidget" name="treeWidget">
+      <column>
+       <property name="text">
+        <string>Configuration</string>
+       </property>
+      </column>
+     </widget>
+    </item>
+    <item row="1" column="2">
+     <widget class="QPushButton" name="configureButton">
+      <property name="text">
+       <string>Configure and Run</string>
       </property>
-      <property name="baseSize">
-       <size>
-        <width>0</width>
-        <height>0</height>
-       </size>
-      </property>
+      <addaction name="configureRun"/>
      </widget>
     </item>
    </layout>
@@ -145,6 +153,14 @@
    </property>
    <property name="text">
     <string>Center selected module</string>
+   </property>
+  </action>
+  <action name="configureRun">
+   <property name="text">
+    <string>Configure and run a simulation</string>
+   </property>
+   <property name="toolTip">
+    <string>Configure and run a simulation</string>
    </property>
   </action>
  </widget>

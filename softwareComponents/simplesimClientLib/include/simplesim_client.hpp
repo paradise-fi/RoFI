@@ -21,6 +21,7 @@
 
 #include "atoms/guarded.hpp"
 #include "changecolor.hpp"
+#include "runmodules.hpp"
 #include "configuration/rofiworld.hpp"
 #include "configuration/serialization.hpp"
 
@@ -122,6 +123,8 @@ private slots:
 
     void changeColorWindow();
 
+    void runModulesWindow();
+
     void pauseButton();
 
     void speedChanged( double speed );
@@ -202,6 +205,7 @@ private:
     std::shared_ptr< const rofi::configuration::RofiWorld > _lastRenderedConfiguration;
 
     std::unique_ptr< ChangeColor > _changeColorWindow;
+    std::unique_ptr< RunModules > _runModulesWindow;
     vtkNew< vtkRenderer > _renderer;
     vtkNew< vtkRenderWindow > _renderWindow;
     vtkNew< vtkInteractorStyleTrackballCamera > _interactorStyle;

@@ -11,12 +11,15 @@ set(FILES
     # Required to include header files for Qt compilation
     include/simplesim_client.hpp
     include/changecolor.hpp
+    include/runmodules.hpp
 
     src/simplesim_client.cpp
     src/changecolor.cpp
+    src/runmodules.cpp
 
     src/mainwindow.ui
     src/changecolor.ui
+    src/runmodules.ui
 )
 
 set(CMAKE_AUTOMOC ON)

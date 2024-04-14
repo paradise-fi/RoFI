@@ -33,6 +33,7 @@
 
 using rofi::configuration::UniversalModule;
 using rofi::simplesim::ChangeColor;
+using rofi::simplesim::RunModules;
 using rofi::simplesim::SimplesimClient;
 using rofi::simplesim::detail::ModuleRenderInfo;
 using namespace rofi::configuration::matrices;
@@ -330,6 +331,7 @@ SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
              this,
              SLOT( itemSelected( QTreeWidgetItem * ) ) );
     connect( _ui->changeColor, SIGNAL( triggered() ), this, SLOT( changeColorWindow() ) );
+    connect( _ui->configureButton, SIGNAL( released() ), this, SLOT( runModulesWindow() ) );
 
     this->show();
 }
@@ -426,6 +428,16 @@ void SimplesimClient::changeColorWindow()
     }
 
     _changeColorWindow->show();
+}
+
+void SimplesimClient::runModulesWindow()
+{
+    if ( !_runModulesWindow ) {
+        _runModulesWindow = 
+            std::make_unique< RunModules >( this, getCurrentConfig()->modules().size() );
+    }
+    std::cout << "Opening Run Modules Window" << std::endl;
+    _runModulesWindow->show();
 }
 
 void SimplesimClient::setCamera( Matrix focalPoint )
