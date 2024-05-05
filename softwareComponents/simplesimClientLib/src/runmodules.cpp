@@ -46,7 +46,7 @@ void RunModules::accept()
 
         if ( module_id == 0 )
         {
-            if ( execl( executable, static_cast< char* >( 0 ) ) == -1 ) {
+            if ( execl( executable, executable, static_cast< char* >( 0 ) ) == -1 ) {
                 std::cerr << "Failed to run module: " << std::strerror( errno ) << std::endl;
             }
         }
