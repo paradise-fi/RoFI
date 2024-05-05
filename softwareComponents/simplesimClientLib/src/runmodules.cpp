@@ -8,8 +8,9 @@
 
 using rofi::simplesim::RunModules;
 
-RunModules::RunModules( QWidget* parent, std::size_t moduleCount )
-    : QWidget( parent ), _ui( std::make_unique< Ui::RunModules >() ), _moduleCount( moduleCount ) 
+RunModules::RunModules( bool& isRunning, QWidget* parent, std::size_t moduleCount )
+    : QWidget( parent ), _ui( std::make_unique< Ui::RunModules >() ), 
+      _moduleCount( moduleCount ), _isRunning( isRunning )
 {
     _ui->setupUi( this );
 
@@ -29,7 +30,7 @@ void RunModules::accept()
     std::string simplesimPath = std::string(std::getenv("ROFI_BUILD_DIR")) + "/desktop/bin/rofi-simplesim";
     std::string programPath = std::string(std::getenv("ROFI_BUILD_DIR")) + "/desktop/bin/" + program;
     std::cout << "Running " << programPath << " for " << _moduleCount << " modules in the simulation." << std::endl;
-
+    _isRunning = true;
 
     const char* executable = programPath.c_str();
 

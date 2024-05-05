@@ -216,6 +216,7 @@ private:
 
     int _lastModule = -1;
     std::array< double, 3 > _lastColor;
+    bool _isRunning = false;
 
     std::vector< rofi::configuration::ModuleId > _treeIdMapping;
     std::map< rofi::configuration::ModuleId, detail::ModuleRenderInfo > _moduleRenderInfos;

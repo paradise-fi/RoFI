@@ -6,6 +6,8 @@
 #include <unordered_map>
 #include <unordered_set>
 
+#include <QMessageBox>
+
 #include <vtkActor.h>
 #include <vtkAxesActor.h>
 #include <vtkCamera.h>
@@ -432,11 +434,21 @@ void SimplesimClient::changeColorWindow()
 
 void SimplesimClient::runModulesWindow()
 {
-    if ( !_runModulesWindow ) {
-        _runModulesWindow = 
-            std::make_unique< RunModules >( this, getCurrentConfig()->modules().size() );
+    if ( _isRunning ) 
+    {
+        QMessageBox::warning
+        (
+            this,
+            tr( "Cannot run a simulation." ),
+            tr( "A simulation is already running. You must load up a new configuration first." )
+        );
+        return;
     }
-    std::cout << "Opening Run Modules Window" << std::endl;
+    if ( !_runModulesWindow ) 
+    {
+        _runModulesWindow = 
+            std::make_unique< RunModules >( _isRunning, this, getCurrentConfig()->modules().size() );
+    }
     _runModulesWindow->show();
 }
 

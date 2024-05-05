@@ -244,6 +244,7 @@ if (${BUILD_GAZEBO})
   if (NOT ${BUILD_HEADLESS})
     add_tool(simplesimClient)
     add_tool(simplesim)
+    add_tool(rofiRun)
   endif()
 endif()
 

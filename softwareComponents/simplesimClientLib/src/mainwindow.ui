@@ -157,10 +157,10 @@
   </action>
   <action name="configureRun">
    <property name="text">
-    <string>Configure and run a simulation</string>
+    <string>Run a simulation</string>
    </property>
    <property name="toolTip">
-    <string>Configure and run a simulation</string>
+    <string>Run a simulation</string>
    </property>
   </action>
  </widget>
