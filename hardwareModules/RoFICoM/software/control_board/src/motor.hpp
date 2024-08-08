@@ -6,6 +6,9 @@
 #include <drivers/timer.hpp>
 #include <drivers/gpio.hpp>
 #include <configuration.hpp>
+#include <system/dbg.hpp>
+
+#include "jammonitor.hpp"
 
 class Motor {
 public:
@@ -44,20 +47,37 @@ public:
             _pin.write( false );
         }
     }
+
+    void stop(){
+      set(0);
+    }
 private:
     Timer::Pwm _pwm;
     Gpio::Pin _pin;
 };
+
+namespace SliderShape {
+static const float kRetractedPosition = 0.0;
+static const float kExpandedPosition = 1.0;
+}
+
+/**
+     * Returns direction coeffiecient  -1 or 1 based on direction
+     * @param position
+     * @param goal_position
+     * @return -1 if goal < position, 1 if goal > position, 0 if goal==position
+ */
+float getDirection(float position, float goal);
+float getPower(float position, float goal_position);
 
 class Slider {
 public:
     Slider( Motor motor, const std::array< Gpio::Pin, cfg::motorSensorsCount > & positionPins )
         : _motor( std::move( motor ) ),
           _positionPins( positionPins ),
-          _goal( State::Retracted ),
           _currentState( State::Unknown )
     {
-        motor.set( 0 );
+        motor.stop();
         motor.enable();
 
         for ( auto posPin : _positionPins ) {
@@ -65,118 +85,119 @@ public:
         }
     }
 
-    enum class State { Unknown, Retracted, Expanding, Expanded, Retracting };
+    enum class State {
+      Unknown,
+      Retracted,
+      Expanding,
+      Expanded,
+      Retracting,
+      Stopped,
+      jammed};
 
     void expand() {
         _goal = State::Expanded;
-        _onStateChange();
+        _goalPosition = SliderShape::kExpandedPosition;
+        _jamMonitor.start(_position(), _goalPosition);
+        _currentState = State::Expanding;
     }
 
     void retract() {
         _goal = State::Retracted;
-        _onStateChange();
+        _goalPosition = SliderShape::kRetractedPosition;
+        _jamMonitor.start(_position(), _goalPosition);
+        _currentState = State::Retracting;
     }
 
     void stop() {
-        _goal = State::Unknown;
-        _currentState = State::Unknown;
-        _onStateChange();
-        _move();
+        _goal = State::Stopped;
+        _currentState = State::Stopped;
+        _motor.stop();
     }
 
+    bool moveFinished( float pos) const{
+      switch(_goal) {
+      case State::Expanded:
+        return pos >= _goalPosition;
+      case State::Retracted:
+        return pos <= _goalPosition;
+      default:
+        return true;
+      }
+    }
+
+
     void run() {
-        const auto pos = _position();
-        // TODO:
-        if ( pos == -1 ) {
-            return;
+        float pos = _position();
+        dbg_log(pos);
+        dbg_log((int)_goal);
+
+        if( _goal == State::Expanded || _goal == State::Retracted){
+            if(moveFinished(pos)){
+              _currentState = _goal;
+              _goal = State::Stopped;
+              _motor.stop();
+              return;
+            }
+
+            switch ( _jamMonitor.update(pos)) {
+            case JamStatus::Nominal:
+              _motor.set(100 * getPower(pos, _goalPosition));
+              return;
+            case JamStatus::Stuck:
+              _jamMonitor.startRecovery();
+              [[fallthrough]];
+            case JamStatus::Recovery:
+              _motor.set(100 * getDirection(_goalPosition, pos));
+              return;
+
+            case JamStatus::Fatal:
+              _currentState = State::jammed;
+            }
         }
-        if ( _goal == State::Retracted ) {
-            if ( pos - _endThreshold <= _retractedPosition )
-                _set( State::Retracted );
-            else
-                _set( State::Retracting );
-        }
-        else if ( _goal == State::Expanded ) {
-            if ( ( pos + _endThreshold >= _expandedPosition ) )
-                _set( State::Expanded );
-            else
-                _set( State::Expanding );
-        }
-        _move();
+
+        _motor.stop();
     }
 
     State getGoal() { return _goal; }
 
-// TODO: private:
-    void _move() {
-        const int MAX_POWER = 100;
-        const int pos = _position();
-        if ( _currentState == State::Expanding )
-            _motor.set( _coef( pos ) * -MAX_POWER );
-        else if ( _currentState == State::Retracting )
-            _motor.set( _coef( pos ) * MAX_POWER );
-        else
-            _motor.set( 0 );
-    }
+    /**
+     * Computes position of the connector as value <0.0,1.0>.
+     * 0.0 means fully retracted, 1.0 represents fully extended/locked
+     *
+     * Note: when fully retracted not sensor is actually triggered,
+     *
+     * @return
+     */
+    float _position() const{
+      auto readCount = 0;
+      float readPosSum = 0;
 
-    void _set( State s ) {
-        if ( s != _currentState )
-            _onStateChange();
-        _currentState = s;
-    }
 
-    void _onStateChange() {
-        switch (_goal)
-        {
-        case State::Retracting:
-        case State::Retracted:
-            _goalPosition = _retractedPosition;
-            break;
-        case State::Expanding:
-        case State::Expanded:
-            _goalPosition = _expandedPosition;
-            break;
-        default:
-            break;
+      for( size_t  pos_idx = 0; pos_idx < std::size(_positionPins); pos_idx++ ){
+        if ( ! _positionPins[pos_idx].read() ) {
+          ++readCount;
+          readPosSum += pos_idx + 1;
         }
-    }
+      }
 
-    float _coef( int position ) {
-        const int threshold = 50;
-        const int positionFromGoal = std::abs( position - _goalPosition );
-        if ( positionFromGoal <= _endThreshold ) {
-            return 0;
-        } else if ( positionFromGoal <= threshold ) {
-            const float min_coef = 0.5f;
-            float coef = float(positionFromGoal) / 100 / 2; // + 0.25f;
-            return coef; // std::max(coef, min_coef);
-        }
-        return 1;
-    }
+      if( readCount == 0){
+        return 0.0;
+      }
 
-    int _position() {
-        auto readCount = 0;
-        auto readPosSum = 0;
-        for ( auto i = 0; auto posPin : _positionPins ) {
-            if ( ! posPin.read() ) {
-                ++readCount;
-                readPosSum += i;
-            }
-            ++i;
-        }
-        return 
-        readCount == 0
-        ? -1
-        : ( 100 * readPosSum / ( readCount ) )  / ( _positionPins.size() - 1 );
+      auto average_pos = readPosSum / readCount;
+      return  average_pos / _positionPins.size();
     }
 
     Motor _motor;
-    const std::array< Gpio::Pin, cfg::motorSensorsCount > /* Error with cycle referencing?: decltype( bsp::posPins )*/ & _positionPins;
-    State _goal;
-    State _currentState;
-    uint8_t _goalPosition;
-    const uint8_t _retractedPosition = 25;
-    const uint8_t _expandedPosition = 100;
-    const uint8_t _endThreshold = 30;
+    JamMonitor _jamMonitor;
 
+    const std::array< Gpio::Pin, cfg::motorSensorsCount > _positionPins;
+
+    State _goal = State::Stopped;
+    float _goalPosition;
+
+    State _currentState = State::Unknown;
 };
+
+
+
