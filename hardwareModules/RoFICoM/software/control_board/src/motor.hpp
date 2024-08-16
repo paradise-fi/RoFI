@@ -143,7 +143,7 @@ public:
             case JamStatus::Nominal:
               _motor.set(100 * getPower(pos, _goalPosition));
               return;
-            case JamStatus::Stuck:
+            case JamStatus::Jammed:
               _jamMonitor.startRecovery();
               [[fallthrough]];
             case JamStatus::Recovery:

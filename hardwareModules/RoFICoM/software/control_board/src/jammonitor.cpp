@@ -9,12 +9,24 @@
 #include <cmath>
 
 /**
+ * Helper for checking timeouts using unsigned timestamps.
+ * Check whether given timeout has passed, i.e. timeout < current_time,
+ * takes into account overflows
+ * @param timeout
+ * @param current_time
+ * @return
+ */
+bool isExpired( uint32_t timeout, uint32_t current_time){
+  return (int32_t)(timeout - current_time) < 0;
+}
+
+/**
  * @param initStepTimeoutMs  Timeout of the initial move
  * @param stepTimeoutMs  Timeout for progress in position
  * @param stepDistance Minimal change in position to be considered move
  * @param recoveryTimeoutMs Timeout for recovery move
  * @param recoveryDistance Distance of the recovery move
- * @param recoveryAttempts Maximum allowed recovery moves in single taks before
+ * @param recoveryAttempts Maximum allowed recovery moves in single task before
  * fatal jam
  */
 JamMonitor::JamMonitor(uint32_t initStepTimeoutMs,
@@ -58,23 +70,10 @@ JamStatus JamMonitor::startRecovery() {
 }
 
 /**
- * Check whether given timeout has passed, i.e. timeout < current_time.
- * Takes into account overflows
- * @param timeout
- * @param current_time
- * @return
- */
-bool isExpired( uint32_t timeout, uint32_t current_time){
-    return (int32_t)(timeout - current_time) < 0;
-}
-
-/**
  *
  * @param position current position of motor
  * @return true if jam was detected false otherwise
  */
-
-
 JamStatus JamMonitor::update(float pos) {
   auto remainingDistance = std::abs(_goal - pos);
   switch (_status) {
@@ -88,7 +87,7 @@ JamStatus JamMonitor::update(float pos) {
     if (isExpired(_timeout, HAL_GetTick())) { // timeout has already expired
 
       if (++_attempt <= _kRecoveryAttempts) {
-        _status = JamStatus::Stuck;
+        _status = JamStatus::Jammed;
         break;
       }
       _status = JamStatus::Fatal; // no more attempts
@@ -106,7 +105,7 @@ JamStatus JamMonitor::update(float pos) {
     }
 
     if (isExpired(_timeout, HAL_GetTick())) {
-      // coudl not recover in time
+      // could not recover in time
       _status = JamStatus::Fatal;
     }
 

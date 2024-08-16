@@ -11,26 +11,25 @@
  */
 enum class JamStatus{
   Nominal, //No jam detected
-  Stuck, //System was detected to be stuck, recovery can be attempted
+  Jammed, //System was detected to be stuck, recovery can be attempted
   Recovery, //Monitor is watching for signs of recovery
   Fatal, //Permanently stuck, (result of timeout of recovery operation or, too many failures)
 };
 
 
 /**
- * Object monitors whether mechanism might be stuck based on provided timeouts and changes in positions.
- * If jam is detected, monitor should be informed about start of recovery action.
+ * Class monitors whether mechanism might be stuck based on provided timeouts and changes in positions.
+ * If jam is detected, monitor should be informed about start of recovery action by user.
  */
 class JamMonitor{
 public:
 
-  JamMonitor(uint32_t initStepTimeoutMs  = 200,
-             uint32_t stepTimeoutMs = 150 ,
+  JamMonitor(uint32_t initStepTimeoutMs  = 150,
+             uint32_t stepTimeoutMs = 100 ,
              float stepDistance = 0.0f,
-             uint32_t recoveryTimeoutMs = 400,
+             uint32_t recoveryTimeoutMs = 250,
              float recoveryDistance = 0.15f,
              int recoveryAttempts = 3 );
-
 
   void start(float pos, float goal); //start to monitor new move
   JamStatus startRecovery(); //tells to monitor that recovery started
