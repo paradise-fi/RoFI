@@ -61,12 +61,6 @@ static const float kRetractedPosition = 0.0;
 static const float kExpandedPosition = 1.0;
 }
 
-/**
-     * Returns direction coeffiecient  -1 or 1 based on direction
-     * @param position
-     * @param goal_position
-     * @return -1 if goal < position, 1 if goal > position, 0 if goal==position
- */
 float getDirection(float position, float goal);
 float getPower(float position, float goal_position);
 
@@ -164,7 +158,7 @@ public:
      * Computes position of the connector as value <0.0,1.0>.
      * 0.0 means fully retracted, 1.0 represents fully extended/locked
      *
-     * Note: when fully retracted not sensor is actually triggered,
+     * Note: when fully retracted no sensor is actually triggered,
      *
      * @return
      */

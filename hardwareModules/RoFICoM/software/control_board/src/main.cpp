@@ -219,8 +219,9 @@ int main() {
         bsp::internalSwitchPin, bsp::internalVoltagePin, bsp::internalCurrentPin,
         bsp::externalSwitchPin, bsp::externalVoltagePin, bsp::externalCurrentPin );
     ConnectorStatus connectorStatus ( bsp::connectorSenseA, bsp::connectorSenseB );
-    //Lidar lidar( &*bsp::i2c, bsp::lidarEnablePin, bsp::lidarIRQPin );
-    //lidarInit( lidar, currentLidarMeasurement );
+    Lidar lidar( &*bsp::i2c, bsp::lidarEnablePin, bsp::lidarIRQPin );
+
+    lidarInit( lidar, currentLidarMeasurement );
 
     ConnComInterface connComInterface( std::move( bsp::connectorComm ).value() );
 
@@ -232,7 +233,7 @@ int main() {
                 onCmdVersion( spiInterface );
                 break;
             case Command::STATUS:
-                //onCmdStatus( spiInterface, std::move( b ), connComInterface, connectorStatus, slider, powerInterface, lidar, currentLidarMeasurement );
+                onCmdStatus( spiInterface, std::move( b ), connComInterface, connectorStatus, slider, powerInterface, lidar, currentLidarMeasurement );
                 break;
             case Command::INTERRUPT:
                 onCmdInterrupt( spiInterface, std::move( b ) );
