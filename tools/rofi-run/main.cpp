@@ -1,4 +1,4 @@
-#include "rofirun.h"
+#include "main/rofirun.h"
 
 #include <QApplication>
 
