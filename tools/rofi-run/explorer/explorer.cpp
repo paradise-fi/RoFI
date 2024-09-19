@@ -33,7 +33,7 @@ void Explorer::clearPath()
 
 void Explorer::reject()
 {
-   done(QDialog::Rejected);
+   done( QDialog::Rejected );
 }
 
 void Explorer::accept()
@@ -49,7 +49,7 @@ void Explorer::accept()
         return;
 
     }
-    done(QDialog::Accepted);
+    done( QDialog::Accepted );
 }
 
 void Explorer::setAcceptedExtension( std::string extension ) 

@@ -7,6 +7,7 @@
 #include <atoms/util.hpp>
 
 #include <QListWidgetItem>
+#include <QDialog>
 
 
 namespace Ui
@@ -17,14 +18,16 @@ class RunModules;
 namespace rofi::simplesim
 {
 
-class RunModules : public QWidget {
+class RunModules : public QDialog {
     Q_OBJECT
 
 public:
-    // TODO: Fix passing bool&, it isn't really nice.
-    RunModules( bool& isRunning, QWidget * parent = nullptr, std::size_t moduleCount = 0 );
+    RunModules( QWidget * parent = nullptr );
 
     ~RunModules();
+
+    std::string getProgram();
+    
 signals:
 
 private slots:
@@ -33,9 +36,7 @@ private slots:
 
 private:
     std::unique_ptr< Ui::RunModules > _ui;
-    std::size_t _moduleCount;
-    // TODO: Fix this, it isn't really nice.
-    bool& _isRunning;
+    std::string _program;
 };
 
 } // namespace rofi::simplesim

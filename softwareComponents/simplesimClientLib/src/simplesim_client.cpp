@@ -447,9 +447,30 @@ void SimplesimClient::runModulesWindow()
     if ( !_runModulesWindow ) 
     {
         _runModulesWindow = 
-            std::make_unique< RunModules >( _isRunning, this, getCurrentConfig()->modules().size() );
+            std::make_unique< RunModules >( this );
     }
-    _runModulesWindow->show();
+    // _runModulesWindow->show();
+    if (_runModulesWindow->exec() != QDialog::Accepted)
+    {
+        return;
+    }
+    std::string simplesimPath = std::string( std::getenv( "ROFI_BUILD_DIR" ) ) + "/desktop/bin/rofi-simplesim";
+    std::string program = _runModulesWindow->getProgram();
+    std::string programPath = std::string( std::getenv( "ROFI_BUILD_DIR" ) ) + "/desktop/bin/" + program; 
+    
+    QString executable = QString::fromStdString( programPath );
+    QStringList arguments;
+    
+    std::size_t moduleCount = getCurrentConfig()->modules().size();
+
+    for ( std::size_t i = 0; i < moduleCount; ++i )
+    {
+        std::cout << "Running module " << i << std::endl;
+        _moduleProcesses.push_back( std::make_unique< QProcess >( this ) );
+        _moduleProcesses[i]->start( executable, arguments );
+
+        // ToDo: Capture output in a separate console window.
+    }
 }
 
 void SimplesimClient::setCamera( Matrix focalPoint )

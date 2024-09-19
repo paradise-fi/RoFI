@@ -31,6 +31,7 @@
 #include <QTimer>
 #include <QTreeWidgetItem>
 #include <QWidgetItem>
+#include <QProcess>
 
 
 #define vtkTypeMacro_( thisClass, superClass ) \
@@ -217,6 +218,7 @@ private:
     int _lastModule = -1;
     std::array< double, 3 > _lastColor;
     bool _isRunning = false;
+    std::vector< std::unique_ptr< QProcess > > _moduleProcesses;
 
     std::vector< rofi::configuration::ModuleId > _treeIdMapping;
     std::map< rofi::configuration::ModuleId, detail::ModuleRenderInfo > _moduleRenderInfos;
