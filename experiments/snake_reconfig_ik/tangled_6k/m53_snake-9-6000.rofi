@@ -106,4 +106,3 @@ E 25 A -X E -X B 28
 E 25 B -X N -Z A 26
 E 25 B -Z N +X A 27
 E 28 A -X E +X B 29
-

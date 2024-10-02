@@ -24,4 +24,3 @@ E 1 B -Z W +X A 10
 E 0 A -X S +X B 5
 E 0 B +X W +X A 6
 E 0 B -X W -X A 7
-

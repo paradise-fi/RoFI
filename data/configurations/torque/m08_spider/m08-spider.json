@@ -1,0 +1,193 @@
+{
+    "moduleJoints": [
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 0
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "A-Z",
+                "id": 1
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 1
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "A-Z",
+                "id": 2
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 2
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "A-Z",
+                "id": 3
+            }
+        },
+        {
+            "from": {
+                "connector": "A-X",
+                "id": 3
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "A-Z",
+                "id": 0
+            }
+        },
+        {
+            "from": {
+                "connector": "B-Z",
+                "id": 0
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "A-Z",
+                "id": 4
+            }
+        },
+        {
+            "from": {
+                "connector": "B-Z",
+                "id": 1
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "A-Z",
+                "id": 5
+            }
+        },
+        {
+            "from": {
+                "connector": "B-Z",
+                "id": 2
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "A-Z",
+                "id": 6
+            }
+        },
+        {
+            "from": {
+                "connector": "B-Z",
+                "id": 3
+            },
+            "orientation": "North",
+            "to": {
+                "connector": "A-Z",
+                "id": 7
+            }
+        }
+    ],
+    "modules": [
+        {
+            "alpha": -30.0,
+            "beta": 50.0,
+            "gamma": 0.0,
+            "id": 0,
+            "type": "universal"
+        },
+        {
+            "alpha": -30.0,
+            "beta": 50.0,
+            "gamma": 0.0,
+            "id": 1,
+            "type": "universal"
+        },
+        {
+            "alpha": -30.0,
+            "beta": 50.0,
+            "gamma": 0.0,
+            "id": 2,
+            "type": "universal"
+        },
+        {
+            "alpha": -30.0,
+            "beta": 50.0,
+            "gamma": 0.0,
+            "id": 3,
+            "type": "universal"
+        },
+        {
+            "alpha": -60.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 4,
+            "type": "universal"
+        },
+        {
+            "alpha": -60.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 5,
+            "type": "universal"
+        },
+        {
+            "alpha": -60.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 6,
+            "type": "universal"
+        },
+        {
+            "alpha": -60.0,
+            "beta": 0.0,
+            "gamma": 0.0,
+            "id": 7,
+            "type": "universal"
+        }
+    ],
+    "spaceJoints": [
+        {
+            "joint": {
+                "positions": [],
+                "sourceToDestination": [
+                    [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        1.0,
+                        0.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        1.0,
+                        0.0
+                    ],
+                    [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ]
+                ],
+                "type": "rigid"
+            },
+            "point": [
+                0.0,
+                0.0,
+                0.0
+            ],
+            "to": {
+                "component": 6,
+                "id": 0
+            }
+        }
+    ]
+}

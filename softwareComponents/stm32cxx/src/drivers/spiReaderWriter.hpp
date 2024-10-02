@@ -33,7 +33,7 @@ struct SpiReaderWriter {
         LL_DMA_SetMemoryAddress( _rxChannel, _rxChannel, uint32_t( _rxBlock.get() + offset ) );
         LL_DMA_SetDataLength( _rxChannel, _rxChannel, size );
 
-        _rxChannel.onComplete( [&, callback, size]() {
+        _rxChannel.onComplete( [this, callback, size]() {
             LL_DMA_DisableChannel( _rxChannel, _rxChannel );
             int read = size - LL_DMA_GetDataLength( _rxChannel, _rxChannel );
             callback( std::move( _rxBlock ), read );
@@ -58,7 +58,7 @@ struct SpiReaderWriter {
         LL_DMA_SetMemoryAddress( DMA1, _txChannel, uint32_t( _txBlock.get() + offset ) );
         LL_DMA_SetDataLength( DMA1, _txChannel, size );
 
-        _txChannel.onComplete( [&, callback, size]() {
+        _txChannel.onComplete( [this, callback, size]() {
             LL_DMA_DisableChannel( DMA1, _txChannel );
             int sent = size - LL_DMA_GetDataLength( DMA1, _txChannel );
             callback( std::move( _txBlock ), sent );

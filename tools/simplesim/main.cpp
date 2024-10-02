@@ -8,6 +8,7 @@
 #include "configuration/rofiworld.hpp"
 #include "configuration/universalModule.hpp"
 #include "message_server.hpp"
+#include "simplesim/collision.hpp"
 #include "simplesim/packet_filters/py_filter.hpp"
 #include "simplesim/simplesim.hpp"
 #include "simplesim_client.hpp"
@@ -43,9 +44,16 @@ int main( int argc, char * argv[] )
     }
     auto packetFilter = opts.getPyPacketFilter();
 
+    // Collision model selection
+    auto result = getCollisionPtr( opts.collision );
+    if ( !result.has_value() ) {
+        cli.fail( EXIT_FAILURE, result.assume_error() );
+        return cli.printError( std::cerr );
+    }
+    std::shared_ptr< rofi::configuration::Collision > collModel = result.assume_value();
+
     std::cout << "Starting gazebo server" << std::endl;
     auto msgServer = rofi::msgs::Server::createAndLoopInThread( "simplesim" );
-
 
     // Setup server
     auto server = simplesim::Simplesim(
@@ -55,6 +63,7 @@ int main( int argc, char * argv[] )
                     return packetFilter.filter( std::move( packet ) );
                 }
                 : simplesim::PacketFilter::FilterFunction{},
+            collModel,
             opts.verbose );
 
     // Setup client

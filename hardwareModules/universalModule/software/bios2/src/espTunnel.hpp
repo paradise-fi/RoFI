@@ -48,4 +48,3 @@ private:
     UsbConfiguration *_usbConfiguration;
     std::unique_ptr< UsbCdcInterface< PrimaryAllocator > > _usbCdc;
 };
-

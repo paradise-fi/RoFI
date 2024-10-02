@@ -57,4 +57,3 @@ with SmartDisplay(size=(1000, 1000)) as display:
             sys.exit(p.returncode)
         except subprocess.TimeoutExpired:
             pass
-

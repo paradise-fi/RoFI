@@ -21,6 +21,7 @@ LockedModuleCommunication::LockedModuleCommunication( CommandHandler & commandHa
     assert( !moduleTopicName.empty() );
     assert( _pub );
     assert( _sub );
+    _logger.logSubscribe( "~/" + moduleTopicName + "/control" );
 }
 
 void LockedModuleCommunication::onRofiCmd( const LockedModuleCommunication::RofiCmdPtr & msg )

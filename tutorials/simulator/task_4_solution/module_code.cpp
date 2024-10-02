@@ -11,15 +11,6 @@
 namespace hal = rofi::hal;
 using namespace std::chrono_literals;
 
-void blockingWait( std::chrono::milliseconds delayMs )
-{
-    auto waitEndPromise = std::promise< void >();
-
-    hal::RoFI::wait( static_cast< int >( delayMs.count() ), [ & ] { waitEndPromise.set_value(); } );
-
-    waitEndPromise.get_future().get();
-}
-
 void blockingMove( hal::Joint joint, Angle pos, float speedMultiplier = 0.8f )
 {
     auto moveEndPromise = std::promise< void >();

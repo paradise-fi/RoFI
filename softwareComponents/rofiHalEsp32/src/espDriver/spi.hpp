@@ -88,8 +88,6 @@ inline void spiRead( spi_device_handle_t dev, uint8_t* where, int count ) {
     memset( where, 0xAA, count );
     t.length = t.rxlength = 8 * count;
     spi_device_transmit( dev, &t );
-    std::cout << "Spi READ: " << hexDump( where, count ) << "\n";
-    std::cout << "Spi READ: " << charDump( where, count ) << "\n";
 }
 
 template < size_t size >
@@ -99,8 +97,6 @@ void spiRead( spi_device_handle_t dev, uint8_t ( &where )[ size ] ) {
     memset( where, 0xAA, size );
     t.length = t.rxlength = 8 * size;
     spi_device_transmit( dev, &t );
-    std::cout << "Spi READ: " << hexDump( where, size ) << "\n";
-    std::cout << "Spi READ: " << charDump( where, size ) << "\n";
 }
 
 inline void spiWrite( spi_device_handle_t dev, uint8_t* what, int count ) {

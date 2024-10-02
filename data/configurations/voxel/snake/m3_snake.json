@@ -1,0 +1,82 @@
+{
+    "bodies": [
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                0
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                1
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                2
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                3
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": true
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                4
+            ],
+            "shoe_rotated": false
+        },
+        {
+            "body_dir": {
+                "axis": "Z",
+                "is_positive": false
+            },
+            "joint_pos": 0,
+            "pos": [
+                0,
+                0,
+                5
+            ],
+            "shoe_rotated": false
+        }
+    ]
+}

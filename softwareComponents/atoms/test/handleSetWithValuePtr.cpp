@@ -57,4 +57,3 @@ TEST_CASE( "HandleSet + ValuePtr" ) {
     CHECK( m2.num_ptr == &x );
     CHECK( m.num_ptr == &x );
 }
-

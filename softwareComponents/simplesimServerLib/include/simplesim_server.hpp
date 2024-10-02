@@ -34,6 +34,13 @@ public:
                 .desc( "Python packet filter file" );
 
         cli.opt( &verbose, "v verbose" ).desc( "Run simulator in verbose mode" );
+
+        cli.opt( &collision, "c collision", CollisionModel::Simple )
+                .desc( "Collision model to use")
+                .choice( CollisionModel::None, 
+                    "none", "No collision detection" )
+                .choice( CollisionModel::Simple, 
+                    "simple", "Simple collision - each component is a unit sphere");
     }
 
     auto readInputWorldFile() const -> atoms::Result< rofi::configuration::RofiWorld >
@@ -63,6 +70,7 @@ public:
     std::optional< std::filesystem::path > pyPacketFilterFile = {};
 
     bool verbose = {};
+    CollisionModel collision = CollisionModel::Simple;
 };
 
 } // namespace rofi::simplesim

@@ -5,4 +5,3 @@ M 0 90 90 -90
 E 1 A -X S -X B 2
 E 1 B -X W -X A 2
 E 0 A +X W -Z B 1
-

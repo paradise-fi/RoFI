@@ -34,4 +34,3 @@ branch has an extra build step which checks out all branches pushed to origin
 and builds them. For security reasons, builds cannot trigger other builds,
 therefore the master branch is built every night in order to ensure the
 documentation is up-to-date.
-

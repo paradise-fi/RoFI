@@ -12,4 +12,3 @@ E 2 B -X W -X A 3
 E 1 A +X E -X B 3
 E 0 A -X E +X B 2
 E 0 B -Z W -Z A 5
-

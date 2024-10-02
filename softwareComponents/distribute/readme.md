@@ -103,4 +103,3 @@ Examples:
 ```
 ./distribute.sh -i ../data/init.in -g ../data/goal.in -d processing -a full -e dMatrix -f host-file
 ```
-

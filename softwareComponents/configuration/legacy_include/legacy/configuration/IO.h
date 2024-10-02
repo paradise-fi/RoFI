@@ -95,8 +95,13 @@ namespace IO
     inline std::string toString(const std::vector< Configuration > &path)
     {
         std::stringstream out;
+        bool first = true;
         for (const auto &config : path) {
-            out << toString(config) << std::endl;
+            if (!first) {
+                out << std::endl;
+            }
+            first = false;
+            out << toString(config);
         }
         return out.str();
     }
@@ -141,8 +146,13 @@ namespace IO
     inline std::string toString(const std::vector< Action > &actions)
     {
         std::stringstream out;
+        bool first = true;
         for (const Action &action : actions) {
-            out << toString(action) << std::endl;
+            if (!first) {
+                out << std::endl;
+            }
+            first = false;
+            out << toString(action);
         }
 
         return out.str();

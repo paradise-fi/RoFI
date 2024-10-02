@@ -77,10 +77,8 @@ std::optional< std::pair< const Component&, roficom::Orientation > > Component::
         throw std::runtime_error( "rofiworld is not prepared" );
 
     auto thisAbsPosition = getPosition();
-    for ( auto& moduleInfo : world.modules() ) {
-        assert( moduleInfo.module );
-
-        for ( const Component& nearConnector : moduleInfo.module->connectors() ) {
+    for ( auto& rModule : world.modules() ) {
+        for ( const Component& nearConnector : rModule.connectors() ) {
             assert( nearConnector.type == ComponentType::Roficom );
 
             static constexpr auto allOrientations = std::array{ roficom::Orientation::North,

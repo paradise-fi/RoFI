@@ -13,11 +13,10 @@
 #include <thread>
 #include <utility>
 
-#include <boost/uuid/random_generator.hpp>
-
 #include "connector_worker.hpp"
 #include "joint_worker.hpp"
 #include "publish_worker.hpp"
+#include "session_id.hpp"
 #include "wait_worker.hpp"
 
 #include <distributorReq.pb.h>
@@ -25,58 +24,11 @@
 #include <rofiCmd.pb.h>
 #include <rofiResp.pb.h>
 
-#ifndef SESSION_ID
-#define SESSION_ID boost::uuids::random_generator()()
-#endif
-
 
 namespace
 {
 using namespace rofi::hal;
 namespace msgs = rofi::messages;
-
-class SessionId {
-public:
-    static const SessionId & get()
-    {
-        static SessionId instance = SessionId( SESSION_ID );
-        return instance;
-    }
-
-    const std::string & bytes() const
-    {
-        return _bytes;
-    }
-
-private:
-    template < typename T, std::enable_if_t< std::is_integral_v< T >, int > = 0 >
-    constexpr SessionId( T id )
-    {
-        _bytes.reserve( sizeof( T ) );
-
-        for ( size_t i = 0; i < sizeof( T ); i++ ) {
-            _bytes.push_back( *( reinterpret_cast< char * >( &id ) + i ) );
-        }
-    }
-
-    template < typename T,
-               std::enable_if_t< sizeof( typename T::value_type ) == sizeof( char ), int > = 0 >
-    constexpr SessionId( T id )
-    {
-        _bytes.reserve( id.size() );
-
-        for ( auto & c : id ) {
-            static_assert( sizeof( decltype( c ) ) == sizeof( char ) );
-            _bytes.push_back( reinterpret_cast< char & >( c ) );
-        }
-    }
-
-    SessionId( const SessionId & other ) = delete;
-    SessionId & operator=( const SessionId & other ) = delete;
-
-private:
-    std::string _bytes;
-};
 
 class ConnectorSim;
 class JointSim;
@@ -245,13 +197,34 @@ public:
         return descriptor;
     }
 
+    Partition getRunningPartition() override {
+        throw std::logic_error( "getRunningPartition not implemented" );
+    }
+
+    UpdatePartition initUpdate() override {
+        throw std::logic_error( "initUpdate not implemented" );
+    }
+
+    void reboot() override {
+        throw std::logic_error( "reboot not implemented" );
+    }
+
     void onJointResp( const msgs::JointResp & resp );
     void onConnectorResp( const msgs::ConnectorResp & resp );
     void onDescriptionResp( const msgs::RofiResp & resp );
     void onWaitResp( const msgs::RofiResp & resp );
     void onResponse( const msgs::RofiResp & resp );
 
-    void wait( int ms, std::function< void() > callback )
+    void sleep( int ms )
+    {
+        assert( ms >= 0 );
+
+        auto waitEndPromise = std::promise< void >();
+        postpone( static_cast< int >( ms ), [ &waitEndPromise ] { waitEndPromise.set_value(); } );
+        waitEndPromise.get_future().get();
+    }
+
+    void postpone( int ms, std::function< void() > callback )
     {
         assert( callback );
         assert( ms >= 0 );
@@ -435,6 +408,12 @@ public:
         result.orientation = static_cast< ConnectorOrientation >( state.orientation() );
         return result;
     }
+
+    void setDistanceMode( LidarDistanceMode ) override
+    {
+        throw std::logic_error( "Unimplemented in simulator" );
+    }
+
 
 private:
     const int _connectorNumber;
@@ -794,7 +773,18 @@ RoFI RoFI::getRemoteRoFI( RoFI::Id remoteId )
     return RoFI( std::move( remoteRoFI ) );
 }
 
-void RoFI::wait( int ms, std::function< void() > callback )
+void RoFI::sleep( int ms )
+{
+    if ( ms < 0 ) {
+        throw std::invalid_argument( "negative wait time" );
+    }
+
+    auto localRoFI = std::dynamic_pointer_cast< RoFISim >( RoFI::getLocalRoFI()._impl );
+    assert( localRoFI );
+    localRoFI->sleep( ms );
+}
+
+void RoFI::postpone( int ms, std::function< void() > callback )
 {
     if ( !callback ) {
         throw std::invalid_argument( "empty callback" );
@@ -806,7 +796,7 @@ void RoFI::wait( int ms, std::function< void() > callback )
 
     auto localRoFI = std::dynamic_pointer_cast< RoFISim >( RoFI::getLocalRoFI()._impl );
     assert( localRoFI );
-    localRoFI->wait( ms, std::move( callback ) );
+    localRoFI->postpone( ms, std::move( callback ) );
 }
 
 } // namespace rofi::hal

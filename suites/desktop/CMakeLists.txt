@@ -133,6 +133,7 @@ endif()
 set_target_properties(cxxopts PROPERTIES INTERFACE_SYSTEM_INCLUDE_DIRECTORIES $<TARGET_PROPERTY:cxxopts,INTERFACE_INCLUDE_DIRECTORIES>)
 
 find_package(Armadillo REQUIRED)
+find_package(CLP REQUIRED)
 
 if (${BUILD_GAZEBO})
   find_package(gazebo REQUIRED)
@@ -180,11 +181,16 @@ endif()
 add_component(atoms)
 add_component(parsing)
 add_component(configuration)
+<<<<<<< HEAD
 add_component(geometry)
 add_component(voxel)
+=======
+add_component(voxelSerialization)
+>>>>>>> master
 add_component(kinematics)
 add_component(reconfig)
-add_component(isoreconfig)
+add_component(shapeReconfig)
+add_component(torqueComputation)
 if (${BUILD_SMTRECONFIG})
   add_component(smtreconfig)
 endif()
@@ -219,7 +225,7 @@ if (${BUILD_GAZEBO})
 endif()
 
 if (${BUILD_RUST})
-  add_component(rust-rofi_voxel)
+  add_component(voxelReconfig)
 endif()
 
 
@@ -229,6 +235,7 @@ add_tool(emptyDockFill)
 add_tool(topology2dot)
 add_tool(ik)
 add_tool(tangle)
+add_tool(torqueCompute)
 
 if (NOT ${BUILD_HEADLESS})
   add_tool(visualizer)
@@ -246,7 +253,7 @@ if (${BUILD_GAZEBO})
 endif()
 
 if (${BUILD_RUST})
-  add_tool(rust-rofi_voxel_reconfig)
+  add_tool(voxel)
 endif()
 
 
@@ -263,4 +270,3 @@ add_subdirectory($ENV{ROFI_ROOT}/softwareComponents/rofiHalEsp32/test-logic rofi
 list_targets()
 list_dependencies()
 list_sources()
-

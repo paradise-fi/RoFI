@@ -4,6 +4,7 @@
 #include <concepts>
 #include <functional>
 #include <string>
+#include <tuple>
 #include <variant>
 
 
@@ -66,6 +67,9 @@ namespace detail
  *
  * The `Result` class template is designed to be an almost drop-in replacement
  * for `std::optional` except the construction.
+ *
+ * The `Result` is similar to `std::variant` and should be treated as such.
+ * Specifically use `std::monostate` if `T` or `E` types don't have a value.
  */
 template < typename T, typename E = std::string >
 class [[nodiscard]] Result {

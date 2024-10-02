@@ -9,11 +9,13 @@
 #include <map>
 #include <ranges>
 
-#include <atoms/containers.hpp>
 #include <atoms/result.hpp>
 #include <atoms/units.hpp>
+#include <atoms/containers.hpp>
 #include <atoms/util.hpp>
 #include <fmt/format.h>
+
+
 
 #include <configuration/joints.hpp>
 
@@ -420,34 +422,38 @@ private:
     friend class RofiWorld;
 };
 
-/**
- * \brief Collision model ignoring collision
- */
-class NoCollision {
+class Collision {
 public:
     /**
      * \brief Decide if two modules collide
      */
-    bool operator()( const Module& /* a */, const Module& /* b */, Matrix /* posA */, Matrix /* posB */ ) {
+    virtual bool operator()( const Module& /* a */, const Module& /* b */, Matrix /* posA */, Matrix /* posB */ ) const = 0;
+
+    virtual ~Collision() = default; 
+};
+
+/**
+ * \brief Completely ignores any collisions
+ */
+class NoCollision : public Collision {
+public:
+    bool operator()( const Module& /* a */, const Module& /* b */, Matrix /* posA */, Matrix /* posB */ ) const {
         return false;
     }
 };
 
 /**
- * \brief Collision model taking into account only spherical collisions of the
- * shoes
+ * \brief Each module component takes up a unit sphere of space
  */
-class SimpleCollision {
+class SimpleCollision : public Collision {
 public:
-    /**
-     * \brief Decide if two modules collide
-     */
-    bool operator()( const Module& a, const Module& b, Matrix posA, Matrix posB ) {
+    bool operator()( const Module& a, const Module& b, Matrix posA, Matrix posB ) const {
+        using namespace rofi::configuration::matrices;
+        
         for ( auto pA : a.getOccupiedRelativePositions() ) {
             for ( auto pB : b.getOccupiedRelativePositions() ) {
-                if ( rofi::configuration::matrices::equals( static_cast< Matrix >( posA * pA ), posB * pB ) ) {
+                if ( distance( center( posA * pA ), center( posB * pB ) ) < 1 ) // unit sphere
                     return true;
-                }
             }
         }
 
@@ -571,10 +577,41 @@ public:
     }
 
     /**
-     * \brief Get a container of ModuleInfo
+     * \brief Get a range of modules
      */
-    const auto& modules() const {
-        return _modules;
+    auto modules() const -> std::ranges::range auto
+    {
+        return std::views::transform( _modules,
+                                      []( const ModuleInfo & moduleInfo ) -> const Module & {
+                                          assert( moduleInfo.module );
+                                          return *moduleInfo.module;
+                                      } );
+    }
+
+    /**
+     * \brief Get a range of modules
+     */
+    auto modules() -> std::ranges::range auto
+    {
+        return std::views::transform( _modules, []( ModuleInfo & moduleInfo ) -> Module & {
+            assert( moduleInfo.module );
+            return *moduleInfo.module;
+        } );
+    }
+
+    /**
+     * \brief Get a range of modules with their absolute positions
+     *
+     * `this` has to be prepared.
+     */
+    auto modulesWithAbsPos() const -> std::ranges::range auto
+    {
+        assert( isPrepared() && "The world has to be prepared" );
+        return std::views::transform( _modules, []( const ModuleInfo & moduleInfo ) {
+            assert( moduleInfo.module );
+            assert( moduleInfo.absPosition && "Position has to be available if world is prepared" );
+            return std::pair< const Module &, Matrix >{ *moduleInfo.module, *moduleInfo.absPosition };
+        } );
     }
 
     /**
@@ -622,8 +659,7 @@ public:
      *
      * \returns result - the error gives textual description of the reason for invalidity
      */
-    template < typename Collision = SimpleCollision >
-    atoms::Result< std::monostate > isValid( Collision collisionModel = Collision() ) const {
+    atoms::Result< std::monostate > isValid( const Collision& collisionModel = SimpleCollision() ) const {
         if ( !_prepared ) {
             return atoms::result_error< std::string >( "Configuration is not prepared" );
         }
@@ -631,7 +667,7 @@ public:
         for ( const ModuleInfo& m : _modules ) {
             for ( const ModuleInfo& n : _modules ) {
                 if ( n.module->_id >= m.module->_id ) // Collision is symmetric
-                    break;
+                    continue;
                 if ( collisionModel( *n.module, *m.module, *n.absPosition, *m.absPosition ) ) {
                     return atoms::result_error( fmt::format( "Modules {} and {} collide",
                         m.module->_id, n.module->_id ) );
@@ -652,8 +688,7 @@ public:
      *
      * \returns result - the error gives textual description of the reason for invalidity
      */
-    template < typename Collision = SimpleCollision >
-    atoms::Result< std::monostate > validate( Collision collisionModel = Collision() ) {
+    atoms::Result< std::monostate > validate( const Collision& collisionModel = SimpleCollision() ) {
         if ( !_prepared ) {
             if ( auto result = prepare(); !result ) {
                 return result;
@@ -683,8 +718,16 @@ public:
         if ( !_prepared )
             prepare().get_or_throw_as< std::logic_error >();
         if ( !_idMapping.contains( id ) )
-            throw std::logic_error( "bad access: rofi world does not containt module with such id" );
+            throw std::out_of_range( "bad access: rofi world does not contain module with such id" );
         return _modules[ _idMapping[ id ] ].absPosition.value();
+    }
+
+    Matrix getModulePosition( ModuleId id ) const {
+        if ( !_prepared )
+            throw std::logic_error( "getModulePosition: rofiworld is not prepared" );
+        if ( !_idMapping.contains( id ) )
+            throw std::out_of_range( "bad access: rofi world does not contain module with such id" );
+        return _modules[ _idMapping.at( id ) ].absPosition.value();
     }
 
     void disconnect( RoficomJointHandle h );

@@ -20,14 +20,14 @@ inline const Vector X = arma::vec4({1,0,0,0});
 inline const Vector Y = arma::vec4({0,1,0,0});
 inline const Vector Z = arma::vec4({0,0,1,0});
 
-inline bool equals( const Matrix& a, const Matrix& b)
+inline bool equals( const Matrix& a, const Matrix& b, double prec = precision)
 {
-    return arma::approx_equal( a, b, "absdiff", 1/precision);
+    return arma::approx_equal( a, b, "absdiff", 1/prec);
 }
 
-inline bool equals( const Vector& a, const Vector& b)
+inline bool equals( const Vector& a, const Vector& b, double prec = precision)
 {
-    return arma::approx_equal( a, b, "absdiff", 1/precision);
+    return arma::approx_equal( a, b, "absdiff", 1/prec);
 }
 
 inline Vector column(const Matrix &matrix, int col)
@@ -40,7 +40,7 @@ inline Vector center(const Matrix &m)
     return column(m, 3);
 }
 
-inline double distance(const Vector& a, const Vector& b)
+inline double distance(const Vector& a, const Vector& b, double prec = precision)
 {
     Vector diff = a - b;
     double res = 0;
@@ -48,10 +48,10 @@ inline double distance(const Vector& a, const Vector& b)
     {
         res += diff(i) * diff(i);
     }
-    return std::round(sqrt(res) * precision) / precision;
+    return std::round(sqrt(res) * prec) / prec;
 }
 
-inline double sqDistance(const Vector& a, const Vector& b)
+inline double sqDistance(const Vector& a, const Vector& b, double prec = precision)
 {
     Vector diff = a - b;
     double res = 0;
@@ -59,30 +59,30 @@ inline double sqDistance(const Vector& a, const Vector& b)
     {
         res += diff(i) * diff(i);
     }
-    return std::round(res * precision) / precision;
+    return std::round(res * prec) / prec;
 }
 
-inline double distance(const Matrix& a, const Matrix& b)
+inline double distance(const Matrix& a, const Matrix& b, double prec = precision)
 {
     double res = 0;
     for (int r = 0; r < 4; ++r)
     {
-        res += distance(column(a, r), column(b, r));
+        res += distance(column(a, r), column(b, r), prec);
     }
     return res;
 }
 
-inline double sqDistance(const Matrix& a, const Matrix& b)
+inline double sqDistance(const Matrix& a, const Matrix& b, double prec = precision)
 {
     double res = 0;
     for (int r = 0; r < 4; ++r)
     {
-        res += sqDistance(column(a, r), column(b, r));
+        res += sqDistance(column(a, r), column(b, r), prec);
     }
     return res;
 }
 
-inline double centerSqDistance(const Matrix& a, const Matrix& b)
+inline double centerSqDistance(const Matrix& a, const Matrix& b, double prec = precision)
 {
     double res = 0;
     for (int i = 0; i < 4; ++i)
@@ -90,10 +90,10 @@ inline double centerSqDistance(const Matrix& a, const Matrix& b)
         double diff = a(i, 3) - b(i, 3);
         res += diff * diff;
     }
-    return std::round(res * precision) / precision;
+    return std::round(res * prec) / prec;
 }
 
-inline double centerDistance(const Matrix& a, const Matrix& b)
+inline double centerDistance(const Matrix& a, const Matrix& b, double prec = precision)
 {
     double res = 0;
     for (int i = 0; i < 4; ++i)
@@ -101,17 +101,17 @@ inline double centerDistance(const Matrix& a, const Matrix& b)
         double diff = a(i, 3) - b(i, 3);
         res += diff * diff;
     }
-    return std::round(sqrt(res) * precision) / precision;
+    return std::round(sqrt(res) * prec) / prec;
 }
 
-inline double distFromVec(const Matrix& a, const Vector& v) {
+inline double distFromVec(const Matrix& a, const Vector& v, double prec = precision) {
     double res = 0;
     for (int i = 0; i < 4; ++i)
     {
         double diff = a(i, 3) - v(i);
         res += diff * diff;
     }
-    return std::round(sqrt(res) * precision) / precision;
+    return std::round(sqrt(res) * prec) / prec;
 }
 
 inline unsigned newyorkCenterDistance(const Matrix& a, const Matrix& b)
@@ -126,7 +126,7 @@ inline unsigned newyorkCenterDistance(const Matrix& a, const Matrix& b)
     return res;
 }
 
-inline double moduleDistance(const Matrix& a1, const Matrix& a2, const Matrix& b1, const Matrix& b2)
+inline double moduleDistance(const Matrix& a1, const Matrix& a2, const Matrix& b1, const Matrix& b2, double prec = precision)
 {
     double res = 0;
     for (int i = 0; i < 4; ++i)
@@ -134,10 +134,10 @@ inline double moduleDistance(const Matrix& a1, const Matrix& a2, const Matrix& b
         double diff = a1(i, 3) + a2(i, 3) - b1(i, 3) - b2(i, 3);
         res += diff * diff;
     }
-    return std::round(sqrt(res/4) * precision) / precision;
+    return std::round(sqrt(res/4) * prec) / prec;
 }
 
-inline double sqDistVM(const Matrix&a , const Vector& c)
+inline double sqDistVM(const Matrix&a , const Vector& c, double prec = precision)
 {
     double res = 0;
     for (int i = 0; i < 4; ++i)
@@ -145,7 +145,7 @@ inline double sqDistVM(const Matrix&a , const Vector& c)
         double diff = a(i, 3) - c(i);
         res += diff * diff;
     }
-    return std::round(res * precision) / precision;
+    return std::round(res * prec) / prec;
 
 }
 

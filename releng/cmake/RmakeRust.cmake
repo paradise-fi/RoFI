@@ -1,11 +1,9 @@
-if(CMAKE_BUILD_TYPE STREQUAL "" OR CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set(CARGO_BUILD_TYPE debug)
-    set(CARGO_BUILD_TYPE_FLAG "")
-else()
-    set(CARGO_BUILD_TYPE release)
-    set(CARGO_BUILD_TYPE_FLAG "--release")
-endif()
-
+set(CARGO_BUILD_TYPE
+    $<$<CONFIG:Debug>:dev>
+    $<$<CONFIG:Release>:release>
+    $<$<CONFIG:RelWithDebInfo>:rel-with-deb-info>
+    $<$<CONFIG:MinSizeRel>:min-size-rel>
+)
 
 function(add_rust_library TARGET_NAME)
     set(FLAG_KEYWORDS ALL_FEATURES)
@@ -51,7 +49,7 @@ function(add_rust_library TARGET_NAME)
                 -Z unstable-options
                 --out-dir "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
 
-                ${CARGO_BUILD_TYPE_FLAG}
+                --profile ${CARGO_BUILD_TYPE}
                 --manifest-path "${RRC_MANIFEST_PATH}"
                 --target-dir "${CMAKE_CURRENT_BINARY_DIR}"
                 ${ALL_FEATURES_FLAG}
@@ -106,7 +104,7 @@ function(add_rust_executable TARGET_NAME)
                 -Z unstable-options
                 --out-dir "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
 
-                ${CARGO_BUILD_TYPE_FLAG}
+                --profile ${CARGO_BUILD_TYPE}
                 --manifest-path "${RRC_MANIFEST_PATH}"
                 --target-dir "${CMAKE_CURRENT_BINARY_DIR}"
                 ${ALL_FEATURES_FLAG}
@@ -165,7 +163,7 @@ function(add_rust_tests TARGET_NAME)
                 ${PACKAGE_FLAG}
                 --message-format=json-render-diagnostics
 
-                ${CARGO_BUILD_TYPE_FLAG}
+                --profile ${CARGO_BUILD_TYPE}
                 --manifest-path "${RRC_MANIFEST_PATH}"
                 --target-dir "${CMAKE_CURRENT_BINARY_DIR}"
                 ${ALL_FEATURES_FLAG}

@@ -9,15 +9,6 @@
 namespace hal = rofi::hal;
 using namespace std::chrono_literals;
 
-void blockingWait( std::chrono::milliseconds delayMs )
-{
-    auto waitEndPromise = std::promise< void >();
-
-    hal::RoFI::wait( static_cast< int >( delayMs.count() ), [ & ] { waitEndPromise.set_value(); } );
-
-    waitEndPromise.get_future().get();
-}
-
 hal::PBuf createPacket( const std::string & message )
 {
     auto packet = hal::PBuf::allocate( int( message.size() ) );
@@ -48,7 +39,7 @@ int main()
     } );
 
     for ( int i = 0; true; i++ ) {
-        blockingWait( 1s );
+        sleep( 1000 );
         connector.send( 1, createPacket( "Message no. " + std::to_string( i ) ) );
     }
 }

@@ -1,0 +1,25 @@
+{
+    "modules": [
+        {
+            "id": 42,
+            "type": "universal",
+            "alpha": 0,
+            "beta": 0,
+            "gamma": 0
+        }
+    ],
+    "spaceJoints": [
+        {
+            "point": [ 0, 0, 0 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity"
+            },
+            "to": {
+                "id": 42,
+                "component": 0
+            }
+        }
+    ],
+    "moduleJoints": []
+}

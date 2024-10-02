@@ -20,7 +20,7 @@ public:
 
     void logSending( std::string_view topic, const google::protobuf::Message & msg )
     {
-        if ( !createFormattedString() ) {
+        if ( !loggingEnabled() ) {
             return;
         }
 
@@ -29,9 +29,10 @@ public:
                           topic,
                           msg.ShortDebugString() ) );
     }
+
     void logReceived( std::string_view topic, const google::protobuf::Message & msg )
     {
-        if ( !createFormattedString() ) {
+        if ( !loggingEnabled() ) {
             return;
         }
 
@@ -41,8 +42,31 @@ public:
                           msg.ShortDebugString() ) );
     }
 
+    void logSubscribe( std::string_view topic )
+    {
+        if ( !loggingEnabled() ) {
+            return;
+        }
+
+        log( fmt::format( "{:%H:%M:%S} Subscribing to '{}':\n",
+                          std::chrono::system_clock::now(),
+                          topic ) );
+    }
+
+    void logUnsubscribe( std::string_view topic )
+    {
+        if ( !loggingEnabled() ) {
+            return;
+        }
+
+        log( fmt::format( "{:%H:%M:%S} Unsubscribing from '{}':\n",
+                          std::chrono::system_clock::now(),
+                          topic ) );
+    }
+
 private:
-    bool createFormattedString()
+    // Prevents unnecessary creation of the log string
+    bool loggingEnabled()
     {
         return _verbose || _ostr;
     }

@@ -46,4 +46,3 @@ if(Qt5_FOUND)
     Qt5::Widgets legacy-configuration atoms atoms-heavy cxxopts ${VTK_LIBRARIES})
 
 endif()
-

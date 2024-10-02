@@ -36,5 +36,3 @@ $ rmake tools/                    # Compile all configured targets from source p
 ## Licensing
 
 See [licensing information](licence.md).
-
-

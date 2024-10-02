@@ -85,4 +85,3 @@ void UsbEndpoint::_handleRx() {
     if ( _onRx )
         _onRx( *this );
 }
-

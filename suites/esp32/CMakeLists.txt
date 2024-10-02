@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.12)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} $ENV{ROFI_ROOT}/releng/cmake)
 include(FetchContent)
@@ -76,17 +76,23 @@ add_component(lwipcore)
 add_component(rofiHalInc)
 add_component(rofiHalEsp32)
 add_component(libfi)
+add_component(firmwareUpdater)
 # Introduce alias
 add_library(rofi::hal ALIAS rofi_hal_esp32)
 
 # Add utilities
 add_application(hardwareModules/universalModule/software/esp32/dynamixelConfigurator)
+add_application(hardwareModules/universalModule/software/esp32/console)
+
 
 # Add the examples
 add_application(hardwareModules/universalModule/software/esp32/esp_hello_world)
 add_application(examples/hal/wifi)
 add_application(examples/hal/servo)
+add_application(examples/hal/connectorHal)
 add_application(examples/hal/connectorMovementHal)
+add_application(examples/hal/connectorHalStatus)
+add_application(examples/hal/firmwareUpdater)
 
 
 

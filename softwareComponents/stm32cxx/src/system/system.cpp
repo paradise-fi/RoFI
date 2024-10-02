@@ -81,7 +81,12 @@ HardFault_HandlerDeref( volatile unsigned *stack) {
     Dbg::error( "\n\n\nHardFault ocurred" );
     fillPhase2Vrs( stack );
     backtrace();
-    while ( true );
+
+    #ifdef DEBUG
+        while ( true );
+    #else
+        NVIC_SystemReset();
+    #endif
 }
 
 extern "C" void __attribute__((__naked__)) HardFault_Handler(void) {

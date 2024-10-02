@@ -50,4 +50,3 @@ E 11 B +X E -X A 12
 E 12 A +X E +X B 16
 E 12 B +X S +X A 16
 E 12 B -Z N -Z A 13
-

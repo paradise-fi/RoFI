@@ -29,9 +29,12 @@ public:
 
     explicit Simulation( std::shared_ptr< const rofi::configuration::RofiWorld > rofiworldConfiguration,
                          PacketFilter::FilterFunction packetFilter,
+                         std::shared_ptr< rofi::configuration::Collision > collModel,
                          bool verbose )
             : _moduleStates(
-                    std::make_shared< ModuleStates >( std::move( rofiworldConfiguration ), verbose ) )
+                    std::make_shared< ModuleStates >( std::move( rofiworldConfiguration ), 
+                                                      std::move( collModel ), 
+                                                      verbose ) )
             , _commandHandler( std::make_shared< CommandHandler >( this->_moduleStates,
                                                                    std::move( packetFilter ) ) )
     {

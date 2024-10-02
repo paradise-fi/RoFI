@@ -1,9 +1,10 @@
-
-#include <system/defer.hpp>
-
 #include <cassert>
+#include <functional>
+#include <type_traits>
+
+#include <system/idle.hpp>
 #include <system/dbg.hpp>
-#include <drivers/clock.hpp>
+
 #include <drivers/gpio.hpp>
 #include <drivers/timer.hpp>
 #include <drivers/spi.hpp>
@@ -11,6 +12,7 @@
 #include <drivers/adc.hpp>
 
 #include <motor.hpp>
+#include "lidar.hpp"
 #include <util.hpp>
 
 #include <spiInterface.hpp>
@@ -22,55 +24,36 @@
 #include <stm32g0xx_ll_cortex.h>
 #include <stm32g0xx_ll_utils.h>
 
-void setupSystemClock() {
-    LL_FLASH_SetLatency( LL_FLASH_LATENCY_2 );
-    LL_RCC_HSI_Enable();
-    while( LL_RCC_HSI_IsReady() != 1 );
-
-    /* Main PLL configuration and activation */
-    LL_RCC_PLL_ConfigDomain_SYS( LL_RCC_PLLSOURCE_HSI, LL_RCC_PLLM_DIV_1, 8, LL_RCC_PLLR_DIV_2 );
-    LL_RCC_PLL_Enable();
-    LL_RCC_PLL_EnableDomain_SYS();
-    while( LL_RCC_PLL_IsReady() != 1 );
-
-    /* Set AHB prescaler*/
-    LL_RCC_SetAHBPrescaler( LL_RCC_SYSCLK_DIV_1 );
-
-    /* Sysclk activation on the main PLL */
-    LL_RCC_SetSysClkSource( LL_RCC_SYS_CLKSOURCE_PLL );
-    while( LL_RCC_GetSysClkSource() != LL_RCC_SYS_CLKSOURCE_STATUS_PLL );
-
-    /* Set APB1 prescaler*/
-    LL_RCC_SetAPB1Prescaler( LL_RCC_APB1_DIV_1 );
-
-    LL_Init1msTick(64000000);
-
-    LL_SYSTICK_SetClkSource( LL_SYSTICK_CLKSOURCE_HCLK );
-    /* Update CMSIS variable (which can be updated also through SystemCoreClockUpdate function) */
-    LL_SetSystemCoreClock( 64000000 );
-    LL_RCC_SetUSARTClockSource( LL_RCC_USART1_CLKSOURCE_PCLK1 );
-    LL_RCC_SetUSARTClockSource( LL_RCC_USART2_CLKSOURCE_PCLK1 );
-}
+#include <bsp.hpp>
+#include <configuration.hpp>
 
 
 using Block = memory::Pool::Block;
+
+using LidarResult = decltype( std::declval< Lidar >().getRangingMeasurementData() );
 
 enum ConnectorStateFlags {
     PositionExpanded  = 1 << 0,
     InternalConnected = 1 << 1,
     ExternalConnected = 1 << 2,
+    /**
+     * Usually is affected by ambient light.
+     * Ob00 = autonomous distance measurement
+     * 0b01 = short distance measurement <= 1.3m 
+     * 0b10 = long distance measurement <= 4m
+    */
+    LidarDistanceMode = 0b11 << 3,
     MatingSide        = 1 << 8,
     Orientation       = 0b11 << 9,
+    /**
+     * 0b00 = error
+     * 0b01 = Data not yet measured
+     * 0b10 = Data outside measured range (data DOESN'T HAVE TO BE valid, but can be, usually means is below or above of range we can measure )
+     * 0b11 = valid measurement data
+    */
+    LidarStatus       = 0b11 << 11,
 };
 
-Dbg& dbgInstance() {
-    static Dbg inst(
-        USART1, Dma::allocate( DMA1, 1 ), Dma::allocate( DMA1, 2 ),
-        TxOn( GpioB[ 6 ] ),
-        RxOn( GpioB[ 7 ] ),
-        Baudrate( 115200 ) );
-    return inst;
-}
 
 void onCmdVersion( SpiInterface& interf ) {
     auto block = memory::Pool::allocate( 4 );
@@ -80,7 +63,9 @@ void onCmdVersion( SpiInterface& interf ) {
 }
 
 void onCmdStatus( SpiInterface& interf, Block header,
-    ConnComInterface& connInt, Slider& slider )
+    ConnComInterface& connInt, ConnectorStatus connectorStatus,
+    Slider& slider, PowerSwitch& powerInterface,
+    Lidar& lidar, std::optional< LidarResult >& lidarResult )
 {
     uint16_t status = viewAs< uint16_t >( header.get() );
     uint16_t mask = viewAs< uint16_t >( header.get() + 2 );
@@ -90,15 +75,57 @@ void onCmdStatus( SpiInterface& interf, Block header,
         else
             slider.retract();
     }
+    if ( mask & ConnectorStateFlags::InternalConnected ) {
+        powerInterface.connectInternal( static_cast< bool >( status & ConnectorStateFlags::InternalConnected ) );
+    }
+    if ( mask & ConnectorStateFlags::ExternalConnected ) {
+        powerInterface.connectExternal( static_cast< bool >( status & ConnectorStateFlags::ExternalConnected ) );
+    }
 
-    auto block = memory::Pool::allocate( 12 );
-    memset( block.get(), 0xAA, 12 );
+    if ( mask & ConnectorStateFlags::LidarDistanceMode ) {
+        auto mode = ( status & ConnectorStateFlags::LidarDistanceMode ) >> 11;
+        if ( mode != 0b11 ) {
+            // We cannot report error back
+            static_cast< void >( lidar.setDistanceMode( Lidar::DistanceMode( mode ) ) );
+        }
+    }
+
+    uint8_t lidarStatus;
+    if ( ! lidarResult.has_value() ) {
+        lidarStatus = 0b01;
+    } else if ( ! ( lidarResult.value().has_value() ) ) {
+        lidarStatus = 0b00;
+    } else if ( auto& lidarData = lidarResult.value().assume_value();
+                lidarData.Status == 0 ) {
+        lidarStatus = 0b11;
+    } else {
+        lidarStatus = 0b10;
+    }
+
+    const auto blockSize = 14;
+    auto block = memory::Pool::allocate( blockSize );
+    uint16_t flags = 0;
+    flags |= ( slider.getGoal() == Slider::State::Expanded ) << 0;
+    flags |= powerInterface.getInternalConnection() << 1;
+    flags |= powerInterface.getExternalConnection() << 2;
+    flags |= uint8_t( lidar.getDistanceModeInstant() ) << 3;
+    flags |= lidarStatus << 11;
+
+    if ( connectorStatus.getOrientation() != ConnectorOrientation::Unknown ) {
+        flags |= ConnectorStateFlags::MatingSide;
+        flags |= connectorStatus.getOrientation() << 9;
+    }
+
+    viewAs< uint16_t >( block.get() ) = flags;
     viewAs< uint8_t >( block.get() + 2 ) = connInt.pending();
     viewAs< uint8_t >( block.get() + 3 ) = connInt.available();
-    viewAs< uint8_t >( block.get() + 4 ) = 42;
-    // ToDo: Assign remaining values
-    interf.sendBlock( std::move( block ), 12 );
-    // ToDo Interpret the header
+    viewAs< uint16_t >( block.get() + 4 ) = powerInterface.getIntVoltage();
+    viewAs< uint16_t >( block.get() + 6 ) = powerInterface.getIntCurrent();
+    viewAs< uint16_t >( block.get() + 8 ) = powerInterface.getExtVoltage();
+    viewAs< uint16_t >( block.get() + 10 ) = powerInterface.getExtCurrent();
+    if ( !( lidarStatus & 0b10 ) )
+        viewAs< uint16_t >( block.get() + 12 ) = lidarResult.value().assume_value().Distance;
+    interf.sendBlock( std::move( block ), blockSize );
 }
 
 void onCmdInterrupt( SpiInterface& interf, Block /*header*/ ) {
@@ -108,11 +135,10 @@ void onCmdInterrupt( SpiInterface& interf, Block /*header*/ ) {
 }
 
 void onCmdSendBlob( SpiInterface& spiInt, ConnComInterface& connInt ) {
-    spiInt.receiveBlob([&]( Block blob, int size ) {
+    spiInt.receiveBlob([&spiInt, &connInt]( Block blob, int size ) {
         int blobLen = viewAs< uint16_t >( blob.get() + 2 );
         if ( size != 4 + blobLen )
             return;
-        Dbg::info( "CMD blob send received: %d, %.*s", blobLen, blobLen, blob.get() + 4 );
         connInt.sendBlob( std::move( blob ) );
     } );
 }
@@ -130,56 +156,84 @@ void onCmdReceiveBlob( SpiInterface& spiInt, ConnComInterface& connInt ) {
     }
 }
 
+
+void lidarGet( Lidar& lidar, std::optional< LidarResult >& );
+
+void lidarInit( Lidar& lidar, std::optional< LidarResult >& currentLidarMeasurement ) {
+    auto result = lidar.initialize().and_then( [&] ( auto ) {
+            Dbg::blockingInfo("start measuring\n");
+            return lidar.startMeasurement();
+    });
+
+    if ( !result ) {
+        *currentLidarMeasurement = atoms::result_error( result.assume_error() );
+        Dbg::error( "\n Error init:" );
+        Dbg::error( result.assume_error().data() );
+        IdleTask::defer( [&]( ) { lidarInit( lidar, currentLidarMeasurement ); } );
+    } else {
+        IdleTask::defer( [&]( ) { lidarGet( lidar, currentLidarMeasurement ); } );
+    }
+}
+
+void lidarGet( Lidar& lidar, std::optional< LidarResult >& currentLidarMeasurement ) {
+    using Data = LidarResult::value_type;
+
+    auto result = lidar.getMeasurementDataReady().and_then( [&] ( bool ready ) -> atoms::Result< std::optional< Data >, std::string_view >  {
+        if (!ready) {
+            return atoms::Result< std::optional< Data >, std::string_view >::value( std::nullopt );
+        }
+
+        return lidar.getRangingMeasurementData()
+            .and_then( [&] ( auto rangingMeasurementData ) {
+                return lidar.clearInterruptAndStartMeasurement().and_then( [&] ( auto ) {
+                    return atoms::Result< std::optional< Data >, std::string_view >::value( std::make_optional( rangingMeasurementData ) );
+                } );
+            });
+    });
+    
+    if ( !result ) {
+        currentLidarMeasurement = LidarResult::error( result.assume_error() );
+        Dbg::error( "\nError get: " );
+        Dbg::error( result.assume_error().data() );
+        IdleTask::defer( [&]( ) { lidarInit( lidar, currentLidarMeasurement ); } );
+    } else {
+        std::optional< Data > data = result.assume_value();
+        if ( data ) {
+            currentLidarMeasurement = LidarResult::value( data.value() );
+        }
+        IdleTask::defer( [&]( ) { lidarGet( lidar, currentLidarMeasurement ); } );
+    }
+}
+
+
 int main() {
-    setupSystemClock();
-    SystemCoreClockUpdate();
+    bsp::setupBoard();
     HAL_Init();
 
-    Dbg::error( "Main clock: %d", SystemCoreClock );
+    Dbg::blockingInfo( "Starting" );
 
-    Adc1.setup();
-    Adc1.enable();
+    std::optional< LidarResult > currentLidarMeasurement;
 
-    Timer timer( TIM1, FreqAndRes( 1000, 2000 ) );
-    auto pwm = timer.pwmChannel( LL_TIM_CHANNEL_CH1 );
-    pwm.attachPin( GpioA[ 8 ] );
-    timer.enable();
+    Slider slider( std::move( bsp::sliderMotor ).value(), bsp::posPins );
+    PowerSwitch powerInterface(
+        bsp::internalSwitchPin, bsp::internalVoltagePin, bsp::internalCurrentPin,
+        bsp::externalSwitchPin, bsp::externalVoltagePin, bsp::externalCurrentPin );
+    ConnectorStatus connectorStatus ( bsp::connectorSenseA, bsp::connectorSenseB );
+    Lidar lidar( &*bsp::i2c, bsp::lidarEnablePin, bsp::lidarIRQPin );
 
-    Motor motor( pwm, GpioB[ 1 ] );
-    motor.enable();
-    motor.set( 0 );
+    lidarInit( lidar, currentLidarMeasurement );
 
-    Slider slider( Motor( pwm, GpioC[ 14 ] ), GpioB[ 4 ], GpioB[ 8 ] );
-
-    PowerSwitch powerInterface;
-    ConnectorStatus connectorStatus ( GpioC[ 6 ], GpioA[ 15 ] );
-
-
-    Spi spi( SPI1,
-        Slave(),
-        MisoOn( GpioA[ 6 ] ),
-        SckOn( GpioB[ 3 ] ),
-        CsOn( GpioA[ 4 ] )
-    );
-
-    Uart uart( USART2,
-        Baudrate( 115200 ),
-        TxOn( GpioA[ 2 ] ),
-        RxOn( GpioA[ 3 ] ) );
-    uart.enable();
-
-    ConnComInterface connComInterface( std::move( uart ) );
+    ConnComInterface connComInterface( std::move( bsp::connectorComm ).value() );
 
     using Command = SpiInterface::Command;
-    SpiInterface spiInterface( std::move( spi ), GpioA[ 4 ],
+    SpiInterface spiInterface( std::move( bsp::moduleComm ).value(), bsp::spiCSPin,
         [&]( Command cmd, Block b ) {
-            Dbg::error("CMD %d", int( cmd ));
             switch( cmd ) {
             case Command::VERSION:
                 onCmdVersion( spiInterface );
                 break;
             case Command::STATUS:
-                onCmdStatus( spiInterface, std::move( b ), connComInterface, slider );
+                onCmdStatus( spiInterface, std::move( b ), connComInterface, connectorStatus, slider, powerInterface, lidar, currentLidarMeasurement );
                 break;
             case Command::INTERRUPT:
                 onCmdInterrupt( spiInterface, std::move( b ) );
@@ -196,32 +250,38 @@ int main() {
         } );
     connComInterface.onNewBlob( [&] { spiInterface.interruptMaster(); } );
 
-    Dbg::error( "Ready for operation" );
+    Dbg::blockingInfo( "Ready for operation" );
 
     while ( true ) {
-        slider.run();
+
         powerInterface.run();
         if ( connectorStatus.run() )
             spiInterface.interruptMaster();
 
         if ( Dbg::available() ) {
-            switch( Dbg::get() ) {
+            char chr = Dbg::get();
+            switch( chr ) {
             case 'e':
                 slider.expand();
-                Dbg::info("Expanding");
+                Dbg::blockingInfo("Expanding");
                 break;
             case 'r':
                 slider.retract();
-                Dbg::info("Retracting");
+                Dbg::blockingInfo("Retracting");
+                break;
+            case 's':
+                slider.stop();
+                Dbg::blockingInfo("Stopping");
                 break;
             default:
-                Dbg::error( "DBG received: %c", Dbg::get() );
+                Dbg::error( "DBG received: %c, %d", chr, int( chr ) );
             }
         }
-        Dbg::error("%d, %d", GpioB[ 4 ].read(), GpioB[ 8 ].read());
-        if (Defer::run()) {
-            // Dbg::error("D\n");
-        }
+
+        slider.run();
+
+        connComInterface.run();
+
+        IdleTask::run();
     }
 }
-

@@ -89,4 +89,3 @@ mkdir $DIR
   ROFI_COUNT=$(head -n 1 $COUNT) &&
   mpiexec --hostfile $HOSTS -np $ROFI_COUNT ../../build/distribute/rofi-distribute -d $DIR -a $ALG -e $EVAL >> $OUT_MPI &&
   ../../build/rofi-distribute-postprocessing -i $OUT_MPI -t $DICTIONARY
-

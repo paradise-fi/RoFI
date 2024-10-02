@@ -113,13 +113,20 @@ public:
      * \brief Wait for finishing transmission
      */
     bool waitForTx( int timeout ) {
-        auto res = uart_wait_tx_done( _uart, timeout );
-        switch (res)
-        {
-        case ESP_ERR_TIMEOUT:
-            return false;
-        case ESP_FAIL:
-            throw ServoError( "Couldn't switch to RX mode" );
+        // There is race is ESP-IDF:
+        // - uart_wait_tx_done only checks for HW ring buffer
+        // - but not for the software one
+        // By repeating several times it ensures that we didn't just hit the
+        // sweet spot when HW buffer is empty and it wasn't filled
+        for (int i = 0; i != 5; i++) {
+            auto res = uart_wait_tx_done( _uart, timeout );
+            switch (res)
+            {
+            case ESP_ERR_TIMEOUT:
+                return false;
+            case ESP_FAIL:
+                throw ServoError( "Couldn't switch to RX mode" );
+            }
         }
         return true;
     }
@@ -127,7 +134,7 @@ public:
     /**
      * \brief Read a packet from the bus
      *
-     * If not packet is received within the timout, std::nullopt is returned.
+     * If not packet is received within the timeout, std::nullopt is returned.
      * \param ticks timeout in FreeRTOS ticks
      */
     std::optional< Packet > read( int ticks = -1, bool flushInput = true ) {
@@ -145,6 +152,8 @@ public:
         while ( size == 1 && !parser.parseByte( buff ) ) {
             size = uart_read_bytes( _uart, &buff, 1 , ticks );
         }
+        if ( !parser.done() )
+            return std::nullopt;
         Packet p = parser.getPacket();
         if ( p.valid() )
             return p;

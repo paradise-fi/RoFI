@@ -9,8 +9,7 @@
 #include <atoms/unreachable.hpp>
 #include <configuration/rofiworld.hpp>
 #include <configuration/serialization.hpp>
-
-#include <voxel.hpp>
+#include <voxel/serialization.hpp>
 
 #include "parsing/parsing_lite.hpp"
 

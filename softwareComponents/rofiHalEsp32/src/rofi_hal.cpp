@@ -9,6 +9,7 @@
 #include <atomic>
 #include <cmath>
 #include <type_traits>
+#include <utility>
 
 #include <esp_timer.h>
 
@@ -18,6 +19,8 @@
 #include <driver/gpio.h>
 #include <esp_log.h>
 #include <esp_heap_caps.h>
+#include <esp_ota_ops.h>
+#include <esp_partition.h>
 
 #include <espDriver/gpio.hpp>
 #include <espDriver/spi.hpp>
@@ -100,8 +103,10 @@ enum ConnectorStateFlags {
     PositionExpanded  = 1 << 0,
     InternalConnected = 1 << 1,
     ExternalConnected = 1 << 2,
+    LidarDistanceMode = 0b11 << 3,
     MatingSide        = 1 << 8,
     Orientation       = 0b11 << 9,
+    LidarStatus       = 0b11 << 11,
 };
 
 struct ConnectorStateImpl: public ConnectorState {
@@ -119,9 +124,13 @@ struct ConnectorStateImpl: public ConnectorState {
 
         s.internal = flags & ConnectorStateFlags::InternalConnected;
         s.external = flags & ConnectorStateFlags::ExternalConnected;
+        s.distanceMode = rofi::hal::LidarDistanceMode( flags & ConnectorStateFlags::LidarDistanceMode >> 3 );
         s.connected = flags & ConnectorStateFlags::MatingSide;
         s.orientation = ConnectorOrientation (
             ( flags & ConnectorStateFlags::Orientation ) >> 9 );
+        s.lidarStatus = rofi::hal::LidarStatus(
+            ( flags & ConnectorStateFlags::LidarStatus ) >> 11
+        );
 
         s.pendingSend = as< uint8_t >( d + 2 );
         s.pendingReceive = as< uint8_t >( d + 3 );
@@ -129,6 +138,8 @@ struct ConnectorStateImpl: public ConnectorState {
         s.internalCurrent = as< int16_t >( d + 6 ) / 255.0;
         s.externalVoltage = as< int16_t >( d + 8 ) / 255.0;
         s.externalCurrent = as< int16_t >( d + 10 ) / 255.0;
+        s.distance = as< uint16_t >( d + 12 );
+
         return s;
     }
 };
@@ -199,7 +210,7 @@ public:
     ConnectorBus( spi_host_device_t bus, gpio_num_t dataPin, gpio_num_t clkPin,
         int clkFrequency)
         : _commandQueue( 64 ),
-          _dmaBuffer( static_cast< uint8_t* >( heap_caps_malloc( 12 , MALLOC_CAP_DMA ) ) )
+          _dmaBuffer( static_cast< uint8_t* >( heap_caps_malloc( 14 , MALLOC_CAP_DMA ) ) )
     {
         using namespace rofi::esp32;
 
@@ -212,7 +223,6 @@ public:
             .flags( SPI_DEVICE_3WIRE | SPI_DEVICE_HALFDUPLEX )
             .queueSize( 1 )
             .clockSpeedHz( clkFrequency );
-        std::cout << busConfig << "\n";
         auto ret = spi_bus_initialize( bus, &busConfig, 1 );
         ESP_ERROR_CHECK( ret );
         ret = spi_bus_add_device( bus, &devConfig, &_spiDev );
@@ -221,7 +231,19 @@ public:
             ESP_INTR_FLAG_SHARED | ESP_INTR_FLAG_LOWMED | ESP_INTR_FLAG_IRAM );
         ESP_ERROR_CHECK( ret );
 
-        std::thread( [&]{ _run(); } ).detach();
+        // We have to use FreeRTOS task as the task needs high priority
+        auto tRet = xTaskCreate([]( void *arg ) {
+                    ConnectorBus& self = *reinterpret_cast< ConnectorBus * >( arg );
+                    self._run();
+                },
+                "ConectorBusTask",
+                4096,   // Stack size
+                this,   // Argument
+                3,      // Priority
+                nullptr // The task is never accessed again
+            );
+        if ( tRet != pdPASS )
+            abort();
     }
 
     ~ConnectorBus() {
@@ -316,10 +338,31 @@ public:
             _issueStatusCmd( 0, ConnectorStateFlags::InternalConnected );
     }
 
+    virtual void setDistanceMode( rofi::hal::LidarDistanceMode mode ) override {
+        _issueStatusCmd( static_cast< uint16_t >( mode ) << 3, ConnectorStateFlags::LidarDistanceMode );
+    }
+
     ConnectorLocal( ConnectorBus *bus, gpio_num_t cs )
         : _bus( bus ), _cs( cs ), _receiveCmdCounter( 0 ), _interruptCounter( 0 )
     {
         _setupCs();
+
+        auto tRet = xTaskCreate([]( void *arg ) {
+                    ConnectorLocal& self = *reinterpret_cast< ConnectorLocal * >( arg );
+
+                    while (true) {
+                        self._issueStatusCmd( 0, 0 );
+                        vTaskDelay( 300 / portTICK_PERIOD_MS );
+                    }
+                },
+                "StatusPoller",
+                4096,   // Stack size
+                this,   // Argument
+                tskIDLE_PRIORITY, // Priority
+                nullptr // The task is never accessed again
+            );
+        if ( tRet != pdPASS )
+            abort();
     }
 private:
     static rofi::esp32::Gpio defaultCsConfig( gpio_num_t c ) {
@@ -353,19 +396,17 @@ private:
 
     void _issueReceiveCmd( rtos::ExContext exCtx = rtos::ExContext::Normal ) {
         _receiveCmdCounter++;
-        ets_printf( "Currently scheduled: %d\n", _receiveCmdCounter.load() );
         ConnectorBus::ReceiveCommand c;
         c.conn = this;
         _bus->schedule( c, exCtx );
     }
 
     SpiTransactionGuard startTransaction() {
-        std::cout << "Transaction on " << _cs << "\n";
         return SpiTransactionGuard( _cs, defaultCsConfig( _cs ) );
     }
 
     void finish( ConnectorBus::VersionCommand, ConnectorVersion ver ) {
-        // Not implemented yet - currently, there is no need to distinguishe
+        // Not implemented yet - currently, there is no need to distinguish
         // versions of the connectors
     }
 
@@ -386,10 +427,9 @@ private:
                     event );
         }
         if (status.pendingReceive == 255) {
-            std::cout << "invalid pending receive";
+            rofi::log::debug("invalid pending receive");
             status.pendingReceive = 0;
         }
-        std::cout << "Pending to receive (" << _cs << "): " << status.pendingReceive << "\n";
         while ( _receiveCmdCounter < status.pendingReceive )
             _issueReceiveCmd();
         _status = status;
@@ -421,10 +461,9 @@ private:
     static void _csInterruptHandler( void * arg ) {
         auto *self = reinterpret_cast< ConnectorLocal* >( arg );
         // Probably a packet, so try to read it, then check the true reason
-        // self->_issueReceiveCmd( rtos::ExContext::ISR );
-        // ets_printf("Interrupted %d\n", self->_cs);
-        // if ( self->_interruptCounter == 0 )
-        //     self->_issueInterruptCmd( rtos::ExContext::ISR );
+        self->_issueReceiveCmd( rtos::ExContext::ISR );
+        if ( self->_interruptCounter == 0 )
+            self->_issueInterruptCmd( rtos::ExContext::ISR );
     }
 
     friend class ConnectorBus;
@@ -441,7 +480,6 @@ private:
 
 void ConnectorBus::run( VersionCommand c ) {
     using namespace rofi::esp32;
-    rofi::log::info( "Version command" );
 
     auto transaction = c.conn->startTransaction();
     const int headerSize = 1;
@@ -458,7 +496,6 @@ void ConnectorBus::run( VersionCommand c ) {
 
 void ConnectorBus::run( InterruptCommand c ) {
     using namespace rofi::esp32;
-    ets_printf( "Interrupt command %d\n", c.counter );
 
     auto transaction = c.conn->startTransaction();
     const int headerSize = 3;
@@ -477,19 +514,17 @@ void ConnectorBus::run( InterruptCommand c ) {
 
 void ConnectorBus::run( StatusCommand c ) {
     using namespace rofi::esp32;
-    rofi::log::info( "Status command " + std::to_string(c.conn->_cs ) );
 
     auto transaction = c.conn->startTransaction();
     const int headerSize = 5;
     as< ProtocolCommand >( _dmaBuffer + 0 ) = ProtocolCommand::Status;
-    std::cout << std::hex << c.flags << ", " << c.writeMask << "\n" << std::dec;
     as< uint16_t >( _dmaBuffer + 1 ) = c.flags;
     as< uint16_t >( _dmaBuffer + 3 ) = c.writeMask;
     spiWrite( _spiDev, _dmaBuffer, headerSize );
 
     slaveDelay();
 
-    const int payloadSize = 12;
+    const int payloadSize = 14;
     spiRead( _spiDev, _dmaBuffer, payloadSize );
     transaction.end();
 
@@ -498,42 +533,33 @@ void ConnectorBus::run( StatusCommand c ) {
 
 void ConnectorBus::run( SendCommand c ) {
     using namespace rofi::esp32;
-    // rofi::log::info( "Send command" );
-    ets_printf("Send command %d\n", c.conn->_cs);
 
     if ( c.packet.size() > 2048 ) {
-        rofi::log::warning( "Trying to send big packet" );
+        rofi::log::warning( "Trying to send big packet, ignored" );
         c.conn->finish( c );
         return;
     }
     auto transaction = c.conn->startTransaction();
     const int headerSize = 1;
     as< ProtocolCommand >( _dmaBuffer ) = ProtocolCommand::Send;
-    ets_printf("Send command %d - A\n", c.conn->_cs);
     spiWrite( _spiDev, _dmaBuffer, headerSize );
-     ets_printf("Send command %d - B\n", c.conn->_cs);
 
     slaveDelay();
 
     const int packetHeaderSize = 4;
     as< uint16_t >( _dmaBuffer ) = c.contentType;
     as< uint16_t >( _dmaBuffer + 2 ) = c.packet.size();
-     ets_printf("Send command %d - C\n", c.conn->_cs);
     spiWrite( _spiDev, _dmaBuffer, packetHeaderSize );
-     ets_printf("Send command %d - D\n", c.conn->_cs);
 
     for ( auto it = c.packet.chunksBegin(); it != c.packet.chunksEnd(); ++it ) {
         spiWrite( _spiDev, it->mem(), it->size() );
     }
-    ets_printf("Send command %d -E \n", c.conn->_cs);
     transaction.end();
 
-    ets_printf("Send command %d finished\n", c.conn->_cs);
     c.conn->finish( c );
 }
 
 void ConnectorBus::run( ReceiveCommand c ) {
-    rofi::log::info( "Receive command" );
     using namespace rofi::esp32;
     auto transaction = c.conn->startTransaction();
 
@@ -558,7 +584,6 @@ void ConnectorBus::run( ReceiveCommand c ) {
     // auto size = as< uint16_t >( _dmaBuffer );
 
     if ( size == 0 || size > 2048 ) {
-        std::cout << "    Nothing received: " << size << "\n";
         c.conn->finish( c );
         return;
     }
@@ -743,10 +768,131 @@ rofi::hal::Joint::Implementation::Capabilities bodyJointCapability() {
     return cap;
 }
 
+class PartitionLocal :
+        virtual public rofi::hal::Partition::Implementation,
+        public std::enable_shared_from_this< PartitionLocal >
+{
+protected:
+    const esp_partition_t* _partition;
+
+public:
+    PartitionLocal( const esp_partition_t* partition ) {
+        if ( partition == nullptr ) {
+            throw std::invalid_argument( "nullptr passed to constructor" );
+        }
+        _partition = partition;
+    }
+
+    virtual std::size_t getSize() override {
+        return _partition->size;
+    }
+
+    virtual void read( std::size_t offset, std::size_t size, const std::span< unsigned char >& buffer ) override {
+        assert( size <= buffer.size() );
+
+        esp_err_t err = esp_partition_read( _partition, offset, buffer.data(), size );
+        if ( err == ESP_ERR_INVALID_ARG ) {
+            throw std::invalid_argument( "offset exceeds partition size" );
+        }
+
+        if ( err == ESP_ERR_INVALID_SIZE || err != ESP_OK ) {
+            throw std::runtime_error( "unable to successfully read data" );
+        }
+    }
+
+    virtual void write( std::size_t offset, const std::span< const unsigned char >& data ) override {
+        esp_err_t err = esp_partition_write( _partition, offset, data.data(), data.size() );
+        if ( err == ESP_ERR_INVALID_ARG ) {
+            throw std::invalid_argument( "offset exceeds partition size" );
+        }
+
+        if ( err == ESP_ERR_INVALID_SIZE || err != ESP_OK ) {
+            throw std::runtime_error( "unable to successfully write data" );
+        }
+    }
+};
+
+class UpdatePartitionLocal :
+        public rofi::hal::UpdatePartition::Implementation,
+        public PartitionLocal,
+        public std::enable_shared_from_this< UpdatePartition >
+{
+    esp_ota_handle_t _updateHandle;
+    bool* _updateInitialized;
+    bool _updateEnded = false;
+
+public:
+    UpdatePartitionLocal( const esp_partition_t* partition, esp_ota_handle_t&& updateHandle, bool* updateInitialized )
+            : PartitionLocal( partition ), _updateHandle( updateHandle ), _updateInitialized( updateInitialized ) {}
+
+    virtual void write( std::size_t offset, const std::span< const unsigned char >& data ) override {
+        if ( _updateEnded ) { throw std::runtime_error( "update procedure is already done" ); };
+
+        esp_err_t err = esp_ota_write_with_offset( _updateHandle, data.data(), data.size(), offset );
+        if ( err == ESP_ERR_INVALID_ARG ) {
+            throw std::invalid_argument( "offset exceeds partition size" );
+        }
+        if ( err == ESP_ERR_OTA_VALIDATE_FAILED ) {
+            throw std::runtime_error( "invalid image format" );
+        }
+
+        if ( err != ESP_OK ) {
+            throw std::runtime_error( "unable to successfully write data" );
+        }
+    }
+
+    virtual void commit() override {
+        if ( _updateEnded ) { throw std::runtime_error( "update procedure is already done" ); }
+
+        esp_err_t err = esp_ota_end( _updateHandle );
+        if ( err == ESP_ERR_INVALID_ARG ) {
+            throw std::runtime_error( "no data were written to the partition" );
+        }
+        if ( err == ESP_ERR_OTA_VALIDATE_FAILED ) {
+            throw std::runtime_error( "written data is invalid" );
+        }
+
+        err = esp_ota_set_boot_partition( _partition );
+        switch ( err ) {
+            case ESP_OK:
+                break;
+            case ESP_ERR_INVALID_ARG:
+                throw std::runtime_error( "not valid ota partition of type app" );
+            case ESP_ERR_OTA_VALIDATE_FAILED:
+                throw std::runtime_error( "invalid app image or signature validation failed" );
+            case ESP_ERR_NOT_FOUND:
+                throw std::runtime_error( "partition not found" );
+            case ESP_ERR_FLASH_OP_TIMEOUT:
+            case ESP_ERR_FLASH_OP_FAIL:
+                throw std::runtime_error( "flash erase or write failed" );
+            default:
+                throw std::runtime_error( "unspecified error" );
+        }
+
+        _updateEnded = true;
+        *_updateInitialized = false;
+    }
+
+    virtual void abort() override {
+        if ( _updateEnded ) { throw std::runtime_error( "update procedure is already done" ); }
+
+        esp_ota_abort( _updateHandle );
+        _updateEnded = true;
+        *_updateInitialized = false;
+    }
+
+    virtual ~UpdatePartitionLocal() override {
+        if ( _updateEnded ) { return; }
+        esp_ota_abort( _updateHandle );
+        *_updateInitialized = false;
+    }
+};
+
 class RoFILocal : public RoFI::Implementation {
 public:
     RoFILocal() try:
         _servoBus( bsp::buildServoBus() ),
+    #ifndef ROFI_HAL_NO_MOTORS
         _joints( {
             std::make_shared< JointLocal >(
                 _servoBus.getServo( bsp::alphaId ),
@@ -761,12 +907,13 @@ public:
                                     bodyJointCapability(),
                                     bsp::gammaRatio )
         } ),
-        _connectorBus( HSPI_HOST, GPIO_NUM_19, GPIO_NUM_18, 100000 ),
+    #endif
+        _connectorBus( HSPI_HOST, GPIO_NUM_19, GPIO_NUM_18, 50'000'000 ),
         _connectors( {
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_27 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_25 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_32 ),
-            std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_4 ),
+            std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_2 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_33 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_26 )
         } )
@@ -794,17 +941,87 @@ public:
         return { 3, 6 };
     };
 
+    virtual Partition getRunningPartition() override {
+        if ( ! _runningPartition ) {
+            const esp_partition_t* runningPartition = esp_ota_get_running_partition();
+            if ( runningPartition == nullptr ) {
+                throw std::runtime_error( "error occurred during obtaining running partition" );
+            }
+            _runningPartition = std::make_shared< PartitionLocal >( runningPartition );
+        }
+
+        return { _runningPartition };
+    }
+
+    virtual UpdatePartition initUpdate() override {
+        if ( _updateInitialized ) {
+            throw std::runtime_error( "there is another update in progress" );
+        }
+
+        const esp_partition_t* updatePartition = esp_ota_get_next_update_partition( nullptr );
+        if ( updatePartition == nullptr ) {
+            throw std::runtime_error( "update partition not configured or another error occurred" );
+        }
+        esp_ota_handle_t updateHandle;
+        esp_err_t err = esp_ota_begin( updatePartition, OTA_SIZE_UNKNOWN, &updateHandle );
+        if ( err == ESP_ERR_NO_MEM ) {
+            throw std::runtime_error( "not enough memory to start firmware update ");
+        }
+        if ( err != ESP_OK ) {
+            throw std::runtime_error( "error occurred during firmware update initialization" );
+        }
+
+        _updateInitialized = true;
+        return {
+                std::make_shared< UpdatePartitionLocal >( updatePartition, std::move( updateHandle ), &_updateInitialized )
+        };
+    }
+
+    virtual void reboot() override {
+        esp_restart();
+    }
+
 private:
     bsp::ServoBus _servoBus;
     std::array< std::shared_ptr< Joint::Implementation >, 3 > _joints;
 
     ConnectorBus _connectorBus;
     std::array< std::shared_ptr< Connector::Implementation >, 6 > _connectors;
+
+    std::shared_ptr< rofi::hal::Partition::Implementation > _runningPartition;
+    bool _updateInitialized = false;
 };
 
 } // namespace
 
 namespace rofi::hal {
+
+void RoFI::sleep( int ms )
+{
+    if ( ms < 0 ) {
+        throw std::invalid_argument( "negative sleep time" );
+    }
+
+    vTaskDelay( ms / portTICK_PERIOD_MS );
+}
+
+void RoFI::postpone( int ms, std::function< void() > callback )
+{
+    if ( !callback ) {
+        throw std::invalid_argument( "empty callback" );
+    }
+
+    if ( ms < 0 ) {
+        throw std::invalid_argument( "negative wait time" );
+    }
+
+    auto* timer = new rtos::Timer();
+    *timer = rtos::Timer( static_cast< std::chrono::milliseconds >( ms ),
+                          rtos::Timer::Type::OneShot,
+                          [ ptr = timer, cb = std::move( callback ) ]() { cb(); delete ptr; }
+                    );
+    timer->start();
+}
 
 RoFI RoFI::getLocalRoFI() {
     // Definition of local RoFI driver

@@ -51,5 +51,13 @@ void error(const std::string_view& message,
               << message << '\n';
 }
 
-} // namespace rofi::log
+void debug(const std::string_view& message,
+    const std::source_location& location = std::source_location::current() )
+{
+    std::cout << "debug: "
+              << detail::limitPathLen( location.file_name() ) << ":"
+              << location.line() << " "
+              << message << '\n';
+}
 
+} // namespace rofi::log

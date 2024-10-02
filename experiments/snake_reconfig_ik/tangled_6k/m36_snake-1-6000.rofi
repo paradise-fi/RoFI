@@ -70,4 +70,3 @@ E 23 B -X W -X A 26
 E 25 A -X S -X B 27
 E 25 B -Z W +X A 28
 E 28 A -Z N -Z B 29
-

@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <memory>
+#include <span>
 
 #include "networking.hpp"
 
@@ -188,6 +189,33 @@ enum class ConnectorLine : bool {
     External = 1,
 };
 
+enum class LidarDistanceMode {
+    /// The `Autonomous` Distance Mode is handled by RoFICoM based on the status of measurements.
+    Autonomous = 0,
+    /// `Short` mode measures up to 1.3 m and is less effected by the ambient light.
+    Short      = 1,
+    /// `Long` mode can measure up to 4 m; however is strongly effected by the ambient light.
+    /// The `LidarStatus` can reflect this mode might not be suitable for current condition by the `OutsideRange` value.
+    Long       = 2,
+};
+
+/**
+ * \brief Status of Lidar measurement
+*/
+enum class LidarStatus : signed char {
+    /// Usually error with lidar communication i.e. Lidar not connected, i2c error, ...
+    Error = 0b00,
+    /// Status command was received before lidar initilized and received measurements.
+    NotMeasured = 0b01,
+    /// Measured data are outside of lidar available range 
+    /// meaning that data could be valid but DOESN'T HAVE TO BE.
+    /// Usually means that measured data is below or above of range we can measure.
+    /// Also could be caused by wrong distance mode, setting different one could resolve this.
+    OutsideRange = 0b10,
+    /// Measured data are fully valid
+    Valid = 0b11,
+};
+
 /**
  * \brief Connector state descriptor.
  */
@@ -198,6 +226,8 @@ struct ConnectorState {
     bool internal = false;
     /// Is the external power bus connected to the connector?
     bool external = false;
+    /// The current distance mode of the RoFICoM's Lidar.
+    LidarDistanceMode distanceMode = LidarDistanceMode::Autonomous;
     /// Is there a mating side connected?
     bool connected = false;
     /// Orientation of the connection. Applicable only when connected.
@@ -210,6 +240,10 @@ struct ConnectorState {
     float externalVoltage = 0.f;
     /// External current of the Connector.
     float externalCurrent = 0.f;
+    /// Status of lidar measurement.
+    LidarStatus lidarStatus = LidarStatus::NotMeasured;
+    /// Lidar measured distance in mm. Validity depends on `lidarStatus`.
+    uint16_t distance = 0;
 };
 
 /**
@@ -223,6 +257,125 @@ enum class ConnectorEvent : signed char {
     /// Power status (voltage or current) changed.
     PowerChanged,
 };
+
+/**
+ * \brief Proxy for accessing raw partition data
+ *
+ * Partition cannot be instantiated on its own; you can obtain its instance from
+ * RoFI::getRunningPartition().
+ *
+ * Since the class is only a proxy it can be safely copied and passed around.
+ */
+class Partition {
+    public:
+        /**
+         * \brief Interface of the actual implementation - either physical or simulation one.
+         *
+         * To provide an implementation, simply inherit from this class.
+         *
+         * For method description, see description of Partition.
+         */
+        class Implementation {
+        protected:
+            virtual ~Implementation() = default;
+
+        public:
+            virtual std::size_t getSize() = 0;
+            virtual void read( std::size_t offset, std::size_t size, const std::span< unsigned char >& buffer ) = 0;
+            virtual void write( std::size_t offset, const std::span< const unsigned char >& data ) = 0;
+        };
+
+        /**
+         * \brief Get partition size.
+         *
+         * \return partition size in bytes
+         */
+        std::size_t getSize() const { return _impl->getSize(); }
+
+        /**
+         * \brief Read exactly `size` bytes into `buffer` from the partition starting at the `offset`.
+         *
+         * If read would go out of bounds of the partition `std::out_of_range` is thrown.
+         *
+         * \param offset offset from beginning of the partition to start reading from
+         * \param size number of bytes to read
+         * \param buffer buffer to put read data to
+         *
+         * \throw std::out_of_range if read would go out of bounds of the partition
+         */
+        void read( std::size_t offset, std::size_t size, const std::span< unsigned char >& buffer ) {
+            _impl->read( offset, size, buffer );
+        }
+
+        /**
+         * \brief Write `data` to the partition starting at the `offset`.
+         *
+         * If write would go out of bounds of the partition `std::out_of_range` is thrown.
+         *
+         * \param offset offset from beginning of the partition to start writing at
+         * \param data data to write to the partition
+         *
+         * \throw std::out_of_range if write would go out of bounds of the partition
+         */
+        void write( std::size_t offset, const std::span< const unsigned char >& data ) {
+            _impl->write( offset, data );
+        }
+
+        Partition( std::shared_ptr< Implementation > impl ) : _impl( std::move( impl ) ) {}
+
+    protected:
+        std::shared_ptr< Implementation > _impl;
+    };
+
+/**
+ * \brief Proxy for accessing update partition data
+ *
+ * UpdatePartition cannot be instantiated on its own; you can obtain its instance from
+ * RoFI::initUpdate().
+ *
+ * Since the class is only a proxy it can be safely copied and passed around.
+ */
+    class UpdatePartition : public Partition {
+    public:
+        /**
+         * \brief Interface of the actual implementation - either physical or simulation one.
+         *
+         * To provide an implementation, simply inherit from this class.
+         *
+         * For method description, see description of UpdatePartition.
+         */
+        class Implementation : virtual public Partition::Implementation {
+        protected:
+            virtual ~Implementation() override = default;
+
+        public:
+            virtual void commit() = 0;
+            virtual void abort() = 0;
+        };
+
+        /**
+         * \brief Commit pending update
+         *
+         * By calling this method update process is ended hence subsequent calls of this method, UpdatePartition::abort
+         * or UpdatePartition::write method may throw std::runtime_error.
+         * If any error occurs during update verification std::runtime_error is thrown with particular error reason.
+         */
+        void commit() {
+            dynamic_cast< UpdatePartition::Implementation* >( _impl.get() )->commit();
+        }
+
+        /**
+         * \brief Abort pending update
+         *
+         * By calling this method update process is ended hence subsequent calls of this method, UpdatePartition::commit
+         * or UpdatePartition::write method may throw std::runtime_error.
+         */
+        void abort() {
+            dynamic_cast< UpdatePartition::Implementation* >( _impl.get() )->abort();
+        }
+
+        UpdatePartition( std::shared_ptr< Implementation > impl ) : Partition( std::move( impl ) ) {}
+    };
 
 /**
  * \brief Proxy for controlling a single connector of RoFI.
@@ -257,6 +410,7 @@ public:
         virtual void send( uint16_t contentType, PBuf packet ) = 0;
         virtual void connectPower( ConnectorLine ) = 0;
         virtual void disconnectPower( ConnectorLine ) = 0;
+        virtual void setDistanceMode( LidarDistanceMode ) = 0;
     };
 
     /**
@@ -337,6 +491,14 @@ public:
         _impl->disconnectPower( line );
     }
 
+    /**
+     * \brief Sets distance mode for the RoFICoM's Lidar.
+    */
+    void setDistanceMode( LidarDistanceMode mode )
+    {
+        _impl->setDistanceMode( mode );
+    }
+
     Connector( std::shared_ptr< Implementation > impl ) : _impl( std::move( impl ) ) {}
 
 private:
@@ -385,6 +547,9 @@ public:
         virtual Joint getJoint( int index ) = 0;
         virtual Connector getConnector( int index ) = 0;
         virtual Descriptor getDescriptor() const = 0;
+        virtual Partition getRunningPartition() = 0;
+        virtual UpdatePartition initUpdate() = 0;
+        virtual void reboot() = 0;
     };
 
     /**
@@ -436,13 +601,41 @@ public:
     Descriptor getDescriptor() const { return _impl->getDescriptor(); }
 
     /**
-     * \brief Call callback after given delay.
+ * \brief Get partition from which running firmware was loaded
+ *
+ * \return partition from which running firmware was loaded
+ */
+    Partition getRunningPartition() const { return _impl->getRunningPartition(); }
+
+    /**
+     * \brief Initialize firmware update
+     *
+     * If this method is called and another update is already in process std::runtime_error is thrown
+     *
+     * @return UpdatePartition to write the new firmware to
+     */
+    UpdatePartition initUpdate() { return _impl->initUpdate(); }
+
+    /**
+     * \brief Reboot device
+     */
+    void reboot() { return _impl->reboot(); }
+
+    /**
+     * \brief Blocks the execution for given amount of time
+     *
+     * \param ms delay in milliseconds
+     */
+    static void sleep( int ms );
+
+    /**
+     * \brief Call callback after given delay. The call is non-blocking.
      *
      * You can assume that the callback will always be called exactly once.
-     * \param ms delay in milliseconds
+     * \param ms wait time in milliseconds
      * \param callback non-empty callback to be called after the delay
      */
-    static void wait( int ms, std::function< void() > callback );
+    static void postpone( int ms, std::function< void() > callback );
 
 private:
     RoFI( std::shared_ptr< Implementation > impl ) : _impl( std::move( impl ) ) {}

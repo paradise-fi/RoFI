@@ -8,4 +8,3 @@ E 1 B -X N -X A 2
 E 0 A -X W -Z B 1
 E 0 A -Z W +X B 4
 E 0 B +X W -Z A 3
-

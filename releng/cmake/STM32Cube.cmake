@@ -200,6 +200,8 @@ function(setup_stm32cube PREFIX MCU)
     add_hallib(LL_Usart
         REQUIRED ll_usart.c)
         target_link_libraries(${PREFIX}_LL_Usart INTERFACE ${PREFIX}_LL)
+    add_hallib(LL_I2C
+        REQUIRED ll_i2c.c)
 
     set_property(TARGET ${PREFIX}_CUBE
         PROPERTY STM_LIB ${STM_LIB})

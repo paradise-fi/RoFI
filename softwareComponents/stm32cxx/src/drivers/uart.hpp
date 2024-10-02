@@ -227,4 +227,29 @@ struct RxOn: public UartConfigBase {
     Gpio::Pin _pin;
 };
 
+struct UartOversampling: public UartConfigBase {
+    UartOversampling( int oversampling ) {
+        switch ( oversampling ) {
+            #ifdef LL_USART_OVERSAMPLING_16
+                case 16:
+                    _oversampling = LL_USART_OVERSAMPLING_16;
+                    break;
+            #endif
+            #ifdef LL_USART_OVERSAMPLING_8
+                case 8:
+                    _oversampling = LL_USART_OVERSAMPLING_8;
+                    break;
+            #endif
+            default:
+                _oversampling = 0;
+        }
+    }
+
+    void pre( LL_USART_InitTypeDef& init ) {
+        init.OverSampling = _oversampling;
+    }
+
+    int _oversampling;
+};
+
 #undef HANDLE_WITH

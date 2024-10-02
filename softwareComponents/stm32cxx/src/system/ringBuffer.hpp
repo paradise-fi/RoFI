@@ -14,6 +14,7 @@ public:
         : _head( 0 ), _tail( 0 ), _storage( std::move( storage ) ),
           _storageCapacity( storageSize / sizeof( T ) )
     {
+        assert( _storage.get() );
         for ( int i = 0; i != _storageCapacity; i++ )
             new ( _data() + i ) T();
     }
@@ -69,7 +70,6 @@ public:
     bool push_back( T val ) {
         if ( full() )
             return false;
-
         _data()[ _tail ] = std::move( val );
         _tail = _next( _tail );
         return true;

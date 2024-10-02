@@ -3,4 +3,3 @@ project(rofi)
 
 add_executable(rofi-tangle ${ARMADILLO_LIBRARIES} main.cpp)
 target_link_libraries(rofi-tangle PUBLIC legacy-configuration dimcli)
-

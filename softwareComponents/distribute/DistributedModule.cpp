@@ -42,5 +42,3 @@ std::string DistributedModule::printModule(const DistributedModuleProperties &mo
 
     return out.str();
 }
-
-

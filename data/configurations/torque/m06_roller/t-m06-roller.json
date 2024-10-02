@@ -1,0 +1,27 @@
+{
+    "gravitation": [
+        0.0,
+        2.0,
+        2.0
+    ],
+    "visitModuleStrategies": {
+        "pad": {},
+        "universal": {
+            "weights": {
+                "Roficom": 10.0,
+                "UmBody": 15.0,
+                "UmShoe": 30.0
+            },
+            "bounds": {
+                "Motor": 1672.27,
+                "GammaMotor": 493.88
+            }
+        }
+    },
+    "walls": [
+        {
+            "moduleId": 1,
+            "componentId": 0
+        }
+    ]
+}

@@ -41,4 +41,3 @@ E 11 B -X W +X A 13
 E 11 B -Z N -Z A 12
 E 12 A -X E +X B 13
 E 12 B -X N +X A 14
-

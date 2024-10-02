@@ -311,4 +311,3 @@ E 122 A -X W +X B 123
 E 122 B +X E +X A 124
 E 122 B -X E -X A 150
 E 123 A -Z E +X B 141
-

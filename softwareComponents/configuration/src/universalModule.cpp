@@ -30,11 +30,11 @@ std::vector< ComponentJoint > UniversalModule::_initJoints() {
             , Vector( { 1, 0, 0 } )
             , identity
             , -90_deg, 90_deg ),
-        makeComponentJoint< RotationJoint >( 7, 8 // BodyA <-> BodyB
+        makeComponentJoint< ModularRotationJoint >( 7, 8 // BodyA <-> BodyB
             , identity
             , Vector( { 0, 0, 1 } )
             , translate( { 0, 0, 1 } ) * rotate( Angle::pi, { 0, 1, 0 } )
-            , -180_deg, 180_deg ),
+            , 360_deg ),
         makeComponentJoint< RigidJoint >( 6, 0, identity ), // A-X
         makeComponentJoint< RigidJoint >( 6, 1, rotate( Angle::pi, { 0, 1, 0 } ) ), // A+X
         makeComponentJoint< RigidJoint >( 6, 2, rotate( Angle::pi, { 0, 0, 1 } ) * rotate( Angle::pi / 2, { 0, -1, 0 } ) ), // A-Z

@@ -216,4 +216,3 @@ struct Slave {
         LL_SPI_SetNSSMode( periph, LL_SPI_NSS_HARD_INPUT );
     }
 };
-

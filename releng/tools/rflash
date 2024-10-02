@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
 
-from multiprocessing.sharedctypes import Value
 import sys
 import os
 import subprocess
+from argparse import ArgumentParser
 from common import *
+
+def splitList(l, value):
+    try:
+        i = l.index(value)
+        return l[0:i], l[i+1:]
+    except ValueError:
+        return l, []
+
 
 def esp32GetTableFile(img):
     """
@@ -72,35 +80,65 @@ def flashEsp32Image(img, extra):
     retcode = subprocess.call(command)
     return retcode
 
-def flashStm32Image(img, extra):
+def enumerateStLinks():
+    proc = subprocess.run(["st-info", "--probe"], capture_output=True)
+    if proc.returncode != 0:
+        raise RuntimeError(f"Cannot probe ST-Links: {proc.stderr.decode('utf-8')}")
+    stlinks = [l.split(":")[1].strip() for l in proc.stdout.decode('utf-8').splitlines() if "serial:" in l]
+    return stlinks
+
+def flashStm32ImageAsync(img, extra, id=None):
     if not img.name.endswith(".hex"):
         raise RuntimeError("Only HEX images are supported")
     command = ["st-flash", "--format", "ihex", "--freq=3500"]
+    if id is not None:
+        command += ["--serial", id]
     command += extra
     command += ["write", img.path]
-    retcode = subprocess.call(command)
-    return retcode
+    return subprocess.Popen(command)
+
+def flashStm32Image(img, extra):
+    proc = flashStm32ImageAsync(img, extra)
+    proc.wait()
+    return proc.returncode
+
+def flashStm32Images(img, all, extra):
+    if not all:
+        return flashStm32Image(img, extra)
+    procs = [flashStm32ImageAsync(img, extra, id) for id in enumerateStLinks()]
+    for p in procs:
+        p.wait()
+    for p in procs:
+        if p.returncode != 0:
+            return 1
+    return 0
 
 def run():
-    if len(sys.argv) < 2 or (len(sys.argv) >= 3 and sys.argv[2] != "--"):
-        sys.exit(
-            "Invalid usage!\n\n"
-            "Invoke as rflash <name_of_image> -- <extra_flash_parameters>...\n"
-        )
-    extraArgs = sys.argv[3:]
+    parser = ArgumentParser(
+        prog="rflash",
+        description="Flash embedded images from RoFI suite"
+    )
+    parser.add_argument("image", type=str)
+    parser.add_argument("-a", "--all", action='store_true')
+
+    rflashArgs, extraArgs = splitList(sys.argv, "--")
+    args = parser.parse_args(rflashArgs[1:])
+
+
     imgs = collectImages()
     try:
-        img = imgs[sys.argv[1]]
+        img = imgs[args.image]
     except KeyError:
-        sys.exit(f"Unknown image {sys.argv[1]}")
+        sys.exit(f"Unknown image {args.image}")
     if img.suite == "esp32":
         retcode = flashEsp32Image(img, extraArgs)
         sys.exit(retcode)
     if img.suite == "stm32":
-        retcode = flashStm32Image(img, extraArgs)
+        retcode = flashStm32Images(img, all, extraArgs)
+        enumerateStLinks() # Forces restart of all MCUs
         sys.exit(retcode)
     else:
-        sys.exit(f"Unsupported platform {img[0]}")
+        sys.exit(f"Unsupported platform {args.image}")
 
 if __name__ == "__main__":
     try:

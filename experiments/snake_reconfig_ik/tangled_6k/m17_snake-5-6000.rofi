@@ -32,4 +32,3 @@ E 10 A -Z S +X B 13
 E 11 A -Z S -Z B 12
 E 11 B +X S -X A 15
 E 11 B -X W -X A 16
-

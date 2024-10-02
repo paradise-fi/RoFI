@@ -158,4 +158,3 @@ constexpr bool fitsIn( auto x ) {
         static_assert( always_false_v< T >, "Unreachable" );
     }
 }
-

@@ -18,4 +18,3 @@ E 3 B -X S -Z A 7
 E 2 B -Z W -Z A 8
 E 1 A -Z S -X B 9
 E 0 A -Z S +X B 3
-

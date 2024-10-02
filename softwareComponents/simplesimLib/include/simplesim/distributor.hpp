@@ -39,6 +39,7 @@ public:
     ~Distributor()
     {
         assert( _sub );
+        _logger.logUnsubscribe( _sub->GetTopic() );
         _sub->Unsubscribe();
     }
 
@@ -66,7 +67,7 @@ private:
         onRequest( *reqCopy );
     }
 
-    rofi::messages::DistributorResp onGetInfoReq();
+    rofi::messages::DistributorResp onGetInfoReq( SessionId sessionId );
     rofi::messages::DistributorResp onLockOneReq( SessionId sessionId );
     rofi::messages::DistributorResp onTryLockReq( ModuleId moduleId, SessionId sessionId );
     rofi::messages::DistributorResp onUnlockReq( ModuleId moduleId, SessionId sessionId );

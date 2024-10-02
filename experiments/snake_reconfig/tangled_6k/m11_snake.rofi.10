@@ -20,4 +20,3 @@ E 2 A -X S +X B 4
 E 1 B +X S -Z A 9
 E 0 A +X E -Z B 5
 E 0 A -Z E +X B 3
-

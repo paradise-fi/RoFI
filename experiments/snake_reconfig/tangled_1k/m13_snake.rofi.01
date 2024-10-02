@@ -25,4 +25,3 @@ E 2 B -X N -X A 10
 E 1 B -X N -X A 5
 E 0 A +X S -X B 10
 E 0 A -Z N -X B 11
-

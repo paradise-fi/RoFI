@@ -151,6 +151,10 @@ struct Gpio: public Peripheral< GPIO_TypeDef >, public detail::Gpio< Gpio > {
         bool _invert = false;
     };
 
+    /**
+     *  NOTE: This constructor is UNDEFINED in global space since it depends on
+     *        global variable, which has undefined time of initialization.
+     */
     Pin operator[]( int pin ) {
         return { pin, _periph };
     }

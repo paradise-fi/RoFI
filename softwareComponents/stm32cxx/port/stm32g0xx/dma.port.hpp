@@ -165,7 +165,7 @@ public:
             return *static_cast< ChSelf * >( this );
         }
 
-        void _handleIsr( DMA_TypeDef *periph, int channel ) {
+        void _handleIsr( DMA_TypeDef */*periph*/, int channel ) {
             if ( _firedHT( channel ) ) {
                 _clearHT( channel );
                 self()._half();

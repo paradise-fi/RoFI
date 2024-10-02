@@ -11,16 +11,16 @@ function(generate_image_from A_ELF_TARGET A_FLASH_SIZE)
     set(TSTAMP "${A_ELF_TARGET}.bin_timestamp")
 
     # Set correct flash size
-    set(FLASH_PARAMS ${ESPTOOLPY_FLASH_OPTIONS})
-    list(FIND FLASH_PARAMS "--flash_size" F_IDX)
+    set(FLASH_ARGS ${esptool_elf2image_args})
+    list(FIND FLASH_ARGS "--flash_size" F_IDX)
     if ( NOT ${F_IDX} EQUAL -1 )
         MATH(EXPR F_IDX_PP "${F_IDX} + 1")
-        list(REMOVE_AT FLASH_PARAMS ${F_IDX_PP})
-        list(INSERT FLASH_PARAMS ${F_IDX_PP} "${A_FLASH_SIZE}")
+        list(REMOVE_AT FLASH_ARGS ${F_IDX_PP})
+        list(INSERT FLASH_ARGS ${F_IDX_PP} "${A_FLASH_SIZE}")
     endif()
 
     add_custom_command(OUTPUT "${TSTAMP}"
-        COMMAND ${ESPTOOLPY} elf2image ${FLASH_PARAMS} ${esptool_elf2image_args}
+        COMMAND ${ESPTOOLPY} elf2image ${FLASH_ARGS}
             -o "${IMG_DIR}/${IMG_NAME}" "$<TARGET_FILE:${A_ELF_TARGET}>"
         COMMAND ln -s -f "$<TARGET_FILE:${A_ELF_TARGET}>" "${IMG_DIR}/${ELF_NAME}"
         COMMAND ${CMAKE_COMMAND} -E echo "${IMG_DIR}/${IMG_NAME}"

@@ -57,6 +57,9 @@ namespace rofi::configuration::serialization {
     }
 
     inline nlohmann::json matrixToJSON( const Matrix& m ) {
+        if ( rofi::configuration::matrices::equals( m, rofi::configuration::matrices::identity ) ) {
+            return "identity";
+        }
         nlohmann::json j = nlohmann::json::array();
         for ( int i = 0; i < 4; i++ )
             j[ i ] = { m( i, 0 ), m( i, 1 ), m( i, 2 ), m( i, 3 ) };
@@ -124,6 +127,13 @@ namespace rofi::configuration::serialization {
                 res[ "preMatrix" ]  = matrixToJSON( rj.pre() );
                 res[ "postMatrix" ] = matrixToJSON( rj.post() );
                 res[ "axis" ] = rj.axis();
+            },
+            [ &res ]( ModularRotationJoint& mrj ) {
+                res[ "type" ] = "modRotational";
+                res[ "modulo" ] = Angle::rad( mrj.jointLimits()[ 0 ].second ).deg();;
+                res[ "preMatrix" ]  = matrixToJSON( mrj.pre() );
+                res[ "postMatrix" ] = matrixToJSON( mrj.post() );
+                res[ "axis" ] = mrj.axis();
             }
         );
         return res;
@@ -323,6 +333,18 @@ namespace rofi::configuration::serialization {
                                                                         , Angle::deg( js[ "joint" ][ "max" ] ) ) );
                     details::processAttributes( j[ "joints" ][ i ], cb, joints.back(), i );
                     i++;
+                } else if ( js[ "joint" ][ "type" ] == "modRotational" ) {
+                    Vector axis;
+                    for ( int ix = 0; ix < 4; ix++ )
+                        axis[ ix ] = js[ "joint" ][ "axis" ][ ix ];
+
+                    joints.push_back( makeComponentJoint< ModularRotationJoint >( source, destination
+                                                                        , matrixFromJSON( js[ "joint" ][ "preMatrix" ] )
+                                                                        , axis
+                                                                        , matrixFromJSON( js[ "joint" ][ "postMatrix" ] )
+                                                                        , Angle::deg( js[ "joint" ][ "modulo" ] ) ) );
+                    details::processAttributes( j[ "joints" ][ i ], cb, joints.back(), i );
+                    i++;
                 } else {
                     throw std::logic_error( "Unknown module was given an unknown ComponentJoint" );
                 }
@@ -372,8 +394,8 @@ namespace rofi::configuration::serialization {
         res[ "moduleJoints" ] = json::array();
         res[ "spaceJoints"  ] = json::array();
 
-        for ( const auto& m : world.modules() ) {
-            res[ "modules" ].push_back( details::moduleByTypeToJSON( *m.module, attrCb ) );
+        for ( const auto& rModule : world.modules() ) {
+            res[ "modules" ].push_back( details::moduleByTypeToJSON( rModule, attrCb ) );
         }
 
         for ( const RoficomJoint& rj : world.roficomConnections() ) {
