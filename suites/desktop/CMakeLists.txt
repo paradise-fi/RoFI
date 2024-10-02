@@ -181,12 +181,8 @@ endif()
 add_component(atoms)
 add_component(parsing)
 add_component(configuration)
-<<<<<<< HEAD
 add_component(geometry)
-add_component(voxel)
-=======
 add_component(voxelSerialization)
->>>>>>> master
 add_component(kinematics)
 add_component(reconfig)
 add_component(shapeReconfig)
