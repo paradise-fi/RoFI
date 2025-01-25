@@ -10,8 +10,9 @@ RofiRun::RofiRun( QWidget *parent )
     : QMainWindow( parent )
     , ui( std::make_unique< Ui::RofiRun >() )
 {
-    ui->setupUi(this);
+    ui->setupUi( this );
     connect( ui->configSelectButton, SIGNAL( released() ), this, SLOT( selectConfiguration() ) );
+    connect( ui->programSelectButton, SIGNAL( clicked( bool ) ), this, SLOT( selectProgram( bool ) ) );
     connect( ui->loadButton, SIGNAL( released() ), this, SLOT( loadConfiguration() ) );
     setUpRadioButton();
 }
@@ -31,6 +32,47 @@ void RofiRun::setUpRadioButton()
     connect( ui->buttonGroup, SIGNAL( buttonClicked( QAbstractButton* ) ), this, SLOT( selectFilter( QAbstractButton* ) ) );
 }
 
+void RofiRun::runSimulator( std::string simplesim_path )
+{
+    std::string filter = "";
+    if ( !_filter_path.isEmpty() )
+    {
+        filter = "-p" + _filter_path.toStdString();
+    }
+
+    QStringList sim_arguments;
+    sim_arguments << _config_path;
+
+    _simProcess = std::make_unique< QProcess >( this );
+
+    _simProcess->start( QString::fromStdString( simplesim_path ), sim_arguments );
+}
+
+void RofiRun::runModules( int delay, int count, bool printDetailed )
+{
+    for (auto i = 0; i < count; ++i)
+    {
+        _moduleProcesses.push_back( std::make_unique< ModuleConsole >( i, printDetailed, nullptr ) );
+        _moduleProcesses[ i ]->show();
+        _moduleProcesses[ i ]->runProgram( _program_path );
+        sleep( delay );
+    }
+}
+
+void RofiRun::stopRunningSimulation()
+{
+    for( auto it = _moduleProcesses.begin(); it != _moduleProcesses.end(); ++it)
+    {
+        it->reset( nullptr );
+    }
+
+    while( !_moduleProcesses.empty() )
+    {
+        _moduleProcesses.pop_back();
+    }
+
+}
+
 void RofiRun::loadConfiguration()
 {
     if ( _config_path.isEmpty() )
@@ -44,29 +86,47 @@ void RofiRun::loadConfiguration()
         return;
     }
 
-    std::string filter = "";
-    if ( !_filter_path.isEmpty() )
-    {
-        filter = "-p" + _filter_path.toStdString();
-    }
+    stopRunningSimulation();
 
     std::string simplesim_path = std::string( std::getenv( "ROFI_BUILD_DIR" ) ) 
                                 + "/desktop/bin/rofi-simplesim";
-                                
-    if ( execl( simplesim_path.c_str(),
-         simplesim_path.c_str(), 
-         _config_path.toStdString().c_str(),
-         filter.c_str(),
-         static_cast< char* >( 0 ) ) )
-    {
-        std::cerr << "Failed to launch simplesim: " << std::strerror( errno ) << std::endl; 
-    }
+
+    runSimulator( simplesim_path );
+    int simulationSleepDelay = ui->simulationDelay->value();
+    sleep(simulationSleepDelay);
+
+    QStringList arguments;
+    int modulesDelay = ui->moduleDelay->value();
+    int moduleCount = ui->moduleCount->value();
+    bool printDetailed = ui->detailedBox->isChecked();
+
+    runModules( modulesDelay, moduleCount, printDetailed );
 }
 
 void RofiRun::selectConfiguration()
 {
-    openExplorer(_config_path, ".json");
+    openExplorer( _config_path, ".json");
     ui->configEdit->setText(_config_path);
+}
+
+void RofiRun::selectProgram( bool )
+{
+    QDir directory( QString::fromStdString( std::string( std::getenv( "ROFI_BUILD_DIR" ) ) + "/desktop/bin/" ) );
+    std::vector< std::string > executables;
+
+    if ( !_selector )
+    {
+        QString executablesDirPath =  QString::fromStdString( std::getenv( "ROFI_BUILD_DIR" ) ) + "/desktop/bin/";
+        _selector = std::make_unique< SelectProgram >( executablesDirPath, this );
+    }
+
+    if ( _selector->exec() != QDialog::Accepted )
+    {
+        return;
+    }
+
+    _program_path = _selector->programPath();
+    ui->programEdit->setText( _program_path );
 }
 
 void RofiRun::selectFilter( QAbstractButton* button )

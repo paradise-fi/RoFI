@@ -1,5 +1,4 @@
-#ifndef EXPLORER_H
-#define EXPLORER_H
+#pragma once
 
 #include <memory>
 #include <string>
@@ -37,4 +36,3 @@ private:
     QString _path = "";
     std::string _extension = "";
 };
-#endif // EXPLORER_H

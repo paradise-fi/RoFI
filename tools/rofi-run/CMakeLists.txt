@@ -7,13 +7,19 @@ set(CMAKE_AUTORCC ON)
 set(FILES
         main/rofirun.h
         explorer/explorer.h
+        moduleConsole/moduleconsole.h
+        selectProgram/selectprogram.h
 
         main.cpp
         main/rofirun.cpp
         explorer/explorer.cpp
+        moduleConsole/moduleconsole.cpp
+        selectProgram/selectprogram.cpp
 
         main/rofirun.ui
         explorer/explorer.ui
+        moduleConsole/moduleconsole.ui
+        selectProgram/selectProgram.ui
 )
 
 add_executable(rofi-run main.cpp ${FILES})

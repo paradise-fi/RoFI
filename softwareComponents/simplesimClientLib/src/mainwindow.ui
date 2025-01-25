@@ -101,14 +101,6 @@
       </column>
      </widget>
     </item>
-    <item row="1" column="2">
-     <widget class="QPushButton" name="configureButton">
-      <property name="text">
-       <string>Configure and Run</string>
-      </property>
-      <addaction name="configureRun"/>
-     </widget>
-    </item>
    </layout>
   </widget>
   <widget class="QMenuBar" name="menubar">

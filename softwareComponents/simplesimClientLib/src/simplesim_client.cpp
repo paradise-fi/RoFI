@@ -35,7 +35,6 @@
 
 using rofi::configuration::UniversalModule;
 using rofi::simplesim::ChangeColor;
-using rofi::simplesim::RunModules;
 using rofi::simplesim::SimplesimClient;
 using rofi::simplesim::detail::ModuleRenderInfo;
 using namespace rofi::configuration::matrices;
@@ -333,7 +332,6 @@ SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
              this,
              SLOT( itemSelected( QTreeWidgetItem * ) ) );
     connect( _ui->changeColor, SIGNAL( triggered() ), this, SLOT( changeColorWindow() ) );
-    connect( _ui->configureButton, SIGNAL( released() ), this, SLOT( runModulesWindow() ) );
 
     this->show();
 }
@@ -430,47 +428,6 @@ void SimplesimClient::changeColorWindow()
     }
 
     _changeColorWindow->show();
-}
-
-void SimplesimClient::runModulesWindow()
-{
-    if ( _isRunning ) 
-    {
-        QMessageBox::warning
-        (
-            this,
-            tr( "Cannot run a simulation." ),
-            tr( "A simulation is already running. You must load up a new configuration first." )
-        );
-        return;
-    }
-    if ( !_runModulesWindow ) 
-    {
-        _runModulesWindow = 
-            std::make_unique< RunModules >( this );
-    }
-    // _runModulesWindow->show();
-    if (_runModulesWindow->exec() != QDialog::Accepted)
-    {
-        return;
-    }
-    std::string simplesimPath = std::string( std::getenv( "ROFI_BUILD_DIR" ) ) + "/desktop/bin/rofi-simplesim";
-    std::string program = _runModulesWindow->getProgram();
-    std::string programPath = std::string( std::getenv( "ROFI_BUILD_DIR" ) ) + "/desktop/bin/" + program; 
-    
-    QString executable = QString::fromStdString( programPath );
-    QStringList arguments;
-    
-    std::size_t moduleCount = getCurrentConfig()->modules().size();
-
-    for ( std::size_t i = 0; i < moduleCount; ++i )
-    {
-        std::cout << "Running module " << i << std::endl;
-        _moduleProcesses.push_back( std::make_unique< QProcess >( this ) );
-        _moduleProcesses[i]->start( executable, arguments );
-
-        // ToDo: Capture output in a separate console window.
-    }
 }
 
 void SimplesimClient::setCamera( Matrix focalPoint )
