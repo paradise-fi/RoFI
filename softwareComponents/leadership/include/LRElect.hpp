@@ -1,9 +1,11 @@
 #pragma once
 
+#include <iostream>
 #include <networking/networkManager.hpp>
 #include <LRHelper.hpp>
 #include <set>
 #include <thread>
+#include <mutex>
 #include <functional>
 
 namespace rofi::leadership {
@@ -13,6 +15,8 @@ namespace rofi::leadership {
         NetworkManager& _net;
         const Ip6Addr& _myAddr;
         Ip6Addr _leader;
+        std::function<void()> _elected_callback;
+        std::function<void()> _failed_callback;
 
         std::once_flag _startedFlag;
 
@@ -32,6 +36,7 @@ namespace rofi::leadership {
             }
 
             if ( addr == _leader ) {
+                _elected_callback();
                 _leaderContact = true;
                 _minTimeJoined = logTime;
             }
@@ -46,6 +51,7 @@ namespace rofi::leadership {
         }
 
         void _leaderFailure() {
+            _failed_callback();
             _leader = _myAddr;
             _minTimeJoined = _timeJoined;
         }
@@ -63,6 +69,7 @@ namespace rofi::leadership {
             }
             while ( true ) {
                 if ( _leader == _myAddr ) {
+                    _elected_callback();
                     for ( const Interface& interface : _net.interfaces() ) {
                         if ( interface.name() == "rl0" ) {
                             continue;
@@ -94,7 +101,13 @@ namespace rofi::leadership {
          * @param addr A reference to the address that this module will use as its identity for the election. Must be unique.
          * @param period The period of seconds between election mechanisms. Default = 3.
         */
-        LRElect( NetworkManager& net, const Ip6Addr& addr, unsigned int period ) : _net( net ), _myAddr( addr ),  _leader( addr ) {
+        LRElect( NetworkManager& net, const Ip6Addr& addr, 
+            unsigned int period, 
+            std::function<void()> elected_callback,
+            std::function<void()> failed_callback ) 
+        : _net( net ), _myAddr( addr ),  _leader( addr ),
+          _elected_callback( elected_callback ),
+          _failed_callback( failed_callback ) {
             _timeJoined = 0;
             _minTimeJoined = 0;
             _period = period;
@@ -103,7 +116,7 @@ namespace rofi::leadership {
             net.setProtocol( *prot );
         }
 
-        LRElect( NetworkManager& net, const Ip6Addr& addr ) : LRElect( net, addr, 3 ){}
+        LRElect( NetworkManager& net, const Ip6Addr& addr ) : LRElect( net, addr, 3, [] { std::cout << "Election Success" << std::endl; }, [] { std::cout << "Election Failure" << std::endl; }){}
 
         /**
          * Start the algorithm.

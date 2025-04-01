@@ -1,0 +1,7 @@
+PRiority vo fronte taskov - pre kernel space tasky, atd.
+
+Moze to riesit aj uzivatel???
+
+Modularita kodu?
+
+Distribuovana pamat - posiela kopie

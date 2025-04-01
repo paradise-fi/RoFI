@@ -131,7 +131,7 @@ void testLR( NetworkManager& net, int id, Ip6Addr& addr ) {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distr(0, 100);
 
-    LRElect election( net, addr, 5 );
+    LRElect election( net, addr, 5, []{ std::cout << "Elected" << std::endl; }, []{ std::cout << "Failed" << std::endl; } );
     election.start( id );
     election.start( id );
     
