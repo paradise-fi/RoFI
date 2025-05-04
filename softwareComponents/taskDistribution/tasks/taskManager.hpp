@@ -4,7 +4,7 @@
 
 class TaskManager
 {
-    // This int should be atomic!
+    // ToDo: This int should be atomic!
     int _taskId = 1;
     std::unique_ptr< TaskBase > _initialTask;
     std::map< Ip6Addr, std::queue< std::unique_ptr< TaskBase > > > _tasks;
@@ -87,5 +87,10 @@ public:
         auto task = std::move( taskQueue->second.back() );
         taskQueue->second.pop();
         return task;
+    }
+
+    void clearTasks()
+    {
+        _tasks.clear();
     }
 };

@@ -1,21 +1,15 @@
+#include "messageSender.hpp"
 #include "taskManager.hpp"
 #include "functionManager.hpp"
 #include "LRElect.hpp"
+#include "../memory/sharedMemoryBase.hpp"
+#include "../memory/replicatedMemory.hpp"
 #include <boost/lockfree/queue.hpp>
 
 using namespace rofi::hal;
 using namespace rofi::net;
 using namespace rofi::leadership;
 using namespace std::chrono_literals;
-
-enum DistributionMessageType {
-    TaskRequest,
-    TaskAssignment,
-    TaskResult,
-    TaskFailed,
-    MalformedMessage,
-    FollowerBusy
-};
 
 class DistributionManager
 {
@@ -24,6 +18,8 @@ class DistributionManager
     TaskManager _task_manager;
     FunctionManager _function_manager;
     NetworkManager& _net_manager;
+    MessageSender _sender;
+    std::unique_ptr< SharedMemoryBase > _memory;
     Ip6Addr _address;
     LRElect _election;
 
@@ -64,22 +60,24 @@ class DistributionManager
 
     void onLeaderElected()
     {
-        std::cout << "Leader: " << _election.getLeader() << std::endl;
-
         if ( _elected_count == 3 )
         {
             std::cout << "Election stabilized." << std::endl;
+            if ( _memory != nullptr )
+            {
+                _memory->setLeader( _election.getLeader() ); 
+            }
 
             if ( _address == _election.getLeader() )
             {
-                // Remove any registered tasks.
+                _task_manager.clearTasks();
                 std::cout << "I am the leader." << std::endl;
             }
             else 
             {
                 std::cout << "I am a follower." << std::endl;
                 auto emptyTask = Task< int >(0);
-                sendMessage( DistributionMessageType::TaskRequest, emptyTask, _election.getLeader() );
+                _sender.sendMessage( DistributionMessageType::TaskRequest, emptyTask, _election.getLeader() );
             }
             _elected_count++;
         }
@@ -94,24 +92,6 @@ class DistributionManager
     void onLeaderFailed()
     {
         _elected_count = 0;
-    }
-
-    void sendMessage( DistributionMessageType type, TaskBase& task, const Ip6Addr& target)
-    {
-        auto buffer = rofi::hal::PBuf::allocate( task.size() 
-                                                 + static_cast< std::size_t >( sizeof( DistributionMessageType ) 
-                                                 + static_cast< std::size_t >( sizeof( Ip6Addr ) ) ) );
-        as< DistributionMessageType >( buffer.payload() ) = type;
-        as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
-        task.copyToBuffer( buffer, sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
-
-        std::cout << "Sending message to " << target << std::endl;
-        auto result = udp_sendto( _pcb.get(), buffer.release(), &target, DISTRIBUTION_PORT );
-
-        if ( result != ERR_OK )
-        {
-            std::cout << "Error while sending message: " << lwip_strerr( result ) << std::endl;
-        }
     }
 
     void doWorkLeader()
@@ -136,10 +116,10 @@ class DistributionManager
                 std::cout << "Task distribution failed: No initial task given.";
                 return;
             }
-            sendMessage( DistributionMessageType::TaskAssignment, initial.value(), requester );
+            _sender.sendMessage( DistributionMessageType::TaskAssignment, initial.value(), requester );
             return;
         }
-        sendMessage( DistributionMessageType::TaskAssignment, *(task.value().get()), requester );
+        _sender.sendMessage( DistributionMessageType::TaskAssignment, *(task.value().get()), requester );
     }
 
     void doWorkFollower()
@@ -155,24 +135,25 @@ class DistributionManager
         
         if  ( !_function_manager.invokeFunction( *task.get() ) )
         {
-            sendMessage( DistributionMessageType::TaskFailed, *task.get(), _election.getLeader() );
+            _sender.sendMessage( DistributionMessageType::TaskFailed, *task.get(), _election.getLeader() );
             return;
         }
 
-        sendMessage( DistributionMessageType::TaskResult, *task.get(), _election.getLeader() );
+        _sender.sendMessage( DistributionMessageType::TaskResult, *task.get(), _election.getLeader() );
     }
 
 public:
-    DistributionManager(NetworkManager& netmg, Ip6Addr& address) 
+    DistributionManager(NetworkManager& netmg, Ip6Addr& address, MessageDistributor* distributor) 
     : _net_manager( netmg ), _address( address ),
       _taskRequests( boost::lockfree::queue< ip6_addr_t >( 1024 ) ),
-      _election( netmg, address, 5, 
+      _election( netmg, distributor, address, 5,
         [ this ] {
             onLeaderElected();
         },
         [ this ] {
             onLeaderFailed();
-        } ) 
+        } ),
+      _sender( MessageSender( address, DISTRIBUTION_PORT ) )
     { 
         LOCK_TCPIP_CORE();
         _pcb = std::make_unique< udp_pcb >( *udp_new() );
@@ -187,6 +168,38 @@ public:
         udp_bind( _pcb.get(), IP6_ADDR_ANY, DISTRIBUTION_PORT );
         udp_recv( _pcb.get(), recv_message, this);
         UNLOCK_TCPIP_CORE();
+
+        _sender.setPcb( _pcb.get() );
+    }
+
+    // TODO: Add possibility to use any memory manager.
+    bool useDistributedMemory(MessageDistributor* distributor)
+    {
+        _memory = std::make_unique< ReplicatedMemoryManager >( _net_manager, distributor, _address, _sender );
+    }
+
+    bool saveData( uint8_t* data, int size, int address )
+    {
+        std::cout << "In save" << std::endl;
+        if ( _memory == nullptr )
+        {
+            return false;
+        }
+        return _memory->store( data, size, address );
+    }
+
+    template< typename T >
+    bool readData( int address, T& out )
+    {
+        std::vector< uint8_t > data = _memory->read( address );
+
+            if ( data.size() < sizeof( T ) )
+            {
+                return false;    
+            }
+
+            std::memcpy( &out, data.data(), sizeof( T ) );
+            return true;
     }
 
     void doWork()
@@ -274,9 +287,19 @@ public:
 
         if ( type == DistributionMessageType::TaskFailed )
         {
-            std::cout << "Received Task Failure from " << Ip6Addr( sender ) << std::endl;
+            std::cout << "Received Task Failure from " << sender << std::endl;
             // How to react?
             return;
+        }
+
+        if ( type == DistributionMessageType::DataStorageRequest )
+        {
+            std::cout << "Received Data Storage Request from " << sender << std::endl;
+            if (_memory != nullptr)
+            {
+                return _memory->onStorageMessage( sender, packet.payload(), sizeof( DistributionMessageType ) + Ip6Addr::size(), packet.size() );
+            }
+            // TODO: Exception if memory is nullptr?
         }
 
         
