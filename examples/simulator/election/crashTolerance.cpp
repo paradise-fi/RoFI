@@ -131,32 +131,32 @@ void testLR( NetworkManager& net, int id, Ip6Addr& addr ) {
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> distr(0, 100);
 
-    LRElect election( net, addr, 5, []{ std::cout << "Elected" << std::endl; }, []{ std::cout << "Failed" << std::endl; } );
-    election.start( id );
-    election.start( id );
+    // LRElect election( net, addr, 5, []{ std::cout << "Elected" << std::endl; }, []{ std::cout << "Failed" << std::endl; } );
+    // election.start( id );
+    // election.start( id );
     
-    NetworkManagerCli netcli( net );
-    std::string line;
-    while ( std::getline( std::cin, line ) ) {
-        if ( line.empty() ) {
-            std::cout << ">> ";
-            continue;
-        } else if ( line == "end" ) {
-            return;
-        } else if ( line == "leader" || line == "lead" ) {
-            std::cout << "My (" << addr << ") leader: " << election.getLeader() << "\n";
-        }
+    // NetworkManagerCli netcli( net );
+    // std::string line;
+    // while ( std::getline( std::cin, line ) ) {
+    //     if ( line.empty() ) {
+    //         std::cout << ">> ";
+    //         continue;
+    //     } else if ( line == "end" ) {
+    //         return;
+    //     } else if ( line == "leader" || line == "lead" ) {
+    //         std::cout << "My (" << addr << ") leader: " << election.getLeader() << "\n";
+    //     }
 
-        try {
-            if ( line == "connect" || line == "disconnect" ) {
-                changeConn( line == "connect" );
-            } else if ( netcli.command( line ) ) {}
-        } catch ( const std::exception& exc ) {
-            std::cout << "Bad input: " << exc.what() << std::endl;
-        }
+    //     try {
+    //         if ( line == "connect" || line == "disconnect" ) {
+    //             changeConn( line == "connect" );
+    //         } else if ( netcli.command( line ) ) {}
+    //     } catch ( const std::exception& exc ) {
+    //         std::cout << "Bad input: " << exc.what() << std::endl;
+    //     }
 
-        std::cout << ">> ";
-    }
+    //     std::cout << ">> ";
+    // }
 }
 
 void testTolerant( bool invitationTest ) {

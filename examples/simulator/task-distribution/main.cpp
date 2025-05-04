@@ -59,7 +59,11 @@ void startElectionProtocol() {
     auto rtProto = net.addProtocol( rofi::net::SimpleReactive() );
     net.setProtocol( *rtProto );
 
-    DistributionManager manager( net, addr );
+    auto messageDistributor = net.addProtocol( rofi::net::MessageDistributor( addr, net ) );
+    net.setProtocol( *messageDistributor );
+
+    DistributionManager manager( net, addr, reinterpret_cast< MessageDistributor* >( messageDistributor ) );
+    manager.useDistributedMemory( reinterpret_cast< MessageDistributor* >( messageDistributor ) );
     std::function< void ( std::optional< int >, const rofi::hal::Ip6Addr& ) > initReaction = 
         [&]( std::optional< int > moduleId, const Ip6Addr& sender ) 
         { 
@@ -72,6 +76,8 @@ void startElectionProtocol() {
             {
                 int modId = moduleId.value();
                 manager.pushTask< int, int >(sender, 1, std::make_tuple< int >( std::move( modId ) ) );
+                std::cout << "Going to save " << id << std::endl;
+                manager.saveData(reinterpret_cast< uint8_t* >( &id ), sizeof( int ), id );
             }
             else
             {
@@ -80,22 +86,35 @@ void startElectionProtocol() {
         };
     
     manager.registerFunction< int >( 0, std::function< int () >(initialFunction), initReaction );
-    manager.registerFunction< int, int >( 1, std::function< int ( int ) >( multiplyBy2 ), 
+    manager.registerFunction< int, int >( 1,
+        std::function< int ( int ) >( [&]( int number ) 
+        { 
+            int value = number * 2;
+            std::cout << "[MAIN] Saving Data in main.cpp multiply: " << id << std::endl;
+            manager.saveData( reinterpret_cast< uint8_t* >( &id ), sizeof( int ), id );
+            return value;
+        } ), 
         [&]( std::optional< int > result, const Ip6Addr& sender )
         {
-            std::cout << "Multiply result from " << sender << "is " << ( result.has_value() ? result.value() : -1 ) << std::endl;
+            std::cout << "[MAIN] Multiply result from " << sender << " is " << ( result.has_value() ? result.value() : -1 ) << std::endl;
             manager.pushTask< int >( sender, 2, std::tuple< int >() );
         }
     );
 
-    manager.registerFunction< int >( 2, std::function< int ( ) >( count ), 
+    manager.registerFunction< int >( 2, 
+        [&]() 
+        { 
+            std::cout << "[MAIN] Saving Data in main.cpp count: " << id << std::endl;
+            manager.saveData(reinterpret_cast< uint8_t* >( &id ), sizeof( int ), id);
+            return currentCount++;
+        }, 
         [&]( std::optional< int > result, const Ip6Addr& sender )
         {
-            std::cout << "Increment result from " << sender << "is " << ( result.has_value() ? result.value() : -1 ) << std::endl;
-            if ( result.has_value() && result.value() < 10 )
+            std::cout << "[MAIN] Increment result from " << sender << "is " << ( result.has_value() ? result.value() : -1 ) << std::endl;
+            if ( result.has_value() && result.value() < 5 )
             {
                 manager.pushTask< int >( sender, 2, std::tuple< int >() );
-            }
+            } 
         }
     );
 
@@ -104,6 +123,24 @@ void startElectionProtocol() {
 
     while (true){
         manager.doWork();
+        
+        int mem1 = 0;
+        if (manager.readData(1, mem1))
+        {
+            std::cout << "Data at address 1: " << mem1 << std::endl;
+        }
+
+        int mem2 = 0;
+        if (manager.readData(2, mem2))
+        {
+            std::cout << "Data at address 2: " << mem2 << std::endl;
+        }
+
+        int mem3 = 0;
+        if (manager.readData(3, mem3))
+        {
+            std::cout << "Data at address 3: " << mem3 << std::endl;
+        }
         sleep( id );
     }
 }

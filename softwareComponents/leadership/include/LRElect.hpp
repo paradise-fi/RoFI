@@ -3,6 +3,7 @@
 #include <iostream>
 #include <networking/networkManager.hpp>
 #include <LRHelper.hpp>
+#include <networking/protocols/messageDistributor.hpp>
 #include <set>
 #include <thread>
 #include <mutex>
@@ -12,6 +13,7 @@ namespace rofi::leadership {
     using namespace rofi::net;
 
     class LRElect {
+        const unsigned int METHOD_ID = 1;
         NetworkManager& _net;
         const Ip6Addr& _myAddr;
         Ip6Addr _leader;
@@ -27,15 +29,15 @@ namespace rofi::leadership {
 
         bool _leaderContact = false;
 
-        /** Called by the helper protocol to pass on a message. */
-        void _received( Ip6Addr addr, unsigned int logTime ) {
+        void _received( Ip6Addr sender_addr, unsigned int offset, uint8_t* data, unsigned int size ) {
+            unsigned int logTime = as< unsigned int >( data + offset );
             if ( ( logTime < _minTimeJoined ) 
-                || ( logTime == _minTimeJoined && addr < _leader ) ) {
-                _leader = addr;
+                || ( logTime == _minTimeJoined && sender_addr < _leader ) ) {
+                _leader = sender_addr;
                 _minTimeJoined = logTime;
             }
 
-            if ( addr == _leader ) {
+            if ( sender_addr == _leader ) {
                 _elected_callback();
                 _leaderContact = true;
                 _minTimeJoined = logTime;
@@ -70,18 +72,19 @@ namespace rofi::leadership {
             while ( true ) {
                 if ( _leader == _myAddr ) {
                     _elected_callback();
-                    for ( const Interface& interface : _net.interfaces() ) {
-                        if ( interface.name() == "rl0" ) {
-                            continue;
-                        }
-                        PBuf packet = PBuf::allocate( Ip6Addr::size() + 2 * sizeof( unsigned int ) );
-                        as< Ip6Addr >( packet.payload() ) = _myAddr;
-                        as< unsigned int >( packet.payload() + Ip6Addr::size() ) = _timeJoined;
-                        as< unsigned int >( packet.payload() + Ip6Addr::size() + sizeof( unsigned int ) ) = _sequenceNumber;
-                        if ( ! const_cast< Interface& >( interface ).sendProtocol( _net.getProtocol( "lr-helper" )->address(), std::move( packet ) ) ) {
-                            assert( false && "failed to send a message to the helper protocol. Something went wrong." );
-                        }
+                    
+                    Protocol* proto = _net.getProtocol( "message-distributor" );
+                    if ( proto == nullptr )
+                    {
+                        std::cout << "Protocol message-distributor not found!" << std::endl;
+                        return;
                     }
+
+                    auto distributor = reinterpret_cast< MessageDistributor* >( proto );
+
+                    unsigned int data = _timeJoined;
+
+                    distributor->sendMessage( _myAddr, METHOD_ID, _sequenceNumber, reinterpret_cast< uint8_t* >( &data ), sizeof( unsigned int ) );
                     _sequenceNumber++;
                 } else {
                     if ( !_leaderContact ) {
@@ -95,28 +98,22 @@ namespace rofi::leadership {
         }
 
     public:
-        /** 
-         * The LRElect class constructor.
-         * @param net A reference to a RoFI network manager class instance.
-         * @param addr A reference to the address that this module will use as its identity for the election. Must be unique.
-         * @param period The period of seconds between election mechanisms. Default = 3.
-        */
-        LRElect( NetworkManager& net, const Ip6Addr& addr, 
+        LRElect( NetworkManager& net, 
+            MessageDistributor* distributor, 
+            const Ip6Addr& addr, 
             unsigned int period, 
             std::function<void()> elected_callback,
-            std::function<void()> failed_callback ) 
+            std::function<void()> failed_callback)
         : _net( net ), _myAddr( addr ),  _leader( addr ),
-          _elected_callback( elected_callback ),
-          _failed_callback( failed_callback ) {
+                _elected_callback( elected_callback ),
+                _failed_callback( failed_callback ) {
             _timeJoined = 0;
             _minTimeJoined = 0;
-            _period = period;
-            std::function< void ( const Ip6Addr, unsigned int ) > fun = [ this ]( const Ip6Addr address, unsigned int logTime ){ _received( address, logTime); };
-            Protocol* prot = net.addProtocol( LRHelper( addr, fun, [ this ](){ _increaseTimeJoined(); } ) );
-            net.setProtocol( *prot );
+            _period = 1;
+            distributor->registerMethod( METHOD_ID, 
+                [ this ]( Ip6Addr address, unsigned int offset, uint8_t* data, unsigned int size ){ _received( address, offset, data, size ); },
+                [ this ](){ _increaseTimeJoined(); } );
         }
-
-        LRElect( NetworkManager& net, const Ip6Addr& addr ) : LRElect( net, addr, 3, [] { std::cout << "Election Success" << std::endl; }, [] { std::cout << "Election Failure" << std::endl; }){}
 
         /**
          * Start the algorithm.
