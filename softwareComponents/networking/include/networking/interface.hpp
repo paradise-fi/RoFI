@@ -272,7 +272,7 @@ public:
             return false;
 
         auto [ netifIP, _ ] = getAddress().front();
-        err_t res = raw_sendto_if_src( _pcbs[ listenerAddr ], msg.release(), reinterpret_cast< const ip_addr_t* >( &listenerAddr )
+        err_t res = raw_sendto_if_src( _pcbs[ listenerAddr ], msg.get(), reinterpret_cast< const ip_addr_t* >( &listenerAddr )
                                      , &_netif,  reinterpret_cast< const ip_addr_t* >( &netifIP ) );
         if ( res != ERR_OK ) {
             log( Logger::Level::Warn

@@ -180,7 +180,6 @@ public:
 
     bool saveData( uint8_t* data, int size, int address )
     {
-        std::cout << "In save" << std::endl;
         if ( _memory == nullptr )
         {
             return false;
