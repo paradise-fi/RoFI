@@ -103,30 +103,6 @@ namespace rofi::net {
             }
         }
 
-        // PBuf&& wrapMessage( Ip6Addr sender, unsigned int method_id, unsigned int time_stamp, PBuf&& data )
-        // {
-        //     std::cout << "PBuf&& wrap" << std::endl;
-        //     PBuf packet = PBuf::allocate( Ip6Addr::size() + sizeof( unsigned int ) * 2 + data.size() );
-        //     as< Ip6Addr >( packet.payload() ) = sender;
-        //     as< unsigned int >( packet.payload() + Ip6Addr::size() ) = method_id;
-        //     as< unsigned int >( packet.payload() + Ip6Addr::size() + sizeof( unsigned int ) ) = time_stamp;
-        //     std::memcpy( packet.payload() + Ip6Addr::size() + sizeof( unsigned int ) * 2,
-        //                  data.payload(), data.size() );
-        //     return std::move( packet );
-        // }
-
-        // PBuf&& wrapMessage( Ip6Addr sender, unsigned int method_id, unsigned int time_stamp, uint8_t* data, int data_size )
-        // {
-        //     std::cout << "uint8_t* wrap" << std::endl;
-        //     PBuf packet = PBuf::allocate( Ip6Addr::size() + sizeof( unsigned int ) * 2 + data_size );
-        //     as< Ip6Addr >( packet.payload() ) = sender;
-        //     as< unsigned int >( packet.payload() + Ip6Addr::size() ) = method_id;
-        //     as< unsigned int >( packet.payload() + Ip6Addr::size() + sizeof( unsigned int ) ) = time_stamp;
-        //     std::memcpy( packet.payload() + Ip6Addr::size() + sizeof( unsigned int ) * 2,
-        //                  data, data_size );
-        //     return std::move( packet );
-        // }
-        
         bool registerMethod(unsigned int method_id, 
             std::function< void( Ip6Addr sender_addr, unsigned int offset, uint8_t* data, unsigned int size ) > onMessage,
             std::function< void( ) > connectionChanged )
@@ -174,6 +150,7 @@ namespace rofi::net {
             }
 
             _history.emplace_back( DistributorRecord{ senderAddr, method_id, stamp } );
+            // TODO: Remove offset by moving the pointer a bit. We want to keep that data away from the user.
             callbacks->second.messageReceived( senderAddr, Ip6Addr::size()  + sizeof( unsigned int ) * 2, packet.payload(), packet.size() ); 
             _sendMessagesInner( packet.payload(), packet.size(), method_id, interfaceName );
             return true;
