@@ -53,7 +53,6 @@ public:
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
         std::memcpy(buffer.payload() + sizeof( DistributionMessageType ) + Ip6Addr::size(), data.payload(), data.size() );
         auto result = udp_sendto( _pcb, buffer.release(), &target, _distribution_port );
-        std::cout << "sendto" << std::endl;
 
         if ( result != ERR_OK )
         {

@@ -61,8 +61,12 @@ class ReplicatedMemoryManager : public SharedMemoryBase {
         std::unique_lock lock( _mutex );
         
         auto entry = _storage.find( address );
-        if ( entry != _storage.end() && entry->second.stamp < stamp )
+        if ( entry != _storage.end() )
         {
+            if ( _my_address == _leader && entry->second.stamp >= stamp )
+            {
+                return;
+            }
             entry->second.stamp = stamp;
             entry->second.stored_data.resize( size );
             std::memcpy( entry->second.stored_data.data(), data, size );
@@ -97,7 +101,7 @@ class ReplicatedMemoryManager : public SharedMemoryBase {
         }
         saveData( address, stamp, data + offset + 3 * sizeof( int ), data_size );
         // Distribute to followers
-        sendDataThroughHelper( address, data + offset, size - offset, stamp + 1 );
+        sendDataThroughHelper( address, data + 3 * sizeof( int ) + offset, data_size, stamp + 1 );
         // Await responses from followers
     }
 
@@ -118,7 +122,6 @@ public:
         _leader = leader;
     }
 
-    // TODO: What to do with sender?
     void onStorageMessage( Ip6Addr sender, uint8_t* data, unsigned int offset, unsigned int size )
     { 
         if ( _leader == _my_address )

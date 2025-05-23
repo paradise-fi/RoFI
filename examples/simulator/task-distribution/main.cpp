@@ -3,6 +3,7 @@
 
 #include <networking/protocols/rrp.hpp>
 #include <networking/protocols/simpleReactive.hpp>
+#include <networking/protocols/simplePeriodic.hpp>
 
 #include <lwip/udp.h>
 #include <iostream>
@@ -51,17 +52,22 @@ void startElectionProtocol() {
     std::cout << "This module is: " << id << "\n";
 
     NetworkManager net( RoFI::getLocalRoFI() );
+    std::cout << "Made nmanager" << std::endl;
     Ip6Addr addr = createAddress( id );
     
+    std::cout << "Created addr " << std::endl;
     net.addAddress( addr, 80, net.interface( "rl0" ) );
+    std::cout << "Added addr " << std::endl;
     net.setUp();
+    std::cout << "After setup" << std::endl;
 
+    
     auto rtProto = net.addProtocol( rofi::net::SimpleReactive() );
     net.setProtocol( *rtProto );
 
     auto messageDistributor = net.addProtocol( rofi::net::MessageDistributor( addr, net ) );
     net.setProtocol( *messageDistributor );
-
+ 
     DistributionManager manager( net, addr, reinterpret_cast< MessageDistributor* >( messageDistributor ) );
     manager.useDistributedMemory( reinterpret_cast< MessageDistributor* >( messageDistributor ) );
     std::function< void ( std::optional< int >, const rofi::hal::Ip6Addr& ) > initReaction = 
@@ -90,8 +96,10 @@ void startElectionProtocol() {
         std::function< int ( int ) >( [&]( int number ) 
         { 
             int value = number * 2;
-            std::cout << "[MAIN] Saving Data in main.cpp multiply: " << id << std::endl;
-            manager.saveData( reinterpret_cast< uint8_t* >( &id ), sizeof( int ), id );
+
+            int save = id * 100 + number;
+            std::cout << "[MAIN] Saving Data in main.cpp multiply: " << save << std::endl;
+            manager.saveData( reinterpret_cast< uint8_t* >( &save ), sizeof( int ), id );
             return value;
         } ), 
         [&]( std::optional< int > result, const Ip6Addr& sender )
@@ -104,8 +112,9 @@ void startElectionProtocol() {
     manager.registerFunction< int >( 2, 
         [&]() 
         { 
-            std::cout << "[MAIN] Saving Data in main.cpp count: " << id << std::endl;
-            manager.saveData(reinterpret_cast< uint8_t* >( &id ), sizeof( int ), id);
+            int save = id * 100 + currentCount;
+            std::cout << "[MAIN] Saving Data in main.cpp count: " << save << std::endl;
+            manager.saveData(reinterpret_cast< uint8_t* >( &save ), sizeof( int ), id);
             return currentCount++;
         }, 
         [&]( std::optional< int > result, const Ip6Addr& sender )
@@ -122,6 +131,8 @@ void startElectionProtocol() {
     manager.start( id );
 
     while (true){
+        sleep( 1 );
+        std::cout << "EMPTY" << std::endl;
         manager.doWork();
         
         int mem1 = 0;
@@ -141,7 +152,7 @@ void startElectionProtocol() {
         {
             std::cout << "Data at address 3: " << mem3 << std::endl;
         }
-        sleep( id );
+        // sleep( id );
     }
 }
 
