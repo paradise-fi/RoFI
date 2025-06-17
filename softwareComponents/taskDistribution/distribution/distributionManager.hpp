@@ -13,18 +13,16 @@ using namespace std::chrono_literals;
 
 class DistributionManager
 {
-    static const int DISTRIBUTION_PORT = 7071;
-
     TaskManager _task_manager;
     FunctionManager _function_manager;
     NetworkManager& _net_manager;
-    MessageSender _sender;
-    std::unique_ptr< SharedMemoryBase > _memory;
     Ip6Addr _address;
-    LRElect _election;
 
     boost::lockfree::queue< ip6_addr_t > _taskRequests;
 
+    LRElect _election;
+    MessageSender _sender;
+    std::unique_ptr< SharedMemoryBase > _memory;
     std::unique_ptr< udp_pcb > _pcb;
     
     int _elected_count = 0;
@@ -42,7 +40,7 @@ class DistributionManager
         }   
     }
 
-    std::unique_ptr< TaskBase > getTaskFromBuffer(PBuf& buffer, int functionId, int start)
+    std::unique_ptr< TaskBase > getTaskFromBuffer( uint8_t* buffer, int functionId )
     {
         auto fnOptional = _function_manager.getFunction( functionId );
 
@@ -54,7 +52,7 @@ class DistributionManager
 
         auto fun = fnOptional.value();
         auto task = fun.get().createTask();
-        task->fillFromBuffer(buffer, start);
+        task->fillFromBuffer( buffer );
         return task;
     }
 
@@ -62,7 +60,6 @@ class DistributionManager
     {
         if ( _elected_count == 3 )
         {
-            std::cout << "Election stabilized." << std::endl;
             if ( _memory != nullptr )
             {
                 _memory->setLeader( _election.getLeader() ); 
@@ -85,8 +82,6 @@ class DistributionManager
         {
             _elected_count++;
         }
-        
-        
     }
 
     void onLeaderFailed()
@@ -143,7 +138,9 @@ class DistributionManager
     }
 
 public:
-    DistributionManager(NetworkManager& netmg, Ip6Addr& address, MessageDistributor* distributor) 
+    static const int DISTRIBUTION_PORT = 7071;
+
+    DistributionManager(NetworkManager& netmg, Ip6Addr& address, MessageDistributor* distributor, std::unique_ptr< udp_pcb > pcb) 
     : _net_manager( netmg ), _address( address ),
       _taskRequests( boost::lockfree::queue< ip6_addr_t >( 1024 ) ),
       _election( netmg, distributor, address, 5,
@@ -153,10 +150,10 @@ public:
         [ this ] {
             onLeaderFailed();
         } ),
-      _sender( MessageSender( address, DISTRIBUTION_PORT ) )
+      _sender( MessageSender( address, DISTRIBUTION_PORT, pcb.get() ) )
     { 
         LOCK_TCPIP_CORE();
-        _pcb = std::make_unique< udp_pcb >( *udp_new() );
+        _pcb = std::move( pcb );
         UNLOCK_TCPIP_CORE();
 
         if ( !_pcb )
@@ -168,14 +165,24 @@ public:
         udp_bind( _pcb.get(), IP6_ADDR_ANY, DISTRIBUTION_PORT );
         udp_recv( _pcb.get(), recv_message, this);
         UNLOCK_TCPIP_CORE();
-
-        _sender.setPcb( _pcb.get() );
     }
+
+    bool useMemory( std::unique_ptr< SharedMemoryBase > memory )
+    {
+        if (_memory != nullptr )
+        {
+            return false;
+        }
+
+        _memory = std::move( memory );
+        return true;
+    } 
 
     // TODO: Add possibility to use any memory manager.
     bool useDistributedMemory(MessageDistributor* distributor)
     {
         _memory = std::make_unique< ReplicatedMemoryManager >( _net_manager, distributor, _address, _sender );
+        return true;
     }
 
     bool saveData( uint8_t* data, int size, int address )
@@ -236,9 +243,9 @@ public:
     /// @param arguments The arguments for the function.
     /// @return True if the push was succesful. Otherwise false.
     template< typename Result, typename... Arguments >
-    bool pushTask( const Ip6Addr& addr, int functionId, std::tuple< Arguments... >&& arguments )
+    bool pushTask( const Ip6Addr& addr, int functionId, int priority, std::tuple< Arguments... >&& arguments )
     {
-        bool result = _task_manager.enqueueTask< Result >( addr, functionId, std::move( arguments ) );
+        bool result = _task_manager.enqueueTask< Result >( addr, functionId, priority, std::move( arguments ) );
         _taskRequests.push(addr);
         return result;  
     }
@@ -265,7 +272,7 @@ public:
     void receiveMessage( void*,
         struct udp_pcb*,
         struct pbuf* p,
-        const ip6_addr_t* addr, 
+        const ip6_addr_t*, 
         u16_t )
     {
         if ( !p )
@@ -296,18 +303,18 @@ public:
             std::cout << "Received Data Storage Request from " << sender << std::endl;
             if (_memory != nullptr)
             {
-                return _memory->onStorageMessage( sender, packet.payload(), sizeof( DistributionMessageType ) + Ip6Addr::size(), packet.size() );
+                unsigned int offset = sizeof( DistributionMessageType ) + Ip6Addr::size();
+                return _memory->onStorageMessage( sender, packet.payload() + offset, packet.size() - offset );
             }
             // TODO: Exception if memory is nullptr?
         }
 
         
-        int functionId = as< int >( packet.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) ); //static_cast< int >( packet[ sizeof( DistributionMessageType ) ] );
+        int functionId = as< int >( packet.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
 
         auto task = getTaskFromBuffer(
-            packet, 
-            functionId, 
-            sizeof( DistributionMessageType ) + sizeof( int ) + sizeof( Ip6Addr ) );
+            packet.payload() + sizeof( DistributionMessageType ) + sizeof( int ) + sizeof( Ip6Addr ), 
+            functionId );
         
         if ( task == nullptr )
         {
@@ -324,7 +331,6 @@ public:
 
         if ( type == DistributionMessageType::TaskResult )
         {
-            const TaskBase& test = *task.get();
             std::cout << "Received result from " << sender << " for Task with ID " << task->id() << std::endl;
             if ( !_function_manager.invokeReaction( sender, *task.get() ) )
             {
