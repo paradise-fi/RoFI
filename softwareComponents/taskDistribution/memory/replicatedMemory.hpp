@@ -11,10 +11,10 @@ class ReplicatedMemoryManager : public SharedMemoryBase {
     const unsigned int METHOD_ID = 2;
     unsigned int sender_stamp = 0;
     NetworkManager& _net_manager;
-    MessageSender& _sender;
     const Ip6Addr& _my_address;
     Ip6Addr _leader;
-    // TODO: MUST BE THREAD SAFE!!!!!
+    MessageSender& _sender;
+
     std::map< int, MemoryEntry > _storage;
     mutable std::shared_mutex _mutex;
 
@@ -80,29 +80,32 @@ class ReplicatedMemoryManager : public SharedMemoryBase {
         }
     }
 
-    void onMemoryReplicationFollower( uint8_t* data, unsigned int offset, unsigned int size )
+    void onMemoryReplicationFollower( uint8_t* data )
     {
-        int address = as< int >( data + offset );
-        int stamp = as< int >( data + offset + sizeof( int ) );
-        int data_size = as< int >( data + offset + 2 * sizeof( int ) );
-        saveData( address, stamp, data + offset + 3 * sizeof( int ), data_size );
+        int address = as< int >( data );
+        unsigned int stamp = as< unsigned int >( data + sizeof( int ) );
+        int data_size = as< int >( data + sizeof( int ) + sizeof( unsigned int ) );
+        
+        saveData( address, stamp, data + 2 * sizeof( int ) + sizeof( unsigned int ), data_size );
         _sender.sendMessage( DistributionMessageType::DataStorageSuccess, _leader );
     }
 
-    void onMemoryReplicationLeader( uint8_t* data, unsigned int offset, unsigned int size )
+    void onMemoryReplicationLeader( uint8_t* data )
     {
-        int address = as< int >( data + offset );
-        int stamp = as< int >( data + offset + sizeof( int ) );
-        int data_size = as< int >( data + offset + 2 * sizeof( int ) );
+        int address = as< int >( data );
+        unsigned int stamp = as< unsigned int >( data + sizeof( int ) );
+        int data_size = as< int >( data + sizeof( int ) + sizeof( unsigned int ) );
         auto current_value = _storage.find( address );
+        
         if ( current_value != _storage.end() && current_value->second.stamp >= stamp )
         {
             return;
         }
-        saveData( address, stamp, data + offset + 3 * sizeof( int ), data_size );
+        
+        saveData( address, stamp, data + 2 * sizeof( int ) + sizeof( unsigned int ), data_size );
         // Distribute to followers
-        sendDataThroughHelper( address, data + 3 * sizeof( int ) + offset, data_size, stamp + 1 );
-        // Await responses from followers
+        sendDataThroughHelper( address, data + 2 * sizeof( int ) + sizeof( unsigned int ), data_size, stamp + 1 );
+        // Await responses from followers?
     }
 
 public:
@@ -110,9 +113,9 @@ public:
     : _net_manager( netManager ), _my_address( myAddress ), _leader( myAddress ), _sender( sender )
     {
         distributor->registerMethod( METHOD_ID, 
-            [ this ] ( Ip6Addr sender, unsigned int offset, uint8_t* data, unsigned int size ) 
+            [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
             {
-                onStorageMessage( sender, data, offset, size ); 
+                onStorageMessage( sender, data, size ); 
             },
             [] () { return; } );
     }
@@ -122,14 +125,14 @@ public:
         _leader = leader;
     }
 
-    void onStorageMessage( Ip6Addr sender, uint8_t* data, unsigned int offset, unsigned int size )
+    void onStorageMessage( Ip6Addr, uint8_t* data, unsigned int )
     { 
         if ( _leader == _my_address )
         {
-            return onMemoryReplicationLeader( data, offset, size );
+            return onMemoryReplicationLeader( data );
         }
 
-        onMemoryReplicationFollower( data, offset, size );
+        onMemoryReplicationFollower( data );
     }
 
     virtual bool store( uint8_t* data, int size, int address ) override
@@ -154,9 +157,9 @@ public:
         // Address, Stamp, Size, Data
         PBuf packet = PBuf::allocate( 3 * sizeof( int ) + size );
         as< int >( packet.payload() ) = address;
-        as< int >( packet.payload() + sizeof( int ) ) = timestamp;
-        as< int >( packet.payload() + 2 * sizeof( int ) ) = size;
-        std::memcpy( packet.payload() + 3 * sizeof( int ), data, size );
+        as< unsigned int >( packet.payload() + sizeof( int ) ) = timestamp;
+        as< int >( packet.payload() + sizeof( int ) + sizeof( unsigned int ) ) = size;
+        std::memcpy( packet.payload() + 2 * sizeof( int ) + sizeof( unsigned int ), data, size );
         _sender.sendMessage( DistributionMessageType::DataStorageRequest, std::move( packet ), _leader );
         return true;
     }

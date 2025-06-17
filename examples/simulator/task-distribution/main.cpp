@@ -48,18 +48,18 @@ void startElectionProtocol() {
     std::cout << "Starting crash tolerant election test\n";
     tcpip_init( nullptr, nullptr );
 
+    LOCK_TCPIP_CORE();
+    auto pcb = std::make_unique< udp_pcb >( *udp_new() );
+    UNLOCK_TCPIP_CORE();
+
     int id = RoFI::getLocalRoFI().getId();
     std::cout << "This module is: " << id << "\n";
 
     NetworkManager net( RoFI::getLocalRoFI() );
-    std::cout << "Made nmanager" << std::endl;
     Ip6Addr addr = createAddress( id );
     
-    std::cout << "Created addr " << std::endl;
     net.addAddress( addr, 80, net.interface( "rl0" ) );
-    std::cout << "Added addr " << std::endl;
     net.setUp();
-    std::cout << "After setup" << std::endl;
 
     
     auto rtProto = net.addProtocol( rofi::net::SimpleReactive() );
@@ -68,26 +68,30 @@ void startElectionProtocol() {
     auto messageDistributor = net.addProtocol( rofi::net::MessageDistributor( addr, net ) );
     net.setProtocol( *messageDistributor );
  
-    DistributionManager manager( net, addr, reinterpret_cast< MessageDistributor* >( messageDistributor ) );
+    DistributionManager manager( net, addr, reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
+    
+    // ToDo: Use this
+    // manager.useMemory( std::make_unique< ReplicatedMemoryManager >( manager, messageDistributor, addr, sender ) );
+    
     manager.useDistributedMemory( reinterpret_cast< MessageDistributor* >( messageDistributor ) );
     std::function< void ( std::optional< int >, const rofi::hal::Ip6Addr& ) > initReaction = 
         [&]( std::optional< int > moduleId, const Ip6Addr& sender ) 
         { 
-            std::cout << "Received initial response from " << moduleId.value() << std::endl;
+            std::cout << "[InitReaction] Received initial response from " << moduleId.value() << std::endl;
             if ( !moduleId.has_value() )
             {
-                std::cout << "Something went wrong." << std::endl;
+                std::cout << "[InitReaction] Something went wrong." << std::endl;
             }
             if ( moduleId.value() % 2 == 0 )
             {
                 int modId = moduleId.value();
-                manager.pushTask< int, int >(sender, 1, std::make_tuple< int >( std::move( modId ) ) );
-                std::cout << "Going to save " << id << std::endl;
+                manager.pushTask< int, int >(sender, 1, 1, std::make_tuple< int >( std::move( modId ) ) );
+                std::cout << "[InitReaction] Going to save " << id << std::endl;
                 manager.saveData(reinterpret_cast< uint8_t* >( &id ), sizeof( int ), id );
             }
             else
             {
-                manager.pushTask< int >(sender, 2, std::tuple< int >() );
+                manager.pushTask< int >(sender, 2, 1, std::tuple< int >() );
             }
         };
     
@@ -105,7 +109,7 @@ void startElectionProtocol() {
         [&]( std::optional< int > result, const Ip6Addr& sender )
         {
             std::cout << "[MAIN] Multiply result from " << sender << " is " << ( result.has_value() ? result.value() : -1 ) << std::endl;
-            manager.pushTask< int >( sender, 2, std::tuple< int >() );
+            manager.pushTask< int >( sender, 2, 1, std::tuple< int >() );
         }
     );
 
@@ -122,7 +126,7 @@ void startElectionProtocol() {
             std::cout << "[MAIN] Increment result from " << sender << "is " << ( result.has_value() ? result.value() : -1 ) << std::endl;
             if ( result.has_value() && result.value() < 5 )
             {
-                manager.pushTask< int >( sender, 2, std::tuple< int >() );
+                manager.pushTask< int >( sender, 2, 1, std::tuple< int >() );
             } 
         }
     );
@@ -132,7 +136,6 @@ void startElectionProtocol() {
 
     while (true){
         sleep( 1 );
-        std::cout << "EMPTY" << std::endl;
         manager.doWork();
         
         int mem1 = 0;

@@ -19,11 +19,8 @@ class MessageSender {
     Ip6Addr& _address;
     u16_t _distribution_port;
 public:
-    MessageSender(Ip6Addr& address, u16_t port)
-    : _address( address ), _distribution_port( port ){}
-
-    void setPcb(udp_pcb* pcb)
-    {
+    MessageSender(Ip6Addr& address, u16_t port, udp_pcb* pcb)
+    : _address( address ), _distribution_port( port ){
         _pcb = pcb;
     }
 
@@ -34,7 +31,7 @@ public:
                                                  + sizeof( Ip6Addr ) );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
-        task.copyToBuffer( buffer, sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
+        task.copyToBuffer( buffer.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
 
         auto result = udp_sendto( _pcb, buffer.release(), &target, _distribution_port );
 

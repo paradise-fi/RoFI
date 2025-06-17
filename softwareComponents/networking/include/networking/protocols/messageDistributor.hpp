@@ -29,10 +29,10 @@ namespace rofi::net {
 
     struct DistributorCallbacks
     {
-        std::function< void( Ip6Addr sender_addr, unsigned int offset, uint8_t* data, unsigned int size ) > messageReceived;
+        std::function< void( Ip6Addr sender_addr, uint8_t* data, unsigned int size ) > messageReceived;
         std::function< void( ) > connectionChanged;
 
-        DistributorCallbacks(std::function< void( Ip6Addr sender_addr, unsigned int offset, uint8_t* data, unsigned int size ) > messageReceived,
+        DistributorCallbacks(std::function< void( Ip6Addr sender_addr, uint8_t* data, unsigned int size ) > messageReceived,
             std::function< void( ) > connectionChanged) : messageReceived( messageReceived ), connectionChanged( connectionChanged ) {}
     };
 
@@ -60,7 +60,7 @@ namespace rofi::net {
             }
         }
 
-        void _sendMessagesInner( uint8_t* data, int size, unsigned int method_id, const std::string& noSendInterfaceName )
+        void _sendMessagesInner( uint8_t* data, int size, const std::string& noSendInterfaceName )
         {
             for ( const Interface& interface : _manager.interfaces() )
             {
@@ -81,7 +81,7 @@ namespace rofi::net {
         MessageDistributor( const Ip6Addr& myAddr, NetworkManager& manager ) 
         : _myAddr( myAddr ), _manager( manager ) {}
 
-        void sendMessage( Ip6Addr sender, unsigned int method_id, unsigned int time_stamp, uint8_t* data, int data_size )
+        void sendMessage( Ip6Addr sender, unsigned int method_id, unsigned int time_stamp, uint8_t* data, long unsigned int data_size )
         {
             for ( const Interface& interface : _manager.interfaces() )
             {
@@ -95,7 +95,7 @@ namespace rofi::net {
                 as< unsigned int >( packet.payload() + Ip6Addr::size() ) = method_id;
                 as< unsigned int >( packet.payload() + Ip6Addr::size() + sizeof( unsigned int ) ) = time_stamp;
                 std::memcpy( packet.payload() + Ip6Addr::size() + sizeof( unsigned int ) * 2,
-                            data, data_size );
+                             data, data_size );
 
                 if ( !const_cast< Interface& >( interface ).sendProtocol( address(), std::move( packet ) ) ) {
                     assert( false && "failed to send a message to the helper protocol. Something went wrong." );
@@ -104,7 +104,7 @@ namespace rofi::net {
         }
 
         bool registerMethod(unsigned int method_id, 
-            std::function< void( Ip6Addr sender_addr, unsigned int offset, uint8_t* data, unsigned int size ) > onMessage,
+            std::function< void( Ip6Addr sender_addr, uint8_t* data, unsigned int size ) > onMessage,
             std::function< void( ) > connectionChanged )
         {
             if ( _callbacks.find( method_id ) != _callbacks.end() )
@@ -150,9 +150,10 @@ namespace rofi::net {
             }
 
             _history.emplace_back( DistributorRecord{ senderAddr, method_id, stamp } );
-            // TODO: Remove offset by moving the pointer a bit. We want to keep that data away from the user.
-            callbacks->second.messageReceived( senderAddr, Ip6Addr::size()  + sizeof( unsigned int ) * 2, packet.payload(), packet.size() ); 
-            _sendMessagesInner( packet.payload(), packet.size(), method_id, interfaceName );
+
+            unsigned int header_size = Ip6Addr::size()  + sizeof( unsigned int ) * 2;
+            callbacks->second.messageReceived( senderAddr, packet.payload() + header_size, packet.size() - header_size ); 
+            _sendMessagesInner( packet.payload(), packet.size(), interfaceName );
             return true;
         }
 
