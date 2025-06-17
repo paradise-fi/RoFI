@@ -28,17 +28,21 @@ public:
     virtual int functionId() const = 0;
     virtual void setStatus( TaskStatus status ) = 0;
 
-    virtual void copyToBuffer( PBuf& buffer, size_t start ) = 0;
-    virtual void fillFromBuffer( const PBuf& buffer, size_t start ) = 0;
-    
+    virtual void copyToBuffer( uint8_t* buffer ) = 0;
+    virtual void fillFromBuffer( const uint8_t* buffer ) = 0;
+
+    virtual int getPriority() const = 0;
+    virtual int getEffectivePriority() const = 0;
+    virtual void incrementAge() = 0;
 };
 
 template < typename Result, typename... Arguments >
 class Task : public TaskBase {
     int _id;
     TaskStatus _status;
-
+    int _age = 0;
     int _func_id;
+    int _priority;
     std::optional< Result > _result;
     std::tuple< Arguments... > _args;
 
@@ -57,70 +61,81 @@ class Task : public TaskBase {
         _status = TaskStatus::InProgress;
         _id = 0;
     }
-    Task( int id, TaskStatus status, int functionId )
-        : _id( id ), _status( status ), _func_id( functionId ) {}
-    Task( int id, TaskStatus status, int functionId, int result )
-        : _id( id ), _status( status ), _func_id( functionId ), _result( result ) {}
-    Task( int id, TaskStatus status, int functionId, std::tuple< Arguments... > args)
-        : _id( id ), _status( status ), _func_id( functionId ), _args( args ) {}
+    Task( int id, TaskStatus status, int functionId, int priority )
+        : _id( id ), _status( status ), _func_id( functionId ), _priority( priority ) {}
+    Task( int id, TaskStatus status, int functionId, int result, int priority )
+        : _id( id ), _status( status ), _func_id( functionId ), _result( result ), _priority( priority ) {}
+    Task( int id, TaskStatus status, int functionId, int priority, std::tuple< Arguments... > args)
+        : _id( id ), _status( status ), _func_id( functionId ), _priority( priority ), _args( args ) {}
 
     int id() const override { return _id; }
 
     virtual size_t size() const override {
         using T = decltype( _args );
-        return sizeof( _id ) + sizeof( _status ) + sizeof ( _func_id ) + sizeof( bool ) + sizeof ( Result ) + std::tuple_size< T >{};
+        return sizeof( _id ) + sizeof( _priority ) 
+             + sizeof( _status ) + sizeof ( _func_id ) 
+             + sizeof( bool ) + sizeof ( Result ) 
+             + std::tuple_size< T >{};
     };
 
-    virtual void copyToBuffer( PBuf& buffer, size_t idx ) override
+    virtual void copyToBuffer( uint8_t* buffer ) override
     {
-        auto internalBuff = buffer.payload();
-        as< int >( internalBuff + idx ) = _func_id;
+        unsigned int idx = 0;
+        as< int >( buffer + idx ) = _func_id;
         idx += sizeof( _func_id );
-        as< int >( internalBuff + idx ) = _id;
+        as< int >( buffer + idx ) = _id;
         idx += sizeof( _id );
-        as< TaskStatus >( internalBuff + idx ) = _status;
+        as< int >( buffer + idx ) = _priority;
+        idx += sizeof( _priority );
+        as< TaskStatus >( buffer + idx ) = _status;
         idx +=  sizeof( TaskStatus );
         bool hasValue = _result.has_value();
-        as< bool >( internalBuff + idx ) = hasValue;
+        as< bool >( buffer + idx ) = hasValue;
         idx += sizeof( bool );
+        
         if ( _result.has_value() )
         {
             Result resultValue = _result.value();
-            as< Result >( internalBuff + idx ) = resultValue;
-            std::memcpy( internalBuff + idx, &resultValue, sizeof( Result ) );
+            as< Result >( buffer + idx ) = resultValue;
+            std::memcpy( buffer + idx, &resultValue, sizeof( Result ) );
         }
+
         idx += sizeof( Result );
 
         std::apply(
             [&]( Arguments&... args )
             {
-                ((std::memcpy( internalBuff + idx, &args, sizeof( args ) ),
+                ((std::memcpy( buffer + idx, &args, sizeof( args ) ),
                 idx += sizeof( args )), ...);
             }, 
             _args
         );
     }
 
-    virtual void fillFromBuffer( const PBuf& buffer, size_t idx ) override
+    virtual void fillFromBuffer( const uint8_t* buffer ) override
     {
-        auto* internalBuff = buffer.payload();
-        _id = as< int >( internalBuff + idx );
+        unsigned int idx = 0;
+        _id = as< int >( buffer + idx );
         idx += sizeof( int );
-        _status = as< TaskStatus >( internalBuff + idx );
+        _priority = as< int >( buffer + idx );
+        idx += sizeof( int );
+        _status = as< TaskStatus >( buffer + idx );
         idx += sizeof ( TaskStatus );
-        bool hasValue = as< bool >( internalBuff + idx );
+        bool hasValue = as< bool >( buffer + idx );
         idx += sizeof( bool );
+
         if ( hasValue )
         {
-            Result value = as< Result >( internalBuff + idx );
+            Result value = as< Result >( buffer + idx );
             _result = std::make_optional< Result >( value );
         }
         else
         {
             _result.reset();
         }
+
         idx += sizeof( Result );
-        _args = std::tuple< Arguments... >( readArgument< Arguments >( internalBuff )... );
+        _args = std::tuple< Arguments... >( readArgument< Arguments >( buffer )... );
     } 
     
     int functionId() const override { return _func_id; }
@@ -135,14 +150,13 @@ class Task : public TaskBase {
 
     void setStatus( TaskStatus status ) { _status = status; }
 
-    bool operator< (const Task& rhs)
-    {
-        return _id < rhs.id();
-    }
+    bool operator< (const Task& rhs) { return _id < rhs.id(); }
 
-    bool operator== (const Task& rhs)
-    {
-        return _id == rhs.id();
-    }
+    bool operator== (const Task& rhs) { return _id == rhs.id(); }
     
+    virtual int getPriority() const { return _priority; };
+
+    virtual int getEffectivePriority() const { return _priority + _age; };
+    
+    virtual void incrementAge() { _age++; }
 };

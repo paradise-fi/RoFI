@@ -29,8 +29,8 @@ namespace rofi::leadership {
 
         bool _leaderContact = false;
 
-        void _received( Ip6Addr sender_addr, unsigned int offset, uint8_t* data, unsigned int size ) {
-            unsigned int logTime = as< unsigned int >( data + offset );
+        void _received( Ip6Addr sender_addr, uint8_t* data, unsigned int size ) {
+            unsigned int logTime = as< unsigned int >( data );
             if ( ( logTime < _minTimeJoined ) 
                 || ( logTime == _minTimeJoined && sender_addr < _leader ) ) {
                 _leader = sender_addr;
@@ -101,7 +101,7 @@ namespace rofi::leadership {
         LRElect( NetworkManager& net, 
             MessageDistributor* distributor, 
             const Ip6Addr& addr, 
-            unsigned int period, 
+            unsigned int, 
             std::function<void()> elected_callback,
             std::function<void()> failed_callback)
         : _net( net ), _myAddr( addr ),  _leader( addr ),
@@ -111,7 +111,7 @@ namespace rofi::leadership {
             _minTimeJoined = 0;
             _period = 1;
             distributor->registerMethod( METHOD_ID, 
-                [ this ]( Ip6Addr address, unsigned int offset, uint8_t* data, unsigned int size ){ _received( address, offset, data, size ); },
+                [ this ]( Ip6Addr address, uint8_t* data, unsigned int size ){ _received( address, data, size ); },
                 [ this ](){ _increaseTimeJoined(); } );
         }
 

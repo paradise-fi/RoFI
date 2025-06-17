@@ -23,7 +23,7 @@ void electionStatusUpdate( bool elected, ElectionStatus nodeStatus ) {
     std::cout << ( ( nodeStatus == ElectionStatus::FOLLOWER ) ? "Follower\n" : "Leader\n" );
 }
 
-void electionResult( Ip6Addr leaderAddr, ElectionStatus status ) {
+void electionResult( Ip6Addr, ElectionStatus ) {
     
 }
 

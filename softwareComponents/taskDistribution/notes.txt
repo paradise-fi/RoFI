@@ -1,0 +1,28 @@
+- Treba zistit bug o neuvolnovani LWIP pamate
+
+- Kolize:
+    - Skor neriesit, v MPI sa proste posiela sprava a nevies co pride skor, takze je to problematicke.
+    - Pamatova bariera -> leader pozastavi updates do doby, kym dostane nejake potvrdenie ze vsetko sa ulozilo - nie pre vsetko, ale implementovat ako user request.
+    - Dvoufazova bariera -> leader povie ze to uz poslal, 
+
+- Dorobit RPC, Pamat a dorobit tutorialove priklady / examples pre buducich programatorov
+- Mozno neriesit computer server version
+
+
+-----------------------
+Aging len u leadera
+
+Task Nastavenie -> Cakaj na odpoved leadra
+
+Prepend into queue -> Vlozi task na zaciatok queue.
+
+ToDo:
+1. Use DI to pass udp_pcb to distributionManager && memory
+2. Make it possible to register custom memory solutions
+3. Make sure aging is only used in the leader's queue
+4. Make a setting in the task that will make it wait for leader response
+5. Add 'push to front' option for tasks such as Barrier.
+6. Add global barrier
+7. Try to solve issue where two modules try to write same memory at the same time.
+8. Refactor code -> Split logic for sending, receiving and processing queue
+9. Demo programs
