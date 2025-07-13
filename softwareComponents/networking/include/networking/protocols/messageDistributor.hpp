@@ -1,5 +1,6 @@
 #pragma once
 
+#include <atomic>
 #include <lwip++.hpp>
 #include <networking/protocol.hpp>
 #include <networking/interface.hpp>
@@ -27,13 +28,32 @@ namespace rofi::net {
         }
     };
 
-    struct DistributorCallbacks
+    struct DistributorMethodRegistry
     {
         std::function< void( Ip6Addr sender_addr, uint8_t* data, unsigned int size ) > messageReceived;
         std::function< void( ) > connectionChanged;
+        std::atomic< unsigned int > timestamp = 0;
 
-        DistributorCallbacks(std::function< void( Ip6Addr sender_addr, uint8_t* data, unsigned int size ) > messageReceived,
-            std::function< void( ) > connectionChanged) : messageReceived( messageReceived ), connectionChanged( connectionChanged ) {}
+        DistributorMethodRegistry(std::function< void( Ip6Addr sender_addr, uint8_t* data, unsigned int size ) > messageReceived,
+            std::function< void( ) > connectionChanged) 
+            : messageReceived( messageReceived ), connectionChanged( connectionChanged ) {}
+
+        DistributorMethodRegistry( const DistributorMethodRegistry& other )
+            : messageReceived( other.messageReceived ), connectionChanged( other.connectionChanged ), timestamp( other.timestamp.load() ) {}
+        DistributorMethodRegistry& operator=( const DistributorMethodRegistry& other ) 
+        {
+            if ( this == &other )
+            {
+                return *this;
+            }
+
+            messageReceived = other.messageReceived;
+            connectionChanged = other.connectionChanged;
+            timestamp.store( other.timestamp.load() );
+        }
+
+        DistributorMethodRegistry( DistributorMethodRegistry&& ) = default;
+        DistributorMethodRegistry& operator=( DistributorMethodRegistry&& ) = default;
     };
 
     class MessageDistributor : public Protocol {
@@ -44,9 +64,11 @@ namespace rofi::net {
         std::vector< std::pair< ConfigAction, ConfigChange > > _configChanges;
         
         std::vector< DistributorRecord > _history;
-        std::map< methodId, DistributorCallbacks > _callbacks; 
+        std::map< methodId, DistributorMethodRegistry > _registry; 
         const Ip6Addr& _myAddr;
         NetworkManager& _manager;
+
+        unsigned int _stampClearTreshold = 5;
 
         void _eraseOldMethodHistory( Ip6Addr& addr, unsigned int method_id, unsigned int stamp ) {
             for ( auto record_it = _history.begin(); record_it != _history.end(); ) {
@@ -78,11 +100,20 @@ namespace rofi::net {
 
 
     public:
-        MessageDistributor( const Ip6Addr& myAddr, NetworkManager& manager ) 
-        : _myAddr( myAddr ), _manager( manager ) {}
+        MessageDistributor( const Ip6Addr& myAddr, NetworkManager& manager, unsigned int stampClearTreshold = 5 ) 
+        : _myAddr( myAddr ), _manager( manager ), _stampClearTreshold( stampClearTreshold ) {}
 
-        void sendMessage( Ip6Addr sender, unsigned int method_id, unsigned int time_stamp, uint8_t* data, long unsigned int data_size )
+        bool sendMessage( Ip6Addr sender, unsigned int method_id, uint8_t* data, size_t data_size )
         {
+            const auto& entry = _registry.find( method_id );
+
+            if ( entry == _registry.end() )
+            {
+                return false;
+            }
+
+            unsigned int timestamp = entry->second.timestamp.fetch_add( 1 );
+
             for ( const Interface& interface : _manager.interfaces() )
             {
                 if ( interface.name() == "rl0" )
@@ -93,32 +124,35 @@ namespace rofi::net {
                 PBuf packet = PBuf::allocate( Ip6Addr::size() + sizeof( unsigned int ) * 2 + data_size );
                 as< Ip6Addr >( packet.payload() ) = sender;
                 as< unsigned int >( packet.payload() + Ip6Addr::size() ) = method_id;
-                as< unsigned int >( packet.payload() + Ip6Addr::size() + sizeof( unsigned int ) ) = time_stamp;
+                as< unsigned int >( packet.payload() + Ip6Addr::size() + sizeof( unsigned int ) ) = timestamp;
                 std::memcpy( packet.payload() + Ip6Addr::size() + sizeof( unsigned int ) * 2,
                              data, data_size );
 
-                if ( !const_cast< Interface& >( interface ).sendProtocol( address(), std::move( packet ) ) ) {
+                if ( !const_cast< Interface& >( interface ).sendProtocol( address(), std::move( packet ) ) ) 
+                {
                     assert( false && "failed to send a message to the helper protocol. Something went wrong." );
                 }           
             }
+
+            return true;
         }
 
-        bool registerMethod(unsigned int method_id, 
+        bool registerMethod(methodId method_id, 
             std::function< void( Ip6Addr sender_addr, uint8_t* data, unsigned int size ) > onMessage,
             std::function< void( ) > connectionChanged )
         {
-            if ( _callbacks.find( method_id ) != _callbacks.end() )
+            if ( _registry.find( method_id ) != _registry.end() )
             {
                 return false;
             }
 
-            _callbacks.emplace( method_id, DistributorCallbacks( onMessage, connectionChanged ) );
+            _registry.emplace( method_id, DistributorMethodRegistry( onMessage, connectionChanged ) );
             return true;
         }
 
         void unregisterMethod( unsigned int method_id )
         {
-            _callbacks.erase( method_id );
+            _registry.erase( method_id );
         }
 
         virtual bool onMessage( const std::string& interfaceName,
@@ -135,29 +169,45 @@ namespace rofi::net {
                                             && stamp == record.stamp;
                                     } );
             
-            if ( res != _history.end() || senderAddr == _myAddr ) {
-                return false;
-            }
-
-            const auto& callbacks = _callbacks.find( method_id );
-            if ( callbacks == _callbacks.end() )
+            if ( res != _history.end() || senderAddr == _myAddr )
             {
                 return false;
             }
 
-            if ( stamp >= 2 ) {
-                _eraseOldMethodHistory( senderAddr, method_id, stamp );
+            const auto& methodRegistryEntry = _registry.find( method_id );
+
+            if ( methodRegistryEntry == _registry.end() )
+            {
+                return false;
             }
+            
+            if ( stamp >= _stampClearTreshold )
+            {
+                _eraseOldMethodHistory( senderAddr, method_id, stamp );
+                // Reset the timestamp.
+                methodRegistryEntry->second.timestamp.store( 0 );
+            }
+            else
+            {
+                unsigned int timestamp = methodRegistryEntry->second.timestamp.load();
 
+                if (stamp > timestamp )
+                {
+                    methodRegistryEntry->second.timestamp.fetch_add(stamp + 1);
+                }
+            }
+            
             _history.emplace_back( DistributorRecord{ senderAddr, method_id, stamp } );
-
-            unsigned int header_size = Ip6Addr::size()  + sizeof( unsigned int ) * 2;
-            callbacks->second.messageReceived( senderAddr, packet.payload() + header_size, packet.size() - header_size ); 
+            
+            unsigned int header_size = Ip6Addr::size()  + sizeof( unsigned int ) * 2; 
+            methodRegistryEntry->second.messageReceived( senderAddr, packet.payload() + header_size, packet.size() - header_size ); 
+            
             _sendMessagesInner( packet.payload(), packet.size(), interfaceName );
+            
             return true;
         }
 
-        virtual bool afterMessage( const Interface& interface, std::function< void ( PBuf&& ) > fun, void* /* args */) {
+        virtual bool afterMessage( const Interface&, std::function< void ( PBuf&& ) >, void* /* args */) {
             return false;
         }
 
@@ -195,7 +245,7 @@ namespace rofi::net {
         }
 
         virtual bool onInterfaceEvent( const Interface&, bool ) override {
-            for ( const auto& callback_pair : _callbacks )
+            for ( const auto& callback_pair : _registry )
             {
                 callback_pair.second.connectionChanged();
             }
