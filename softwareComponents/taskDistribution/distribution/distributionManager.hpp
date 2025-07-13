@@ -13,6 +13,8 @@ using namespace std::chrono_literals;
 
 class DistributionManager
 {
+    const unsigned int METHOD_ID = 3;
+
     TaskManager _task_manager;
     FunctionManager _function_manager;
     NetworkManager& _net_manager;

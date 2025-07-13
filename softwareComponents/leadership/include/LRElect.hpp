@@ -29,7 +29,7 @@ namespace rofi::leadership {
 
         bool _leaderContact = false;
 
-        void _received( Ip6Addr sender_addr, uint8_t* data, unsigned int size ) {
+        void _received( Ip6Addr sender_addr, uint8_t* data, unsigned int ) {
             unsigned int logTime = as< unsigned int >( data );
             if ( ( logTime < _minTimeJoined ) 
                 || ( logTime == _minTimeJoined && sender_addr < _leader ) ) {
@@ -84,7 +84,7 @@ namespace rofi::leadership {
 
                     unsigned int data = _timeJoined;
 
-                    distributor->sendMessage( _myAddr, METHOD_ID, _sequenceNumber, reinterpret_cast< uint8_t* >( &data ), sizeof( unsigned int ) );
+                    distributor->sendMessage( _myAddr, METHOD_ID, reinterpret_cast< uint8_t* >( &data ), sizeof( unsigned int ) );
                     _sequenceNumber++;
                 } else {
                     if ( !_leaderContact ) {

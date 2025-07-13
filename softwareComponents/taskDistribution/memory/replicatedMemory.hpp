@@ -9,8 +9,6 @@ using namespace rofi::net;
 
 class ReplicatedMemoryManager : public SharedMemoryBase {
     const unsigned int METHOD_ID = 2;
-    unsigned int sender_stamp = 0;
-    NetworkManager& _net_manager;
     const Ip6Addr& _my_address;
     Ip6Addr _leader;
     MessageSender& _sender;
@@ -18,34 +16,8 @@ class ReplicatedMemoryManager : public SharedMemoryBase {
     std::map< int, MemoryEntry > _storage;
     mutable std::shared_mutex _mutex;
 
-    void sendDataThroughHelper( PBuf&& data )
-    {
-        Protocol* proto = _net_manager.getProtocol( "message-distributor" );
-        if ( proto == nullptr )
-        {
-            std::cout << "[ReplicatedMemory] Protocol message-distributor not found!" << std::endl;
-            return;
-        }
-
-        auto distributor = reinterpret_cast< MessageDistributor* >( proto );
-        sender_stamp++;
-        std::vector< uint8_t > data_vector( data.size() );
-        std::memcpy( data_vector.data(), data.payload(), data.size() );
-        distributor->sendMessage( _my_address, METHOD_ID, sender_stamp, data_vector.data(), data_vector.size() );
-    }
-
     void sendDataThroughHelper( int address, const uint8_t* data, int size, int stamp )
     {
-        sender_stamp++;
-        Protocol* proto = _net_manager.getProtocol( "message-distributor" );
-        if ( proto == nullptr )
-        {
-            std::cout << "[ReplicatedMemory] Protocol message-distributor not found!" << std::endl;
-            return;
-        }
-
-        auto distributor = reinterpret_cast< MessageDistributor* >( proto );
-
         std::vector< uint8_t > buffer;
         buffer.resize( size + 3 * sizeof ( int ) );
         as< int >( buffer.data() ) = address;
@@ -53,7 +25,7 @@ class ReplicatedMemoryManager : public SharedMemoryBase {
         as< int >( buffer.data() + 2 * sizeof( int ) ) = size;
         std::memcpy( buffer.data() + 3 * sizeof( int ), data, size );
 
-        distributor->sendMessage( _my_address, METHOD_ID, sender_stamp, buffer.data(), size + 3 * sizeof ( int ) );
+        _sender.broadcastMessage( DistributionMessageType::DataStorageRequest, buffer.data(), buffer.size(), METHOD_ID );
     }
 
     void saveData( int address, unsigned int stamp, uint8_t* data, int size)
@@ -109,13 +81,13 @@ class ReplicatedMemoryManager : public SharedMemoryBase {
     }
 
 public:
-    ReplicatedMemoryManager( NetworkManager& netManager, MessageDistributor* distributor, Ip6Addr& myAddress, MessageSender& sender )
-    : _net_manager( netManager ), _my_address( myAddress ), _leader( myAddress ), _sender( sender )
+    ReplicatedMemoryManager( MessageDistributor* distributor, Ip6Addr& myAddress, MessageSender& sender )
+    : _my_address( myAddress ), _leader( myAddress ), _sender( sender )
     {
         distributor->registerMethod( METHOD_ID, 
             [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
             {
-                onStorageMessage( sender, data, size ); 
+                onStorageMessage( sender, data + _sender.headerSize(), size ); 
             },
             [] () { return; } );
     }
@@ -154,7 +126,6 @@ public:
             return true;
         }
 
-        // Address, Stamp, Size, Data
         PBuf packet = PBuf::allocate( 3 * sizeof( int ) + size );
         as< int >( packet.payload() ) = address;
         as< unsigned int >( packet.payload() + sizeof( int ) ) = timestamp;
