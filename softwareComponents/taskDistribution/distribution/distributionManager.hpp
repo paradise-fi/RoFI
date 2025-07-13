@@ -102,7 +102,7 @@ class DistributionManager
             return;
         }
 
-        auto task = _task_manager.popTask(requester);
+        auto task = _task_manager.popTask(requester, true);
         if ( !task.has_value() )
         {
             auto initial = _task_manager.getInitialTask();
@@ -150,7 +150,7 @@ public:
         [ this ] {
             onLeaderFailed();
         } ),
-      _sender( MessageSender( address, DISTRIBUTION_PORT, pcb.get() ) )
+      _sender( MessageSender( address, DISTRIBUTION_PORT, pcb.get(), distributor ) )
     { 
         LOCK_TCPIP_CORE();
         _pcb = std::move( pcb );

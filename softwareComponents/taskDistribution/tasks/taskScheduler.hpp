@@ -16,14 +16,17 @@ class TaskScheduler
     }
 
 public:
-    std::optional< std::unique_ptr< TaskBase > > popTask()
+    std::optional< std::unique_ptr< TaskBase > > popTask( bool isLeader = false )
     {
         if ( _tasks.empty() )
         {
             return std::nullopt;
         }
 
-        ageTasks();
+        if ( isLeader )
+        {
+            ageTasks();
+        }
 
         auto oldest = std::max_element( _tasks.begin(), _tasks.end(), 
             [](const std::unique_ptr< TaskBase >& lhs, const std::unique_ptr< TaskBase >& rhs ) { return lhs->getEffectivePriority() < rhs->getEffectivePriority(); } );
@@ -37,6 +40,19 @@ public:
 
     void enqueueTask( std::unique_ptr< TaskBase > task )
     {
+        _tasks.push_back( std::move( task ) );
+    }
+
+    void pushTaskToFront( std::unique_ptr< TaskBase > task )
+    {
+        if ( !_tasks.empty() )
+        {
+            auto oldest = std::max_element( _tasks.begin(), _tasks.end(), 
+            [](const std::unique_ptr< TaskBase >& lhs, const std::unique_ptr< TaskBase >& rhs ) { return lhs->getEffectivePriority() < rhs->getEffectivePriority(); } );
+
+            task->setPriority( oldest->get()->getEffectivePriority() + 1 );
+        }
+
         _tasks.push_back( std::move( task ) );
     }
 };
