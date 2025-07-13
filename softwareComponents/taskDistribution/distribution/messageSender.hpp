@@ -17,10 +17,11 @@ enum DistributionMessageType {
 class MessageSender {
     udp_pcb* _pcb;
     Ip6Addr& _address;
+    MessageDistributor* _messageDistributor;
     u16_t _distribution_port;
 public:
-    MessageSender(Ip6Addr& address, u16_t port, udp_pcb* pcb)
-    : _address( address ), _distribution_port( port ){
+    MessageSender(Ip6Addr& address, u16_t port, udp_pcb* pcb, MessageDistributor* messageDistributor)
+    : _address( address ), _distribution_port( port ), _messageDistributor( messageDistributor ) {
         _pcb = pcb;
     }
 
@@ -71,4 +72,6 @@ public:
             std::cout << "Error while sending message: " << lwip_strerr( result ) << std::endl;
         }
     }
+
+    // void broadcastMessage()
 };

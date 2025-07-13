@@ -72,7 +72,7 @@ public:
         return std::optional< std::reference_wrapper< TaskBase > >( *_initialTask );
     }
 
-    std::optional< std::unique_ptr< TaskBase > > popTask( Ip6Addr& address )
+    std::optional< std::unique_ptr< TaskBase > > popTask( Ip6Addr& address, bool isLeader = false )
     {
         const auto& taskQueue = _schedulers.find( address );
 
@@ -83,16 +83,7 @@ public:
         }
 
 
-        return taskQueue->second.popTask();
-        // if ( taskQueue->second.empty() )
-        // {
-        //     std::cout << "No task in queue." << std::endl;
-        //     return std::nullopt;
-        // }
-
-        // auto task = std::move( taskQueue->second.back() );
-        // taskQueue->second.pop();
-        // return task;
+        return taskQueue->second.popTask( isLeader );
     }
 
     void clearTasks()

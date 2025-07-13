@@ -34,6 +34,7 @@ public:
     virtual int getPriority() const = 0;
     virtual int getEffectivePriority() const = 0;
     virtual void incrementAge() = 0;
+    virtual void setPriority( int priority ) = 0;
 };
 
 template < typename Result, typename... Arguments >
@@ -154,9 +155,11 @@ class Task : public TaskBase {
 
     bool operator== (const Task& rhs) { return _id == rhs.id(); }
     
-    virtual int getPriority() const { return _priority; };
+    virtual int getPriority() const override { return _priority; }
 
-    virtual int getEffectivePriority() const { return _priority + _age; };
+    virtual int getEffectivePriority() const override { return _priority + _age; }
     
-    virtual void incrementAge() { _age++; }
+    virtual void incrementAge() override { _age++; }
+
+    virtual void setPriority( int priority ) override { _priority = priority; }
 };
