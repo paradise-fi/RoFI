@@ -70,7 +70,7 @@ void startElectionProtocol() {
     
     DistributionManager manager( net, addr, reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     
-    manager.useMemory( std::make_unique< ReplicatedMemoryManager >( net, reinterpret_cast< MessageDistributor* >( messageDistributor ), addr, manager.getSender() ) );
+    manager.useMemory( std::make_unique< ReplicatedMemoryManager >( reinterpret_cast< MessageDistributor* >( messageDistributor ), addr, manager.getSender() ) );
     
     std::function< void ( std::optional< int >, const rofi::hal::Ip6Addr& ) > initReaction = 
         [&]( std::optional< int > moduleId, const Ip6Addr& sender ) 
