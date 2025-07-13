@@ -167,7 +167,8 @@ public:
         UNLOCK_TCPIP_CORE();
     }
 
-    bool useMemory( std::unique_ptr< SharedMemoryBase > memory )
+    template< std::derived_from< SharedMemoryBase > Memory >
+    bool useMemory( std::unique_ptr< Memory > memory )
     {
         if (_memory != nullptr )
         {
@@ -177,13 +178,6 @@ public:
         _memory = std::move( memory );
         return true;
     } 
-
-    // TODO: Add possibility to use any memory manager.
-    bool useDistributedMemory(MessageDistributor* distributor)
-    {
-        _memory = std::make_unique< ReplicatedMemoryManager >( _net_manager, distributor, _address, _sender );
-        return true;
-    }
 
     bool saveData( uint8_t* data, int size, int address )
     {
@@ -337,6 +331,11 @@ public:
                 std::cout << "Error invoking reaction for function " << task->functionId() << std::endl;
             }
         }
+    }
+
+    MessageSender& getSender()
+    {
+        return _sender;
     }
 
 };
