@@ -239,11 +239,11 @@ public:
     /// @param arguments The arguments for the function.
     /// @return True if the push was succesful. Otherwise false.
     template< typename Result, typename... Arguments >
-    bool pushTask( const Ip6Addr& addr, int functionId, int priority, std::tuple< Arguments... >&& arguments )
+    bool pushTask( const Ip6Addr& addr, int functionId, int priority, bool enqueueFront, std::tuple< Arguments... >&& arguments )
     {
-        bool result = _task_manager.enqueueTask< Result >( addr, functionId, priority, std::move( arguments ) );
+        bool result = _task_manager.enqueueTask< Result >( addr, functionId, priority, enqueueFront, std::move( arguments ) );
         _taskRequests.push(addr);
-        return result;  
+        return result;
     }
 
     /*

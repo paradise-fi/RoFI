@@ -35,6 +35,8 @@ public:
     virtual int getEffectivePriority() const = 0;
     virtual void incrementAge() = 0;
     virtual void setPriority( int priority ) = 0;
+
+    virtual bool isQueuedToFront() = 0;
 };
 
 template < typename Result, typename... Arguments >
@@ -46,6 +48,7 @@ class Task : public TaskBase {
     int _priority;
     std::optional< Result > _result;
     std::tuple< Arguments... > _args;
+    bool _enqueueFront;
 
     template< typename Arg >
     Arg readArgument( const uint8_t* buffer )
@@ -62,12 +65,12 @@ class Task : public TaskBase {
         _status = TaskStatus::InProgress;
         _id = 0;
     }
-    Task( int id, TaskStatus status, int functionId, int priority )
-        : _id( id ), _status( status ), _func_id( functionId ), _priority( priority ) {}
-    Task( int id, TaskStatus status, int functionId, int result, int priority )
-        : _id( id ), _status( status ), _func_id( functionId ), _result( result ), _priority( priority ) {}
-    Task( int id, TaskStatus status, int functionId, int priority, std::tuple< Arguments... > args)
-        : _id( id ), _status( status ), _func_id( functionId ), _priority( priority ), _args( args ) {}
+    Task( int id, TaskStatus status, int functionId, int priority, bool enqueueFront )
+        : _id( id ), _status( status ), _func_id( functionId ), _priority( priority ), _enqueueFront( enqueueFront ) {}
+    Task( int id, TaskStatus status, int functionId, int result, int priority, bool enqueueFront )
+        : _id( id ), _status( status ), _func_id( functionId ), _result( result ), _priority( priority ), _enqueueFront( enqueueFront ) {}
+    Task( int id, TaskStatus status, int functionId, int priority, bool enqueueFront, std::tuple< Arguments... > args)
+        : _id( id ), _status( status ), _func_id( functionId ), _priority( priority ), _enqueueFront( enqueueFront ), _args( args ) {}
 
     int id() const override { return _id; }
 
@@ -75,7 +78,7 @@ class Task : public TaskBase {
         using T = decltype( _args );
         return sizeof( _id ) + sizeof( _priority ) 
              + sizeof( _status ) + sizeof ( _func_id ) 
-             + sizeof( bool ) + sizeof ( Result ) 
+             + 2 * sizeof( bool ) + sizeof ( Result ) 
              + std::tuple_size< T >{};
     };
 
@@ -88,6 +91,8 @@ class Task : public TaskBase {
         idx += sizeof( _id );
         as< int >( buffer + idx ) = _priority;
         idx += sizeof( _priority );
+        as< bool >( bufer + idx ) = _enqueueFront;
+        idx += sizeof( bool );
         as< TaskStatus >( buffer + idx ) = _status;
         idx +=  sizeof( TaskStatus );
         bool hasValue = _result.has_value();
@@ -120,6 +125,8 @@ class Task : public TaskBase {
         idx += sizeof( int );
         _priority = as< int >( buffer + idx );
         idx += sizeof( int );
+        _enqueueFront = as< bool >( buffer + idx );
+        idx += sizeof( bool );
         _status = as< TaskStatus >( buffer + idx );
         idx += sizeof ( TaskStatus );
         bool hasValue = as< bool >( buffer + idx );
@@ -162,4 +169,6 @@ class Task : public TaskBase {
     virtual void incrementAge() override { _age++; }
 
     virtual void setPriority( int priority ) override { _priority = priority; }
+
+    virtual bool isQueuedToFront() override { return _enqueueFront; }
 };
