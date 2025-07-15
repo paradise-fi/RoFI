@@ -116,7 +116,7 @@ class DistributionManager
             _sender.sendMessage( DistributionMessageType::TaskAssignment, initial.value(), requester );
             return;
         }
-        _sender.sendMessage( DistributionMessageType::TaskAssignment, *(task.value().get()), requester );
+        _sender.sendMessage( DistributionMessageType::TaskAssignment, task.value().get(), requester );
     }
 
     void doWorkFollower()
@@ -130,13 +130,15 @@ class DistributionManager
 
         auto task = std::move( taskCandidate.value() );
         
-        if  ( !_function_manager.invokeFunction( *task.get() ) )
+        if  ( !_function_manager.invokeFunction( task.get() ) )
         {
-            _sender.sendMessage( DistributionMessageType::TaskFailed, *task.get(), _election.getLeader() );
+            _sender.sendMessage( DistributionMessageType::TaskFailed, task.get(), _election.getLeader() );
+            _task_manager.finishActiveTask( _address );
             return;
         }
 
-        _sender.sendMessage( DistributionMessageType::TaskResult, *task.get(), _election.getLeader() );
+        _sender.sendMessage( DistributionMessageType::TaskResult, task.get(), _election.getLeader() );
+        _task_manager.finishActiveTask( _address );
     }
 
 public:
@@ -221,9 +223,10 @@ public:
     template < typename Result, typename... Arguments >
     bool registerFunction( int id, 
         FunctionType< Result, Arguments... > function, 
-        ReactionType< Result, Arguments... > reaction )
+        ReactionType< Result, Arguments... > reaction,
+        CompletionType completionType = CompletionType::NonBlocking )
     {
-        return _function_manager.addFunction< Result, Arguments... >( id, function, reaction );
+        return _function_manager.addFunction< Result, Arguments... >( id, function, reaction, completionType );
     }
 
     bool unregisterFunction( int id )
@@ -241,7 +244,14 @@ public:
     template< typename Result, typename... Arguments >
     bool pushTask( const Ip6Addr& addr, int functionId, int priority, bool enqueueFront, std::tuple< Arguments... >&& arguments )
     {
-        bool result = _task_manager.enqueueTask< Result >( addr, functionId, priority, enqueueFront, std::move( arguments ) );
+        auto fn = _function_manager.getFunction( functionId );
+
+        if (!fn)
+        {
+            return false;
+        }
+
+        bool result = _task_manager.enqueueTask< Result >( addr, functionId, priority, enqueueFront, fn.value().get().getCompletionType(), std::move( arguments ) );
         _taskRequests.push(addr);
         return result;
     }
@@ -277,8 +287,16 @@ public:
         }
         
         auto packet = rofi::hal::PBuf::own( p );
-        DistributionMessageType type = static_cast< DistributionMessageType >( packet[ 0 ] );
+        DistributionMessageType type = as< DistributionMessageType >( packet.payload() );
         Ip6Addr sender = as< Ip6Addr >( packet.payload() + sizeof( DistributionMessageType ) );
+
+        // Add one more field for taskId
+
+        if ( type == DistributionMessageType::BlockingTaskRelease )
+        {
+            _task_manager.unblockSchedulers();
+            return;
+        }
 
         if ( type == DistributionMessageType::TaskRequest )
         {
@@ -305,8 +323,15 @@ public:
             // TODO: Exception if memory is nullptr?
         }
 
-        
         int functionId = as< int >( packet.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
+
+        std::optional<std::reference_wrapper<FunctionConcept>> fn = _function_manager.getFunction( functionId );
+
+        if (!fn)
+        {
+            std::cout << "Function with ID " << functionId << " not found." << std::endl;
+            return;
+        }
 
         auto task = getTaskFromBuffer(
             packet.payload() + sizeof( DistributionMessageType ) + sizeof( int ) + sizeof( Ip6Addr ), 
@@ -321,7 +346,7 @@ public:
         if ( type == DistributionMessageType::TaskAssignment )
         {
             std::cout << "Received Task Assignment from " << sender << " for task with ID " << task->id() << std::endl;
-            _task_manager.enqueueTask( _address, std::move( task ) );
+            _task_manager.enqueueTask( _address, std::move( task ), fn.value().get().getCompletionType() );
             return;
         }
 
@@ -338,6 +363,11 @@ public:
     MessageSender& getSender()
     {
         return _sender;
+    }
+
+    void BroadcastUnblockSignal()
+    {
+        _sender.broadcastMessage(DistributionMessageType::BlockingTaskRelease, METHOD_ID);
     }
 
 };

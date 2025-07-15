@@ -12,6 +12,7 @@ enum DistributionMessageType {
     FollowerBusy,
     DataStorageRequest,
     DataStorageSuccess,
+    BlockingTaskRelease
 };
 
 class MessageSender {
