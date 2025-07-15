@@ -24,14 +24,15 @@ public:
     template < typename Result, typename... Arguments >
     bool addFunction( int id, 
         FunctionType< Result, Arguments... > function, 
-        ReactionType< Result, Arguments... > reaction )
+        ReactionType< Result, Arguments... > reaction,
+        CompletionType completionType )
     {
         if ( _functions.find( id ) != _functions.end() )
         {
             return false;
         }
 
-        _functions.emplace( id, std::make_unique< FunctionModel< Result, Arguments... > >( id, function, reaction ) );
+        _functions.emplace( id, std::make_unique< FunctionModel< Result, Arguments... > >( id, function, reaction, completionType ) );
         return true;
     }
 

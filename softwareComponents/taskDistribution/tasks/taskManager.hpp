@@ -17,27 +17,26 @@ class TaskManager
     }
 
 public:
-    bool enqueueTask( const Ip6Addr& addr, std::unique_ptr< TaskBase >&&  task )
+    bool enqueueTask( const Ip6Addr& addr, std::unique_ptr< TaskBase >&&  task, CompletionType completionType )
     {
-        _schedulers[ addr ].enqueueTask( std::move( task ) );
-        // _tasks[ addr ].push( std::move( task ) );
+        _schedulers[ addr ].enqueueTask( std::move( task ), completionType );
         return true;
     }
 
     template< typename Result >
-    bool enqueueTask( Ip6Addr addr, int functionId, bool enqueueFront = false )
+    bool enqueueTask( Ip6Addr addr, int functionId, CompletionType completionType, bool enqueueFront = false )
     {
         auto task = Task< Result >( ++_taskId, TaskStatus::Enqueued, functionId, enqueueFront );
-        _schedulers[ addr ].enqueueTask( std::make_unique< TaskBase >( task ) );
+        _schedulers[ addr ].enqueueTask( std::make_unique< TaskBase >( task ), completionType );
 
         return true;
     }
 
     template < typename Result, typename... Arguments >
-    bool enqueueTask( Ip6Addr addr, int functionId, int priority, bool enqueueFront, std::tuple< Arguments... >&& arguments )
+    bool enqueueTask( Ip6Addr addr, int functionId, int priority, bool enqueueFront, CompletionType completionType, std::tuple< Arguments... >&& arguments )
     {
         auto task = Task< Result, Arguments... >( ++_taskId, TaskStatus::Enqueued, functionId, priority, enqueueFront, arguments );
-        _schedulers[ addr ].enqueueTask( std::make_unique< Task< Result, Arguments... > >( task ) );
+        _schedulers[ addr ].enqueueTask( std::make_unique< Task< Result, Arguments... > >( task ), completionType );
 
         return true;
     }
@@ -47,7 +46,7 @@ public:
         auto task = relatedFunction.createTask();
         task->fillFromBuffer( buffer );
         updateTaskIdIfStale( task->id() );
-        _schedulers[ addr ].enqueueTask( std::move( task ) );
+        _schedulers[ addr ].enqueueTask( std::move( task ), relatedFunction.getCompletionType() );
         return true;
     }
 
@@ -71,7 +70,7 @@ public:
         return std::optional< std::reference_wrapper< TaskBase > >( *_initialTask );
     }
 
-    std::optional< std::unique_ptr< TaskBase > > popTask( Ip6Addr& address, bool isLeader = false )
+    std::optional< std::reference_wrapper< TaskBase > > popTask( Ip6Addr& address, bool isLeader = false )
     {
         const auto& taskQueue = _schedulers.find( address );
 
@@ -85,8 +84,43 @@ public:
         return taskQueue->second.popTask( isLeader );
     }
 
+    void finishActiveTask( Ip6Addr& address )
+    {
+        const auto& taskQueue = _schedulers.find( address );
+
+        if ( taskQueue == _schedulers.end() )
+        {
+            std::cout << "Address not found in tasks" << std::endl;
+            return;
+        }
+
+        taskQueue->second.clearActiveTask();
+    }
+
+    void finishActiveTask( Ip6Addr& address, int id )
+    {
+        const auto& taskQueue = _schedulers.find( address );
+
+        if ( taskQueue == _schedulers.end() )
+        {
+            std::cout << "Address not found in tasks" << std::endl;
+            return;
+        }
+
+        taskQueue->second.clearActiveTask( id );
+    }
+
+    void unblockSchedulers()
+    {
+        for( auto it = _schedulers.begin(); it != _schedulers.end(); ++it)
+        {
+            it->second.clearActiveTask();
+        }
+    }
+
     void clearTasks()
     {
+        unblockSchedulers();
         _schedulers.clear();
     }
 };
