@@ -25,19 +25,18 @@ public:
     }
 
     template< typename Result >
-    bool enqueueTask( Ip6Addr addr, int functionId )
+    bool enqueueTask( Ip6Addr addr, int functionId, bool enqueueFront = false )
     {
-        auto task = Task< Result >( ++_taskId, TaskStatus::Enqueued, functionId );
+        auto task = Task< Result >( ++_taskId, TaskStatus::Enqueued, functionId, enqueueFront );
         _schedulers[ addr ].enqueueTask( std::make_unique< TaskBase >( task ) );
-        // _tasks[ addr ].push( std::make_unique< TaskBase >( task ) );
 
         return true;
     }
 
     template < typename Result, typename... Arguments >
-    bool enqueueTask( Ip6Addr addr, int functionId, int priority, std::tuple< Arguments... >&& arguments )
+    bool enqueueTask( Ip6Addr addr, int functionId, int priority, bool enqueueFront, std::tuple< Arguments... >&& arguments )
     {
-        auto task = Task< Result, Arguments... >( ++_taskId, TaskStatus::Enqueued, functionId, priority, arguments );
+        auto task = Task< Result, Arguments... >( ++_taskId, TaskStatus::Enqueued, functionId, priority, enqueueFront, arguments );
         _schedulers[ addr ].enqueueTask( std::make_unique< Task< Result, Arguments... > >( task ) );
 
         return true;
