@@ -83,13 +83,13 @@ void startElectionProtocol() {
             if ( moduleId.value() % 2 == 0 )
             {
                 int modId = moduleId.value();
-                manager.pushTask< int, int >(sender, 1, 1, std::make_tuple< int >( std::move( modId ) ) );
+                manager.pushTask< int, int >(sender, 1, 1, false, std::make_tuple< int >( std::move( modId ) ) );
                 std::cout << "[InitReaction] Going to save " << id << std::endl;
                 manager.saveData(reinterpret_cast< uint8_t* >( &id ), sizeof( int ), id );
             }
             else
             {
-                manager.pushTask< int >(sender, 2, 1, std::tuple< int >() );
+                manager.pushTask< int >(sender, 2, 1, false, std::tuple< int >() );
             }
         };
     
@@ -107,7 +107,7 @@ void startElectionProtocol() {
         [&]( std::optional< int > result, const Ip6Addr& sender )
         {
             std::cout << "[MAIN] Multiply result from " << sender << " is " << ( result.has_value() ? result.value() : -1 ) << std::endl;
-            manager.pushTask< int >( sender, 2, 1, std::tuple< int >() );
+            manager.pushTask< int >( sender, 2, 1, false, std::tuple< int >() );
         }
     );
 
@@ -124,7 +124,7 @@ void startElectionProtocol() {
             std::cout << "[MAIN] Increment result from " << sender << "is " << ( result.has_value() ? result.value() : -1 ) << std::endl;
             if ( result.has_value() && result.value() < 5 )
             {
-                manager.pushTask< int >( sender, 2, 1, std::tuple< int >() );
+                manager.pushTask< int >( sender, 2, 1, false, std::tuple< int >() );
             } 
         }
     );
