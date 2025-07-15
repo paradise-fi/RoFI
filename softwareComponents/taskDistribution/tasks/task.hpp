@@ -91,7 +91,7 @@ class Task : public TaskBase {
         idx += sizeof( _id );
         as< int >( buffer + idx ) = _priority;
         idx += sizeof( _priority );
-        as< bool >( bufer + idx ) = _enqueueFront;
+        as< bool >( buffer + idx ) = _enqueueFront;
         idx += sizeof( bool );
         as< TaskStatus >( buffer + idx ) = _status;
         idx +=  sizeof( TaskStatus );
