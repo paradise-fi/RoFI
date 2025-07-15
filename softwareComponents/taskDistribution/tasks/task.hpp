@@ -47,8 +47,9 @@ class Task : public TaskBase {
     int _func_id;
     int _priority;
     std::optional< Result > _result;
-    std::tuple< Arguments... > _args;
     bool _enqueueFront;
+    std::tuple< Arguments... > _args;
+    
 
     template< typename Arg >
     Arg readArgument( const uint8_t* buffer )
