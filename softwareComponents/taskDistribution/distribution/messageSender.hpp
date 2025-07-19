@@ -19,7 +19,7 @@ class MessageSender {
     Ip6Addr& _address;
     u16_t _distribution_port;
     MessageDistributor* _messageDistributor;
-    udp_pcb* _pcb;
+    udp_pcb* _pcb;  
 
 public:
     MessageSender(Ip6Addr& address, u16_t port, udp_pcb* pcb, MessageDistributor* messageDistributor)
