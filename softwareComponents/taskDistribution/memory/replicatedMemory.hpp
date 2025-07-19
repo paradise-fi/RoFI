@@ -1,6 +1,6 @@
 #include <shared_mutex>
 #include "memoryEntry.hpp"
-#include "../distribution/messageSender.hpp"
+#include "../messageService/messageService.hpp"
 #include "sharedMemoryBase.hpp"
 #include <map>
 
@@ -11,7 +11,7 @@ class ReplicatedMemoryManager : public SharedMemoryBase {
     const unsigned int METHOD_ID = 2;
     const Ip6Addr& _my_address;
     Ip6Addr _leader;
-    MessageSender& _sender;
+    MessageService& _messageService;
 
     std::map< int, MemoryEntry > _storage;
     mutable std::shared_mutex _mutex;
@@ -25,7 +25,7 @@ class ReplicatedMemoryManager : public SharedMemoryBase {
         as< int >( buffer.data() + 2 * sizeof( int ) ) = size;
         std::memcpy( buffer.data() + 3 * sizeof( int ), data, size );
 
-        _sender.broadcastMessage( DistributionMessageType::DataStorageRequest, buffer.data(), buffer.size(), METHOD_ID );
+        _messageService.broadcastMessage( DistributionMessageType::DataStorageRequest, buffer.data(), buffer.size(), METHOD_ID );
     }
 
     void saveData( int address, unsigned int stamp, uint8_t* data, int size)
@@ -59,7 +59,7 @@ class ReplicatedMemoryManager : public SharedMemoryBase {
         int data_size = as< int >( data + sizeof( int ) + sizeof( unsigned int ) );
         
         saveData( address, stamp, data + 2 * sizeof( int ) + sizeof( unsigned int ), data_size );
-        _sender.sendMessage( DistributionMessageType::DataStorageSuccess, _leader );
+        _messageService.sendMessage( METHOD_ID, DistributionMessageType::DataStorageSuccess, _leader );
     }
 
     void onMemoryReplicationLeader( uint8_t* data )
@@ -81,15 +81,21 @@ class ReplicatedMemoryManager : public SharedMemoryBase {
     }
 
 public:
-    ReplicatedMemoryManager( MessageDistributor* distributor, Ip6Addr& myAddress, MessageSender& sender )
-    : _my_address( myAddress ), _leader( myAddress ), _sender( sender )
+    ReplicatedMemoryManager( Ip6Addr& myAddress, MessageService& messageService )
+    : _my_address( myAddress ), _leader( myAddress ), _messageService( messageService )
     {
-        distributor->registerMethod( METHOD_ID, 
-            [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
+        _messageService.registerOnMessageCallback(
+            METHOD_ID,
+            [ this ]( Ip6Addr sender, DistributionMessageType messageType, uint8_t* data, size_t size )
             {
-                onStorageMessage( sender, data + _sender.headerSize(), size ); 
-            },
-            [] () { return; } );
+                if ( messageType != DistributionMessageType::DataStorageRequest && messageType != DistributionMessageType::DataStorageSuccess )
+                {
+                    std::cout << "[ReplicatedMemoryManager] Unexpected message type received, aborting message reception." << std::endl;
+                    return;
+                }
+
+                return onStorageMessage( sender, data, size );
+            });
     }
 
     virtual void setLeader( Ip6Addr leader ) override
@@ -97,7 +103,7 @@ public:
         _leader = leader;
     }
 
-    void onStorageMessage( Ip6Addr, uint8_t* data, unsigned int )
+    void onStorageMessage( Ip6Addr, uint8_t* data, size_t )
     { 
         if ( _leader == _my_address )
         {
@@ -131,7 +137,9 @@ public:
         as< unsigned int >( packet.payload() + sizeof( int ) ) = timestamp;
         as< int >( packet.payload() + sizeof( int ) + sizeof( unsigned int ) ) = size;
         std::memcpy( packet.payload() + 2 * sizeof( int ) + sizeof( unsigned int ), data, size );
-        _sender.sendMessage( DistributionMessageType::DataStorageRequest, std::move( packet ), _leader );
+
+        std::cout << "[Memory] Going to request from leader" << std::endl;
+        _messageService.sendMessage( METHOD_ID, DistributionMessageType::DataStorageRequest, std::move( packet ), _leader );
         return true;
     }
 
