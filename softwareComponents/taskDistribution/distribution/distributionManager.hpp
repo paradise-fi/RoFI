@@ -1,9 +1,9 @@
+#include "messageSender.hpp"
 #include "taskManager.hpp"
 #include "functionManager.hpp"
 #include "LRElect.hpp"
 #include "../memory/sharedMemoryBase.hpp"
 #include "../memory/replicatedMemory.hpp"
-#include "../messageService/messageService.hpp"
 #include <boost/lockfree/queue.hpp>
 
 using namespace rofi::hal;
@@ -23,10 +23,24 @@ class DistributionManager
     boost::lockfree::queue< ip6_addr_t > _taskRequests;
 
     LRElect _election;
-    std::unique_ptr< MessageService > _messageService;
+    MessageSender _sender;
     std::unique_ptr< SharedMemoryBase > _memory;
+    std::unique_ptr< udp_pcb > _pcb;
     
     int _elected_count = 0;
+
+    static void recv_message( void* manager, 
+        struct udp_pcb* pcb,
+        struct pbuf * p,
+        const ip6_addr_t * addr,
+        u16_t port )
+    {
+        DistributionManager* self = static_cast< DistributionManager* >( manager );
+        if ( self )
+        {
+            self->receiveMessage( nullptr, pcb, p, addr, port );
+        }   
+    }
 
     std::unique_ptr< TaskBase > getTaskFromBuffer( uint8_t* buffer, int functionId )
     {
@@ -62,7 +76,7 @@ class DistributionManager
             {
                 std::cout << "I am a follower." << std::endl;
                 auto emptyTask = Task< int >(0);
-                _messageService->sendMessage( METHOD_ID, DistributionMessageType::TaskRequest, emptyTask, _election.getLeader() );
+                _sender.sendMessage( DistributionMessageType::TaskRequest, emptyTask, _election.getLeader() );
             }
             _elected_count++;
         }
@@ -99,10 +113,10 @@ class DistributionManager
                 std::cout << "Task distribution failed: No initial task given.";
                 return;
             }
-            _messageService->sendMessage( METHOD_ID, DistributionMessageType::TaskAssignment, initial.value(), requester );
+            _sender.sendMessage( DistributionMessageType::TaskAssignment, initial.value(), requester );
             return;
         }
-        _messageService->sendMessage( METHOD_ID, DistributionMessageType::TaskAssignment, task.value().get(), requester );
+        _sender.sendMessage( DistributionMessageType::TaskAssignment, task.value().get(), requester );
     }
 
     void doWorkFollower()
@@ -118,86 +132,19 @@ class DistributionManager
         
         if  ( !_function_manager.invokeFunction( task.get() ) )
         {
-            _messageService->sendMessage( METHOD_ID, DistributionMessageType::TaskFailed, task.get(), _election.getLeader() );
+            _sender.sendMessage( DistributionMessageType::TaskFailed, task.get(), _election.getLeader() );
             _task_manager.finishActiveTask( _address );
             return;
         }
 
-        _messageService->sendMessage( METHOD_ID, DistributionMessageType::TaskResult, task.get(), _election.getLeader() );
+        _sender.sendMessage( DistributionMessageType::TaskResult, task.get(), _election.getLeader() );
         _task_manager.finishActiveTask( _address );
     }
 
-    void onMessage( Ip6Addr sender, DistributionMessageType messageType, uint8_t* data, size_t size )
-    {
-        std::cout << "Received message from " << sender << std::endl;
-        if ( messageType == DistributionMessageType::BlockingTaskRelease )
-        {
-            _task_manager.unblockSchedulers();
-            return;
-        }
-
-        if ( messageType == DistributionMessageType::TaskRequest )
-        {
-            std::cout << "Received Task Request from" << sender << std::endl;
-            _taskRequests.push( sender );
-            return;
-        }
-
-        if ( messageType == DistributionMessageType::TaskFailed )
-        {
-            std::cout << "Received Task Failure from " << sender << std::endl;
-            // How to react?
-            return;
-        }
-
-        if ( messageType == DistributionMessageType::DataStorageRequest )
-        {
-            std::cout << "Received Data Storage Request from " << sender << std::endl;
-            if (_memory != nullptr)
-            {
-                return _memory->onStorageMessage( sender, data, size );
-            }
-            // TODO: Exception if memory is nullptr?
-        }
-
-        int functionId = as< int >( data );
-
-        std::optional<std::reference_wrapper<FunctionConcept>> fn = _function_manager.getFunction( functionId );
-
-        if (!fn)
-        {
-            std::cout << "Function with ID " << functionId << " not found." << std::endl;
-            return;
-        }
-
-        auto task = getTaskFromBuffer( data + sizeof( int ), functionId );
-        
-        if ( task == nullptr )
-        {
-            // Something went wrong.
-            return;
-        }
-
-        if ( messageType == DistributionMessageType::TaskAssignment )
-        {
-            std::cout << "Received Task Assignment from " << sender << " for task with ID " << task->id() << std::endl;
-            _task_manager.enqueueTask( _address, std::move( task ), fn.value().get().getCompletionType() );
-            return;
-        }
-
-        if ( messageType == DistributionMessageType::TaskResult )
-        {
-            std::cout << "Received result from " << sender << " for Task with ID " << task->id() << std::endl;
-            if ( !_function_manager.invokeReaction( sender, *task.get() ) )
-            {
-                std::cout << "Error invoking reaction for function " << task->functionId() << std::endl;
-            }
-        }
-    }
 public:
     static const int DISTRIBUTION_PORT = 7071;
 
-    DistributionManager(NetworkManager& netmg, Ip6Addr& address, MessageDistributor* distributor, std::unique_ptr< udp_pcb > pcb, int port) 
+    DistributionManager(NetworkManager& netmg, Ip6Addr& address, MessageDistributor* distributor, std::unique_ptr< udp_pcb > pcb) 
     : _net_manager( netmg ), _address( address ),
       _taskRequests( boost::lockfree::queue< ip6_addr_t >( 1024 ) ),
       _election( netmg, distributor, address, 5,
@@ -207,14 +154,21 @@ public:
         [ this ] {
             onLeaderFailed();
         } ),
-      _messageService( std::make_unique< MessageService >( address, port, distributor, std::move( pcb ) ) )
-    {
-        _messageService->registerOnMessageCallback( 
-            METHOD_ID,
-            [&]( Ip6Addr sender, DistributionMessageType messageType, uint8_t* data, size_t size ) 
-            {
-                onMessage( sender, messageType, data, size );
-            });
+      _sender( MessageSender( address, DISTRIBUTION_PORT, pcb.get(), distributor ) )
+    { 
+        LOCK_TCPIP_CORE();
+        _pcb = std::move( pcb );
+        UNLOCK_TCPIP_CORE();
+
+        if ( !_pcb )
+        {
+            std::cout << "PCB Null" << std::endl;
+        }
+
+        LOCK_TCPIP_CORE();
+        udp_bind( _pcb.get(), IP6_ADDR_ANY, DISTRIBUTION_PORT );
+        udp_recv( _pcb.get(), recv_message, this);
+        UNLOCK_TCPIP_CORE();
     }
 
     template< std::derived_from< SharedMemoryBase > Memory >
@@ -321,14 +275,99 @@ public:
         _election.start( moduleId );
     }
 
-    MessageService& messageService()
+    void receiveMessage( void*,
+        struct udp_pcb*,
+        struct pbuf* p,
+        const ip6_addr_t*, 
+        u16_t )
     {
-        return *(_messageService.get());
+        if ( !p )
+        {
+            return;
+        }
+        
+        auto packet = rofi::hal::PBuf::own( p );
+        DistributionMessageType type = as< DistributionMessageType >( packet.payload() );
+        Ip6Addr sender = as< Ip6Addr >( packet.payload() + sizeof( DistributionMessageType ) );
+
+        // Add one more field for taskId
+
+        if ( type == DistributionMessageType::BlockingTaskRelease )
+        {
+            _task_manager.unblockSchedulers();
+            return;
+        }
+
+        if ( type == DistributionMessageType::TaskRequest )
+        {
+            std::cout << "Received Task Request from" << sender << std::endl;
+            _taskRequests.push( sender );
+            return;
+        }
+
+        if ( type == DistributionMessageType::TaskFailed )
+        {
+            std::cout << "Received Task Failure from " << sender << std::endl;
+            // How to react?
+            return;
+        }
+
+        if ( type == DistributionMessageType::DataStorageRequest )
+        {
+            std::cout << "Received Data Storage Request from " << sender << std::endl;
+            if (_memory != nullptr)
+            {
+                unsigned int offset = sizeof( DistributionMessageType ) + Ip6Addr::size();
+                return _memory->onStorageMessage( sender, packet.payload() + offset, packet.size() - offset );
+            }
+            // TODO: Exception if memory is nullptr?
+        }
+
+        int functionId = as< int >( packet.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
+
+        std::optional<std::reference_wrapper<FunctionConcept>> fn = _function_manager.getFunction( functionId );
+
+        if (!fn)
+        {
+            std::cout << "Function with ID " << functionId << " not found." << std::endl;
+            return;
+        }
+
+        auto task = getTaskFromBuffer(
+            packet.payload() + sizeof( DistributionMessageType ) + sizeof( int ) + sizeof( Ip6Addr ), 
+            functionId );
+        
+        if ( task == nullptr )
+        {
+            // Something went wrong.
+            return;
+        }
+
+        if ( type == DistributionMessageType::TaskAssignment )
+        {
+            std::cout << "Received Task Assignment from " << sender << " for task with ID " << task->id() << std::endl;
+            _task_manager.enqueueTask( _address, std::move( task ), fn.value().get().getCompletionType() );
+            return;
+        }
+
+        if ( type == DistributionMessageType::TaskResult )
+        {
+            std::cout << "Received result from " << sender << " for Task with ID " << task->id() << std::endl;
+            if ( !_function_manager.invokeReaction( sender, *task.get() ) )
+            {
+                std::cout << "Error invoking reaction for function " << task->functionId() << std::endl;
+            }
+        }
     }
-    
-    void broadcastUnblockSignal()
+
+    MessageSender& getSender()
     {
-        _messageService->broadcastMessage( DistributionMessageType::BlockingTaskRelease, METHOD_ID );
+        return _sender;
+    }
+
+    void BroadcastUnblockSignal()
+    {
+        _sender.broadcastMessage(DistributionMessageType::BlockingTaskRelease, METHOD_ID);
     }
 
 };
