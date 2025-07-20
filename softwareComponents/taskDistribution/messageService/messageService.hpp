@@ -105,9 +105,7 @@ public:
 
     void sendMessage( unsigned int methodId, DistributionMessageType type, TaskBase& task, const Ip6Addr& target)
     {
-        auto buffer = rofi::hal::PBuf::allocate( task.size() 
-                                                 + sizeof( DistributionMessageType ) 
-                                                 + sizeof( Ip6Addr ) );
+        auto buffer = rofi::hal::PBuf::allocate( task.size() + headerSize() );
         addHeader( methodId, type, _address, buffer.payload() );
         task.copyToBuffer( buffer.payload() + headerSize() );
 
@@ -172,9 +170,10 @@ public:
     {
         std::vector< uint8_t > buffer;
         buffer.resize( size + headerSize() );
-        addHeader( methodId, type, _address, data );
+        addHeader( methodId, type, _address, buffer.data() );
+        unsigned int method = as< unsigned int >( buffer.data() );
         std::memcpy( buffer.data() + headerSize(), data, size );
-        _messageDistributor->sendMessage( _address, methodId, buffer.data(), buffer.size() );
+        _messageDistributor->sendMessage( _address, methodId, buffer.data(), size + headerSize() );
     }
 
     void broadcastMessage( DistributionMessageType type, TaskBase& task, unsigned int methodId )
