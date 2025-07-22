@@ -10,6 +10,9 @@
 #include <string>
 
 #include "distributionManager.hpp"
+#include "initial.hpp"
+#include "add.hpp"
+#include "multiply.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
@@ -27,22 +30,6 @@ Ip6Addr createAddress( int id ) {
 
 int currentCount = 0;
 std::map< int, std::string > dataMap;
-
-int count()
-{
-    return currentCount++;
-}
-
-int multiplyBy2( int number )
-{
-    return number * 2; 
-}
-
-int initialFunction( void )
-{
-    std::cout << "Initial Function!" << std::endl;
-    return RoFI::getLocalRoFI().getId();
-}
 
 void startElectionProtocol() {
     std::cout << "Starting crash tolerant election test\n";
@@ -72,84 +59,34 @@ void startElectionProtocol() {
     
     manager.useMemory( std::make_unique< ReplicatedMemoryManager >( reinterpret_cast< MessageDistributor* >( messageDistributor ), addr, manager.getSender() ) );
     
-    std::function< void ( std::optional< int >, const rofi::hal::Ip6Addr& ) > initReaction = 
-        [&]( std::optional< int > moduleId, const Ip6Addr& sender ) 
-        { 
-            std::cout << "[InitReaction] Received initial response from " << moduleId.value() << std::endl;
-            if ( !moduleId.has_value() )
-            {
-                std::cout << "[InitReaction] Something went wrong." << std::endl;
-            }
-            if ( moduleId.value() % 2 == 0 )
-            {
-                int modId = moduleId.value();
-                manager.pushTask< int, int >(sender, 1, 1, false, std::make_tuple< int >( std::move( modId ) ) );
-                std::cout << "[InitReaction] Going to save " << id << std::endl;
-                manager.saveData(reinterpret_cast< uint8_t* >( &id ), sizeof( int ), id );
-            }
-            else
-            {
-                manager.pushTask< int >(sender, 2, 1, false, std::tuple< int >() );
-            }
-        };
-    
-    manager.registerFunction< int >( 0, std::function< int () >(initialFunction), initReaction );
-    manager.registerFunction< int, int >( 1,
-        std::function< int ( int ) >( [&]( int number ) 
-        { 
-            int value = number * 2;
-
-            int save = id * 100 + number;
-            std::cout << "[MAIN] Saving Data in main.cpp multiply: " << save << std::endl;
-            manager.saveData( reinterpret_cast< uint8_t* >( &save ), sizeof( int ), id );
-            return value;
-        } ), 
-        [&]( std::optional< int > result, const Ip6Addr& sender )
-        {
-            std::cout << "[MAIN] Multiply result from " << sender << " is " << ( result.has_value() ? result.value() : -1 ) << std::endl;
-            manager.pushTask< int >( sender, 2, 1, false, std::tuple< int >() );
-        }
-    );
-
-    manager.registerFunction< int >( 2, 
-        [&]() 
-        { 
-            int save = id * 100 + currentCount;
-            std::cout << "[MAIN] Saving Data in main.cpp count: " << save << std::endl;
-            manager.saveData(reinterpret_cast< uint8_t* >( &save ), sizeof( int ), id);
-            return currentCount++;
-        }, 
-        [&]( std::optional< int > result, const Ip6Addr& sender )
-        {
-            std::cout << "[MAIN] Increment result from " << sender << "is " << ( result.has_value() ? result.value() : -1 ) << std::endl;
-            if ( result.has_value() && result.value() < 5 )
-            {
-                manager.pushTask< int >( sender, 2, 1, false, std::tuple< int >() );
-            } 
-        }
-    );
+    std::unique_ptr< DistributedFunction< int > > initial = std::make_unique< Initial >( id, manager );
+    std::unique_ptr< DistributedFunction< int, int > > add = std::make_unique< Add >( currentCount, manager );
+    std::unique_ptr< DistributedFunction< int, int > > multiply = std::make_unique< Multiply >( currentCount, manager );
+    manager.registerFunction< int >( std::move( initial ) );
+    manager.registerFunction< int, int >( std::move( add ) );
+    manager.registerFunction< int, int >( std::move( multiply ) );
 
     manager.setInitialTask( 0 );
     manager.start( id );
 
-    while (true){
+    while ( true ){
         sleep( 1 );
         manager.doWork();
         
         int mem1 = 0;
-        if (manager.readData(1, mem1))
+        if ( manager.readData( 1, mem1 ) )
         {
             std::cout << "Data at address 1: " << mem1 << std::endl;
         }
 
         int mem2 = 0;
-        if (manager.readData(2, mem2))
+        if ( manager.readData( 2, mem2 ) )
         {
             std::cout << "Data at address 2: " << mem2 << std::endl;
         }
 
         int mem3 = 0;
-        if (manager.readData(3, mem3))
+        if ( manager.readData( 3, mem3 ) )
         {
             std::cout << "Data at address 3: " << mem3 << std::endl;
         }

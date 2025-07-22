@@ -1,6 +1,8 @@
+#pragma once
+
 #include "messageSender.hpp"
-#include "taskManager.hpp"
-#include "functionManager.hpp"
+#include "../tasks/taskManager.hpp"
+#include "../functions/functionManager.hpp"
 #include "LRElect.hpp"
 #include "../memory/sharedMemoryBase.hpp"
 #include "../memory/replicatedMemory.hpp"
@@ -221,12 +223,10 @@ public:
     }
 
     template < typename Result, typename... Arguments >
-    bool registerFunction( int id, 
-        FunctionType< Result, Arguments... > function, 
-        ReactionType< Result, Arguments... > reaction,
+    bool registerFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction,
         CompletionType completionType = CompletionType::NonBlocking )
     {
-        return _function_manager.addFunction< Result, Arguments... >( id, function, reaction, completionType );
+        return _function_manager.addFunction< Result, Arguments... >( std::move( userFunction ), completionType );
     }
 
     bool unregisterFunction( int id )
@@ -234,25 +234,45 @@ public:
         return _function_manager.removeFunction( id );
     }
 
-    /// @brief Pushes task into manager. This task is to be distributed to another module.
-    /// @tparam Result The type of the task result.
-    /// @tparam ...Arguments The types of task arguments. 
-    /// @param addr The address of the receiver / delegate module.
-    /// @param functionId The ID of the function to be invoked at receiver.
-    /// @param arguments The arguments for the function.
-    /// @return True if the push was succesful. Otherwise false.
     template< typename Result, typename... Arguments >
-    bool pushTask( const Ip6Addr& addr, int functionId, int priority, bool enqueueFront, std::tuple< Arguments... >&& arguments )
-    {
+    bool executeFunction( const Ip6Addr& executorAddress, int priority, bool giveTopPriority, int functionId, std::tuple< Arguments... >&& arguments )
+    {    
         auto fn = _function_manager.getFunction( functionId );
 
-        if (!fn)
+        if ( !fn.has_value() )
         {
             return false;
         }
 
-        bool result = _task_manager.enqueueTask< Result >( addr, functionId, priority, enqueueFront, fn.value().get().getCompletionType(), std::move( arguments ) );
-        _taskRequests.push(addr);
+        bool result = _task_manager.enqueueTask< Result >( executorAddress, functionId, priority,
+            giveTopPriority, fn.value().get().completionType(), std::move( arguments ) );
+
+        if ( !result )
+        {
+            _taskRequests.push( executorAddress );
+        }
+
+        return result;
+    }
+
+    template< typename Result, typename... Arguments >
+    bool executeFunction( const Ip6Addr& executorAddress, int priority, bool giveTopPriority, std::string functionName, std::tuple< Arguments... >&& arguments )
+    {    
+        auto fn = _function_manager.getFunction( functionName );
+
+        if ( !fn.has_value() )
+        {
+            return false;
+        }
+        
+        bool result = _task_manager.enqueueTask< Result >( executorAddress, fn.value().get().functionId(), priority,
+            giveTopPriority, fn.value().get().completionType(), std::move( arguments ) );
+
+        if ( !result )
+        {
+            _taskRequests.push( executorAddress );
+        }
+
         return result;
     }
 
@@ -325,7 +345,7 @@ public:
 
         int functionId = as< int >( packet.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
 
-        std::optional<std::reference_wrapper<FunctionConcept>> fn = _function_manager.getFunction( functionId );
+        std::optional<std::reference_wrapper< FunctionConcept > > fn = _function_manager.getFunction( functionId );
 
         if (!fn)
         {
@@ -346,7 +366,7 @@ public:
         if ( type == DistributionMessageType::TaskAssignment )
         {
             std::cout << "Received Task Assignment from " << sender << " for task with ID " << task->id() << std::endl;
-            _task_manager.enqueueTask( _address, std::move( task ), fn.value().get().getCompletionType() );
+            _task_manager.enqueueTask( _address, std::move( task ), fn.value().get().completionType() );
             return;
         }
 

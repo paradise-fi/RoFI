@@ -1,4 +1,5 @@
 #pragma once
+
 #include <cstdint>
 #include <lwip++.hpp>
 #include <networking/networkManager.hpp>
