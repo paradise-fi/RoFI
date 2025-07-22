@@ -155,7 +155,7 @@ class Task : public TaskBase {
 
     const std::tuple< Arguments... >& arguments() const { return _args; }
 
-    void setResult( Result result ) { _result = std::optional< Result >( result ); }
+    void setResult( std::optional< Result > result ) { _result = result; }
 
     void setStatus( TaskStatus status ) { _status = status; }
 

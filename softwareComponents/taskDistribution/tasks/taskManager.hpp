@@ -1,3 +1,5 @@
+#pragma once
+
 #include <queue>
 #include "task.hpp"
 #include "functionModel.hpp"
@@ -46,7 +48,7 @@ public:
         auto task = relatedFunction.createTask();
         task->fillFromBuffer( buffer );
         updateTaskIdIfStale( task->id() );
-        _schedulers[ addr ].enqueueTask( std::move( task ), relatedFunction.getCompletionType() );
+        _schedulers[ addr ].enqueueTask( std::move( task ), relatedFunction.completionType() );
         return true;
     }
 
