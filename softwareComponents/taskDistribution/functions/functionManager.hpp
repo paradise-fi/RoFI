@@ -3,17 +3,17 @@
 #include <map>
 #include <memory>
 #include "functionModel.hpp"
+#include "distributedFunction.hpp"
+#include "functionHandle.hpp"
 #include <networking/networkManager.hpp>
 
 template < typename Result, typename... Arguments >
-using FunctionType = FunctionModel< Result, Arguments... >::FunctionType;
-
-template < typename Result, typename... Arguments >
-using ReactionType = FunctionModel< Result, Arguments... >::ReactionType;
+using Executor = std::function< bool( const Ip6Addr&, int, bool, FunctionModel< Result, Arguments...>& fn, std::tuple< Arguments...> && arguments ) >;
 
 class FunctionManager
 {
     std::map< int, std::unique_ptr< FunctionConcept > > _functions;
+    std::map< std::string, int > _nameToIdMap;
 
 public:
     bool isFunctionRegistered( int id ) const
@@ -22,23 +22,55 @@ public:
     }
 
     template < typename Result, typename... Arguments >
-    bool addFunction( int id, 
-        FunctionType< Result, Arguments... > function, 
-        ReactionType< Result, Arguments... > reaction,
+    bool addFunction( 
+        std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction,
         CompletionType completionType )
     {
+        int id = userFunction->functionId();
+        std::string name = userFunction->functionName();
+
         if ( _functions.find( id ) != _functions.end() )
         {
             return false;
         }
 
-        _functions.emplace( id, std::make_unique< FunctionModel< Result, Arguments... > >( id, function, reaction, completionType ) );
+        if ( _nameToIdMap.find( name ) != _nameToIdMap.end() )
+        {
+            return false;
+        }
+
+        _functions.emplace( id, std::make_unique< FunctionModel< Result, Arguments... > >(
+            std::move( userFunction ), 
+            completionType ) );
+
+        _nameToIdMap.emplace( name, id );
         return true;
     }
 
     bool removeFunction( int id )
     {
+        auto fnCandidate = _functions.find( id );
+
+        if ( fnCandidate == _functions.end() )
+        {
+            return false;
+        }
+
+        _nameToIdMap.erase( fnCandidate->second->functionName() );
+
         return _functions.erase( id ) != 0;
+    }
+
+    bool removeFunction( std::string name )
+    {
+        auto idCandidate = _nameToIdMap.find( name );
+        
+        if ( idCandidate == _nameToIdMap.end() )
+        {
+            return false;
+        }
+
+        return removeFunction( idCandidate->second );
     }
 
     bool invokeFunction( TaskBase& task )
@@ -64,7 +96,7 @@ public:
             return false;
         }
 
-        fn->second->react( addr, task );
+        fn->second->onSuccess( addr, task );
         return true;
     }
 
@@ -79,4 +111,42 @@ public:
 
         return *( kv->second.get() );
     }
+
+    std::optional< std::reference_wrapper< FunctionConcept > > getFunction( std::string functionName )
+    {
+        auto idCandidate = _nameToIdMap.find( functionName );
+        
+        if ( idCandidate == _nameToIdMap.end() )
+        {
+            return std::nullopt;
+        }
+
+        return getFunction( idCandidate->second );
+    }
+
+    // template< typename Result, typename... Arguments >
+    // std::optional< FunctionHandle< Result, Arguments... > > getFunctionHandle( int functionId )
+    // {
+    //     auto kv = _functions.find( functionId );
+        
+    //     if ( kv == _functions.end() )
+    //     {
+    //         return std::nullopt;
+    //     }
+    //     FunctionModel< Result, Arguments... >& fn = static_cast< FunctionModel< Result, Arguments... >& >( *( kv->second.get() ) );
+    //     return FunctionHandle< Result, Arguments... >( fn, _distributionManager );
+    // }
+
+    // template< typename Result, typename... Arguments >
+    // std::optional< FunctionHandle< Result, Arguments... > > getFunctionHandle( std::string functionName )
+    // {
+    //     auto idCandidate = _nameToIdMap.find( functionName );
+        
+    //     if ( idCandidate == _nameToIdMap.end() )
+    //     {
+    //         return std::nullopt;
+    //     }
+
+    //     return getFunctionHandle< Result, Arguments... >( idCandidate->second );
+    // }
 };

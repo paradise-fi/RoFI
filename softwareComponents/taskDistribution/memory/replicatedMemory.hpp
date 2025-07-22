@@ -1,3 +1,5 @@
+#pragma once
+
 #include <shared_mutex>
 #include "memoryEntry.hpp"
 #include "../distribution/messageSender.hpp"
