@@ -12,7 +12,15 @@ public:
 
     virtual FunctionResult< int > execute( int multiplyValue ) override
     {
+        std::cout << _value << " * " << multiplyValue;
         _value *= multiplyValue;
+        std::cout << " = " << _value << std::endl;
+
+        int value = 300 + _value;
+        if ( !_manager.saveData( reinterpret_cast< uint8_t* >( &value ), sizeof( int ), 3 ) )
+        {
+            return FunctionResult< int >( _value, false );
+        }
 
         return FunctionResult< int >( _value, true );
     }

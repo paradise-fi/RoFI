@@ -97,12 +97,14 @@ class DistributionManager
     {
         if ( _taskRequests.empty() )
         {
+            std::cout << "No task requests" << std::endl;
             return;
         }
 
         Ip6Addr requester(1);
         if (!_taskRequests.pop( requester ))
         {
+            std::cout << "No requester for task found." << std::endl;
             return;
         }
 
@@ -118,6 +120,7 @@ class DistributionManager
             _sender.sendMessage( DistributionMessageType::TaskAssignment, initial.value(), requester );
             return;
         }
+
         _sender.sendMessage( DistributionMessageType::TaskAssignment, task.value().get(), requester );
     }
 
@@ -236,7 +239,7 @@ public:
 
     template< typename Result, typename... Arguments >
     bool executeFunction( const Ip6Addr& executorAddress, int priority, bool giveTopPriority, int functionId, std::tuple< Arguments... >&& arguments )
-    {    
+    {
         auto fn = _function_manager.getFunction( functionId );
 
         if ( !fn.has_value() )
@@ -247,7 +250,7 @@ public:
         bool result = _task_manager.enqueueTask< Result >( executorAddress, functionId, priority,
             giveTopPriority, fn.value().get().completionType(), std::move( arguments ) );
 
-        if ( !result )
+        if ( result )
         {
             _taskRequests.push( executorAddress );
         }
@@ -268,7 +271,7 @@ public:
         bool result = _task_manager.enqueueTask< Result >( executorAddress, fn.value().get().functionId(), priority,
             giveTopPriority, fn.value().get().completionType(), std::move( arguments ) );
 
-        if ( !result )
+        if ( result )
         {
             _taskRequests.push( executorAddress );
         }
@@ -320,7 +323,7 @@ public:
 
         if ( type == DistributionMessageType::TaskRequest )
         {
-            std::cout << "Received Task Request from" << sender << std::endl;
+            std::cout << "Received Task Request from " << sender << std::endl;
             _taskRequests.push( sender );
             return;
         }
@@ -343,6 +346,12 @@ public:
             // TODO: Exception if memory is nullptr?
         }
 
+        if ( type == DistributionMessageType::DataStorageSuccess )
+        {
+            std::cout << "Data storage succeeded." << std::endl;
+            return;
+        }
+
         int functionId = as< int >( packet.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
 
         std::optional<std::reference_wrapper< FunctionConcept > > fn = _function_manager.getFunction( functionId );
@@ -354,9 +363,9 @@ public:
         }
 
         auto task = getTaskFromBuffer(
-            packet.payload() + sizeof( DistributionMessageType ) + sizeof( int ) + sizeof( Ip6Addr ), 
+            packet.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ), 
             functionId );
-        
+
         if ( task == nullptr )
         {
             // Something went wrong.

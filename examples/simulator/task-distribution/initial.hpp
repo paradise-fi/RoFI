@@ -17,12 +17,16 @@ public:
 
     virtual void onFunctionSuccess( std::optional< int > result, const Ip6Addr& origin ) override
     {
+        std::cout << "Initial.onFunctionSuccess()" << std::endl;
         if ( !result.has_value() )
         {
+            std::cout << "No result value" << std::endl;
             return;
         }
 
         int moduleId = result.value();
+
+        std::cout << "Initial ModuleId: " << moduleId << std::endl;
 
         if ( moduleId % 2 == 0 )
         {
@@ -33,7 +37,7 @@ public:
         }
         else
         {
-            if ( !_manager.executeFunction<int, int >( origin, 1, false, 2, std::tuple< int >( 1 ) ) )
+            if ( !_manager.executeFunction<int, int >( origin, 1, false, 2, std::tuple< int >( 2 ) ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }
