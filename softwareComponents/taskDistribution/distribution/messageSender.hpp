@@ -34,6 +34,7 @@ public:
                                                  + sizeof( Ip6Addr ) );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
+        std::cout << "Copying task to buffer of size " << buffer.size() - ( sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) ) << std::endl;
         task.copyToBuffer( buffer.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
 
         auto result = udp_sendto( _pcb, buffer.release(), &target, _distribution_port );

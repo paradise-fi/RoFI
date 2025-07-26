@@ -12,7 +12,9 @@ public:
 
     virtual FunctionResult< int > execute( int value ) override 
     {
+        std::cout << _value << " + " << value;
         _value += value;
+        std::cout << " = " << _value << std::endl;
         return FunctionResult< int >( _value, true );
     }
 

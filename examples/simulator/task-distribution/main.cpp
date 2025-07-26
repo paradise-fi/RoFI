@@ -28,7 +28,7 @@ Ip6Addr createAddress( int id ) {
     return Ip6Addr( ss.str() );
 }
 
-int currentCount = 0;
+int currentCount = 1;
 std::map< int, std::string > dataMap;
 
 void startElectionProtocol() {

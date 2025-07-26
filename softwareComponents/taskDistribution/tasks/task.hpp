@@ -24,7 +24,7 @@ public:
     virtual ~TaskBase() = default;
 
     virtual int id() const = 0;
-    virtual size_t size() const = 0;
+    virtual size_t size() = 0;
     virtual int functionId() const = 0;
     virtual void setStatus( TaskStatus status ) = 0;
 
@@ -55,9 +55,18 @@ class Task : public TaskBase {
     Arg readArgument( const uint8_t* buffer )
     {
         Arg argument;
+        int agg = as< int  >( buffer );
         std::memcpy(&argument, buffer, sizeof( Arg ) );
         buffer += sizeof( Arg );
         return argument;
+    }
+
+    template< typename Arg >
+    void writeArgument( uint8_t* buffer, unsigned int& idx, const Arg& arg )
+    {
+        std::memcpy( buffer + idx, &arg, sizeof( Arg ) );
+        int agg = as< int >( buffer + idx );
+        idx += sizeof( Arg );
     }
 
     public:
@@ -75,12 +84,22 @@ class Task : public TaskBase {
 
     int id() const override { return _id; }
 
-    virtual size_t size() const override {
+    template< typename ArgTuple >
+    constexpr std::size_t argumentsSize( const ArgTuple& ) {
+        using T = std::remove_cvref_t<ArgTuple>;
+
+        return []<std::size_t... Is>(std::index_sequence<Is...>) {
+            return ( 0 + ... + sizeof(std::tuple_element_t<Is, T>) );
+        }(std::make_index_sequence<std::tuple_size_v<T>>{});
+    }
+
+    virtual size_t size() override {
         using T = decltype( _args );
+
         return sizeof( _id ) + sizeof( _priority ) 
              + sizeof( _status ) + sizeof ( _func_id ) 
              + 2 * sizeof( bool ) + sizeof ( Result ) 
-             + std::tuple_size< T >{};
+             + argumentsSize( _args );
     };
 
     virtual void copyToBuffer( uint8_t* buffer ) override
@@ -112,8 +131,7 @@ class Task : public TaskBase {
         std::apply(
             [&]( Arguments&... args )
             {
-                ((std::memcpy( buffer + idx, &args, sizeof( args ) ),
-                idx += sizeof( args )), ...);
+                ( writeArgument( buffer, idx, args), ...);
             }, 
             _args
         );
@@ -122,6 +140,8 @@ class Task : public TaskBase {
     virtual void fillFromBuffer( const uint8_t* buffer ) override
     {
         unsigned int idx = 0;
+        _func_id = as< int >( buffer + idx );
+        idx += sizeof( int );
         _id = as< int >( buffer + idx );
         idx += sizeof( int );
         _priority = as< int >( buffer + idx );
@@ -144,7 +164,7 @@ class Task : public TaskBase {
         }
 
         idx += sizeof( Result );
-        _args = std::tuple< Arguments... >( readArgument< Arguments >( buffer )... );
+        _args = std::tuple< Arguments... >( readArgument< Arguments >( buffer + idx )... );
     } 
     
     int functionId() const override { return _func_id; }
