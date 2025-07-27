@@ -27,6 +27,7 @@ public:
     virtual size_t size() = 0;
     virtual int functionId() const = 0;
     virtual void setStatus( TaskStatus status ) = 0;
+    virtual TaskStatus status() const = 0;
 
     virtual void copyToBuffer( uint8_t* buffer ) = 0;
     virtual void fillFromBuffer( const uint8_t* buffer ) = 0;
@@ -55,7 +56,6 @@ class Task : public TaskBase {
     Arg readArgument( const uint8_t* buffer )
     {
         Arg argument;
-        int agg = as< int  >( buffer );
         std::memcpy(&argument, buffer, sizeof( Arg ) );
         buffer += sizeof( Arg );
         return argument;
@@ -65,7 +65,6 @@ class Task : public TaskBase {
     void writeArgument( uint8_t* buffer, unsigned int& idx, const Arg& arg )
     {
         std::memcpy( buffer + idx, &arg, sizeof( Arg ) );
-        int agg = as< int >( buffer + idx );
         idx += sizeof( Arg );
     }
 
@@ -171,7 +170,7 @@ class Task : public TaskBase {
 
     std::optional< Result > result() const { return _result; }
 
-    TaskStatus status() const { return _status; }
+    virtual TaskStatus status() const override { return _status; }
 
     const std::tuple< Arguments... >& arguments() const { return _args; }
 
