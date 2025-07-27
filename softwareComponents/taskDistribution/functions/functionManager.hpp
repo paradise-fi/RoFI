@@ -96,7 +96,15 @@ public:
             return false;
         }
 
-        fn->second->onSuccess( addr, task );
+        if ( task.status() != TaskStatus::Complete )
+        {
+            fn->second->onFailure( addr, task );
+        }
+        else 
+        {
+            fn->second->onSuccess( addr, task );
+        }
+        
         return true;
     }
 
