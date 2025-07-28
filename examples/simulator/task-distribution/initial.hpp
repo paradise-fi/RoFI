@@ -1,5 +1,6 @@
 #include "distributionManager.hpp"
 #include "distributedFunction.hpp"
+#include "functionHandle.hpp"
 
 class Initial : public DistributedFunction< int >
 {
@@ -8,7 +9,8 @@ class Initial : public DistributedFunction< int >
 
 public:
     Initial( int moduleId, DistributionManager& manager )
-    : _moduleId( moduleId ), _manager( manager ) {}
+    : _moduleId( moduleId ),
+      _manager( manager ) {}
 
     virtual FunctionResult< int > execute() override
     {
@@ -30,14 +32,16 @@ public:
 
         if ( moduleId % 2 == 0 )
         {
-            if ( !_manager.executeFunction< int, int >( origin, 1, false, 1, std::tuple< int >( 1 ) ) )
+            auto addHandle = _manager.getFunctionHandle< int, int >( 1 ).value();
+            if ( !addHandle( origin, 1, false, std::tuple< int >( 1 ) ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }
         }
         else
         {
-            if ( !_manager.executeFunction<int, int >( origin, 1, false, 2, std::tuple< int >( 2 ) ) )
+            auto multiplyHandle = _manager.getFunctionHandle< int, int >( 2 ).value(); 
+            if ( !multiplyHandle( origin, 1, false, std::tuple< int >( 2 ) ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }

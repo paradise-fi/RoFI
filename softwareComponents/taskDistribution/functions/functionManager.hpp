@@ -131,30 +131,4 @@ public:
 
         return getFunction( idCandidate->second );
     }
-
-    // template< typename Result, typename... Arguments >
-    // std::optional< FunctionHandle< Result, Arguments... > > getFunctionHandle( int functionId )
-    // {
-    //     auto kv = _functions.find( functionId );
-        
-    //     if ( kv == _functions.end() )
-    //     {
-    //         return std::nullopt;
-    //     }
-    //     FunctionModel< Result, Arguments... >& fn = static_cast< FunctionModel< Result, Arguments... >& >( *( kv->second.get() ) );
-    //     return FunctionHandle< Result, Arguments... >( fn, _distributionManager );
-    // }
-
-    // template< typename Result, typename... Arguments >
-    // std::optional< FunctionHandle< Result, Arguments... > > getFunctionHandle( std::string functionName )
-    // {
-    //     auto idCandidate = _nameToIdMap.find( functionName );
-        
-    //     if ( idCandidate == _nameToIdMap.end() )
-    //     {
-    //         return std::nullopt;
-    //     }
-
-    //     return getFunctionHandle< Result, Arguments... >( idCandidate->second );
-    // }
 };
