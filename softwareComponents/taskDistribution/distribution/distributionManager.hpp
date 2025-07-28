@@ -22,8 +22,6 @@ class DistributionManager
     NetworkManager& _net_manager;
     Ip6Addr _address;
 
-    boost::lockfree::queue< ip6_addr_t > _taskRequests;
-
     LRElect _election;
     MessageSender _sender;
     std::unique_ptr< SharedMemoryBase > _memory;
@@ -95,14 +93,14 @@ class DistributionManager
 
     void doWorkLeader()
     {
-        if ( _taskRequests.empty() )
+        if ( !_task_manager.anyTaskRequests() )
         {
             std::cout << "No task requests" << std::endl;
             return;
         }
 
         Ip6Addr requester(1);
-        if (!_taskRequests.pop( requester ))
+        if (!_task_manager.popTaskRequest( requester ))
         {
             std::cout << "No requester for task found." << std::endl;
             return;
@@ -151,7 +149,6 @@ public:
 
     DistributionManager(NetworkManager& netmg, Ip6Addr& address, MessageDistributor* distributor, std::unique_ptr< udp_pcb > pcb) 
     : _net_manager( netmg ), _address( address ),
-      _taskRequests( boost::lockfree::queue< ip6_addr_t >( 1024 ) ),
       _election( netmg, distributor, address, 5,
         [ this ] {
             onLeaderElected();
@@ -238,45 +235,29 @@ public:
     }
 
     template< typename Result, typename... Arguments >
-    bool executeFunction( const Ip6Addr& executorAddress, int priority, bool giveTopPriority, int functionId, std::tuple< Arguments... >&& arguments )
+    std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( int functionId )
     {
         auto fn = _function_manager.getFunction( functionId );
 
         if ( !fn.has_value() )
         {
-            return false;
+            return std::nullopt;
         }
 
-        bool result = _task_manager.enqueueTask< Result >( executorAddress, functionId, priority,
-            giveTopPriority, fn.value().get().completionType(), std::move( arguments ) );
-
-        if ( result )
-        {
-            _taskRequests.push( executorAddress );
-        }
-
-        return result;
+        return FunctionHandle< Result, Arguments... >( functionId, fn.value().get().completionType(),  _task_manager );
     }
 
     template< typename Result, typename... Arguments >
-    bool executeFunction( const Ip6Addr& executorAddress, int priority, bool giveTopPriority, std::string functionName, std::tuple< Arguments... >&& arguments )
-    {    
+    std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( std::string functionName )
+    {
         auto fn = _function_manager.getFunction( functionName );
 
         if ( !fn.has_value() )
         {
-            return false;
-        }
-        
-        bool result = _task_manager.enqueueTask< Result >( executorAddress, fn.value().get().functionId(), priority,
-            giveTopPriority, fn.value().get().completionType(), std::move( arguments ) );
-
-        if ( result )
-        {
-            _taskRequests.push( executorAddress );
+            return std::nullopt;
         }
 
-        return result;
+        return FunctionHandle< Result, Arguments... >( fn.value().get().functionId(), fn.value().get().completionType(),  _task_manager );
     }
 
     /*
@@ -324,7 +305,7 @@ public:
         if ( type == DistributionMessageType::TaskRequest )
         {
             std::cout << "Received Task Request from " << sender << std::endl;
-            _taskRequests.push( sender );
+            _task_manager.enqueueTaskRequest( sender );
             return;
         }
 

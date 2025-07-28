@@ -4,13 +4,14 @@
 #include "task.hpp"
 #include "functionModel.hpp"
 #include "taskScheduler.hpp"
+#include <boost/lockfree/queue.hpp>
 
 class TaskManager
 {
     // ToDo: This int should be atomic!
     int _taskId = 1;
     std::unique_ptr< TaskBase > _initialTask;
-//    std::map< Ip6Addr, std::queue< std::unique_ptr< TaskBase > > > _tasks;
+    boost::lockfree::queue< ip6_addr_t > _taskRequests = boost::lockfree::queue< ip6_addr_t >( 1024 );
     std::map< Ip6Addr, TaskScheduler > _schedulers;
 
     void updateTaskIdIfStale( int newId )
@@ -19,6 +20,21 @@ class TaskManager
     }
 
 public:
+    void enqueueTaskRequest( const Ip6Addr& addr )
+    {
+        _taskRequests.push( addr );
+    }
+
+    bool popTaskRequest( Ip6Addr& result )
+    {
+        return _taskRequests.pop( result );
+    }
+
+    bool anyTaskRequests()
+    {
+        return !_taskRequests.empty();
+    }
+
     bool enqueueTask( const Ip6Addr& addr, std::unique_ptr< TaskBase >&&  task, CompletionType completionType )
     {
         _schedulers[ addr ].enqueueTask( std::move( task ), completionType );

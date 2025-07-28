@@ -38,7 +38,8 @@ public:
 
         if ( value < 5 )
         {
-            if ( !_manager.executeFunction< int, int >( origin, 1, false, 1, std::tuple< int >( 1 ) ) )
+            auto addHandle = _manager.getFunctionHandle< int, int >( 1 ).value();
+            if ( !addHandle( origin, 1, false, std::tuple< int >( 1 ) ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }
