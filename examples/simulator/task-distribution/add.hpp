@@ -8,7 +8,8 @@ class Add : public DistributedFunction< int, int >
 
 public:
     Add( int& baseValue, DistributionManager& manager )
-    : _value( baseValue ), _manager( manager ) {}
+    : _value( baseValue ), _manager( manager )
+    {}
 
     virtual FunctionResult< int > execute( int value ) override 
     {
@@ -31,7 +32,8 @@ public:
 
          if ( value < 5 )
         {
-            if ( !_manager.executeFunction< int, int >( origin, 1, false, functionId(), std::tuple< int >( 1 ) ) )
+            auto addHandle = _manager.getFunctionHandle< int, int >( functionId() ).value();
+            if ( !addHandle( origin, 1, false, std::tuple< int >( 1 ) ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }

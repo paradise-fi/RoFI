@@ -93,8 +93,6 @@ class Task : public TaskBase {
     }
 
     virtual size_t size() override {
-        using T = decltype( _args );
-
         return sizeof( _id ) + sizeof( _priority ) 
              + sizeof( _status ) + sizeof ( _func_id ) 
              + 2 * sizeof( bool ) + sizeof ( Result ) 
