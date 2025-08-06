@@ -223,10 +223,9 @@ public:
     }
 
     template < typename Result, typename... Arguments >
-    bool registerFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction,
-        CompletionType completionType = CompletionType::NonBlocking )
+    bool registerFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction)
     {
-        return _function_manager.addFunction< Result, Arguments... >( std::move( userFunction ), completionType );
+        return _function_manager.addFunction< Result, Arguments... >( std::move( userFunction ), userFunction.get()->completionType() );
     }
 
     bool unregisterFunction( int id )
@@ -375,7 +374,7 @@ public:
         return _sender;
     }
 
-    void BroadcastUnblockSignal()
+    void broadcastUnblockSignal()
     {
         _sender.broadcastMessage(DistributionMessageType::BlockingTaskRelease, METHOD_ID);
     }
