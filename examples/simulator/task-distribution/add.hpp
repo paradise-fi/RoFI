@@ -54,4 +54,9 @@ public:
     {
         return 1;
     }
+
+    virtual CompletionType completionType() const override
+    {
+        return CompletionType::NonBlocking;
+    }
 };

@@ -1,5 +1,6 @@
 #pragma once
 #include "functionResult.hpp"
+#include "completionType.hpp"
 #include <optional>
 
 template< typename Result, typename... Arguments >
@@ -30,4 +31,8 @@ public:
     /// @brief Returns unique function id.
     /// @return Unique function id.
     virtual int functionId() const = 0;
+
+    /// @brief Returns the completion type for the function, determining whether it is blocking after completion or not.
+    /// @return The completion type.
+    virtual CompletionType completionType() const = 0;
 };
