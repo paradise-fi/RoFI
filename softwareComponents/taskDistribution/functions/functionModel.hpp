@@ -5,7 +5,6 @@
 
 #include "distributedFunction.hpp"
 #include "task.hpp"
-#include "../tasks/completionType.hpp"
 
 class FunctionConcept {
     public:
@@ -14,7 +13,8 @@ class FunctionConcept {
         virtual void perform( TaskBase& task ) = 0;
         virtual void onSuccess( const Ip6Addr& addr, const TaskBase& task ) = 0;
         virtual void onFailure( const Ip6Addr& addr, const TaskBase& task ) = 0;
-        virtual CompletionType completionType() const = 0;
+        virtual FunctionCompletionType completionType() const = 0;
+        virtual FunctionDistributionType distributionType() const = 0;
         virtual std::string functionName() const = 0;
         virtual int functionId() const = 0;
     };
@@ -23,10 +23,14 @@ class FunctionConcept {
     class FunctionModel : public FunctionConcept
     {
     public:
-        FunctionModel( std::unique_ptr< DistributedFunction< Result, Arguments... > > fn, CompletionType completionType )
-        : _function( std::move( fn ) ), _completionType( completionType )
+        FunctionModel( std::unique_ptr< DistributedFunction< Result, Arguments... > > fn )
+        : _function( std::move( fn ) )
         {}
 
+        DistributedFunction< Result, Arguments... >& getImplementation()
+        {
+            return *_function.get();
+        }
         
         virtual void perform( TaskBase& task ) override
         {
@@ -59,9 +63,14 @@ class FunctionConcept {
             return std::make_unique< Task<Result, Arguments... > >( _function->functionId() );
         }
 
-        virtual CompletionType completionType() const override
+        virtual FunctionCompletionType completionType() const override
         {
-            return _completionType;
+            return _function.get()->completionType();
+        }
+
+        virtual FunctionDistributionType distributionType() const override
+        {
+            return _function.get()->distributionType();
         }
 
         virtual std::string functionName() const override
@@ -76,6 +85,4 @@ class FunctionConcept {
 
     private:
         std::unique_ptr< DistributedFunction< Result, Arguments... > > _function;
-
-        CompletionType _completionType;
     };

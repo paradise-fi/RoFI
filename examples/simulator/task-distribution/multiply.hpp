@@ -61,8 +61,13 @@ public:
         return 2;
     }
 
-    virtual CompletionType completionType() const override
+    virtual FunctionCompletionType completionType() const override
     {
-        return CompletionType::NonBlocking;
+        return FunctionCompletionType::NonBlocking;
+    }
+
+    virtual FunctionDistributionType distributionType() const override
+    {
+        return FunctionDistributionType::Unicast;
     }
 };

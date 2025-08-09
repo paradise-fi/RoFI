@@ -93,6 +93,7 @@ class DistributionManager
 
     void doWorkLeader()
     {
+        std::cout << "doWorkLeader" << std::endl;
         if ( !_task_manager.anyTaskRequests() )
         {
             std::cout << "No task requests" << std::endl;
@@ -107,19 +108,48 @@ class DistributionManager
         }
 
         auto task = _task_manager.popTask(requester, true);
+        std::cout << "popTask in doWorkLeader done" << std::endl;
         if ( !task.has_value() )
         {
-            auto initial = _task_manager.getInitialTask();
-            if ( !initial.has_value() )
+            task = _task_manager.getInitialTask();
+            if ( !task.has_value() )
             {
                 std::cout << "Task distribution failed: No initial task given.";
                 return;
             }
-            _sender.sendMessage( DistributionMessageType::TaskAssignment, initial.value(), requester );
+        }
+
+        auto function = _function_manager.getFunction( task.value().get().functionId() );
+        if ( !function.has_value() )
+        {
+            std::cout << "Task distribution failed: Given task has associated no function.";
             return;
         }
 
-        _sender.sendMessage( DistributionMessageType::TaskAssignment, task.value().get(), requester );
+        std::cout << "Task " << task.value().get().id() << " for function: " << function.value().get().functionName() << std::endl;
+
+        switch ( function.value().get().distributionType() )
+        {
+            case FunctionDistributionType::Broadcast: 
+            {
+                std::cout << "DoWorkLeader - Switch - Broadcast" << std::endl;
+                _sender.broadcastMessage( DistributionMessageType::TaskAssignment, task.value().get(), METHOD_ID );
+                return;
+            }
+
+            case FunctionDistributionType::Unicast:
+            {
+                std::cout << "DoWorkLeader - Switch - Unicast" << std::endl;
+                _sender.sendMessage( DistributionMessageType::TaskAssignment, task.value().get(), requester );
+                return;
+            }
+
+            default:
+            {
+                std::cout << "Undefined Function Distribution Type found." << std::endl;
+                return;
+            }
+        }
     }
 
     void doWorkFollower()
@@ -142,6 +172,86 @@ class DistributionManager
 
         _sender.sendMessage( DistributionMessageType::TaskResult, task.get(), _election.getLeader() );
         _task_manager.finishActiveTask( _address );
+    }
+
+    void onMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size )
+    {
+
+        // Add one more field for taskId
+
+        if ( type == DistributionMessageType::BlockingTaskRelease )
+        {
+            std::cout << "RECEIVED SIGNAL TO UNBLOCK SCHEDULERS!!!" << std::endl;
+            _task_manager.unblockSchedulers();
+            return;
+        }
+
+        if ( type == DistributionMessageType::TaskRequest )
+        {
+            std::cout << "Received Task Request from " << sender << std::endl;
+            _task_manager.enqueueTaskRequest( sender );
+            return;
+        }
+
+        if ( type == DistributionMessageType::TaskFailed )
+        {
+            std::cout << "Received Task Failure from " << sender << std::endl;
+            // How to react?
+            return;
+        }
+
+        if ( type == DistributionMessageType::DataStorageRequest )
+        {
+            std::cout << "Received Data Storage Request from " << sender << std::endl;
+            if (_memory != nullptr)
+            {
+                unsigned int offset = sizeof( DistributionMessageType ) + Ip6Addr::size();
+                return _memory->onStorageMessage( sender, data + offset, size - offset );
+            }
+            // TODO: Exception if memory is nullptr?
+        }
+
+        if ( type == DistributionMessageType::DataStorageSuccess )
+        {
+            std::cout << "Data storage succeeded." << std::endl;
+            return;
+        }
+
+        int functionId = as< int >( data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
+
+        std::optional<std::reference_wrapper< FunctionConcept > > fn = _function_manager.getFunction( functionId );
+
+        if ( !fn )
+        {
+            std::cout << "Function with ID " << functionId << " not found." << std::endl;
+            return;
+        }
+
+        auto task = getTaskFromBuffer(
+            data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ), 
+            functionId );
+
+        if ( task == nullptr )
+        {
+            // Something went wrong.
+            return;
+        }
+
+        if ( type == DistributionMessageType::TaskAssignment )
+        {
+            std::cout << "Received Task Assignment from " << sender << " for task with ID " << task->id() << std::endl;
+            _task_manager.enqueueTask( _address, std::move( task ), fn.value().get().completionType() );
+            return;
+        }
+
+        if ( type == DistributionMessageType::TaskResult )
+        {
+            std::cout << "Received result from " << sender << " for Task with ID " << task->id() << std::endl;
+            if ( !_function_manager.invokeReaction( sender, *task.get() ) )
+            {
+                std::cout << "Error invoking reaction for function " << task->functionId() << std::endl;
+            }
+        }
     }
 
 public:
@@ -171,6 +281,14 @@ public:
         udp_bind( _pcb.get(), IP6_ADDR_ANY, DISTRIBUTION_PORT );
         udp_recv( _pcb.get(), recv_message, this);
         UNLOCK_TCPIP_CORE();
+
+        distributor->registerMethod( METHOD_ID, 
+            [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
+            {
+                DistributionMessageType type = as< DistributionMessageType >( data );
+                onMessage( sender, type, data, size ); 
+            },
+            [] () { return; } );
     }
 
     template< std::derived_from< SharedMemoryBase > Memory >
@@ -185,6 +303,7 @@ public:
         return true;
     } 
 
+    // ToDo: Consider moving these functions out of here and giving access to memory by .memory()
     bool saveData( uint8_t* data, int size, int address )
     {
         if ( _memory == nullptr )
@@ -225,7 +344,7 @@ public:
     template < typename Result, typename... Arguments >
     bool registerFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction)
     {
-        return _function_manager.addFunction< Result, Arguments... >( std::move( userFunction ), userFunction.get()->completionType() );
+        return _function_manager.addFunction< Result, Arguments... >( std::move( userFunction ) );
     }
 
     bool unregisterFunction( int id )
@@ -243,7 +362,9 @@ public:
             return std::nullopt;
         }
 
-        return FunctionHandle< Result, Arguments... >( functionId, fn.value().get().completionType(),  _task_manager );
+        auto& model = static_cast< FunctionModel< Result, Arguments... >& >( fn->get() );
+
+        return FunctionHandle< Result, Arguments... >( functionId, fn->get().completionType(), model.getImplementation(), _task_manager );
     }
 
     template< typename Result, typename... Arguments >
@@ -293,80 +414,7 @@ public:
         DistributionMessageType type = as< DistributionMessageType >( packet.payload() );
         Ip6Addr sender = as< Ip6Addr >( packet.payload() + sizeof( DistributionMessageType ) );
 
-        // Add one more field for taskId
-
-        if ( type == DistributionMessageType::BlockingTaskRelease )
-        {
-            _task_manager.unblockSchedulers();
-            return;
-        }
-
-        if ( type == DistributionMessageType::TaskRequest )
-        {
-            std::cout << "Received Task Request from " << sender << std::endl;
-            _task_manager.enqueueTaskRequest( sender );
-            return;
-        }
-
-        if ( type == DistributionMessageType::TaskFailed )
-        {
-            std::cout << "Received Task Failure from " << sender << std::endl;
-            // How to react?
-            return;
-        }
-
-        if ( type == DistributionMessageType::DataStorageRequest )
-        {
-            std::cout << "Received Data Storage Request from " << sender << std::endl;
-            if (_memory != nullptr)
-            {
-                unsigned int offset = sizeof( DistributionMessageType ) + Ip6Addr::size();
-                return _memory->onStorageMessage( sender, packet.payload() + offset, packet.size() - offset );
-            }
-            // TODO: Exception if memory is nullptr?
-        }
-
-        if ( type == DistributionMessageType::DataStorageSuccess )
-        {
-            std::cout << "Data storage succeeded." << std::endl;
-            return;
-        }
-
-        int functionId = as< int >( packet.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
-
-        std::optional<std::reference_wrapper< FunctionConcept > > fn = _function_manager.getFunction( functionId );
-
-        if (!fn)
-        {
-            std::cout << "Function with ID " << functionId << " not found." << std::endl;
-            return;
-        }
-
-        auto task = getTaskFromBuffer(
-            packet.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ), 
-            functionId );
-
-        if ( task == nullptr )
-        {
-            // Something went wrong.
-            return;
-        }
-
-        if ( type == DistributionMessageType::TaskAssignment )
-        {
-            std::cout << "Received Task Assignment from " << sender << " for task with ID " << task->id() << std::endl;
-            _task_manager.enqueueTask( _address, std::move( task ), fn.value().get().completionType() );
-            return;
-        }
-
-        if ( type == DistributionMessageType::TaskResult )
-        {
-            std::cout << "Received result from " << sender << " for Task with ID " << task->id() << std::endl;
-            if ( !_function_manager.invokeReaction( sender, *task.get() ) )
-            {
-                std::cout << "Error invoking reaction for function " << task->functionId() << std::endl;
-            }
-        }
+        onMessage( sender, type, packet.payload(), packet.size() );
     }
 
     MessageSender& getSender()

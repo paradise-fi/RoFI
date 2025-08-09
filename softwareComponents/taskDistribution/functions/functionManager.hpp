@@ -23,8 +23,7 @@ public:
 
     template < typename Result, typename... Arguments >
     bool addFunction( 
-        std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction,
-        CompletionType completionType )
+        std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction )
     {
         int id = userFunction->functionId();
         std::string name = userFunction->functionName();
@@ -39,9 +38,7 @@ public:
             return false;
         }
 
-        _functions.emplace( id, std::make_unique< FunctionModel< Result, Arguments... > >(
-            std::move( userFunction ), 
-            completionType ) );
+        _functions.emplace( id, std::make_unique< FunctionModel< Result, Arguments... > >( std::move( userFunction ) ) );
 
         _nameToIdMap.emplace( name, id );
         return true;
