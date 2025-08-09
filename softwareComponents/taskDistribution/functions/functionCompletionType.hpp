@@ -1,3 +1,5 @@
+#pragma once
+
 enum FunctionCompletionType
 {
     BlockingUntilReaction, // Task must wait for a response from the leader

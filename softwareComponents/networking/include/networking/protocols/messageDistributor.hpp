@@ -161,6 +161,11 @@ namespace rofi::net {
             Ip6Addr senderAddr = as< Ip6Addr >( packet.payload() );
             unsigned int method_id = as< unsigned int >( packet.payload() + Ip6Addr::size() );
             unsigned int stamp = as< unsigned int >( packet.payload() + Ip6Addr::size()  + sizeof( unsigned int ) );
+            
+            if (method_id == 3)
+            {
+                std::cout << "[Distributor] Received message for Method 3 from " << senderAddr << std::endl;
+            }
 
             auto res = std::find_if( _history.begin(), _history.end(),
                                     [ senderAddr, method_id, stamp ]( DistributorRecord& record ) {
@@ -171,6 +176,10 @@ namespace rofi::net {
             
             if ( res != _history.end() || senderAddr == _myAddr )
             {
+                if (method_id == 3)
+                {
+                    std::cout << "[Distributor] Duplicate Message for Method 3 from " << senderAddr << std::endl;
+                }
                 return false;
             }
 
@@ -178,6 +187,10 @@ namespace rofi::net {
 
             if ( methodRegistryEntry == _registry.end() )
             {
+                if (method_id == 3)
+            {
+                std::cout << "[Distributor] Method 3 not in Method Registry" << std::endl;
+            }
                 return false;
             }
             

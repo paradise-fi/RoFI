@@ -15,6 +15,7 @@ public:
 
     void registerParticipant( Ip6Addr participant )
     {
+        std::cout << functionName() << " :Registering participant " << participant << std::endl;
         _participants.insert( participant );
     }
 
@@ -43,13 +44,18 @@ public:
         return "NaiveBarrier";
     }
 
-    virtual int functionid()
+    virtual int functionId() const override
     {
         return 100;
     }
 
-    virtual CompletionType completionType()
+    virtual FunctionCompletionType completionType() const override
     {
-        return CompletionType::Blocking;
+        return FunctionCompletionType::Blocking;
+    }
+
+    virtual FunctionDistributionType distributionType() const override
+    {
+        return FunctionDistributionType::Broadcast;
     }
 };

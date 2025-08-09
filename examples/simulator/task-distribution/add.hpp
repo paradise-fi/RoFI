@@ -30,7 +30,26 @@ public:
 
         std::cout << "Received Add Result " << value << " from " << origin << std::endl;
 
-         if ( value < 5 )
+        if ( value == 6 && origin == Ip6Addr("FC07::3:0:0:0:1"))
+        {
+            auto delayHandle = _manager.getFunctionHandle< int, int >( 4 ).value();
+            if (!delayHandle( origin, 1, false, std::tuple<int>(1)))
+            {
+                std::cout << "Execution failed." << std::endl;
+            }
+        }
+
+        if ( value == 7 && origin != Ip6Addr("FC07::3:0:0:0:1"))
+        {
+            std::cout << "Calling barrier!" << std::endl;
+            auto barrierHandle = _manager.getFunctionHandle< Ip6Addr >( 100 ).value();
+            if ( !barrierHandle( origin, 1, false, std::tuple<>()) )
+            {
+                std::cout << "Exectuion of function " << functionName() << " failed" << std::endl;
+            }
+        }
+
+         if ( value < 10 )
         {
             auto addHandle = _manager.getFunctionHandle< int, int >( functionId() ).value();
             if ( !addHandle( origin, 1, false, std::tuple< int >( 1 ) ) )
@@ -55,8 +74,13 @@ public:
         return 1;
     }
 
-    virtual CompletionType completionType() const override
+    virtual FunctionCompletionType completionType() const override
     {
-        return CompletionType::NonBlocking;
+        return FunctionCompletionType::NonBlocking;
+    }
+
+    virtual FunctionDistributionType distributionType() const override
+    {
+        return FunctionDistributionType::Unicast;
     }
 };

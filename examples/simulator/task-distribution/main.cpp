@@ -13,6 +13,7 @@
 #include "initial.hpp"
 #include "add.hpp"
 #include "multiply.hpp"
+#include "delay.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
@@ -61,10 +62,14 @@ void startElectionProtocol() {
     
     std::unique_ptr< DistributedFunction< int > > initial = std::make_unique< Initial >( id, manager );
     std::unique_ptr< DistributedFunction< int, int > > add = std::make_unique< Add >( currentCount, manager );
+    std::unique_ptr< DistributedFunction< int, int > > delay = std::make_unique< Delay >( currentCount, manager );
     std::unique_ptr< DistributedFunction< int, int > > multiply = std::make_unique< Multiply >( currentCount, manager );
+    std::unique_ptr< DistributedFunction< Ip6Addr > > barrier = std::make_unique< NaiveBarrier >( addr, manager );
     manager.registerFunction< int >( std::move( initial ) );
     manager.registerFunction< int, int >( std::move( add ) );
+    manager.registerFunction< int, int >( std::move( delay ) );
     manager.registerFunction< int, int >( std::move( multiply ) );
+    manager.registerFunction< Ip6Addr >( std::move( barrier ) );
 
     manager.setInitialTask( 0 );
     manager.start( id );

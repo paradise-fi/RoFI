@@ -3,13 +3,13 @@
 #include <memory>
 
 #include "task.hpp"
-#include "completionType.hpp"
+#include "../functions/functionCompletionType.hpp"
 
 struct TaskEntry
 {
-    TaskEntry( std::unique_ptr< TaskBase >&& task, CompletionType completionType )
+    TaskEntry( std::unique_ptr< TaskBase >&& task, FunctionCompletionType completionType )
     : task( std::move( task ) ), completionType( completionType ) {}
 
     std::unique_ptr< TaskBase > task;
-    CompletionType completionType;
+    FunctionCompletionType completionType;
 };

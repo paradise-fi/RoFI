@@ -1,6 +1,7 @@
 #include "distributionManager.hpp"
 #include "distributedFunction.hpp"
 #include "functionHandle.hpp"
+#include "naiveBarrier.hpp"
 
 class Initial : public DistributedFunction< int >
 {
@@ -30,9 +31,16 @@ public:
 
         std::cout << "Initial ModuleId: " << moduleId << std::endl;
 
+        auto barrierHandle = _manager.getFunctionHandle< Ip6Addr >( 100 ).value();
+        auto& barrierImplementation = static_cast< NaiveBarrier& >( barrierHandle.implementation() );
+        barrierImplementation.registerParticipant( origin );
+
+        std::cout << "Retrieving add" << std::endl;
+        auto addHandle = _manager.getFunctionHandle< int, int >( 1 ).value();
+
         if ( moduleId % 2 == 0 )
         {
-            auto addHandle = _manager.getFunctionHandle< int, int >( 1 ).value();
+            std::cout << "Calling add" << std::endl;
             if ( !addHandle( origin, 1, false, std::tuple< int >( 1 ) ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
@@ -40,12 +48,22 @@ public:
         }
         else
         {
+            std::cout << "Retrieving multiply" << std::endl;
             auto multiplyHandle = _manager.getFunctionHandle< int, int >( 2 ).value(); 
+
+            std::cout << "Calling multiply" << std::endl;
             if ( !multiplyHandle( origin, 1, false, std::tuple< int >( 2 ) ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }
+            std::cout << "Calling add" << std::endl;
+            if ( !addHandle( origin, 1, false, std::tuple< int >( 1 ) ) )
+            {
+                std::cout << "Execution of function " << functionName() << "failed." << std::endl;
+            }
         }
+
+        // std::cout << "Sending out Naive Barrier." << std::endl;
     }
 
     virtual void onFunctionFailure( std::optional< int >, const Ip6Addr& ) override
@@ -63,8 +81,13 @@ public:
         return 0;
     }
 
-    virtual CompletionType completionType() const override
+    virtual FunctionCompletionType completionType() const override
     {
-        return CompletionType::NonBlocking;
+        return FunctionCompletionType::NonBlocking;
+    }
+
+    virtual FunctionDistributionType distributionType() const override
+    {
+        return FunctionDistributionType::Unicast;
     }
 };
