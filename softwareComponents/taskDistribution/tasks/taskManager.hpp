@@ -35,14 +35,14 @@ public:
         return !_taskRequests.empty();
     }
 
-    bool enqueueTask( const Ip6Addr& addr, std::unique_ptr< TaskBase >&&  task, CompletionType completionType )
+    bool enqueueTask( const Ip6Addr& addr, std::unique_ptr< TaskBase >&&  task, FunctionCompletionType completionType )
     {
         _schedulers[ addr ].enqueueTask( std::move( task ), completionType );
         return true;
     }
 
     template< typename Result >
-    bool enqueueTask( Ip6Addr addr, int functionId, CompletionType completionType, bool enqueueFront = false )
+    bool enqueueTask( Ip6Addr addr, int functionId, FunctionCompletionType completionType, bool enqueueFront = false )
     {
         auto task = Task< Result >( ++_taskId, TaskStatus::Enqueued, functionId, enqueueFront );
         _schedulers[ addr ].enqueueTask( std::make_unique< TaskBase >( task ), completionType );
@@ -51,7 +51,7 @@ public:
     }
 
     template < typename Result, typename... Arguments >
-    bool enqueueTask( Ip6Addr addr, int functionId, int priority, bool enqueueFront, CompletionType completionType, std::tuple< Arguments... >&& arguments )
+    bool enqueueTask( Ip6Addr addr, int functionId, int priority, bool enqueueFront, FunctionCompletionType completionType, std::tuple< Arguments... >&& arguments )
     {
         auto task = Task< Result, Arguments... >( ++_taskId, TaskStatus::Enqueued, functionId, priority, enqueueFront, arguments );
         _schedulers[ addr ].enqueueTask( std::make_unique< Task< Result, Arguments... > >( task ), completionType );
@@ -98,7 +98,7 @@ public:
             return std::nullopt;
         }
 
-
+        std::cout << "TaskQueue PopTask" << std::endl;
         return taskQueue->second.popTask( isLeader );
     }
 

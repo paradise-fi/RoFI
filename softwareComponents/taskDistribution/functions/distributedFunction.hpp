@@ -1,6 +1,7 @@
 #pragma once
 #include "functionResult.hpp"
-#include "completionType.hpp"
+#include "functionCompletionType.hpp"
+#include "functionDistributionType.hpp"
 #include <optional>
 
 template< typename Result, typename... Arguments >
@@ -34,5 +35,9 @@ public:
 
     /// @brief Returns the completion type for the function, determining whether it is blocking after completion or not.
     /// @return The completion type.
-    virtual CompletionType completionType() const = 0;
+    virtual FunctionCompletionType completionType() const = 0;
+
+    /// @brief Determines the way the function will be distributed to followers.
+    /// @return The distribution type.
+    virtual FunctionDistributionType distributionType() const = 0;
 };

@@ -8,6 +8,7 @@
 
 class TaskScheduler
 {
+    // We need to split these tasks if a barrier is present. All tasks that were created after the barrier task have a higher ID and should not be aged to be scheduled sooner than the barrier.
     std::vector< TaskEntry > _tasks;
 
     // TODO: This needs to be handled better -> we require manual clearing now, and that is not good at all.
@@ -21,7 +22,7 @@ class TaskScheduler
         }
     }
 
-    void pushTaskToFront( std::unique_ptr< TaskBase > task, CompletionType completionType )
+    void pushTaskToFront( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType )
     {
         if ( !_tasks.empty() )
         {
@@ -42,7 +43,7 @@ public:
             return false;
         }
 
-        return _active.get()->completionType != CompletionType::NonBlocking;
+        return _active.get()->completionType != FunctionCompletionType::NonBlocking;
     }
 
     void clearActiveTask()
@@ -70,7 +71,12 @@ public:
 
     std::optional< std::reference_wrapper< TaskBase > > popTask( bool isLeader = false )
     {
-        if ( _tasks.empty() || schedulerIsBlocked() )
+        if ( ( !isLeader && schedulerIsBlocked() ) )
+        {
+            std::cout << "Blocked." << std::endl;
+        }
+
+        if ( _tasks.empty() || ( !isLeader && schedulerIsBlocked() ) )
         {
             return std::nullopt;
         }
@@ -85,14 +91,16 @@ public:
 
         std::swap( *oldest, _tasks.back() );
         auto taskEntry = std::move( _tasks.back() );
+        
         _active.reset(nullptr);
         _active = std::make_unique< TaskEntry >( std::move( taskEntry.task ), taskEntry.completionType );
+
         _tasks.pop_back();
 
         return std::reference_wrapper< TaskBase >(*(_active.get()->task.get()));
     }
 
-    void enqueueTask( std::unique_ptr< TaskBase > task, CompletionType completionType )
+    void enqueueTask( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType )
     {
         if ( task.get()->isQueuedToFront() )
         {
