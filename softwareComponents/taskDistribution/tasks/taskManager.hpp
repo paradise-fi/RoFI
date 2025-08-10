@@ -20,6 +20,14 @@ class TaskManager
     }
 
 public:
+    void registerBarrierFunction( int functionId )
+    {
+        for( auto it = _schedulers.begin(); it != _schedulers.end(); ++it)
+        {
+            it->second.registerBarrier( functionId );
+        }
+    }
+
     void enqueueTaskRequest( const Ip6Addr& addr )
     {
         _taskRequests.push( addr );
