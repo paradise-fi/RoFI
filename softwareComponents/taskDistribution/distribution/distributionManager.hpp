@@ -342,7 +342,26 @@ public:
     }
 
     template < typename Result, typename... Arguments >
-    bool registerFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction)
+    bool registerBarrier( std::unique_ptr< DistributedFunction< Result, Arguments... > > barrierFunction )
+    {
+        if ( barrierFunction->completionType() != FunctionCompletionType::Blocking )
+        {
+            return false;
+        }
+
+        int functionId = barrierFunction->functionId();
+
+        if (!_function_manager.addFunction< Result, Arguments... >( std::move( barrierFunction ) ) )
+        {
+            return false;
+        }
+
+        _task_manager.registerBarrierFunction( functionId );
+        return true; 
+    }
+
+    template < typename Result, typename... Arguments >
+    bool registerFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction )
     {
         return _function_manager.addFunction< Result, Arguments... >( std::move( userFunction ) );
     }
