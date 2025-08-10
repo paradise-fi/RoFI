@@ -10,6 +10,9 @@ class TaskScheduler
 {
     // We need to split these tasks if a barrier is present. All tasks that were created after the barrier task have a higher ID and should not be aged to be scheduled sooner than the barrier.
     std::vector< TaskEntry > _tasks;
+    
+    std::optional< int > _registeredBarrierFunctionId;
+    std::optional< int > _activeBarrierTaskId;
 
     // TODO: This needs to be handled better -> we require manual clearing now, and that is not good at all.
     std::unique_ptr< TaskEntry > _active;
@@ -36,6 +39,11 @@ class TaskScheduler
     }
 
 public:
+    void registerBarrier( int barrierId )
+    {
+        _registeredBarrierFunctionId = barrierId;
+    }
+
     bool schedulerIsBlocked()
     {
         if ( _active == nullptr )
@@ -53,6 +61,11 @@ public:
             return;
         }
 
+        if ( _active->task->id() == _activeBarrierTaskId )
+        {
+            _activeBarrierTaskId = std::nullopt;
+        }
+
         _active.reset( nullptr );
     }
 
@@ -65,6 +78,11 @@ public:
 
         if ( _active.get()->task.get()->id() == id )
         {
+            if ( _active->task->id() == _activeBarrierTaskId )
+            {
+                _activeBarrierTaskId = std::nullopt;
+            }
+            
             _active.reset();
         }
     }
@@ -87,7 +105,15 @@ public:
         }
 
         auto oldest = std::max_element( _tasks.begin(), _tasks.end(), 
-            [](const TaskEntry& lhs, const TaskEntry& rhs ) { return lhs.task->getEffectivePriority() < rhs.task->getEffectivePriority(); } );
+            [this](const TaskEntry& lhs, const TaskEntry& rhs ) 
+            { 
+                if ( _activeBarrierTaskId.has_value() && rhs.task->functionId() > _activeBarrierTaskId.value() )
+                {
+                    return false;
+                }
+
+                return lhs.task->getEffectivePriority() < rhs.task->getEffectivePriority(); 
+            } );
 
         std::swap( *oldest, _tasks.back() );
         auto taskEntry = std::move( _tasks.back() );
@@ -102,6 +128,19 @@ public:
 
     void enqueueTask( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType )
     {
+        // This is where we figure out the task is a barrier and put it where it belongs.
+        if ( task->functionId() == _registeredBarrierFunctionId )
+        {
+            if ( _activeBarrierTaskId.has_value() )
+            {
+                std::cout << "Task not queued, barrier is already set." << std::endl;
+                return;
+            }
+
+            _activeBarrierTaskId = task->id();
+        }
+
+        // We have to make sure that a task being queued when a barrier is active does not queue over it.
         if ( task.get()->isQueuedToFront() )
         {
             pushTaskToFront( std::move( task ), completionType );
