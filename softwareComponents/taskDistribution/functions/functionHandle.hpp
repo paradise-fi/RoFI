@@ -27,15 +27,19 @@ public:
         return _implementation;
     }
 
+    /// @brief Invokes the distributed function, registering it as a task into the distributed scheduler.
+    /// @param receiver The address of the participant who will execute the function.
+    /// @param priority The priority of the task. Higher priority tasks take precedence.
+    /// @param setTopPriority If true, this task will be given the highest priority.
+    /// @param arguments The arguments to the task.
+    /// @return True if the task was queued succesfully, otherwise false.
     bool operator()( const Ip6Addr& receiver, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments )
     {
-        std::cout << "Going to enqueue task in FunctionHandle." << std::endl;
         auto result = _taskManager.enqueueTask< Result >(
             receiver, _functionId, priority,
             setTopPriority, _completionType, std::move( arguments ) );
 
-
-        std::cout << "After enqueue task in FunctionHandle" << std::endl;
+        // ToDo: Check the enqueue result
         if ( result )
         {
             _taskManager.enqueueTaskRequest( receiver );
