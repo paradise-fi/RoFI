@@ -12,6 +12,9 @@ public:
     : _identity( identity ), _manager( manager )
     {}
 
+    /// @brief The execute() function is performed by the follower node.
+    /// @param value the argument, corresponding to < Arguments > of the template.
+    /// @return A function result structure, which contains both the result value and whether the function is considered a success.
     virtual FunctionResult< int > execute( int value ) override 
     {
         int result = _identity + ( value * _identity );
@@ -19,6 +22,7 @@ public:
         return FunctionResult< int >( result, true );
     }
 
+    /// This function is called by the leader node if the FunctionResult fom execute indicates a success.
     virtual void onFunctionSuccess( std::optional< int > result, const Ip6Addr& origin ) override
     {
         if ( !result.has_value() )
@@ -51,6 +55,7 @@ public:
         }
     }
 
+    /// This function is called by the leader node if the FunctionResult fom execute indicates a failure.
     virtual void onFunctionFailure( std::optional< int >, const Ip6Addr& ) override
     {
         return;

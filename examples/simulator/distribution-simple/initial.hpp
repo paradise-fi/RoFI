@@ -3,6 +3,8 @@
 #include "functionHandle.hpp"
 #include "naiveBarrier.hpp"
 
+/// @brief The initial function is best used to handle distributed initialization. In this example, it does not do much
+/// in terms of initialization, but you may use it to, for example, gather information about the network.
 class Initial : public DistributedFunction< int >
 {
     int _moduleId;
