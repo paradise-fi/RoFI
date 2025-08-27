@@ -2,4 +2,4 @@ cmake_minimum_required(VERSION 3.6)
 
 add_library(taskDistribution)
 target_link_libraries(taskDistribution PUBLIC leadership)
-target_include_directories(taskDistribution PUBLIC functions tasks distribution systemMethods)
+target_include_directories(taskDistribution PUBLIC functions tasks distribution systemMethods memory)
