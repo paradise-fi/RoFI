@@ -93,22 +93,18 @@ class DistributionManager
 
     void doWorkLeader()
     {
-        std::cout << "doWorkLeader" << std::endl;
         if ( !_task_manager.anyTaskRequests() )
         {
-            std::cout << "No task requests" << std::endl;
             return;
         }
 
         Ip6Addr requester(1);
         if (!_task_manager.popTaskRequest( requester ))
         {
-            std::cout << "No requester for task found." << std::endl;
             return;
         }
 
         auto task = _task_manager.popTask(requester, true);
-        std::cout << "popTask in doWorkLeader done" << std::endl;
         if ( !task.has_value() )
         {
             task = _task_manager.getInitialTask();
@@ -126,20 +122,16 @@ class DistributionManager
             return;
         }
 
-        std::cout << "Task " << task.value().get().id() << " for function: " << function.value().get().functionName() << std::endl;
-
         switch ( function.value().get().distributionType() )
         {
             case FunctionDistributionType::Broadcast: 
             {
-                std::cout << "DoWorkLeader - Switch - Broadcast" << std::endl;
                 _sender.broadcastMessage( DistributionMessageType::TaskAssignment, task.value().get(), METHOD_ID );
                 return;
             }
 
             case FunctionDistributionType::Unicast:
             {
-                std::cout << "DoWorkLeader - Switch - Unicast" << std::endl;
                 _sender.sendMessage( DistributionMessageType::TaskAssignment, task.value().get(), requester );
                 return;
             }
@@ -176,12 +168,8 @@ class DistributionManager
 
     void onMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size )
     {
-
-        // Add one more field for taskId
-
         if ( type == DistributionMessageType::BlockingTaskRelease )
         {
-            std::cout << "RECEIVED SIGNAL TO UNBLOCK SCHEDULERS!!!" << std::endl;
             _task_manager.unblockSchedulers();
             return;
         }
