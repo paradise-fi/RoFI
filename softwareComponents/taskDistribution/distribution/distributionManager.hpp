@@ -2,9 +2,8 @@
 
 #include "messageSender.hpp"
 #include "functionRegistry.hpp"
+#include "memoryService.hpp"
 #include "LRElect.hpp"
-#include "../memory/sharedMemoryBase.hpp"
-#include "../memory/replicatedMemory.hpp"
 #include <boost/lockfree/queue.hpp>
 
 using namespace rofi::hal;
@@ -22,7 +21,7 @@ class DistributionManager
 
     LRElect _election;
     MessageSender _sender;
-    std::unique_ptr< SharedMemoryBase > _memory;
+    MemoryService _memoryService;
     std::unique_ptr< udp_pcb > _pcb;
     
     int _elected_count = 0;
@@ -44,9 +43,9 @@ class DistributionManager
     {
         if ( _elected_count == 3 )
         {
-            if ( _memory != nullptr )
+            if ( _memoryService.isMemoryRegistered() )
             {
-                _memory->setLeader( _election.getLeader() ); 
+                _memoryService.setLeader( _election.getLeader() ); 
             }
 
             if ( _address == _election.getLeader() )
@@ -98,10 +97,10 @@ class DistributionManager
         if ( type == DistributionMessageType::DataStorageRequest )
         {
             std::cout << "Received Data Storage Request from " << sender << std::endl;
-            if ( _memory != nullptr )
+            if ( _memoryService.isMemoryRegistered() )
             {
                 unsigned int offset = sizeof( DistributionMessageType ) + Ip6Addr::size();
-                return _memory->onStorageMessage( sender, data + offset, size - offset );
+                return _memoryService.onStorageMessage( sender, data + offset, size - offset );
             }
         }
 
@@ -256,40 +255,9 @@ public:
             [] () { return; } );
     }
 
-    template< std::derived_from< SharedMemoryBase > Memory >
-    bool useMemory( std::unique_ptr< Memory > memory )
+    MemoryService& memoryService()
     {
-        if (_memory != nullptr )
-        {
-            return false;
-        }
-
-        _memory = std::move( memory );
-        return true;
-    } 
-
-    // ToDo: Consider moving these functions out of here and giving access to memory by .memory()
-    bool saveData( uint8_t* data, int size, int address )
-    {
-        if ( _memory == nullptr )
-        {
-            return false;
-        }
-        return _memory->store( data, size, address );
-    }
-
-    template< typename T >
-    bool readData( int address, T& out )
-    {
-        std::vector< uint8_t > data = _memory->read( address );
-
-            if ( data.size() < sizeof( T ) )
-            {
-                return false;    
-            }
-
-            std::memcpy( &out, data.data(), sizeof( T ) );
-            return true;
+        return _memoryService;
     }
 
     void doWork()
