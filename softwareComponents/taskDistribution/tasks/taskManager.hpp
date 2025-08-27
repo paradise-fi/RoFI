@@ -106,7 +106,6 @@ public:
             return std::nullopt;
         }
 
-        std::cout << "TaskQueue PopTask" << std::endl;
         return taskQueue->second.popTask( isLeader );
     }
 
