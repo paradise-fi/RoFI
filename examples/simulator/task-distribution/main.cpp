@@ -65,13 +65,13 @@ void startElectionProtocol() {
     std::unique_ptr< DistributedFunction< int, int > > delay = std::make_unique< Delay >( currentCount, manager );
     std::unique_ptr< DistributedFunction< int, int > > multiply = std::make_unique< Multiply >( currentCount, manager );
     std::unique_ptr< DistributedFunction< Ip6Addr > > barrier = std::make_unique< NaiveBarrier >( addr, manager );
-    manager.registerFunction< int >( std::move( initial ) );
-    manager.registerFunction< int, int >( std::move( add ) );
-    manager.registerFunction< int, int >( std::move( delay ) );
-    manager.registerFunction< int, int >( std::move( multiply ) );
-    manager.registerFunction< Ip6Addr >( std::move( barrier ) );
+    manager.functionRegistry().registerFunction< int >( std::move( initial ) );
+    manager.functionRegistry().registerFunction< int, int >( std::move( add ) );
+    manager.functionRegistry().registerFunction< int, int >( std::move( delay ) );
+    manager.functionRegistry().registerFunction< int, int >( std::move( multiply ) );
+    manager.functionRegistry().registerFunction< Ip6Addr >( std::move( barrier ) );
 
-    manager.setInitialTask( 0 );
+    manager.functionRegistry().setInitialTask( 0 );
     manager.start( id );
 
     while ( true ){

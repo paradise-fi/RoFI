@@ -47,7 +47,7 @@ public:
 
         if ( value < _fizzBuzzTreshold )
         {
-            auto fizzbuzzHandle = _manager.getFunctionHandle< int, int >( functionId() ).value();
+            auto fizzbuzzHandle = _manager.functionRegistry().getFunctionHandle< int, int >( functionId() ).value();
             if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( value ) ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;

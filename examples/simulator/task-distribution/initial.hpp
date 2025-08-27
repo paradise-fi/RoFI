@@ -31,12 +31,12 @@ public:
 
         std::cout << "Initial ModuleId: " << moduleId << std::endl;
 
-        auto barrierHandle = _manager.getFunctionHandle< Ip6Addr >( 100 ).value();
+        auto barrierHandle = _manager.functionRegistry().getFunctionHandle< Ip6Addr >( 100 ).value();
         auto& barrierImplementation = static_cast< NaiveBarrier& >( barrierHandle.implementation() );
         barrierImplementation.registerParticipant( origin );
 
         std::cout << "Retrieving add" << std::endl;
-        auto addHandle = _manager.getFunctionHandle< int, int >( 1 ).value();
+        auto addHandle = _manager.functionRegistry().getFunctionHandle< int, int >( 1 ).value();
 
         if ( moduleId % 2 == 0 )
         {
@@ -49,7 +49,7 @@ public:
         else
         {
             std::cout << "Retrieving multiply" << std::endl;
-            auto multiplyHandle = _manager.getFunctionHandle< int, int >( 2 ).value(); 
+            auto multiplyHandle = _manager.functionRegistry().getFunctionHandle< int, int >( 2 ).value(); 
 
             std::cout << "Calling multiply" << std::endl;
             if ( !multiplyHandle( origin, 1, false, std::tuple< int >( 2 ) ) )

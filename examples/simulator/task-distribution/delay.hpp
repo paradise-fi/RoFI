@@ -33,7 +33,7 @@ public:
 
         std::cout << "Received Delay Result " << value << " from " << origin << std::endl;
 
-        auto addHandle = _manager.getFunctionHandle< int, int >( 1 ).value();
+        auto addHandle = _manager.functionRegistry().getFunctionHandle< int, int >( 1 ).value();
         if ( !addHandle( origin, 1, false, std::tuple< int >( 1 ) ) )
         {
             std::cout << "Execution of function " << functionName() << "failed." << std::endl;
