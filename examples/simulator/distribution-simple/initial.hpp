@@ -32,7 +32,7 @@ public:
 
         std::cout << "Initial ModuleId: " << moduleId << std::endl;
 
-        auto fizzbuzzHandle = _manager.getFunctionHandle< int, int >( 1 ).value();
+        auto fizzbuzzHandle = _manager.functionRegistry().getFunctionHandle< int, int >( 1 ).value();
 
         if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( 1 ) ) )
         {

@@ -1,8 +1,7 @@
 #pragma once
 
 #include "messageSender.hpp"
-#include "../tasks/taskManager.hpp"
-#include "../functions/functionManager.hpp"
+#include "functionRegistry.hpp"
 #include "LRElect.hpp"
 #include "../memory/sharedMemoryBase.hpp"
 #include "../memory/replicatedMemory.hpp"
@@ -17,8 +16,7 @@ class DistributionManager
 {
     const unsigned int METHOD_ID = 3;
 
-    TaskManager _task_manager;
-    FunctionManager _function_manager;
+    FunctionRegistry _functionRegistry;
     NetworkManager& _net_manager;
     Ip6Addr _address;
 
@@ -42,22 +40,6 @@ class DistributionManager
         }   
     }
 
-    std::unique_ptr< TaskBase > getTaskFromBuffer( uint8_t* buffer, int functionId )
-    {
-        auto fnOptional = _function_manager.getFunction( functionId );
-
-        if ( !fnOptional.has_value() )
-        {
-            // Something is wrong!
-            return nullptr;
-        }
-
-        auto fun = fnOptional.value();
-        auto task = fun.get().createTask();
-        task->fillFromBuffer( buffer );
-        return task;
-    }
-
     void onLeaderElected()
     {
         if ( _elected_count == 3 )
@@ -69,7 +51,7 @@ class DistributionManager
 
             if ( _address == _election.getLeader() )
             {
-                _task_manager.clearTasks();
+                _functionRegistry.clearTasks();
                 std::cout << "I am the leader." << std::endl;
             }
             else 
@@ -91,31 +73,102 @@ class DistributionManager
         _elected_count = 0;
     }
 
-    void doWorkLeader()
+    void onMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size )
     {
-        if ( !_task_manager.anyTaskRequests() )
+        if ( type == DistributionMessageType::BlockingTaskRelease )
         {
+            _functionRegistry.unblockTaskSchedulers();
             return;
         }
 
-        Ip6Addr requester(1);
-        if (!_task_manager.popTaskRequest( requester ))
+        if ( type == DistributionMessageType::TaskRequest )
         {
+            std::cout << "Received Task Request from " << sender << std::endl;
+            _functionRegistry.enqueueTaskRequest( sender );
             return;
         }
 
-        auto task = _task_manager.popTask(requester, true);
-        if ( !task.has_value() )
+        if ( type == DistributionMessageType::TaskFailed )
         {
-            task = _task_manager.getInitialTask();
-            if ( !task.has_value() )
+            std::cout << "Received Task Failure from " << sender << std::endl;
+            // How to react?
+            return;
+        }
+
+        if ( type == DistributionMessageType::DataStorageRequest )
+        {
+            std::cout << "Received Data Storage Request from " << sender << std::endl;
+            if ( _memory != nullptr )
             {
-                std::cout << "Task distribution failed: No initial task given.";
-                return;
+                unsigned int offset = sizeof( DistributionMessageType ) + Ip6Addr::size();
+                return _memory->onStorageMessage( sender, data + offset, size - offset );
             }
         }
 
-        auto function = _function_manager.getFunction( task.value().get().functionId() );
+        if ( type == DistributionMessageType::DataStorageSuccess )
+        {
+            std::cout << "Data storage succeeded." << std::endl;
+            return;
+        }
+
+        int functionId = as< int >( data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
+
+        std::optional<std::reference_wrapper< FunctionConcept > > fn = _functionRegistry.getFunction( functionId );
+
+        if ( !fn )
+        {
+            std::cout << "Function with ID " << functionId << " not found." << std::endl;
+            return;
+        }
+
+        auto task = _functionRegistry.getTaskFromBuffer(
+            data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ), 
+            functionId );
+
+        if ( task == nullptr )
+        {
+            // Something went wrong.
+            return;
+        }
+
+        if ( type == DistributionMessageType::TaskAssignment )
+        {
+            std::cout << "Received Task Assignment from " << sender << " for task with ID " << task->id() << std::endl;
+            _functionRegistry.enqueueTask( _address, std::move( task ), fn.value().get().completionType() );
+            return;
+        }
+
+        if ( type == DistributionMessageType::TaskResult )
+        {
+            std::cout << "Received result from " << sender << " for Task with ID " << task->id() << std::endl;
+            if ( !_functionRegistry.invokeFunctionReaction( sender, *task.get() ) )
+            {
+                std::cout << "Error invoking reaction for function " << task->functionId() << std::endl;
+            }
+        }
+    }
+
+    void doWorkLeader()
+    {
+        if ( !_functionRegistry.anyTaskRequests() )
+        {
+            return;
+        }
+
+        auto requester = _functionRegistry.getTaskRequester();
+        if ( !requester.has_value() )
+        {
+            return;
+        }
+
+        auto task = _functionRegistry.popTaskForAddress( requester.value(), true );
+        if ( !task.has_value() )
+        {
+            std::cout << "Task distribution failed: No initial task given.";
+            return;
+        }
+
+        auto function = _functionRegistry.getFunction( task.value().get().functionId() );
         if ( !function.has_value() )
         {
             std::cout << "Task distribution failed: Given task has associated no function.";
@@ -132,7 +185,7 @@ class DistributionManager
 
             case FunctionDistributionType::Unicast:
             {
-                _sender.sendMessage( DistributionMessageType::TaskAssignment, task.value().get(), requester );
+                _sender.sendMessage( DistributionMessageType::TaskAssignment, task.value().get(), requester.value() );
                 return;
             }
 
@@ -146,7 +199,7 @@ class DistributionManager
 
     void doWorkFollower()
     {
-        auto taskCandidate = _task_manager.popTask( _address );
+        auto taskCandidate = _functionRegistry.popTaskForAddress( _address );
 
         if ( !taskCandidate.has_value() )
         {
@@ -155,91 +208,15 @@ class DistributionManager
 
         auto task = std::move( taskCandidate.value() );
         
-        if  ( !_function_manager.invokeFunction( task.get() ) )
+        if  ( !_functionRegistry.invokeFunction( task.get() ) )
         {
             _sender.sendMessage( DistributionMessageType::TaskFailed, task.get(), _election.getLeader() );
-            _task_manager.finishActiveTask( _address );
+            _functionRegistry.finishActiveTask( _address );
             return;
         }
 
         _sender.sendMessage( DistributionMessageType::TaskResult, task.get(), _election.getLeader() );
-        _task_manager.finishActiveTask( _address );
-    }
-
-    void onMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size )
-    {
-        if ( type == DistributionMessageType::BlockingTaskRelease )
-        {
-            _task_manager.unblockSchedulers();
-            return;
-        }
-
-        if ( type == DistributionMessageType::TaskRequest )
-        {
-            std::cout << "Received Task Request from " << sender << std::endl;
-            _task_manager.enqueueTaskRequest( sender );
-            return;
-        }
-
-        if ( type == DistributionMessageType::TaskFailed )
-        {
-            std::cout << "Received Task Failure from " << sender << std::endl;
-            // How to react?
-            return;
-        }
-
-        if ( type == DistributionMessageType::DataStorageRequest )
-        {
-            std::cout << "Received Data Storage Request from " << sender << std::endl;
-            if (_memory != nullptr)
-            {
-                unsigned int offset = sizeof( DistributionMessageType ) + Ip6Addr::size();
-                return _memory->onStorageMessage( sender, data + offset, size - offset );
-            }
-            // TODO: Exception if memory is nullptr?
-        }
-
-        if ( type == DistributionMessageType::DataStorageSuccess )
-        {
-            std::cout << "Data storage succeeded." << std::endl;
-            return;
-        }
-
-        int functionId = as< int >( data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
-
-        std::optional<std::reference_wrapper< FunctionConcept > > fn = _function_manager.getFunction( functionId );
-
-        if ( !fn )
-        {
-            std::cout << "Function with ID " << functionId << " not found." << std::endl;
-            return;
-        }
-
-        auto task = getTaskFromBuffer(
-            data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ), 
-            functionId );
-
-        if ( task == nullptr )
-        {
-            // Something went wrong.
-            return;
-        }
-
-        if ( type == DistributionMessageType::TaskAssignment )
-        {
-            std::cout << "Received Task Assignment from " << sender << " for task with ID " << task->id() << std::endl;
-            _task_manager.enqueueTask( _address, std::move( task ), fn.value().get().completionType() );
-            return;
-        }
-
-        if ( type == DistributionMessageType::TaskResult )
-        {
-            std::cout << "Received result from " << sender << " for Task with ID " << task->id() << std::endl;
-            if ( !_function_manager.invokeReaction( sender, *task.get() ) )
-            {
-                std::cout << "Error invoking reaction for function " << task->functionId() << std::endl;
-            }
-        }
+        _functionRegistry.finishActiveTask( _address );
     }
 
 public:
@@ -329,76 +306,84 @@ public:
         doWorkFollower();
     }
 
-    template < typename Result, typename... Arguments >
-    bool registerBarrier( std::unique_ptr< DistributedFunction< Result, Arguments... > > barrierFunction )
-    {
-        if ( barrierFunction->completionType() != FunctionCompletionType::Blocking )
-        {
-            return false;
-        }
+// #region FunctionRegistry
+    // template < typename Result, typename... Arguments >
+    // bool registerBarrier( std::unique_ptr< DistributedFunction< Result, Arguments... > > barrierFunction )
+    // {
+    //     if ( barrierFunction->completionType() != FunctionCompletionType::Blocking )
+    //     {
+    //         return false;
+    //     }
 
-        int functionId = barrierFunction->functionId();
+    //     int functionId = barrierFunction->functionId();
 
-        if (!_function_manager.addFunction< Result, Arguments... >( std::move( barrierFunction ) ) )
-        {
-            return false;
-        }
+    //     if (!_function_manager.addFunction< Result, Arguments... >( std::move( barrierFunction ) ) )
+    //     {
+    //         return false;
+    //     }
 
-        _task_manager.registerBarrierFunction( functionId );
-        return true; 
-    }
+    //     _task_manager.registerBarrierFunction( functionId );
+    //     return true; 
+    // }
 
-    template < typename Result, typename... Arguments >
-    bool registerFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction )
-    {
-        return _function_manager.addFunction< Result, Arguments... >( std::move( userFunction ) );
-    }
+    // template < typename Result, typename... Arguments >
+    // bool registerFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction )
+    // {
+    //     return _function_manager.addFunction< Result, Arguments... >( std::move( userFunction ) );
+    // }
 
-    bool unregisterFunction( int id )
-    {
-        return _function_manager.removeFunction( id );
-    }
+    // bool unregisterFunction( int id )
+    // {
+    //     return _function_manager.removeFunction( id );
+    // }
 
-    template< typename Result, typename... Arguments >
-    std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( int functionId )
-    {
-        auto fn = _function_manager.getFunction( functionId );
+    // template< typename Result, typename... Arguments >
+    // std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( int functionId )
+    // {
+    //     auto fn = _function_manager.getFunction( functionId );
 
-        if ( !fn.has_value() )
-        {
-            return std::nullopt;
-        }
+    //     if ( !fn.has_value() )
+    //     {
+    //         return std::nullopt;
+    //     }
 
-        auto& model = static_cast< FunctionModel< Result, Arguments... >& >( fn->get() );
+    //     auto& model = static_cast< FunctionModel< Result, Arguments... >& >( fn->get() );
 
-        return FunctionHandle< Result, Arguments... >( functionId, fn->get().completionType(), model.getImplementation(), _task_manager );
-    }
+    //     return FunctionHandle< Result, Arguments... >( functionId, fn->get().completionType(), model.getImplementation(), _task_manager );
+    // }
 
-    template< typename Result, typename... Arguments >
-    std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( std::string functionName )
-    {
-        auto fn = _function_manager.getFunction( functionName );
+    // template< typename Result, typename... Arguments >
+    // std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( std::string functionName )
+    // {
+    //     auto fn = _function_manager.getFunction( functionName );
 
-        if ( !fn.has_value() )
-        {
-            return std::nullopt;
-        }
+    //     if ( !fn.has_value() )
+    //     {
+    //         return std::nullopt;
+    //     }
 
-        return FunctionHandle< Result, Arguments... >( fn.value().get().functionId(), fn.value().get().completionType(),  _task_manager );
-    }
+    //     return FunctionHandle< Result, Arguments... >( fn.value().get().functionId(), fn.value().get().completionType(),  _task_manager );
+    // }
 
-    /*
-    * Takes existing functionId and creates a task for it that is given at initialization to every requesting module.
-    */
-    bool setInitialTask( int functionId )
-    {
-        auto fn = _function_manager.getFunction( functionId );
-        if ( !fn.has_value() )
-        {
-            return false;
-        }
+    // /*
+    // * Takes existing functionId and creates a task for it that is given at initialization to every requesting module.
+    // */
+    // bool setInitialTask( int functionId )
+    // {
+    //     auto fn = _function_manager.getFunction( functionId );
+    //     if ( !fn.has_value() )
+    //     {
+    //         return false;
+    //     }
         
-        return _task_manager.setInitialTask( fn.value() );
+    //     return _task_manager.setInitialTask( fn.value() );
+    // }
+
+// #endregion
+
+    FunctionRegistry& functionRegistry()
+    {
+        return _functionRegistry;
     }
 
     void start( int moduleId )
