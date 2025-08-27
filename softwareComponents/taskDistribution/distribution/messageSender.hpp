@@ -2,19 +2,9 @@
 #include "lwip++.hpp"
 #include "task.hpp"
 #include "LRElect.hpp"
+#include "distributionMessageType.hpp"
 
-enum DistributionMessageType {
-    TaskRequest,
-    TaskAssignment,
-    TaskResult,
-    TaskFailed,
-    MalformedMessage,
-    FollowerBusy,
-    DataStorageRequest,
-    DataStorageSuccess,
-    BlockingTaskRelease
-};
-
+/// @brief Low level handler for sending messages via network.
 class MessageSender {
     Ip6Addr& _address;
     u16_t _distribution_port;
@@ -24,6 +14,10 @@ class MessageSender {
 public:
     MessageSender(Ip6Addr& address, u16_t port, udp_pcb* pcb, MessageDistributor* messageDistributor)
     : _address( address ), _distribution_port( port ), _messageDistributor( messageDistributor ) {
+        if ( !pcb )
+        {
+            std::cout << "PCB Null" << std::endl;
+        }
         _pcb = pcb;
     }
 
