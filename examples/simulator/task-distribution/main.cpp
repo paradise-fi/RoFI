@@ -14,6 +14,7 @@
 #include "add.hpp"
 #include "multiply.hpp"
 #include "delay.hpp"
+#include "replicatedMemory.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
@@ -58,7 +59,7 @@ void startElectionProtocol() {
     
     DistributionManager manager( net, addr, reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     
-    manager.useMemory( std::make_unique< ReplicatedMemoryManager >( reinterpret_cast< MessageDistributor* >( messageDistributor ), addr, manager.getSender() ) );
+    manager.memoryService().useMemory( std::make_unique< ReplicatedMemoryManager >( reinterpret_cast< MessageDistributor* >( messageDistributor ), addr, manager.getSender() ) );
     
     std::unique_ptr< DistributedFunction< int > > initial = std::make_unique< Initial >( id, manager );
     std::unique_ptr< DistributedFunction< int, int > > add = std::make_unique< Add >( currentCount, manager );
@@ -79,19 +80,19 @@ void startElectionProtocol() {
         manager.doWork();
         
         int mem1 = 0;
-        if ( manager.readData( 1, mem1 ) )
+        if ( manager.memoryService().readData( 1, mem1 ) )
         {
             std::cout << "Data at address 1: " << mem1 << std::endl;
         }
 
         int mem2 = 0;
-        if ( manager.readData( 2, mem2 ) )
+        if ( manager.memoryService().readData( 2, mem2 ) )
         {
             std::cout << "Data at address 2: " << mem2 << std::endl;
         }
 
         int mem3 = 0;
-        if ( manager.readData( 3, mem3 ) )
+        if ( manager.memoryService().readData( 3, mem3 ) )
         {
             std::cout << "Data at address 3: " << mem3 << std::endl;
         }

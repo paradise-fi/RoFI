@@ -17,7 +17,7 @@ public:
         std::cout << " = " << _value << std::endl;
 
         int value = 300 + _value;
-        if ( !_manager.saveData( reinterpret_cast< uint8_t* >( &value ), sizeof( int ), 3 ) )
+        if ( !_manager.memoryService().saveData( reinterpret_cast< uint8_t* >( &value ), sizeof( int ), 3 ) )
         {
             return FunctionResult< int >( _value, false );
         }
