@@ -25,9 +25,12 @@ class DistributionManager
     MessageSender _sender;
     MemoryService _memoryService;
     std::unique_ptr< udp_pcb > _pcb;
+
+    std::optional< std::function< void() > > _onLeaderFailed;
     
     int _elected_count = 0;
 
+    // ToDo: Move elsewhere.
     void onLeaderElected()
     {
         if ( _elected_count == 3 )
@@ -59,6 +62,11 @@ class DistributionManager
     void onLeaderFailed()
     {
         _elected_count = 0;
+
+        if ( _onLeaderFailed.has_value() )
+        {
+            _onLeaderFailed.value()();
+        }
     }
 
     void onMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size )
@@ -239,6 +247,27 @@ public:
                 onMessage( sender, type, data, size ); 
             },
             [] () { return; } );
+    }
+
+    bool registerLeaderFailureCallback( std::function< void() > callback )
+    {
+        if ( _onLeaderFailed.has_value() )
+        {
+            return false;
+        }
+
+        _onLeaderFailed = callback;
+    }
+
+    bool unregisterLeaderFailureCallback()
+    {
+        if ( !_onLeaderFailed.has_value() )
+        {
+            return false;
+        }
+
+        _onLeaderFailed.reset();
+        return true;
     }
 
     MemoryService& memoryService()
