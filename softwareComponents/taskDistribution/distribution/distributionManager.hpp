@@ -1,5 +1,6 @@
 #pragma once
 
+#include "messageReceiver.hpp"
 #include "messageSender.hpp"
 #include "functionRegistry.hpp"
 #include "memoryService.hpp"
@@ -20,24 +21,12 @@ class DistributionManager
     Ip6Addr _address;
 
     LRElect _election;
+    MessageReceiver _receiver;
     MessageSender _sender;
     MemoryService _memoryService;
     std::unique_ptr< udp_pcb > _pcb;
     
     int _elected_count = 0;
-
-    static void recv_message( void* manager, 
-        struct udp_pcb* pcb,
-        struct pbuf * p,
-        const ip6_addr_t * addr,
-        u16_t port )
-    {
-        DistributionManager* self = static_cast< DistributionManager* >( manager );
-        if ( self )
-        {
-            self->receiveMessage( nullptr, pcb, p, addr, port );
-        }   
-    }
 
     void onLeaderElected()
     {
@@ -221,6 +210,7 @@ class DistributionManager
 public:
     static const int DISTRIBUTION_PORT = 7071;
 
+    // ToDo: Move pcb ownership.
     DistributionManager(NetworkManager& netmg, Ip6Addr& address, MessageDistributor* distributor, std::unique_ptr< udp_pcb > pcb) 
     : _net_manager( netmg ), _address( address ),
       _election( netmg, distributor, address, 5,
@@ -230,20 +220,16 @@ public:
         [ this ] {
             onLeaderFailed();
         } ),
-      _sender( MessageSender( address, DISTRIBUTION_PORT, pcb.get(), distributor ) )
+      _receiver(
+        DISTRIBUTION_PORT, pcb.get(),
+        [ this ]( Ip6Addr sender, DistributionMessageType messageType, uint8_t* data, unsigned int size )
+        {
+            onMessage( sender, messageType, data, size );
+        }),
+      _sender( address, DISTRIBUTION_PORT, pcb.get(), distributor )
     { 
         LOCK_TCPIP_CORE();
         _pcb = std::move( pcb );
-        UNLOCK_TCPIP_CORE();
-
-        if ( !_pcb )
-        {
-            std::cout << "PCB Null" << std::endl;
-        }
-
-        LOCK_TCPIP_CORE();
-        udp_bind( _pcb.get(), IP6_ADDR_ANY, DISTRIBUTION_PORT );
-        udp_recv( _pcb.get(), recv_message, this);
         UNLOCK_TCPIP_CORE();
 
         distributor->registerMethod( METHOD_ID, 
@@ -282,24 +268,6 @@ public:
     void start( int moduleId )
     {
         _election.start( moduleId );
-    }
-
-    void receiveMessage( void*,
-        struct udp_pcb*,
-        struct pbuf* p,
-        const ip6_addr_t*, 
-        u16_t )
-    {
-        if ( !p )
-        {
-            return;
-        }
-        
-        auto packet = rofi::hal::PBuf::own( p );
-        DistributionMessageType type = as< DistributionMessageType >( packet.payload() );
-        Ip6Addr sender = as< Ip6Addr >( packet.payload() + sizeof( DistributionMessageType ) );
-
-        onMessage( sender, type, packet.payload(), packet.size() );
     }
 
     MessageSender& getSender()
