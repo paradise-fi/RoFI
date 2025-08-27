@@ -61,11 +61,11 @@ void distributionManagerFizzBuzz() {
     int initialFunctionId = initial->functionId();
 
     // Register the distributed functions.
-    manager.registerFunction< int >( std::move( initial ) );
-    manager.registerFunction< int, int >( std::move( fizzBuzz ) );
+    manager.functionRegistry().registerFunction< int >( std::move( initial ) );
+    manager.functionRegistry().registerFunction< int, int >( std::move( fizzBuzz ) );
 
     // Register the ID of the initial task
-    manager.setInitialTask( initialFunctionId );
+    manager.functionRegistry().setInitialTask( initialFunctionId );
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );
