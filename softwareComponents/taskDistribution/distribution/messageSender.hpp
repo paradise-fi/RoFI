@@ -20,7 +20,7 @@ public:
         }
         _pcb = pcb;
     }
-
+    
     void sendMessage( DistributionMessageType type, TaskBase& task, const Ip6Addr& target)
     {
         auto buffer = rofi::hal::PBuf::allocate( task.size() 

@@ -152,4 +152,16 @@ public:
 
         return entry->second.stored_data;   
     }
+
+    virtual bool remove( int address ) override
+    {
+        std::shared_lock lock( _mutex );
+        return _storage.erase( address ) == 1;
+    }
+    
+    virtual void clear() override
+    {
+        std::shared_lock lock( _mutex );
+        _storage.clear();
+    }
 };
