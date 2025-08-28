@@ -48,8 +48,7 @@ class DistributionManager
             else 
             {
                 std::cout << "I am a follower." << std::endl;
-                auto emptyTask = Task< int >(0);
-                _sender.sendMessage( DistributionMessageType::TaskRequest, emptyTask, _election.getLeader() );
+                requestTask();
             }
             _elected_count++;
         }
@@ -96,6 +95,7 @@ class DistributionManager
             std::cout << "Received Data Storage Request from " << sender << std::endl;
             if ( _memoryService.isMemoryRegistered() )
             {
+                // ToDo: Move packet payload past Type and Sender before this function
                 unsigned int offset = sizeof( DistributionMessageType ) + Ip6Addr::size();
                 return _memoryService.onStorageMessage( sender, data + offset, size - offset );
             }
@@ -309,4 +309,15 @@ public:
         _sender.broadcastMessage(DistributionMessageType::BlockingTaskRelease, METHOD_ID);
     }
 
+    bool requestTask()
+    {
+        if ( _election.getLeader() == _address )
+        {
+            return false;
+        }
+
+        auto emptyTask = Task< int >(0);
+        _sender.sendMessage( DistributionMessageType::TaskRequest, emptyTask, _election.getLeader() );
+        return true;
+    }
 };
