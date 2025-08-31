@@ -96,7 +96,7 @@ public:
         return std::optional< std::reference_wrapper< TaskBase > >( *_initialTask );
     }
 
-    std::optional< std::reference_wrapper< TaskBase > > popTask( Ip6Addr& address, bool isLeader = false )
+    std::optional< std::reference_wrapper< TaskBase > > popTask( const Ip6Addr& address, bool isLeader = false )
     {
         const auto& taskQueue = _schedulers.find( address );
 
@@ -109,7 +109,7 @@ public:
         return taskQueue->second.popTask( isLeader );
     }
 
-    void finishActiveTask( Ip6Addr& address )
+    void finishActiveTask( const Ip6Addr& address )
     {
         const auto& taskQueue = _schedulers.find( address );
 
@@ -122,7 +122,7 @@ public:
         taskQueue->second.clearActiveTask();
     }
 
-    void finishActiveTask( Ip6Addr& address, int id )
+    void finishActiveTask( const Ip6Addr& address, int id )
     {
         const auto& taskQueue = _schedulers.find( address );
 
