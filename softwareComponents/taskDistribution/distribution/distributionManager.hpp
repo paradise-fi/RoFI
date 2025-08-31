@@ -4,6 +4,7 @@
 #include "messageSender.hpp"
 #include "functionRegistry.hpp"
 #include "memoryService.hpp"
+#include "workflowService.hpp"
 #include "LRElect.hpp"
 #include <boost/lockfree/queue.hpp>
 
@@ -24,6 +25,7 @@ class DistributionManager
     MessageReceiver _receiver;
     MessageSender _sender;
     MemoryService _memoryService;
+    WorkFlowService _workFlowService;
     std::unique_ptr< udp_pcb > _pcb;
 
     std::optional< std::function< void() > > _onLeaderFailed;
@@ -144,82 +146,15 @@ class DistributionManager
         }
     }
 
-    void doWorkLeader()
-    {
-        if ( !_functionRegistry.anyTaskRequests() )
-        {
-            return;
-        }
-
-        auto requester = _functionRegistry.getTaskRequester();
-        if ( !requester.has_value() )
-        {
-            return;
-        }
-
-        auto task = _functionRegistry.popTaskForAddress( requester.value(), true );
-        if ( !task.has_value() )
-        {
-            std::cout << "Task distribution failed: No initial task given.";
-            return;
-        }
-
-        auto function = _functionRegistry.getFunction( task.value().get().functionId() );
-        if ( !function.has_value() )
-        {
-            std::cout << "Task distribution failed: Given task has associated no function.";
-            return;
-        }
-
-        switch ( function.value().get().distributionType() )
-        {
-            case FunctionDistributionType::Broadcast: 
-            {
-                _sender.broadcastMessage( DistributionMessageType::TaskAssignment, task.value().get(), METHOD_ID );
-                return;
-            }
-
-            case FunctionDistributionType::Unicast:
-            {
-                _sender.sendMessage( DistributionMessageType::TaskAssignment, task.value().get(), requester.value() );
-                return;
-            }
-
-            default:
-            {
-                std::cout << "Undefined Function Distribution Type found." << std::endl;
-                return;
-            }
-        }
-    }
-
-    void doWorkFollower()
-    {
-        auto taskCandidate = _functionRegistry.popTaskForAddress( _address );
-
-        if ( !taskCandidate.has_value() )
-        {
-            return;
-        }
-
-        auto task = std::move( taskCandidate.value() );
-        
-        if  ( !_functionRegistry.invokeFunction( task.get() ) )
-        {
-            _sender.sendMessage( DistributionMessageType::TaskFailed, task.get(), _election.getLeader() );
-            _functionRegistry.finishActiveTask( _address );
-            return;
-        }
-
-        _sender.sendMessage( DistributionMessageType::TaskResult, task.get(), _election.getLeader() );
-        _functionRegistry.finishActiveTask( _address );
-    }
-
 public:
     static const int DISTRIBUTION_PORT = 7071;
 
     // ToDo: Move pcb ownership.
-    DistributionManager(NetworkManager& netmg, Ip6Addr& address, MessageDistributor* distributor, std::unique_ptr< udp_pcb > pcb) 
+    DistributionManager(
+        NetworkManager& netmg,
+        Ip6Addr& address,
+        MessageDistributor* distributor,
+        std::unique_ptr< udp_pcb > pcb) 
     : _net_manager( netmg ), _address( address ),
       _election( netmg, distributor, address, 5,
         [ this ] {
@@ -234,7 +169,8 @@ public:
         {
             onMessage( sender, messageType, data, size );
         }),
-      _sender( address, DISTRIBUTION_PORT, pcb.get(), distributor )
+      _sender( address, DISTRIBUTION_PORT, pcb.get(), distributor ),
+      _workFlowService( _sender, _functionRegistry )
     { 
         LOCK_TCPIP_CORE();
         _pcb = std::move( pcb );
@@ -284,9 +220,9 @@ public:
 
         if ( _address == _election.getLeader() )
         {
-            return doWorkLeader();
+            return _workFlowService.doWorkLeader( METHOD_ID );
         }
-        doWorkFollower();
+        _workFlowService.doWorkFollower( _address, _election.getLeader() );
     }
 
     FunctionRegistry& functionRegistry()
@@ -294,14 +230,14 @@ public:
         return _functionRegistry;
     }
 
-    void start( int moduleId )
-    {
-        _election.start( moduleId );
-    }
-
     MessageSender& getSender()
     {
         return _sender;
+    }
+
+    void start( int moduleId )
+    {
+        _election.start( moduleId );
     }
 
     void broadcastUnblockSignal()

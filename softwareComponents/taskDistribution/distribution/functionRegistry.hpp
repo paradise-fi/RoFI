@@ -121,7 +121,7 @@ public:
         return requester;
     }
 
-    std::optional< std::reference_wrapper< TaskBase > > popTaskForAddress( Ip6Addr& address, bool isLeader = false )
+    std::optional< std::reference_wrapper< TaskBase > > popTaskForAddress( const Ip6Addr& address, bool isLeader = false )
     {
         auto task = _taskManager.popTask( address, isLeader );
         if ( !task.has_value() && isLeader )
@@ -131,7 +131,7 @@ public:
         return task;
     }
 
-    void finishActiveTask( Ip6Addr& address )
+    void finishActiveTask( const Ip6Addr& address )
     {
         _taskManager.finishActiveTask( address );
     }
