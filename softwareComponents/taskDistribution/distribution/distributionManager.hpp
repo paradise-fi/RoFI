@@ -5,6 +5,7 @@
 #include "functionRegistry.hpp"
 #include "memoryService.hpp"
 #include "workflowService.hpp"
+#include "electionService.hpp"
 #include "LRElect.hpp"
 #include <boost/lockfree/queue.hpp>
 
@@ -18,56 +19,31 @@ class DistributionManager
     const unsigned int METHOD_ID = 3;
 
     FunctionRegistry _functionRegistry;
-    NetworkManager& _net_manager;
     Ip6Addr _address;
 
-    LRElect _election;
+    ElectionService _election;
     MessageReceiver _receiver;
     MessageSender _sender;
     MemoryService _memoryService;
     WorkFlowService _workFlowService;
     std::unique_ptr< udp_pcb > _pcb;
-
-    std::optional< std::function< void() > > _onLeaderFailed;
     
-    int _elected_count = 0;
-
-    // ToDo: Move elsewhere.
-    void onLeaderElected()
+    void onElectionSuccesful( const Ip6Addr& leader )
     {
-        if ( _elected_count == 3 )
+        if ( _memoryService.isMemoryRegistered() )
         {
-            if ( _memoryService.isMemoryRegistered() )
-            {
-                _memoryService.setLeader( _election.getLeader() ); 
-            }
-
-            if ( _address == _election.getLeader() )
-            {
-                _functionRegistry.clearTasks();
-                std::cout << "I am the leader." << std::endl;
-            }
-            else 
-            {
-                std::cout << "I am a follower." << std::endl;
-                requestTask();
-            }
-            _elected_count++;
+            _memoryService.setLeader( _election.getLeader() ); 
         }
-        if (_elected_count < 3)
+
+        if ( _address == leader )
         {
-            _elected_count++;
+            _functionRegistry.clearTasks();
+            std::cout << "I am the leader." << std::endl;
+            return;
         }
-    }
 
-    void onLeaderFailed()
-    {
-        _elected_count = 0;
-
-        if ( _onLeaderFailed.has_value() )
-        {
-            _onLeaderFailed.value()();
-        }
+        std::cout << "I am the follower." << std::endl;
+        requestTask();
     }
 
     void onMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size )
@@ -155,14 +131,11 @@ public:
         Ip6Addr& address,
         MessageDistributor* distributor,
         std::unique_ptr< udp_pcb > pcb) 
-    : _net_manager( netmg ), _address( address ),
-      _election( netmg, distributor, address, 5,
-        [ this ] {
-            onLeaderElected();
-        },
-        [ this ] {
-            onLeaderFailed();
-        } ),
+    : _address( address ),
+      _election( netmg, distributor, address,
+        [ this ]( const Ip6Addr& leader) {
+            onElectionSuccesful( leader );
+        }),
       _receiver(
         DISTRIBUTION_PORT, pcb.get(),
         [ this ]( Ip6Addr sender, DistributionMessageType messageType, uint8_t* data, unsigned int size )
@@ -187,23 +160,12 @@ public:
 
     bool registerLeaderFailureCallback( std::function< void() > callback )
     {
-        if ( _onLeaderFailed.has_value() )
-        {
-            return false;
-        }
-
-        _onLeaderFailed = callback;
+        return _election.registerLeaderFailureCallback( callback );
     }
 
     bool unregisterLeaderFailureCallback()
     {
-        if ( !_onLeaderFailed.has_value() )
-        {
-            return false;
-        }
-
-        _onLeaderFailed.reset();
-        return true;
+        return _election.unregisterLeaderFailureCallback();
     }
 
     MemoryService& memoryService()
@@ -213,7 +175,13 @@ public:
 
     void doWork()
     {
-        if ( _elected_count <= 3 )
+        if ( !_election.isRunning() )
+        {
+            std::cout << "The election protocol is not running!" << std::endl;
+            return;
+        }
+
+        if ( !_election.isElectionComplete() )
         {
             return;
         }
@@ -222,6 +190,7 @@ public:
         {
             return _workFlowService.doWorkLeader( METHOD_ID );
         }
+
         _workFlowService.doWorkFollower( _address, _election.getLeader() );
     }
 

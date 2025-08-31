@@ -1,3 +1,4 @@
+#pragma once
 #include "../memory/sharedMemoryBase.hpp"
 
 class MemoryService
