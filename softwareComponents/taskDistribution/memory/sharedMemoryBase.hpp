@@ -4,6 +4,7 @@
 #include <lwip++.hpp>
 #include <networking/networkManager.hpp>
 
+/// @brief TODO: Consider making it possible to add custom data to memory items using a struct with a map <string, any>
 class SharedMemoryBase {
     public:
         virtual ~SharedMemoryBase() = default;
