@@ -11,7 +11,7 @@ public:
     : _value( baseValue ), _manager( manager )
     {}
 
-    virtual FunctionResult< int > execute( int value ) override 
+    virtual FunctionResult< int > execute( int ) override 
     {
         for (int i = 0; i < 10; ++i)
         {
