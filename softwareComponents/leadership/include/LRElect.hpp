@@ -2,23 +2,23 @@
 
 #include <iostream>
 #include <networking/networkManager.hpp>
-#include <LRHelper.hpp>
 #include <networking/protocols/messageDistributor.hpp>
 #include <set>
 #include <thread>
 #include <mutex>
 #include <functional>
+#include "electionProtocolBase.hpp"
 
 namespace rofi::leadership {
     using namespace rofi::net;
 
-    class LRElect {
+    class LRElect : public ElectionProtocolBase {
         const unsigned int METHOD_ID = 1;
         NetworkManager& _net;
         const Ip6Addr& _myAddr;
         Ip6Addr _leader;
-        std::function<void()> _elected_callback;
-        std::function<void()> _failed_callback;
+        std::optional< std::function<void()> > _elected_callback;
+        std::optional< std::function<void()> > _failed_callback;
 
         std::once_flag _startedFlag;
 
@@ -38,7 +38,11 @@ namespace rofi::leadership {
             }
 
             if ( sender_addr == _leader ) {
-                _elected_callback();
+                if ( _elected_callback.has_value() )
+                {
+                    _elected_callback.value()();
+                }
+
                 _leaderContact = true;
                 _minTimeJoined = logTime;
             }
@@ -53,7 +57,11 @@ namespace rofi::leadership {
         }
 
         void _leaderFailure() {
-            _failed_callback();
+            if ( _failed_callback.has_value() )
+            {
+                _failed_callback.value()();
+            }
+
             _leader = _myAddr;
             _minTimeJoined = _timeJoined;
         }
@@ -71,7 +79,10 @@ namespace rofi::leadership {
             }
             while ( true ) {
                 if ( _leader == _myAddr ) {
-                    _elected_callback();
+                    if ( _elected_callback.has_value() )
+                    {
+                        _elected_callback.value()();
+                    }
                     
                     Protocol* proto = _net.getProtocol( "message-distributor" );
                     if ( proto == nullptr )
@@ -100,13 +111,8 @@ namespace rofi::leadership {
     public:
         LRElect( NetworkManager& net, 
             MessageDistributor* distributor, 
-            const Ip6Addr& addr, 
-            unsigned int, 
-            std::function<void()> elected_callback,
-            std::function<void()> failed_callback)
-        : _net( net ), _myAddr( addr ),  _leader( addr ),
-                _elected_callback( elected_callback ),
-                _failed_callback( failed_callback ) {
+            const Ip6Addr& addr )
+        : _net( net ), _myAddr( addr ),  _leader( addr ) {
             _timeJoined = 0;
             _minTimeJoined = 0;
             _period = 1;
@@ -119,13 +125,21 @@ namespace rofi::leadership {
          * Start the algorithm.
          * @param id Used for an arbitrary wait time as described in the original algorithm description.
         */
-        void start( int id ) {
+        virtual void start( int id ) override {
             std::call_once( _startedFlag, [ this, id ](){
                 std::thread thread{ [ this, id ]() {
                     this->_periodic( id );
                 } };
                 thread.detach();
             });
+        }
+
+        virtual void registerElectionFinishedCallback( std::function< void() > callBack ) override {
+            _elected_callback = callBack;
+        }
+
+        virtual void registerElectionFailedCallback( std::function< void() > callBack ) override {
+            _failed_callback = callBack;
         }
 
         const Ip6Addr& getLeader() {
