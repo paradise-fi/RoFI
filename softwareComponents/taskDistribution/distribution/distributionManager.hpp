@@ -6,7 +6,7 @@
 #include "memoryService.hpp"
 #include "workflowService.hpp"
 #include "electionService.hpp"
-#include "LRElect.hpp"
+#include "electionProtocolBase.hpp"
 #include <boost/lockfree/queue.hpp>
 
 using namespace rofi::hal;
@@ -127,12 +127,12 @@ public:
 
     // ToDo: Move pcb ownership.
     DistributionManager(
-        NetworkManager& netmg,
+        std::unique_ptr< ElectionProtocolBase > election,
         Ip6Addr& address,
         MessageDistributor* distributor,
         std::unique_ptr< udp_pcb > pcb) 
     : _address( address ),
-      _election( netmg, distributor, address,
+      _election( std::move( election ),
         [ this ]( const Ip6Addr& leader) {
             onElectionSuccesful( leader );
         }),

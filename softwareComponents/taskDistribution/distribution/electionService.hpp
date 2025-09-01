@@ -1,12 +1,13 @@
-#include "LRElect.hpp"
+#include "electionProtocolBase.hpp"
 #include "memoryService.hpp"
 
 using namespace rofi::net;
 using namespace rofi::leadership;
 
+
 class ElectionService
 {
-    LRElect _election;
+    std::unique_ptr< ElectionProtocolBase > _election;
     std::function< void( const Ip6Addr& ) > _onLeaderSuccess;
     std::optional< std::function< void() > > _onLeaderFailed;
     int _electedCount = 0;
@@ -16,7 +17,7 @@ class ElectionService
     {
         if ( _electedCount == 3 )
         {
-            _onLeaderSuccess( _election.getLeader() );
+            _onLeaderSuccess( _election->getLeader() );
             _electedCount++;
         }
         if (_electedCount < 3)
@@ -34,22 +35,20 @@ class ElectionService
             _onLeaderFailed.value()();
         }
     }
+
 public:
-    ElectionService( NetworkManager& netmg, MessageDistributor* distributor, Ip6Addr& address,
-    std::function< void( const Ip6Addr& ) > electionFinishedCallback )
-    : _election( netmg, distributor, address, 5,
-        [ this ] {
-            onLeaderElected();
-        },
-        [ this ] {
-            onLeaderFailed();
-        } ),
+    ElectionService( std::unique_ptr< ElectionProtocolBase > election, 
+        std::function< void( const Ip6Addr& ) > electionFinishedCallback )
+    : _election( std::move( election ) ),
       _onLeaderSuccess( electionFinishedCallback )
-    {}
+    {
+        _election->registerElectionFailedCallback( [ this ] { onLeaderFailed(); } );
+        _election->registerElectionFinishedCallback( [ this ] { onLeaderElected(); } );
+    }
 
     void start( int moduleId )
     {
-        _election.start( moduleId );
+        _election->start( moduleId );
         _isRunning = true;
     }
 
@@ -65,7 +64,7 @@ public:
 
     const Ip6Addr& getLeader()
     {
-        return _election.getLeader();
+        return _election->getLeader();
     }
 
     bool registerLeaderFailureCallback( std::function< void() > callback )

@@ -57,7 +57,11 @@ void startElectionProtocol() {
     auto messageDistributor = net.addProtocol( rofi::net::MessageDistributor( addr, net ) );
     net.setProtocol( *messageDistributor );
     
-    DistributionManager manager( net, addr, reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
+    std::unique_ptr< ElectionProtocolBase > election = std::make_unique< LRElect >( net, reinterpret_cast< MessageDistributor* >( messageDistributor ), addr );
+
+    DistributionManager manager(
+        std::move( election ), addr,
+        reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     
     manager.memoryService().useMemory( std::make_unique< ReplicatedMemoryManager >( reinterpret_cast< MessageDistributor* >( messageDistributor ), addr, manager.getSender() ) );
     
