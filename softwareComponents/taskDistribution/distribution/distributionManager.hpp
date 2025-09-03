@@ -19,7 +19,7 @@ class DistributionManager
     const unsigned int METHOD_ID = 3;
 
     FunctionRegistry _functionRegistry;
-    Ip6Addr _address;
+    rofi::net::Ip6Addr _address;
 
     ElectionService _election;
     MessageReceiver _receiver;
@@ -27,6 +27,8 @@ class DistributionManager
     MemoryService _memoryService;
     WorkFlowService _workFlowService;
     std::unique_ptr< udp_pcb > _pcb;
+
+    std::optional< std::function< bool(DistributionManager&, rofi::net::Ip6Addr& ) > > _onTaskRequest;
     
     void onElectionSuccesful( const Ip6Addr& leader )
     {
@@ -57,6 +59,13 @@ class DistributionManager
         if ( type == DistributionMessageType::TaskRequest )
         {
             std::cout << "Received Task Request from " << sender << std::endl;
+
+            // Should enqueing the task request be done by the user?
+            if ( _onTaskRequest.has_value() && _onTaskRequest.value()( *this, sender ) )
+            {
+                return;
+            }
+            
             _functionRegistry.enqueueTaskRequest( sender );
             return;
         }
@@ -224,5 +233,12 @@ public:
         auto emptyTask = Task< int >(0);
         _sender.sendMessage( DistributionMessageType::TaskRequest, emptyTask, _election.getLeader() );
         return true;
+    }
+
+    /// @brief Registers a callback that is called when a task request is received.
+    /// @param callback Your custom callback. Returns true if the task request pipeline should not continue after this callback (e.g. to avoid double-scheduling of a task)
+    void registerTaskRequestCallback( std::function< bool(DistributionManager&, rofi::net::Ip6Addr& ) > callback )
+    {
+        _onTaskRequest = callback;
     }
 };
