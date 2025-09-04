@@ -135,11 +135,11 @@ public:
         taskQueue->second.clearActiveTask( id );
     }
 
-    void unblockSchedulers()
+    void unblockSchedulers( bool hardUnblock = false )
     {
         for( auto it = _schedulers.begin(); it != _schedulers.end(); ++it)
         {
-            it->second.clearActiveTask();
+            it->second.clearActiveTask( hardUnblock );
         }
     }
 

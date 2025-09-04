@@ -89,6 +89,7 @@ public:
         distributor->registerMethod( METHOD_ID, 
             [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
             {
+                std::cout << "Received storage message." << std::endl;
                 onStorageMessage( sender, data + _sender.headerSize(), size ); 
             },
             [] () { return; } );

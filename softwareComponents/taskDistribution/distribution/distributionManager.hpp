@@ -52,7 +52,8 @@ class DistributionManager
     {
         if ( type == DistributionMessageType::BlockingTaskRelease )
         {
-            _functionRegistry.unblockTaskSchedulers();
+            std::cout << "Blocking task release." << std::endl;
+            _functionRegistry.unblockTaskSchedulers( true );
             return;
         }
 
