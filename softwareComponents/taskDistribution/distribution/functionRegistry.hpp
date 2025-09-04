@@ -99,6 +99,31 @@ public:
         return _taskManager.setInitialTask( fn.value() );
     }
 
+    /// @brief Registers a function that will be given to a follower if they have no pending tasks.
+    /// @tparam Result 
+    /// @tparam ...Arguments 
+    /// @param initialFunction 
+    /// @return 
+    template < typename Result, typename... Arguments >
+    bool registerInitialFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > initialFunction  )
+    {
+        int functionId = initialFunction->functionId();
+
+        if ( !_functionManager.addFunction< Result, Arguments... >( std::move( initialFunction ) ) )
+        {
+            return false;
+        }
+
+        auto fn = _functionManager.getFunction( functionId );
+
+        if ( !fn.has_value() )
+        {
+            return false;
+        }
+
+        return _taskManager.setInitialTask( fn.value() );
+    }
+
     void enqueueTaskRequest( Ip6Addr& sender )
     {
         _taskManager.enqueueTaskRequest( sender );
@@ -162,8 +187,10 @@ public:
         _taskManager.clearTasks();
     }
 
-    void unblockTaskSchedulers()
+    /// @brief Clears all task schedulers for scheduling tasks.
+    /// @param hardUnblock Removes active barrier if true, otherwise the barrier remains active.
+    void unblockTaskSchedulers( bool hardUnblock = false )
     {
-        _taskManager.unblockSchedulers();
+        _taskManager.unblockSchedulers( hardUnblock );
     }
 };

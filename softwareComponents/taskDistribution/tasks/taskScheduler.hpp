@@ -41,6 +41,7 @@ class TaskScheduler
 public:
     void registerBarrier( int barrierId )
     {
+        std::cout << "Barrier registered as " << barrierId << std::endl;
         _registeredBarrierFunctionId = barrierId;
     }
 
@@ -54,22 +55,29 @@ public:
         return _active.get()->completionType != FunctionCompletionType::NonBlocking;
     }
 
-    void clearActiveTask()
+    void clearActiveTask( bool clearBarrier = false )
     {
         if ( _active == nullptr )
         {
             return;
         }
 
-        if ( _active->task->id() == _activeBarrierTaskId )
+        if ( _active->task->id() == _activeBarrierTaskId)
         {
+            std::cout << "Clearing barrier" << std::endl;
+            if ( !clearBarrier )
+            {
+                std::cout << "ACTUALLY NOT DOING SO" << std::endl;
+                return;
+            }
+
             _activeBarrierTaskId = std::nullopt;
         }
 
         _active.reset( nullptr );
     }
 
-    void clearActiveTask( int id )
+    void clearActiveTask( int id, bool clearBarrier = false )
     {
         if ( _active == nullptr )
         {
@@ -80,6 +88,13 @@ public:
         {
             if ( _active->task->id() == _activeBarrierTaskId )
             {
+                std::cout << "Clearing barrier" << std::endl;
+                if ( !clearBarrier )
+                {
+                    std::cout << "ACTUALLY NOT DOING SO" << std::endl;
+                    return;
+                }
+
                 _activeBarrierTaskId = std::nullopt;
             }
             
@@ -104,10 +119,15 @@ public:
             ageTasks();
         }
 
+        if ( _activeBarrierTaskId.has_value() )
+        {
+            std::cout << "Active Barrier Task ID: " << _activeBarrierTaskId.value() << std::endl;
+        }
+
         auto oldest = std::max_element( _tasks.begin(), _tasks.end(), 
             [this](const TaskEntry& lhs, const TaskEntry& rhs ) 
             { 
-                if ( _activeBarrierTaskId.has_value() && rhs.task->functionId() > _activeBarrierTaskId.value() )
+                if ( _activeBarrierTaskId.has_value() && rhs.task->id() > _activeBarrierTaskId.value() )
                 {
                     return false;
                 }
@@ -131,6 +151,7 @@ public:
         // This is where we figure out the task is a barrier and put it where it belongs.
         if ( task->functionId() == _registeredBarrierFunctionId )
         {
+            std::cout << "Task is a barrier task." << std::endl;
             if ( _activeBarrierTaskId.has_value() )
             {
                 std::cout << "Task not queued, barrier is already set." << std::endl;
