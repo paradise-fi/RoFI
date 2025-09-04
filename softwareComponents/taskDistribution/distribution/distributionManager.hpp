@@ -115,19 +115,24 @@ class DistributionManager
             return;
         }
 
+        int taskId = task->id();
+
         if ( type == DistributionMessageType::TaskAssignment )
         {
-            std::cout << "Received Task Assignment from " << sender << " for task with ID " << task->id() << std::endl;
-            _functionRegistry.enqueueTask( _address, std::move( task ), fn.value().get().completionType() );
+            std::cout << "Received Task Assignment from " << sender << " for task with ID " << taskId << std::endl;
+            if ( !_functionRegistry.enqueueTask( _address, std::move( task ), fn.value().get().completionType() ) )
+            {
+                std::cout << "Failed to register task assignment for function " << functionId << std::endl;
+            }
             return;
         }
 
         if ( type == DistributionMessageType::TaskResult )
         {
-            std::cout << "Received result from " << sender << " for Task with ID " << task->id() << std::endl;
-            if ( !_functionRegistry.invokeFunctionReaction( sender, *task.get() ) )
+            std::cout << "Received result from " << sender << " for Task with ID " << taskId << std::endl;
+            if ( !_functionRegistry.enqueueTaskResult( std::move( task ), sender ) )
             {
-                std::cout << "Error invoking reaction for function " << task->functionId() << std::endl;
+                std::cout << "Failed to persist result from task " << taskId << " for function " << functionId << std::endl;
             }
         }
     }
@@ -231,7 +236,7 @@ public:
             return false;
         }
 
-        auto emptyTask = Task< int >(0);
+        auto emptyTask = Task< int >( 0 );
         _sender.sendMessage( DistributionMessageType::TaskRequest, emptyTask, _election.getLeader() );
         return true;
     }

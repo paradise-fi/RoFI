@@ -1,9 +1,11 @@
 #pragma once
 
+#include <shared_mutex>
 #include <queue>
 #include "task.hpp"
 #include "functionModel.hpp"
 #include "taskScheduler.hpp"
+#include "taskResultEntry.hpp"
 #include <boost/lockfree/queue.hpp>
 
 class TaskManager
@@ -12,7 +14,9 @@ class TaskManager
     int _taskId = 1;
     std::unique_ptr< TaskBase > _initialTask;
     boost::lockfree::queue< ip6_addr_t > _taskRequests = boost::lockfree::queue< ip6_addr_t >( 1024 );
+    std::queue< TaskResultEntry > _taskResults;
     std::map< Ip6Addr, TaskScheduler > _schedulers;
+    mutable std::shared_mutex _mutex;
 
     void updateTaskIdIfStale( int newId )
     {
@@ -28,9 +32,30 @@ public:
         }
     }
 
-    void enqueueTaskRequest( const Ip6Addr& addr )
+    bool enqueueTaskResult( std::unique_ptr< TaskBase > task, Ip6Addr origin )
     {
-        _taskRequests.push( addr );
+        std::unique_lock lock( _mutex );
+        _taskResults.push( TaskResultEntry{ std::move( task ), origin } );
+        return true;
+    }
+
+    std::optional< TaskResultEntry > popTaskResult()
+    {
+        std::unique_lock lock( _mutex );
+        if ( _taskResults.empty() )
+        {
+            return std::nullopt;
+        }
+
+        TaskResultEntry result = std::move( _taskResults.front() );
+        _taskResults.pop();
+        return result;
+    }
+    
+
+    bool enqueueTaskRequest( const Ip6Addr& addr )
+    {
+        return _taskRequests.push( addr );
     }
 
     bool popTaskRequest( Ip6Addr& result )
@@ -45,26 +70,21 @@ public:
 
     bool enqueueTask( const Ip6Addr& addr, std::unique_ptr< TaskBase >&&  task, FunctionCompletionType completionType )
     {
-        _schedulers[ addr ].enqueueTask( std::move( task ), completionType );
-        return true;
+        return _schedulers[ addr ].enqueueTask( std::move( task ), completionType );
     }
 
     template< typename Result >
     bool enqueueTask( Ip6Addr addr, int functionId, FunctionCompletionType completionType, bool enqueueFront = false )
     {
         auto task = Task< Result >( ++_taskId, TaskStatus::Enqueued, functionId, enqueueFront );
-        _schedulers[ addr ].enqueueTask( std::make_unique< TaskBase >( task ), completionType );
-
-        return true;
+        return _schedulers[ addr ].enqueueTask( std::make_unique< TaskBase >( task ), completionType );
     }
 
     template < typename Result, typename... Arguments >
     bool enqueueTask( Ip6Addr addr, int functionId, int priority, bool enqueueFront, FunctionCompletionType completionType, std::tuple< Arguments... >&& arguments )
     {
         auto task = Task< Result, Arguments... >( ++_taskId, TaskStatus::Enqueued, functionId, priority, enqueueFront, arguments );
-        _schedulers[ addr ].enqueueTask( std::make_unique< Task< Result, Arguments... > >( task ), completionType );
-
-        return true;
+        return _schedulers[ addr ].enqueueTask( std::make_unique< Task< Result, Arguments... > >( task ), completionType );
     }
 
     bool enqueueTask( Ip6Addr addr, const FunctionConcept& relatedFunction, const uint8_t* buffer )
@@ -72,8 +92,7 @@ public:
         auto task = relatedFunction.createTask();
         task->fillFromBuffer( buffer );
         updateTaskIdIfStale( task->id() );
-        _schedulers[ addr ].enqueueTask( std::move( task ), relatedFunction.completionType() );
-        return true;
+        return _schedulers[ addr ].enqueueTask( std::move( task ), relatedFunction.completionType() );
     }
 
     bool setInitialTask( const FunctionConcept& relatedFunction )

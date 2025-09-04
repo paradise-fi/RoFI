@@ -85,6 +85,31 @@ public:
         return _functionManager.invokeReaction( sender, task );
     }
 
+    bool enqueueTaskResult( std::unique_ptr< TaskBase > task, Ip6Addr sender )
+    {
+        return _taskManager.enqueueTaskResult( std::move( task ), sender );
+    }
+
+    void processTaskResultQueue()
+    {
+        auto taskResultOptional = _taskManager.popTaskResult();
+        if ( !taskResultOptional.has_value() )
+        {
+            return;
+        }
+
+        if ( taskResultOptional.value().task == nullptr )
+        {
+            std::cout << "ERROR: Task in TaskResult is null." << std::endl;
+            return;
+        }
+
+        if ( !invokeFunctionReaction( taskResultOptional->origin, *taskResultOptional->task ) )
+        {
+            std::cout << "Function reaction invocation failed for Task " << taskResultOptional->task->id() << std::endl;
+        }
+    }
+
     /*
     * Takes existing functionId and creates a task for it that is given at initialization to every requesting module.
     */
@@ -124,14 +149,14 @@ public:
         return _taskManager.setInitialTask( fn.value() );
     }
 
-    void enqueueTaskRequest( Ip6Addr& sender )
+    bool enqueueTaskRequest( Ip6Addr& sender )
     {
-        _taskManager.enqueueTaskRequest( sender );
+        return _taskManager.enqueueTaskRequest( sender );
     }
 
-    void enqueueTask( Ip6Addr& address, std::unique_ptr< TaskBase >&&  task, FunctionCompletionType completionType )
+    bool enqueueTask( Ip6Addr& address, std::unique_ptr< TaskBase >&&  task, FunctionCompletionType completionType )
     {
-        _taskManager.enqueueTask( address, std::move( task ), completionType );
+        return _taskManager.enqueueTask( address, std::move( task ), completionType );
     }
 
     std::optional< Ip6Addr > getTaskRequester()

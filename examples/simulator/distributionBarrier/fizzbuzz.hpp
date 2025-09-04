@@ -10,7 +10,7 @@ struct FizzBuzzMetaData {
 
 class FizzBuzz : public DistributedFunction< FizzBuzzMetaData, int >
 {
-    const int _fizzBuzzTreshold = 600;
+    const int _fizzBuzzTreshold = 20;
     int _identity;
     const int _memorySlotOneId = 2;
     const int _memorySlotTwoId = 3;
@@ -87,7 +87,7 @@ public:
             }
         }
 
-        if ( result < _fizzBuzzTreshold )
+        if ( data.value().value < _fizzBuzzTreshold )
         {
             auto fizzbuzzHandle = _manager.functionRegistry().getFunctionHandle< FizzBuzzMetaData, int >( 1 ).value();
             if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( data.value().value + 1 ) ) )
