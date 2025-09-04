@@ -8,7 +8,6 @@
 
 class TaskScheduler
 {
-    // We need to split these tasks if a barrier is present. All tasks that were created after the barrier task have a higher ID and should not be aged to be scheduled sooner than the barrier.
     std::vector< TaskEntry > _tasks;
     
     std::optional< int > _registeredBarrierFunctionId;
@@ -25,7 +24,7 @@ class TaskScheduler
         }
     }
 
-    void pushTaskToFront( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType )
+    bool pushTaskToFront( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType )
     {
         if ( !_tasks.empty() )
         {
@@ -36,6 +35,7 @@ class TaskScheduler
         }
 
         _tasks.push_back( TaskEntry( std::move( task ), completionType ) );
+        return true;
     }
 
 public:
@@ -146,16 +146,15 @@ public:
         return std::reference_wrapper< TaskBase >(*(_active.get()->task.get()));
     }
 
-    void enqueueTask( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType )
+    bool enqueueTask( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType )
     {
         // This is where we figure out the task is a barrier and put it where it belongs.
         if ( task->functionId() == _registeredBarrierFunctionId )
         {
-            std::cout << "Task is a barrier task." << std::endl;
             if ( _activeBarrierTaskId.has_value() )
             {
                 std::cout << "Task not queued, barrier is already set." << std::endl;
-                return;
+                return false;
             }
 
             _activeBarrierTaskId = task->id();
@@ -164,10 +163,10 @@ public:
         // We have to make sure that a task being queued when a barrier is active does not queue over it.
         if ( task.get()->isQueuedToFront() )
         {
-            pushTaskToFront( std::move( task ), completionType );
-            return;
+            return pushTaskToFront( std::move( task ), completionType );
         }
 
         _tasks.push_back( TaskEntry( std::move( task ), completionType ) );
+        return true;
     }
 };

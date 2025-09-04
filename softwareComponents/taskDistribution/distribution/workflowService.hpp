@@ -6,35 +6,7 @@ class WorkFlowService
     MessageSender& _sender;
     FunctionRegistry& _functionRegistry;
 
-    void DistributeTask( FunctionDistributionType distributionType, TaskBase& task, 
-        int method_id, const Ip6Addr& requester )
-    {
-        switch ( distributionType )
-        {
-            case FunctionDistributionType::Broadcast: 
-            {
-                _sender.broadcastMessage( DistributionMessageType::TaskAssignment, task, method_id );
-                return;
-            }
-
-            case FunctionDistributionType::Unicast:
-            {
-                _sender.sendMessage( DistributionMessageType::TaskAssignment, task, requester );
-                return;
-            }
-
-            default:
-            {
-                std::cout << "Undefined Function Distribution Type found." << std::endl;
-                return;
-            }
-        }
-    }
-public:
-    WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry)
-    : _sender( sender ), _functionRegistry( functionRegistry ){}
-
-    void doWorkLeader( int method_id )
+    void tryDistributeNewTask( int methodId )
     {
         if ( !_functionRegistry.anyTaskRequests() )
         {
@@ -61,7 +33,41 @@ public:
             return;
         }
 
-        DistributeTask( function.value().get().distributionType(), task.value().get(), method_id, requester.value() );
+        distributeTask( function.value().get().distributionType(), task.value().get(), methodId, requester.value() );
+    }
+
+    void distributeTask( FunctionDistributionType distributionType, TaskBase& task, 
+        int methodId, const Ip6Addr& requester )
+    {
+        switch ( distributionType )
+        {
+            case FunctionDistributionType::Broadcast: 
+            {
+                _sender.broadcastMessage( DistributionMessageType::TaskAssignment, task, methodId );
+                return;
+            }
+
+            case FunctionDistributionType::Unicast:
+            {
+                _sender.sendMessage( DistributionMessageType::TaskAssignment, task, requester );
+                return;
+            }
+
+            default:
+            {
+                std::cout << "Undefined Function Distribution Type found." << std::endl;
+                return;
+            }
+        }
+    }
+public:
+    WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry)
+    : _sender( sender ), _functionRegistry( functionRegistry ){}
+
+    void doWorkLeader( int methodId )
+    {
+        tryDistributeNewTask( methodId );
+        _functionRegistry.processTaskResultQueue();
     }
 
     void doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader )
