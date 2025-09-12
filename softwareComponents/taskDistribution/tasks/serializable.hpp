@@ -3,8 +3,9 @@
 #include <cstdint>
 
 struct Serializable {
-    virtual void Serialize( uint8_t*& buffer ) const = 0;
-    virtual void Deserialize( const uint8_t*& buffer ) = 0;
+    virtual void serialize( uint8_t*& buffer ) const = 0;
+    virtual void deserialize( const uint8_t*& buffer ) = 0;
+    virtual std::size_t size() const = 0;
 };
 
 template< typename T >

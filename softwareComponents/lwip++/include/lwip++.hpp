@@ -21,6 +21,9 @@ namespace rofi::hal {
  * Provides a few useful methods and C++ operators.
  */
 struct Ip6Addr : ip6_addr_t {
+    explicit Ip6Addr() {
+        mask_to_address( 0, this );
+    }
     explicit Ip6Addr( const char* str ) {
         ip6addr_aton( str, this );
     }
