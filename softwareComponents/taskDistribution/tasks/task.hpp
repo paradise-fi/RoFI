@@ -138,7 +138,7 @@ class Task : public TaskBase {
         {
             if constexpr ( std::is_base_of_v< Serializable, Result > )
             {
-                return size + _result.size();
+                return size + ( _result.has_value() ? _result.value().size() : 0 );
             }
         }
 
