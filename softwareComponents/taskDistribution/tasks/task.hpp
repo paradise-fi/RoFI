@@ -153,31 +153,11 @@ class Task : public TaskBase {
         writeToBuffer( buffer, _enqueueFront );
         writeToBuffer( buffer, _status );
         writeToBuffer( buffer, _result.has_value() );
-        // unsigned int idx = 0;
-        // as< int >( buffer + idx ) = _func_id;
-        // idx += sizeof( _func_id );
-        // as< int >( buffer + idx ) = _id;
-        // idx += sizeof( _id );
-        // as< int >( buffer + idx ) = _priority;
-        // idx += sizeof( _priority );
-        // as< bool >( buffer + idx ) = _enqueueFront;
-        // idx += sizeof( bool );
-        // as< TaskStatus >( buffer + idx ) = _status;
-        // idx +=  sizeof( TaskStatus );
-        // bool hasValue = _result.has_value();
-        // as< bool >( buffer + idx ) = hasValue;
-        // idx += sizeof( bool );
-        
+
         if ( _result.has_value() )
         {
-            // Parse using proper serialization
-            // Result sresultValue = _result.value();
             writeToBuffer( buffer, _result.value() );
-            // as< Result >( buffer + idx ) = resultValue;
-            // std::memcpy( buffer + idx, &resultValue, sizeof( Result ) );
         }
-
-        // idx += sizeof( Result );
 
         std::apply(
             [&]( Arguments&... args )
@@ -196,25 +176,9 @@ class Task : public TaskBase {
         _enqueueFront = readFromBuffer< bool >( buffer );
         _status = readFromBuffer< TaskStatus >( buffer );
         bool hasValue = readFromBuffer< bool >( buffer );
-        // unsigned int idx = 0;
-        // _func_id = as< int >( buffer + idx );
-        // idx += sizeof( int );
-        // _id = as< int >( buffer + idx );
-        // idx += sizeof( int );
-        // _priority = as< int >( buffer + idx );
-        // idx += sizeof( int );
-        // _enqueueFront = as< bool >( buffer + idx );
-        // idx += sizeof( bool );
-        // _status = as< TaskStatus >( buffer + idx );
-        // idx += sizeof ( TaskStatus );
-        // bool hasValue = as< bool >( buffer + idx );
-        // idx += sizeof( bool );
 
         if ( hasValue )
         {
-            // Parse using proper serialization
-            // Result value = as< Result >( buffer + idx );
-            // _result = std::make_optional< Result >( value );
             _result = std::make_optional< Result >( readFromBuffer< Result >( buffer ) );
         }
         else
@@ -222,7 +186,6 @@ class Task : public TaskBase {
             _result.reset();
         }
 
-        // idx += sizeof( Result );
         _args = std::tuple< Arguments... >( readFromBuffer< Arguments >( buffer )... );
     } 
     
