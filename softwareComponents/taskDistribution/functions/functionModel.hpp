@@ -19,7 +19,7 @@ class FunctionConcept {
         virtual int functionId() const = 0;
     };
 
-    template < typename Result, typename... Arguments >
+    template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     class FunctionModel : public FunctionConcept
     {
     public:

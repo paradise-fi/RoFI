@@ -17,6 +17,7 @@ public:
     /// @return A function result structure, which contains both the result value and whether the function is considered a success.
     virtual FunctionResult< int > execute( int value ) override 
     {
+        std::cout << "Received value from leader: " << value << std::endl;
         int result = _identity + ( value * _identity );
         std::cout << "FizzBuzz Value:" << result << std::endl;
         return FunctionResult< int >( result, true );
@@ -48,7 +49,7 @@ public:
         if ( value < _fizzBuzzTreshold )
         {
             auto fizzbuzzHandle = _manager.functionRegistry().getFunctionHandle< int, int >( functionId() ).value();
-            if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( value ) ) )
+            if ( !fizzbuzzHandle( origin, 1, false, { value } ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }

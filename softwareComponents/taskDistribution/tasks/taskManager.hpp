@@ -73,14 +73,14 @@ public:
         return _schedulers[ addr ].enqueueTask( std::move( task ), completionType );
     }
 
-    template< typename Result >
+    template< SerializableOrTrivial Result >
     bool enqueueTask( Ip6Addr addr, int functionId, FunctionCompletionType completionType, bool enqueueFront = false )
     {
         auto task = Task< Result >( ++_taskId, TaskStatus::Enqueued, functionId, enqueueFront );
         return _schedulers[ addr ].enqueueTask( std::make_unique< TaskBase >( task ), completionType );
     }
 
-    template < typename Result, typename... Arguments >
+    template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     bool enqueueTask( Ip6Addr addr, int functionId, int priority, bool enqueueFront, FunctionCompletionType completionType, std::tuple< Arguments... >&& arguments )
     {
         auto task = Task< Result, Arguments... >( ++_taskId, TaskStatus::Enqueued, functionId, priority, enqueueFront, arguments );
