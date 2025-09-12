@@ -4,7 +4,7 @@
 #include "functionDistributionType.hpp"
 #include <optional>
 
-template< typename Result, typename... Arguments >
+template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
 class DistributedFunction
 {
 public:

@@ -1,4 +1,6 @@
-template< typename Result >
+#include "serializable.hpp"
+
+template< SerializableOrTrivial Result >
 struct FunctionResult
 {
     FunctionResult( std::optional< Result > value, bool isSuccessful )
