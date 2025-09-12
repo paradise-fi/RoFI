@@ -52,36 +52,34 @@ class Task : public TaskBase {
     bool _enqueueFront;
     std::tuple< Arguments... > _args;
 
-    template< SerializableOrTrivial Arg >
-    Arg readArgument( const uint8_t*& buffer )
+    template< SerializableOrTrivial T >
+    T readFromBuffer( const uint8_t*& buffer )
     {
-        if constexpr ( std::is_base_of_v< Serializable, Arg > )
+        T argument;
+        if constexpr ( std::is_base_of_v< Serializable, T > )
         {
-            Arg argument;
-            argument.Deserialize( buffer );
+            argument.deserialize( buffer );
             return argument;
         }
         else
         {
-            Arg argument;
-            buffer += sizeof( Arg );
-            std::memcpy(&argument, buffer, sizeof( Arg ) );
-            
+            std::memcpy(&argument, buffer, sizeof( T ) );
+            buffer += sizeof( T );   
             return argument;
-        }
+        }   
     }
 
-    template< SerializableOrTrivial Arg >
-    void writeArgument( uint8_t*& buffer, unsigned int& idx, const Arg& arg )
+    template< SerializableOrTrivial T >
+    void writeToBuffer( uint8_t*& buffer, const T& value )
     {
-        if constexpr( std::is_base_of_v< Serializable, Arg > )
+        if constexpr( std::is_base_of_v< Serializable, T > )
         {
-            arg.Serialize( buffer );
+            value.serialize( buffer );
         }
         else
         {
-            std::memcpy( buffer + idx, &arg, sizeof( Arg ) );
-            idx += sizeof( Arg );
+            std::memcpy( buffer, &value, sizeof( T ) );
+            buffer += sizeof( T );
         }
     }
 
@@ -101,8 +99,13 @@ class Task : public TaskBase {
     int id() const override { return _id; }
 
     template< SerializableOrTrivial T >
-    std::size_t getSingleArgumentSize( const T& )
+    std::size_t getSerializableOrTrivialSize( const T& argument )
     {
+        if constexpr ( std::is_base_of_v< Serializable, T > )
+        {
+            return argument.size();
+        }
+
         return sizeof( std::decay_t< T > );
     }
 
@@ -119,61 +122,67 @@ class Task : public TaskBase {
             [ & ]( ArgTuple const&... arg )
             {
                 // Fold expression -> iterate over all of ArgTuple and sum the sizes together together.
-                return ( 0 + ... + getSingleArgumentSize( arg ) );
+                return ( 0 + ... + getSerializableOrTrivialSize( arg ) );
             },
             tuple
         );
     }
 
-    // ToDo: Remake this - find out more about index_sequences, iterating over tuples, etc.
-    // This needs to take a single member of the tuple, determine if trivial or serializable, get the size.
-    template< typename ArgTuple >
-    constexpr std::size_t argumentsSize( const ArgTuple& ) {
-        using T = std::remove_cvref_t<ArgTuple>;
-
-        return []<std::size_t... Is>(std::index_sequence<Is...>) {
-            return ( 0 + ... + sizeof(std::tuple_element_t<Is, T>) );
-        }(std::make_index_sequence<std::tuple_size_v<T>>{});
-    }
-
     virtual size_t size() override {
-        return sizeof( _id ) + sizeof( _priority ) 
+        size_t size =  sizeof( _id ) + sizeof( _priority ) 
              + sizeof( _status ) + sizeof ( _func_id ) 
              + 2 * sizeof( bool ) + sizeof ( Result ) 
              + calculateArgumentsSize( _args );
+
+        if constexpr( !std::is_void_v< Result > )
+        {
+            if constexpr ( std::is_base_of_v< Serializable, Result > )
+            {
+                return size + _result.size();
+            }
+        }
+
+        return size + sizeof( Result );
     };
 
     virtual void copyToBuffer( uint8_t* buffer ) override
     {
-        unsigned int idx = 0;
-        as< int >( buffer + idx ) = _func_id;
-        idx += sizeof( _func_id );
-        as< int >( buffer + idx ) = _id;
-        idx += sizeof( _id );
-        as< int >( buffer + idx ) = _priority;
-        idx += sizeof( _priority );
-        as< bool >( buffer + idx ) = _enqueueFront;
-        idx += sizeof( bool );
-        as< TaskStatus >( buffer + idx ) = _status;
-        idx +=  sizeof( TaskStatus );
-        bool hasValue = _result.has_value();
-        as< bool >( buffer + idx ) = hasValue;
-        idx += sizeof( bool );
+        writeToBuffer( buffer, _func_id );
+        writeToBuffer( buffer, _id );
+        writeToBuffer( buffer, _priority );
+        writeToBuffer( buffer, _enqueueFront );
+        writeToBuffer( buffer, _status );
+        writeToBuffer( buffer, _result.has_value() );
+        // unsigned int idx = 0;
+        // as< int >( buffer + idx ) = _func_id;
+        // idx += sizeof( _func_id );
+        // as< int >( buffer + idx ) = _id;
+        // idx += sizeof( _id );
+        // as< int >( buffer + idx ) = _priority;
+        // idx += sizeof( _priority );
+        // as< bool >( buffer + idx ) = _enqueueFront;
+        // idx += sizeof( bool );
+        // as< TaskStatus >( buffer + idx ) = _status;
+        // idx +=  sizeof( TaskStatus );
+        // bool hasValue = _result.has_value();
+        // as< bool >( buffer + idx ) = hasValue;
+        // idx += sizeof( bool );
         
         if ( _result.has_value() )
         {
             // Parse using proper serialization
-            Result resultValue = _result.value();
-            as< Result >( buffer + idx ) = resultValue;
-            std::memcpy( buffer + idx, &resultValue, sizeof( Result ) );
+            // Result sresultValue = _result.value();
+            writeToBuffer( buffer, _result.value() );
+            // as< Result >( buffer + idx ) = resultValue;
+            // std::memcpy( buffer + idx, &resultValue, sizeof( Result ) );
         }
 
-        idx += sizeof( Result );
+        // idx += sizeof( Result );
 
         std::apply(
             [&]( Arguments&... args )
             {
-                ( writeArgument( buffer, idx, args ), ...);
+                ( writeToBuffer( buffer, args ), ... );
             }, 
             _args
         );
@@ -181,33 +190,40 @@ class Task : public TaskBase {
 
     virtual void fillFromBuffer( const uint8_t* buffer ) override
     {
-        unsigned int idx = 0;
-        _func_id = as< int >( buffer + idx );
-        idx += sizeof( int );
-        _id = as< int >( buffer + idx );
-        idx += sizeof( int );
-        _priority = as< int >( buffer + idx );
-        idx += sizeof( int );
-        _enqueueFront = as< bool >( buffer + idx );
-        idx += sizeof( bool );
-        _status = as< TaskStatus >( buffer + idx );
-        idx += sizeof ( TaskStatus );
-        bool hasValue = as< bool >( buffer + idx );
-        idx += sizeof( bool );
+        _func_id = readFromBuffer< int >( buffer );
+        _id = readFromBuffer< int >( buffer );
+        _priority = readFromBuffer< int >( buffer );
+        _enqueueFront = readFromBuffer< bool >( buffer );
+        _status = readFromBuffer< TaskStatus >( buffer );
+        bool hasValue = readFromBuffer< bool >( buffer );
+        // unsigned int idx = 0;
+        // _func_id = as< int >( buffer + idx );
+        // idx += sizeof( int );
+        // _id = as< int >( buffer + idx );
+        // idx += sizeof( int );
+        // _priority = as< int >( buffer + idx );
+        // idx += sizeof( int );
+        // _enqueueFront = as< bool >( buffer + idx );
+        // idx += sizeof( bool );
+        // _status = as< TaskStatus >( buffer + idx );
+        // idx += sizeof ( TaskStatus );
+        // bool hasValue = as< bool >( buffer + idx );
+        // idx += sizeof( bool );
 
         if ( hasValue )
         {
             // Parse using proper serialization
-            Result value = as< Result >( buffer + idx );
-            _result = std::make_optional< Result >( value );
+            // Result value = as< Result >( buffer + idx );
+            // _result = std::make_optional< Result >( value );
+            _result = std::make_optional< Result >( readFromBuffer< Result >( buffer ) );
         }
         else
         {
             _result.reset();
         }
 
-        idx += sizeof( Result );
-        _args = std::tuple< Arguments... >( readArgument< Arguments >( buffer )... );
+        // idx += sizeof( Result );
+        _args = std::tuple< Arguments... >( readFromBuffer< Arguments >( buffer )... );
     } 
     
     int functionId() const override { return _func_id; }
