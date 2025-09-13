@@ -23,7 +23,7 @@ public:
     
     void sendMessage( DistributionMessageType type, TaskBase& task, const Ip6Addr& target)
     {
-        auto buffer = rofi::hal::PBuf::allocate( task.size() 
+        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( task.size() )
                                                  + sizeof( DistributionMessageType ) 
                                                  + sizeof( Ip6Addr ) );
         as< DistributionMessageType >( buffer.payload() ) = type;
@@ -40,7 +40,7 @@ public:
 
     void sendMessage( DistributionMessageType type, PBuf&& data, const Ip6Addr& target )
     {
-        auto buffer = rofi::hal::PBuf::allocate( sizeof( DistributionMessageType )
+        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( sizeof( DistributionMessageType ) )
                                                 + Ip6Addr::size()
                                                 + data.size() );
         as< DistributionMessageType >( buffer.payload() ) = type;
@@ -81,7 +81,7 @@ public:
 
     void broadcastMessage( DistributionMessageType type, PBuf&& data, unsigned int methodId )
     {
-        auto buffer = rofi::hal::PBuf::allocate( sizeof( DistributionMessageType )
+        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( sizeof( DistributionMessageType ) )
                                                 + Ip6Addr::size()
                                                 + data.size() );
         as< DistributionMessageType >( buffer.payload() ) = type;
@@ -104,7 +104,7 @@ public:
 
     void broadcastMessage( DistributionMessageType type, TaskBase& task, unsigned int methodId )
     {
-        auto buffer = rofi::hal::PBuf::allocate( task.size() 
+        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( task.size() )
                                                  + sizeof( DistributionMessageType ) 
                                                  + sizeof( Ip6Addr ) );
         as< DistributionMessageType >( buffer.payload() ) = type;
