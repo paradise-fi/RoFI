@@ -3,7 +3,7 @@
 #include <memory>
 
 #include "task.hpp"
-#include "../functions/functionCompletionType.hpp"
+#include "../functions/enums/functionCompletionType.hpp"
 
 struct TaskEntry
 {

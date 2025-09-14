@@ -2,9 +2,9 @@
 
 #include "messagingWrapper.hpp"
 #include "functionRegistry.hpp"
-#include "memoryService.hpp"
-#include "workflowService.hpp"
-#include "electionService.hpp"
+#include "services/memoryService.hpp"
+#include "services/workflowService.hpp"
+#include "services/electionService.hpp"
 #include "electionProtocolBase.hpp"
 #include <boost/lockfree/queue.hpp>
 
