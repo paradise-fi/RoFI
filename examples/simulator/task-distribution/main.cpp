@@ -14,7 +14,7 @@
 #include "add.hpp"
 #include "multiply.hpp"
 #include "delay.hpp"
-#include "replicatedMemory.hpp"
+#include "implementation/replicatedMemory.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
