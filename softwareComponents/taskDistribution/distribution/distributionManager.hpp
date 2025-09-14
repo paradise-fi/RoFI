@@ -21,12 +21,9 @@ class DistributionManager
     rofi::net::Ip6Addr _address;
 
     ElectionService _election;
-    // MessageReceiver _receiver;
-    // MessageSender _sender;
     MessagingWrapper _messaging;
     MemoryService _memoryService;
     WorkFlowService _workFlowService;
-    std::unique_ptr< udp_pcb > _pcb;
 
     std::optional< std::function< bool(DistributionManager&, rofi::net::Ip6Addr& ) > > _onTaskRequest;
     
