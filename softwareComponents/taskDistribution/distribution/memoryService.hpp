@@ -83,6 +83,25 @@ public:
         return _memory->clear();
     }
 
+    template< typename T >
+    bool readMetadata( int address, std::string key, T& out )
+    {
+        std::vector< uint8_t > metadata = _memory->readMetadata( address, key );
+
+        if ( metadata.size() < sizeof( T ) )
+        {
+            return false;
+        }
+
+        std::memcpy( &out, metadata.data(), sizeof( T ) );
+        return true;
+    }
+
+    bool saveMetadata( int address, std::string key, uint8_t* metadata, int metadataSize )
+    {
+        return _memory->storeMetadata( address, key, metadata, metadataSize );
+    }
+
     void onStorageMessage( Ip6Addr sender, uint8_t* data, unsigned int size )
     {
         _memory->onStorageMessage( sender, data, size );

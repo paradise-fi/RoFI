@@ -165,4 +165,33 @@ public:
         std::shared_lock lock( _mutex );
         _storage.clear();
     }
+
+    // This implementation only allows to read the timestamp with the stamp key.
+    virtual std::vector< uint8_t > readMetadata( int address, std::string key ) override
+    {
+        auto result = std::vector< uint8_t >();
+
+        if ( key != std::string( "stamp" ) )
+        {
+            return result;
+        }
+
+        std::shared_lock lock( _mutex );
+        auto entry = _storage.find( address );
+        
+        if (entry == _storage.end())
+        {
+            return result;
+        }
+
+        result.resize( sizeof( unsigned int ) );
+        std::memcpy( result.data(), &(entry->second.stamp), sizeof( unsigned int ) );
+        return result; 
+    }
+
+    // This implementation does not allow to store metadata.
+    virtual bool storeMetadata( int, std::string, uint8_t*, int ) override 
+    {
+        return false;
+    }
 };
