@@ -1,7 +1,6 @@
 #pragma once
 
-#include "messageReceiver.hpp"
-#include "messageSender.hpp"
+#include "messagingWrapper.hpp"
 #include "functionRegistry.hpp"
 #include "memoryService.hpp"
 #include "workflowService.hpp"
@@ -22,8 +21,9 @@ class DistributionManager
     rofi::net::Ip6Addr _address;
 
     ElectionService _election;
-    MessageReceiver _receiver;
-    MessageSender _sender;
+    // MessageReceiver _receiver;
+    // MessageSender _sender;
+    MessagingWrapper _messaging;
     MemoryService _memoryService;
     WorkFlowService _workFlowService;
     std::unique_ptr< udp_pcb > _pcb;
@@ -151,19 +151,14 @@ public:
         [ this ]( const Ip6Addr& leader) {
             onElectionSuccesful( leader );
         }),
-      _receiver(
-        DISTRIBUTION_PORT, pcb.get(),
+      _messaging( address, DISTRIBUTION_PORT, distributor,
         [ this ]( Ip6Addr sender, DistributionMessageType messageType, uint8_t* data, unsigned int size )
         {
             onMessage( sender, messageType, data, size );
-        }),
-      _sender( address, DISTRIBUTION_PORT, pcb.get(), distributor ),
-      _workFlowService( _sender, _functionRegistry )
-    { 
-        LOCK_TCPIP_CORE();
-        _pcb = std::move( pcb );
-        UNLOCK_TCPIP_CORE();
-
+        },
+        std::move( pcb ) ),
+      _workFlowService( _messaging.sender(), _functionRegistry )
+    {
         distributor->registerMethod( METHOD_ID, 
             [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
             {
@@ -216,7 +211,7 @@ public:
 
     MessageSender& getSender()
     {
-        return _sender;
+        return _messaging.sender();
     }
 
     void start( int moduleId )
@@ -226,7 +221,7 @@ public:
 
     void broadcastUnblockSignal()
     {
-        _sender.broadcastMessage(DistributionMessageType::BlockingTaskRelease, METHOD_ID);
+        _messaging.sender().broadcastMessage(DistributionMessageType::BlockingTaskRelease, METHOD_ID);
     }
 
     bool requestTask()
@@ -237,7 +232,7 @@ public:
         }
 
         auto emptyTask = Task< int >( 0 );
-        _sender.sendMessage( DistributionMessageType::TaskRequest, emptyTask, _election.getLeader() );
+        _messaging.sender().sendMessage( DistributionMessageType::TaskRequest, emptyTask, _election.getLeader() );
         return true;
     }
 

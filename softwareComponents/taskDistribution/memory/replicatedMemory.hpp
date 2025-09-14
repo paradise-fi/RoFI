@@ -2,7 +2,7 @@
 
 #include <shared_mutex>
 #include "memoryEntry.hpp"
-#include "../distribution/messageSender.hpp"
+#include "../distribution/messaging/messageSender.hpp"
 #include "sharedMemoryBase.hpp"
 #include <map>
 
