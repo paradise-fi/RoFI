@@ -9,7 +9,7 @@ using namespace rofi::net;
 #include <atoms/units.hpp>
 #include <vector>
 #include <variant>
-#include "serializable.hpp"
+#include "serializable/serializable.hpp"
 
 enum TaskStatus {
     Enqueued, // Still in Queue 

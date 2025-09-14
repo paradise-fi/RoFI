@@ -1,4 +1,4 @@
-#include "serializable.hpp"
+#include "../tasks/serializable/serializable.hpp"
 
 template< SerializableOrTrivial Result >
 struct FunctionResult
