@@ -11,7 +11,7 @@
 #include "distributionManager.hpp"
 #include "initial.hpp"
 #include "fizzbuzz.hpp"
-#include "replicatedMemory.hpp"
+#include "implementation/replicatedMemory.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;

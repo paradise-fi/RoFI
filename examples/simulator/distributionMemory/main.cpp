@@ -9,7 +9,7 @@
 #include <string>
 
 #include "distributionManager.hpp"
-#include "replicatedMemory.hpp"
+#include "implementation/replicatedMemory.hpp"
 #include "initial.hpp"
 #include "fizzbuzz.hpp"
 
