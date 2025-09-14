@@ -1,7 +1,7 @@
 #pragma once
 #include "functionResult.hpp"
-#include "functionCompletionType.hpp"
-#include "functionDistributionType.hpp"
+#include "enums/functionCompletionType.hpp"
+#include "enums/functionDistributionType.hpp"
 #include <optional>
 
 template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
