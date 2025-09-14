@@ -121,7 +121,7 @@ namespace rofi::net {
                     continue;
                 }
 
-                PBuf packet = PBuf::allocate( Ip6Addr::size() + sizeof( unsigned int ) * 2 + static_cast< int >( data_size ) );
+                PBuf packet = PBuf::allocate( Ip6Addr::size() + static_cast< int >( sizeof( unsigned int ) ) * 2 + static_cast< int >( data_size ) );
                 as< Ip6Addr >( packet.payload() ) = sender;
                 as< unsigned int >( packet.payload() + Ip6Addr::size() ) = method_id;
                 as< unsigned int >( packet.payload() + Ip6Addr::size() + sizeof( unsigned int ) ) = timestamp;
