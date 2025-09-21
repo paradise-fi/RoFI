@@ -16,14 +16,14 @@ public:
         std::cout << _value << " + " << value;
         _value += value;
         std::cout << " = " << _value << std::endl;
-        return FunctionResult< int >( _value, true );
+        return FunctionResult< int >( _value, FunctionResultType::SUCCESS );
     }
 
-    virtual void onFunctionSuccess( std::optional< int > result, const Ip6Addr& origin ) override
+    virtual bool onFunctionSuccess( std::optional< int > result, const Ip6Addr& origin ) override
     {
         if ( !result.has_value() )
         {
-            return;
+            return false;
         }
 
         int value = result.value();
@@ -49,7 +49,7 @@ public:
             }
         }
 
-         if ( value < 10 )
+        if ( value < 10 )
         {
             auto addHandle = _manager.functionRegistry().getFunctionHandle< int, int >( functionId() ).value();
             if ( !addHandle( origin, 1, false, std::tuple< int >( 1 ) ) )
@@ -57,11 +57,13 @@ public:
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }
         }
+
+        return false;
     }
 
-    virtual void onFunctionFailure( std::optional< int >, const Ip6Addr& ) override
+    virtual bool onFunctionFailure( std::optional< int >, const Ip6Addr& ) override
     {
-        return;
+        return false;
     }
 
     virtual std::string functionName() const override

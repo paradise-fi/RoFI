@@ -19,35 +19,38 @@ public:
     virtual FunctionResult< int > execute( int value ) override 
     {
         int result;
-        if ( !_manager.memoryService().readData< int >( _identity, result ) )
+        MemoryReadResult memoryResult = _manager.memoryService().readData( _identity );
+        if ( !memoryResult.success )
         {
             std::cout << "FizzBuzz value not in memory, generating..." << std::endl;
             result = _identity + ( value * _identity );
         }
         else
         {
-            result = _identity + ( result * _identity );
+            result = _identity + ( memoryResult.data< int >() * _identity );
         }
         std::cout << "FizzBuzz Value " << result << " will be stored to memory." << std::endl;
-        _manager.memoryService().saveData( reinterpret_cast< uint8_t* >( &result ), sizeof( int ), _identity );
-
-        // TODO: Perform better detection for this.
-        sleep(2);
-
-        return FunctionResult< int >( _identity, true );
+        _manager.memoryService().saveData< int >( result, _identity );
+        return FunctionResult< int >( _identity, FunctionResultType::SUCCESS );
     }
 
     /// This function is called by the leader node if the FunctionResult fom execute indicates a success.
-    virtual void onFunctionSuccess( std::optional< int > addr, const Ip6Addr& origin ) override
+    virtual bool onFunctionSuccess( std::optional< int > addr, const Ip6Addr& origin ) override
     {
         if ( !addr.has_value() )
         {
-            return;
+            return false;
         }
 
         int result;
-        while (!_manager.memoryService().readData< int >( addr.value(), result ))
-        {}
+        MemoryReadResult memoryResult = _manager.memoryService().readData( addr.value() );;
+        while ( !memoryResult.success )
+        {
+            std::cout << "Going to re-queue this task." << std::endl;
+            return true;
+        }
+
+        result = memoryResult.data< int >();
         std::cout << origin << ": " << result << " ";
         if ( result % 3 == 0 )
         {
@@ -68,12 +71,14 @@ public:
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }
         }
+
+        return false;
     }
 
     /// This function is called by the leader node if the FunctionResult fom execute indicates a failure.
-    virtual void onFunctionFailure( std::optional< int >, const Ip6Addr& ) override
+    virtual bool onFunctionFailure( std::optional< int >, const Ip6Addr& ) override
     {
-        return;
+        return false;
     }
 
     virtual std::string functionName() const override

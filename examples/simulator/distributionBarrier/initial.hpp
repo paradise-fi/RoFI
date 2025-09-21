@@ -18,15 +18,15 @@ public:
 
     virtual FunctionResult< int > execute() override
     {
-        return FunctionResult< int >( _moduleId, true );
+        return FunctionResult< int >( _moduleId, FunctionResultType::SUCCESS );
     }
 
-    virtual void onFunctionSuccess( std::optional< int > result, const Ip6Addr& origin ) override
+    virtual bool onFunctionSuccess( std::optional< int > result, const Ip6Addr& origin ) override
     {
         if ( !result.has_value() )
         {
             std::cout << "No result value" << std::endl;
-            return;
+            return false;
         }
 
         int moduleId = result.value();
@@ -44,11 +44,13 @@ public:
         {
             std::cout << "Execution of function " << functionName() << "failed." << std::endl;
         }
+
+        return false;
     }
 
-    virtual void onFunctionFailure( std::optional< int >, const Ip6Addr& ) override
+    virtual bool onFunctionFailure( std::optional< int >, const Ip6Addr& ) override
     {
-        return;
+        return false;
     }
 
     virtual std::string functionName() const override

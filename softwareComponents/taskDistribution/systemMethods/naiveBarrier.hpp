@@ -21,10 +21,10 @@ public:
 
     virtual FunctionResult< Ip6Addr > execute() override {
         std::cout << "Naive Barrier execution." << std::endl;
-        return FunctionResult< Ip6Addr >( _address, true );
+        return FunctionResult< Ip6Addr >( _address, FunctionResultType::SUCCESS );
     }
 
-    virtual void onFunctionSuccess( std::optional< Ip6Addr >, const Ip6Addr& origin ) override
+    virtual bool onFunctionSuccess( std::optional< Ip6Addr >, const Ip6Addr& origin ) override
     {
         _participants.erase( origin );
 
@@ -32,11 +32,13 @@ public:
         {
             _manager.broadcastUnblockSignal();
         }
+
+        return false;
     }
 
-    virtual void onFunctionFailure( std::optional< Ip6Addr >, const Ip6Addr& ) override
+    virtual bool onFunctionFailure( std::optional< Ip6Addr >, const Ip6Addr& ) override
     {
-        return;
+        return false;
     }
 
     virtual std::string functionName() const override

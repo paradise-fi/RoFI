@@ -32,40 +32,46 @@ public:
     /// @return A function result structure, which contains both the result value and whether the function is considered a success.
     virtual FunctionResult< FizzBuzzMetaData > execute( int value ) override 
     {
-        int result;
         int memoryAddress = getMemorySlotAddress( value );
         std::cout << "FizzBuzz Value " << value << " Memory Address: " << memoryAddress << std::endl;
-        if ( !_manager.memoryService().readData< int >( memoryAddress, result ) )
+        MemoryReadResult result = _manager.memoryService().readData( memoryAddress );
+        int resultValue;
+        if ( !result.success )
         {
             std::cout << "FizzBuzz value not in memory, generating..." << std::endl;
-            result = _identity + ( value * _identity );
+            resultValue = _identity + ( value * _identity );
         }
         else
         {
-            result = _identity + ( result * _identity );
+            resultValue = _identity + ( result.data< int >() * _identity );
         }
-        std::cout << "FizzBuzz Value " << result << " will be stored to memory." << std::endl;
-        _manager.memoryService().saveData( reinterpret_cast< uint8_t* >( &result ), sizeof( int ), memoryAddress );
+        std::cout << "FizzBuzz Value " << resultValue << " will be stored to memory." << std::endl;
+        _manager.memoryService().saveData< int >( resultValue, memoryAddress );
 
         auto metaData = FizzBuzzMetaData{ value + 1, _identity };
         std::cout << "Returning metadata with value " << value + 1 << std::endl;
-        return FunctionResult< FizzBuzzMetaData >( metaData, true );
+        return FunctionResult< FizzBuzzMetaData >( metaData, FunctionResultType::SUCCESS );
     }
 
     /// This function is called by the leader node if the FunctionResult fom execute indicates a success.
-    virtual void onFunctionSuccess( std::optional< FizzBuzzMetaData > data, const Ip6Addr& origin ) override
+    virtual bool onFunctionSuccess( std::optional< FizzBuzzMetaData > data, const Ip6Addr& origin ) override
     {
         if ( !data.has_value() )
         {
-            return;
+            return false;
         }
 
         std::cout << "Data Value: " << data.value().value << std::endl;
         int memoryAddress = getMemorySlotAddress( data.value().value );
 
         std::cout << "Memory Address: " << memoryAddress << std::endl;
-        int result;
-        while (!_manager.memoryService().readData< int >( memoryAddress, result )){}
+        MemoryReadResult readResult = _manager.memoryService().readData( memoryAddress );
+        while ( !readResult.success )
+        {
+            readResult = _manager.memoryService().readData( memoryAddress );
+        }
+        
+        int result = readResult.data< int >();
         std::cout << origin << ": " << result << " ";
         if ( result % 3 == 0 )
         {
@@ -95,12 +101,14 @@ public:
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }
         }
+
+        return false;
     }
 
     /// This function is called by the leader node if the FunctionResult fom execute indicates a failure.
-    virtual void onFunctionFailure( std::optional< FizzBuzzMetaData >, const Ip6Addr& ) override
+    virtual bool onFunctionFailure( std::optional< FizzBuzzMetaData >, const Ip6Addr& ) override
     {
-        return;
+        return false;
     }
 
     virtual std::string functionName() const override

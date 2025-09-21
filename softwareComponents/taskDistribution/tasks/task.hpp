@@ -16,7 +16,8 @@ enum TaskStatus {
     InProgress, // Has been sent out
     Complete, // Returned with a success
     Failed, // Returned with a failure
-    TimedOut // Timed Out.
+    RepeatLocally, // Reschedule at the executor
+    RepeatDistributed, // Reschedule at the central authority / leader
 };
 
 class TaskBase 

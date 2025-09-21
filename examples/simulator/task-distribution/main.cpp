@@ -63,7 +63,7 @@ void startElectionProtocol() {
         std::move( election ), addr,
         reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     
-    manager.memoryService().useMemory( std::make_unique< ReplicatedMemoryManager >( reinterpret_cast< MessageDistributor* >( messageDistributor ), addr, manager.getSender() ) );
+    manager.memoryService().useMemory( std::make_unique< ReplicatedMemory >() );
     
     std::unique_ptr< DistributedFunction< int > > initial = std::make_unique< Initial >( id, manager );
     std::unique_ptr< DistributedFunction< int, int > > add = std::make_unique< Add >( currentCount, manager );
@@ -83,22 +83,22 @@ void startElectionProtocol() {
         sleep( 1 );
         manager.doWork();
         
-        int mem1 = 0;
-        if ( manager.memoryService().readData( 1, mem1 ) )
+        auto mem1 = manager.memoryService().readData( 1 );
+        if ( mem1.success )
         {
-            std::cout << "Data at address 1: " << mem1 << std::endl;
+            std::cout << "Data at address 1: " << mem1.data< int >() << std::endl;
         }
 
-        int mem2 = 0;
-        if ( manager.memoryService().readData( 2, mem2 ) )
+        auto mem2 = manager.memoryService().readData( 2 );
+        if ( mem2.success )
         {
-            std::cout << "Data at address 2: " << mem2 << std::endl;
+            std::cout << "Data at address 2: " << mem2.data< int >() << std::endl;
         }
 
-        int mem3 = 0;
-        if ( manager.memoryService().readData( 3, mem3 ) )
+        auto mem3 = manager.memoryService().readData( 3 );
+        if ( mem3.success )
         {
-            std::cout << "Data at address 3: " << mem3 << std::endl;
+            std::cout << "Data at address 3: " << mem3.data< int >() << std::endl;
         }
         // sleep( id );
     }

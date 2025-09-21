@@ -20,20 +20,20 @@ public:
     {
         if ( message.message == std::string("end"))
         {
-            return FunctionResult< Message >( Message( std::string( "end" ) ), true );
+            return FunctionResult< Message >( Message( std::string( "end" ) ), FunctionResultType::SUCCESS );
         }
 
         std::cout << "Received value from leader: " << message.message << std::endl;
         std::string hello("Hi from ");
-        return FunctionResult< Message >( Message( hello + std::to_string( _moduleId ) ), true );
+        return FunctionResult< Message >( Message( hello + std::to_string( _moduleId ) ), FunctionResultType::SUCCESS );
     }
 
     /// This function is called by the leader node if the FunctionResult fom execute indicates a success.
-    virtual void onFunctionSuccess( std::optional< Message > result, const Ip6Addr& origin ) override
+    virtual bool onFunctionSuccess( std::optional< Message > result, const Ip6Addr& origin ) override
     {
         if ( !result.has_value() )
         {
-            return;
+            return false;
         }
 
         Message value = result.value();
@@ -47,15 +47,16 @@ public:
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }
-            return;
+            return false;
         }
         std::cout << "Function end." << std::endl;
+        return false;
     }
 
     /// This function is called by the leader node if the FunctionResult fom execute indicates a failure.
-    virtual void onFunctionFailure( std::optional< Message >, const Ip6Addr& ) override
+    virtual bool onFunctionFailure( std::optional< Message >, const Ip6Addr& ) override
     {
-        return;
+        return false;
     }
 
     virtual std::string functionName() const override

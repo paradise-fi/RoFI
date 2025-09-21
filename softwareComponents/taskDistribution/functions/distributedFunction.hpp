@@ -12,18 +12,20 @@ public:
 
     /// @brief Invoked remotely by the distribution system after the function call is sent out to a module.
     /// @param ...args - arguments of the function, typically received from the leader module.
-    /// @return - return value of the function, this will be sent back to the leader module. Setting false to 
+    /// @return - return value of the function, this will be sent back to the leader module.
     virtual FunctionResult< Result > execute( Arguments... args ) = 0;
 
     /// @brief Invoked on the leader module after receiving a success result from its follower module.
     /// @param result The result obtained from the follower module.
     /// @param origin The address of the module that performed the function call.
-    virtual void onFunctionSuccess( std::optional< Result > result, const Ip6Addr& origin ) = 0;
+    /// @return True if processing of the result (this function) should be re-scheduled, else false.
+    virtual bool onFunctionSuccess( std::optional< Result > result, const Ip6Addr& origin ) = 0;
 
     /// @brief Invoked on the leader module after receiving a failure result from its follower module.
     /// @param result The result value obtained from the module.
     /// @param origin The address of the module that performed the function call.
-    virtual void onFunctionFailure( std::optional< Result > result, const Ip6Addr& origin ) = 0;
+    /// @return True if processing of the result (this function) should be re-scheduled, else false.
+    virtual bool onFunctionFailure( std::optional< Result > result, const Ip6Addr& origin ) = 0;
 
     /// @brief Returns unique function name for user-friendly function retrieval.
     /// @return Unique function name.
