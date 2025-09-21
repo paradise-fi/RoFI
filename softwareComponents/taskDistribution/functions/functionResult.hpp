@@ -26,11 +26,11 @@ struct FunctionResult
 
     bool shouldLeaderReschedule()
     {
-        return resultType == FunctionResultType::TRY_AGAIN_LOCAL;
+        return resultType == FunctionResultType::TRY_AGAIN;
     }
 
     bool shouldFollowerReschedule()
     {
-        return resultType == FunctionResultType::TRY_AGAIN;
+        return resultType == FunctionResultType::TRY_AGAIN_LOCAL;
     }
 };

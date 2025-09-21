@@ -161,6 +161,19 @@ public:
         taskQueue->second.clearActiveTask( id );
     }
 
+    std::unique_ptr< TaskBase > finishAndGetActiveTask ( const Ip6Addr& address )
+    {
+        const auto& taskQueue = _schedulers.find( address );
+
+        if ( taskQueue == _schedulers.end() )
+        {
+            std::cout << "Address not found in tasks" << std::endl;
+            return nullptr;
+        }
+
+        return taskQueue->second.clearAndGetActiveTask();
+    }
+
     void unblockSchedulers( bool hardUnblock = false )
     {
         for( auto it = _schedulers.begin(); it != _schedulers.end(); ++it)

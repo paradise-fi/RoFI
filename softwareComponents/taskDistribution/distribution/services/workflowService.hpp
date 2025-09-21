@@ -76,7 +76,7 @@ public:
     void doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader )
     {
         _memoryService.processQueue();
-        
+
         auto taskCandidate = _functionRegistry.popTaskForAddress( address );
 
         if ( !taskCandidate.has_value() )
@@ -86,7 +86,19 @@ public:
 
         auto task = std::move( taskCandidate.value() );
         
-        if  ( !_functionRegistry.invokeFunction( task.get() ) )
+        bool isFunctionSuccesful = _functionRegistry.invokeFunction( task.get() );
+
+        TaskStatus status = task.get().status();
+
+        if ( status == TaskStatus::RepeatLocally )
+        {
+            std::cout << "Going to repeat locally." << std::endl;
+            auto function = _functionRegistry.getFunction( task.get().functionId() );
+            _functionRegistry.enqueueTask( address, _functionRegistry.finishAndGetActiveTask( address ), function->get().completionType() );
+            return;
+        }
+
+        if  ( !isFunctionSuccesful )
         {
             _sender.sendMessage( DistributionMessageType::TaskFailed, task.get(), leader );
             _functionRegistry.finishActiveTask( address );

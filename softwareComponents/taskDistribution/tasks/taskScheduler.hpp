@@ -102,6 +102,18 @@ public:
         }
     }
 
+    std::unique_ptr< TaskBase > clearAndGetActiveTask()
+    {
+        if ( _active == nullptr )
+        {
+            return nullptr;
+        }
+
+        auto activeTask = std::move( _active->task );
+        _active = nullptr;
+        return activeTask;
+    }
+
     std::optional< std::reference_wrapper< TaskBase > > popTask( bool isLeader = false )
     {
         if ( ( !isLeader && schedulerIsBlocked() ) )
