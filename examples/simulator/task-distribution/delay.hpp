@@ -18,15 +18,15 @@ public:
             sleep( 4 );
             std::cout << "SLEEP: " << i << std::endl;
         }
-        return FunctionResult< int >( _value, true );
+        return FunctionResult< int >( _value, FunctionResultType::SUCCESS );
     }
 
-    virtual void onFunctionSuccess( std::optional< int > result, const Ip6Addr& origin ) override
+    virtual bool onFunctionSuccess( std::optional< int > result, const Ip6Addr& origin ) override
     {
         std::cout << "DELAY SUCCESS" << std::endl;
         if ( !result.has_value() )
         {
-            return;
+            return false;
         }
 
         int value = result.value();
@@ -38,11 +38,13 @@ public:
         {
             std::cout << "Execution of function " << functionName() << "failed." << std::endl;
         }
+
+        return false;
     }
 
-    virtual void onFunctionFailure( std::optional< int >, const Ip6Addr& ) override
+    virtual bool onFunctionFailure( std::optional< int >, const Ip6Addr& ) override
     {
-        return;
+        return false;
     }
 
     virtual std::string functionName() const override

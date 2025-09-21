@@ -14,7 +14,7 @@ class TaskManager
     int _taskId = 1;
     std::unique_ptr< TaskBase > _initialTask;
     boost::lockfree::queue< ip6_addr_t > _taskRequests = boost::lockfree::queue< ip6_addr_t >( 1024 );
-    std::queue< TaskResultEntry > _taskResults;
+    std::deque< TaskResultEntry > _taskResults;
     std::map< Ip6Addr, TaskScheduler > _schedulers;
     mutable std::shared_mutex _mutex;
 
@@ -32,10 +32,17 @@ public:
         }
     }
 
-    bool enqueueTaskResult( std::unique_ptr< TaskBase > task, Ip6Addr origin )
+    bool enqueueTaskResult( std::unique_ptr< TaskBase > task, Ip6Addr origin, bool pushToFront = false )
     {
         std::unique_lock lock( _mutex );
-        _taskResults.push( TaskResultEntry{ std::move( task ), origin } );
+        if ( pushToFront )
+        {
+            _taskResults.push_front( TaskResultEntry{ std::move( task ), origin } );
+        }
+        else
+        {
+            _taskResults.push_back( TaskResultEntry{ std::move( task ), origin } );
+        }
         return true;
     }
 
@@ -48,7 +55,7 @@ public:
         }
 
         TaskResultEntry result = std::move( _taskResults.front() );
-        _taskResults.pop();
+        _taskResults.pop_front();
         return result;
     }
     

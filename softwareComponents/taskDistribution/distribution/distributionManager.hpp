@@ -22,7 +22,7 @@ class DistributionManager
 
     ElectionService _election;
     MessagingWrapper _messaging;
-    MemoryService _memoryService;
+    DistributedMemoryService _memoryService;
     WorkFlowService _workFlowService;
 
     std::optional< std::function< bool(DistributionManager&, rofi::net::Ip6Addr& ) > > _onTaskRequest;
@@ -80,9 +80,17 @@ class DistributionManager
             std::cout << "Received Data Storage Request from " << sender << std::endl;
             if ( _memoryService.isMemoryRegistered() )
             {
-                // ToDo: Move packet payload past Type and Sender before this function
                 unsigned int offset = sizeof( DistributionMessageType ) + Ip6Addr::size();
-                return _memoryService.onStorageMessage( sender, data + offset, size - offset );
+                return _memoryService.onStorageMessage( sender, data + offset, size - offset, false );
+            }
+        }
+
+        if ( type == DistributionMessageType::DataRemovalRequest )
+        {
+            if ( _memoryService.isMemoryRegistered() )
+            {
+                unsigned int offset = sizeof( DistributionMessageType ) + Ip6Addr::size();
+                return _memoryService.onStorageMessage( sender, data + offset, size - offset, true );
             }
         }
 
@@ -154,7 +162,8 @@ public:
             onMessage( sender, messageType, data, size );
         },
         std::move( pcb ) ),
-      _workFlowService( _messaging.sender(), _functionRegistry )
+      _memoryService( distributor, _messaging.sender(), address ),
+      _workFlowService( _messaging.sender(), _functionRegistry, _memoryService )
     {
         distributor->registerMethod( METHOD_ID, 
             [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
@@ -175,7 +184,7 @@ public:
         return _election.unregisterLeaderFailureCallback();
     }
 
-    MemoryService& memoryService()
+    DistributedMemoryService& memoryService()
     {
         return _memoryService;
     }

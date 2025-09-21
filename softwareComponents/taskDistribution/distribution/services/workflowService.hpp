@@ -1,3 +1,4 @@
+#include "memoryService.hpp"
 #include "functionRegistry.hpp"
 #include "messaging/messageSender.hpp"
 
@@ -5,6 +6,7 @@ class WorkFlowService
 {
     MessageSender& _sender;
     FunctionRegistry& _functionRegistry;
+    DistributedMemoryService& _memoryService;
 
     void tryDistributeNewTask( int methodId )
     {
@@ -61,17 +63,20 @@ class WorkFlowService
         }
     }
 public:
-    WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry)
-    : _sender( sender ), _functionRegistry( functionRegistry ){}
+    WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService )
+    : _sender( sender ), _functionRegistry( functionRegistry ), _memoryService( memoryService ){}
 
     void doWorkLeader( int methodId )
     {
         tryDistributeNewTask( methodId );
+        _memoryService.processQueue();
         _functionRegistry.processTaskResultQueue();
     }
 
     void doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader )
     {
+        _memoryService.processQueue();
+        
         auto taskCandidate = _functionRegistry.popTaskForAddress( address );
 
         if ( !taskCandidate.has_value() )

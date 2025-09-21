@@ -20,15 +20,15 @@ public:
         std::cout << "Received value from leader: " << value << std::endl;
         int result = _identity + ( value * _identity );
         std::cout << "FizzBuzz Value:" << result << std::endl;
-        return FunctionResult< int >( result, true );
+        return FunctionResult< int >( result, FunctionResultType::SUCCESS );
     }
 
     /// This function is called by the leader node if the FunctionResult fom execute indicates a success.
-    virtual void onFunctionSuccess( std::optional< int > result, const Ip6Addr& origin ) override
+    virtual bool onFunctionSuccess( std::optional< int > result, const Ip6Addr& origin ) override
     {
         if ( !result.has_value() )
         {
-            return;
+            return false;
         }
 
         int value = result.value();
@@ -54,12 +54,14 @@ public:
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }
         }
+
+        return false;
     }
 
     /// This function is called by the leader node if the FunctionResult fom execute indicates a failure.
-    virtual void onFunctionFailure( std::optional< int >, const Ip6Addr& ) override
+    virtual bool onFunctionFailure( std::optional< int >, const Ip6Addr& ) override
     {
-        return;
+        return false;
     }
 
     virtual std::string functionName() const override

@@ -84,25 +84,21 @@ public:
         return true;
     }
 
-    bool invokeReaction( const Ip6Addr& addr, const TaskBase& task )
+    FunctionResultType invokeReaction( const Ip6Addr& addr, const TaskBase& task )
     {
         const auto& fn = _functions.find( task.functionId() );
         if ( fn == _functions.end() )
         {
             std::cerr << "Function not found when trying to react to module task completion" << std::endl;
-            return false;
+            return FunctionResultType::FAILURE;
         }
 
         if ( task.status() != TaskStatus::Complete )
         {
-            fn->second->onFailure( addr, task );
-        }
-        else 
-        {
-            fn->second->onSuccess( addr, task );
+            return fn->second->onFailure( addr, task ) ? FunctionResultType::TRY_AGAIN : FunctionResultType::SUCCESS;
         }
         
-        return true;
+        return fn->second->onSuccess( addr, task ) ? FunctionResultType::TRY_AGAIN : FunctionResultType::SUCCESS;
     }
 
     std::optional< std::reference_wrapper< FunctionConcept > > getFunction( int functionId )

@@ -9,7 +9,7 @@ struct MemoryEntry {
 
     MemoryEntry() {}
 
-    MemoryEntry( unsigned int stamp, int size )
+    MemoryEntry( unsigned int stamp, size_t size )
     : stamp( stamp ){
         stored_data.resize( size );
     }

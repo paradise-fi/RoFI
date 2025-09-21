@@ -80,7 +80,7 @@ public:
         return _functionManager.invokeFunction( task );
     }
 
-    bool invokeFunctionReaction( Ip6Addr& sender, TaskBase& task )
+    FunctionResultType invokeFunctionReaction( Ip6Addr& sender, TaskBase& task )
     {
         return _functionManager.invokeReaction( sender, task );
     }
@@ -104,9 +104,18 @@ public:
             return;
         }
 
-        if ( !invokeFunctionReaction( taskResultOptional->origin, *taskResultOptional->task ) )
+        auto reactionResult = invokeFunctionReaction( taskResultOptional->origin, *taskResultOptional->task );
+
+        if ( reactionResult == FunctionResultType::FAILURE )
         {
             std::cout << "Function reaction invocation failed for Task " << taskResultOptional->task->id() << std::endl;
+            return;
+        }
+
+        if ( reactionResult == FunctionResultType::TRY_AGAIN )
+        {
+            std::cout << "Going to re-enqueue task result because it was requested." << std::endl;
+            _taskManager.enqueueTaskResult( std::move( taskResultOptional->task ), taskResultOptional->origin, true );
         }
     }
 

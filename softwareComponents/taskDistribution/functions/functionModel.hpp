@@ -11,8 +11,8 @@ class FunctionConcept {
         virtual ~FunctionConcept() = default;
         virtual std::unique_ptr< TaskBase > createTask() const = 0;
         virtual void perform( TaskBase& task ) = 0;
-        virtual void onSuccess( const Ip6Addr& addr, const TaskBase& task ) = 0;
-        virtual void onFailure( const Ip6Addr& addr, const TaskBase& task ) = 0;
+        virtual bool onSuccess( const Ip6Addr& addr, const TaskBase& task ) = 0;
+        virtual bool onFailure( const Ip6Addr& addr, const TaskBase& task ) = 0;
         virtual FunctionCompletionType completionType() const = 0;
         virtual FunctionDistributionType distributionType() const = 0;
         virtual std::string functionName() const = 0;
@@ -22,6 +22,8 @@ class FunctionConcept {
     template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     class FunctionModel : public FunctionConcept
     {
+        std::unique_ptr< DistributedFunction< Result, Arguments... > > _function;
+
     public:
         FunctionModel( std::unique_ptr< DistributedFunction< Result, Arguments... > > fn )
         : _function( std::move( fn ) )
@@ -43,19 +45,38 @@ class FunctionConcept {
             );
 
             specializedTask.setResult( result.result );
-            specializedTask.setStatus( result.success ? TaskStatus::Complete : TaskStatus::Failed );
+
+            if ( result.isSuccessful() )
+            {
+                specializedTask.setStatus( TaskStatus::Complete );
+                return;
+            }
+
+            if ( result.shouldFollowerReschedule() )
+            {
+                specializedTask.setStatus( TaskStatus::RepeatLocally );
+                return;
+            }
+
+            if ( result.shouldLeaderReschedule() )
+            {
+                specializedTask.setStatus( TaskStatus::RepeatDistributed );
+                return;
+            }
+
+            specializedTask.setStatus( TaskStatus::Failed );
         }
 
-        virtual void onSuccess( const Ip6Addr& addr, const TaskBase& task ) override
+        virtual bool onSuccess( const Ip6Addr& addr, const TaskBase& task ) override
         {
             const Task< Result, Arguments... >& specializedTask = dynamic_cast< const Task< Result, Arguments... >& >( task );   
-            _function->onFunctionSuccess( specializedTask.result(), addr );
+            return _function->onFunctionSuccess( specializedTask.result(), addr );
         }
 
-        virtual void onFailure( const Ip6Addr& addr, const TaskBase& task ) override
+        virtual bool onFailure( const Ip6Addr& addr, const TaskBase& task ) override
         {
             const Task< Result, Arguments... >& specializedTask = dynamic_cast< const Task< Result, Arguments... >& >( task );   
-            _function->onFunctionFailure( specializedTask.result(), addr );
+            return _function->onFunctionFailure( specializedTask.result(), addr );
         }
 
         std::unique_ptr< TaskBase > createTask() const override
@@ -82,7 +103,4 @@ class FunctionConcept {
         {
             return _function->functionId();
         }
-
-    private:
-        std::unique_ptr< DistributedFunction< Result, Arguments... > > _function;
     };
