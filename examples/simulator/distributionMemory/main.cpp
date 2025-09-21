@@ -74,10 +74,7 @@ void distributionManagerFizzBuzz() {
     // Register the memory implementation - the memory implementation is responsible for 
     // initiating memory-relevant communication, hence why the sender is passed too.
     manager.memoryService().useMemory( 
-        std::make_unique< ReplicatedMemoryManager >( 
-            reinterpret_cast< MessageDistributor* >( messageDistributor ),
-            addr,
-            manager.getSender() ) );
+        std::make_unique< ReplicatedMemory >() );
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );

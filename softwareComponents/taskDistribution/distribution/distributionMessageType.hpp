@@ -5,9 +5,9 @@ enum DistributionMessageType {
     TaskAssignment,
     TaskResult,
     TaskFailed,
-    MalformedMessage,
-    FollowerBusy,
+    BlockingTaskRelease,
     DataStorageRequest,
+    DataRemovalRequest,
+    MetadataStorageRequest,
     DataStorageSuccess,
-    BlockingTaskRelease
 };
