@@ -135,6 +135,22 @@ class DistributionManager
         if ( type == DistributionMessageType::TaskResult )
         {
             std::cout << "Received result from " << sender << " for Task with ID " << taskId << std::endl;
+            if ( task->status() == TaskStatus::RepeatDistributed )
+            {
+                if ( !_functionRegistry.enqueueTask( sender, std::move( task ), fn.value().get().completionType() ) )
+                {
+                    std::cout << "Failed to register task for repeat for function " << functionId << std::endl;
+                    return;
+                }
+                
+                if ( !_functionRegistry.enqueueTaskRequest( sender ) )
+                {
+                    std::cout << "Failed to enqueue task request." << std::endl;
+                }
+
+                return;
+            }
+
             if ( !_functionRegistry.enqueueTaskResult( std::move( task ), sender ) )
             {
                 std::cout << "Failed to persist result from task " << taskId << " for function " << functionId << std::endl;

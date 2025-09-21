@@ -163,7 +163,7 @@ public:
         return _taskManager.enqueueTaskRequest( sender );
     }
 
-    bool enqueueTask( Ip6Addr& address, std::unique_ptr< TaskBase >&&  task, FunctionCompletionType completionType )
+    bool enqueueTask( const Ip6Addr& address, std::unique_ptr< TaskBase >&&  task, FunctionCompletionType completionType )
     {
         return _taskManager.enqueueTask( address, std::move( task ), completionType );
     }
@@ -193,6 +193,11 @@ public:
     void finishActiveTask( const Ip6Addr& address )
     {
         _taskManager.finishActiveTask( address );
+    }
+
+    std::unique_ptr< TaskBase > finishAndGetActiveTask ( const Ip6Addr& address )
+    {
+        return _taskManager.finishAndGetActiveTask( address );
     }
 
     bool anyTaskRequests()
