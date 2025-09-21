@@ -48,26 +48,22 @@ class FunctionConcept {
 
             if ( result.isSuccessful() )
             {
-                std::cout << "Succesful." << std::endl;
                 specializedTask.setStatus( TaskStatus::Complete );
                 return;
             }
 
             if ( result.shouldFollowerReschedule() )
             {
-                std::cout << "Local Reschedule." << std::endl;
                 specializedTask.setStatus( TaskStatus::RepeatLocally );
                 return;
             }
 
             if ( result.shouldLeaderReschedule() )
             {
-                std::cout << "Leader Reschedule." << std::endl;
                 specializedTask.setStatus( TaskStatus::RepeatDistributed );
                 return;
             }
 
-            std::cout << "Failed." << std::endl;
             specializedTask.setStatus( TaskStatus::Failed );
         }
 
