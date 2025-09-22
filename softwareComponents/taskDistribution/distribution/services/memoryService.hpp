@@ -34,11 +34,22 @@ class DistributedMemoryService
     std::unique_ptr< SharedMemoryBase > _memory;
 
     std::queue<MemoryStorageQueueItem> _memoryStorageQueue;
+    std::optional< std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) > > _onMemoryStoredCb;
     unsigned int _queueThroughput;
 
     bool isLeaderMemory()
     {
         return _leader == _currentModuleAddress;
+    }
+
+    void onMemoryStored( int memoryAddress, bool isLeaderMemory )
+    {
+        if ( _onMemoryStoredCb == std::nullopt )
+        {
+            return;
+        }
+
+        _onMemoryStoredCb.value()( memoryAddress, isLeaderMemory, *this );
     }
 
     void sendDataBroadcast( int address, const uint8_t* data, size_t size, bool isMetadataOnly, DistributionMessageType messageType )
@@ -150,6 +161,11 @@ public:
             [] () { return; } );
     }
     
+    void registerOnMemoryStored( std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) > onMemoryStoredCb )
+    {
+        _onMemoryStoredCb = onMemoryStoredCb;
+    }
+
     bool isMemoryRegistered()
     {
         return _memory != nullptr;
@@ -205,10 +221,15 @@ public:
             ? handleMetadataUpdate( memory )
             : handleDataUpdate ( memory );
 
-        if ( result.success && isLeaderMemory() )
+        if ( result.success )
         {
-            propagateMemoryChange( result.propagationType, memory.address, memory.data.data(), memory.data.size(),
-                result.metadataOnly, result.propagationTarget, DistributionMessageType::DataStorageRequest );
+            onMemoryStored( memory.address, isLeaderMemory() );
+
+            if ( isLeaderMemory() )
+            {
+                propagateMemoryChange( result.propagationType, memory.address, memory.data.data(), memory.data.size(),
+                    result.metadataOnly, result.propagationTarget, DistributionMessageType::DataStorageRequest );
+            }
         }
     }
     
