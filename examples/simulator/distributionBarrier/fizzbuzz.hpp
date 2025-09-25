@@ -66,9 +66,9 @@ public:
 
         std::cout << "Memory Address: " << memoryAddress << std::endl;
         MemoryReadResult readResult = _manager.memoryService().readData( memoryAddress );
-        while ( !readResult.success )
+        if ( !readResult.success )
         {
-            readResult = _manager.memoryService().readData( memoryAddress );
+            return true;
         }
         
         int result = readResult.data< int >();
