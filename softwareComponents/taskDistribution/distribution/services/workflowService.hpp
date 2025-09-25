@@ -92,7 +92,6 @@ public:
 
         if ( status == TaskStatus::RepeatLocally )
         {
-            std::cout << "Going to repeat locally." << std::endl;
             auto function = _functionRegistry.getFunction( task.get().functionId() );
             _functionRegistry.enqueueTask( address, _functionRegistry.finishAndGetActiveTask( address ), function->get().completionType() );
             return;
