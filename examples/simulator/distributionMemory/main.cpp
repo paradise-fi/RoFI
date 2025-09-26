@@ -8,7 +8,7 @@
 #include <iostream>
 #include <string>
 
-#include "distributionManager.hpp"
+#include "distributedTaskManager.hpp"
 #include "implementation/replicatedMemory.hpp"
 #include "initial.hpp"
 #include "fizzbuzz.hpp"
@@ -54,7 +54,7 @@ void distributionManagerFizzBuzz() {
     std::unique_ptr< ElectionProtocolBase > election = std::make_unique< LRElect >( net, reinterpret_cast< MessageDistributor* >( messageDistributor ), addr );
 
     // Instantiate the Distribution Manager
-    DistributionManager manager(
+    DistributedTaskManager manager(
         std::move( election ), addr,
         reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     

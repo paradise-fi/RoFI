@@ -1,14 +1,14 @@
-#include "distributionManager.hpp"
+#include "distributedTaskManager.hpp"
 #include "distributedFunction.hpp"
 
 class FizzBuzz : public DistributedFunction< int, int >
 {
     const int _fizzBuzzTreshold = 600;
     int _identity;
-    DistributionManager& _manager;
+    DistributedTaskManager& _manager;
 
 public:
-    FizzBuzz( int identity, DistributionManager& manager )
+    FizzBuzz( int identity, DistributedTaskManager& manager )
     : _identity( identity ), _manager( manager )
     {}
 
