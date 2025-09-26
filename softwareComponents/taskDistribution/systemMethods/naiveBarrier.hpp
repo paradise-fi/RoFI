@@ -1,5 +1,5 @@
 // A simple barrier that requires all of the participants to respond.
-#include "distributionManager.hpp"
+#include "distributedTaskManager.hpp"
 #include "distributedFunction.hpp"
 
 class NaiveBarrier : public DistributedFunction< Ip6Addr >
@@ -7,10 +7,10 @@ class NaiveBarrier : public DistributedFunction< Ip6Addr >
     // Needs to be atomic
     std::set< Ip6Addr > _participants;
     Ip6Addr& _address;
-    DistributionManager& _manager;
+    DistributedTaskManager& _manager;
 
 public:
-    NaiveBarrier( Ip6Addr& address, DistributionManager& manager )
+    NaiveBarrier( Ip6Addr& address, DistributedTaskManager& manager )
     : _address( address ), _manager( manager ) {}
 
     void registerParticipant( Ip6Addr participant )
@@ -51,11 +51,13 @@ public:
         return 100;
     }
 
+    // This means that the barrier will not be dequeued upon completion.
     virtual FunctionCompletionType completionType() const override
     {
         return FunctionCompletionType::Blocking;
     }
 
+    // Setting this to broadcast will ensure that the barrier is sent out to all modules when it is invoked.
     virtual FunctionDistributionType distributionType() const override
     {
         return FunctionDistributionType::Broadcast;

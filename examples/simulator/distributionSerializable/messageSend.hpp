@@ -1,15 +1,15 @@
-#include "distributionManager.hpp"
+#include "distributedTaskManager.hpp"
 #include "distributedFunction.hpp"
 #include "message.hpp"
 
 /// @brief This DistributedFunction uses a Serializable structure, Message, which implements methods that serialize a string into network messages.
 class MessageSend : public DistributedFunction< Message, Message >
 {
-    DistributionManager& _manager;
+    DistributedTaskManager& _manager;
     int _moduleId;
 
 public:
-    MessageSend( DistributionManager& manager, int moduleId )
+    MessageSend( DistributedTaskManager& manager, int moduleId )
     : _manager( manager ), _moduleId( moduleId )
     {}
 

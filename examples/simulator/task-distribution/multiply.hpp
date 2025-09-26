@@ -1,13 +1,13 @@
-#include "distributionManager.hpp"
+#include "distributedTaskManager.hpp"
 #include "distributedFunction.hpp"
 
 class Multiply : public DistributedFunction< int, int >
 {
     int& _value;
-    DistributionManager& _manager;
+    DistributedTaskManager& _manager;
 
 public:
-    Multiply( int& baseValue, DistributionManager& manager )
+    Multiply( int& baseValue, DistributedTaskManager& manager )
     : _value( baseValue ), _manager( manager ) {}
 
     virtual FunctionResult< int > execute( int multiplyValue ) override
