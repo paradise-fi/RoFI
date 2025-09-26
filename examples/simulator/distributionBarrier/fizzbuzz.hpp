@@ -1,6 +1,6 @@
 #pragma once
 
-#include "distributionManager.hpp"
+#include "distributedTaskManager.hpp"
 #include "distributedFunction.hpp"
 
 struct FizzBuzzMetaData {
@@ -14,7 +14,7 @@ class FizzBuzz : public DistributedFunction< FizzBuzzMetaData, int >
     int _identity;
     const int _memorySlotOneId = 2;
     const int _memorySlotTwoId = 3;
-    DistributionManager& _manager;
+    DistributedTaskManager& _manager;
     std::map< int, int > _addressStampMap;
 
     int getMemorySlotAddress( int value )
@@ -23,7 +23,7 @@ class FizzBuzz : public DistributedFunction< FizzBuzzMetaData, int >
     }
 
 public:
-    FizzBuzz( int identity, DistributionManager& manager )
+    FizzBuzz( int identity, DistributedTaskManager& manager )
     : _identity( identity ), _manager( manager )
     {}
 

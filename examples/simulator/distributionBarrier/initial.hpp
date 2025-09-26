@@ -1,4 +1,4 @@
-#include "distributionManager.hpp"
+#include "distributedTaskManager.hpp"
 #include "distributedFunction.hpp"
 #include "functionHandle.hpp"
 #include "fizzbuzz.hpp"
@@ -9,10 +9,10 @@
 class Initial : public DistributedFunction< int >
 {
     int _moduleId;
-    DistributionManager& _manager;
+    DistributedTaskManager& _manager;
 
 public:
-    Initial( int moduleId, DistributionManager& manager )
+    Initial( int moduleId, DistributedTaskManager& manager )
     : _moduleId( moduleId ),
       _manager( manager ) {}
 

@@ -9,7 +9,7 @@
 #include <iostream>
 #include <string>
 
-#include "distributionManager.hpp"
+#include "distributedTaskManager.hpp"
 #include "initial.hpp"
 #include "add.hpp"
 #include "multiply.hpp"
@@ -59,7 +59,7 @@ void startElectionProtocol() {
     
     std::unique_ptr< ElectionProtocolBase > election = std::make_unique< LRElect >( net, reinterpret_cast< MessageDistributor* >( messageDistributor ), addr );
 
-    DistributionManager manager(
+    DistributedTaskManager manager(
         std::move( election ), addr,
         reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     

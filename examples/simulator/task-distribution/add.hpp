@@ -1,13 +1,13 @@
-#include "distributionManager.hpp"
+#include "distributedTaskManager.hpp"
 #include "distributedFunction.hpp"
 
 class Add : public DistributedFunction< int, int >
 {
     int& _value;
-    DistributionManager& _manager;
+    DistributedTaskManager& _manager;
 
 public:
-    Add( int& baseValue, DistributionManager& manager )
+    Add( int& baseValue, DistributedTaskManager& manager )
     : _value( baseValue ), _manager( manager )
     {}
 

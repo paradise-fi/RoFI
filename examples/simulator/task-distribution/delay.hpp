@@ -1,13 +1,13 @@
-#include "distributionManager.hpp"
+#include "distributedTaskManager.hpp"
 #include "distributedFunction.hpp"
 
 class Delay : public DistributedFunction< int, int >
 {
     int& _value;
-    DistributionManager& _manager;
+    DistributedTaskManager& _manager;
 
 public:
-    Delay( int& baseValue, DistributionManager& manager )
+    Delay( int& baseValue, DistributedTaskManager& manager )
     : _value( baseValue ), _manager( manager )
     {}
 

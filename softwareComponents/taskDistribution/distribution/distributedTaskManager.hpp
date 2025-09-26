@@ -13,7 +13,7 @@ using namespace rofi::net;
 using namespace rofi::leadership;
 using namespace std::chrono_literals;
 
-class DistributionManager
+class DistributedTaskManager
 {
     const unsigned int METHOD_ID = 3;
 
@@ -25,7 +25,7 @@ class DistributionManager
     DistributedMemoryService _memoryService;
     WorkFlowService _workFlowService;
 
-    std::optional< std::function< bool(DistributionManager&, rofi::net::Ip6Addr& ) > > _onTaskRequest;
+    std::optional< std::function< bool(DistributedTaskManager&, rofi::net::Ip6Addr& ) > > _onTaskRequest;
     
     void onElectionSuccesful( const Ip6Addr& leader )
     {
@@ -162,7 +162,7 @@ public:
     static const int DISTRIBUTION_PORT = 7071;
 
     // ToDo: Move pcb ownership.
-    DistributionManager(
+    DistributedTaskManager(
         std::unique_ptr< ElectionProtocolBase > election,
         Ip6Addr& address,
         MessageDistributor* distributor,
@@ -260,7 +260,7 @@ public:
 
     /// @brief Registers a callback that is called when a task request is received.
     /// @param callback Your custom callback. Returns true if the task request pipeline should not continue after this callback (e.g. to avoid double-scheduling of a task)
-    void registerTaskRequestCallback( std::function< bool(DistributionManager&, rofi::net::Ip6Addr& ) > callback )
+    void registerTaskRequestCallback( std::function< bool(DistributedTaskManager&, rofi::net::Ip6Addr& ) > callback )
     {
         _onTaskRequest = callback;
     }
