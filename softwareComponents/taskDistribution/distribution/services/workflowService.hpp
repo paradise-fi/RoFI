@@ -86,7 +86,7 @@ public:
 
         auto task = std::move( taskCandidate.value() );
         
-        bool isFunctionSuccesful = _functionRegistry.invokeFunction( task.get() );
+        bool functionInvocationSucceeded = _functionRegistry.invokeFunction( task.get() );
 
         TaskStatus status = task.get().status();
 
@@ -97,7 +97,7 @@ public:
             return;
         }
 
-        if  ( !isFunctionSuccesful )
+        if  ( !functionInvocationSucceeded )
         {
             _sender.sendMessage( DistributionMessageType::TaskFailed, task.get(), leader );
             _functionRegistry.finishActiveTask( address );
