@@ -13,7 +13,6 @@ class TaskScheduler
     std::optional< int > _registeredBarrierFunctionId;
     std::optional< int > _activeBarrierTaskId;
 
-    // TODO: This needs to be handled better -> we require manual clearing now, and that is not good at all.
     std::unique_ptr< TaskEntry > _active;
 
     void ageTasks()
