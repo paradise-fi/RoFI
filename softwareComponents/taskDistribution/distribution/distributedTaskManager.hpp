@@ -25,7 +25,8 @@ class DistributedTaskManager
     DistributedMemoryService _memoryService;
     WorkFlowService _workFlowService;
 
-    std::optional< std::function< bool(DistributedTaskManager&, rofi::net::Ip6Addr& ) > > _onTaskRequest;
+    std::optional< std::function< bool(DistributedTaskManager& manager, rofi::net::Ip6Addr& requester ) > > _onTaskRequest;
+    std::optional< std::function< void(DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, int functionId ) > > _onTaskFailure;
     
     void onElectionSuccesful( const Ip6Addr& leader )
     {
@@ -68,13 +69,6 @@ class DistributedTaskManager
             return;
         }
 
-        if ( type == DistributionMessageType::TaskFailed )
-        {
-            std::cout << "Received Task Failure from " << sender << std::endl;
-            // How to react?
-            return;
-        }
-
         if ( type == DistributionMessageType::DataStorageRequest )
         {
             std::cout << "Received Data Storage Request from " << sender << std::endl;
@@ -94,6 +88,7 @@ class DistributedTaskManager
             }
         }
 
+        //TODO: Unused
         if ( type == DistributionMessageType::DataStorageSuccess )
         {
             std::cout << "Data storage succeeded." << std::endl;
@@ -101,6 +96,18 @@ class DistributedTaskManager
         }
 
         int functionId = as< int >( data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
+
+        if ( type == DistributionMessageType::TaskFailed )
+        {
+            std::cout << "Received Task Failure from " << sender << std::endl;
+
+            // TODO: Consider if this is necessary. Maybe there should be a break in the workflow instead?
+            if ( _onTaskFailure.has_value() )
+            {
+                _onTaskFailure.value()( *this, sender, functionId );
+            }
+            return;
+        }
 
         std::optional<std::reference_wrapper< FunctionConcept > > fn = _functionRegistry.getFunction( functionId );
 
@@ -260,8 +267,13 @@ public:
 
     /// @brief Registers a callback that is called when a task request is received.
     /// @param callback Your custom callback. Returns true if the task request pipeline should not continue after this callback (e.g. to avoid double-scheduling of a task)
-    void registerTaskRequestCallback( std::function< bool(DistributedTaskManager&, rofi::net::Ip6Addr& ) > callback )
+    void registerTaskRequestCallback( std::function< bool(DistributedTaskManager& manager, rofi::net::Ip6Addr& requester ) > callback )
     {
         _onTaskRequest = callback;
+    }
+
+    void registerTaskFailedCallback( std::function< void(DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, int functionId ) > callback )
+    {
+        _onTaskFailure = callback;
     }
 };

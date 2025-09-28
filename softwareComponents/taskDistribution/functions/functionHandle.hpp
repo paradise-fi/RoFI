@@ -36,8 +36,8 @@ public:
     bool operator()( const Ip6Addr& receiver, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments )
     {
         auto result = _taskManager.enqueueTask< Result >(
-            receiver, _functionId, priority,
-            setTopPriority, _completionType, std::move( arguments ) );
+            receiver, _implementation.functionId(), priority,
+            setTopPriority, _implementation.completionType(), std::move( arguments ) );
 
         // ToDo: Check the enqueue result
         if ( result )

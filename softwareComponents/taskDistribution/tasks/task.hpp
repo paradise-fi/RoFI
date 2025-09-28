@@ -92,10 +92,12 @@ class Task : public TaskBase {
     }
     Task( int id, TaskStatus status, int functionId, int priority, bool enqueueFront )
         : _id( id ), _status( status ), _func_id( functionId ), _priority( priority ), _enqueueFront( enqueueFront ) {}
+
     Task( int id, TaskStatus status, int functionId, int result, int priority, bool enqueueFront )
         : _id( id ), _status( status ), _func_id( functionId ), _result( result ), _priority( priority ), _enqueueFront( enqueueFront ) {}
-    Task( int id, TaskStatus status, int functionId, int priority, bool enqueueFront, std::tuple< Arguments... > args)
-        : _id( id ), _status( status ), _func_id( functionId ), _priority( priority ), _enqueueFront( enqueueFront ), _args( args ) {}
+    
+        Task( int id, TaskStatus status, int functionId, int priority, bool enqueueFront, std::tuple< Arguments... > args)
+        : _id( id ), _status( status ), _func_id( functionId ), _priority( priority ), _enqueueFront( enqueueFront ), _args ( args ) {}
 
     int id() const override { return _id; }
 
@@ -132,7 +134,7 @@ class Task : public TaskBase {
     virtual size_t size() override {
         size_t size =  sizeof( _id ) + sizeof( _priority ) 
              + sizeof( _status ) + sizeof ( _func_id ) 
-             + 2 * sizeof( bool ) + sizeof ( Result ) 
+             + 2 * sizeof( bool ) + sizeof ( Result )
              + calculateArgumentsSize( _args );
 
         if constexpr( !std::is_void_v< Result > )
