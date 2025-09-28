@@ -3,7 +3,7 @@
 #include "taskManager.hpp"
 #include <functional>
 
-template< typename Result, typename... Arguments > 
+template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments > 
 class FunctionHandle
 {
     int _functionId;
