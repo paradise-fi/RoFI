@@ -253,6 +253,11 @@ public:
         _messaging.sender().broadcastMessage(DistributionMessageType::BlockingTaskRelease, METHOD_ID);
     }
 
+    void sendUnblockSignal( Ip6Addr& receiver )
+    {
+        _messaging.sender().sendMessage(DistributionMessageType::BlockingTaskRelease, receiver );
+    }
+
     bool requestTask()
     {
         if ( _election.getLeader() == _address )
