@@ -258,6 +258,28 @@ public:
         _messaging.sender().sendMessage(DistributionMessageType::BlockingTaskRelease, receiver );
     }
 
+    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments > 
+    bool sendFunctionExecutionOrder( int functionId, const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments )
+    {
+        auto functionHandle = _functionRegistry.getFunctionHandle< Result, Arguments... >( functionId );
+        if ( functionHandle.has_value() )
+        {
+            return functionHandle.value()( target, priority, setTopPriority, arguments );
+        }
+        return false;
+    }
+
+    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments > 
+    bool sendFunctionExecutionOrder( std::string functionName, const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments )
+    {
+        auto functionHandle = _functionRegistry.getFunctionHandle< Result, Arguments... >( functionName );
+        if ( functionHandle.has_value() )
+        {
+            return functionHandle.value()( target, priority, setTopPriority, arguments );
+        }
+        return false;
+    }
+
     bool requestTask()
     {
         if ( _election.getLeader() == _address )
