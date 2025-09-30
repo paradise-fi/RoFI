@@ -13,10 +13,11 @@ struct ConnectorStatus
 {
     int connectorId;
     std::optional< Ip6Addr > connectedTo;
+    std::optional< int > otherSideConnectorId;
 
     ConnectorStatus() = default;
-    ConnectorStatus( int connectorId, std::optional< Ip6Addr > connectedTo )
-    : connectorId( connectorId ), connectedTo( connectedTo ) {}
+    ConnectorStatus( int connectorId, std::optional< Ip6Addr > connectedTo, std::optional< int > otherSideConnectorId )
+    : connectorId( connectorId ), connectedTo( connectedTo ), otherSideConnectorId( otherSideConnectorId ) {}
 };
 
 struct JointStatus
@@ -46,7 +47,7 @@ struct ModuleState : public Serializable
     virtual void serialize( uint8_t*& buffer ) const
     {
         as< Ip6Addr >( buffer ) = moduleAddress;
-        size_t offset = Ip6Addr::size();
+        size_t offset = sizeof( Ip6Addr );
         as< size_t >( buffer + offset ) = connectors.size();
         offset += sizeof( size_t );
         if ( connectors.size() > 0 )
@@ -67,7 +68,7 @@ struct ModuleState : public Serializable
     virtual void deserialize( const uint8_t*& buffer )
     {
         moduleAddress = as< Ip6Addr >( buffer );
-        size_t offset = Ip6Addr::size();
+        size_t offset = sizeof( Ip6Addr );
         size_t connectorsCount = as< size_t >( buffer + offset );
         offset += sizeof( size_t );
         if ( connectorsCount > 0 )
