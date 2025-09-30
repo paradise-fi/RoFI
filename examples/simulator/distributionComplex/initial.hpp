@@ -10,11 +10,13 @@ class Initial : public DistributedFunction< ModuleState >
 {
     DistributedTaskManager& _manager;
     BotState& _state;
+    std::set< Ip6Addr >& _requesters;
 
 public:
-    Initial( DistributedTaskManager& manager, BotState& state )
+    Initial( DistributedTaskManager& manager, BotState& state, std::set< Ip6Addr >& requesters )
     : _manager( manager ),
-      _state( state ) {}
+      _state( state ),
+      _requesters( requesters ) {}
 
     virtual FunctionResult< ModuleState > execute() override
     {
@@ -31,8 +33,27 @@ public:
         }
 
         _state.modules[ origin ] = result.value();
-        std::cout << "Received module information from " << origin << " this module is has " << result.value().connectors.size() << " connectors and " << result.value().joints.size() << " joints." << std::endl;
+        _requesters.erase( origin );
+        if ( _requesters.empty() )
+        {
+            std::cout << "Requesters empty. All module information obtained." << std::endl;
 
+            auto result = _state.tryFindLoop();
+
+            if ( result.has_value() )
+            {
+                std::cout << "Loop found at: " << result->first << ", connector: " << result->second << std::endl;
+                auto handle = _manager.functionRegistry().getFunctionHandle< bool, int >( 1 );
+                if ( handle.has_value() )
+                {
+                    handle.value()( result->first, 0, false, { result->second } );
+                }
+            }
+            else
+            {
+                std::cout << "No loop found!" << std::endl;
+            }
+        }
         return false;
     }
 
