@@ -10,6 +10,7 @@
 
 #include "distributedTaskManager.hpp"
 #include "initial.hpp"
+#include "disconnect.hpp"
 
 #include "botState.hpp"
 #include "configProtocol.hpp"
@@ -54,7 +55,7 @@ void distributionManagerFizzBuzz() {
     auto descriptor = rofi.getDescriptor();
     for ( int cidx = 0; cidx < descriptor.connectorCount; ++cidx )
     {
-        botState.modules[ addr ].connectors.push_back( ConnectorStatus( cidx, std::nullopt ) );
+        botState.modules[ addr ].connectors.push_back( ConnectorStatus( cidx, std::nullopt, std::nullopt ) );
     }
 
     for ( int jidx = 0; jidx < descriptor.jointCount; ++jidx )
@@ -81,13 +82,26 @@ void distributionManagerFizzBuzz() {
         std::move( election ), addr,
         reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     
+    std::set< Ip6Addr > requesters;
+
+    manager.registerTaskRequestCallback([&requesters]( DistributedTaskManager&, Ip6Addr& requester ) {
+        std::cout << "task request cb from " << requester << std::endl;
+        if ( requesters.find( requester ) == requesters.end() )
+        {
+            requesters.emplace( requester );
+        }
+        return false;
+    });
+
     // Create distributed function instances.
-    std::unique_ptr< DistributedFunction< ModuleState > > initial = std::make_unique< Initial >( manager, botState );
+    std::unique_ptr< DistributedFunction< ModuleState > > initial = std::make_unique< Initial >( manager, botState, requesters );
+    std::unique_ptr< DistributedFunction< int, int > > disconnect = std::make_unique< Disconnect >( manager, botState );
 
     int initialFunctionId = initial->functionId();
 
     // Register the distributed functions.
     manager.functionRegistry().registerFunction< ModuleState >( std::move( initial ) );
+    manager.functionRegistry().registerFunction< int, int >( std::move( disconnect ) );
 
     // Register the ID of the initial task
     manager.functionRegistry().setInitialTask( initialFunctionId );

@@ -49,7 +49,9 @@ public:
             // Assume that a packet is just information about the moduleState
             ModuleState moduleState;
             auto payload = reinterpret_cast< const uint8_t* >( packet.payload() );
-            moduleState.deserialize( payload );
+            int oppositeConnectorId = as< int >( payload );
+            auto moduleStateBuffer = payload + sizeof( int );
+            moduleState.deserialize( moduleStateBuffer );
             auto module = _state.modules.find( moduleState.moduleAddress );
             if ( module == _state.modules.end() )
             {
@@ -59,17 +61,26 @@ public:
 
             if ( interfaceName != "rl0" )
             {
-                _state.currentModuleState().connectors[ getConnectorId( interfaceName ) ].connectedTo = std::make_optional< Ip6Addr >( moduleState.moduleAddress );
+                int connid = getConnectorId( interfaceName );
+                _state.currentModuleState().connectors[ connid ] = ConnectorStatus( connid, moduleState.moduleAddress, oppositeConnectorId );
+                std::cout << "Settng conenctor state for connector " << getConnectorId( interfaceName ) << std::endl;
             }
 
             return false;
         }
 
-        virtual bool afterMessage( const Interface&, std::function< void ( PBuf&& ) > fn, void* /* args */ ) override {
+        virtual bool afterMessage( const Interface& interface, std::function< void ( PBuf&& ) > fn, void* /* args */ ) override {
+            if ( interface.name() == "rl0")
+            {
+                return false;
+            }
+
             // std::cout << "afterMessage for configProtocl" << std::endl;
-            auto packet = PBuf::allocate( _state.currentModuleState().size() );
+            auto packet = PBuf::allocate( _state.currentModuleState().size() + sizeof( int ) );
             auto payload = packet.payload();
-            _state.currentModuleState().serialize( payload );
+            as< int >( payload ) = getConnectorId( interface.name() );
+            auto moduleStateBuffer = payload + sizeof( int );
+            _state.currentModuleState().serialize( moduleStateBuffer );
             fn( std::move( packet ) );
             return false;
         }
