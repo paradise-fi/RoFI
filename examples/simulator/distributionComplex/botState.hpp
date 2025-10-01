@@ -2,6 +2,8 @@
 
 #include "moduleState.hpp"
 #include <map>
+#include <queue>
+#include <set>
 
 using namespace rofi::hal;
 
@@ -43,6 +45,55 @@ struct BotState
         auto currentModule = currentModuleState();
         auto visitedModules = std::set< Ip6Addr >();
         return findLoopEnd( currentModule, currentModule.moduleAddress, -1, visitedModules );
+    }
+
+    std::optional< std::pair< Ip6Addr, int > > findConnectedStubJoint()
+    {
+        auto currentModule = currentModuleState();
+        auto visitedModules = std::set< Ip6Addr >();
+        
+        std::set< Ip6Addr > visited;
+        std::queue< Ip6Addr > moduleQueue;
+        moduleQueue.push( currentModule.moduleAddress );
+        visited.emplace( currentModule.moduleAddress );
+
+        while ( !moduleQueue.empty() )
+        {
+            Ip6Addr moduleAddr = moduleQueue.front();
+            moduleQueue.pop();
+
+            auto modState = modules.find( moduleAddr );
+            if ( modState == modules.end() )
+            {
+                continue;
+            }
+
+            auto& module = modState->second;
+
+            int connectedCount = 0;
+            int latestConnectorId = 0;
+            for ( auto connector = module.connectors.begin(); connector != module.connectors.end(); ++connector )
+            {
+                if ( connector->connectedTo.has_value() )
+                {
+                    if ( visited.find( connector->connectedTo.value() ) == visited.end() )
+                    {
+                        moduleQueue.push( connector->connectedTo.value() );
+                    }
+                    visited.emplace( moduleAddr );
+                    connectedCount++;
+                    latestConnectorId = connector->connectorId;
+                }
+            }
+
+            if ( connectedCount == 1 )
+            {
+                // 0 - 2 is joint 0, 3 - 5 joint 1
+                return std::make_pair< Ip6Addr, int >( std::move( moduleAddr ), latestConnectorId / 3 );
+            }
+        }
+
+        return std::nullopt;
     }
 
 private:

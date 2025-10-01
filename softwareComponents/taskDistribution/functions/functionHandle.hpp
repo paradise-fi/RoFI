@@ -39,10 +39,10 @@ public:
             receiver, _implementation.functionId(), priority,
             setTopPriority, _implementation.completionType(), std::move( arguments ) );
 
-        // ToDo: Check the enqueue result
         if ( result )
         {
-            _taskManager.enqueueTaskRequest( receiver );
+            // TODO: Remove task from queue if task request fails to enqueue
+            result = _taskManager.enqueueTaskRequest( receiver );
         }
 
         return result;
