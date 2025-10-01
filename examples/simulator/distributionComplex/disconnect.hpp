@@ -2,6 +2,7 @@
 #include "distributedFunction.hpp"
 #include "functionHandle.hpp"
 #include "botState.hpp"
+#include "moveResult.hpp"
 
 
 using namespace rofi::hal;
@@ -39,6 +40,18 @@ public:
         _state.modules.at( origin ).connectors[ result.value() ].otherSideConnectorId = std::nullopt;
         _state.modules.at( oppositeModule ).connectors[ oppositeConnector ].otherSideConnectorId = std::nullopt;
         _state.modules.at( oppositeModule ).connectors[ oppositeConnector ].connectedTo = std::nullopt;
+
+        auto stub = _state.findConnectedStubJoint();
+
+        if ( stub.has_value() )
+        {
+            auto handle = _manager.functionRegistry().getFunctionHandle< MoveResult, int, float, float >( 2 );
+            if ( handle.has_value() )
+            {
+                int stubJointId = stub.value().second;
+                handle.value()( stub->first, 0, false, std::tuple< int, float, float >( stubJointId, 1.0, 0.5 ) );
+            }
+        }
         return false;
     }
 

@@ -14,6 +14,7 @@
 
 #include "botState.hpp"
 #include "configProtocol.hpp"
+#include "move.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
@@ -96,12 +97,14 @@ void distributionManagerFizzBuzz() {
     // Create distributed function instances.
     std::unique_ptr< DistributedFunction< ModuleState > > initial = std::make_unique< Initial >( manager, botState, requesters );
     std::unique_ptr< DistributedFunction< int, int > > disconnect = std::make_unique< Disconnect >( manager, botState );
+    std::unique_ptr< DistributedFunction< MoveResult, int, float, float > > move = std::make_unique< Move >( manager, botState );
 
     int initialFunctionId = initial->functionId();
 
     // Register the distributed functions.
     manager.functionRegistry().registerFunction< ModuleState >( std::move( initial ) );
     manager.functionRegistry().registerFunction< int, int >( std::move( disconnect ) );
+    manager.functionRegistry().registerFunction< MoveResult, int, float, float >( std::move( move ) ); 
 
     // Register the ID of the initial task
     manager.functionRegistry().setInitialTask( initialFunctionId );

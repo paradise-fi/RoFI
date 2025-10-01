@@ -63,7 +63,6 @@ public:
             {
                 int connid = getConnectorId( interfaceName );
                 _state.currentModuleState().connectors[ connid ] = ConnectorStatus( connid, moduleState.moduleAddress, oppositeConnectorId );
-                std::cout << "Settng conenctor state for connector " << getConnectorId( interfaceName ) << std::endl;
             }
 
             return false;
@@ -75,7 +74,6 @@ public:
                 return false;
             }
 
-            // std::cout << "afterMessage for configProtocl" << std::endl;
             auto packet = PBuf::allocate( _state.currentModuleState().size() + sizeof( int ) );
             auto payload = packet.payload();
             as< int >( payload ) = getConnectorId( interface.name() );
