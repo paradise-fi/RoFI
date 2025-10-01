@@ -161,7 +161,7 @@ class Task : public TaskBase {
         {
             writeToBuffer( buffer, _result.value() );
         }
-
+        
         std::apply(
             [&]( Arguments&... args )
             {
@@ -189,7 +189,13 @@ class Task : public TaskBase {
             _result.reset();
         }
 
-        _args = std::tuple< Arguments... >( readFromBuffer< Arguments >( buffer )... );
+        // Note to self: Without std::apply, the order of arguments would be reversed, leading to errors.
+        _args = std::apply(
+        [&](auto...){
+            return std::tuple<Arguments...>{ readFromBuffer<Arguments>(buffer)... };
+            },
+            std::tuple<Arguments...>{}
+        );
     } 
     
     int functionId() const override { return _func_id; }
