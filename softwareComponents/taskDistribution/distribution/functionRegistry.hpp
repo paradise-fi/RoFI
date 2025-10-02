@@ -3,6 +3,7 @@
 #include "../functions/functionManager.hpp"
 #include "../tasks/taskManager.hpp"
 #include "lwip++.hpp"
+#include "../tasks/serializable/serializable.hpp"
 
 using namespace rofi::net;
 
@@ -12,7 +13,7 @@ class FunctionRegistry
     TaskManager _taskManager;
 
 public:   
-    template < typename Result, typename... Arguments >
+    template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     bool registerBarrier( std::unique_ptr< DistributedFunction< Result, Arguments... > > barrierFunction )
     {
         if ( barrierFunction->completionType() != FunctionCompletionType::Blocking )
@@ -31,7 +32,7 @@ public:
         return true; 
     }
 
-    template < typename Result, typename... Arguments >
+    template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     bool registerFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction )
     {
         return _functionManager.addFunction< Result, Arguments... >( std::move( userFunction ) );
@@ -42,7 +43,7 @@ public:
         return _functionManager.removeFunction( id );
     }
 
-    template< typename Result, typename... Arguments >
+    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( int functionId )
     {
         auto fn = _functionManager.getFunction( functionId );
@@ -57,7 +58,7 @@ public:
         return FunctionHandle< Result, Arguments... >( functionId, fn->get().completionType(), model.getImplementation(), _taskManager );
     }
 
-    template< typename Result, typename... Arguments >
+    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( std::string functionName )
     {
         auto fn = _functionManager.getFunction( functionName );
@@ -138,7 +139,7 @@ public:
     /// @tparam ...Arguments 
     /// @param initialFunction 
     /// @return 
-    template < typename Result, typename... Arguments >
+    template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     bool registerInitialFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > initialFunction  )
     {
         int functionId = initialFunction->functionId();
