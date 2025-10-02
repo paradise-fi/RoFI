@@ -87,7 +87,7 @@ public:
         auto task = std::move( taskCandidate.value() );
         
         bool functionInvocationSucceeded = _functionRegistry.invokeFunction( task.get() );
-
+        auto fn = _functionRegistry.getFunction( task.get().functionId() );
         TaskStatus status = task.get().status();
 
         if ( status == TaskStatus::RepeatLocally )
@@ -100,11 +100,18 @@ public:
         if  ( !functionInvocationSucceeded )
         {
             _sender.sendMessage( DistributionMessageType::TaskFailed, task.get(), leader );
-            _functionRegistry.finishActiveTask( address );
+
+            if ( !fn.has_value() || fn.value().get().completionType() != FunctionCompletionType::Blocking )
+            {
+                _functionRegistry.finishActiveTask( address );
+            }
             return;
         }
 
         _sender.sendMessage( DistributionMessageType::TaskResult, task.get(), leader );
-        _functionRegistry.finishActiveTask( address );
+        if ( !fn.has_value() || fn.value().get().completionType() != FunctionCompletionType::Blocking )
+        {
+            _functionRegistry.finishActiveTask( address );
+        }
     }
 };
