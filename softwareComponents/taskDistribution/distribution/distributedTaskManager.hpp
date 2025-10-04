@@ -168,7 +168,6 @@ class DistributedTaskManager
 public:
     static const int DISTRIBUTION_PORT = 7071;
 
-    // ToDo: Move pcb ownership.
     DistributedTaskManager(
         std::unique_ptr< ElectionProtocolBase > election,
         Ip6Addr& address,
@@ -197,19 +196,50 @@ public:
             [] () { return; } );
     }
 
+    /// @brief Registers a callback that is called when leader election fails.
+    /// @param callback The callback function.
+    /// @return True if the registration succeeded.
     bool registerLeaderFailureCallback( std::function< void() > callback )
     {
         return _election.registerLeaderFailureCallback( callback );
     }
 
+    /// @brief Unregisters a callback for leader election failure.
+    /// @return True if the function was unregistered.
     bool unregisterLeaderFailureCallback()
     {
         return _election.unregisterLeaderFailureCallback();
+    }
+    
+    /// @brief Registers a callback that is called when a task request is received.
+    /// @param callback Your custom callback. Returns true if the task request pipeline should not continue after this callback (e.g. to avoid double-scheduling of a task)
+    void registerTaskRequestCallback( std::function< bool(DistributedTaskManager& manager, rofi::net::Ip6Addr& requester ) > callback )
+    {
+        _onTaskRequest = callback;
+    }
+
+    /// @brief Unregisters a callback that is called when a task request is received.
+    void unregisterTaskRequestCallback()
+    {
+        _onTaskRequest.reset();
+    }
+
+    void registerTaskFailedCallback( std::function< void(DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, int functionId ) > callback )
+    {
+        _onTaskFailure = callback;
     }
 
     DistributedMemoryService& memoryService()
     {
         return _memoryService;
+    }
+    MessageSender& sender()
+    {
+        return _messaging.sender();
+    } 
+    FunctionRegistry& functionRegistry()
+    {
+        return _functionRegistry;
     }
 
     void doWork()
@@ -229,20 +259,10 @@ public:
         {
             return _workFlowService.doWorkLeader( METHOD_ID );
         }
-
+        
         _workFlowService.doWorkFollower( _address, _election.getLeader() );
     }
-
-    FunctionRegistry& functionRegistry()
-    {
-        return _functionRegistry;
-    }
-
-    MessageSender& getSender()
-    {
-        return _messaging.sender();
-    }
-
+    
     void start( int moduleId )
     {
         _election.start( moduleId );
@@ -258,6 +278,7 @@ public:
         _messaging.sender().sendMessage(DistributionMessageType::BlockingTaskRelease, receiver );
     }
 
+    /// @brief Used to manually send a function execution order to a module. This should be done from the leader to the follower. You do NOT need to use this if you use functionHandle instead.
     template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments > 
     bool sendFunctionExecutionOrder( int functionId, const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments )
     {
@@ -269,6 +290,7 @@ public:
         return false;
     }
 
+    /// @brief Used to manually send a function execution order to a module. This should be done from the leader to the follower. You do NOT need to use this if you use functionHandle instead.
     template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments > 
     bool sendFunctionExecutionOrder( std::string functionName, const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments )
     {
@@ -280,6 +302,8 @@ public:
         return false;
     }
 
+    /// @brief  Used to manually send a function request to the leader. You should not need to use this in a typical workflow, but it may be useful for situations where you want the follower to request a task outside of the typical workflow.
+    /// @return Returns false if the module is a leader and thus a request was not sent out.
     bool requestTask()
     {
         if ( _election.getLeader() == _address )
@@ -292,15 +316,36 @@ public:
         return true;
     }
 
-    /// @brief Registers a callback that is called when a task request is received.
-    /// @param callback Your custom callback. Returns true if the task request pipeline should not continue after this callback (e.g. to avoid double-scheduling of a task)
-    void registerTaskRequestCallback( std::function< bool(DistributedTaskManager& manager, rofi::net::Ip6Addr& requester ) > callback )
+    /// @brief Retrieves a function handle. The function handle is used for invoking a function over the network.
+    /// @tparam Result A trivially copyable type, or a type that implements Serializable. Denotes the type of the function's result. 
+    /// @tparam ...Arguments A pack of trivially copyable types, or types that implement Serializable. Denotes the types of the function's parameters.
+    /// @param functionName The name of the distributed function.
+    /// @return std::nullopt if the function does not exist, otherwise the function handle is returned.
+    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
+    std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( std::string functionName )
     {
-        _onTaskRequest = callback;
+        return _functionRegistry.getFunctionHandle< Result, Arguments... >( functionName );
     }
 
-    void registerTaskFailedCallback( std::function< void(DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, int functionId ) > callback )
+    /// @brief Retrieves a function handle. The function handle is used for invoking a function over the network.
+    /// @tparam Result A trivially copyable type, or a type that implements Serializable. Denotes the type of the function's result. 
+    /// @tparam ...Arguments A pack of trivially copyable types, or types that implement Serializable. Denotes the types of the function's parameters.
+    /// @param functionId The ID of the distributed function. You may also use the std::string variant for more human-friendly retrieval.
+    /// @return std::nullopt if the function does not exist, otherwise the function handle is returned.
+    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
+    std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( int functionId )
     {
-        _onTaskFailure = callback;
+        return _functionRegistry.getFunctionHandle< Result, Arguments... >( functionId );
+    }
+
+    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
+    bool registerFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > function )
+    {
+        if ( function == nullptr )
+        {
+            return false;
+        }
+
+        return _functionRegistry.registerFunction< Result, Arguments... >( std::move( function ) );
     }
 };

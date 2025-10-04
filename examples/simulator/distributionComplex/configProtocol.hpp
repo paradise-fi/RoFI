@@ -74,7 +74,7 @@ public:
                 return false;
             }
 
-            auto packet = PBuf::allocate( _state.currentModuleState().size() + sizeof( int ) );
+            auto packet = PBuf::allocate( static_cast< int >( _state.currentModuleState().size() + sizeof( int ) ) );
             auto payload = packet.payload();
             as< int >( payload ) = getConnectorId( interface.name() );
             auto moduleStateBuffer = payload + sizeof( int );

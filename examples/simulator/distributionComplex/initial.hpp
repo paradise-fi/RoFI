@@ -6,14 +6,14 @@
 
 using namespace rofi::hal;
 
-class Initial : public DistributedFunction< ModuleState >
+class InitialFunction : public DistributedFunction< ModuleState >
 {
     DistributedTaskManager& _manager;
     BotState& _state;
     std::set< Ip6Addr >& _requesters;
 
 public:
-    Initial( DistributedTaskManager& manager, BotState& state, std::set< Ip6Addr >& requesters )
+    InitialFunction( DistributedTaskManager& manager, BotState& state, std::set< Ip6Addr >& requesters )
     : _manager( manager ),
       _state( state ),
       _requesters( requesters ) {}
@@ -43,7 +43,7 @@ public:
             if ( result.has_value() )
             {
                 std::cout << "Loop found at: " << result->first << ", connector: " << result->second << std::endl;
-                auto handle = _manager.functionRegistry().getFunctionHandle< bool, int >( 1 );
+                auto handle = _manager.getFunctionHandle< bool, int >( 1 );
                 if ( handle.has_value() )
                 {
                     handle.value()( result->first, 0, false, { result->second } );
@@ -80,5 +80,10 @@ public:
     virtual FunctionDistributionType distributionType() const override
     {
         return FunctionDistributionType::Unicast;
+    }
+
+    virtual FunctionType functionType() const override
+    {
+        return FunctionType::Initial;
     }
 };

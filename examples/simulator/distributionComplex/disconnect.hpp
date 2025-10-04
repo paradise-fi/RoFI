@@ -21,9 +21,7 @@ public:
     {
         std::cout << "Disconnect with connectorId " << connectorId << std::endl;
         auto rofi = RoFI::getLocalRoFI();
-        std::cout << "Got local rofi " << std::endl;
         rofi.getConnector( connectorId ).disconnect();
-        std::cout << "Disconnected" << std::endl;
         return FunctionResult< int >( connectorId, FunctionResultType::SUCCESS );
     }
 
@@ -45,7 +43,7 @@ public:
 
         if ( stub.has_value() )
         {
-            auto handle = _manager.functionRegistry().getFunctionHandle< MoveResult, int, float, float >( 2 );
+            auto handle = _manager.getFunctionHandle< MoveResult, int, float, float >( 2 );
             if ( handle.has_value() )
             {
                 int stubJointId = stub.value().second;
@@ -78,5 +76,10 @@ public:
     virtual FunctionDistributionType distributionType() const override
     {
         return FunctionDistributionType::Unicast;
+    }
+
+    virtual FunctionType functionType() const override
+    {
+        return FunctionType::Regular;
     }
 };

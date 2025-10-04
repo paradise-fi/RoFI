@@ -83,4 +83,9 @@ public:
     {
         return FunctionDistributionType::Unicast;
     }
+
+    virtual FunctionType functionType() const override
+    {
+        return FunctionType::Regular;
+    }
 };
