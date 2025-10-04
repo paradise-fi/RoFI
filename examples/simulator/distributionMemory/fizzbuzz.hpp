@@ -65,7 +65,7 @@ public:
 
         if ( result < _fizzBuzzTreshold )
         {
-            auto fizzbuzzHandle = _manager.functionRegistry().getFunctionHandle< int, int >( functionId() ).value();
+            auto fizzbuzzHandle = _manager.getFunctionHandle< int, int >( functionId() ).value();
             if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( result ) ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
@@ -99,5 +99,10 @@ public:
     virtual FunctionDistributionType distributionType() const override
     {
         return FunctionDistributionType::Unicast;
+    }
+
+    virtual FunctionType functionType() const override
+    {
+        return FunctionType::Regular;
     }
 };

@@ -5,13 +5,13 @@
 
 /// @brief The initial function is best used to handle distributed initialization. In this example, it does not do much
 /// in terms of initialization, but you may use it to, for example, gather information about the network.
-class Initial : public DistributedFunction< int >
+class InitialFunction : public DistributedFunction< int >
 {
     int _moduleId;
     DistributedTaskManager& _manager;
 
 public:
-    Initial( int moduleId, DistributedTaskManager& manager )
+    InitialFunction( int moduleId, DistributedTaskManager& manager )
     : _moduleId( moduleId ),
       _manager( manager ) {}
 
@@ -65,5 +65,10 @@ public:
     virtual FunctionDistributionType distributionType() const override
     {
         return FunctionDistributionType::Unicast;
+    }
+    
+    virtual FunctionType functionType() const override
+    {
+        return FunctionType::Initial;
     }
 };

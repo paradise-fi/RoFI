@@ -62,4 +62,9 @@ public:
     {
         return FunctionDistributionType::Broadcast;
     }
+
+    virtual FunctionType functionType() const override
+    {
+        return FunctionType::Barrier;
+    }
 };

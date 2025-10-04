@@ -2,6 +2,7 @@
 #include "functionResult.hpp"
 #include "enums/functionCompletionType.hpp"
 #include "enums/functionDistributionType.hpp"
+#include "enums/functionType.hpp"
 #include <optional>
 
 template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
@@ -42,4 +43,8 @@ public:
     /// @brief Determines the way the function will be distributed to followers.
     /// @return The distribution type.
     virtual FunctionDistributionType distributionType() const = 0;
+
+    /// @brief Determines the way the function is registered. For example, FunctionType::Initial registers the function as the initial function.
+    /// @return The function type
+    virtual FunctionType functionType() const = 0;
 };
