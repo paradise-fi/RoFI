@@ -59,12 +59,12 @@ void distributionManagerFizzBuzz() {
         reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     
     // Create distributed function instances.
-    std::unique_ptr< DistributedFunction< int > > initial = std::make_unique< Initial >( id, manager );
+    std::unique_ptr< DistributedFunction< int > > initial = std::make_unique< InitialFunction >( id, manager );
     std::unique_ptr< DistributedFunction< int, int > > fizzBuzz = std::make_unique< FizzBuzz >( id, manager );
 
     // Register the distributed functions.
-    manager.functionRegistry().registerInitialFunction< int >( std::move( initial ) );
-    manager.functionRegistry().registerFunction< int, int >( std::move( fizzBuzz ) );
+    manager.registerFunction< int >( std::move( initial ) );
+    manager.registerFunction< int, int >( std::move( fizzBuzz ) );
 
     // Register the memory implementation - the memory implementation is responsible for 
     // initiating memory-relevant communication, hence why the sender is passed too.

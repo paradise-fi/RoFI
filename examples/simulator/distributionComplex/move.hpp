@@ -27,13 +27,12 @@ public:
         return FunctionResult< MoveResult >( MoveResult{ jointId, position }, FunctionResultType::SUCCESS );
     }
 
-    virtual bool onFunctionSuccess( std::optional< MoveResult > result, const Ip6Addr& origin ) override
+    virtual bool onFunctionSuccess( std::optional< MoveResult > result, const Ip6Addr& ) override
     {
         if ( !result.has_value() )
         {
             return false;
         }
-        std::cout << "Moved Joint ID " << result.value().jointId << " on " << origin << " to " << result.value().position << "rad" << std::endl;
         // TODO: Update information
         return false;
     }
@@ -61,5 +60,10 @@ public:
     virtual FunctionDistributionType distributionType() const override
     {
         return FunctionDistributionType::Unicast;
+    }
+
+    virtual FunctionType functionType() const override
+    {
+        return FunctionType::Regular;
     }
 };

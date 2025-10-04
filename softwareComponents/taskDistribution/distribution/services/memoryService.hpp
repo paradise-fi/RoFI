@@ -72,7 +72,7 @@ class DistributedMemoryService
 
     void sendDataUnicast( int address, const uint8_t* data, size_t size, bool isMetadataOnly, Ip6Addr& target, DistributionMessageType messageType )
     {
-        PBuf packet = PBuf::allocate( sizeof( int ) + sizeof( bool ) + sizeof( size_t ) + size );
+        PBuf packet = PBuf::allocate( static_cast< int >( sizeof( int ) + sizeof( bool ) + sizeof( size_t ) + size ) );
         as< int >( packet.payload() ) = address;
         as< bool >( packet.payload() + sizeof( int ) ) = isMetadataOnly;
         as< size_t >( packet.payload() + sizeof( int ) + sizeof( bool ) ) = size;

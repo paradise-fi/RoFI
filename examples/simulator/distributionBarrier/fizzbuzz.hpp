@@ -86,7 +86,7 @@ public:
 
         if ( data.value().identity == 2 )
         {
-            auto barrierHandle = _manager.functionRegistry().getFunctionHandle< Ip6Addr >( 100 ).value();
+            auto barrierHandle = _manager.getFunctionHandle< Ip6Addr >( 100 ).value();
             if ( !barrierHandle( origin, 1, false, std::tuple<>()) )
             {
                 std::cout << "Execution of function " << functionName() << " failed" << std::endl;
@@ -95,7 +95,7 @@ public:
 
         if ( data.value().value < _fizzBuzzTreshold )
         {
-            auto fizzbuzzHandle = _manager.functionRegistry().getFunctionHandle< FizzBuzzMetaData, int >( 1 ).value();
+            auto fizzbuzzHandle = _manager.getFunctionHandle< FizzBuzzMetaData, int >( 1 ).value();
             if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( data.value().value + 1 ) ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
@@ -129,5 +129,10 @@ public:
     virtual FunctionDistributionType distributionType() const override
     {
         return FunctionDistributionType::Unicast;
+    }
+
+    virtual FunctionType functionType() const override
+    {
+        return FunctionType::Regular;
     }
 };

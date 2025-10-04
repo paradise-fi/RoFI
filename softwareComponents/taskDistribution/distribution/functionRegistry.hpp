@@ -12,12 +12,6 @@ class FunctionRegistry
     FunctionManager _functionManager;
     TaskManager _taskManager;
 
-public:   
-    /// @brief Registers a barrier function. This function will prevent other tasks to be queued infront of it due to priority if they are placed into the scheduler later.
-    /// @tparam Result A trivially copyable type, or a type that implements Serializable. Denotes the type of the function's result.
-    /// @tparam ...Arguments A pack of trivially copyable types, or types that implement Serializable. Denotes the types of the function's parameters.
-    /// @param barrierFunction The distributed function implementation.
-    /// @return True if the barrier was successfully registered, otherwise false.
     template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     bool registerBarrier( std::unique_ptr< DistributedFunction< Result, Arguments... > > barrierFunction )
     {
@@ -37,6 +31,28 @@ public:
         return true; 
     }
 
+    template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
+    bool registerInitialFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > initialFunction  )
+    {
+        int functionId = initialFunction->functionId();
+
+        if ( !_functionManager.addFunction< Result, Arguments... >( std::move( initialFunction ) ) )
+        {
+            return false;
+        }
+
+        auto fn = _functionManager.getFunction( functionId );
+
+        if ( !fn.has_value() )
+        {
+            return false;
+        }
+
+        return _taskManager.setInitialTask( fn.value() );
+    }
+
+public:   
+
     /// @brief Registers a function. The function handle, which is used for invoking the function over the network, is then retrieved from the function registry with getFunctionHandle().
     /// @tparam Result A trivially copyable type, or a type that implements Serializable. Denotes the type of the function's result.
     /// @tparam ...Arguments A pack of trivially copyable types, or types that implement Serializable. Denotes the types of the function's parameters.
@@ -45,6 +61,16 @@ public:
     template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     bool registerFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction )
     {
+        if ( userFunction.get()->functionType() == FunctionType::Barrier )
+        {
+            return registerBarrier( std::move( userFunction ) );
+        }
+
+        if ( userFunction.get()->functionType() == FunctionType::Initial )
+        {
+            return registerInitialFunction( std::move( userFunction ) );
+        }
+
         return _functionManager.addFunction< Result, Arguments... >( std::move( userFunction ) );
     }
 
@@ -153,31 +179,6 @@ public:
             std::cout << "Going to re-enqueue task result because it was requested." << std::endl;
             _taskManager.enqueueTaskResult( std::move( taskResultOptional->task ), taskResultOptional->origin, true );
         }
-    }
-
-    /// @brief Registers a function that will be given to a follower if they have no pending tasks.
-    /// @tparam Result A trivially copyable type, or a type that implements Serializable. Denotes the type of the function's result. 
-    /// @tparam ...Arguments A pack of trivially copyable types, or types that implement Serializable. Denotes the types of the function's parameters.
-    /// @param initialFunction The function that will be used as an initial function. It must not already be registered before this.
-    /// @return True if the initial function was registered.
-    template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
-    bool registerInitialFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > initialFunction  )
-    {
-        int functionId = initialFunction->functionId();
-
-        if ( !_functionManager.addFunction< Result, Arguments... >( std::move( initialFunction ) ) )
-        {
-            return false;
-        }
-
-        auto fn = _functionManager.getFunction( functionId );
-
-        if ( !fn.has_value() )
-        {
-            return false;
-        }
-
-        return _taskManager.setInitialTask( fn.value() );
     }
 
     /// @brief Places a module's request into the task request queue.
