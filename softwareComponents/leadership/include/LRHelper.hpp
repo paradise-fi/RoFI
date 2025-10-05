@@ -42,7 +42,6 @@ namespace rofi::net {
 
         virtual bool onMessage( const std::string& interfaceName,
                                 rofi::hal::PBuf packetWithHeader ) {
-            std::cout << "Received message in LRHELPER" << std::endl;
             auto packet = PBuf::own( pbuf_free_header( packetWithHeader.release(), IP6_HLEN ) );
 
             Ip6Addr senderAddr = as< Ip6Addr >( packet.payload() );

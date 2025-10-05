@@ -40,11 +40,13 @@ class DistributedTaskManager
         if ( _address == leader )
         {
             _functionRegistry.clearTasks();
-            std::cout << "I am the leader." << std::endl;
+            _loggingService.logInfo( "I have been elected as the leader." );
             return;
         }
 
-        std::cout << "I am the follower." << std::endl;
+        std::ostringstream stream;
+        stream << "I am a follower of " << leader;
+        _loggingService.logInfo( stream.str() );
         requestTask();
     }
 
@@ -291,7 +293,7 @@ public:
     {
         if ( !_election.isRunning() )
         {
-            std::cout << "The election protocol is not running!" << std::endl;
+            _loggingService.logError("Election protocol not running.");
             return;
         }
 
