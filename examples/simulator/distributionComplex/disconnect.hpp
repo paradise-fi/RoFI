@@ -39,17 +39,20 @@ public:
         _state.modules.at( oppositeModule ).connectors[ oppositeConnector ].otherSideConnectorId = std::nullopt;
         _state.modules.at( oppositeModule ).connectors[ oppositeConnector ].connectedTo = std::nullopt;
 
-        auto stub = _state.findConnectedStubJoint();
+        auto stubJoint = _state.findLongestStubArm();
 
-        if ( stub.has_value() )
+        auto moveHandle = _manager.getFunctionHandle< MoveResult, int, float, float >( 2 );
+
+        if ( !moveHandle.has_value() )
         {
-            auto handle = _manager.getFunctionHandle< MoveResult, int, float, float >( 2 );
-            if ( handle.has_value() )
-            {
-                int stubJointId = stub.value().second;
-                handle.value()( stub->first, 0, false, std::tuple< int, float, float >( stubJointId, 1.0, 0.5 ) );
-            }
+            return false;
         }
+
+        for ( auto limb = stubJoint.begin(); limb != stubJoint.end(); ++limb )
+        {
+            moveHandle.value()( limb->first, 0, false, { limb->second, 1.0, 1.0 } );
+        }
+
         return false;
     }
 
