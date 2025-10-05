@@ -4,6 +4,7 @@
 #include "lwip++.hpp"
 #include "atoms/util.hpp"
 #include "../messaging/messageSender.hpp"
+#include "loggingService.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
@@ -35,7 +36,7 @@ class DistributedMemoryService
 
     std::queue<MemoryStorageQueueItem> _memoryStorageQueue;
     std::optional< std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) > > _onMemoryStoredCb;
-    unsigned int _queueThroughput;
+    LoggingService& _loggingService;
 
     bool isLeaderMemory()
     {
@@ -149,8 +150,8 @@ class DistributedMemoryService
     }
 
 public:
-    DistributedMemoryService( MessageDistributor* distributor, MessageSender& sender, Ip6Addr& currentModuleAddress )
-    : _sender( sender ), _currentModuleAddress( currentModuleAddress )
+    DistributedMemoryService( MessageDistributor* distributor, MessageSender& sender, Ip6Addr& currentModuleAddress, LoggingService& loggingService )
+    : _sender( sender ), _currentModuleAddress( currentModuleAddress ), _loggingService( loggingService )
     {
         distributor->registerMethod( METHOD_ID, 
             [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
@@ -189,7 +190,7 @@ public:
         size_t headerSize = sizeof( int ) + sizeof( bool ) + sizeof( size_t );
         if ( size < headerSize )
         {
-            std::cout << "[DistributionMemoryService.onStorageMessage] Malformed message detected. Not saving data." << std::endl;
+            _loggingService.logError( "Distributed Memory - Malformed message deceted. Data not saved." );
             return;
         }
 
@@ -199,7 +200,9 @@ public:
         
         if ( size < headerSize + dataSize )
         {
-            std::cout << "[DistributionMemoryService.onStorageMessage] The total data size " << headerSize + dataSize << " doesa not match expected size " << size << std::endl;
+            std::ostringstream stream;
+            stream << "Distributed Memory -  The total data size " << headerSize + dataSize << " does not match expected size " << size;
+            _loggingService.logError( stream.str() );
             return;
         }
         

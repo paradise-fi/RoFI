@@ -4,6 +4,7 @@
 #include "../tasks/taskManager.hpp"
 #include "lwip++.hpp"
 #include "../tasks/serializable/serializable.hpp"
+#include "services/loggingService.hpp"
 
 using namespace rofi::net;
 
@@ -11,6 +12,7 @@ class FunctionRegistry
 {
     FunctionManager _functionManager;
     TaskManager _taskManager;
+    LoggingService& _loggingService;
 
     template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     bool registerBarrier( std::unique_ptr< DistributedFunction< Result, Arguments... > > barrierFunction )
@@ -52,6 +54,7 @@ class FunctionRegistry
     }
 
 public:   
+    FunctionRegistry( LoggingService& loggingService ) : _loggingService( loggingService ) {}
 
     /// @brief Registers a function. The function handle, which is used for invoking the function over the network, is then retrieved from the function registry with getFunctionHandle().
     /// @tparam Result A trivially copyable type, or a type that implements Serializable. Denotes the type of the function's result.
@@ -162,7 +165,7 @@ public:
 
         if ( taskResultOptional.value().task == nullptr )
         {
-            std::cout << "ERROR: Task in TaskResult is null." << std::endl;
+            _loggingService.logError( "processTaskResultQueue - Task in TaskResult is null." );
             return;
         }
 
@@ -170,14 +173,20 @@ public:
 
         if ( reactionResult == FunctionResultType::FAILURE )
         {
-            std::cout << "Function reaction invocation failed for Task " << taskResultOptional->task->id() << std::endl;
+            std::ostringstream stream;
+            stream << "processTaskResultQueue - Function reaction invocation failed for Task " << taskResultOptional->task->id();
+            _loggingService.logError( stream.str() );
             return;
         }
 
         if ( reactionResult == FunctionResultType::TRY_AGAIN )
         {
-            std::cout << "Going to re-enqueue task result because it was requested." << std::endl;
-            _taskManager.enqueueTaskResult( std::move( taskResultOptional->task ), taskResultOptional->origin, true );
+            
+            _loggingService.logInfo( "processTaskResultQueue - Task result placed back in queue." );
+            if ( !_taskManager.enqueueTaskResult( std::move( taskResultOptional->task ), taskResultOptional->origin, true ) )
+            {
+                _loggingService.logError( "processTaskResultQueue - Failed to enqueue task result." );
+            }
         }
     }
 

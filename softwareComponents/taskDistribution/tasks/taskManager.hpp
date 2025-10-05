@@ -115,7 +115,6 @@ public:
         
         if ( _initialTask == nullptr )
         {
-            std::cout << "Initial task is null" << std::endl;
             return std::nullopt;
         }
         
@@ -128,7 +127,6 @@ public:
 
         if ( taskQueue == _schedulers.end() )
         {
-            std::cout << "Address not found in tasks" << std::endl;
             return std::nullopt;
         }
 
@@ -141,7 +139,6 @@ public:
 
         if ( taskQueue == _schedulers.end() )
         {
-            std::cout << "Address not found in tasks" << std::endl;
             return;
         }
 
@@ -154,7 +151,6 @@ public:
 
         if ( taskQueue == _schedulers.end() )
         {
-            std::cout << "Address not found in tasks" << std::endl;
             return;
         }
 
@@ -167,7 +163,6 @@ public:
 
         if ( taskQueue == _schedulers.end() )
         {
-            std::cout << "Address not found in tasks" << std::endl;
             return nullptr;
         }
 
