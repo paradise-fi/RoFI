@@ -383,14 +383,10 @@ public:
         return _functionRegistry.getFunctionHandle< Result, Arguments... >( functionId );
     }
 
-    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
-    bool registerFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > function )
+    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments,
+              std::derived_from< DistributedFunction< Result, Arguments... > > Func >
+    bool registerFunction( const Func& function )
     {
-        if ( function == nullptr )
-        {
-            return false;
-        }
-
-        return _functionRegistry.registerFunction< Result, Arguments... >( std::move( function ) );
+        return _functionRegistry.registerFunction< Result, Arguments... >( function );
     }
 };
