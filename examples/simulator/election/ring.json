@@ -45,15 +45,6 @@
                 "positions": []
             },
             "to": { "id": 1, "component": 7 }
-        },
-        {
-            "point": [ 3, 0, 0 ],
-            "joint": {
-                "type": "rigid",
-                "sourceToDestination": "identity",
-                "positions": []
-            },
-            "to": { "id": 2, "component": 7 }
         }
     ],
     "moduleJoints": [

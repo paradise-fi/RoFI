@@ -47,6 +47,78 @@ struct BotState
         return findLoopEnd( currentModule, currentModule.moduleAddress, -1, visitedModules );
     }
 
+    std::vector< std::pair< Ip6Addr, int > > findLongestStubArm()
+    {
+        auto currentModule = currentModuleState();
+        auto visitedModules = std::set< Ip6Addr >();
+        
+        std::map< Ip6Addr, Ip6Addr > prevModules;
+
+        std::vector< std::pair< Ip6Addr, int > > stubModules;
+        std::set< Ip6Addr > visited;
+        std::queue< Ip6Addr > moduleQueue;
+        moduleQueue.push( currentModule.moduleAddress );
+        visited.emplace( currentModule.moduleAddress );
+
+        while ( !moduleQueue.empty() )
+        {
+            Ip6Addr moduleAddr = moduleQueue.front();
+            moduleQueue.pop();
+
+            auto modState = modules.find( moduleAddr );
+            if ( modState == modules.end() )
+            {
+                continue;
+            }
+
+            auto& module = modState->second;
+
+            int connectedCount = 0;
+            int latestConnectorId = 0;
+            for ( auto connector = module.connectors.begin(); connector != module.connectors.end(); ++connector )
+            {
+                if ( connector->connectedTo.has_value() )
+                {
+                    if ( visited.find( connector->connectedTo.value() ) == visited.end() )
+                    {
+                        moduleQueue.push( connector->connectedTo.value() );
+                        prevModules.emplace( connector->connectedTo.value(), moduleAddr );
+                    }
+                    visited.emplace( moduleAddr );
+                    connectedCount++;
+                    latestConnectorId = connector->connectorId;
+                }
+            }
+
+            if ( connectedCount == 1 )
+            {
+                // 0 - 2 is joint 0, 3 - 5 joint 1
+                stubModules.push_back( std::make_pair< Ip6Addr, int >( std::move( moduleAddr ), latestConnectorId / 3 ) );
+            }
+        }
+
+        if (stubModules.empty())
+        {
+            return std::vector< std::pair< Ip6Addr, int > >();
+        }
+
+        std::vector< std::pair< Ip6Addr, int > > longestStub;
+        
+        size_t longestLength = 0;
+        
+        for ( auto stub = stubModules.begin(); stub != stubModules.end(); ++stub )
+        {
+            auto result = resolveStubLimb( prevModules, *stub );
+            if ( result.size() > longestLength )
+            {
+                longestStub = result;
+                longestLength = result.size();
+            }
+        }
+        
+        return longestStub;
+    }
+
     std::optional< std::pair< Ip6Addr, int > > findConnectedStubJoint()
     {
         auto currentModule = currentModuleState();
@@ -97,6 +169,19 @@ struct BotState
     }
 
 private:
+    std::vector< std::pair< Ip6Addr, int > > resolveStubLimb( std::map< Ip6Addr, Ip6Addr >& previousModules, std::pair< Ip6Addr, int > module )
+    {
+        std::vector< std::pair< Ip6Addr, int > > result;
+        result.push_back( module );
+        auto currentModule = previousModules.find( module.first );
+        while ( currentModule != previousModules.end() )
+        {
+            result.push_back( std::make_pair( currentModule->second, 0 ) );
+            currentModule = previousModules.find( currentModule->second );
+        }
+        return result;
+    }
+
     std::optional< std::pair< Ip6Addr, int > > findLoopEnd( ModuleState currentModule, Ip6Addr prevModule, int prevConnector, std::set< Ip6Addr >& visitedModules )
     {
         if ( visitedModules.find( currentModule.moduleAddress ) != visitedModules.end() )
