@@ -93,14 +93,14 @@ void distributionManagerFizzBuzz() {
     });
 
     // Create distributed function instances.
-    std::unique_ptr< DistributedFunction< ModuleState > > initial = std::make_unique< InitialFunction >( manager, botState, requesters );
-    std::unique_ptr< DistributedFunction< int, int > > disconnect = std::make_unique< Disconnect >( manager, botState );
-    std::unique_ptr< DistributedFunction< MoveResult, int, float, float > > move = std::make_unique< Move >( manager, botState );
+    // std::unique_ptr< DistributedFunction< ModuleState > > initial = std::make_unique< InitialFunction >( manager, botState, requesters );
+    // std::unique_ptr< DistributedFunction< int, int > > disconnect = std::make_unique< Disconnect >( manager, botState );
+    // std::unique_ptr< DistributedFunction< MoveResult, int, float, float > > move = std::make_unique< Move >( manager, botState );
 
     // Register the distributed functions.
-    manager.registerFunction< ModuleState >( std::move( initial ) );
-    manager.registerFunction< int, int >( std::move( disconnect ) );
-    manager.registerFunction< MoveResult, int, float, float >( std::move( move ) ); 
+    manager.registerFunction< ModuleState >( InitialFunction( manager, botState, requesters ) );
+    manager.registerFunction< int, int >( Disconnect( manager, botState ) );
+    manager.registerFunction< MoveResult, int, float, float >( Move( manager, botState ) ); 
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );

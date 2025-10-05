@@ -61,15 +61,17 @@ public:
     /// @tparam ...Arguments A pack of trivially copyable types, or types that implement Serializable. Denotes the types of the function's parameters.
     /// @param userFunction The distributed function implementation.
     /// @return True if the function was successfully registered, otherwise false.
-    template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
-    bool registerFunction( std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction )
+    template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments,
+              std::derived_from< DistributedFunction< Result, Arguments... > > Func >
+    bool registerFunction( const Func& function )
     {
-        if ( userFunction.get()->functionType() == FunctionType::Barrier )
+        std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction = std::make_unique< Func >( function );
+        if ( userFunction->functionType() == FunctionType::Barrier )
         {
             return registerBarrier( std::move( userFunction ) );
         }
 
-        if ( userFunction.get()->functionType() == FunctionType::Initial )
+        if ( userFunction->functionType() == FunctionType::Initial )
         {
             return registerInitialFunction( std::move( userFunction ) );
         }

@@ -58,12 +58,12 @@ void distributionManagerFizzBuzz() {
         reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     
     // Create distributed function instances.
-    std::unique_ptr< DistributedFunction< int > > initial = std::make_unique< InitialFunction >( id, manager );
-    std::unique_ptr< DistributedFunction< Message, Message > > messageSend = std::make_unique< MessageSend >( manager, id );
+    // std::unique_ptr< DistributedFunction< int > > initial = std::make_unique< InitialFunction >( id, manager );
+    // std::unique_ptr< DistributedFunction< Message, Message > > messageSend = std::make_unique< MessageSend >( manager, id );
 
     // Register the distributed functions.
-    manager.registerFunction< int >( std::move( initial ) );
-    manager.registerFunction< Message, Message >( std::move( messageSend ) );
+    manager.registerFunction< int >( InitialFunction( id, manager ) );
+    manager.registerFunction< Message, Message >( MessageSend( manager, id ) );
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );
