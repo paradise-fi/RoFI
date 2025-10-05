@@ -65,14 +65,14 @@ void distributionManagerFizzBuzz() {
         std::make_unique< ReplicatedMemory >());
 
     // Create distributed function instances.
-    std::unique_ptr< DistributedFunction< int > > initial = std::make_unique< InitialFunction >( id, manager );
-    std::unique_ptr< DistributedFunction< FizzBuzzMetaData, int > > fizzBuzz = std::make_unique< FizzBuzz >( id, manager );
-    std::unique_ptr< DistributedFunction< Ip6Addr > > barrier = std::make_unique< NaiveBarrier >( addr, manager );
+    // std::unique_ptr< DistributedFunction< int > > initial = std::make_unique< InitialFunction >( id, manager );
+    // std::unique_ptr< DistributedFunction< FizzBuzzMetaData, int > > fizzBuzz = std::make_unique< FizzBuzz >( id, manager );
+    // std::unique_ptr< DistributedFunction< Ip6Addr > > barrier = std::make_unique< NaiveBarrier >( addr, manager );
 
     // Register the distributed functions.
-    manager.registerFunction< FizzBuzzMetaData, int >( std::move( fizzBuzz ) );
-    manager.registerFunction< int >( std::move( initial ) );
-    if ( !manager.registerFunction< Ip6Addr >( std::move( barrier ) ) )
+    manager.registerFunction< int >( InitialFunction( id, manager ) );
+    manager.registerFunction< FizzBuzzMetaData, int >( FizzBuzz( id, manager ) );
+    if ( !manager.registerFunction< Ip6Addr >( NaiveBarrier( addr, manager ) ) )
     {
         std::cout << "Failed to register barrier." << std::endl;
         return;
