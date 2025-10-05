@@ -40,7 +40,6 @@ class TaskScheduler
 public:
     void registerBarrier( int barrierId )
     {
-        std::cout << "Barrier registered as " << barrierId << std::endl;
         _registeredBarrierFunctionId = barrierId;
     }
 
@@ -63,10 +62,8 @@ public:
 
         if ( _active->task->id() == _activeBarrierTaskId)
         {
-            std::cout << "Clearing barrier" << std::endl;
             if ( !clearBarrier )
             {
-                std::cout << "ACTUALLY NOT DOING SO" << std::endl;
                 return;
             }
 
@@ -87,10 +84,8 @@ public:
         {
             if ( _active->task->id() == _activeBarrierTaskId )
             {
-                std::cout << "Clearing barrier" << std::endl;
                 if ( !clearBarrier )
                 {
-                    std::cout << "ACTUALLY NOT DOING SO" << std::endl;
                     return;
                 }
 
@@ -115,11 +110,6 @@ public:
 
     std::optional< std::reference_wrapper< TaskBase > > popTask( bool isLeader = false )
     {
-        if ( ( !isLeader && schedulerIsBlocked() ) )
-        {
-            std::cout << "Blocked." << std::endl;
-        }
-
         if ( _tasks.empty() || ( !isLeader && schedulerIsBlocked() ) )
         {
             return std::nullopt;
@@ -130,13 +120,8 @@ public:
             ageTasks();
         }
 
-        if ( _activeBarrierTaskId.has_value() )
-        {
-            std::cout << "Active Barrier Task ID: " << _activeBarrierTaskId.value() << std::endl;
-        }
-
         auto oldest = std::max_element( _tasks.begin(), _tasks.end(), 
-            [this](const TaskEntry& lhs, const TaskEntry& rhs ) 
+            [ this ]( const TaskEntry& lhs, const TaskEntry& rhs ) 
             { 
                 if ( _activeBarrierTaskId.has_value() && rhs.task->id() > _activeBarrierTaskId.value() )
                 {
@@ -164,7 +149,6 @@ public:
         {
             if ( _activeBarrierTaskId.has_value() )
             {
-                std::cout << "Task not queued, barrier is already set." << std::endl;
                 return false;
             }
 

@@ -1,5 +1,6 @@
 #include "memoryService.hpp"
 #include "functionRegistry.hpp"
+#include "loggingService.hpp"
 #include "messaging/messageSender.hpp"
 
 class WorkFlowService
@@ -7,6 +8,7 @@ class WorkFlowService
     MessageSender& _sender;
     FunctionRegistry& _functionRegistry;
     DistributedMemoryService& _memoryService;
+    LoggingService& _loggingService;
 
     void tryDistributeNewTask( int methodId )
     {
@@ -24,14 +26,14 @@ class WorkFlowService
         auto task = _functionRegistry.popTaskForAddress( requester.value(), true );
         if ( !task.has_value() )
         {
-            std::cout << "Task distribution failed: No initial task given.";
+            _loggingService.logError( "Task distribution failed: No initial task given." );
             return;
         }
 
         auto function = _functionRegistry.getFunction( task.value().get().functionId() );
         if ( !function.has_value() )
         {
-            std::cout << "Task distribution failed: Given task has associated no function.";
+            _loggingService.logError( "Task distribution failed: Given task has associated no function." );
             return;
         }
 
@@ -57,14 +59,14 @@ class WorkFlowService
 
             default:
             {
-                std::cout << "Undefined Function Distribution Type found." << std::endl;
+                _loggingService.logError( "Undefined function distribution type found." );
                 return;
             }
         }
     }
 public:
-    WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService )
-    : _sender( sender ), _functionRegistry( functionRegistry ), _memoryService( memoryService ){}
+    WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService, LoggingService& loggingService )
+    : _sender( sender ), _functionRegistry( functionRegistry ), _memoryService( memoryService ), _loggingService( loggingService ) {}
 
     void doWorkLeader( int methodId )
     {

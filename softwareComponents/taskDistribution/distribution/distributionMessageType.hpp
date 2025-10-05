@@ -8,6 +8,4 @@ enum DistributionMessageType {
     BlockingTaskRelease,
     DataStorageRequest,
     DataRemovalRequest,
-    MetadataStorageRequest,
-    DataStorageSuccess,
 };

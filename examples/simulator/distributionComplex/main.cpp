@@ -9,6 +9,7 @@
 #include <string>
 
 #include "distributedTaskManager.hpp"
+#include "exampleLogger.hpp"
 #include "initial.hpp"
 #include "disconnect.hpp"
 
@@ -30,12 +31,8 @@ Ip6Addr createAddress( int id ) {
     return Ip6Addr( ss.str() );
 }
 
-/// In this simple example, you will learn how to create a simple program using
-/// the distribution manager. In this example, follower nodes will generate values
-/// that will be sent to the leader. The leader will take these values and play the fizzbuzz
-/// game with them.
 void distributionManagerFizzBuzz() {
-    std::cout << "Starting simple RoFI Distribution Manager FizzBuzz example\n";
+    std::cout << "Starting Complex RoFI Distribution Manager example\n";
     tcpip_init( nullptr, nullptr );
 
     LOCK_TCPIP_CORE();
@@ -83,10 +80,11 @@ void distributionManagerFizzBuzz() {
         std::move( election ), addr,
         reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     
+    manager.useLogger( ExampleLogger() );
+
     std::set< Ip6Addr > requesters;
 
     manager.registerTaskRequestCallback([&requesters]( DistributedTaskManager&, Ip6Addr& requester ) {
-        std::cout << "task request cb from " << requester << std::endl;
         if ( requesters.find( requester ) == requesters.end() )
         {
             requesters.emplace( requester );
@@ -100,9 +98,9 @@ void distributionManagerFizzBuzz() {
     std::unique_ptr< DistributedFunction< MoveResult, int, float, float > > move = std::make_unique< Move >( manager, botState );
 
     // Register the distributed functions.
-    manager.functionRegistry().registerFunction< ModuleState >( std::move( initial ) );
-    manager.functionRegistry().registerFunction< int, int >( std::move( disconnect ) );
-    manager.functionRegistry().registerFunction< MoveResult, int, float, float >( std::move( move ) ); 
+    manager.registerFunction< ModuleState >( std::move( initial ) );
+    manager.registerFunction< int, int >( std::move( disconnect ) );
+    manager.registerFunction< MoveResult, int, float, float >( std::move( move ) ); 
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );
