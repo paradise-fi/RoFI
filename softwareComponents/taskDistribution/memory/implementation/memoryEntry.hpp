@@ -5,12 +5,12 @@
 
 struct MemoryEntry {
     unsigned int stamp;
-    std::vector<uint8_t> stored_data;
+    std::vector<uint8_t> storedData;
 
     MemoryEntry() {}
 
     MemoryEntry( unsigned int stamp, size_t size )
     : stamp( stamp ){
-        stored_data.resize( size );
+        storedData.resize( size );
     }
 };
