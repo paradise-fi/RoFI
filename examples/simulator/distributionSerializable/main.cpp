@@ -56,10 +56,6 @@ void distributionManagerFizzBuzz() {
     DistributedTaskManager manager(
         std::move( election ), addr,
         reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
-    
-    // Create distributed function instances.
-    // std::unique_ptr< DistributedFunction< int > > initial = std::make_unique< InitialFunction >( id, manager );
-    // std::unique_ptr< DistributedFunction< Message, Message > > messageSend = std::make_unique< MessageSend >( manager, id );
 
     // Register the distributed functions.
     manager.registerFunction< int >( InitialFunction( id, manager ) );
