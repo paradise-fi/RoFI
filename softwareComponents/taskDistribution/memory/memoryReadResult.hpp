@@ -5,7 +5,7 @@
 struct MemoryReadResult
 {
     bool success;
-    std::vector< uint8_t > raw_data;
+    std::vector< uint8_t > rawData;
 
     template< SerializableOrTrivial T >
     T data()
@@ -14,10 +14,10 @@ struct MemoryReadResult
         {
             
             T var{};
-            var.deserialize( raw_data.data() );
+            var.deserialize( rawData.data() );
             return var;
         }
 
-        return as< T >( raw_data.data() );
+        return as< T >( rawData.data() );
     }
 };

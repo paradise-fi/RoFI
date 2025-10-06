@@ -27,8 +27,8 @@ class ReplicatedMemory : public SharedMemoryBase {
             }
             
             entry->second.stamp = stamp;
-            entry->second.stored_data.resize( size );
-            std::memcpy( entry->second.stored_data.data(), data, size );
+            entry->second.storedData.resize( size );
+            std::memcpy( entry->second.storedData.data(), data, size );
             
             return true;
         }
@@ -36,7 +36,7 @@ class ReplicatedMemory : public SharedMemoryBase {
         auto res = _storage.emplace(address, MemoryEntry( stamp, size ) );
         if ( res.second )
         {
-            std::memcpy( res.first->second.stored_data.data(), data, size );
+            std::memcpy( res.first->second.storedData.data(), data, size );
             
             return true;
         }
@@ -74,7 +74,7 @@ public:
         }
 
         result.success = true;
-        result.raw_data = entry->second.stored_data;
+        result.rawData = entry->second.storedData;
 
         return result;
     }
@@ -120,8 +120,8 @@ public:
             return result;
         }
 
-        result.raw_data.resize( sizeof( unsigned int ) );
-        std::memcpy( result.raw_data.data(), &(entry->second.stamp), sizeof( unsigned int ) );
+        result.rawData.resize( sizeof( unsigned int ) );
+        std::memcpy( result.rawData.data(), &(entry->second.stamp), sizeof( unsigned int ) );
         result.success = true;
 
         return result; 
