@@ -32,7 +32,7 @@ Ip6Addr createAddress( int id ) {
 /// that will be sent to the leader. The leader will take these values and play the fizzbuzz
 /// game with them.
 void distributionManagerFizzBuzz() {
-    std::cout << "Starting simple RoFI Distribution Manager FizzBuzz example\n";
+    std::cout << "Starting simple RoFI Distribution Manager FizzBuzz with memory example\n";
     tcpip_init( nullptr, nullptr );
 
     LOCK_TCPIP_CORE();
@@ -64,11 +64,6 @@ void distributionManagerFizzBuzz() {
     manager.memoryService().useMemory( 
         std::make_unique< ReplicatedMemory >());
 
-    // Create distributed function instances.
-    // std::unique_ptr< DistributedFunction< int > > initial = std::make_unique< InitialFunction >( id, manager );
-    // std::unique_ptr< DistributedFunction< FizzBuzzMetaData, int > > fizzBuzz = std::make_unique< FizzBuzz >( id, manager );
-    // std::unique_ptr< DistributedFunction< Ip6Addr > > barrier = std::make_unique< NaiveBarrier >( addr, manager );
-
     // Register the distributed functions.
     manager.registerFunction< int >( InitialFunction( id, manager ) );
     manager.registerFunction< FizzBuzzMetaData, int >( FizzBuzz( id, manager ) );
@@ -81,7 +76,7 @@ void distributionManagerFizzBuzz() {
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );
 
-    while ( true ){
+    while ( true ) {
         sleep( 1 );
         // A single 'tick' of the manager instance.
         manager.doWork();
