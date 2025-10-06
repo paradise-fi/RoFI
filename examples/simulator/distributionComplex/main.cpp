@@ -92,11 +92,6 @@ void distributionManagerFizzBuzz() {
         return false;
     });
 
-    // Create distributed function instances.
-    // std::unique_ptr< DistributedFunction< ModuleState > > initial = std::make_unique< InitialFunction >( manager, botState, requesters );
-    // std::unique_ptr< DistributedFunction< int, int > > disconnect = std::make_unique< Disconnect >( manager, botState );
-    // std::unique_ptr< DistributedFunction< MoveResult, int, float, float > > move = std::make_unique< Move >( manager, botState );
-
     // Register the distributed functions.
     manager.registerFunction< ModuleState >( InitialFunction( manager, botState, requesters ) );
     manager.registerFunction< int, int >( Disconnect( manager, botState ) );
