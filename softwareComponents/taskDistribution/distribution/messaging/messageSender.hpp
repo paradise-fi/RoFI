@@ -7,13 +7,13 @@
 /// @brief Low level handler for sending messages via network.
 class MessageSender {
     Ip6Addr& _address;
-    u16_t _distribution_port;
+    u16_t _distributionPort;
     MessageDistributor* _messageDistributor;
     udp_pcb* _pcb;
 
 public:
     MessageSender(Ip6Addr& address, u16_t port, udp_pcb* pcb, MessageDistributor* messageDistributor)
-    : _address( address ), _distribution_port( port ), _messageDistributor( messageDistributor ) {
+    : _address( address ), _distributionPort( port ), _messageDistributor( messageDistributor ) {
         if ( !pcb )
         {
             std::cout << "PCB Null" << std::endl;
@@ -30,7 +30,7 @@ public:
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
         task.copyToBuffer( buffer.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
 
-        auto result = udp_sendto( _pcb, buffer.release(), &target, _distribution_port );
+        auto result = udp_sendto( _pcb, buffer.release(), &target, _distributionPort );
 
         if ( result != ERR_OK )
         {
@@ -46,7 +46,7 @@ public:
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
         std::memcpy(buffer.payload() + sizeof( DistributionMessageType ) + Ip6Addr::size(), data.payload(), data.size() );
-        auto result = udp_sendto( _pcb, buffer.release(), &target, _distribution_port );
+        auto result = udp_sendto( _pcb, buffer.release(), &target, _distributionPort );
 
         if ( result != ERR_OK )
         {
@@ -61,7 +61,7 @@ public:
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
 
-        auto result = udp_sendto( _pcb, buffer.release(), &target, _distribution_port );
+        auto result = udp_sendto( _pcb, buffer.release(), &target, _distributionPort );
 
         if ( result != ERR_OK )
         {

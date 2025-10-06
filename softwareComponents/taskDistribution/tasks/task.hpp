@@ -47,7 +47,7 @@ class Task : public TaskBase {
     int _id;
     TaskStatus _status;
     int _age = 0;
-    int _func_id;
+    int _functionId;
     int _priority;
     std::optional< Result > _result;
     bool _enqueueFront;
@@ -86,18 +86,18 @@ class Task : public TaskBase {
 
     public:
     Task() {}
-    Task( int functionId ) : _func_id( functionId ) {
+    Task( int functionId ) : _functionId( functionId ) {
         _status = TaskStatus::InProgress;
         _id = 0;
     }
     Task( int id, TaskStatus status, int functionId, int priority, bool enqueueFront )
-        : _id( id ), _status( status ), _func_id( functionId ), _priority( priority ), _enqueueFront( enqueueFront ) {}
+        : _id( id ), _status( status ), _functionId( functionId ), _priority( priority ), _enqueueFront( enqueueFront ) {}
 
     Task( int id, TaskStatus status, int functionId, int result, int priority, bool enqueueFront )
-        : _id( id ), _status( status ), _func_id( functionId ), _result( result ), _priority( priority ), _enqueueFront( enqueueFront ) {}
+        : _id( id ), _status( status ), _functionId( functionId ), _result( result ), _priority( priority ), _enqueueFront( enqueueFront ) {}
     
         Task( int id, TaskStatus status, int functionId, int priority, bool enqueueFront, std::tuple< Arguments... > args)
-        : _id( id ), _status( status ), _func_id( functionId ), _priority( priority ), _enqueueFront( enqueueFront ), _args ( args ) {}
+        : _id( id ), _status( status ), _functionId( functionId ), _priority( priority ), _enqueueFront( enqueueFront ), _args ( args ) {}
 
     int id() const override { return _id; }
 
@@ -133,7 +133,7 @@ class Task : public TaskBase {
 
     virtual size_t size() override {
         size_t size =  sizeof( _id ) + sizeof( _priority ) 
-             + sizeof( _status ) + sizeof ( _func_id ) 
+             + sizeof( _status ) + sizeof ( _functionId ) 
              + 2 * sizeof( bool ) + sizeof ( Result )
              + calculateArgumentsSize( _args );
 
@@ -150,7 +150,7 @@ class Task : public TaskBase {
 
     virtual void copyToBuffer( uint8_t* buffer ) override
     {
-        writeToBuffer( buffer, _func_id );
+        writeToBuffer( buffer, _functionId );
         writeToBuffer( buffer, _id );
         writeToBuffer( buffer, _priority );
         writeToBuffer( buffer, _enqueueFront );
@@ -173,7 +173,7 @@ class Task : public TaskBase {
 
     virtual void fillFromBuffer( const uint8_t* buffer ) override
     {
-        _func_id = readFromBuffer< int >( buffer );
+        _functionId = readFromBuffer< int >( buffer );
         _id = readFromBuffer< int >( buffer );
         _priority = readFromBuffer< int >( buffer );
         _enqueueFront = readFromBuffer< bool >( buffer );
@@ -198,7 +198,7 @@ class Task : public TaskBase {
         );
     } 
     
-    int functionId() const override { return _func_id; }
+    int functionId() const override { return _functionId; }
 
     std::optional< Result > result() const { return _result; }
 
