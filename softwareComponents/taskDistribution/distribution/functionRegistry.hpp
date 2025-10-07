@@ -10,9 +10,9 @@ using namespace rofi::net;
 
 class FunctionRegistry
 {
+    LoggingService& _loggingService;
     FunctionManager _functionManager;
     TaskManager _taskManager;
-    LoggingService& _loggingService;
 
     template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     bool registerBarrier( std::unique_ptr< DistributedFunction< Result, Arguments... > > barrierFunction )
@@ -54,7 +54,7 @@ class FunctionRegistry
     }
 
 public:   
-    FunctionRegistry( LoggingService& loggingService ) : _loggingService( loggingService ) {}
+    FunctionRegistry( LoggingService& loggingService ) : _loggingService( loggingService ), _functionManager( loggingService ) {}
 
     /// @brief Registers a function. The function handle, which is used for invoking the function over the network, is then retrieved from the function registry with getFunctionHandle().
     /// @tparam Result A trivially copyable type, or a type that implements Serializable. Denotes the type of the function's result.

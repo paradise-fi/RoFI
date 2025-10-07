@@ -6,6 +6,7 @@
 #include "distributedFunction.hpp"
 #include "functionHandle.hpp"
 #include <networking/networkManager.hpp>
+#include "../distribution/services/loggingService.hpp"
 
 template < typename Result, typename... Arguments >
 using Executor = std::function< bool( const Ip6Addr&, int, bool, FunctionModel< Result, Arguments...>& fn, std::tuple< Arguments...> && arguments ) >;
@@ -14,8 +15,11 @@ class FunctionManager
 {
     std::map< int, std::unique_ptr< FunctionConcept > > _functions;
     std::map< std::string, int > _nameToIdMap;
+    LoggingService& _loggingService;
 
 public:
+    FunctionManager( LoggingService& loggingService ) : _loggingService( loggingService ) {}
+
     bool isFunctionRegistered( int id ) const
     {
         return _functions.find( id ) != _functions.end();
@@ -76,6 +80,9 @@ public:
         
         if ( fn == _functions.end() )
         {
+            std::ostringstream stream;
+            stream << "Function " << task.functionId() << " not found during function invocation.";
+            _loggingService.logWarning( stream.str() );
             task.setStatus( TaskStatus::Failed );
             return false;
         }
@@ -89,7 +96,9 @@ public:
         const auto& fn = _functions.find( task.functionId() );
         if ( fn == _functions.end() )
         {
-            std::cerr << "Function not found when trying to react to module task completion" << std::endl;
+            std::ostringstream stream;
+            stream << "Function " << task.functionId() << " not found when trying to react to module task completion.";
+            _loggingService.logError( stream.str() );
             return FunctionResultType::FAILURE;
         }
 
