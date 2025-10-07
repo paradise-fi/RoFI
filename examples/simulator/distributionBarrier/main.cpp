@@ -12,6 +12,7 @@
 #include "initial.hpp"
 #include "fizzbuzz.hpp"
 #include "implementation/replicatedMemory.hpp"
+#include "exampleLogger.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
@@ -59,6 +60,9 @@ void distributionManagerFizzBuzz() {
         std::move( election ), addr,
         reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     
+    // Register logger implementation -> check the NaiveBarrier function to see how it can be used.
+    manager.useLogger( ExampleLogger() );
+
     // Register the memory implementation - the memory implementation is responsible for 
     // initiating memory-relevant communication, hence why the sender is passed too.
     manager.memoryService().useMemory( 
