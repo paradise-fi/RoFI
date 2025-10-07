@@ -15,12 +15,15 @@ public:
 
     void registerParticipant( Ip6Addr participant )
     {
-        std::cout << functionName() << " :Registering participant " << participant << std::endl;
+        std::ostringstream stream;
+        stream << functionName() << " :Registering participant " << participant << std::endl;
+        _manager.loggingService().logInfo( stream.str() );
+
         _participants.insert( participant );
     }
 
     virtual FunctionResult< Ip6Addr > execute() override {
-        std::cout << "Naive Barrier execution." << std::endl;
+        _manager.loggingService().logInfo("Executing NaiveBarrier.");
         return FunctionResult< Ip6Addr >( _address, FunctionResultType::SUCCESS );
     }
 
@@ -28,8 +31,11 @@ public:
     {
         _participants.erase( origin );
 
+        _manager.loggingService().logInfo("NaiveBarrier Success.");
+        
         if (_participants.empty())
         {
+            _manager.loggingService().logInfo("NaiveBarrier Unblocking.");
             _manager.broadcastUnblockSignal();
         }
 
