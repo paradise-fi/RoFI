@@ -8,4 +8,5 @@ enum DistributionMessageType {
     BlockingTaskRelease,
     DataStorageRequest,
     DataRemovalRequest,
+    CustomMessage,
 };

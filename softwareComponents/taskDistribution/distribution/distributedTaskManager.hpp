@@ -27,8 +27,9 @@ class DistributedTaskManager
     DistributedMemoryService _memoryService;
     WorkFlowService _workFlowService;
 
-    std::optional< std::function< bool(DistributedTaskManager& manager, rofi::net::Ip6Addr& requester ) > > _onTaskRequest;
-    std::optional< std::function< void(DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, int functionId ) > > _onTaskFailure;
+    std::optional< std::function< bool( DistributedTaskManager& manager, rofi::net::Ip6Addr& requester ) > > _onTaskRequest;
+    std::optional< std::function< void( DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, int functionId ) > > _onTaskFailure;
+    std::optional< std::function< void( DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, uint8_t* data, size_t size ) > > _onCustomMessage;
 
     void onElectionSuccesful( const Ip6Addr& leader )
     {
@@ -52,6 +53,18 @@ class DistributedTaskManager
 
     void onMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size )
     {
+        if ( type == DistributionMessageType::CustomMessage )
+        {
+            _loggingService.logInfo("Custom Message.");
+            
+            if ( !_onCustomMessage.has_value() )
+            {
+                _loggingService.logWarning("Received custom message but no callback to handle it is registered.");
+                return;
+            }
+
+            return _onCustomMessage.value()( *this, sender, data, size );
+        }
         if ( type == DistributionMessageType::BlockingTaskRelease )
         {
             _loggingService.logInfo("Blocking task release.");
@@ -242,35 +255,26 @@ public:
     /// @brief Registers a callback that is called when leader election fails.
     /// @param callback The callback function.
     /// @return True if the registration succeeded.
-    bool registerLeaderFailureCallback( std::function< void() > callback )
-    {
-        return _election.registerLeaderFailureCallback( callback );
-    }
+    bool registerLeaderFailureCallback( std::function< void() > callback ) { return _election.registerLeaderFailureCallback( callback ); }
 
     /// @brief Unregisters a callback for leader election failure.
     /// @return True if the function was unregistered.
-    bool unregisterLeaderFailureCallback()
-    {
-        return _election.unregisterLeaderFailureCallback();
-    }
+    bool unregisterLeaderFailureCallback() { return _election.unregisterLeaderFailureCallback(); }
     
     /// @brief Registers a callback that is called when a task request is received.
     /// @param callback Your custom callback. Returns true if the task request pipeline should not continue after this callback (e.g. to avoid double-scheduling of a task)
-    void registerTaskRequestCallback( std::function< bool(DistributedTaskManager& manager, rofi::net::Ip6Addr& requester ) > callback )
-    {
-        _onTaskRequest = callback;
-    }
+    void registerTaskRequestCallback( std::function< bool(DistributedTaskManager& manager, rofi::net::Ip6Addr& requester ) > callback ) { _onTaskRequest = callback; }
 
     /// @brief Unregisters a callback that is called when a task request is received.
-    void unregisterTaskRequestCallback()
-    {
-        _onTaskRequest.reset();
-    }
+    void unregisterTaskRequestCallback() { _onTaskRequest.reset(); }
 
-    void registerTaskFailedCallback( std::function< void(DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, int functionId ) > callback )
-    {
-        _onTaskFailure = callback;
-    }
+    void registerTaskFailedCallback( std::function< void(DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, int functionId ) > callback ) { _onTaskFailure = callback; }
+
+    void unregisterTaskFailedCallback() { _onTaskFailure.reset(); }
+
+    void registerCustomMessageCallback( std::function< void( DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, unsigned int bufferSize ) > callback ) { _onCustomMessage = callback; }
+
+    void unregisterCustomMessageCallback() { _onCustomMessage.reset(); }
 
     DistributedMemoryService& memoryService()
     {
