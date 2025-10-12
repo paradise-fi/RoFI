@@ -16,11 +16,15 @@ To find out how to use the RoFI task manager, consult examples provided in ~RoFI
 
 ## Documentation
 ### Table of Contents
-1.[DistributedTaskManager](#distributedtaskmanager)
-2.[DistributedMemoryService](#distributedmemoryservice)
-3.[LoggingService](#loggingservice)
-4.[DistributedFunction](#distributedfunction)
-5.[FunctionHandle](#functionhandle)
+
+1. [DistributionTaskManager](#distributedtaskmanager)
+2. [DistributionMemoryService](#distributedmemoryservice)
+3. [LoggingService](#loggingservice)
+4. [DistributedFunction](#distributedfunction)
+5. [FunctionHandle](#functionhandle)
+6. [DistributedMemoryBase](#distributedmemorybase)
+7. [LoggerBase](#loggerbase)
+8. [Serializable](#serializable)
 
 <hr>
 
