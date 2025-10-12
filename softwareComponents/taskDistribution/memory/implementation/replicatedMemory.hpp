@@ -102,7 +102,7 @@ public:
     }
 
     // This implementation only allows to read the timestamp with the stamp key.
-    virtual MemoryReadResult readMetadata( int address, std::string key ) override
+    virtual MemoryReadResult readMetadata( int address, const std::string& key ) override
     {
         MemoryReadResult result;
         result.success = false;
@@ -128,7 +128,7 @@ public:
     }
 
     // This implementation does not allow to store metadata.
-    virtual MemoryWriteResult writeMetadata( int, std::string, uint8_t*, size_t, bool ) override 
+    virtual MemoryWriteResult writeMetadata( int, const std::string&, uint8_t*, size_t, bool ) override 
     {
         MemoryWriteResult result;
         result.success = false;
@@ -136,7 +136,7 @@ public:
         return result;
     }
 
-    virtual MemoryWriteResult removeMetadata( int, std::string, bool ) override
+    virtual MemoryWriteResult removeMetadata( int, const std::string&, bool ) override
     {
         MemoryWriteResult result;
         result.success = false;

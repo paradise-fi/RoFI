@@ -62,7 +62,7 @@ public:
         return _functions.erase( id ) != 0;
     }
 
-    bool removeFunction( std::string name )
+    bool removeFunction( const std::string& name )
     {
         auto idCandidate = _nameToIdMap.find( name );
         
@@ -122,7 +122,7 @@ public:
         return *( kv->second.get() );
     }
 
-    std::optional< std::reference_wrapper< FunctionConcept > > getFunction( std::string functionName )
+    std::optional< std::reference_wrapper< FunctionConcept > > getFunction( const std::string& functionName )
     {
         auto idCandidate = _nameToIdMap.find( functionName );
         

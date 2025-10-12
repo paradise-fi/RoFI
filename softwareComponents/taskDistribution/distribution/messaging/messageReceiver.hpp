@@ -58,7 +58,6 @@ public:
         DistributionMessageType type = as< DistributionMessageType >( packet.payload() );
         Ip6Addr sender = as< Ip6Addr >( packet.payload() + sizeof( DistributionMessageType ) );
 
-        // ToDo: Move packet payload past Type and Sender
         _onMessageHandler( sender, type, packet.payload(), packet.size() );
     }
 };

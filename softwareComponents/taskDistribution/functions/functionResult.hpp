@@ -13,7 +13,7 @@ struct FunctionResult
 {
     FunctionResult( std::optional< Result > value, FunctionResultType resultType )
     : result( value ), resultType( resultType ) {}
-    /// @brief The result of the function.
+    /// @brief The result value of the function.
     std::optional< Result > result;
     
     /// @brief Denotes whether the function is considered as a success.
