@@ -32,7 +32,7 @@ public:
         }
     }
 
-    bool enqueueTaskResult( std::unique_ptr< TaskBase > task, Ip6Addr origin, bool pushToFront = false )
+    bool enqueueTaskResult( std::unique_ptr< TaskBase > task, const Ip6Addr& origin, bool pushToFront = false )
     {
         std::unique_lock lock( _mutex );
         if ( pushToFront )
@@ -81,20 +81,20 @@ public:
     }
 
     template< SerializableOrTrivial Result >
-    bool enqueueTask( Ip6Addr addr, int functionId, FunctionCompletionType completionType, bool enqueueFront = false )
+    bool enqueueTask( const Ip6Addr& addr, int functionId, FunctionCompletionType completionType, bool enqueueFront = false )
     {
         auto task = Task< Result >( ++_taskId, TaskStatus::Enqueued, functionId, enqueueFront );
         return _schedulers[ addr ].enqueueTask( std::make_unique< TaskBase >( task ), completionType );
     }
 
     template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
-    bool enqueueTask( Ip6Addr addr, int functionId, int priority, bool enqueueFront, FunctionCompletionType completionType, std::tuple< Arguments... >&& arguments )
+    bool enqueueTask( const Ip6Addr& addr, int functionId, int priority, bool enqueueFront, FunctionCompletionType completionType, std::tuple< Arguments... >&& arguments )
     {
         auto task = Task< Result, Arguments... >( ++_taskId, TaskStatus::Enqueued, functionId, priority, enqueueFront, arguments );
         return _schedulers[ addr ].enqueueTask( std::make_unique< Task< Result, Arguments... > >( task ), completionType );
     }
 
-    bool enqueueTask( Ip6Addr addr, const FunctionConcept& relatedFunction, const uint8_t* buffer )
+    bool enqueueTask( const Ip6Addr& addr, const FunctionConcept& relatedFunction, const uint8_t* buffer )
     {
         auto task = relatedFunction.createTask();
         task->fillFromBuffer( buffer );

@@ -41,7 +41,6 @@ public:
 
         if ( result )
         {
-            // TODO: Remove task from queue if task request fails to enqueue?
             result = _taskManager.enqueueTaskRequest( receiver );
         }
 
