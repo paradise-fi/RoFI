@@ -144,7 +144,7 @@ public:
         return result;
     }
 
-    virtual std::vector< uint8_t > serializeDataToMemoryFormat( uint8_t* data, size_t dataSize, int address, bool )
+    virtual std::vector< uint8_t > serializeDataToMemoryFormat( uint8_t* data, size_t dataSize, int address, bool ) const override
     {
         unsigned int timestamp = 0;
         auto stored = _storage.find( address );
