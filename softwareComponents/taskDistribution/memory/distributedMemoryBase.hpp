@@ -21,8 +21,8 @@ class DistributedMemoryBase {
         
         virtual MemoryWriteResult removeMetadata( int address, const std::string& key, bool isLeader ) = 0;
 
-        virtual MemoryReadResult readData( int address ) = 0;
-        virtual MemoryReadResult readMetadata( int address, const std::string& key) = 0;
+        virtual MemoryReadResult readData( int address ) const = 0;
+        virtual MemoryReadResult readMetadata( int address, const std::string& key) const = 0;
         
         /// @brief Take data and add important details for your implementation. This will be sent to the other nodes.
         /// @param data The raw data.
