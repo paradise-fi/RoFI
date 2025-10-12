@@ -60,7 +60,7 @@ public:
     /// @brief Reads data from an address in the shared memory.
     /// @param address - An address of the requested data.
     /// @return Data in uint8_t* format. Nullptr if no data found under the address.
-    virtual MemoryReadResult readData( int address ) override
+    virtual MemoryReadResult readData( int address ) const override
     {
         MemoryReadResult result;
         result.success = false;
@@ -102,7 +102,7 @@ public:
     }
 
     // This implementation only allows to read the timestamp with the stamp key.
-    virtual MemoryReadResult readMetadata( int address, const std::string& key ) override
+    virtual MemoryReadResult readMetadata( int address, const std::string& key ) const override
     {
         MemoryReadResult result;
         result.success = false;
