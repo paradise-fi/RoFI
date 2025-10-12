@@ -16,8 +16,6 @@ using namespace std::chrono_literals;
 
 class DistributedTaskManager
 {
-    const unsigned int METHOD_ID = 3;
-
     rofi::net::Ip6Addr _address;
     
     LoggingService _loggingService;
@@ -215,6 +213,7 @@ class DistributedTaskManager
     }
 
 public:
+    const unsigned int METHOD_ID = 3;
     static const int DISTRIBUTION_PORT = 7071;
 
     DistributedTaskManager(
@@ -280,10 +279,6 @@ public:
     {
         return _memoryService;
     }
-    MessageSender& sender()
-    {
-        return _messaging.sender();
-    } 
     FunctionRegistry& functionRegistry()
     {
         return _functionRegistry;
@@ -327,6 +322,28 @@ public:
     void sendUnblockSignal( Ip6Addr& receiver )
     {
         _messaging.sender().sendMessage(DistributionMessageType::BlockingTaskRelease, receiver );
+    }
+
+    std::optional< Ip6Addr > getLeader()
+    {
+        if ( _election.isElectionComplete() )
+        {
+            return _election.getLeader();
+        }
+
+        return std::nullopt;
+    }
+
+    void sendCustomMessage( uint8_t* data, unsigned int dataSize, std::optional< Ip6Addr > target )
+    {
+        if ( !target.has_value() )
+        {
+            return _messaging.sender().broadcastMessage( DistributionMessageType::CustomMessage, data, dataSize, METHOD_ID );
+        }
+
+        auto packet = PBuf::allocate( static_cast< int >( dataSize ) );
+        std::memcpy( packet.payload(), data, dataSize );
+        _messaging.sender().sendMessage( DistributionMessageType::CustomMessage, std::move( packet ), target.value() );
     }
 
     /// @brief Used to manually send a function execution order to a module. This should be done from the leader to the follower. You do NOT need to use this if you use functionHandle instead.
@@ -394,5 +411,11 @@ public:
     bool registerFunction( const Func& function )
     {
         return _functionRegistry.registerFunction< Result, Arguments... >( function );
+    }
+
+    /// @brief Removes all tasks from all schedulers on this module.
+    void clearAllTasks()
+    {
+        _functionRegistry.clearTasks();
     }
 };

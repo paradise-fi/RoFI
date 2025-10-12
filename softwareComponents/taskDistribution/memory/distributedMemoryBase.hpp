@@ -8,9 +8,9 @@
 #include "memoryReadResult.hpp"
 #include "memoryWriteResult.hpp"
 
-class SharedMemoryBase {
+class DistributedMemoryBase {
     public:
-        virtual ~SharedMemoryBase() = default;
+        virtual ~DistributedMemoryBase() = default;
         virtual void clear() = 0;
         
         virtual MemoryWriteResult removeData( int address, bool isLeader ) = 0;
