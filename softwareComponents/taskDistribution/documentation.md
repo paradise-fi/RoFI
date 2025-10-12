@@ -37,7 +37,7 @@ DistributedTaskManager(
         std::unique_ptr< ElectionProtocolBase > election,
         Ip6Addr& address,
         MessageDistributor* distributor,
-        std::unique_ptr< udp_pcb > pcb) 
+        std::unique_ptr< udp_pcb > pcb) ;
 ```
 Constructs a distributed task manager instance. It is strongly recommended that only one DistributedTaskManager instance exists per module.
 
@@ -54,36 +54,36 @@ Constructs a distributed task manager instance. It is strongly recommended that 
 ##### Logger Registration
 ```c++
 template< std::derived_from< LoggerBase > Logger >
-void useLogger( const Logger& logger )
+void useLogger( const Logger& logger );
 ```
 
 Registers a logger instance. The logger instance can be custom made, but it must inherit the Logger abstract class. When a logger is provided, the task manager will automatically write messages for different events, warnings and errors into the logger.
 
 ##### Event Callbacks
 ```c++
-bool registerLeaderFailureCallback( std::function< void() > callback )
-bool unregisterLeaderFailureCallback()
+bool registerLeaderFailureCallback( std::function< void() > callback );
+bool unregisterLeaderFailureCallback();
 ```
 
 Registers (and unregisters) a callback function for the event of leader failure (disconnect, crash, etc.). This is especially useful for failure recovery mechanisms.
 
 ```c++
-void registerTaskRequestCallback( std::function< bool(DistributedTaskManager& manager, rofi::net::Ip6Addr& requester ) > callback )
-void unregisterTaskRequestCallback()
+void registerTaskRequestCallback( std::function< bool(DistributedTaskManager& manager, rofi::net::Ip6Addr& requester ) > callback );
+void unregisterTaskRequestCallback();
 ```
 
 Registers (and unregisters) a callback function for the event of task requests from follower modules. This allows for custom task request handling code. The callback should return true if the task request pipeline should be terminated after this callback.
 
 ```c++
-void registerTaskFailedCallback( std::function< void(DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, int functionId ) > callback )
-void unregisterTaskFailedCallback()
+void registerTaskFailedCallback( std::function< void(DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, int functionId ) > callback );
+void unregisterTaskFailedCallback();
 ```
 
 Registers (and unregisters) a callback function for the event of a system failure when executing a function. This type of failure is not the same failure indicated by your own function defined in ``DistributedFunction``, but rather a failure of system configuration. For example, this could mean that a function was not registered on one of the modules, and thus the task manager failed to execute the function on that module.
 
 ```c++
-void registerCustomMessageCallback( std::function< void( DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, unsigned int bufferSize ) > callback )
-void unregisterCustomMessageCallback() {}
+void registerCustomMessageCallback( std::function< void( DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, unsigned int bufferSize ) > callback );
+void unregisterCustomMessageCallback();
 ```
 
 Registers (and unregisters) a callback function for the receiving of [custom messages](#sendcustommessage). Custom messages allow the user to implement and use their own messaging scheme within the task manager system. The user can also achieve this by using the lower level messaging API built over lwIP - this is a feature of convenience.
