@@ -1,5 +1,5 @@
 #pragma once
-#include "../memory/sharedMemoryBase.hpp"
+#include "../memory/distributedMemoryBase.hpp"
 #include <queue>
 #include "lwip++.hpp"
 #include "atoms/util.hpp"
@@ -32,7 +32,7 @@ class DistributedMemoryService
     MessageSender& _sender;
     Ip6Addr _leader;
     const Ip6Addr& _currentModuleAddress;
-    std::unique_ptr< SharedMemoryBase > _memory;
+    std::unique_ptr< DistributedMemoryBase > _memory;
 
     std::queue<MemoryStorageQueueItem> _memoryStorageQueue;
     std::optional< std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) > > _onMemoryStoredCb;
@@ -243,6 +243,10 @@ public:
     template < SerializableOrTrivial T >
     bool saveData( T data, int address )
     {
+        if ( !isMemoryRegistered() )
+        {
+            return false;
+        }
         // Convert the data to the memory format required by the implementation
         std::vector< uint8_t > dataBuffer;
 
@@ -280,6 +284,11 @@ public:
     /// @return MemoryReadResult struct containing information about read success and a method for extracting the data read.
     MemoryReadResult readData( int address )
     {
+        if ( !isMemoryRegistered() )
+        {
+            return MemoryReadResult{ false, std::vector< uint8_t >() };
+        }
+
         return _memory->readData( address );
     }
     
@@ -287,6 +296,11 @@ public:
     /// @param address The address of the data in memory
     void removeData( int address )
     {
+        if ( !isMemoryRegistered() )
+        {
+            return;
+        }
+        
         if ( isLeaderMemory() )
         {
             auto result = _memory->removeData( address, true );
@@ -316,13 +330,23 @@ public:
         }
     }
     
-    MemoryReadResult readMetadata( int address, std::string key )
+    MemoryReadResult readMetadata( int address, const std::string& key )
     {
+        if ( !isMemoryRegistered() )
+        {
+            return MemoryReadResult{ false, std::vector< uint8_t >() };
+        }
+
         return _memory->readMetadata( address, key );
     }
 
-    void saveMetadata( int address, std::string key, uint8_t* metadata, std::size_t metadataSize )
+    bool saveMetadata( int address, const std::string& key, uint8_t* metadata, std::size_t metadataSize )
     {
+        if ( !isMemoryRegistered() )
+        {
+            return false;
+        }
+
         if (isLeaderMemory() )
         {
             auto result = _memory->writeMetadata( address, key, metadata, metadataSize, true );
@@ -331,29 +355,36 @@ public:
                 propagateMetadataChange(result.propagationType, address, key, metadata, 
                     metadataSize, result.propagationTarget, DistributionMessageType::DataStorageRequest );
             }
-            return;
+            return true;
         }
 
         // If not leader -> we simply request to save metadata
         propagateMetadataChange( MemoryPropagationType::ONE_TARGET, address, key, metadata,
             metadataSize, _leader, DistributionMessageType::DataStorageRequest );
+
+        return true;
     }
 
-    void removeMetadata( int address, std::string key )
+    void removeMetadata( int address, const std::string& key )
     {
+        if ( !isMemoryRegistered() )
+        {
+            return;
+        }
+
         if ( isLeaderMemory() )
         {
             auto result = _memory->removeMetadata( address, key, true );
 
             if ( result.success )
             {
-                propagateMetadataChange(result.propagationType, address, key, nullptr, 
+                propagateMetadataChange( result.propagationType, address, key, nullptr, 
                     0, result.propagationTarget, DistributionMessageType::DataRemovalRequest );
             }
             return;
         }
 
-        propagateMetadataChange(MemoryPropagationType::ONE_TARGET, address, key, nullptr, 
+        propagateMetadataChange( MemoryPropagationType::ONE_TARGET, address, key, nullptr, 
                     0, _leader, DistributionMessageType::DataRemovalRequest );
     }
     
@@ -364,9 +395,9 @@ public:
     
     /// @brief Registers a shared memory implementation in the memory service. Only one implementation may be registered at a time.
     /// @tparam Memory
-    /// @param memory The SharedMemoryBase implementation to be registered.
+    /// @param memory The DistributedMemoryBase implementation to be registered.
     /// @return True if memory was succesfully registered, otherwise false.
-    template< std::derived_from< SharedMemoryBase > Memory >
+    template< std::derived_from< DistributedMemoryBase > Memory >
     bool useMemory( std::unique_ptr< Memory > memory )
     {
         if (_memory != nullptr )

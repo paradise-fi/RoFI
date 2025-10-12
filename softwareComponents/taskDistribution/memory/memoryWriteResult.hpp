@@ -17,8 +17,14 @@ enum MemoryPropagationType
 struct MemoryWriteResult
 {
     bool success;
+
+    // Instructs the system to only write metadata.
     bool metadataOnly;
+
+    // Instructs the system on how the data should be propagated.
     MemoryPropagationType propagationType;
+
+    // Used only if the propagation is ONE_TARGET.
     std::optional< Ip6Addr > propagationTarget;
 
     MemoryWriteResult() = default;

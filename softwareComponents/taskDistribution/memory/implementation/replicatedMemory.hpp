@@ -3,13 +3,13 @@
 #include <shared_mutex>
 #include "memoryEntry.hpp"
 #include "../distribution/messaging/messageSender.hpp"
-#include "sharedMemoryBase.hpp"
+#include "distributedMemoryBase.hpp"
 #include <map>
 
 using namespace rofi::hal;
 using namespace rofi::net;
 
-class ReplicatedMemory : public SharedMemoryBase {
+class ReplicatedMemory : public DistributedMemoryBase {
     std::map< int, MemoryEntry > _storage;
     mutable std::shared_mutex _mutex;
 

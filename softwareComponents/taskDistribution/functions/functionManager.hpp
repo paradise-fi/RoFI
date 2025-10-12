@@ -104,10 +104,10 @@ public:
 
         if ( task.status() != TaskStatus::Complete )
         {
-            return fn->second->onFailure( addr, task ) ? FunctionResultType::TRY_AGAIN : FunctionResultType::SUCCESS;
+            return fn->second->onFailure( addr, task ) ? FunctionResultType::TRY_AGAIN_LOCAL : FunctionResultType::SUCCESS;
         }
         
-        return fn->second->onSuccess( addr, task ) ? FunctionResultType::TRY_AGAIN : FunctionResultType::SUCCESS;
+        return fn->second->onSuccess( addr, task ) ? FunctionResultType::TRY_AGAIN_LOCAL : FunctionResultType::SUCCESS;
     }
 
     std::optional< std::reference_wrapper< FunctionConcept > > getFunction( int functionId )
