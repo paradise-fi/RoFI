@@ -171,6 +171,18 @@ public:
             return;
         }
 
+        if ( taskResultOptional.value().task->status() == TaskStatus::RepeatDistributed )
+        {
+            auto fn = _functionManager.getFunction(taskResultOptional.value().task->functionId());
+            if ( !fn.has_value() )
+            {
+                _loggingService.logError("Trying to requeue task in result processing, but no such function exists.");
+            }
+
+            _taskManager.enqueueTask( taskResultOptional.value().origin, std::move( taskResultOptional.value().task ), fn.value().get().completionType() );
+            return;
+        }
+
         auto reactionResult = invokeFunctionReaction( taskResultOptional->origin, *taskResultOptional->task );
 
         if ( reactionResult == FunctionResultType::FAILURE )
