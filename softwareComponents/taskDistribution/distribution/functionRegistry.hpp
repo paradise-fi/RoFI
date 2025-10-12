@@ -181,7 +181,7 @@ public:
             return;
         }
 
-        if ( reactionResult == FunctionResultType::TRY_AGAIN )
+        if ( reactionResult == FunctionResultType::TRY_AGAIN_LOCAL )
         {
             
             _loggingService.logInfo( "processTaskResultQueue - Task result placed back in queue." );
