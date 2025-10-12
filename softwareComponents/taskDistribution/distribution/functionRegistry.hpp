@@ -110,7 +110,7 @@ public:
     /// @param functionName The name of the distributed function.
     /// @return std::nullopt if the function does not exist, otherwise the function handle is returned.
     template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
-    std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( std::string functionName )
+    std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( const std::string& functionName )
     {
         auto fn = _functionManager.getFunction( functionName );
 

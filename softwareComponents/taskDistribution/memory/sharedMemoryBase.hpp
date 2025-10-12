@@ -17,12 +17,12 @@ class SharedMemoryBase {
         
         virtual MemoryWriteResult writeData( uint8_t* data, size_t size, int address, bool isLeader ) = 0;
         
-        virtual MemoryWriteResult writeMetadata( int address, std::string key, uint8_t* metadata, size_t metadataSize, bool isLeader ) = 0;
+        virtual MemoryWriteResult writeMetadata( int address, const std::string& key, uint8_t* metadata, size_t metadataSize, bool isLeader ) = 0;
         
-        virtual MemoryWriteResult removeMetadata( int address, std::string key, bool isLeader ) = 0;
+        virtual MemoryWriteResult removeMetadata( int address, const std::string& key, bool isLeader ) = 0;
 
         virtual MemoryReadResult readData( int address ) = 0;
-        virtual MemoryReadResult readMetadata( int address, std::string key) = 0;
+        virtual MemoryReadResult readMetadata( int address, const std::string& key) = 0;
         
         /// @brief Take data and add important details for your implementation. This will be sent to the other nodes.
         /// @param data The raw data.
