@@ -91,8 +91,8 @@ Registers (and unregisters) a callback function for the receiving of [custom mes
 The data buffer received into the callback contains only the body of the message, headers are already parsed out at this point.
 
 ```c++
-DistributedMemoryService& memoryService()
-LoggingService& loggingService()
+DistributedMemoryService& memoryService();
+LoggingService& loggingService();
 ```
 
 These methods provide direct access to some of the lower level subsystems that make up the task manager. 
@@ -103,27 +103,27 @@ These methods provide direct access to some of the lower level subsystems that m
 
 ##### Standard Workflow
 ```c++
-void doWork()
+void doWork();
 ```
 
 Executes a single run of the standard workflow loop of the task manager. This method must be continuously invoked for the task manager to function properly.
 
 ```c++
-void start( int moduleId )
+void start( int moduleId );
 ```
 
 Performs important initialization for the task manager. Namely, this method starts the election algorithm, which is necessary for the task manager to function correctly.
 
 ##### Unblock Queue Signals
 ```c++
-void broadcastUnblockSignal()
-void sendUnblockSignal( Ip6Addr& receiver )
+void broadcastUnblockSignal();
+void sendUnblockSignal( Ip6Addr& receiver );
 ```
 
 Methods used in synchronization workflows. These methods allow users to unblock queues on other modules, allowing for the implementation mechanisms such as barriers.
 
 ```c++
-std::optional< Ip6Addr > getLeader()
+std::optional< Ip6Addr > getLeader();
 ```
 
 Returns the address of the current leader if the election is finished. Otherwise ``std::nullopt`` is returned.
@@ -131,29 +131,29 @@ Returns the address of the current leader if the election is finished. Otherwise
 ##### SendCustomMessage
 
 ```c++
-void sendCustomMessage( uint8_t* data, unsigned int dataSize, std::optional< Ip6Addr > target )
+void sendCustomMessage( uint8_t* data, unsigned int dataSize, std::optional< Ip6Addr > target );
 ```
 Sends a custom message to the target module. If ``target`` is ``std::nullopt``, the message is sent to all modules.
 
 ##### Manual Task Distribution
 ```c++
 template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments > 
-bool sendFunctionExecutionOrder( int functionId, const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments )
+bool sendFunctionExecutionOrder( int functionId, const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments );
 
 template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments > 
-bool sendFunctionExecutionOrder( std::string functionName, const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments )
+bool sendFunctionExecutionOrder( std::string functionName, const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments );
 
-bool requestTask()
+bool requestTask();
 ```
 These methods allow for manual requests of task executions and task scheduling. These actions are typically performed as part of the task manager pipeline between leaders and followers, but they are needed when the user needs to manually start the pipeline of tasks again.
 
 ##### GetFunctionHandle
 ```c++
 template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
-std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( const std::string& functionName )
+std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( const std::string& functionName );
 
 template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
-std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( int functionId )
+std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( int functionId );
 ```
 
 These functions allow the user to retrieve a handle to their custom-defined ``DistributedFunction``. The handle is a functional object which can be invoked with the ``()`` operator.
@@ -163,14 +163,14 @@ These functions allow the user to retrieve a handle to their custom-defined ``Di
 ```c++
 template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments,
               std::derived_from< DistributedFunction< Result, Arguments... > > Func >
-bool registerFunction( const Func& function )
+bool registerFunction( const Func& function );
 ```
 
 Registers a custom defined ``DistributedFunction`` into the task manager.
 
 ##### ClearAllTasks
 ```c++
-void clearAllTasks()
+void clearAllTasks();
 ```
 Used to clear all tasks from the queues on this module. Can be useful for failure recovery.
 
@@ -185,7 +185,7 @@ The ``DistributedMemoryService`` is created internally by the task manager. The 
 
 ##### Memory Storage Callback
 ```c++
-void registerOnMemoryStored( std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) > onMemoryStoredCb )
+void registerOnMemoryStored( std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) > onMemoryStoredCb );
 ```
 
 Registers a callback for the event that memory has been succesfully stored at this module.
@@ -194,11 +194,11 @@ Registers a callback for the event that memory has been succesfully stored at th
 
 ```c++
 template< std::derived_from< SharedMemoryBase > Memory >
-bool useMemory( std::unique_ptr< Memory > memory )
+bool useMemory( std::unique_ptr< Memory > memory );
 
-bool isMemoryRegistered()
+bool isMemoryRegistered();
 
-bool deleteMemory()
+bool deleteMemory();
 ```
 
 Methods for registering a memory implementation, checking whether a memory implementation is registered, and deregistering a memory implementation respectivelly. 
@@ -209,7 +209,7 @@ Any custom memory implementation must be derived from ``SharedMemoryBase``.
 
 ```c++
 template < SerializableOrTrivial T >
-bool saveData( T data, int address )
+bool saveData( T data, int address );
 ```
 
 Used by the user to save data to the shared memory. Returns true if the data was stored succesfully, otherwise false.
@@ -218,14 +218,14 @@ If this module is a follower module, this method simply sends out a request for 
 
 
 ```c++
-void removeData( int address )
+void removeData( int address );
 ```
 Attempts to remove data from memory.
 
 If this module is a follower module, this method simply sends out a request for data removal to the leader and the actual data removal in this module is performed some time after the function finishes execution.
 
 ```c++
-MemoryReadResult readData( int address )
+MemoryReadResult readData( int address );
 ```
 
 Attempts to read data from memory. If data is not read, the MemoryReadResult struct will have ``success`` set to false.
@@ -239,7 +239,7 @@ struct MemoryReadResult
     std::vector< uint8_t > rawData;
 
     template< SerializableOrTrivial T >
-    T data()
+    T data();
 }
 ```
 The structure used for representation of the result of memory reading. If the result was succesfull, the ``success`` flag is set to true. To read the data within the memory read result, you should use the ``data()`` function.
@@ -247,22 +247,22 @@ The structure used for representation of the result of memory reading. If the re
 ##### Memory Service Purge
 
 ```c++
-void clearLocalMemory()
+void clearLocalMemory();
 ```
 
 Removes all data from local memory.
 
 ```c++
-void clearLocalQueue()
+void clearLocalQueue();
 ```
 Removes all entries in the storage queue - all pending memory changes.
 
 ##### Metadata Access Methods
 
 ```c++
-MemoryReadResult readMetadata( int address, const std::string& key )
-bool saveMetadata( int address, const std::string& key, uint8_t* metadata, std::size_t metadataSize )
-void removeMetadata( int address, const std::string& key )
+MemoryReadResult readMetadata( int address, const std::string& key );
+bool saveMetadata( int address, const std::string& key, uint8_t* metadata, std::size_t metadataSize );
+void removeMetadata( int address, const std::string& key );
 ```
 
 Functions for storing just the metadata related to an address within memory. Analogous to functions for storing data. 
@@ -271,19 +271,19 @@ Note that functions for storing data should generally encompass metadata as well
 
 ##### Internal Methods
 ```c++
-void onStorageMessage( Ip6Addr sender, uint8_t* data, size_t size, bool isDeleteMessage )
+void onStorageMessage( Ip6Addr sender, uint8_t* data, size_t size, bool isDeleteMessage );
 ```
 
 **This method is used within the internal workflow of the task manager.** It is likely not useful to the end user. It is used for the processing of incoming memory-related messages that are passed to this service from the ``DistributedTaskManager`` instance that manages this memory service.
 
 ```c++
-void processQueue()
+void processQueue();
 ```
 
 **This method is used within the internal workflow of the task manager.** Calling the ``DistributedTaskManager.doWork()`` method already invokes this method. This method processes any pending memory-altering operation requests.
 
 ```c++
-void setLeader( Ip6Addr leader )
+void setLeader( Ip6Addr leader );
 ```
 
 **This method is used within the internal workflow of the task manager.** This method informs the task manager of who the current leader module is. You should generally not use this method.
@@ -299,10 +299,7 @@ Provides a simple wrapper around a custom-defined logger, ensuring ease of use a
 ##### UseLogger
 ```c++
 template< std::derived_from< LoggerBase > Logger >
-void useLogger( const Logger& logger )
-{
-    _logger = std::make_unique< Logger >( logger );
-}
+void useLogger( const Logger& logger );
 ```
 
 Registers a logger instance within the logging service. Only one logger instance can be registered at a time.
@@ -310,9 +307,9 @@ Registers a logger instance within the logging service. Only one logger instance
 ##### Logging
 
 ```c++
-void logInfo( const std::string& message )
-void logWarning( const std::string& message )
-void logError( const std::string& message )
+void logInfo( const std::string& message );
+void logWarning( const std::string& message );
+void logError( const std::string& message );
 ```
 
 Instructs the underlying logger implementation to write log messages with the given log levels (Info, Warning, Error). It is up to the lower level implementation to handle the representation of these messages and their output.
@@ -329,7 +326,7 @@ The FunctionResult structure carries data about the execution of the function th
 
 ##### Constructor
 ```c++
-FunctionResult( std::optional< Result > value, FunctionResultType resultType )
+FunctionResult( std::optional< Result > value, FunctionResultType resultType );
 ```
 
 ##### Members
@@ -364,7 +361,7 @@ The ``TRY_AGAIN_LOCAL`` value simply reschedules the task on the module's side. 
 
 ##### Execute
 ```c++
-virtual FunctionResult< Result > execute( Arguments... args )
+virtual FunctionResult< Result > execute( Arguments... args ) = 0;
 ```
 The ``execute`` function is invoked on the follower module. It represents the primary function execution. For the return type semantics, see [FunctionResult](#functionresult).
 
@@ -372,7 +369,7 @@ The ``execute`` function is invoked on the follower module. It represents the pr
 
 ##### OnFunctionSuccess
 ```c++
-virtual bool onFunctionSuccess( std::optional< Result > result, const Ip6Addr& origin )
+virtual bool onFunctionSuccess( std::optional< Result > result, const Ip6Addr& origin ) = 0;
 ```
 
 The ``onFunctionSuccess`` method is invoked on the leader side. It is invoked when the leader receives a function result with result type set to ``FunctionResultType::SUCCESS``.
@@ -385,7 +382,7 @@ The return value of this function indicates whether the function result processi
 
 ##### OnFunctionFailure
 ```c++
-virtual bool onFunctionFailure( std::optional< Result > result, const Ip6Addr& origin )
+virtual bool onFunctionFailure( std::optional< Result > result, const Ip6Addr& origin ) = 0;
 ```
 
 The ``onFunctionFailure`` method is invoked on the leader side. It is invoked when the leader receives a function result with result type set to ``FunctionResultType::FAILURE``.
@@ -398,11 +395,11 @@ The return value of this function indicates whether the function result processi
 
 ##### Metadata Methods
 ```c++
-virtual std::string functionName() const 
-virtual int functionId() const
-virtual FunctionCompletionType completionType() const
-virtual FunctionDistributionType distributionType() const
-virtual FunctionType functionType() const
+virtual std::string functionName() const = 0;
+virtual int functionId() const = 0;
+virtual FunctionCompletionType completionType() const = 0;
+virtual FunctionDistributionType distributionType() const = 0;
+virtual FunctionType functionType() const = 0;
 ```
 
 These functions are used as metadata for the task manager. The ``functionName()`` and ``functionId()`` functions must provide unique representation of the function.
@@ -442,7 +439,7 @@ The wrapper for ``DistributedFunction``. The ``FunctionHandle`` is a functional 
 #### Methods
 ##### Invocation
 ```c++
-bool operator()( const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments )
+bool operator()( const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments );
 ```
 Used at the leader side. This call to the FunctionHandle queues the ``DistributedFunction`` execution for execution at the ``target`` follower.
 
@@ -462,19 +459,19 @@ The base abstract class for any distributed memory implementation.
 
 ##### Clear Memory
 ```c++
-virtual void clear()
+virtual void clear() = 0;
 ```
 Instructs the memory implementation to completely clear its memory.
 
 ##### Data Writing
 ```c++
-virtual MemoryWriteResult removeData( int address, bool isLeader )
+virtual MemoryWriteResult removeData( int address, bool isLeader ) = 0;
         
-virtual MemoryWriteResult writeData( uint8_t* data, size_t size, int address, bool isLeader )
+virtual MemoryWriteResult writeData( uint8_t* data, size_t size, int address, bool isLeader ) = 0;
 
-virtual MemoryWriteResult writeMetadata( int address, const std::string& key, uint8_t* metadata, size_t metadataSize, bool isLeader )
+virtual MemoryWriteResult writeMetadata( int address, const std::string& key, uint8_t* metadata, size_t metadataSize, bool isLeader ) = 0;
 
-virtual MemoryWriteResult removeMetadata( int address, const std::string& key, bool isLeader )
+virtual MemoryWriteResult removeMetadata( int address, const std::string& key, bool isLeader ) = 0;
 ```
 
 These functions are for writing into the data and metadata of the implementation. The return structure for these functions is used to instruct the ``MemoryService`` on how the memory should be propagated from the leader, what type of data was sent, and the success of the write operation.
@@ -505,9 +502,9 @@ struct MemoryWriteResult
     // Used only if the propagation is ONE_TARGET.
     std::optional< Ip6Addr > propagationTarget;
 
-    MemoryWriteResult()
-    MemoryWriteResult( bool success, bool metadataOnly, MemoryPropagationType propagationType, Ip6Addr target )
-    MemoryWriteResult( bool success, bool metadataOnly, MemoryPropagationType propagationType )
+    MemoryWriteResult();
+    MemoryWriteResult( bool success, bool metadataOnly, MemoryPropagationType propagationType, Ip6Addr target );
+    MemoryWriteResult( bool success, bool metadataOnly, MemoryPropagationType propagationType );
 };
 ```
 
@@ -515,15 +512,15 @@ This structure represents the result of writing into memory. It informs the uppe
 
 ##### Data Reading
 ```c++
-virtual MemoryReadResult readData( int address )
-virtual MemoryReadResult readMetadata( int address, const std::string& key)
+virtual MemoryReadResult readData( int address ) const = 0;
+virtual MemoryReadResult readMetadata( int address, const std::string& key) const = 0;
 ```
 
 These methods serve for reading data from the memory implementation. For the return value, see [MemoryReadResult](#memoryreadresult)
 
 ##### Implementation-specific Serialization
 ```c++
-virtual std::vector< uint8_t > serializeDataToMemoryFormat( uint8_t* data, size_t dataSize, int address, bool isMetadataOnly = false )
+virtual std::vector< uint8_t > serializeDataToMemoryFormat( uint8_t* data, size_t dataSize, int address, bool isMetadataOnly = false ) const = 0;
 ```
 
 This function is used to serialize data for transport to other modules. This is because implementations may require different formats of data, and the memory service has no way of knowing how to format the data.
@@ -558,7 +555,7 @@ concept SerializableOrTrivial = std::is_base_of_v< Serializable, T > || std::is_
 
 ##### Serialize
 ```c++
-virtual void serialize( uint8_t*& buffer ) const
+virtual void serialize( uint8_t*& buffer ) const = 0;
 ```
 
 Used to Serialize the data into the given buffer. The buffer will be of size atleast equal to the value returned by the ``size()`` function of ``Serializable``.
@@ -566,7 +563,7 @@ Used to Serialize the data into the given buffer. The buffer will be of size atl
 ##### Deserialize
 
 ```c++
-virtual void deserialize( const uint8_t*& buffer )
+virtual void deserialize( const uint8_t*& buffer ) = 0;
 ```
 
 Used to deserialize the data from a given buffer into this struct. The buffer wil be of size at least equal to the value returned by the ``size()`` function of ``Serializable``.
@@ -574,7 +571,7 @@ Used to deserialize the data from a given buffer into this struct. The buffer wi
 ##### Size
 
 ```c++
-virtual std::size_t size() const
+virtual std::size_t size() const = 0;
 ```
 
 The size that the data buffer for serialization of the data in this structure must have. Typically this includes sizes of individual items and some additional metadata, such as the size of a vector stored in the ``Serializable`` struct.

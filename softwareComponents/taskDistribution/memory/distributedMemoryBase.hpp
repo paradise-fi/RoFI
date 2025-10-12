@@ -30,5 +30,5 @@ class DistributedMemoryBase {
         /// @param address The address this data is to be stored in - you do not need serialize the address. Can be used to fetch additional data about an alreadty existing entry.
         /// @param isMetadataOnly A flag that denotes whether the data being serialized is just metadata. You can use this for different formatting.
         /// @return A buffer with added data required for your own implementation.
-        virtual std::vector< uint8_t > serializeDataToMemoryFormat( uint8_t* data, size_t dataSize, int address, bool isMetadataOnly = false ) = 0;
+        virtual std::vector< uint8_t > serializeDataToMemoryFormat( uint8_t* data, size_t dataSize, int address, bool isMetadataOnly = false ) const = 0;
 };
