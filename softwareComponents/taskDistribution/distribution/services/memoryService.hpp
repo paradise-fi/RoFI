@@ -210,6 +210,13 @@ public:
             dataSize, address, isMetadataOnly, isDeleteMessage );
     }
 
+    /// @brief Checks whether the memory, in this instant, is going to process any more write operations that are queued.
+    /// @return True if there are no more pending writes.
+    bool isMemoryStable()
+    {
+        return _memoryStorageQueue.empty();
+    }
+
     void processQueue()
     {
         if ( _memory == nullptr || _memoryStorageQueue.empty() )
@@ -219,7 +226,7 @@ public:
 
         auto memory = _memoryStorageQueue.front();
         _memoryStorageQueue.pop();
-        
+
         MemoryWriteResult result = memory.isMetadataOnly 
             ? handleMetadataUpdate( memory )
             : handleDataUpdate ( memory );
