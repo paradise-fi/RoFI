@@ -6,6 +6,7 @@ class NaiveBarrier : public DistributedFunction< Ip6Addr >
 {
     // Needs to be atomic
     std::set< Ip6Addr > _participants;
+    std::set< Ip6Addr > _reached;
     Ip6Addr& _address;
     DistributedTaskManager& _manager;
 
@@ -29,12 +30,15 @@ public:
 
     virtual bool onFunctionSuccess( std::optional< Ip6Addr >, const Ip6Addr& origin ) override
     {
-        _participants.erase( origin );
+        _reached.insert( origin );
 
-        _manager.loggingService().logInfo("NaiveBarrier Success.");
+        std::ostringstream stream;
+        stream << "NaiveBarrier reached by " << origin;
+        _manager.loggingService().logInfo(stream.str());
         
-        if (_participants.empty())
+        if (_reached == _participants)
         {
+            _reached.clear();
             _manager.loggingService().logInfo("NaiveBarrier Unblocking.");
             _manager.broadcastUnblockSignal();
         }
@@ -66,7 +70,7 @@ public:
     // Setting this to broadcast will ensure that the barrier is sent out to all modules when it is invoked.
     virtual FunctionDistributionType distributionType() const override
     {
-        return FunctionDistributionType::Broadcast;
+        return FunctionDistributionType::Unicast;
     }
 
     virtual FunctionType functionType() const override

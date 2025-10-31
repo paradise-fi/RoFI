@@ -87,7 +87,7 @@ public:
         }
 
         auto task = std::move( taskCandidate.value() );
-        
+        std::ostringstream stream;
         bool functionInvocationSucceeded = _functionRegistry.invokeFunction( task.get() );
         auto fn = _functionRegistry.getFunction( task.get().functionId() );
         TaskStatus status = task.get().status();
