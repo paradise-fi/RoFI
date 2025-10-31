@@ -50,7 +50,6 @@ public:
         MemoryWriteResult result;
         result.metadataOnly = false;
         unsigned int timestamp = as< unsigned int >( data );
-        
         result.success = saveData( address, timestamp, data + sizeof( unsigned int ), size - sizeof( unsigned int ), isLeader );
         result.propagationType = MemoryPropagationType::SEND_TO_ALL;
         
