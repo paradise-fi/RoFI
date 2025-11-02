@@ -8,12 +8,21 @@ struct FizzBuzzMetaData {
     int identity;
 };
 
+struct MemoryTrackingData
+{
+    int stamp;
+    int staleCount = 0;
+
+    MemoryTrackingData() : stamp( -1 ) {}
+    MemoryTrackingData( int stamp ) : stamp( stamp ) {}
+};
+
 class FizzBuzz : public DistributedFunction< FizzBuzzMetaData, int >
 {
     const int fizzbuzzLimit = 20;
     int fizzBuzzOps = 0;
     int _identity;
-    std::map< int, int > _prevStamps;
+    std::map< int, MemoryTrackingData > _prevStamps;
     const int _memorySlotOneId = 2;
     const int _memorySlotTwoId = 3;
     DistributedTaskManager& _manager;
@@ -28,8 +37,8 @@ public:
     FizzBuzz( int identity, DistributedTaskManager& manager )
     : _identity( identity ), _manager( manager )
     {
-        _prevStamps.emplace(_memorySlotOneId, -1);
-        _prevStamps.emplace(_memorySlotTwoId, -1);
+        _prevStamps.emplace(_memorySlotOneId, MemoryTrackingData( -1 ) );
+        _prevStamps.emplace(_memorySlotTwoId, MemoryTrackingData( -1 ) );
     }
 
     /// @brief The execute() function is performed by the follower node.
@@ -63,6 +72,8 @@ public:
         if ( fizzbuzzLimit <= fizzBuzzOps )
         {
             std::cout << "Example complete. Terminating pipeline." << std::endl;
+            auto terminateHandle = _manager.getFunctionHandle< bool >( 101 ).value();
+            terminateHandle( origin, 1, false, std::tuple<>() );
             return false;
         }
         
@@ -74,16 +85,17 @@ public:
         int memoryAddress = data.value().value;
         std::cout << "FizzBuzz result notification received from " << data.value().identity << ", going to read from address " << memoryAddress << std::endl;
         MemoryReadResult metadata = _manager.memoryService().readMetadata( memoryAddress, "stamp" );
-        if ( !metadata.success || metadata.data< int >() <= _prevStamps[ memoryAddress ])
+        if ( !metadata.success )
         {
-            if (!metadata.success)
-            {
-                std::cout << "Failed to read metadata." << std::endl;
-            }
-            else
-            {
-                std::cout << "Stale data detected." << std::endl;
-            }
+            std::cout << "Failed to read metadata." << std::endl;
+            return true;
+        }
+
+        auto& prevStamp = _prevStamps[ memoryAddress ];
+        if ( metadata.data< int >() <= prevStamp.stamp && prevStamp.staleCount < 4 )
+        {
+            prevStamp.staleCount++;
+            std::cout << "Stale data detected." << std::endl;
             return true;
         }
 
@@ -94,7 +106,8 @@ public:
         }
         
         fizzBuzzOps++;
-        _prevStamps[ memoryAddress ] = metadata.data< int >();
+        prevStamp.stamp = metadata.data< int >();
+        prevStamp.staleCount = 0;
         int result = readResult.data< int >();
         std::cout << "[Result on " << origin << "]: " << result << " -> ";
         if ( result % 3 == 0 )
@@ -111,7 +124,7 @@ public:
         auto barrierHandle = _manager.getFunctionHandle< Ip6Addr >( 100 ).value();
         if ( !barrierHandle( origin, 1, false, std::tuple<>()) )
         {
-            std::cout << "Execution of function " << functionName() << " failed" << std::endl;
+            std::cout << "Execution of function " << functionName() << " failed." << std::endl;
         }
 
         auto fizzbuzzHandle = _manager.getFunctionHandle< FizzBuzzMetaData, int >( 1 ).value();

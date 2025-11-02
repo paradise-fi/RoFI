@@ -173,8 +173,10 @@ public:
     {
         for( auto it = _schedulers.begin(); it != _schedulers.end(); ++it)
         {
+            std::cout << "[unblockSchedulers] unblocking." << std::endl;
             it->second.clearActiveTask( hardUnblock );
         }
+        std::cout << "[unblockSchedulers] unblocked" << std::endl;
     }
 
     void clearTasks()

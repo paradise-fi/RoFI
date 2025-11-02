@@ -87,9 +87,18 @@ public:
         }
 
         auto task = std::move( taskCandidate.value() );
-        std::ostringstream stream;
-        bool functionInvocationSucceeded = _functionRegistry.invokeFunction( task.get() );
         auto fn = _functionRegistry.getFunction( task.get().functionId() );
+        
+        if ( !fn.has_value() )
+        {
+            _functionRegistry.finishActiveTask( address );
+            std::ostringstream stream;
+            stream << "doWorkFollower: Failed to retrieve function with ID " << task.get().functionId();
+            _loggingService.logError( stream.str() );
+            return;
+        }
+
+        bool functionInvocationSucceeded = _functionRegistry.invokeFunction( task.get() );
         TaskStatus status = task.get().status();
 
         if ( status == TaskStatus::RepeatLocally )
