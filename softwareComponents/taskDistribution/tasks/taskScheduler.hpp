@@ -45,7 +45,7 @@ public:
 
     bool schedulerIsBlocked()
     {
-        if ( _active == nullptr )
+        if ( _active == nullptr || _active.get() == nullptr )
         {
             return false;
         }
@@ -55,7 +55,7 @@ public:
 
     void clearActiveTask( bool clearBarrier = false )
     {
-        if ( _active == nullptr )
+        if ( _active == nullptr || _active.get() == nullptr )
         {
             return;
         }
@@ -75,8 +75,14 @@ public:
 
     void clearActiveTask( int id, bool clearBarrier = false )
     {
-        if ( _active == nullptr )
+        if ( _active == nullptr || _active.get() == nullptr )
         {
+            return;
+        }
+
+        if ( _active.get()->task == nullptr || _active.get()->task.get() == nullptr )
+        {
+            _active.reset();
             return;
         }
 
@@ -98,8 +104,14 @@ public:
 
     std::unique_ptr< TaskBase > clearAndGetActiveTask()
     {
-        if ( _active == nullptr )
+        if ( _active == nullptr || _active.get() == nullptr )
         {
+            return nullptr;
+        }
+
+        if ( _active.get()->task == nullptr || _active.get()->task.get() == nullptr )
+        {
+            _active.reset();
             return nullptr;
         }
 
