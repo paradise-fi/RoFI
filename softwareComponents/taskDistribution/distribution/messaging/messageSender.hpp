@@ -30,7 +30,7 @@ public:
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
         task.copyToBuffer( buffer.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
 
-        auto result = udp_sendto( _pcb, buffer.release(), &target, _distributionPort );
+        auto result = udp_sendto( _pcb, buffer.get(), &target, _distributionPort );
 
         if ( result != ERR_OK )
         {
@@ -46,7 +46,7 @@ public:
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
         std::memcpy(buffer.payload() + sizeof( DistributionMessageType ) + Ip6Addr::size(), data.payload(), data.size() );
-        auto result = udp_sendto( _pcb, buffer.release(), &target, _distributionPort );
+        auto result = udp_sendto( _pcb, buffer.get(), &target, _distributionPort );
 
         if ( result != ERR_OK )
         {
@@ -61,7 +61,7 @@ public:
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
 
-        auto result = udp_sendto( _pcb, buffer.release(), &target, _distributionPort );
+        auto result = udp_sendto( _pcb, buffer.get(), &target, _distributionPort );
 
         if ( result != ERR_OK )
         {
