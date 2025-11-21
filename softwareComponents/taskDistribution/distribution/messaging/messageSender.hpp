@@ -3,6 +3,13 @@
 #include "task.hpp"
 #include "LRElect.hpp"
 #include "distributionMessageType.hpp"
+#include "../../tasks/serializable/serializable.hpp"
+
+struct MessageSendResult
+{
+    bool success;
+    std::string messsage;
+};
 
 /// @brief Low level handler for sending messages via network.
 class MessageSender {
@@ -21,58 +28,90 @@ public:
         _pcb = pcb;
     }
     
-    void sendMessage( DistributionMessageType type, TaskBase& task, const Ip6Addr& target)
+    MessageSendResult sendMessage( DistributionMessageType type, TaskBase& task, const Ip6Addr& target)
     {
-        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( task.size() )
-                                                 + sizeof( DistributionMessageType ) 
-                                                 + sizeof( Ip6Addr ) );
+        auto buffer = rofi::hal::PBuf::allocate( headerSize() + static_cast< int >( task.size() ) );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
         task.copyToBuffer( buffer.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
 
+        MessageSendResult sendResult;
+        sendResult.success = true;
         auto result = udp_sendto( _pcb, buffer.get(), &target, _distributionPort );
-
+        std::cout << lwip_strerr( result ) << std::endl;
         if ( result != ERR_OK )
         {
-            std::cout << "Error while sending message: " << lwip_strerr( result ) << std::endl;
+            sendResult.success = false;
+            sendResult.messsage = lwip_strerr( result );
         }
+
+        return sendResult;
     }
 
-    void sendMessage( DistributionMessageType type, PBuf&& data, const Ip6Addr& target )
+    MessageSendResult sendMessage( DistributionMessageType type, PBuf&& data, const Ip6Addr& target )
     {
-        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( sizeof( DistributionMessageType ) )
-                                                + Ip6Addr::size()
-                                                + data.size() );
+        auto buffer = rofi::hal::PBuf::allocate( headerSize() + data.size() );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
         std::memcpy(buffer.payload() + sizeof( DistributionMessageType ) + Ip6Addr::size(), data.payload(), data.size() );
+
+        MessageSendResult sendResult;
+        sendResult.success = true;
+
         auto result = udp_sendto( _pcb, buffer.get(), &target, _distributionPort );
 
         if ( result != ERR_OK )
         {
-            std::cout << "Error while sending message: " << lwip_strerr( result ) << std::endl;
+            sendResult.success = false;
+            sendResult.messsage = lwip_strerr( result );
         }
+
+        return sendResult;
+    }
+
+    MessageSendResult sendMessage( DistributionMessageType type, uint8_t* data, size_t dataSize, const Ip6Addr& target )
+    {
+        auto buffer = rofi::hal::PBuf::allocate( headerSize() + dataSize );
+        as< DistributionMessageType >( buffer.payload() ) = type;
+        as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
+        std::memcpy( buffer.payload() + headerSize(), data, dataSize );
+
+        MessageSendResult sendResult;
+        sendResult.success = true;
+
+        auto result = udp_sendto( _pcb, buffer.get(), &target, _distributionPort );
+
+        if ( result != ERR_OK )
+        {
+            sendResult.success = false;
+            sendResult.messsage = lwip_strerr( result );
+        }
+
+        return sendResult;
     }
     
-    void sendMessage( DistributionMessageType type, const Ip6Addr& target )
+    MessageSendResult sendMessage( DistributionMessageType type, const Ip6Addr& target )
     {
-        auto buffer = rofi::hal::PBuf::allocate( static_cast< std::size_t >( sizeof( DistributionMessageType ) 
-                                               + static_cast< std::size_t >( sizeof( Ip6Addr ) ) ) );
+        auto buffer = rofi::hal::PBuf::allocate( headerSize() );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
 
+        MessageSendResult sendResult;
+        sendResult.success = true;
         auto result = udp_sendto( _pcb, buffer.get(), &target, _distributionPort );
 
         if ( result != ERR_OK )
         {
-            std::cout << "Error while sending message: " << lwip_strerr( result ) << std::endl;
+            sendResult.success = false;
+            sendResult.messsage = lwip_strerr( result );
         }
+
+        return sendResult;
     }
 
     void broadcastMessage( DistributionMessageType type, unsigned int methodId )
     {
-        auto buffer = rofi::hal::PBuf::allocate( static_cast< std::size_t >( sizeof( DistributionMessageType ) 
-                                               + static_cast< std::size_t >( sizeof( Ip6Addr ) ) ) );
+        auto buffer = rofi::hal::PBuf::allocate( headerSize() );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
 
@@ -81,9 +120,7 @@ public:
 
     void broadcastMessage( DistributionMessageType type, PBuf&& data, unsigned int methodId )
     {
-        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( sizeof( DistributionMessageType ) )
-                                                + Ip6Addr::size()
-                                                + data.size() );
+        auto buffer = rofi::hal::PBuf::allocate( headerSize() + data.size() );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
         std::memcpy(buffer.payload() + sizeof( DistributionMessageType ) + Ip6Addr::size(), data.payload(), data.size() );
@@ -105,8 +142,7 @@ public:
     void broadcastMessage( DistributionMessageType type, TaskBase& task, unsigned int methodId )
     {
         auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( task.size() )
-                                                 + sizeof( DistributionMessageType ) 
-                                                 + sizeof( Ip6Addr ) );
+                                                 + headerSize() );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
         task.copyToBuffer( buffer.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
@@ -114,8 +150,8 @@ public:
         _messageDistributor->sendMessage( _address, methodId, buffer.payload(), buffer.size() );
     }
 
-    unsigned long int headerSize()
+    unsigned int headerSize()
     {
-        return sizeof( DistributionMessageType ) + Ip6Addr::size();
+        return static_cast< int >( sizeof( DistributionMessageType ) ) + Ip6Addr::size();
     }
 };

@@ -10,6 +10,7 @@
 
 #include "distributedTaskManager.hpp"
 #include "implementation/replicatedMemory.hpp"
+#include "exampleLogger.hpp"
 #include "initial.hpp"
 #include "fizzbuzz.hpp"
 
@@ -67,11 +68,13 @@ void distributionManagerFizzBuzz() {
     manager.memoryService().useMemory( 
         std::make_unique< ReplicatedMemory >() );
 
+    // Register logger implementation
+    manager.useLogger( ExampleLogger() );
+
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );
 
     while ( true ){
-        sleep( 1 );
         // A single 'tick' of the manager instance.
         manager.doWork();
     }

@@ -7,11 +7,13 @@
 
 #include "memoryReadResult.hpp"
 #include "memoryWriteResult.hpp"
+#include "memoryStorageBehavior.hpp"
 
 class DistributedMemoryBase {
     public:
         virtual ~DistributedMemoryBase() = default;
         virtual void clear() = 0;
+        virtual MemoryStorageBehavior storageBehavior() const = 0;
         
         virtual MemoryWriteResult removeData( int address, bool isLeader ) = 0;
         
@@ -21,8 +23,8 @@ class DistributedMemoryBase {
         
         virtual MemoryWriteResult removeMetadata( int address, const std::string& key, bool isLeader ) = 0;
 
-        virtual MemoryReadResult readData( int address ) const = 0;
-        virtual MemoryReadResult readMetadata( int address, const std::string& key) const = 0;
+        virtual MemoryReadResult readData( int address, bool isLeader ) const = 0;
+        virtual MemoryReadResult readMetadata( int address, const std::string& key, bool isLeader ) const = 0;
         
         /// @brief Take data and add important details for your implementation. This will be sent to the other nodes.
         /// @param data The raw data.
