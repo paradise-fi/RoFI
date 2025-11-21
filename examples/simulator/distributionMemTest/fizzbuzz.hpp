@@ -3,35 +3,53 @@
 
 class FizzBuzz : public DistributedFunction< int, int >
 {
-    const int _fizzBuzzTreshold = 600;
+    const int _fizzBuzzTreshold = 40;
     int _identity;
+    int _address = 1;
     DistributedTaskManager& _manager;
     std::map< int, int > _addressStampMap;
 
 public:
     FizzBuzz( int identity, DistributedTaskManager& manager )
     : _identity( identity ), _manager( manager )
-    {}
+    {
+        _address += 10 * ( identity - 1 );
+    }
 
     /// @brief The execute() function is performed by the follower node.
     /// @param value the argument, corresponding to < Arguments > of the template.
     /// @return A function result structure, which contains both the result value and whether the function is considered a success.
-    virtual FunctionResult< int > execute( int value ) override 
+    virtual FunctionResult< int > execute( int ) override 
     {
+        int address = _address + 10; 
         int result;
-        MemoryReadResult memoryResult = _manager.memoryService().readData( _identity );
-        if ( !memoryResult.success )
+
+        if ( _identity == 2 )
         {
-            std::cout << "FizzBuzz value not in memory, generating..." << std::endl;
-            result = _identity + value ;
+            sleep( 4 );
+        }
+
+        if ( ( _identity == 2 && address > 21 ) || ( _identity == 3 && address > 31 ) )
+        {
+            MemoryReadResult memoryResult = _manager.memoryService().readData( address );
+            if ( !memoryResult.success )
+            {
+                std::cout << "FizzBuzz value not in memory, generating..." << std::endl;
+                result = address;
+            }
+            else
+            {
+                result = memoryResult.data< int >();
+            }
         }
         else
         {
-            result = _identity + memoryResult.data< int >();
+            result = address;
         }
         std::cout << "FizzBuzz Value " << result << " will be stored to memory." << std::endl;
-        _manager.memoryService().saveData< int >( result, _identity );
-        return FunctionResult< int >( _identity, FunctionResultType::SUCCESS );
+        _manager.memoryService().saveData< int >( result, address );
+        _address = address;
+        return FunctionResult< int >( result, FunctionResultType::SUCCESS );
     }
 
     /// This function is called by the leader node if the FunctionResult fom execute indicates a success.
@@ -42,15 +60,24 @@ public:
             return false;
         }
 
-        int result;
-        MemoryReadResult memoryResult = _manager.memoryService().readData( addr.value() );;
-        while ( !memoryResult.success )
+        if ( _fizzBuzzTreshold <= addr.value() )
         {
-            std::cout << "Going to re-queue this task." << std::endl;
-            return true;
+            std::cout << "Example complete. Terminating pipeline." << std::endl;
+            return false;
         }
 
-        result = memoryResult.data< int >();
+        // std::cout << "Function Success, going to read memory" << std::endl;
+        // int result;
+        // MemoryReadResult memoryResult = _manager.memoryService().readData( addr.value() );
+
+        // std::cout << "After memory read." << std::endl;
+        // while ( !memoryResult.success )
+        // {
+        //     std::cout << "Going to re-queue this task." << std::endl;
+        //     return true;
+        // }
+
+        int result = addr.value();
         std::cout << origin << ": " << result << " ";
         if ( result % 3 == 0 )
         {
@@ -63,13 +90,10 @@ public:
         }
         std::cout << std::endl;
 
-        if ( result < _fizzBuzzTreshold )
+        auto fizzbuzzHandle = _manager.getFunctionHandle< int, int >( functionId() ).value();
+        if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( result ) ) )
         {
-            auto fizzbuzzHandle = _manager.getFunctionHandle< int, int >( functionId() ).value();
-            if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( result ) ) )
-            {
-                std::cout << "Execution of function " << functionName() << "failed." << std::endl;
-            }
+            std::cout << "Execution of function " << functionName() << "failed." << std::endl;
         }
 
         return false;

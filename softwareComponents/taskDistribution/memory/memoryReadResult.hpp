@@ -1,10 +1,16 @@
 #include <vector>
 #include <cstdint>
+#include <optional>
 #include "../tasks/serializable/serializable.hpp"
+
+#include <lwip++.hpp>
 
 struct MemoryReadResult
 {
     bool success;
+    bool requestRemoteRead;
+    // Used when a remote read is required. Leave nullopt to send message to leader.
+    std::optional< rofi::hal::Ip6Addr > readTarget;
     std::vector< uint8_t > rawData;
 
     template< SerializableOrTrivial T >

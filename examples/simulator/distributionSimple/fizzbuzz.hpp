@@ -18,7 +18,7 @@ public:
     virtual FunctionResult< int > execute( int value ) override 
     {
         std::cout << "Received value from leader: " << value << std::endl;
-        int result = _identity + ( value * _identity );
+        int result = _identity + value;
         std::cout << "FizzBuzz Value:" << result << std::endl;
         return FunctionResult< int >( result, FunctionResultType::SUCCESS );
     }
