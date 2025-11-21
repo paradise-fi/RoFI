@@ -9,29 +9,23 @@
 #include <string>
 
 #include "distributedTaskManager.hpp"
+#include "testMemory.hpp"
+#include "exampleLogger.hpp"
 #include "initial.hpp"
 #include "fizzbuzz.hpp"
+#include "address.cpp"
+#include "terminate.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
 using namespace rofi::leadership;
 using namespace std::chrono_literals;
 
-Ip6Addr createAddress( int id ) {
-    std::stringstream ss;
-    ss << "fc07:0:0:";
-    ss << id;
-    ss << "::1";
-
-    return Ip6Addr( ss.str() );
-}
-
-/// In this simple example, you will learn how to create a simple program using
-/// the distribution manager. In this example, follower nodes will generate values
-/// that will be sent to the leader. The leader will take these values and play the fizzbuzz
-/// game with them.
+/// In this simple example, you will learn how to use distributed memory within the memory manager. 
+/// In this example, follower nodes will generate values that will be stored in memory. 
+///The leader will take these values and play the fizzbuzz game with them.
 void distributionManagerFizzBuzz() {
-    std::cout << "Starting simple RoFI Distribution Manager FizzBuzz example\n";
+    std::cout << "Starting RoFI Distribution Manager FizzBuzz example with distributed memory\n";
     tcpip_init( nullptr, nullptr );
 
     LOCK_TCPIP_CORE();
@@ -58,14 +52,25 @@ void distributionManagerFizzBuzz() {
         std::move( election ), addr,
         reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
 
+    bool terminate = false;
+
     // Register the distributed functions.
-    manager.registerFunction< int >( InitialFunction( id, manager ));
+    manager.registerFunction< int >( InitialFunction( id, manager ) );
     manager.registerFunction< int, int >( FizzBuzz( id, manager ) );
+    manager.registerFunction< bool >( TerminateFunction( terminate, manager ) );
+
+    // Register the memory implementation - the memory implementation is responsible for 
+    // initiating memory-relevant communication, hence why the sender is passed too.
+    manager.memoryService().useMemory( 
+        std::make_unique< TestMemory >( id ) );
+
+    // Register logger implementation
+    manager.useLogger( ExampleLogger() );
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );
 
-    while ( true ){
+    while ( !terminate ) {
         // A single 'tick' of the manager instance.
         manager.doWork();
     }

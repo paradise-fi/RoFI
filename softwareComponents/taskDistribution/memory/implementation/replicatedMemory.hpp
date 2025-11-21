@@ -45,13 +45,20 @@ class ReplicatedMemory : public DistributedMemoryBase {
     }
 
 public:
+    virtual MemoryStorageBehavior storageBehavior() const override
+    {
+        return MemoryStorageBehavior::LeaderFirstStorage;
+    }
+
     virtual MemoryWriteResult writeData( uint8_t* data, size_t size, int address, bool isLeader ) override
     {
         MemoryWriteResult result;
         result.metadataOnly = false;
         unsigned int timestamp = as< unsigned int >( data );
         result.success = saveData( address, timestamp, data + sizeof( unsigned int ), size - sizeof( unsigned int ), isLeader );
-        result.propagationType = MemoryPropagationType::SEND_TO_ALL;
+        result.stored = result.success;
+
+        result.propagationType = isLeader ? MemoryPropagationType::SEND_TO_ALL : MemoryPropagationType::NONE;
         
         return result;
     }
@@ -59,7 +66,7 @@ public:
     /// @brief Reads data from an address in the shared memory.
     /// @param address - An address of the requested data.
     /// @return Data in uint8_t* format. Nullptr if no data found under the address.
-    virtual MemoryReadResult readData( int address ) const override
+    virtual MemoryReadResult readData( int address, bool ) const override
     {
         MemoryReadResult result;
         result.success = false;
@@ -78,7 +85,7 @@ public:
         return result;
     }
 
-    virtual MemoryWriteResult removeData( int address, bool ) override
+    virtual MemoryWriteResult removeData( int address, bool isLeader ) override
     {
         MemoryWriteResult result;
         result.success = false;
@@ -88,7 +95,9 @@ public:
         if ( _storage.erase( address ) > 0 )
         {
             result.success = true;
-            result.propagationType = MemoryPropagationType::SEND_TO_ALL;
+            result.stored = result.success;
+
+            result.propagationType = isLeader ? MemoryPropagationType::SEND_TO_ALL : MemoryPropagationType::NONE;
         }
 
         return result;
@@ -101,7 +110,7 @@ public:
     }
 
     // This implementation only allows to read the timestamp with the stamp key.
-    virtual MemoryReadResult readMetadata( int address, const std::string& key ) const override
+    virtual MemoryReadResult readMetadata( int address, const std::string& key, bool ) const override
     {
         MemoryReadResult result;
         result.success = false;

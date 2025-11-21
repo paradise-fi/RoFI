@@ -1,6 +1,6 @@
 #pragma once
 
-#include "messagingWrapper.hpp"
+#include "messagingService.hpp"
 #include "functionRegistry.hpp"
 #include "services/memoryService.hpp"
 #include "services/workflowService.hpp"
@@ -21,7 +21,7 @@ class DistributedTaskManager
     LoggingService _loggingService;
     FunctionRegistry _functionRegistry;
     ElectionService _election;
-    MessagingWrapper _messaging;
+    MessagingService _messaging;
     DistributedMemoryService _memoryService;
     WorkFlowService _workFlowService;
 
@@ -51,10 +51,12 @@ class DistributedTaskManager
 
     void onMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size )
     {
+        std::ostringstream receivedMessageStream;
+        receivedMessageStream << "Received " << getMessageTypeName( type ) << " from " << sender;
+        _loggingService.logInfo( receivedMessageStream.str() );
+        
         if ( type == DistributionMessageType::CustomMessage )
         {
-            _loggingService.logInfo("Custom Message.");
-            
             if ( !_onCustomMessage.has_value() )
             {
                 _loggingService.logWarning("Received custom message but no callback to handle it is registered.");
@@ -65,17 +67,12 @@ class DistributedTaskManager
         }
         if ( type == DistributionMessageType::BlockingTaskRelease )
         {
-            _loggingService.logInfo("Blocking task release.");
             _functionRegistry.unblockTaskSchedulers( true );
             return;
         }
 
         if ( type == DistributionMessageType::TaskRequest )
         {
-            std::ostringstream stream;
-            stream << "Received task request from " << sender;
-            _loggingService.logInfo( stream.str() );
-
             // Should enqueing the task request be done by the user?
             if ( _onTaskRequest.has_value() && _onTaskRequest.value()( *this, sender ) )
             {
@@ -89,16 +86,21 @@ class DistributedTaskManager
             return;
         }
 
-        if ( type == DistributionMessageType::DataStorageRequest )
+        if ( type == DistributionMessageType::DataReadResponseBlocking )
         {
-            std::ostringstream stream;
-            stream << "Received Data Storage request from " << sender;
-            _loggingService.logInfo( stream.str() );
+            _messaging.completeBlockingMessage( data + sizeof( DistributionMessageType ) + Ip6Addr::size(), size - ( sizeof( DistributionMessageType ) + Ip6Addr::size() ) );
+            return;
+        }
 
+        if ( type == DistributionMessageType::DataStorageRequest 
+            || type == DistributionMessageType::DataRemovalRequest
+            || type == DistributionMessageType::DataReadRequestBlocking
+            || type == DistributionMessageType::DataReadRequest )
+        {
             if ( _memoryService.isMemoryRegistered() )
             {
                 unsigned int offset = sizeof( DistributionMessageType ) + Ip6Addr::size();
-                return _memoryService.onStorageMessage( sender, data + offset, size - offset, false );
+                return _memoryService.onMemoryMessage( sender, data + offset, size - offset, mapMessageToMemoryRequest( type ) );
             }
             else
             {
@@ -106,31 +108,10 @@ class DistributedTaskManager
             }
         }
 
-        if ( type == DistributionMessageType::DataRemovalRequest )
-        {
-            std::ostringstream stream;
-            stream << "Received data removal request from " << sender;
-            _loggingService.logInfo( stream.str() );
-
-            if ( _memoryService.isMemoryRegistered() )
-            {
-                unsigned int offset = sizeof( DistributionMessageType ) + Ip6Addr::size();
-                return _memoryService.onStorageMessage( sender, data + offset, size - offset, true );
-            }
-            else
-            {
-                _loggingService.logWarning( "Memory not registered." );
-            }
-        }
-
         int functionId = as< int >( data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
 
         if ( type == DistributionMessageType::TaskFailed )
         {
-            std::ostringstream stream;
-            stream << "Received Task Failure from " << sender;
-            _loggingService.logInfo( stream.str() );
-
             // TODO: Consider if this is necessary. Maybe there should be a break in the workflow instead?
             if ( _onTaskFailure.has_value() )
             {
@@ -166,14 +147,14 @@ class DistributedTaskManager
         if ( type == DistributionMessageType::TaskAssignment )
         {
             std::ostringstream stream;
-            stream << "Received Task Assignment from " << sender << " for task with ID " << taskId;
+            stream << "Task Assignment for task with ID " << taskId;
             _loggingService.logInfo( stream.str() );
             
             if ( !_functionRegistry.enqueueTask( _address, std::move( task ), fn.value().get().completionType() ) )
             {
-                stream.clear();
-                stream << "Failed to register task assignment for function " << functionId;
-                _loggingService.logError( stream.str() );
+                std::ostringstream failStream;
+                failStream << "Failed to register task assignment for function " << functionId;
+                _loggingService.logError( failStream.str() );
             }
 
             return;
@@ -182,16 +163,16 @@ class DistributedTaskManager
         if ( type == DistributionMessageType::TaskResult )
         {
             std::ostringstream stream;
-            stream << "Received result from " << sender << " for Task with ID " << taskId;
+            stream << "Result for Task with ID " << taskId;
             _loggingService.logInfo( stream.str() );
             
             if ( task->status() == TaskStatus::RepeatDistributed )
             {
                 if ( !_functionRegistry.enqueueTask( sender, std::move( task ), fn.value().get().completionType() ) )
                 {
-                    stream.clear();
-                    stream << "Failed to register task for repeat for function " << functionId;
-                    _loggingService.logError( stream.str() );
+                    std::ostringstream failStream;
+                    failStream << "Failed to register task for repeat for function " << functionId;
+                    _loggingService.logError( failStream.str() );
                     return;
                 }
                 
@@ -205,9 +186,9 @@ class DistributedTaskManager
 
             if ( !_functionRegistry.enqueueTaskResult( std::move( task ), sender ) )
             {
-                stream.clear();
-                stream << "Failed to persist result from task " << taskId << " for function " << functionId;
-                _loggingService.logError( stream.str() );
+                std::ostringstream failStream;
+                failStream << "Failed to persist result from task " << taskId << " for function " << functionId;
+                _loggingService.logError( failStream.str() );
             }
         }
     }
@@ -233,7 +214,7 @@ public:
             onMessage( sender, messageType, data, size );
         },
         std::move( pcb ) ),
-      _memoryService( distributor, _messaging.sender(), address, _loggingService ),
+      _memoryService( distributor, _messaging, address, _loggingService ),
       _workFlowService( _messaging.sender(), _functionRegistry, _memoryService, _loggingService )
     {
         distributor->registerMethod( METHOD_ID, 
