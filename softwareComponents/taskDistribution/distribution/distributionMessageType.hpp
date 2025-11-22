@@ -11,19 +11,27 @@ enum DistributionMessageType {
     DataRemovalRequest,
     DataReadRequest,
     DataReadRequestBlocking,
-    DataReadResponseBlocking,
 
     CustomMessage,
     CustomMessageBlocking,
-    CustomMessageResponseBlocking,
+    
+    BlockingMessageResponse,
 };
 
 bool IsMessageTypeBlocking( DistributionMessageType messageType )
 {
-    return messageType != DistributionMessageType::CustomMessageBlocking &&
-            messageType != DistributionMessageType::DataReadRequestBlocking &&
-            messageType != DistributionMessageType::CustomMessageResponseBlocking &&
-            messageType != DistributionMessageType::DataReadResponseBlocking;
+    return messageType == DistributionMessageType::CustomMessageBlocking ||
+            messageType == DistributionMessageType::DataReadRequestBlocking ||
+            messageType == DistributionMessageType::BlockingMessageResponse;
+}
+
+bool IsMessageTypeTaskMessage( DistributionMessageType messageType )
+{
+    return messageType == DistributionMessageType::TaskRequest 
+        || messageType == DistributionMessageType::BlockingTaskRelease
+        || messageType == DistributionMessageType::TaskAssignment
+        || messageType == DistributionMessageType::TaskFailed
+        || messageType == DistributionMessageType::TaskResult;
 }
 
 const char* getMessageTypeName( DistributionMessageType messageType )
@@ -36,14 +44,12 @@ const char* getMessageTypeName( DistributionMessageType messageType )
             return "Custom Message";
         case DistributionMessageType::CustomMessageBlocking:
             return "Blocking Custom Message";
-        case DistributionMessageType::CustomMessageResponseBlocking:
-            return "Blocking Custom Message Response";
+        case DistributionMessageType::BlockingMessageResponse:
+            return "Response to a Blocking Message.";
         case DistributionMessageType::DataReadRequestBlocking:
             return "Blocking Data Read Request";
         case DistributionMessageType::DataReadRequest:
             return "Forwarding Data Read Request";
-        case DistributionMessageType::DataReadResponseBlocking:
-            return "Blocking Data Read Response";
         case DistributionMessageType::DataRemovalRequest:
             return "Data Removal Request";
         case DistributionMessageType::DataStorageRequest:

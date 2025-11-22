@@ -46,19 +46,19 @@ class DistributedMemoryService
     const unsigned int METHOD_ID = 2;
     const unsigned int READ_BATCH_SIZE = 5;
 
-    int _blockingMessageTimeoutMs = 300;
     MessagingService& _messaging;
     Ip6Addr _leader;
     const Ip6Addr& _currentModuleAddress;
     std::unique_ptr< DistributedMemoryBase > _memory;
-
+    
     // For external read requests that need to be sent over network.
     std::queue<MemoryRequestQueueItem> _memoryReadQueue;
-
+    
     // For external write requests.
     std::queue<MemoryRequestQueueItem> _memoryStorageQueue;
     std::optional< std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) > > _onMemoryStoredCb;
     LoggingService& _loggingService;
+    int _blockingMessageTimeoutMs = 300;
 
     bool isLeaderMemory()
     {
@@ -251,7 +251,7 @@ class DistributedMemoryService
             }
 
             // Send a message to the origin.
-            sendDataUnicast( address, data.data(), data.size(), false, origin, DistributionMessageType::DataReadResponseBlocking );
+            sendDataUnicast( address, data.data(), data.size(), false, origin, DistributionMessageType::BlockingMessageResponse );
             return result;
         }
 
@@ -277,7 +277,7 @@ class DistributedMemoryService
             errorMessage.resize( sizeof( bool ) + sizeof( size_t ) );
             as< bool >( errorMessage.data() ) = false;
             as< size_t >( errorMessage.data() + sizeof( bool ) ) = 0;
-            auto messageResult = _messaging.sender().sendMessage( DistributionMessageType::DataReadResponseBlocking, errorMessage.data(), errorMessage.size(), origin );
+            auto messageResult = _messaging.sender().sendMessage( DistributionMessageType::BlockingMessageResponse, errorMessage.data(), errorMessage.size(), origin );
             if ( !messageResult.success )
             {
                 std::ostringstream stream;
@@ -310,7 +310,7 @@ class DistributedMemoryService
             }
 
             // Send a message to the origin.
-            sendDataUnicast( address, data.data(), data.size(), true, origin, DistributionMessageType::DataReadResponseBlocking );
+            sendDataUnicast( address, data.data(), data.size(), true, origin, DistributionMessageType::BlockingMessageResponse );
             return result;
         }
 
