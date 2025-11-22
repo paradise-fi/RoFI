@@ -49,6 +49,101 @@ class DistributedTaskManager
         requestTask();
     }
 
+    void handleCustomMessage( Ip6Addr& sender, uint8_t* data, unsigned int size )
+    {
+        if ( !_onCustomMessage.has_value() )
+            {
+                _loggingService.logWarning("Received custom message but no callback to handle it is registered.");
+                return;
+            }
+
+        return _onCustomMessage.value()( *this, sender, data, size );
+    }
+
+    void handleTaskRequest( Ip6Addr& sender )
+    {
+        // Should enqueing the task request be done by the user?
+        if ( _onTaskRequest.has_value() && _onTaskRequest.value()( *this, sender ) )
+        {
+            return;
+        }
+            
+        if ( !_functionRegistry.enqueueTaskRequest( sender ) )
+        {
+            _loggingService.logError( "Failed to enqueue task request." );
+        }
+        return;   
+    }
+
+    void handleMemoryMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size, unsigned int offset )
+    {
+        if ( _memoryService.isMemoryRegistered() )
+            {
+                return _memoryService.onMemoryMessage( sender, data + offset, size - offset, mapMessageToMemoryRequest( type ) );
+            }
+            else
+            {
+                _loggingService.logError("Memory not registered.");
+            }   
+    }
+
+    void handleTaskFailure( Ip6Addr& sender, int functionId )
+    {
+        if ( _onTaskFailure.has_value() )
+        {
+            _onTaskFailure.value()( *this, sender, functionId );
+        }
+        return;
+    }
+
+    void handleTaskAssignment( Ip6Addr& sender, std::unique_ptr< TaskBase > task, std::reference_wrapper< FunctionConcept > fn )
+    {
+        std::ostringstream stream;
+        stream << "Task Assignment for task with ID " << task->id();
+        _loggingService.logInfo( stream.str() );
+        
+        if ( !_functionRegistry.enqueueTask( _address, std::move( task ), fn.get().completionType() ) )
+        {
+            std::ostringstream failStream;
+            failStream << "Failed to register task assignment for function " << fn.get().functionId();
+            _loggingService.logError( failStream.str() );
+        }
+    }
+
+    void handleTaskResult( Ip6Addr& sender, std::unique_ptr< TaskBase > task, std::reference_wrapper< FunctionConcept > fn )
+    {
+        int taskId = task->id();
+
+        std::ostringstream stream;
+        stream << "Result for Task with ID " << taskId;
+        _loggingService.logInfo( stream.str() );
+
+        if ( task->status() == TaskStatus::RepeatDistributed )
+        {
+            if ( !_functionRegistry.enqueueTask( sender, std::move( task ), fn.get().completionType() ) )
+            {
+                std::ostringstream failStream;
+                failStream << "Failed to register task for repeat for function " << fn.get().functionId();
+                _loggingService.logError( failStream.str() );
+                return;
+            }
+            
+            if ( !_functionRegistry.enqueueTaskRequest( sender ) )
+            {
+                _loggingService.logError( "Failed to enqueue task request." );
+            }
+
+            return;
+        }
+
+        if ( !_functionRegistry.enqueueTaskResult( std::move( task ), sender ) )
+        {
+            std::ostringstream failStream;
+            failStream << "Failed to persist result from task " << taskId << " for function " << fn.get().functionId();
+            _loggingService.logError( failStream.str() );
+        }   
+    }
+
     void onMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size )
     {
         std::ostringstream receivedMessageStream;
@@ -57,39 +152,22 @@ class DistributedTaskManager
         
         if ( type == DistributionMessageType::CustomMessage )
         {
-            if ( !_onCustomMessage.has_value() )
-            {
-                _loggingService.logWarning("Received custom message but no callback to handle it is registered.");
-                return;
-            }
-
-            return _onCustomMessage.value()( *this, sender, data, size );
+            return handleCustomMessage( sender, data, size );
         }
+
         if ( type == DistributionMessageType::BlockingTaskRelease )
         {
-            _functionRegistry.unblockTaskSchedulers( true );
-            return;
+            return _functionRegistry.unblockTaskSchedulers( true );
         }
 
         if ( type == DistributionMessageType::TaskRequest )
         {
-            // Should enqueing the task request be done by the user?
-            if ( _onTaskRequest.has_value() && _onTaskRequest.value()( *this, sender ) )
-            {
-                return;
-            }
-            
-            if ( !_functionRegistry.enqueueTaskRequest( sender ) )
-            {
-                _loggingService.logError( "Failed to enqueue task request." );
-            }
-            return;
+            return handleTaskRequest( sender );
         }
 
         if ( type == DistributionMessageType::DataReadResponseBlocking )
         {
-            _messaging.completeBlockingMessage( data + sizeof( DistributionMessageType ) + Ip6Addr::size(), size - ( sizeof( DistributionMessageType ) + Ip6Addr::size() ) );
-            return;
+            return _messaging.completeBlockingMessage( data + sizeof( DistributionMessageType ) + Ip6Addr::size(), size - ( sizeof( DistributionMessageType ) + Ip6Addr::size() ) );
         }
 
         if ( type == DistributionMessageType::DataStorageRequest 
@@ -97,27 +175,14 @@ class DistributedTaskManager
             || type == DistributionMessageType::DataReadRequestBlocking
             || type == DistributionMessageType::DataReadRequest )
         {
-            if ( _memoryService.isMemoryRegistered() )
-            {
-                unsigned int offset = sizeof( DistributionMessageType ) + Ip6Addr::size();
-                return _memoryService.onMemoryMessage( sender, data + offset, size - offset, mapMessageToMemoryRequest( type ) );
-            }
-            else
-            {
-                _loggingService.logError("Memory not registered.");
-            }
+            return handleMemoryMessage( sender, type, data, size, sizeof( DistributionMessageType ) + Ip6Addr::size() );
         }
 
         int functionId = as< int >( data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
 
         if ( type == DistributionMessageType::TaskFailed )
         {
-            // TODO: Consider if this is necessary. Maybe there should be a break in the workflow instead?
-            if ( _onTaskFailure.has_value() )
-            {
-                _onTaskFailure.value()( *this, sender, functionId );
-            }
-            return;
+            return handleTaskFailure( sender, functionId );
         }
 
         std::optional<std::reference_wrapper< FunctionConcept > > fn = _functionRegistry.getFunction( functionId );
@@ -146,50 +211,12 @@ class DistributedTaskManager
 
         if ( type == DistributionMessageType::TaskAssignment )
         {
-            std::ostringstream stream;
-            stream << "Task Assignment for task with ID " << taskId;
-            _loggingService.logInfo( stream.str() );
-            
-            if ( !_functionRegistry.enqueueTask( _address, std::move( task ), fn.value().get().completionType() ) )
-            {
-                std::ostringstream failStream;
-                failStream << "Failed to register task assignment for function " << functionId;
-                _loggingService.logError( failStream.str() );
-            }
-
-            return;
+            return handleTaskAssignment( sender, std::move( task ), fn.value() );
         }
 
         if ( type == DistributionMessageType::TaskResult )
         {
-            std::ostringstream stream;
-            stream << "Result for Task with ID " << taskId;
-            _loggingService.logInfo( stream.str() );
-            
-            if ( task->status() == TaskStatus::RepeatDistributed )
-            {
-                if ( !_functionRegistry.enqueueTask( sender, std::move( task ), fn.value().get().completionType() ) )
-                {
-                    std::ostringstream failStream;
-                    failStream << "Failed to register task for repeat for function " << functionId;
-                    _loggingService.logError( failStream.str() );
-                    return;
-                }
-                
-                if ( !_functionRegistry.enqueueTaskRequest( sender ) )
-                {
-                    _loggingService.logError( "Failed to enqueue task request." );
-                }
-
-                return;
-            }
-
-            if ( !_functionRegistry.enqueueTaskResult( std::move( task ), sender ) )
-            {
-                std::ostringstream failStream;
-                failStream << "Failed to persist result from task " << taskId << " for function " << functionId;
-                _loggingService.logError( failStream.str() );
-            }
+            return handleTaskResult( sender, std::move( task ), fn.value() );
         }
     }
 
