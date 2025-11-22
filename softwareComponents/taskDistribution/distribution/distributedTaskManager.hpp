@@ -96,7 +96,7 @@ class DistributedTaskManager
         return;
     }
 
-    void handleTaskAssignment( Ip6Addr& sender, std::unique_ptr< TaskBase > task, std::reference_wrapper< FunctionConcept > fn )
+    void handleTaskAssignment( std::unique_ptr< TaskBase > task, std::reference_wrapper< FunctionConcept > fn )
     {
         std::ostringstream stream;
         stream << "Task Assignment for task with ID " << task->id();
@@ -144,38 +144,19 @@ class DistributedTaskManager
         }   
     }
 
-    void onMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size )
+    void handleTaskMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data )
     {
-        std::ostringstream receivedMessageStream;
-        receivedMessageStream << "Received " << getMessageTypeName( type ) << " from " << sender;
-        _loggingService.logInfo( receivedMessageStream.str() );
-        
-        if ( type == DistributionMessageType::CustomMessage )
+        if ( !IsMessageTypeTaskMessage( type ) )
         {
-            return handleCustomMessage( sender, data, size );
-        }
-
-        if ( type == DistributionMessageType::BlockingTaskRelease )
-        {
-            return _functionRegistry.unblockTaskSchedulers( true );
+            std::ostringstream invalidMessageTypeStream;
+            invalidMessageTypeStream << "Unhandled Message Type Detected: " << getMessageTypeName( type );
+            _loggingService.logError( invalidMessageTypeStream.str() );
+            return;
         }
 
         if ( type == DistributionMessageType::TaskRequest )
         {
             return handleTaskRequest( sender );
-        }
-
-        if ( type == DistributionMessageType::DataReadResponseBlocking )
-        {
-            return _messaging.completeBlockingMessage( data + sizeof( DistributionMessageType ) + Ip6Addr::size(), size - ( sizeof( DistributionMessageType ) + Ip6Addr::size() ) );
-        }
-
-        if ( type == DistributionMessageType::DataStorageRequest 
-            || type == DistributionMessageType::DataRemovalRequest
-            || type == DistributionMessageType::DataReadRequestBlocking
-            || type == DistributionMessageType::DataReadRequest )
-        {
-            return handleMemoryMessage( sender, type, data, size, sizeof( DistributionMessageType ) + Ip6Addr::size() );
         }
 
         int functionId = as< int >( data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
@@ -207,17 +188,44 @@ class DistributedTaskManager
             return;
         }
 
-        int taskId = task->id();
-
         if ( type == DistributionMessageType::TaskAssignment )
         {
-            return handleTaskAssignment( sender, std::move( task ), fn.value() );
+            return handleTaskAssignment( std::move( task ), fn.value() );
         }
 
         if ( type == DistributionMessageType::TaskResult )
         {
             return handleTaskResult( sender, std::move( task ), fn.value() );
         }
+    }
+
+    void onMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size )
+    {
+        std::ostringstream receivedMessageStream;
+        receivedMessageStream << "Received " << getMessageTypeName( type ) << " from " << sender;
+        _loggingService.logInfo( receivedMessageStream.str() );
+
+        switch ( type )
+        {
+            case DistributionMessageType::CustomMessage:
+                return handleCustomMessage( sender, data, size );
+
+            case DistributionMessageType::BlockingTaskRelease:
+                return _functionRegistry.unblockTaskSchedulers( true );
+
+            case DistributionMessageType::BlockingMessageResponse:
+                return _messaging.completeBlockingMessage( data + sizeof( DistributionMessageType ) + Ip6Addr::size(), 
+                    size - ( sizeof( DistributionMessageType ) + Ip6Addr::size() ) );
+
+            case DistributionMessageType::DataStorageRequest:
+            case DistributionMessageType::DataReadRequest:
+            case DistributionMessageType::DataReadRequestBlocking:
+            case DistributionMessageType::DataRemovalRequest:
+                return handleMemoryMessage( sender, type, data, size, sizeof( DistributionMessageType ) + Ip6Addr::size() );
+
+            default:
+                return handleTaskMessage( sender, type, data );
+        };
     }
 
 public:
