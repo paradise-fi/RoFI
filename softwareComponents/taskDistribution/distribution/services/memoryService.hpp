@@ -46,6 +46,7 @@ class DistributedMemoryService
     const unsigned int METHOD_ID = 2;
     const unsigned int READ_BATCH_SIZE = 5;
 
+    int _blockingMessageTimeoutMs = 300;
     MessagingService& _messaging;
     Ip6Addr _leader;
     const Ip6Addr& _currentModuleAddress;
@@ -89,7 +90,7 @@ class DistributedMemoryService
         as< bool >( buffer.data() + sizeof( int ) ) = isMetadataOnly;
         as< size_t >( buffer.data() + sizeof( int ) + sizeof( bool ) ) = size;
 
-        if ( size != 0 )
+        if ( size != 0 && data != nullptr )
         {
             std::memcpy( buffer.data() + genericMemoryMessageHeaderSize(), data, size );
         }
@@ -106,7 +107,7 @@ class DistributedMemoryService
         as< bool >( packet.payload() + sizeof( int ) ) = isMetadataOnly;
         as< size_t >( packet.payload() + sizeof( int ) + sizeof( bool ) ) = size;
 
-        if ( size != 0 )
+        if ( size != 0 && data != nullptr )
         {
             std::memcpy( packet.payload() + genericMemoryMessageHeaderSize(), data, size );
         }
@@ -188,7 +189,7 @@ class DistributedMemoryService
     {
         MemoryReadResult result;
         result.success = false;
-        auto remoteReadResult = _messaging.sendMessageBlocking( target, DistributionMessageType::DataReadRequest, data, dataSize );
+        auto remoteReadResult = _messaging.sendMessageBlocking( target, DistributionMessageType::DataReadRequest, data, dataSize, _blockingMessageTimeoutMs );
         if ( remoteReadResult.success )
         {
             auto success = as< bool >( remoteReadResult.rawData.data() + genericMemoryMessageHeaderSize() );
@@ -383,8 +384,8 @@ class DistributedMemoryService
     }
 
 public:
-    DistributedMemoryService( MessageDistributor* distributor, MessagingService& messaging, Ip6Addr& currentModuleAddress, LoggingService& loggingService )
-    : _messaging( messaging ), _currentModuleAddress( currentModuleAddress ), _loggingService( loggingService )
+    DistributedMemoryService( MessageDistributor* distributor, MessagingService& messaging, Ip6Addr& currentModuleAddress, LoggingService& loggingService, int blockingMessageTimeoutMs = 300 )
+    : _messaging( messaging ), _currentModuleAddress( currentModuleAddress ), _loggingService( loggingService ), _blockingMessageTimeoutMs( blockingMessageTimeoutMs )
     {
         distributor->registerMethod( METHOD_ID, 
             [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
@@ -533,8 +534,9 @@ public:
                 return result.success;
             }
 
-            sendDataUnicast( address, dataBuffer.data(), dataBuffer.size(), false, 
-            _leader, DistributionMessageType::DataStorageRequest );
+            propagateMemoryChange( MemoryPropagationType::ONE_TARGET, address, 
+                dataBuffer.data(), dataBuffer.size(), false, _leader, 
+                DistributionMessageType::DataStorageRequest );
 
             return true;
         }
@@ -581,7 +583,7 @@ public:
                 return;
             }
 
-            sendDataUnicast( address, nullptr, 0, false, _leader, DistributionMessageType::DataRemovalRequest );
+            propagateMemoryChange( MemoryPropagationType::ONE_TARGET, address, nullptr, 0, false, _leader, DistributionMessageType::DataRemovalRequest );
             return;
         }
 

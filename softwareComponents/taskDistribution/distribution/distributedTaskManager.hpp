@@ -201,7 +201,8 @@ public:
         std::unique_ptr< ElectionProtocolBase > election,
         Ip6Addr& address,
         MessageDistributor* distributor,
-        std::unique_ptr< udp_pcb > pcb) 
+        std::unique_ptr< udp_pcb > pcb,
+        int blockingMessageTimeoutMs = 300 ) 
     : _address( address ),
       _functionRegistry( _loggingService ),
       _election( std::move( election ),
@@ -214,7 +215,7 @@ public:
             onMessage( sender, messageType, data, size );
         },
         std::move( pcb ) ),
-      _memoryService( distributor, _messaging, address, _loggingService ),
+      _memoryService( distributor, _messaging, address, _loggingService, blockingMessageTimeoutMs ),
       _workFlowService( _messaging.sender(), _functionRegistry, _memoryService, _loggingService )
     {
         distributor->registerMethod( METHOD_ID, 
