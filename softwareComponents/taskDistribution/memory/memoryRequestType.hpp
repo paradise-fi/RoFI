@@ -8,7 +8,7 @@ enum MemoryRequestType
     InvalidOperation,
 };
 
-MemoryRequestType mapMessageToMemoryRequest( DistributionMessageType messageType )
+MemoryRequestType mapMessageToMemoryRequest( const DistributionMessageType messageType )
 {
     switch (messageType)
     {

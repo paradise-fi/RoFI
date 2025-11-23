@@ -2,6 +2,7 @@
 #include "functionRegistry.hpp"
 #include "loggingService.hpp"
 #include "messaging/messageSender.hpp"
+#include "messaging/customMessageQueueManager.hpp"
 
 class WorkFlowService
 {
@@ -9,6 +10,7 @@ class WorkFlowService
     FunctionRegistry& _functionRegistry;
     DistributedMemoryService& _memoryService;
     LoggingService& _loggingService;
+    CustomMessageQueueManager& _customMessageQueueManager;
 
     void tryDistributeNewTask( int methodId )
     {
@@ -65,19 +67,23 @@ class WorkFlowService
         }
     }
 public:
-    WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService, LoggingService& loggingService )
-    : _sender( sender ), _functionRegistry( functionRegistry ), _memoryService( memoryService ), _loggingService( loggingService ) {}
+    WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService,
+        LoggingService& loggingService, CustomMessageQueueManager& customMessageQueueManager )
+    : _sender( sender ), _functionRegistry( functionRegistry ), _memoryService( memoryService ),
+      _loggingService( loggingService ), _customMessageQueueManager( customMessageQueueManager ) {}
 
     void doWorkLeader( int methodId )
     {
         tryDistributeNewTask( methodId );
         _memoryService.processQueue();
+        _customMessageQueueManager.processQueue();
         _functionRegistry.processTaskResultQueue();
     }
 
     void doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader )
     {
         _memoryService.processQueue();
+        _customMessageQueueManager.processQueue();
 
         auto taskCandidate = _functionRegistry.popTaskForAddress( address );
 

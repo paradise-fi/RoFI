@@ -8,15 +8,9 @@
 #include "messaging/messageReceiver.hpp"
 #include "messaging/messageSender.hpp"
 #include "../tasks/serializable/serializable.hpp"
+#include "messaging/messagingResult.hpp"
 
 using namespace rofi::net;
-
-struct MessagingResult
-{
-    bool success;
-    std::string statusMessage;
-    std::vector< uint8_t > rawData;
-};
 
 /// @brief Wrapper for pcb ownership.
 class MessagingService
@@ -120,7 +114,7 @@ public:
         auto cvResult = _blockingMessageCV.wait_for( lk, std::chrono::microseconds( timeout ) );
 
 
-        if ( cvResult == std::cv_status::timeout)
+        if ( cvResult == std::cv_status::timeout )
         {
             result.statusMessage = std::string("Message sending timed out.");
         }

@@ -33,12 +33,12 @@ public:
         auto buffer = rofi::hal::PBuf::allocate( headerSize() + static_cast< int >( task.size() ) );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
-        task.copyToBuffer( buffer.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
+        task.copyToBuffer( buffer.payload() + headerSize() );
 
         MessageSendResult sendResult;
         sendResult.success = true;
         auto result = udp_sendto( _pcb, buffer.get(), &target, _distributionPort );
-        std::cout << lwip_strerr( result ) << std::endl;
+
         if ( result != ERR_OK )
         {
             sendResult.success = false;
@@ -53,7 +53,11 @@ public:
         auto buffer = rofi::hal::PBuf::allocate( headerSize() + data.size() );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
-        std::memcpy(buffer.payload() + sizeof( DistributionMessageType ) + Ip6Addr::size(), data.payload(), data.size() );
+
+        if ( data.size() > 0 )
+        {
+            std::memcpy(buffer.payload() + headerSize(), data.payload(), data.size() );
+        }
 
         MessageSendResult sendResult;
         sendResult.success = true;
@@ -74,7 +78,11 @@ public:
         auto buffer = rofi::hal::PBuf::allocate( headerSize() + dataSize );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
-        std::memcpy( buffer.payload() + headerSize(), data, dataSize );
+
+        if ( dataSize > 0 )
+        {
+            std::memcpy( buffer.payload() + headerSize(), data, dataSize );
+        }
 
         MessageSendResult sendResult;
         sendResult.success = true;
@@ -123,7 +131,11 @@ public:
         auto buffer = rofi::hal::PBuf::allocate( headerSize() + data.size() );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
-        std::memcpy(buffer.payload() + sizeof( DistributionMessageType ) + Ip6Addr::size(), data.payload(), data.size() );
+
+        if ( data.size() > 0 )
+        {
+            std::memcpy(buffer.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ), data.payload(), data.size() );
+        }
 
         _messageDistributor->sendMessage( _address, methodId, buffer.payload(), buffer.size() );
     }
@@ -131,10 +143,14 @@ public:
     void broadcastMessage( DistributionMessageType type, uint8_t* data, size_t size, unsigned int methodId )
     {
         std::vector< uint8_t > buffer;
-        buffer.resize( size + sizeof( DistributionMessageType ) + Ip6Addr::size() );
+        buffer.resize( size + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
         as< DistributionMessageType >( buffer.data() ) = type;
         as< Ip6Addr >( buffer.data() + sizeof( DistributionMessageType ) ) = _address;
-        std::memcpy( buffer.data() + sizeof( DistributionMessageType ) + Ip6Addr::size(), data, size );
+
+        if ( size > 0 )
+        {
+            std::memcpy( buffer.data() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ), data, size );
+        }
 
         _messageDistributor->sendMessage( _address, methodId, buffer.data(), buffer.size() );
     }
@@ -152,6 +168,6 @@ public:
 
     unsigned int headerSize()
     {
-        return static_cast< int >( sizeof( DistributionMessageType ) ) + Ip6Addr::size();
+        return static_cast< int >( sizeof( DistributionMessageType ) ) + sizeof( Ip6Addr );
     }
 };

@@ -8,13 +8,11 @@
 #include "electionProtocolBase.hpp"
 #include <boost/lockfree/queue.hpp>
 #include "services/loggingService.hpp"
+#include "messaging/userCallbackInvoker.hpp"
+#include "messaging/messageDispatcher.hpp"
+#include "messaging/customMessageQueueManager.hpp"
 
-using namespace rofi::hal;
-using namespace rofi::net;
-using namespace rofi::leadership;
-using namespace std::chrono_literals;
-
-class DistributedTaskManager
+class DistributedTaskManager : public UserCallbackInvoker
 {
     rofi::net::Ip6Addr _address;
     
@@ -23,11 +21,16 @@ class DistributedTaskManager
     ElectionService _election;
     MessagingService _messaging;
     DistributedMemoryService _memoryService;
+    CustomMessageQueueManager _customMessageQueueManager;
     WorkFlowService _workFlowService;
+    MessageDispatcher _messageDispatcher;
 
-    std::optional< std::function< bool( DistributedTaskManager& manager, rofi::net::Ip6Addr& requester ) > > _onTaskRequest;
-    std::optional< std::function< void( DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, int functionId ) > > _onTaskFailure;
-    std::optional< std::function< void( DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, uint8_t* data, size_t size ) > > _onCustomMessage;
+    int _blockingMessageTimeoutMs;
+
+    std::function< bool( DistributedTaskManager& manager, const rofi::net::Ip6Addr& requester ) > _onTaskRequest;
+    std::function< void( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, const int functionId ) > _onTaskFailure;
+    std::function< void( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* data, const size_t size ) > _onCustomMessage;
+    std::function< MessagingResult( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* data, const size_t size ) > _onCustomMessageBlocking;
 
     void onElectionSuccesful( const Ip6Addr& leader )
     {
@@ -49,188 +52,81 @@ class DistributedTaskManager
         requestTask();
     }
 
-    void handleCustomMessage( Ip6Addr& sender, uint8_t* data, unsigned int size )
+    virtual MessagingResult invokeUserCallback( CallbackType cbType, const rofi::hal::Ip6Addr& sender, uint8_t* data, size_t size ) override
     {
-        if ( !_onCustomMessage.has_value() )
-            {
-                _loggingService.logWarning("Received custom message but no callback to handle it is registered.");
-                return;
-            }
-
-        return _onCustomMessage.value()( *this, sender, data, size );
-    }
-
-    void handleTaskRequest( Ip6Addr& sender )
-    {
-        // Should enqueing the task request be done by the user?
-        if ( _onTaskRequest.has_value() && _onTaskRequest.value()( *this, sender ) )
+        MessagingResult result;
+        result.success = true;
+        switch ( cbType )
         {
-            return;
-        }
+            case CallbackType::CompleteBlockingMessageCb:
+                _messaging.completeBlockingMessage( data, size );
+                break;
+            case CallbackType::CustomMessageCb:
+                if ( _onCustomMessage )
+                {
+                    _onCustomMessage( *this, sender, data, size );
+                }
+                else
+                {
+                    _loggingService.logError("Received custom message but no callback to handle it is registered.");
+                    result.success = false;
+                }
+                break;
             
-        if ( !_functionRegistry.enqueueTaskRequest( sender ) )
-        {
-            _loggingService.logError( "Failed to enqueue task request." );
-        }
-        return;   
-    }
+            case CallbackType::CustomMessageBlockingCb:
+                if ( _onCustomMessageBlocking )
+                {
+                    return _onCustomMessageBlocking( *this, sender, data, size );
+                }
+                else
+                {
+                    _loggingService.logError("Received blocking custom message but no callback to handle it is registered.");
+                    result.success = false;
+                }
+                break;
 
-    void handleMemoryMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size, unsigned int offset )
-    {
-        if ( _memoryService.isMemoryRegistered() )
-            {
-                return _memoryService.onMemoryMessage( sender, data + offset, size - offset, mapMessageToMemoryRequest( type ) );
-            }
-            else
-            {
-                _loggingService.logError("Memory not registered.");
-            }   
-    }
+            case CallbackType::TaskFailureCb:
+                if ( _onTaskFailure )
+                {
+                    int taskId = 0;
+                    if ( size == sizeof( int ) )
+                    {
+                        taskId = as< int >( data );
+                    }
+                    _onTaskFailure( *this, sender, taskId );
+                }
+                break;
 
-    void handleTaskFailure( Ip6Addr& sender, int functionId )
-    {
-        if ( _onTaskFailure.has_value() )
-        {
-            _onTaskFailure.value()( *this, sender, functionId );
-        }
-        return;
-    }
-
-    void handleTaskAssignment( std::unique_ptr< TaskBase > task, std::reference_wrapper< FunctionConcept > fn )
-    {
-        std::ostringstream stream;
-        stream << "Task Assignment for task with ID " << task->id();
-        _loggingService.logInfo( stream.str() );
-        
-        if ( !_functionRegistry.enqueueTask( _address, std::move( task ), fn.get().completionType() ) )
-        {
-            std::ostringstream failStream;
-            failStream << "Failed to register task assignment for function " << fn.get().functionId();
-            _loggingService.logError( failStream.str() );
-        }
-    }
-
-    void handleTaskResult( Ip6Addr& sender, std::unique_ptr< TaskBase > task, std::reference_wrapper< FunctionConcept > fn )
-    {
-        int taskId = task->id();
-
-        std::ostringstream stream;
-        stream << "Result for Task with ID " << taskId;
-        _loggingService.logInfo( stream.str() );
-
-        if ( task->status() == TaskStatus::RepeatDistributed )
-        {
-            if ( !_functionRegistry.enqueueTask( sender, std::move( task ), fn.get().completionType() ) )
-            {
-                std::ostringstream failStream;
-                failStream << "Failed to register task for repeat for function " << fn.get().functionId();
-                _loggingService.logError( failStream.str() );
-                return;
-            }
-            
-            if ( !_functionRegistry.enqueueTaskRequest( sender ) )
-            {
-                _loggingService.logError( "Failed to enqueue task request." );
-            }
-
-            return;
-        }
-
-        if ( !_functionRegistry.enqueueTaskResult( std::move( task ), sender ) )
-        {
-            std::ostringstream failStream;
-            failStream << "Failed to persist result from task " << taskId << " for function " << fn.get().functionId();
-            _loggingService.logError( failStream.str() );
-        }   
-    }
-
-    void handleTaskMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data )
-    {
-        if ( !IsMessageTypeTaskMessage( type ) )
-        {
-            std::ostringstream invalidMessageTypeStream;
-            invalidMessageTypeStream << "Unhandled Message Type Detected: " << getMessageTypeName( type );
-            _loggingService.logError( invalidMessageTypeStream.str() );
-            return;
-        }
-
-        if ( type == DistributionMessageType::TaskRequest )
-        {
-            return handleTaskRequest( sender );
-        }
-
-        int functionId = as< int >( data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
-
-        if ( type == DistributionMessageType::TaskFailed )
-        {
-            return handleTaskFailure( sender, functionId );
-        }
-
-        std::optional<std::reference_wrapper< FunctionConcept > > fn = _functionRegistry.getFunction( functionId );
-
-        if ( !fn )
-        {
-            std::ostringstream stream;
-            stream << "Function with ID " << functionId << " not found.";
-            _loggingService.logError( stream.str() );
-            return;
-        }
-
-        auto task = _functionRegistry.getTaskFromBuffer(
-            data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ), 
-            functionId );
-
-        if ( task == nullptr )
-        {
-            std::ostringstream stream;
-            stream << "Unable to parse task for function with ID " << functionId << ".";
-            _loggingService.logError( stream.str() );
-            return;
-        }
-
-        if ( type == DistributionMessageType::TaskAssignment )
-        {
-            return handleTaskAssignment( std::move( task ), fn.value() );
-        }
-
-        if ( type == DistributionMessageType::TaskResult )
-        {
-            return handleTaskResult( sender, std::move( task ), fn.value() );
-        }
-    }
-
-    void onMessage( Ip6Addr& sender, DistributionMessageType type, uint8_t* data, unsigned int size )
-    {
-        std::ostringstream receivedMessageStream;
-        receivedMessageStream << "Received " << getMessageTypeName( type ) << " from " << sender;
-        _loggingService.logInfo( receivedMessageStream.str() );
-
-        switch ( type )
-        {
-            case DistributionMessageType::CustomMessage:
-                return handleCustomMessage( sender, data, size );
-
-            case DistributionMessageType::BlockingTaskRelease:
-                return _functionRegistry.unblockTaskSchedulers( true );
-
-            case DistributionMessageType::BlockingMessageResponse:
-                return _messaging.completeBlockingMessage( data + sizeof( DistributionMessageType ) + Ip6Addr::size(), 
-                    size - ( sizeof( DistributionMessageType ) + Ip6Addr::size() ) );
-
-            case DistributionMessageType::DataStorageRequest:
-            case DistributionMessageType::DataReadRequest:
-            case DistributionMessageType::DataReadRequestBlocking:
-            case DistributionMessageType::DataRemovalRequest:
-                return handleMemoryMessage( sender, type, data, size, sizeof( DistributionMessageType ) + Ip6Addr::size() );
+            case CallbackType::TaskRequestCb:
+                if ( _onTaskRequest )
+                {
+                    // Semantics -> true means that the task request pipeline ends with this call. False means we still need to queue the task request.
+                    result.success = _onTaskRequest( *this, sender );
+                }
+                else
+                {
+                    result.success = false;
+                }
+                break;
 
             default:
-                return handleTaskMessage( sender, type, data );
-        };
+                std::ostringstream errorMessageStream;
+                errorMessageStream << "Callback type not registered. " << std::endl;
+                _loggingService.logError( errorMessageStream.str() );
+                result.success = false;
+                break;
+        }
+        return result;
+    }
+
+    void onMessage( const Ip6Addr& sender, const DistributionMessageType type, uint8_t* data, unsigned int size )
+    {
+        _messageDispatcher.dispatchMessage( sender, type, data, size );
     }
 
 public:
-    const unsigned int METHOD_ID = 3;
-    static const int DISTRIBUTION_PORT = 7071;
+    static constexpr unsigned int METHOD_ID = 3;
+    static constexpr int DISTRIBUTION_PORT = 7071;
 
     DistributedTaskManager(
         std::unique_ptr< ElectionProtocolBase > election,
@@ -251,7 +147,10 @@ public:
         },
         std::move( pcb ) ),
       _memoryService( distributor, _messaging, address, _loggingService, blockingMessageTimeoutMs ),
-      _workFlowService( _messaging.sender(), _functionRegistry, _memoryService, _loggingService )
+      _customMessageQueueManager( *this, _messaging ),
+      _workFlowService( _messaging.sender(), _functionRegistry, _memoryService, _loggingService, _customMessageQueueManager ),
+      _messageDispatcher( address, *this, _functionRegistry, _messaging, _memoryService, _loggingService, _customMessageQueueManager, blockingMessageTimeoutMs ),
+      _blockingMessageTimeoutMs( blockingMessageTimeoutMs )
     {
         distributor->registerMethod( METHOD_ID, 
             [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
@@ -279,18 +178,22 @@ public:
     
     /// @brief Registers a callback that is called when a task request is received.
     /// @param callback Your custom callback. Returns true if the task request pipeline should not continue after this callback (e.g. to avoid double-scheduling of a task)
-    void registerTaskRequestCallback( std::function< bool(DistributedTaskManager& manager, rofi::net::Ip6Addr& requester ) > callback ) { _onTaskRequest = callback; }
+    void registerTaskRequestCallback( std::function< bool(DistributedTaskManager& manager, const rofi::net::Ip6Addr& requester ) > callback ) { _onTaskRequest = callback; }
 
     /// @brief Unregisters a callback that is called when a task request is received.
-    void unregisterTaskRequestCallback() { _onTaskRequest.reset(); }
+    void unregisterTaskRequestCallback() { _onTaskRequest = nullptr; }
 
-    void registerTaskFailedCallback( std::function< void(DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, int functionId ) > callback ) { _onTaskFailure = callback; }
+    void registerTaskFailedCallback( std::function< void(DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, const int functionId ) > callback ) { _onTaskFailure = callback; }
 
-    void unregisterTaskFailedCallback() { _onTaskFailure.reset(); }
+    void unregisterTaskFailedCallback() { _onTaskFailure = nullptr; }
 
-    void registerCustomMessageCallback( std::function< void( DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, unsigned int bufferSize ) > callback ) { _onCustomMessage = callback; }
+    void registerNonBlockingCustomMessageCallback( std::function< void( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, const unsigned int bufferSize ) > callback ) { _onCustomMessage = callback; }
 
-    void unregisterCustomMessageCallback() { _onCustomMessage.reset(); }
+    void unregisterNonBlockingCustomMessageCallback() { _onCustomMessage = nullptr; }
+
+    void registerBlockingCustomMessageCallback( std::function< MessagingResult( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, const unsigned int bufferSize ) > callback ) { _onCustomMessageBlocking = callback; }
+
+    void unregisterBlockingCustomMessageCallback() { _onCustomMessageBlocking = nullptr; }
 
     DistributedMemoryService& memoryService()
     {
@@ -320,7 +223,8 @@ public:
 
         if ( _address == _election.getLeader() )
         {
-            return _workFlowService.doWorkLeader( METHOD_ID );
+            _workFlowService.doWorkLeader( METHOD_ID );
+            return;
         }
         
         _workFlowService.doWorkFollower( _address, _election.getLeader() );
@@ -361,6 +265,11 @@ public:
         auto packet = PBuf::allocate( static_cast< int >( dataSize ) );
         std::memcpy( packet.payload(), data, dataSize );
         _messaging.sender().sendMessage( DistributionMessageType::CustomMessage, std::move( packet ), target.value() );
+    }
+
+    MessagingResult sendCustomMessageBlocking( uint8_t* data, unsigned int dataSize, Ip6Addr& target )
+    {
+        return _messaging.sendMessageBlocking( target, DistributionMessageType::CustomMessageBlocking, data, dataSize, _blockingMessageTimeoutMs );
     }
 
     /// @brief Used to manually send a function execution order to a module. This should be done from the leader to the follower. You do NOT need to use this if you use functionHandle instead.
