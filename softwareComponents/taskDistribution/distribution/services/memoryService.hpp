@@ -186,7 +186,7 @@ class DistributedMemoryService
     {
         MemoryReadResult result;
         result.success = false;
-        auto remoteReadResult = _messaging.sendMessageBlocking( target, DistributionMessageType::DataReadRequest, data, dataSize, _blockingMessageTimeoutMs );
+        auto remoteReadResult = _messaging.sendMessageBlocking( target, DistributionMessageType::DataReadRequestBlocking, data, dataSize, _blockingMessageTimeoutMs );
         if ( remoteReadResult.success )
         {
             auto success = as< bool >( remoteReadResult.rawData.data() + genericMemoryMessageHeaderSize() );
@@ -254,12 +254,12 @@ class DistributedMemoryService
 
         result.success = false;
         Ip6Addr& target = result.readTarget.has_value() ? result.readTarget.value() : _leader;
-        data.resize( sizeof( int ) + sizeof( bool ) + sizeof( size_t ) + Ip6Addr::size() + sizeof(u8_t));
+        data.resize( sizeof( int ) + sizeof( bool ) + sizeof( size_t ) + sizeof( Ip6Addr ) + sizeof(u8_t));
         as< Ip6Addr >( data.data() ) = origin;
-        as< u8_t >( data.data() + Ip6Addr::size() ) = origin.zone;
-        as< int >( data.data() + Ip6Addr::size() + sizeof(u8_t) ) = address;
-        as< bool >( data.data() + sizeof( int ) + Ip6Addr::size() + sizeof(u8_t)  ) = false;
-        as< size_t >( data.data() + sizeof( int ) + sizeof( bool ) + Ip6Addr::size() + sizeof(u8_t)  ) = 0;
+        as< u8_t >( data.data() + sizeof( Ip6Addr ) ) = origin.zone;
+        as< int >( data.data() + sizeof( Ip6Addr ) + sizeof(u8_t) ) = address;
+        as< bool >( data.data() + sizeof( int ) + sizeof( Ip6Addr ) + sizeof(u8_t)  ) = false;
+        as< size_t >( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof(u8_t)  ) = 0;
 
         if ( isUserCall ) 
         {
@@ -314,13 +314,13 @@ class DistributedMemoryService
         result.success = false;
         Ip6Addr& target = result.readTarget.has_value() ? result.readTarget.value() : _leader;
         
-        data.resize( sizeof( int ) + sizeof( bool ) + sizeof( size_t ) + Ip6Addr::size() + key.size() + sizeof( u8_t ) );
+        data.resize( sizeof( int ) + sizeof( bool ) + sizeof( size_t ) + sizeof( Ip6Addr ) + key.size() + sizeof( u8_t ) );
         as< Ip6Addr >( data.data() ) = origin;
-        as< u8_t >( data.data() + Ip6Addr::size() ) = origin.zone;
-        as< int >( data.data() + Ip6Addr::size() + sizeof( u8_t ) ) = address;
-        as< bool >( data.data() + sizeof( int ) + Ip6Addr::size() + sizeof( u8_t ) ) = false;
-        as< size_t >( data.data() + sizeof( int ) + sizeof( bool ) + Ip6Addr::size() + sizeof( u8_t )  ) = key.size();
-        std::memcpy( data.data() + sizeof( int ) + sizeof( bool ) + Ip6Addr::size() + sizeof( size_t ) + sizeof( u8_t ),
+        as< u8_t >( data.data() + sizeof( Ip6Addr ) ) = origin.zone;
+        as< int >( data.data() + sizeof( Ip6Addr ) + sizeof( u8_t ) ) = address;
+        as< bool >( data.data() + sizeof( int ) + sizeof( Ip6Addr ) + sizeof( u8_t ) ) = false;
+        as< size_t >( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof( u8_t )  ) = key.size();
+        std::memcpy( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof( size_t ) + sizeof( u8_t ),
                      key.data(), key.size() );
 
         return isUserCall 
@@ -427,7 +427,7 @@ public:
         
         if ( requestType == MemoryRequestType::MemoryRead )
         {
-            headerSize += Ip6Addr::size();
+            headerSize += sizeof( Ip6Addr );
         }
         
         if ( size < headerSize )
@@ -441,8 +441,8 @@ public:
         if ( requestType == MemoryRequestType::MemoryRead )
         {
             sender = as< Ip6Addr >( data );
-            sender.zone = as< u8_t >( data + Ip6Addr::size() );
-            offset += Ip6Addr::size() + sizeof( u8_t );
+            sender.zone = as< u8_t >( data + sizeof( Ip6Addr ) );
+            offset += sizeof( Ip6Addr ) + sizeof( u8_t );
         }
         
         int address = as< int >( data + offset );

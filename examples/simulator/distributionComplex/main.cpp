@@ -84,7 +84,7 @@ void distributionManagerFizzBuzz() {
 
     std::set< Ip6Addr > requesters;
 
-    manager.registerTaskRequestCallback([&requesters]( DistributedTaskManager&, Ip6Addr& requester ) {
+    manager.registerTaskRequestCallback([&requesters]( DistributedTaskManager&, const Ip6Addr& requester ) {
         if ( requesters.find( requester ) == requesters.end() )
         {
             requesters.emplace( requester );

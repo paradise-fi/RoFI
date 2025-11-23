@@ -207,7 +207,7 @@ public:
     /// @brief Places a module's request into the task request queue.
     /// @param requester The address of the task requester
     /// @return True if the task request was placed in the queue.
-    bool enqueueTaskRequest( Ip6Addr& requester )
+    bool enqueueTaskRequest( const Ip6Addr& requester )
     {
         return _taskManager.enqueueTaskRequest( requester );
     }
