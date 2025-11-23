@@ -80,20 +80,25 @@ class DistributedMemoryService
         return sizeof( int ) + sizeof( bool ) + sizeof( size_t );
     }
     
+    void prepareMemoryMessageData( uint8_t* buffer, int address, const uint8_t* data, size_t dataSize, bool isMetadataOnly )
+    {
+        as< int >( buffer ) = address;
+        as< bool >( buffer + sizeof( int ) ) = isMetadataOnly;
+        as< size_t >( buffer + sizeof( int ) + sizeof( bool ) ) = dataSize;
+
+        if ( dataSize != 0 && data != nullptr )
+        {
+            std::memcpy( buffer + genericMemoryMessageHeaderSize(), data, dataSize );
+        }
+    }
+
     void sendDataBroadcast( int address, const uint8_t* data, size_t size, bool isMetadataOnly, DistributionMessageType messageType )
     {
         // ADDRESS - IS METADATA ONLY - DATA SIZE - DATA
         std::vector< uint8_t > buffer;
 
         buffer.resize( size + genericMemoryMessageHeaderSize() );
-        as< int >( buffer.data() ) = address;
-        as< bool >( buffer.data() + sizeof( int ) ) = isMetadataOnly;
-        as< size_t >( buffer.data() + sizeof( int ) + sizeof( bool ) ) = size;
-
-        if ( size != 0 && data != nullptr )
-        {
-            std::memcpy( buffer.data() + genericMemoryMessageHeaderSize(), data, size );
-        }
+        prepareMemoryMessageData( buffer.data(), address, data, size, isMetadataOnly );
 
         _messaging.sender().broadcastMessage( messageType, buffer.data(), buffer.size(), METHOD_ID );
     }
@@ -102,15 +107,7 @@ class DistributedMemoryService
     {
         PBuf packet = PBuf::allocate( static_cast< int >( genericMemoryMessageHeaderSize() + size ) );
         
-        // Generic Memory Message Header
-        as< int >( packet.payload() ) = address;
-        as< bool >( packet.payload() + sizeof( int ) ) = isMetadataOnly;
-        as< size_t >( packet.payload() + sizeof( int ) + sizeof( bool ) ) = size;
-
-        if ( size != 0 && data != nullptr )
-        {
-            std::memcpy( packet.payload() + genericMemoryMessageHeaderSize(), data, size );
-        }
+        prepareMemoryMessageData( packet.payload(), address, data, size, isMetadataOnly );
 
         auto sendResult = _messaging.sender().sendMessage( messageType, std::move( packet ), target );
 
@@ -526,11 +523,13 @@ public:
             if ( isLeaderMemory() )
             {
                 auto result = _memory->writeData( dataBuffer.data(), dataBuffer.size(), address, true );
+                
                 if ( result.success )
                 {
                     propagateMemoryChange( result.propagationType, address, dataBuffer.data(), dataBuffer.size(), 
                         false, result.propagationTarget, DistributionMessageType::DataStorageRequest );
                 }
+
                 return result.success;
             }
 
