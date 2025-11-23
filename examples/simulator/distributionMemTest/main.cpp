@@ -54,6 +54,24 @@ void distributionManagerFizzBuzz() {
 
     bool terminate = false;
 
+    manager.registerBlockingCustomMessageCallback( 
+        []( DistributedTaskManager&, const Ip6Addr&, uint8_t* dataBuffer, unsigned int bufferSize )
+        {
+            MessagingResult result { false, std::string(), std::vector< uint8_t >( sizeof( int ) ) };
+            if ( bufferSize > 0 )
+            {
+                result.success = true;
+                int data = as< int >( dataBuffer );
+                data++;
+                std::memcpy( result.rawData.data(), &data, result.rawData.size() );
+            }
+            else
+            {
+                result.success = false;
+            }
+            return result;
+        } );
+
     // Register the distributed functions.
     manager.registerFunction< int >( InitialFunction( id, manager ) );
     manager.registerFunction< int, int >( FizzBuzz( id, manager ) );

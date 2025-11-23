@@ -116,7 +116,6 @@ public:
     /// @return Data in uint8_t* format. Nullptr if no data found under the address.
     virtual MemoryReadResult readData( int address, bool isLeader ) const override
     {
-        std::cout << "readData at addr " << address << std::endl; 
         int starterDigit = getAddressStarterDigit( address );
         MemoryReadResult result;
         result.success = false;

@@ -26,7 +26,23 @@ public:
 
         if ( _identity == 2 )
         {
-            sleep( 4 );
+            sleep( 1 );
+            std::vector< uint8_t > message;
+            message.resize( sizeof( int ) );
+            std::memcpy( message.data(), &_identity, sizeof( int ) );
+            Ip6Addr addr = _manager.getLeader().value();
+            MessagingResult mr = _manager.sendCustomMessageBlocking( message.data(), message.size(), addr );
+            if ( mr.success )
+            {
+                if ( mr.rawData.size() > 0 )
+                {
+                    std::cout << "Received blocking message response from " << addr << " with payload " << as< int >( mr.rawData.data() ) << std::endl;
+                }
+            }
+            else
+            {
+                std::cout << "Blocking message failed." << std::endl;
+            }
         }
 
         if ( ( _identity == 2 && address > 21 ) || ( _identity == 3 && address > 31 ) )
