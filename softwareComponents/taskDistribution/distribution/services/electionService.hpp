@@ -1,3 +1,4 @@
+#pragma once
 #include "electionProtocolBase.hpp"
 #include "memoryService.hpp"
 
@@ -74,6 +75,7 @@ public:
         }
 
         _onLeaderFailed = std::forward< std::function< void() > >( callback );
+        return true;
     }
 
     bool unregisterLeaderFailureCallback()

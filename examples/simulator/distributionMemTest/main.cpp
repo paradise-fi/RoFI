@@ -54,7 +54,7 @@ void distributionManagerFizzBuzz() {
 
     bool terminate = false;
 
-    manager.registerBlockingCustomMessageCallback( 
+    manager.callbacks().registerBlockingCustomMessageCallback( 
         []( DistributedTaskManager&, const Ip6Addr&, uint8_t* dataBuffer, unsigned int bufferSize )
         {
             MessagingResult result { false, std::string(), std::vector< uint8_t >( sizeof( int ) ) };
