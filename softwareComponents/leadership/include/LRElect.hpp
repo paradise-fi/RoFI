@@ -110,13 +110,13 @@ namespace rofi::leadership {
 
     public:
         LRElect( NetworkManager& net, 
-            MessageDistributor* distributor, 
+            MessageDistributor& distributor, 
             const Ip6Addr& addr )
         : _net( net ), _myAddr( addr ),  _leader( addr ) {
             _timeJoined = 0;
             _minTimeJoined = 0;
             _period = 1;
-            distributor->registerMethod( METHOD_ID, 
+            distributor.registerMethod( METHOD_ID, 
                 [ this ]( Ip6Addr address, uint8_t* data, unsigned int size ){ _received( address, data, size ); },
                 [ this ](){ _increaseTimeJoined(); } );
         }

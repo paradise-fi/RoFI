@@ -37,17 +37,16 @@ class ElectionService
     }
 
 public:
-    ElectionService( std::unique_ptr< ElectionProtocolBase > election, 
-        std::function< void( const Ip6Addr& ) > electionFinishedCallback )
-    : _election( std::move( election ) ),
-      _onLeaderSuccess( electionFinishedCallback )
+    ElectionService( std::unique_ptr< ElectionProtocolBase > election )
+    : _election( std::move( election ) )
     {
         _election->registerElectionFailedCallback( [ this ] { onLeaderFailed(); } );
         _election->registerElectionFinishedCallback( [ this ] { onLeaderElected(); } );
     }
 
-    void start( int moduleId )
+    void start( int moduleId, std::function< void( const Ip6Addr& ) >&& electionFinishedCallback )
     {
+        _onLeaderSuccess = std::forward< std::function< void( const Ip6Addr& ) > >( electionFinishedCallback );
         _election->start( moduleId );
         _isRunning = true;
     }
@@ -67,14 +66,14 @@ public:
         return _election->getLeader();
     }
 
-    bool registerLeaderFailureCallback( std::function< void() > callback )
+    bool registerLeaderFailureCallback( std::function< void() >&& callback )
     {
         if ( _onLeaderFailed.has_value() )
         {
             return false;
         }
 
-        _onLeaderFailed = callback;
+        _onLeaderFailed = std::forward< std::function< void() > >( callback );
     }
 
     bool unregisterLeaderFailureCallback()
