@@ -24,6 +24,7 @@ class DistributedTaskManager : public UserCallbackInvoker
     CustomMessageQueueManager _customMessageQueueManager;
     WorkFlowService _workFlowService;
     MessageDispatcher _messageDispatcher;
+    MessageDistributor& _messageDistributor;
 
     int _blockingMessageTimeoutMs;
 
@@ -131,15 +132,12 @@ public:
     DistributedTaskManager(
         std::unique_ptr< ElectionProtocolBase > election,
         Ip6Addr& address,
-        MessageDistributor* distributor,
+        MessageDistributor& distributor,
         std::unique_ptr< udp_pcb > pcb,
         int blockingMessageTimeoutMs = 300 ) 
     : _address( address ),
       _functionRegistry( _loggingService ),
-      _election( std::move( election ),
-        [ this ]( const Ip6Addr& leader) {
-            onElectionSuccesful( leader );
-        }),
+      _election( std::move( election ) ),
       _messaging( address, DISTRIBUTION_PORT, distributor,
         [ this ]( Ip6Addr sender, DistributionMessageType messageType, uint8_t* data, unsigned int size )
         {
@@ -150,16 +148,9 @@ public:
       _customMessageQueueManager( *this, _messaging ),
       _workFlowService( _messaging.sender(), _functionRegistry, _memoryService, _loggingService, _customMessageQueueManager ),
       _messageDispatcher( address, *this, _functionRegistry, _messaging, _memoryService, _loggingService, _customMessageQueueManager, blockingMessageTimeoutMs ),
+      _messageDistributor( distributor ),
       _blockingMessageTimeoutMs( blockingMessageTimeoutMs )
-    {
-        distributor->registerMethod( METHOD_ID, 
-            [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
-            {
-                DistributionMessageType type = as< DistributionMessageType >( data );
-                onMessage( sender, type, data, size ); 
-            },
-            [] () { return; } );
-    }
+    {}
 
     template< std::derived_from< LoggerBase > Logger >
     void useLogger( const Logger& logger )
@@ -170,7 +161,10 @@ public:
     /// @brief Registers a callback that is called when leader election fails.
     /// @param callback The callback function.
     /// @return True if the registration succeeded.
-    bool registerLeaderFailureCallback( std::function< void() > callback ) { return _election.registerLeaderFailureCallback( callback ); }
+    bool registerLeaderFailureCallback( std::function< void() >&& callback ) 
+    { 
+        return _election.registerLeaderFailureCallback( std::forward< std::function< void() > >( callback ) ); 
+    }
 
     /// @brief Unregisters a callback for leader election failure.
     /// @return True if the function was unregistered.
@@ -178,20 +172,32 @@ public:
     
     /// @brief Registers a callback that is called when a task request is received.
     /// @param callback Your custom callback. Returns true if the task request pipeline should not continue after this callback (e.g. to avoid double-scheduling of a task)
-    void registerTaskRequestCallback( std::function< bool(DistributedTaskManager& manager, const rofi::net::Ip6Addr& requester ) > callback ) { _onTaskRequest = callback; }
+    void registerTaskRequestCallback( std::function< bool(DistributedTaskManager& manager, const rofi::net::Ip6Addr& requester ) >&& callback )
+    { 
+        _onTaskRequest = std::forward< std::function< bool(DistributedTaskManager& manager, const rofi::net::Ip6Addr& requester ) > >( callback );
+    }
 
     /// @brief Unregisters a callback that is called when a task request is received.
     void unregisterTaskRequestCallback() { _onTaskRequest = nullptr; }
 
-    void registerTaskFailedCallback( std::function< void(DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, const int functionId ) > callback ) { _onTaskFailure = callback; }
+    void registerTaskFailedCallback( std::function< void(DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, const int functionId ) >&& callback ) 
+    { 
+        _onTaskFailure = std::forward< std::function< void(DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, const int functionId ) > >( callback );
+    }
 
     void unregisterTaskFailedCallback() { _onTaskFailure = nullptr; }
 
-    void registerNonBlockingCustomMessageCallback( std::function< void( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, const unsigned int bufferSize ) > callback ) { _onCustomMessage = callback; }
+    void registerNonBlockingCustomMessageCallback( std::function< void( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, const unsigned int bufferSize ) >&& callback )
+    { 
+        _onCustomMessage = std::forward< std::function< void( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, const unsigned int bufferSize ) > >( callback );
+    }
 
     void unregisterNonBlockingCustomMessageCallback() { _onCustomMessage = nullptr; }
 
-    void registerBlockingCustomMessageCallback( std::function< MessagingResult( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, const unsigned int bufferSize ) > callback ) { _onCustomMessageBlocking = callback; }
+    void registerBlockingCustomMessageCallback( std::function< MessagingResult( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, const unsigned int bufferSize ) >&& callback )
+    { 
+        _onCustomMessageBlocking = std::forward< std::function< MessagingResult( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, const unsigned int bufferSize ) > >( callback );
+    }
 
     void unregisterBlockingCustomMessageCallback() { _onCustomMessageBlocking = nullptr; }
 
@@ -232,7 +238,18 @@ public:
     
     void start( int moduleId )
     {
-        _election.start( moduleId );
+        _messageDistributor.registerMethod( METHOD_ID, 
+            [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
+            {
+                DistributionMessageType type = as< DistributionMessageType >( data );
+                onMessage( sender, type, data, size ); 
+            },
+            [] () { return; } );
+
+        _election.start( moduleId,
+            [ this ]( const Ip6Addr& leader) {
+                onElectionSuccesful( leader );
+            });
     }
 
     void broadcastUnblockSignal()
