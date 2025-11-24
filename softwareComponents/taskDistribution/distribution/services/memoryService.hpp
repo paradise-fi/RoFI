@@ -6,6 +6,7 @@
 #include "../messagingService.hpp"
 #include "../memory/memoryRequestType.hpp"
 #include "loggingService.hpp"
+#include "callbacks/callbackService.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
@@ -56,8 +57,8 @@ class DistributedMemoryService
     
     // For external write requests.
     std::queue<MemoryRequestQueueItem> _memoryStorageQueue;
-    std::optional< std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) > > _onMemoryStoredCb;
     LoggingService& _loggingService;
+    CallbackService& _callbackService;
     int _blockingMessageTimeoutMs = 300;
 
     bool isLeaderMemory()
@@ -65,16 +66,6 @@ class DistributedMemoryService
         return _leader == _currentModuleAddress;
     }
 
-    void onMemoryStored( int memoryAddress, bool isLeaderMemory )
-    {
-        if ( _onMemoryStoredCb == std::nullopt )
-        {
-            return;
-        }
-        
-        _onMemoryStoredCb.value()( memoryAddress, isLeaderMemory, *this );
-    }
-    
     size_t genericMemoryMessageHeaderSize()
     {
         return sizeof( int ) + sizeof( bool ) + sizeof( size_t );
@@ -370,7 +361,7 @@ class DistributedMemoryService
         {
             if ( result.stored )
             {
-                onMemoryStored( memoryItem.address, isLeaderMemory() );
+                _callbackService.invokeOnMemoryStored( memoryItem.address, isLeaderMemory(), *this );
             }
             
             propagateMemoryChange( result.propagationType, memoryItem.address, memoryItem.data.data(), memoryItem.data.size(),
@@ -381,8 +372,12 @@ class DistributedMemoryService
     }
 
 public:
-    DistributedMemoryService( MessageDistributor& distributor, MessagingService& messaging, Ip6Addr& currentModuleAddress, LoggingService& loggingService, int blockingMessageTimeoutMs = 300 )
-    : _messaging( messaging ), _currentModuleAddress( currentModuleAddress ), _loggingService( loggingService ), _blockingMessageTimeoutMs( blockingMessageTimeoutMs )
+    DistributedMemoryService( MessageDistributor& distributor, MessagingService& messaging,
+        Ip6Addr& currentModuleAddress, LoggingService& loggingService, 
+        CallbackService& callbackService, int blockingMessageTimeoutMs = 300 )
+    : _messaging( messaging ), _currentModuleAddress( currentModuleAddress ),
+      _loggingService( loggingService ), _callbackService( callbackService ), 
+      _blockingMessageTimeoutMs( blockingMessageTimeoutMs )
     {
         distributor.registerMethod( METHOD_ID, 
             [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
@@ -391,11 +386,6 @@ public:
                 onMemoryMessage( sender, data + _messaging.sender().headerSize(), size, mapMessageToMemoryRequest(messageType) ); 
             },
             [] () { return; } );
-    }
-    
-    void registerOnMemoryStored( std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) > onMemoryStoredCb )
-    {
-        _onMemoryStoredCb = onMemoryStoredCb;
     }
 
     bool isMemoryRegistered()

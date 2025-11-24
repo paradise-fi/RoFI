@@ -8,7 +8,8 @@
 #include "electionProtocolBase.hpp"
 #include <boost/lockfree/queue.hpp>
 #include "services/loggingService.hpp"
-#include "messaging/userCallbackInvoker.hpp"
+#include "callbacks/userCallbackInvoker.hpp"
+#include "callbacks/callbackService.hpp"
 #include "messaging/messageDispatcher.hpp"
 #include "messaging/customMessageQueueManager.hpp"
 
@@ -19,6 +20,7 @@ class DistributedTaskManager : public UserCallbackInvoker
     LoggingService _loggingService;
     FunctionRegistry _functionRegistry;
     ElectionService _election;
+    CallbackService _callbackService;
     MessagingService _messaging;
     DistributedMemoryService _memoryService;
     CustomMessageQueueManager _customMessageQueueManager;
@@ -27,11 +29,6 @@ class DistributedTaskManager : public UserCallbackInvoker
     MessageDistributor& _messageDistributor;
 
     int _blockingMessageTimeoutMs;
-
-    std::function< bool( DistributedTaskManager& manager, const rofi::net::Ip6Addr& requester ) > _onTaskRequest;
-    std::function< void( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, const int functionId ) > _onTaskFailure;
-    std::function< void( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* data, const size_t size ) > _onCustomMessage;
-    std::function< MessagingResult( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* data, const size_t size ) > _onCustomMessageBlocking;
 
     void onElectionSuccesful( const Ip6Addr& leader )
     {
@@ -57,57 +54,29 @@ class DistributedTaskManager : public UserCallbackInvoker
     {
         MessagingResult result;
         result.success = true;
+        int taskId;
         switch ( cbType )
         {
             case CallbackType::CompleteBlockingMessageCb:
                 _messaging.completeBlockingMessage( data, size );
                 break;
             case CallbackType::CustomMessageCb:
-                if ( _onCustomMessage )
-                {
-                    _onCustomMessage( *this, sender, data, size );
-                }
-                else
-                {
-                    _loggingService.logError("Received custom message but no callback to handle it is registered.");
-                    result.success = false;
-                }
+                _callbackService.invokeOnCustomMessage( *this, sender, data, size );
                 break;
-            
             case CallbackType::CustomMessageBlockingCb:
-                if ( _onCustomMessageBlocking )
-                {
-                    return _onCustomMessageBlocking( *this, sender, data, size );
-                }
-                else
-                {
-                    _loggingService.logError("Received blocking custom message but no callback to handle it is registered.");
-                    result.success = false;
-                }
-                break;
-
+                return _callbackService.invokeOnCustomMessageBlocking( *this, sender, data, size );
             case CallbackType::TaskFailureCb:
-                if ( _onTaskFailure )
+                taskId = 0;
+                if ( size == sizeof( int ) )
                 {
-                    int taskId = 0;
-                    if ( size == sizeof( int ) )
-                    {
-                        taskId = as< int >( data );
-                    }
-                    _onTaskFailure( *this, sender, taskId );
+                    taskId = as< int >( data );
                 }
+                _callbackService.invokeOnTaskFailure( *this, sender, taskId );
                 break;
 
             case CallbackType::TaskRequestCb:
-                if ( _onTaskRequest )
-                {
-                    // Semantics -> true means that the task request pipeline ends with this call. False means we still need to queue the task request.
-                    result.success = _onTaskRequest( *this, sender );
-                }
-                else
-                {
-                    result.success = false;
-                }
+                // Semantics -> true means that the task request pipeline ends with this call. False means we still need to queue the task request.
+                result.success = _callbackService.invokeOnTaskRequest( *this, sender );
                 break;
 
             default:
@@ -138,13 +107,14 @@ public:
     : _address( address ),
       _functionRegistry( _loggingService ),
       _election( std::move( election ) ),
+      _callbackService( _election, _loggingService ),
       _messaging( address, DISTRIBUTION_PORT, distributor,
         [ this ]( Ip6Addr sender, DistributionMessageType messageType, uint8_t* data, unsigned int size )
         {
             onMessage( sender, messageType, data, size );
         },
         std::move( pcb ) ),
-      _memoryService( distributor, _messaging, address, _loggingService, blockingMessageTimeoutMs ),
+      _memoryService( distributor, _messaging, address, _loggingService, _callbackService, blockingMessageTimeoutMs ),
       _customMessageQueueManager( *this, _messaging ),
       _workFlowService( _messaging.sender(), _functionRegistry, _memoryService, _loggingService, _customMessageQueueManager ),
       _messageDispatcher( address, *this, _functionRegistry, _messaging, _memoryService, _loggingService, _customMessageQueueManager, blockingMessageTimeoutMs ),
@@ -158,48 +128,10 @@ public:
         _loggingService.useLogger( logger );
     }
 
-    /// @brief Registers a callback that is called when leader election fails.
-    /// @param callback The callback function.
-    /// @return True if the registration succeeded.
-    bool registerLeaderFailureCallback( std::function< void() >&& callback ) 
-    { 
-        return _election.registerLeaderFailureCallback( std::forward< std::function< void() > >( callback ) ); 
+    CallbackFacade& callbacks()
+    {
+        return _callbackService;
     }
-
-    /// @brief Unregisters a callback for leader election failure.
-    /// @return True if the function was unregistered.
-    bool unregisterLeaderFailureCallback() { return _election.unregisterLeaderFailureCallback(); }
-    
-    /// @brief Registers a callback that is called when a task request is received.
-    /// @param callback Your custom callback. Returns true if the task request pipeline should not continue after this callback (e.g. to avoid double-scheduling of a task)
-    void registerTaskRequestCallback( std::function< bool(DistributedTaskManager& manager, const rofi::net::Ip6Addr& requester ) >&& callback )
-    { 
-        _onTaskRequest = std::forward< std::function< bool(DistributedTaskManager& manager, const rofi::net::Ip6Addr& requester ) > >( callback );
-    }
-
-    /// @brief Unregisters a callback that is called when a task request is received.
-    void unregisterTaskRequestCallback() { _onTaskRequest = nullptr; }
-
-    void registerTaskFailedCallback( std::function< void(DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, const int functionId ) >&& callback ) 
-    { 
-        _onTaskFailure = std::forward< std::function< void(DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, const int functionId ) > >( callback );
-    }
-
-    void unregisterTaskFailedCallback() { _onTaskFailure = nullptr; }
-
-    void registerNonBlockingCustomMessageCallback( std::function< void( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, const unsigned int bufferSize ) >&& callback )
-    { 
-        _onCustomMessage = std::forward< std::function< void( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, const unsigned int bufferSize ) > >( callback );
-    }
-
-    void unregisterNonBlockingCustomMessageCallback() { _onCustomMessage = nullptr; }
-
-    void registerBlockingCustomMessageCallback( std::function< MessagingResult( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, const unsigned int bufferSize ) >&& callback )
-    { 
-        _onCustomMessageBlocking = std::forward< std::function< MessagingResult( DistributedTaskManager& manager, const rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, const unsigned int bufferSize ) > >( callback );
-    }
-
-    void unregisterBlockingCustomMessageCallback() { _onCustomMessageBlocking = nullptr; }
 
     DistributedMemoryService& memoryService()
     {

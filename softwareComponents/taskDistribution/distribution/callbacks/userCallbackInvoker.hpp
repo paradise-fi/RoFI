@@ -1,6 +1,6 @@
 #pragma once
 #include "lwip++.hpp"
-#include "messagingResult.hpp"
+#include "../messaging/messagingResult.hpp"
 
 enum CallbackType
 {
