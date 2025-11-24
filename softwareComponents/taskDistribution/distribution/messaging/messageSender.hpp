@@ -15,11 +15,11 @@ struct MessageSendResult
 class MessageSender {
     Ip6Addr& _address;
     u16_t _distributionPort;
-    MessageDistributor* _messageDistributor;
+    MessageDistributor& _messageDistributor;
     udp_pcb* _pcb;
 
 public:
-    MessageSender(Ip6Addr& address, u16_t port, udp_pcb* pcb, MessageDistributor* messageDistributor)
+    MessageSender(Ip6Addr& address, u16_t port, udp_pcb* pcb, MessageDistributor& messageDistributor)
     : _address( address ), _distributionPort( port ), _messageDistributor( messageDistributor ) {
         if ( !pcb )
         {
@@ -123,7 +123,7 @@ public:
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
 
-        _messageDistributor->sendMessage( _address, methodId, buffer.payload(), buffer.size() );
+        _messageDistributor.sendMessage( _address, methodId, buffer.payload(), buffer.size() );
     }
 
     void broadcastMessage( DistributionMessageType type, PBuf&& data, unsigned int methodId )
@@ -137,7 +137,7 @@ public:
             std::memcpy(buffer.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ), data.payload(), data.size() );
         }
 
-        _messageDistributor->sendMessage( _address, methodId, buffer.payload(), buffer.size() );
+        _messageDistributor.sendMessage( _address, methodId, buffer.payload(), buffer.size() );
     }
 
     void broadcastMessage( DistributionMessageType type, uint8_t* data, size_t size, unsigned int methodId )
@@ -152,7 +152,7 @@ public:
             std::memcpy( buffer.data() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ), data, size );
         }
 
-        _messageDistributor->sendMessage( _address, methodId, buffer.data(), buffer.size() );
+        _messageDistributor.sendMessage( _address, methodId, buffer.data(), buffer.size() );
     }
 
     void broadcastMessage( DistributionMessageType type, TaskBase& task, unsigned int methodId )
@@ -163,7 +163,7 @@ public:
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
         task.copyToBuffer( buffer.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
 
-        _messageDistributor->sendMessage( _address, methodId, buffer.payload(), buffer.size() );
+        _messageDistributor.sendMessage( _address, methodId, buffer.payload(), buffer.size() );
     }
 
     unsigned int headerSize()

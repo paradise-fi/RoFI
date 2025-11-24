@@ -28,7 +28,7 @@ public:
     MessagingService(
         Ip6Addr& address,
         u16_t distributionPort,
-        MessageDistributor* distributor,
+        MessageDistributor& distributor,
         std::function< void( Ip6Addr sender, DistributionMessageType messageType, uint8_t* data, unsigned int size ) > onMessageHandler,
         std::unique_ptr< udp_pcb > pcb )
     : _pcb( std::move( pcb ) ),

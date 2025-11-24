@@ -381,10 +381,10 @@ class DistributedMemoryService
     }
 
 public:
-    DistributedMemoryService( MessageDistributor* distributor, MessagingService& messaging, Ip6Addr& currentModuleAddress, LoggingService& loggingService, int blockingMessageTimeoutMs = 300 )
+    DistributedMemoryService( MessageDistributor& distributor, MessagingService& messaging, Ip6Addr& currentModuleAddress, LoggingService& loggingService, int blockingMessageTimeoutMs = 300 )
     : _messaging( messaging ), _currentModuleAddress( currentModuleAddress ), _loggingService( loggingService ), _blockingMessageTimeoutMs( blockingMessageTimeoutMs )
     {
-        distributor->registerMethod( METHOD_ID, 
+        distributor.registerMethod( METHOD_ID, 
             [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
             {
                 auto messageType = as< DistributionMessageType >( data );
