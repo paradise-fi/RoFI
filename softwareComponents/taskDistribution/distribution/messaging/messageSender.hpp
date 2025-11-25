@@ -30,7 +30,7 @@ public:
     
     MessageSendResult sendMessage( DistributionMessageType type, TaskBase& task, const Ip6Addr& target)
     {
-        auto buffer = rofi::hal::PBuf::allocate( headerSize() + static_cast< int >( task.size() ) );
+        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( headerSize() +  task.size() ) );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
         task.copyToBuffer( buffer.payload() + headerSize() );
@@ -50,7 +50,7 @@ public:
 
     MessageSendResult sendMessage( DistributionMessageType type, PBuf&& data, const Ip6Addr& target )
     {
-        auto buffer = rofi::hal::PBuf::allocate( headerSize() + data.size() );
+        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( headerSize() + data.size() ) );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
 
@@ -75,7 +75,7 @@ public:
 
     MessageSendResult sendMessage( DistributionMessageType type, uint8_t* data, size_t dataSize, const Ip6Addr& target )
     {
-        auto buffer = rofi::hal::PBuf::allocate( headerSize() + dataSize );
+        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( headerSize() + dataSize ) );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
 
@@ -100,7 +100,7 @@ public:
     
     MessageSendResult sendMessage( DistributionMessageType type, const Ip6Addr& target )
     {
-        auto buffer = rofi::hal::PBuf::allocate( headerSize() );
+        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( headerSize() ) );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
 
@@ -119,7 +119,7 @@ public:
 
     void broadcastMessage( DistributionMessageType type, unsigned int methodId )
     {
-        auto buffer = rofi::hal::PBuf::allocate( headerSize() );
+        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( headerSize() ) );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
 
@@ -128,7 +128,7 @@ public:
 
     void broadcastMessage( DistributionMessageType type, PBuf&& data, unsigned int methodId )
     {
-        auto buffer = rofi::hal::PBuf::allocate( headerSize() + data.size() );
+        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( headerSize() + data.size() ) );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
 
@@ -157,8 +157,7 @@ public:
 
     void broadcastMessage( DistributionMessageType type, TaskBase& task, unsigned int methodId )
     {
-        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( task.size() )
-                                                 + headerSize() );
+        auto buffer = rofi::hal::PBuf::allocate( static_cast< int >( task.size() + headerSize() ) );
         as< DistributionMessageType >( buffer.payload() ) = type;
         as< Ip6Addr >( buffer.payload() + sizeof( DistributionMessageType ) ) = _address;
         task.copyToBuffer( buffer.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) );
@@ -166,8 +165,8 @@ public:
         _messageDistributor.sendMessage( _address, methodId, buffer.payload(), buffer.size() );
     }
 
-    unsigned int headerSize()
+    size_t headerSize()
     {
-        return static_cast< int >( sizeof( DistributionMessageType ) ) + sizeof( Ip6Addr );
+        return sizeof( DistributionMessageType ) + sizeof( Ip6Addr );
     }
 };

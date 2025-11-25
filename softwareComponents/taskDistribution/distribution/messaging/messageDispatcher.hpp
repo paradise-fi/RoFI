@@ -19,7 +19,7 @@ class MessageDispatcher
     int _blockingMessageTimeoutMs;
 
 
-    void handleCustomMessage( const Ip6Addr& sender, uint8_t* data, unsigned int size )
+    void handleCustomMessage( const Ip6Addr& sender, uint8_t* data, size_t size )
     {
         _callbackInvoker.invokeUserCallback( CallbackType::CustomMessageCb, sender, data, size );
     }
@@ -39,7 +39,7 @@ class MessageDispatcher
         return;   
     }
 
-    void handleMemoryMessage( const Ip6Addr& sender, const DistributionMessageType type, uint8_t* data, unsigned int size )
+    void handleMemoryMessage( const Ip6Addr& sender, const DistributionMessageType type, uint8_t* data, size_t size )
     {
         if ( _memoryService.isMemoryRegistered() )
             {
