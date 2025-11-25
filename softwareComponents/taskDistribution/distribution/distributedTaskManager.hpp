@@ -39,11 +39,11 @@ class DistributedTaskManager : public UserCallbackInvoker
 
         if ( _address == leader )
         {
-            _functionRegistry.clearTasks();
             _loggingService.logInfo( "I have been elected as the leader." );
             return;
         }
 
+        _functionRegistry.clearTasks();
         std::ostringstream stream;
         stream << "I am a follower of " << leader;
         _loggingService.logInfo( stream.str() );
@@ -137,10 +137,12 @@ public:
     {
         return _memoryService;
     }
+
     FunctionRegistry& functionRegistry()
     {
         return _functionRegistry;
     }
+    
     LoggingService& loggingService()
     {
         return _loggingService;
@@ -184,16 +186,6 @@ public:
             });
     }
 
-    void broadcastUnblockSignal()
-    {
-        _messaging.sender().broadcastMessage(DistributionMessageType::BlockingTaskRelease, METHOD_ID);
-    }
-
-    void sendUnblockSignal( Ip6Addr& receiver )
-    {
-        _messaging.sender().sendMessage(DistributionMessageType::BlockingTaskRelease, receiver );
-    }
-
     std::optional< Ip6Addr > getLeader()
     {
         if ( _election.isElectionComplete() )
@@ -204,7 +196,42 @@ public:
         return std::nullopt;
     }
 
-    void sendCustomMessage( uint8_t* data, unsigned int dataSize, std::optional< Ip6Addr > target )
+    /// @brief Retrieves a function handle. The function handle is used for invoking a function over the network.
+    /// @tparam Result A trivially copyable type, or a type that implements Serializable. Denotes the type of the function's result. 
+    /// @tparam ...Arguments A pack of trivially copyable types, or types that implement Serializable. Denotes the types of the function's parameters.
+    /// @param functionName The name of the distributed function.
+    /// @return std::nullopt if the function does not exist, otherwise the function handle is returned.
+    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
+    std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( const std::string& functionName )
+    {
+        return _functionRegistry.getFunctionHandle< Result, Arguments... >( functionName );
+    }
+
+    /// @brief Retrieves a function handle. The function handle is used for invoking a function over the network.
+    /// @tparam Result A trivially copyable type, or a type that implements Serializable. Denotes the type of the function's result. 
+    /// @tparam ...Arguments A pack of trivially copyable types, or types that implement Serializable. Denotes the types of the function's parameters.
+    /// @param functionId The ID of the distributed function. You may also use the std::string variant for more human-friendly retrieval.
+    /// @return std::nullopt if the function does not exist, otherwise the function handle is returned.
+    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
+    std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( int functionId )
+    {
+        return _functionRegistry.getFunctionHandle< Result, Arguments... >( functionId );
+    }
+
+    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments,
+              std::derived_from< DistributedFunction< Result, Arguments... > > Func >
+    bool registerFunction( const Func& function )
+    {
+        return _functionRegistry.registerFunction< Result, Arguments... >( function );
+    }
+
+    /// @brief Removes all tasks from all schedulers on this module.
+    void clearAllTasks()
+    {
+        _functionRegistry.clearTasks();
+    }
+
+    void sendCustomMessage( uint8_t* data, size_t dataSize, std::optional< Ip6Addr > target )
     {
         if ( !target.has_value() )
         {
@@ -216,7 +243,7 @@ public:
         _messaging.sender().sendMessage( DistributionMessageType::CustomMessage, std::move( packet ), target.value() );
     }
 
-    MessagingResult sendCustomMessageBlocking( uint8_t* data, unsigned int dataSize, Ip6Addr& target )
+    MessagingResult sendCustomMessageBlocking( uint8_t* data, size_t dataSize, Ip6Addr& target )
     {
         return _messaging.sendMessageBlocking( target, DistributionMessageType::CustomMessageBlocking, data, dataSize, _blockingMessageTimeoutMs );
     }
@@ -259,38 +286,13 @@ public:
         return true;
     }
 
-    /// @brief Retrieves a function handle. The function handle is used for invoking a function over the network.
-    /// @tparam Result A trivially copyable type, or a type that implements Serializable. Denotes the type of the function's result. 
-    /// @tparam ...Arguments A pack of trivially copyable types, or types that implement Serializable. Denotes the types of the function's parameters.
-    /// @param functionName The name of the distributed function.
-    /// @return std::nullopt if the function does not exist, otherwise the function handle is returned.
-    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
-    std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( const std::string& functionName )
+    void broadcastUnblockSignal()
     {
-        return _functionRegistry.getFunctionHandle< Result, Arguments... >( functionName );
+        _messaging.sender().broadcastMessage(DistributionMessageType::BlockingTaskRelease, METHOD_ID);
     }
 
-    /// @brief Retrieves a function handle. The function handle is used for invoking a function over the network.
-    /// @tparam Result A trivially copyable type, or a type that implements Serializable. Denotes the type of the function's result. 
-    /// @tparam ...Arguments A pack of trivially copyable types, or types that implement Serializable. Denotes the types of the function's parameters.
-    /// @param functionId The ID of the distributed function. You may also use the std::string variant for more human-friendly retrieval.
-    /// @return std::nullopt if the function does not exist, otherwise the function handle is returned.
-    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
-    std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( int functionId )
+    void sendUnblockSignal( Ip6Addr& receiver )
     {
-        return _functionRegistry.getFunctionHandle< Result, Arguments... >( functionId );
-    }
-
-    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments,
-              std::derived_from< DistributedFunction< Result, Arguments... > > Func >
-    bool registerFunction( const Func& function )
-    {
-        return _functionRegistry.registerFunction< Result, Arguments... >( function );
-    }
-
-    /// @brief Removes all tasks from all schedulers on this module.
-    void clearAllTasks()
-    {
-        _functionRegistry.clearTasks();
+        _messaging.sender().sendMessage(DistributionMessageType::BlockingTaskRelease, receiver );
     }
 };
