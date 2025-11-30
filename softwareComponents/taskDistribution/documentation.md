@@ -18,13 +18,14 @@ To find out how to use the RoFI task manager, consult examples provided in ~RoFI
 ### Table of Contents
 
 1. [DistributionTaskManager](#distributedtaskmanager)
-2. [DistributionMemoryService](#distributedmemoryservice)
-3. [LoggingService](#loggingservice)
-4. [DistributedFunction](#distributedfunction)
-5. [FunctionHandle](#functionhandle)
-6. [DistributedMemoryBase](#distributedmemorybase)
-7. [LoggerBase](#loggerbase)
-8. [Serializable](#serializable)
+2. [CallbackFacade](#callbackfacade)
+3. [DistributionMemoryService](#distributedmemoryservice)
+4. [LoggingService](#loggingservice)
+5. [DistributedFunction](#distributedfunction)
+6. [FunctionHandle](#functionhandle)
+7. [DistributedMemoryBase](#distributedmemorybase)
+8. [LoggerBase](#loggerbase)
+9. [Serializable](#serializable)
 
 <hr>
 
@@ -36,8 +37,9 @@ The ``DistributedTaskManager`` class is the primary entry point into the functio
 DistributedTaskManager(
         std::unique_ptr< ElectionProtocolBase > election,
         Ip6Addr& address,
-        MessageDistributor* distributor,
-        std::unique_ptr< udp_pcb > pcb) ;
+        MessageDistributor& distributor,
+        std::unique_ptr< udp_pcb > pcb,
+        int blockingMessageTimeoutMs = 300 );
 ```
 Constructs a distributed task manager instance. It is strongly recommended that only one DistributedTaskManager instance exists per module.
 
@@ -45,9 +47,11 @@ Constructs a distributed task manager instance. It is strongly recommended that 
 
 ``address`` - The address of this module. Should be connected to any routing protocols that are running.
 
-``distributor`` - The MessageDistributor network protocol running on the RoFI Network Manager.
+``distributor`` - The MessageDistributor network protocol running on the RoFI Network Manager, this is used by internal functionality to send out and receive multicast messages.
 
 ``pcb`` - A network pcb, used by the underlying network layers.
+
+``blockingMessageTimeoutMs`` - Setting for the timeout of blocking messages within the task manager.
 
 #### Methods
 
@@ -91,13 +95,17 @@ Registers (and unregisters) a callback function for the receiving of [custom mes
 The data buffer received into the callback contains only the body of the message, headers are already parsed out at this point.
 
 ```c++
+CallbackFacade& callbacks();
 DistributedMemoryService& memoryService();
+FunctionRegistry& functionRegistry()
 LoggingService& loggingService();
 ```
 
 These methods provide direct access to some of the lower level subsystems that make up the task manager. 
 
+- ``CallbackFacade`` provides a wrapper around callback management within the distributed task manager. It allows users to register callbacks to specified events.
 - ``DistributedMemoryService`` provides a wrapper around custom memory implementations. It allows users to store and read data in the distributed system.
+- ``FunctionRegistry`` provides lower-level access to the function and task subsystem. However, typical required functionality is provided as part of the DistributedTaskManager.
 - ``LoggingService`` is concerned with logging. You can use this service to send log messages from your application, in which case they will end up in the same channels as the system logging.
 
 
@@ -176,19 +184,73 @@ Used to clear all tasks from the queues on this module. Can be useful for failur
 
 <hr>
 
+### CallbackFacade
+Provides access to registration of callback mechanisms within the distributed task manager.
+
+#### Callback Types
+This is a list of all the callback types available within the task manager.
+```c++
+using OnTaskRequestCallback = std::function< bool( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& requester ) >;
+using OnTaskFailureCallback = std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, const int functionId ) >;
+using OnCustomMessageCallback = std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
+using OnCustomMessageBlockingCallback = std::function< MessagingResult( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
+using OnMemoryStoredCallback = std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) >;
+```
+
+#### Leader Failure Callback
+```c++
+/// @return True if the registration succeeded.
+virtual bool registerLeaderFailureCallback( std::function< void() >&& callback ) = 0;
+
+/// @return True if the function was unregistered.
+virtual bool unregisterLeaderFailureCallback() = 0;
+```
+
+These methods are used to register (unregister) a callback that is called in the event that a module detects its connection to the leader has been severed. This is best used for failure recovery purposes.
+
+#### Task Request Callback
+```c++
+using OnTaskRequestCallback = std::function< bool( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& requester ) >;
+virtual void registerTaskRequestCallback( OnTaskRequestCallback&& callback ) = 0;
+```
+
+Used to register a callback for the event of a task request message being processed by the module. The boolean return value of the OnTaskRequestCallback function informs the distributed task manager about whether it should still continue with the task request pipeline, namely whether it should put the task into its task scheduler or not. Task scheduling is **not** performed if OnTaskRequestCallback returns **true**.
+
+#### Task Failed Callback
+```c++
+using OnTaskFailureCallback = std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, const int functionId ) >;
+virtual void registerTaskFailedCallback( OnTaskFailureCallback&& callback ) = 0;
+```
+
+Used to register a callback for the event of a task failure message being processed by the module. Note that this callback is invoked for exceptional failure, namely the event of a function not being registered at the executing module. This callback can be, for example, used to log the issue at the leader side and then perform a graceful shutdown of the whole system.
+
+#### Custom Message Callbacks
+```c++
+using OnCustomMessageCallback = std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
+virtual void registerNonBlockingCustomMessageCallback( OnCustomMessageCallback&& callback ) = 0;
+
+using OnCustomMessageBlockingCallback = std::function< MessagingResult( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
+virtual void registerBlockingCustomMessageCallback( OnCustomMessageBlockingCallback&& callback ) = 0;
+```
+
+These callbacks are used for non-blocking and blocking custom messages respectively. Custom messages serve as a mechanism for implementing a user's own type of messaging without having to handle low-level details of networking.
+
+#### OnMemoryStored Callback
+```c++
+using OnMemoryStoredCallback = std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) >;
+virtual void registerOnMemoryStoredCallback( OnMemoryStoredCallback&& callback ) = 0;
+```
+
+This callback is used for the event that memory is written into in this module. This callback is invoked in the DistributedMemoryService subsystem of the task manager.
+
+<hr>
+
 ### DistributedMemoryService
 Provides access to methods that work with a distributed memory implementation.
 
 The ``DistributedMemoryService`` is created internally by the task manager. The constructor will thus not be discussed.
 
 #### Methods
-
-##### Memory Storage Callback
-```c++
-void registerOnMemoryStored( std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) > onMemoryStoredCb );
-```
-
-Registers a callback for the event that memory has been succesfully stored at this module.
 
 ##### Memory Implementation Manipulation Methods
 
@@ -209,7 +271,7 @@ Any custom memory implementation must be derived from ``SharedMemoryBase``.
 
 ```c++
 template < SerializableOrTrivial T >
-bool saveData( T data, int address );
+bool saveData( T&& data, int address );
 ```
 
 Used by the user to save data to the shared memory. Returns true if the data was stored succesfully, otherwise false.
@@ -236,6 +298,9 @@ Attempts to read data from memory. If data is not read, the MemoryReadResult str
 struct MemoryReadResult
 {
     bool success;
+    bool requestRemoteRead;
+    // Used when a remote read is required. Leave nullopt to send message to leader.
+    std::optional< rofi::hal::Ip6Addr > readTarget;
     std::vector< uint8_t > rawData;
 
     template< SerializableOrTrivial T >
@@ -243,6 +308,8 @@ struct MemoryReadResult
 }
 ```
 The structure used for representation of the result of memory reading. If the result was succesfull, the ``success`` flag is set to true. To read the data within the memory read result, you should use the ``data()`` function.
+
+Special attention should be paid to ``bool requestRemoteRead`` and ``std::optional< rofi::hal::Ip6Addr > readTarget`` as these two attributes are used to configure remote reading from memory. Should a Distributed Memory implementation need to read from a remote module, the read method should return requestRemoteRead as ``true`` and provide either the source of information in readTarget, or null if the message is to be sent to the leader who can then route the request to the data holder.
 
 ##### Memory Service Purge
 
@@ -255,7 +322,7 @@ Removes all data from local memory.
 ```c++
 void clearLocalQueue();
 ```
-Removes all entries in the storage queue - all pending memory changes.
+Removes all entries in the memory queues - all pending memory changes and pending remote reads.
 
 ##### Metadata Access Methods
 
@@ -463,6 +530,22 @@ virtual void clear() = 0;
 ```
 Instructs the memory implementation to completely clear its memory.
 
+###### Memory Storage Behavior
+```c++
+enum MemoryStorageBehavior
+{
+    LocalFirstStorage,
+    LeaderFirstStorage,
+};
+
+virtual MemoryStorageBehavior storageBehavior() const = 0;
+```
+
+The return value of this method informs the memory service that manages your memory implementation about how to proceed with data storage. 
+
+``MemoryStorageBehavior::LocalFirstStorage`` ensures that data is first stored locally, and then sent to the leader for processing. Leader contact can be ommited by setting ``MemoryPropagationType`` in ``MemoryWriteResult`` to ``MemoryPropagationType::None``.
+``MemoryStorageBehavior::LeaderFirstStorage`` ensures that data is first processed at the leader and does not touch the local data storage at all unless the leader instructs local memory changes.
+
 ##### Data Writing
 ```c++
 virtual MemoryWriteResult removeData( int address, bool isLeader ) = 0;
@@ -491,7 +574,11 @@ Denotes the type of propagation for the memory entry. The entry either does not 
 ```c++
 struct MemoryWriteResult
 {
+    // Instructs the system that the memory storage pipeline should continue as normal.
     bool success;
+
+    // Instructs the system that this module did actually store the memory.
+    bool stored;
 
     // Instructs the system to only write metadata.
     bool metadataOnly;
@@ -499,12 +586,16 @@ struct MemoryWriteResult
     // Instructs the system on how the data should be propagated.
     MemoryPropagationType propagationType;
 
-    // Used only if the propagation is ONE_TARGET.
+    // Used only if the propagation is ONE_TARGET. If null and propagation is ONE_TARGET, this will target the leader.
     std::optional< Ip6Addr > propagationTarget;
 
-    MemoryWriteResult();
-    MemoryWriteResult( bool success, bool metadataOnly, MemoryPropagationType propagationType, Ip6Addr target );
-    MemoryWriteResult( bool success, bool metadataOnly, MemoryPropagationType propagationType );
+    MemoryWriteResult() = default;
+
+    MemoryWriteResult( bool success, bool stored, bool metadataOnly, MemoryPropagationType propagationType, Ip6Addr target )
+    : success( success ), stored( stored ), metadataOnly( metadataOnly ), propagationType( propagationType ), propagationTarget( target ) {}
+
+    MemoryWriteResult( bool success, bool stored, bool metadataOnly, MemoryPropagationType propagationType )
+    : success( success ), stored( stored ), metadataOnly( metadataOnly ), propagationType( propagationType ) {}
 };
 ```
 
@@ -512,8 +603,8 @@ This structure represents the result of writing into memory. It informs the uppe
 
 ##### Data Reading
 ```c++
-virtual MemoryReadResult readData( int address ) const = 0;
-virtual MemoryReadResult readMetadata( int address, const std::string& key) const = 0;
+virtual MemoryReadResult readData( int address, bool isLeader ) const = 0;
+virtual MemoryReadResult readMetadata( int address, const std::string& key, bool isLeader) const = 0;
 ```
 
 These methods serve for reading data from the memory implementation. For the return value, see [MemoryReadResult](#memoryreadresult)
