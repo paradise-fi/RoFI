@@ -10,11 +10,14 @@ class InitialFunction : public DistributedFunction< int >
 {
     int _moduleId;
     DistributedTaskManager& _manager;
+    int _followers;
+    int _currentFollowers = 0;
 
 public:
-    InitialFunction( int moduleId, DistributedTaskManager& manager )
+    InitialFunction( int moduleId, DistributedTaskManager& manager, int followers )
     : _moduleId( moduleId ),
-      _manager( manager ) {}
+      _manager( manager ),
+      _followers( followers ) {}
 
     virtual FunctionResult< int > execute() override
     {
@@ -33,11 +36,16 @@ public:
 
         std::cout << "Initial ModuleId: " << moduleId << std::endl;
 
-        auto messageHandle = _manager.getFunctionHandle< Message, Message >( 1 ).value();
+        ++_currentFollowers;
 
-        if ( !messageHandle( origin, 1, false, std::tuple< Message >( Message( std::string( "Hello, follower." ) ) ) ) )
+        if ( _currentFollowers == _followers )
         {
-            std::cout << "Execution of function " << functionName() << "failed." << std::endl;
+            auto messageHandle = _manager.getFunctionHandle< Message, Message >( 1 ).value();
+
+            if ( !messageHandle( origin, 1, false, std::tuple< Message >( Message( std::string( "Hello, follower." ) ) ) ) )
+            {
+                std::cout << "Execution of function " << functionName() << "failed." << std::endl;
+            }   
         }
 
         return false;

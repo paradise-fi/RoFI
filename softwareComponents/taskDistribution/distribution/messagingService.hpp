@@ -29,10 +29,11 @@ public:
         Ip6Addr& address,
         u16_t distributionPort,
         MessageDistributor& distributor,
-        std::function< void( Ip6Addr sender, DistributionMessageType messageType, uint8_t* data, unsigned int size ) > onMessageHandler,
-        std::unique_ptr< udp_pcb > pcb )
+        std::unique_ptr< udp_pcb > pcb,
+        MessageQueueManager& messageQueueManager,
+        int receiverMethodId )
     : _pcb( std::move( pcb ) ),
-      _receiver( distributionPort, _pcb.get(), onMessageHandler ),
+      _receiver( distributionPort, _pcb.get(), messageQueueManager, distributor, receiverMethodId ),
       _sender( address, distributionPort, _pcb.get(), distributor )
     {}
 

@@ -1,7 +1,7 @@
 #pragma once
 #include "lwip++.hpp"
 #include "task.hpp"
-#include "LRElect.hpp"
+#include "networking/protocols/messageDistributor.hpp"
 #include "distributionMessageType.hpp"
 #include "../../tasks/serializable/serializable.hpp"
 

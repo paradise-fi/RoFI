@@ -43,7 +43,8 @@ public:
         if ( value.message != std::string( "end" ) )
         {
             auto messageSendHandle = _manager.getFunctionHandle< Message, Message >( functionId() ).value();
-            if ( !messageSendHandle( origin, 1, false, { std::string( "end" ) } ) )
+            Message toSend = Message( std::string( "end" ) );
+            if ( !messageSendHandle( origin, 1, false, { toSend } ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }
@@ -76,7 +77,7 @@ public:
 
     virtual FunctionDistributionType distributionType() const override
     {
-        return FunctionDistributionType::Unicast;
+        return FunctionDistributionType::Broadcast;
     }
 
     virtual FunctionType functionType() const override
