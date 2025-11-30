@@ -3,7 +3,7 @@
 
 class FizzBuzz : public DistributedFunction< int, int >
 {
-    const int _fizzBuzzTreshold = 600;
+    const int _fizzBuzzTreshold = 400;
     int _identity;
     DistributedTaskManager& _manager;
     std::map< int, int > _addressStampMap;
@@ -30,7 +30,7 @@ public:
             result = _identity + memoryResult.data< int >();
         }
         std::cout << "FizzBuzz Value " << result << " will be stored to memory." << std::endl;
-        _manager.memoryService().saveData< int >( result, _identity );
+        _manager.memoryService().saveData< int >( std::forward< int >( result ), _identity );
         return FunctionResult< int >( _identity, FunctionResultType::SUCCESS );
     }
 

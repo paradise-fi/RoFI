@@ -60,7 +60,7 @@ public:
             resultValue = _identity + ( result.data< int >() * _identity );
         }
         std::cout << "FizzBuzz Value " << resultValue << " will be stored to memory slot " << memoryAddress << std::endl;
-        _manager.memoryService().saveData< int >( resultValue, memoryAddress );
+        _manager.memoryService().saveData< int >( std::forward< int >( resultValue ), memoryAddress );
 
         auto metaData = FizzBuzzMetaData{ memoryAddress, _identity };
         return FunctionResult< FizzBuzzMetaData >( metaData, FunctionResultType::SUCCESS );
