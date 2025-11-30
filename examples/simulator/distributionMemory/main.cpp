@@ -14,6 +14,9 @@
 #include "initial.hpp"
 #include "fizzbuzz.hpp"
 
+#include <chrono>
+#include <thread>
+
 using namespace rofi::hal;
 using namespace rofi::net;
 using namespace rofi::leadership;
@@ -77,7 +80,8 @@ void distributionManagerFizzBuzz() {
     while ( true ){
         // A single 'tick' of the manager instance.
         manager.doWork();
-        sleep( 1 );
+        // sleep( 1 );
+        // std::this_thread::sleep_for(std::chrono::milliseconds(200));
     }
 }
 

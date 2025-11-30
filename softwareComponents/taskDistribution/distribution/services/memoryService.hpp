@@ -110,7 +110,7 @@ class DistributedMemoryService
         }
     }
 
-    void propagateMemoryChange( MemoryPropagationType type, int address, uint8_t* data, size_t size,
+    void propagateMemoryChange( const MemoryPropagationType type, int address, uint8_t* data, size_t size,
         bool isMetadataOnly, std::optional< Ip6Addr > target, DistributionMessageType messageType )
     {
         switch ( type )
@@ -126,7 +126,7 @@ class DistributedMemoryService
         }
     }
 
-    void propagateMetadataChange( MemoryPropagationType type, int address, std::string key, uint8_t* metadata, 
+    void propagateMetadataChange( MemoryPropagationType type, int address, const std::string& key, uint8_t* metadata, 
         size_t metadataSize, std::optional< Ip6Addr > target, DistributionMessageType messageType)
     {
         std::size_t keySize = key.size();
@@ -277,7 +277,7 @@ class DistributedMemoryService
         return forwardResult;
     }
 
-    MemoryReadResult readMetadataInternal( int address, const Ip6Addr& origin, const std::string key, bool isUserCall )
+    MemoryReadResult readMetadataInternal( int address, const Ip6Addr& origin, const std::string& key, bool isUserCall )
     {
         auto result = _memory->readMetadata( address, key, _leader == _currentModuleAddress );
 
@@ -487,7 +487,7 @@ public:
     /// @param size The size of the data.
     /// @param address The address to store the data at
     template < SerializableOrTrivial T >
-    bool saveData( T data, int address )
+    bool saveData( T&& data, int address )
     {
         if ( !isMemoryRegistered() )
         {
@@ -684,7 +684,7 @@ public:
         }
     }
     
-    void setLeader( Ip6Addr leader )
+    void setLeader( const Ip6Addr& leader )
     {
         _leader = leader;
     }
