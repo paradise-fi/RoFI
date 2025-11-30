@@ -715,5 +715,5 @@ public:
 
         _memory = std::move( memory );
         return true;
-    } 
+    }
 };

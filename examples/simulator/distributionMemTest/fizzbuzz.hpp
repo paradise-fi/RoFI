@@ -47,7 +47,7 @@ public:
 
         if ( ( _identity == 2 && address > 21 ) || ( _identity == 3 && address > 31 ) )
         {
-            MemoryReadResult memoryResult = _manager.memoryService().readData( address );
+            MemoryReadResult memoryResult = _manager.memory().readData( address );
             if ( !memoryResult.success )
             {
                 std::cout << "FizzBuzz value not in memory, generating..." << std::endl;
@@ -63,7 +63,7 @@ public:
             result = address;
         }
         std::cout << "FizzBuzz Value " << result << " will be stored to memory." << std::endl;
-        _manager.memoryService().saveData< int >( std::forward< int >( result ), address );
+        _manager.memory().saveData< int >( std::forward< int >( result ), address );
         _address = address;
         return FunctionResult< int >( result, FunctionResultType::SUCCESS );
     }
@@ -84,7 +84,7 @@ public:
 
         // std::cout << "Function Success, going to read memory" << std::endl;
         // int result;
-        // MemoryReadResult memoryResult = _manager.memoryService().readData( addr.value() );
+        // MemoryReadResult memoryResult = _manager.memory().readData( addr.value() );
 
         // std::cout << "After memory read." << std::endl;
         // while ( !memoryResult.success )
