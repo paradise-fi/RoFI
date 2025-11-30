@@ -19,7 +19,7 @@ To find out how to use the RoFI task manager, consult examples provided in ~RoFI
 
 1. [DistributionTaskManager](#distributedtaskmanager)
 2. [CallbackFacade](#callbackfacade)
-3. [DistributionMemoryService](#distributedmemoryservice)
+3. [MemoryFacade](#memoryfacade)
 4. [LoggingService](#loggingservice)
 5. [DistributedFunction](#distributedfunction)
 6. [FunctionHandle](#functionhandle)
@@ -96,7 +96,7 @@ The data buffer received into the callback contains only the body of the message
 
 ```c++
 CallbackFacade& callbacks();
-DistributedMemoryService& memoryService();
+MemoryFacade& memory();
 FunctionRegistry& functionRegistry()
 LoggingService& loggingService();
 ```
@@ -262,10 +262,8 @@ This callback is used for the event that memory is written into in this module. 
 
 <hr>
 
-### DistributedMemoryService
+### MemoryFacade
 Provides access to methods that work with a distributed memory implementation.
-
-The ``DistributedMemoryService`` is created internally by the task manager. The constructor will thus not be discussed.
 
 #### Methods
 
@@ -353,25 +351,12 @@ Functions for storing just the metadata related to an address within memory. Ana
 
 Note that functions for storing data should generally encompass metadata as well.
 
-##### Internal Methods
+##### Access to user-created memory implementation
 ```c++
-void onStorageMessage( Ip6Addr sender, uint8_t* data, size_t size, bool isDeleteMessage );
+std::optional< std::reference_wrapper< DistributedMemoryBase > > memory()
 ```
 
-**This method is used within the internal workflow of the task manager.** It is likely not useful to the end user. It is used for the processing of incoming memory-related messages that are passed to this service from the ``DistributedTaskManager`` instance that manages this memory service.
-
-```c++
-void processQueue();
-```
-
-**This method is used within the internal workflow of the task manager.** Calling the ``DistributedTaskManager.doWork()`` method already invokes this method. This method processes any pending memory-altering operation requests.
-
-```c++
-void setLeader( Ip6Addr leader );
-```
-
-**This method is used within the internal workflow of the task manager.** This method informs the task manager of who the current leader module is. You should generally not use this method.
-
+Used to fetch the DistributedMemoryBase implementation provided by the user. This method should only be used if a the user requires to retrieve the memory implementation for very specific workflows. This method should not be necessary for regular memory-related workflows as the internals of the task manager handle all the details.
 
 <hr>
 
