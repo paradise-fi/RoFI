@@ -47,7 +47,7 @@ public:
     virtual FunctionResult< FizzBuzzMetaData > execute( int memoryAddress ) override 
     {
         std::cout << "FizzBuzz Memory Address: " << memoryAddress << std::endl;
-        MemoryReadResult result = _manager.memoryService().readData( memoryAddress );
+        MemoryReadResult result = _manager.memory().readData( memoryAddress );
         int resultValue;
         if ( !result.success )
         {
@@ -60,7 +60,7 @@ public:
             resultValue = _identity + ( result.data< int >() * _identity );
         }
         std::cout << "FizzBuzz Value " << resultValue << " will be stored to memory slot " << memoryAddress << std::endl;
-        _manager.memoryService().saveData< int >( std::forward< int >( resultValue ), memoryAddress );
+        _manager.memory().saveData< int >( std::forward< int >( resultValue ), memoryAddress );
 
         auto metaData = FizzBuzzMetaData{ memoryAddress, _identity };
         return FunctionResult< FizzBuzzMetaData >( metaData, FunctionResultType::SUCCESS );
@@ -84,7 +84,7 @@ public:
 
         int memoryAddress = data.value().value;
         std::cout << "FizzBuzz result notification received from " << data.value().identity << ", going to read from address " << memoryAddress << std::endl;
-        MemoryReadResult metadata = _manager.memoryService().readMetadata( memoryAddress, "stamp" );
+        MemoryReadResult metadata = _manager.memory().readMetadata( memoryAddress, "stamp" );
         if ( !metadata.success )
         {
             std::cout << "Failed to read metadata." << std::endl;
@@ -99,7 +99,7 @@ public:
             return true;
         }
 
-        MemoryReadResult readResult = _manager.memoryService().readData( memoryAddress );
+        MemoryReadResult readResult = _manager.memory().readData( memoryAddress );
         if ( !readResult.success )
         {
             return true;

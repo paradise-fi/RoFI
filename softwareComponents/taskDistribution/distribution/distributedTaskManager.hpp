@@ -2,7 +2,7 @@
 
 #include "messagingService.hpp"
 #include "functionRegistry.hpp"
-#include "services/memoryService.hpp"
+#include "services/memoryFacade.hpp"
 #include "services/workflowService.hpp"
 #include "services/electionService.hpp"
 #include "electionProtocolBase.hpp"
@@ -133,9 +133,9 @@ public:
         return _callbackService;
     }
 
-    DistributedMemoryService& memoryService()
+    MemoryFacade memory()
     {
-        return _memoryService;
+        return MemoryFacade( _memoryService );
     }
 
     FunctionRegistry& functionRegistry()

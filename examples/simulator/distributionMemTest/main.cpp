@@ -79,7 +79,7 @@ void distributionManagerFizzBuzz() {
 
     // Register the memory implementation - the memory implementation is responsible for 
     // initiating memory-relevant communication, hence why the sender is passed too.
-    manager.memoryService().useMemory( 
+    manager.memory().useMemory( 
         std::make_unique< TestMemory >( id ) );
 
     // Register logger implementation

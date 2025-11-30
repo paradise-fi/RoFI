@@ -19,7 +19,7 @@ public:
     virtual FunctionResult< int > execute( int value ) override 
     {
         int result;
-        MemoryReadResult memoryResult = _manager.memoryService().readData( _identity );
+        MemoryReadResult memoryResult = _manager.memory().readData( _identity );
         if ( !memoryResult.success )
         {
             std::cout << "FizzBuzz value not in memory, generating..." << std::endl;
@@ -30,7 +30,7 @@ public:
             result = _identity + memoryResult.data< int >();
         }
         std::cout << "FizzBuzz Value " << result << " will be stored to memory." << std::endl;
-        _manager.memoryService().saveData< int >( std::forward< int >( result ), _identity );
+        _manager.memory().saveData< int >( std::forward< int >( result ), _identity );
         return FunctionResult< int >( _identity, FunctionResultType::SUCCESS );
     }
 
@@ -43,7 +43,7 @@ public:
         }
 
         int result;
-        MemoryReadResult memoryResult = _manager.memoryService().readData( addr.value() );;
+        MemoryReadResult memoryResult = _manager.memory().readData( addr.value() );;
         while ( !memoryResult.success )
         {
             std::cout << "Going to re-queue this task." << std::endl;
