@@ -4,6 +4,7 @@
 #include "../services/memoryService.hpp"
 #include "../callbacks/userCallbackInvoker.hpp"
 #include "customMessageQueueManager.hpp"
+#include "messageQueueManager.hpp"
 #include <functional>
 #include <queue>
 
@@ -16,6 +17,7 @@ class MessageDispatcher
     DistributedMemoryService& _memoryService;
     LoggingService& _loggingService;
     CustomMessageQueueManager& _customMessageQueueManager;
+    MessageQueueManager& _messageQueueManager;
     int _blockingMessageTimeoutMs;
 
 
@@ -105,7 +107,7 @@ class MessageDispatcher
             std::ostringstream failStream;
             failStream << "Failed to persist result from task " << taskId << " for function " << fn.get().functionId();
             _loggingService.logError( failStream.str() );
-        }   
+        }
     }
 
     void handleTaskMessage( const Ip6Addr& sender, const DistributionMessageType type, uint8_t* data )
@@ -162,10 +164,31 @@ class MessageDispatcher
     }
 public:
     MessageDispatcher( rofi::hal::Ip6Addr& address, UserCallbackInvoker& callbackInvoker, FunctionRegistry& functionRegistry,
-        MessagingService& messagingService, DistributedMemoryService& memoryService, LoggingService& loggingService, CustomMessageQueueManager& customMessageQueueManager, int blockingMessageTimeoutMS )
+        MessagingService& messagingService, DistributedMemoryService& memoryService, LoggingService& loggingService, 
+        CustomMessageQueueManager& customMessageQueueManager, MessageQueueManager& messageQueueManager, int blockingMessageTimeoutMS )
     : _addr( address ), _callbackInvoker( callbackInvoker ), _functionRegistry( functionRegistry ), _messagingService( messagingService ),
       _memoryService( memoryService ), _loggingService( loggingService ), _customMessageQueueManager( customMessageQueueManager ),
-      _blockingMessageTimeoutMs( blockingMessageTimeoutMS ) { }
+      _messageQueueManager( messageQueueManager ), _blockingMessageTimeoutMs( blockingMessageTimeoutMS ) { }
+
+    bool dispatchMessageFromQueue()
+    {
+        if ( _messageQueueManager.isEmpty() )
+        {
+            return false;
+        }
+
+        std::optional< MessageEntry > result = _messageQueueManager.popMessage();
+
+        if ( !result.has_value() )
+        {
+            return false;
+        }
+
+        dispatchMessage( result.value().sender, result.value().messageType, 
+                         result.value().rawData.data(), result.value().rawData.size() );
+
+        return true;        
+    }
 
     void dispatchMessage( const Ip6Addr& sender, DistributionMessageType messageType, uint8_t* data, size_t size )
     {
@@ -173,14 +196,13 @@ public:
         receivedMessageStream << "Received " << getMessageTypeName( messageType ) << " from " << sender;
         _loggingService.logInfo( receivedMessageStream.str() );
 
-        size_t headerSize = _messagingService.sender().headerSize();
         switch ( messageType )
         {
             case DistributionMessageType::CustomMessage:
-                return handleCustomMessage( sender, data + headerSize, size - headerSize );
+                return handleCustomMessage( sender, data, size );
             
             case DistributionMessageType::CustomMessageBlocking:
-                _customMessageQueueManager.emplaceRequest( sender, data + headerSize, size - headerSize );
+                _customMessageQueueManager.emplaceRequest( sender, data, size );
                 break;
 
             case DistributionMessageType::BlockingTaskRelease:
@@ -188,18 +210,18 @@ public:
                 break;
 
             case DistributionMessageType::BlockingMessageResponse:
-                _messagingService.completeBlockingMessage( data + headerSize, size - headerSize );
+                _messagingService.completeBlockingMessage( data, size );
                 break;
 
             case DistributionMessageType::DataStorageRequest:
             case DistributionMessageType::DataReadRequest:
             case DistributionMessageType::DataReadRequestBlocking:
             case DistributionMessageType::DataRemovalRequest:
-                handleMemoryMessage( sender, messageType, data + headerSize, size - headerSize );
+                handleMemoryMessage( sender, messageType, data, size );
                 break;
 
             default:
-                handleTaskMessage( sender, messageType, data + headerSize );
+                handleTaskMessage( sender, messageType, data );
                 break;
         };
     }

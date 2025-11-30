@@ -24,9 +24,9 @@ class DistributedTaskManager : public UserCallbackInvoker
     MessagingService _messaging;
     DistributedMemoryService _memoryService;
     CustomMessageQueueManager _customMessageQueueManager;
-    WorkFlowService _workFlowService;
+    MessageQueueManager _messageQueueManager;
     MessageDispatcher _messageDispatcher;
-    MessageDistributor& _messageDistributor;
+    WorkFlowService _workFlowService;
 
     int _blockingMessageTimeoutMs;
 
@@ -89,11 +89,6 @@ class DistributedTaskManager : public UserCallbackInvoker
         return result;
     }
 
-    void onMessage( const Ip6Addr& sender, const DistributionMessageType type, uint8_t* data, unsigned int size )
-    {
-        _messageDispatcher.dispatchMessage( sender, type, data, size );
-    }
-
 public:
     static constexpr unsigned int METHOD_ID = 3;
     static constexpr int DISTRIBUTION_PORT = 7071;
@@ -108,17 +103,11 @@ public:
       _functionRegistry( _loggingService ),
       _election( std::move( election ) ),
       _callbackService( _election, _loggingService ),
-      _messaging( address, DISTRIBUTION_PORT, distributor,
-        [ this ]( Ip6Addr sender, DistributionMessageType messageType, uint8_t* data, unsigned int size )
-        {
-            onMessage( sender, messageType, data, size );
-        },
-        std::move( pcb ) ),
+      _messaging( address, DISTRIBUTION_PORT, distributor, std::move( pcb ), _messageQueueManager, METHOD_ID ),
       _memoryService( distributor, _messaging, address, _loggingService, _callbackService, blockingMessageTimeoutMs ),
       _customMessageQueueManager( *this, _messaging ),
-      _workFlowService( _messaging.sender(), _functionRegistry, _memoryService, _loggingService, _customMessageQueueManager ),
-      _messageDispatcher( address, *this, _functionRegistry, _messaging, _memoryService, _loggingService, _customMessageQueueManager, blockingMessageTimeoutMs ),
-      _messageDistributor( distributor ),
+      _messageDispatcher( address, *this, _functionRegistry, _messaging, _memoryService, _loggingService, _customMessageQueueManager, _messageQueueManager, blockingMessageTimeoutMs ),
+      _workFlowService( _messaging.sender(), _functionRegistry, _memoryService, _loggingService, _customMessageQueueManager, _messageDispatcher ),
       _blockingMessageTimeoutMs( blockingMessageTimeoutMs )
     {}
 
@@ -172,14 +161,6 @@ public:
     
     void start( int moduleId )
     {
-        _messageDistributor.registerMethod( METHOD_ID, 
-            [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
-            {
-                DistributionMessageType type = as< DistributionMessageType >( data );
-                onMessage( sender, type, data, size ); 
-            },
-            [] () { return; } );
-
         _election.start( moduleId,
             [ this ]( const Ip6Addr& leader) {
                 onElectionSuccesful( leader );

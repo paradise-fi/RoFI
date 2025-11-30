@@ -4,13 +4,15 @@
 #include <atoms/util.hpp>
 #include "lwip++.hpp"
 #include "distributionMessageType.hpp"
+#include "messageQueueManager.hpp"
+#include "networking/protocols/messageDistributor.hpp"
 
 using namespace rofi::net;
 
 /// @brief Low-level handler for messages received via network.
 class MessageReceiver
 {
-    std::function< void( Ip6Addr, DistributionMessageType, uint8_t* data, unsigned int size ) > _onMessageHandler;
+    MessageQueueManager& _messageQueueManager;
 
     static void recv_message( void* receiver, 
         struct udp_pcb* pcb,
@@ -29,8 +31,10 @@ public:
     MessageReceiver(
         u16_t port, 
         udp_pcb* pcb,
-        std::function< void( Ip6Addr, DistributionMessageType, uint8_t* data, unsigned int size ) > onMessageHandler )
-    : _onMessageHandler( onMessageHandler )
+        MessageQueueManager& messageQueueManager,
+        MessageDistributor& messageDistributor,
+        int receiveMethodId )
+    : _messageQueueManager( messageQueueManager )
     {
         if ( !pcb )
         {
@@ -41,6 +45,14 @@ public:
         udp_bind( pcb, IP6_ADDR_ANY, port );
         udp_recv( pcb, recv_message, this);
         UNLOCK_TCPIP_CORE();
+
+        messageDistributor.registerMethod( receiveMethodId, [&]( rofi::net::Ip6Addr, uint8_t* data, unsigned int size ){
+            DistributionMessageType type = as< DistributionMessageType >( data );
+            Ip6Addr sender = as< Ip6Addr >( data + sizeof( DistributionMessageType ) );
+            _messageQueueManager.pushMessage( sender, type, 
+                data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ), 
+                size - ( sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) ) );
+        }, [](){});
     }
 
     void receiveMessage( void*,
@@ -56,6 +68,8 @@ public:
         auto packet = rofi::hal::PBuf::own( p );
         DistributionMessageType type = as< DistributionMessageType >( packet.payload() );
         Ip6Addr sender = as< Ip6Addr >( packet.payload() + sizeof( DistributionMessageType ) );
-        _onMessageHandler( sender, type, packet.payload(), packet.size() );
+        _messageQueueManager.pushMessage( sender, type,
+            packet.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ),
+            packet.size() - ( sizeof( DistributionMessageType) + sizeof( Ip6Addr ) ) );
     }
 };

@@ -29,8 +29,8 @@ Ip6Addr createAddress( int id ) {
 /// In this simple example, you will learn how to create a simple program using
 /// the distribution manager and a serializble structure for an argument/result. 
 // In this example, follower nodes will generate values
-void distributionManagerFizzBuzz() {
-    std::cout << "Starting simple RoFI Distribution Manager MessageSend example\n";
+void distributionManagerFizzBuzz( int followers ) {
+    std::cout << "Starting simple RoFI Distribution Manager MessageSend example with " << followers << "\n";
     tcpip_init( nullptr, nullptr );
 
     LOCK_TCPIP_CORE();
@@ -58,7 +58,7 @@ void distributionManagerFizzBuzz() {
         *reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
 
     // Register the distributed functions.
-    manager.registerFunction< int >( InitialFunction( id, manager ) );
+    manager.registerFunction< int >( InitialFunction( id, manager, followers ) );
     manager.registerFunction< Message, Message >( MessageSend( manager, id ) );
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
@@ -71,7 +71,12 @@ void distributionManagerFizzBuzz() {
     }
 }
 
-int main( void ) {
-    distributionManagerFizzBuzz( );
+int main( int argc, char* argv[] ) {
+    int followers = 2;
+    if ( argc > 1 )
+    {
+        followers = std::stoi( argv[ 1 ] );
+    }
+    distributionManagerFizzBuzz( followers );
     return 0;
 }

@@ -3,6 +3,7 @@
 #include "loggingService.hpp"
 #include "messaging/messageSender.hpp"
 #include "messaging/customMessageQueueManager.hpp"
+#include "messaging/messageDispatcher.hpp"
 
 class WorkFlowService
 {
@@ -11,6 +12,7 @@ class WorkFlowService
     DistributedMemoryService& _memoryService;
     LoggingService& _loggingService;
     CustomMessageQueueManager& _customMessageQueueManager;
+    MessageDispatcher& _messageDispatcher;
 
     void tryDistributeNewTask( int methodId )
     {
@@ -49,6 +51,7 @@ class WorkFlowService
         {
             case FunctionDistributionType::Broadcast: 
             {
+                std::cout << "Broadcasting task " << task.id() << std::endl;
                 _sender.broadcastMessage( DistributionMessageType::TaskAssignment, task, methodId );
                 return;
             }
@@ -68,20 +71,35 @@ class WorkFlowService
     }
 public:
     WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService,
-        LoggingService& loggingService, CustomMessageQueueManager& customMessageQueueManager )
+        LoggingService& loggingService, CustomMessageQueueManager& customMessageQueueManager, MessageDispatcher& messageDispatcher )
     : _sender( sender ), _functionRegistry( functionRegistry ), _memoryService( memoryService ),
-      _loggingService( loggingService ), _customMessageQueueManager( customMessageQueueManager ) {}
+      _loggingService( loggingService ), _customMessageQueueManager( customMessageQueueManager ),
+      _messageDispatcher( messageDispatcher ) {}
 
-    void doWorkLeader( int methodId )
+    void doWorkLeader( int methodId, int messageProcessingBatch = 5)
     {
+        for ( int i = 0; i < messageProcessingBatch; ++i)
+        {
+            if ( !_messageDispatcher.dispatchMessageFromQueue() )
+            {
+                break;
+            }
+        }
         tryDistributeNewTask( methodId );
         _memoryService.processQueue();
         _customMessageQueueManager.processQueue();
         _functionRegistry.processTaskResultQueue();
     }
 
-    void doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader )
+    void doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader, int messageProcessingBatch = 5 )
     {
+        for ( int i = 0; i < messageProcessingBatch; ++i)
+        {
+            if ( !_messageDispatcher.dispatchMessageFromQueue() )
+            {
+                break;
+            }
+        }
         _memoryService.processQueue();
         _customMessageQueueManager.processQueue();
 
