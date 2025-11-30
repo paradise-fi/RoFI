@@ -143,6 +143,23 @@ void sendCustomMessage( uint8_t* data, unsigned int dataSize, std::optional< Ip6
 ```
 Sends a custom message to the target module. If ``target`` is ``std::nullopt``, the message is sent to all modules.
 
+##### SendCustomMessageBlocking
+```c++
+struct MessagingResult
+{
+    bool success;
+    std::string statusMessage;
+    std::vector< uint8_t > rawData;
+};
+
+MessagingResult sendCustomMessageBlocking( uint8_t* data, size_t dataSize, Ip6Addr& target )
+```
+
+Sends a custom message that stalls program execution until a response is received or the timeout window expires. This type of message can only be sent to a specific target module.
+
+If an error has occured during sending or receiving of the message, success is set to false and the reason message can be found in ``statusMessage``.
+
+
 ##### Manual Task Distribution
 ```c++
 template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments > 
@@ -309,7 +326,7 @@ struct MemoryReadResult
 ```
 The structure used for representation of the result of memory reading. If the result was succesfull, the ``success`` flag is set to true. To read the data within the memory read result, you should use the ``data()`` function.
 
-Special attention should be paid to ``bool requestRemoteRead`` and ``std::optional< rofi::hal::Ip6Addr > readTarget`` as these two attributes are used to configure remote reading from memory. Should a Distributed Memory implementation need to read from a remote module, the read method should return requestRemoteRead as ``true`` and provide either the source of information in readTarget, or null if the message is to be sent to the leader who can then route the request to the data holder.
+Special attention should be paid to ``bool requestRemoteRead`` and ``std::optional< rofi::hal::Ip6Addr > readTarget`` as these two attributes are used to configure remote reading from memory. Should a Distributed Memory implementation need to read from a remote module, the read method should return requestRemoteRead as ``true`` and provide either the source of information in readTarget, or null if the message is to be sent to the leader who can then route the request to the data holder. Either way, if ``requestRemoteRead`` is set to true, the resulting read will be blocking. It will either return once the read is complete, or when the timeout window expires.
 
 ##### Memory Service Purge
 
