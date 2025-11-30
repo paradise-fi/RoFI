@@ -56,7 +56,6 @@ public:
         auto packet = rofi::hal::PBuf::own( p );
         DistributionMessageType type = as< DistributionMessageType >( packet.payload() );
         Ip6Addr sender = as< Ip6Addr >( packet.payload() + sizeof( DistributionMessageType ) );
-
         _onMessageHandler( sender, type, packet.payload(), packet.size() );
     }
 };

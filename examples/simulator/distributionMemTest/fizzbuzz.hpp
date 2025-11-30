@@ -63,7 +63,7 @@ public:
             result = address;
         }
         std::cout << "FizzBuzz Value " << result << " will be stored to memory." << std::endl;
-        _manager.memoryService().saveData< int >( result, address );
+        _manager.memoryService().saveData< int >( std::forward< int >( result ), address );
         _address = address;
         return FunctionResult< int >( result, FunctionResultType::SUCCESS );
     }
