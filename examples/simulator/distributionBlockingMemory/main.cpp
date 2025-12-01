@@ -25,7 +25,7 @@ using namespace std::chrono_literals;
 /// In this example, follower nodes will generate values that will be stored in memory. 
 ///The leader will take these values and play the fizzbuzz game with them.
 void distributionManagerFizzBuzz() {
-    std::cout << "Starting RoFI Distribution Manager FizzBuzz example with distributed memory\n";
+    std::cout << "Starting RoFI Distribution Manager FizzBuzz example with distributed memory and blocking distributed reads\n";
     tcpip_init( nullptr, nullptr );
 
     LOCK_TCPIP_CORE();
