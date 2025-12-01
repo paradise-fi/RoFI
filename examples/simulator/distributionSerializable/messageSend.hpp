@@ -7,6 +7,7 @@ class MessageSend : public DistributedFunction< Message, Message >
 {
     DistributedTaskManager& _manager;
     int _moduleId;
+    bool _ended = false;
 
 public:
     MessageSend( DistributedTaskManager& manager, int moduleId )
@@ -40,8 +41,14 @@ public:
 
         std::cout << "Received message \"" << value.message << "\" from " << origin << std::endl;
 
+        if ( _ended )
+        {
+            return false;
+        }
+
         if ( value.message != std::string( "end" ) )
         {
+            _ended = true;
             auto messageSendHandle = _manager.getFunctionHandle< Message, Message >( functionId() ).value();
             Message toSend = Message( std::string( "end" ) );
             if ( !messageSendHandle( origin, 1, false, { toSend } ) )

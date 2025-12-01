@@ -47,14 +47,19 @@ public:
 
         if ( ( _identity == 2 && address > 21 ) || ( _identity == 3 && address > 31 ) )
         {
+            if ( address > 40 )
+            {
+                std::cout << "Trying to look up address " << address << ", this address should not be found." << std::endl;
+            }
             MemoryReadResult memoryResult = _manager.memory().readData( address );
             if ( !memoryResult.success )
             {
-                std::cout << "FizzBuzz value not in memory, generating..." << std::endl;
+                std::cout << "Value not in memory, generating..." << std::endl;
                 result = address;
             }
             else
             {
+                std::cout << "Value in memory." << std::endl;
                 result = memoryResult.data< int >();
             }
         }
@@ -78,20 +83,9 @@ public:
 
         if ( _fizzBuzzTreshold <= addr.value() )
         {
-            std::cout << "Example complete. Terminating pipeline." << std::endl;
+            std::cout << "Example pipeline for module " << origin << " complete. Terminating pipeline." << std::endl;
             return false;
         }
-
-        // std::cout << "Function Success, going to read memory" << std::endl;
-        // int result;
-        // MemoryReadResult memoryResult = _manager.memory().readData( addr.value() );
-
-        // std::cout << "After memory read." << std::endl;
-        // while ( !memoryResult.success )
-        // {
-        //     std::cout << "Going to re-queue this task." << std::endl;
-        //     return true;
-        // }
 
         int result = addr.value();
         std::cout << origin << ": " << result << " ";

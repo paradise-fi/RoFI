@@ -143,14 +143,13 @@ public:
         auto entry = _storage.find( address );
         if ( entry == _storage.end() )
         {
-            std::cout << "Not found!" << std::endl;
+            std::cout << "Data under address " << address << " not found under this module." << std::endl;
             return result;
         }
 
-        std::cout << "Found" << std::endl;
+        std::cout << "Data under address " << address << " found in this module's memory." << std::endl;
         result.success = true;
         result.rawData = entry->second.storedData;
-        std::cout << "Data Size: " << entry->second.storedData.size() << std::endl;
         return result;
     }
 
