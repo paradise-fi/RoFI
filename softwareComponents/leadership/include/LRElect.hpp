@@ -25,7 +25,8 @@ namespace rofi::leadership {
         unsigned int _timeJoined;
         unsigned int _minTimeJoined;
         unsigned int _sequenceNumber = 0;
-        unsigned int _period;
+        unsigned int _leaderAnnouncePeriod;
+        unsigned int _followerListenPeriod;
 
         bool _leaderContact = false;
 
@@ -38,13 +39,13 @@ namespace rofi::leadership {
             }
 
             if ( sender_addr == _leader ) {
+                _leaderContact = true;
+                _minTimeJoined = logTime;
+
                 if ( _elected_callback.has_value() )
                 {
                     _elected_callback.value()();
                 }
-
-                _leaderContact = true;
-                _minTimeJoined = logTime;
             }
         }
 
@@ -66,14 +67,14 @@ namespace rofi::leadership {
             _minTimeJoined = _timeJoined;
         }
 
-        void _periodic( int id ) {
+        void _periodic( int initialSleep ) {
             // According to the original specification, nodes should
             // wait a bit before they start sending messages. This follows
             // that specification while also limiting the maximum time.
             // Though it may be wise to remove this, as the algorithm is still
             // better in performance than the invitation algorithm without it.
-            if ( id < 3 ) {
-                sleep( id );
+            if ( initialSleep < 3 ) {
+                sleep( initialSleep );
             } else {
                 sleep( 3 );
             }
@@ -104,18 +105,21 @@ namespace rofi::leadership {
 
                     _leaderContact = false;
                 }
-                sleep( _period );
+                sleep( _leader == _myAddr ? _leaderAnnouncePeriod : _followerListenPeriod );
             }
         }
 
     public:
         LRElect( NetworkManager& net, 
             MessageDistributor& distributor, 
-            const Ip6Addr& addr )
+            const Ip6Addr& addr, 
+            int leaderAnnouncePeriod,
+            int followerListenPeriod )
         : _net( net ), _myAddr( addr ),  _leader( addr ) {
             _timeJoined = 0;
             _minTimeJoined = 0;
-            _period = 1;
+            _leaderAnnouncePeriod = leaderAnnouncePeriod;
+            _followerListenPeriod = followerListenPeriod;
             distributor.registerMethod( METHOD_ID, 
                 [ this ]( Ip6Addr address, uint8_t* data, unsigned int size ){ _received( address, data, size ); },
                 [ this ](){ _increaseTimeJoined(); } );
