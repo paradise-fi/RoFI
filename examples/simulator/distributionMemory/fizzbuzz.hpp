@@ -3,7 +3,7 @@
 
 class FizzBuzz : public DistributedFunction< int, int >
 {
-    const int _fizzBuzzTreshold = 400;
+    const int _fizzBuzzTreshold = 50;
     int _identity;
     DistributedTaskManager& _manager;
     std::map< int, int > _addressStampMap;
@@ -44,9 +44,9 @@ public:
 
         int result;
         MemoryReadResult memoryResult = _manager.memory().readData( addr.value() );;
-        while ( !memoryResult.success )
+        if ( !memoryResult.success )
         {
-            std::cout << "Going to re-queue this task." << std::endl;
+            std::cout << "Memory entry not found. Going to re-queue this task." << std::endl;
             return true;
         }
 
@@ -69,6 +69,14 @@ public:
             if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( result ) ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
+            }
+        }
+        else
+        {
+            auto cleanupHandle = _manager.getFunctionHandle< int >( "Cleanup" ).value();
+            if ( !cleanupHandle( origin, 1, false, {} ) )
+            {
+                std::cout << "Execution of Cleanup Function failed." << std::endl;
             }
         }
 

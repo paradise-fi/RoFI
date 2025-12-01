@@ -13,6 +13,7 @@
 #include "exampleLogger.hpp"
 #include "initial.hpp"
 #include "fizzbuzz.hpp"
+#include "cleanup.hpp"
 
 #include <chrono>
 #include <thread>
@@ -65,6 +66,7 @@ void distributionManagerFizzBuzz() {
     // Register the distributed functions.
     manager.registerFunction< int >( InitialFunction( id, manager ) );
     manager.registerFunction< int, int >( FizzBuzz( id, manager ) );
+    manager.registerFunction< int >( Cleanup( id, manager ) );
 
     // Register the memory implementation - the memory implementation is responsible for 
     // initiating memory-relevant communication, hence why the sender is passed too.
