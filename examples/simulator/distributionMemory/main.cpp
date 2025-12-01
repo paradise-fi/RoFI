@@ -55,7 +55,7 @@ void distributionManagerFizzBuzz() {
     auto messageDistributor = net.addProtocol( rofi::net::MessageDistributor( addr, net ) );
     net.setProtocol( *messageDistributor );
     
-    std::unique_ptr< ElectionProtocolBase > election = std::make_unique< LRElect >( net, *reinterpret_cast< MessageDistributor* >( messageDistributor ), addr );
+    std::unique_ptr< ElectionProtocolBase > election = std::make_unique< LRElect >( net, *reinterpret_cast< MessageDistributor* >( messageDistributor ), addr, 1, 3 );
 
     // Instantiate the Distribution Manager
     DistributedTaskManager manager(
