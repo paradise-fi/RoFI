@@ -1,0 +1,4 @@
+cmake_minimum_required(VERSION 3.11)
+
+add_executable(distributionBlockingMemoryExample main.cpp)
+target_link_libraries(distributionBlockingMemoryExample rofi::hal networking leadership taskDistribution)

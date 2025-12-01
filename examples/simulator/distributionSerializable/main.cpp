@@ -30,7 +30,7 @@ Ip6Addr createAddress( int id ) {
 /// the distribution manager and a serializble structure for an argument/result. 
 // In this example, follower nodes will generate values
 void distributionManagerFizzBuzz( int followers ) {
-    std::cout << "Starting simple RoFI Distribution Manager MessageSend example with " << followers << "\n";
+    std::cout << "Starting simple RoFI Distribution Manager MessageSend example with " << followers << " followers.\n";
     tcpip_init( nullptr, nullptr );
 
     LOCK_TCPIP_CORE();
