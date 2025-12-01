@@ -37,8 +37,11 @@ struct MemoryRequestQueueItem
     MemoryRequestQueueItem(Ip6Addr sender, uint8_t* buffer, size_t bufferSize, int address, bool isMetadataOnly, MemoryRequestType requestType )
     : sender( sender ), address( address ), isMetadataOnly( isMetadataOnly ), requestType( requestType )
     {
-        data.resize( bufferSize );
-        std::memcpy( data.data(), buffer, bufferSize );
+        if ( bufferSize > 0 )
+        {
+            data.resize( bufferSize );
+            std::memcpy( data.data(), buffer, bufferSize );
+        }
     } 
 };
 
@@ -346,7 +349,6 @@ class DistributedMemoryService
 
         auto memoryItem = queue.front();
         queue.pop();
-
         if ( memoryItem.isReadRequest() )
         {
             handleReadRequest( memoryItem );
@@ -364,8 +366,9 @@ class DistributedMemoryService
                 _callbackService.invokeOnMemoryStored( memoryItem.address, isLeaderMemory(), *this );
             }
             
-            propagateMemoryChange( result.propagationType, memoryItem.address, memoryItem.data.data(), memoryItem.data.size(),
-                result.metadataOnly, result.propagationTarget, DistributionMessageType::DataStorageRequest );
+            propagateMemoryChange( result.propagationType, memoryItem.address, memoryItem.data.data(),
+                memoryItem.data.size(), result.metadataOnly, result.propagationTarget, 
+                memoryItem.isDeleteRequest() ? DistributionMessageType::DataRemovalRequest : DistributionMessageType::DataStorageRequest );
         }
 
         return true;

@@ -119,7 +119,9 @@ public:
             return std::nullopt;
         }
 
-        return FunctionHandle< Result, Arguments... >( fn.value().get().functionId(), fn.value().get().completionType(),  _taskManager );
+        auto& model = static_cast< FunctionModel< Result, Arguments... >& >( fn->get() );
+
+        return FunctionHandle< Result, Arguments... >( fn.value().get().functionId(), fn.value().get().completionType(), model.getImplementation(), _taskManager );
     }
 
     /// @brief Retrieves an internal function object. May be useful in some scenarios, but this is mostly used for internal worfklows.

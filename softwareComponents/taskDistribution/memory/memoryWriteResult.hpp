@@ -17,13 +17,13 @@ enum MemoryPropagationType
 struct MemoryWriteResult
 {
     // Instructs the system that the memory storage pipeline should continue as normal.
-    bool success;
+    bool success = false;
 
     // Instructs the system that this module did actually store the memory.
-    bool stored;
+    bool stored = false;
 
     // Instructs the system to only write metadata.
-    bool metadataOnly;
+    bool metadataOnly = false;
 
     // Instructs the system on how the data should be propagated.
     MemoryPropagationType propagationType;
