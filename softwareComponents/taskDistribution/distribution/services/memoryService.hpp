@@ -268,6 +268,7 @@ class DistributedMemoryService
             errorMessage.resize( sizeof( bool ) + sizeof( size_t ) );
             as< bool >( errorMessage.data() ) = false;
             as< size_t >( errorMessage.data() + sizeof( bool ) ) = 0;
+            std::cout << "Going to send out error message for failed forwarding!" << std::endl;
             auto messageResult = _messaging.sender().sendMessage( DistributionMessageType::BlockingMessageResponse, errorMessage.data(), errorMessage.size(), origin );
             if ( !messageResult.success )
             {

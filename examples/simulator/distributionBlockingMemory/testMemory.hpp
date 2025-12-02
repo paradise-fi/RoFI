@@ -85,6 +85,7 @@ public:
         {
             // Find the module's address and send write order.
             auto moduleAddress = createAddress( starterDigit );
+            std::cout << "I am the leader and I have determined that address " << address << " belongs to " << moduleAddress << std::endl;
             result.success = true;
             result.stored = false;
             result.propagationTarget = moduleAddress;
@@ -96,12 +97,14 @@ public:
         
         if ( starterDigit == _moduleId )
         {
+            std::cout << "I am the data holder for address " << address << ", writing..." << std::endl; 
             result.success = saveData( address, data, size, isLeader );
             result.stored = result.success;
             result.propagationType = MemoryPropagationType::NONE;
         }
         else
         {
+            std::cout << "I am not the data holder for address " << address << ", going to request leader to find the data." << std::endl;
             result.success = true;
             result.stored = false;
             // By default, this will now target the leader.
@@ -116,6 +119,7 @@ public:
     /// @return Data in uint8_t* format. Nullptr if no data found under the address.
     virtual MemoryReadResult readData( int address, bool isLeader ) const override
     {
+        std::cout << "Inside Memory Implementation trying to read " << address << std::endl;
         int starterDigit = getAddressStarterDigit( address );
         MemoryReadResult result;
         result.success = false;
@@ -123,10 +127,11 @@ public:
         if ( isLeader )
         {
             // Find the module's address and send read order.
-            auto address = createAddress( starterDigit );
+            auto target = createAddress( starterDigit );
+            std::cout << "I am the leader and I have routed " << address << " to be held by " << target << std::endl;
             result.success = true;
             result.requestRemoteRead = true;
-            result.readTarget = address;
+            result.readTarget = target;
             return result;
         }
         
@@ -134,6 +139,7 @@ public:
 
         if ( starterDigit != _moduleId )
         {
+            std::cout << "I do not hold the data on address " << address << ", requesting leader to route this data." << std::endl;
             result.requestRemoteRead = true;
             return result;
         }
@@ -155,24 +161,26 @@ public:
 
     virtual MemoryWriteResult removeData( int address, bool isLeader ) override
     {
+        std::cout << "Inside Memory Implementation - Responding to Remove Request" << std::endl;
         int starterDigit = getAddressStarterDigit( address );
-
         MemoryWriteResult result;
         result.success = false;
 
         if ( isLeader )
         {
             // Find the module's address and send write order.
-            auto address = createAddress( starterDigit );
+            auto target = createAddress( starterDigit );
+            std::cout << "I am the leader and have routed " << address << " to " << target << std::endl;
             result.success = true;
             result.stored = false;
-            result.propagationTarget = address;
+            result.propagationTarget = target;
             result.propagationType = MemoryPropagationType::ONE_TARGET;
             return result;
         }
         
         if ( getAddressStarterDigit( address ) != _moduleId )
         {
+            std::cout << "I am not the data holder of " << address << ", nor am I the leader. I will request the leader to find the data holder." << std::endl;
             result.propagationType = MemoryPropagationType::ONE_TARGET;
             result.success = true;
             result.stored = false;
@@ -183,6 +191,7 @@ public:
 
         if ( _storage.erase( address ) > 0 )
         {
+            std::cout << "I am the data holder of " << address << " and have erased the data." << std::endl;
             result.success = true;
             result.stored = true;
             result.propagationType = MemoryPropagationType::NONE;

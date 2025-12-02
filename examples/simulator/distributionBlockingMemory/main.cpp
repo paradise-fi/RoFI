@@ -12,9 +12,10 @@
 #include "testMemory.hpp"
 #include "exampleLogger.hpp"
 #include "initial.hpp"
-#include "fizzbuzz.hpp"
+#include "read.hpp"
+#include "sendSave.hpp"
+#include "check.hpp"
 #include "address.cpp"
-#include "terminate.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
@@ -50,32 +51,31 @@ void distributionManagerFizzBuzz() {
     // Instantiate the Distribution Manager
     DistributedTaskManager manager(
         std::move( election ), addr,
-        *reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
+        *reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ), 500 );
 
     bool terminate = false;
 
     manager.callbacks().registerBlockingCustomMessageCallback( 
-        []( DistributedTaskManager&, const Ip6Addr&, uint8_t* dataBuffer, unsigned int bufferSize )
+        []( DistributedTaskManager& manager, const Ip6Addr&, uint8_t* dataBuffer, unsigned int bufferSize )
         {
-            MessagingResult result { false, std::string(), std::vector< uint8_t >( sizeof( int ) ) };
+            std::cout << "Blocking message custom callback" << std::endl;
+            MessagingResult result( false, sizeof( int ) );
             if ( bufferSize > 0 )
             {
                 result.success = true;
                 int data = as< int >( dataBuffer );
-                data++;
+                int toStore = data + 1;
+                manager.memory().saveData< int >( std::move( toStore ), data );
                 std::memcpy( result.rawData.data(), &data, result.rawData.size() );
-            }
-            else
-            {
-                result.success = false;
             }
             return result;
         } );
 
     // Register the distributed functions.
     manager.registerFunction< int >( InitialFunction( id, manager ) );
-    manager.registerFunction< int, int >( FizzBuzz( id, manager ) );
-    manager.registerFunction< bool >( TerminateFunction( terminate, manager ) );
+    manager.registerFunction< int, int >( Read( id, manager ) );
+    manager.registerFunction< int, int >( SendSave( id, manager ) );
+    manager.registerFunction< int, int >( Check( id, manager ) );
 
     // Register the memory implementation - the memory implementation is responsible for 
     // initiating memory-relevant communication, hence why the sender is passed too.
