@@ -85,9 +85,9 @@ public:
                 break;
             }
         }
+        _customMessageQueueManager.processQueue();
         tryDistributeNewTask( methodId );
         _memoryService.processQueue();
-        _customMessageQueueManager.processQueue();
         _functionRegistry.processTaskResultQueue();
     }
 

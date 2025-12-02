@@ -32,11 +32,17 @@ public:
 
         std::cout << "Initial ModuleId: " << moduleId << std::endl;
 
-        auto fizzbuzzHandle = _manager.getFunctionHandle< int, int >( 1 ).value();
-
-        if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( 1 ) ) )
+        if ( moduleId > 2 )
         {
-            std::cout << "Execution of function " << functionName() << "failed." << std::endl;
+            std::cout << "This module will not execute any other distributed functions." << std::endl;
+            return false;
+        }
+
+        auto sendSaveHandle= _manager.getFunctionHandle< int, int >( 1 ).value();
+
+        if ( !sendSaveHandle( origin, 1, false, { 3 } ) )
+        {
+            std::cout << "Execution of the next function failed." << std::endl;
         }
 
         return false;
@@ -44,6 +50,7 @@ public:
 
     virtual bool onFunctionFailure( std::optional< int >, const Ip6Addr& ) override
     {
+        std::cout << "Function failure in initial received." << std::endl;
         return false;
     }
 

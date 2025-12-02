@@ -44,7 +44,7 @@ public:
 
         MessagingResult result = _callbackInvoker.invokeUserCallback( CallbackType::CustomMessageBlockingCb, 
             request.sender, request.rawData.data(), request.rawData.size() );
-            
+        
         _messagingService.sender().sendMessage( DistributionMessageType::BlockingMessageResponse, result.rawData.data(), result.rawData.size(), request.sender );
     }    
 };
