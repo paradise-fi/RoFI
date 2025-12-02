@@ -52,17 +52,16 @@ class DistributedTaskManager : public UserCallbackInvoker
 
     virtual MessagingResult invokeUserCallback( CallbackType cbType, const rofi::hal::Ip6Addr& sender, uint8_t* data, size_t size ) override
     {
-        MessagingResult result;
-        result.success = true;
         int taskId;
+        bool stopRequestPipeline;
         switch ( cbType )
         {
             case CallbackType::CompleteBlockingMessageCb:
                 _messaging.completeBlockingMessage( data, size );
-                break;
+                return MessagingResult( true );
             case CallbackType::CustomMessageCb:
                 _callbackService.invokeOnCustomMessage( *this, sender, data, size );
-                break;
+                return MessagingResult( true );
             case CallbackType::CustomMessageBlockingCb:
                 return _callbackService.invokeOnCustomMessageBlocking( *this, sender, data, size );
             case CallbackType::TaskFailureCb:
@@ -72,21 +71,21 @@ class DistributedTaskManager : public UserCallbackInvoker
                     taskId = as< int >( data );
                 }
                 _callbackService.invokeOnTaskFailure( *this, sender, taskId );
-                break;
+                return MessagingResult( true );
 
             case CallbackType::TaskRequestCb:
                 // Semantics -> true means that the task request pipeline ends with this call. False means we still need to queue the task request.
-                result.success = _callbackService.invokeOnTaskRequest( *this, sender );
-                break;
+                stopRequestPipeline = _callbackService.invokeOnTaskRequest( *this, sender );
+                return MessagingResult( stopRequestPipeline );
 
             default:
                 std::ostringstream errorMessageStream;
                 errorMessageStream << "Callback type not registered. " << std::endl;
                 _loggingService.logError( errorMessageStream.str() );
-                result.success = false;
-                break;
+                return MessagingResult( false );
         }
-        return result;
+
+        return MessagingResult( false );
     }
 
 public:

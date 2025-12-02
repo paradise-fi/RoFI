@@ -6,6 +6,7 @@
 #include "distributionMessageType.hpp"
 #include "messageQueueManager.hpp"
 #include "networking/protocols/messageDistributor.hpp"
+#include "blockingMessageDataService.hpp"
 
 using namespace rofi::net;
 
@@ -13,6 +14,7 @@ using namespace rofi::net;
 class MessageReceiver
 {
     MessageQueueManager& _messageQueueManager;
+    BlockingMessageDataService& _blockingMessageDataService;
 
     static void recv_message( void* receiver, 
         struct udp_pcb* pcb,
@@ -33,8 +35,10 @@ public:
         udp_pcb* pcb,
         MessageQueueManager& messageQueueManager,
         MessageDistributor& messageDistributor,
-        int receiveMethodId )
-    : _messageQueueManager( messageQueueManager )
+        int receiveMethodId,
+        BlockingMessageDataService& blockingMessageDataService )
+    : _messageQueueManager( messageQueueManager ),
+      _blockingMessageDataService( blockingMessageDataService )
     {
         if ( !pcb )
         {
@@ -68,8 +72,18 @@ public:
         auto packet = rofi::hal::PBuf::own( p );
         DistributionMessageType type = as< DistributionMessageType >( packet.payload() );
         Ip6Addr sender = as< Ip6Addr >( packet.payload() + sizeof( DistributionMessageType ) );
-        _messageQueueManager.pushMessage( sender, type,
-            packet.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ),
-            packet.size() - ( sizeof( DistributionMessageType) + sizeof( Ip6Addr ) ) );
+
+        if ( type == DistributionMessageType::BlockingMessageResponse )
+        {
+            _blockingMessageDataService.completeBlockingMessage( 
+                packet.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ),
+                packet.size() - ( sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) ) );
+        }
+        else
+        {
+            _messageQueueManager.pushMessage( sender, type,
+                packet.payload() + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ),
+                packet.size() - ( sizeof( DistributionMessageType) + sizeof( Ip6Addr ) ) );
+        }
     }
 };

@@ -50,9 +50,7 @@ public:
         if ( !_onCustomMessageBlocking )
         {
             _loggingService.logError("Received blocking custom message but no callback to handle it is registered.");
-            MessagingResult result;
-            result.success = false;
-            return result;
+            return MessagingResult( false );
         }
         
         return _onCustomMessageBlocking( manager, sender, data, size );

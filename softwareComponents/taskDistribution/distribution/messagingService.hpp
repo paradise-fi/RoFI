@@ -9,6 +9,7 @@
 #include "messaging/messageSender.hpp"
 #include "../tasks/serializable/serializable.hpp"
 #include "messaging/messagingResult.hpp"
+#include "messaging/blockingMessageDataService.hpp"
 
 using namespace rofi::net;
 
@@ -19,10 +20,7 @@ class MessagingService
 
     MessageReceiver _receiver;
     MessageSender _sender;
-
-    std::condition_variable _blockingMessageCV;
-    std::mutex _lock;
-    std::vector< uint8_t > _blockingDataBuffer;
+    BlockingMessageDataService _blockingMessageDataService;
 
 public:
     MessagingService(
@@ -33,7 +31,7 @@ public:
         MessageQueueManager& messageQueueManager,
         int receiverMethodId )
     : _pcb( std::move( pcb ) ),
-      _receiver( distributionPort, _pcb.get(), messageQueueManager, distributor, receiverMethodId ),
+      _receiver( distributionPort, _pcb.get(), messageQueueManager, distributor, receiverMethodId, _blockingMessageDataService ),
       _sender( address, distributionPort, _pcb.get(), distributor )
     {}
 
@@ -52,84 +50,42 @@ public:
         return *( _pcb.get() );
     }
 
-    
-    void completeBlockingMessage( uint8_t* message, size_t messageSize )
-    {
-        {
-            std::lock_guard lk( _lock );
-            _blockingDataBuffer.clear();
-            _blockingDataBuffer.resize( messageSize );
-            std::memcpy(_blockingDataBuffer.data(), message, messageSize );
-        }
-        _blockingMessageCV.notify_all();
-    }
-
 
     MessagingResult sendMessageBlocking( Ip6Addr& receiver, DistributionMessageType messageType, uint8_t* message, size_t messageSize, int timeout = 600 )
     {
-        MessagingResult result;
         if ( !IsMessageTypeBlocking( messageType ) )
         {
-            result.success = false;
-            result.statusMessage = std::string("Non-blocking message type provided. Aborting.");
-            return result;
+            return MessagingResult( std::string("Non-blocking message type provided. Aborting."), false );
         }
 
-        _sender.sendMessage( messageType, message, messageSize, receiver );
+        auto senderResult = _sender.sendMessage( messageType, message, messageSize, receiver );
 
-        std::unique_lock lk ( _lock );
-        auto cvResult = _blockingMessageCV.wait_for( lk, std::chrono::milliseconds( timeout ) );
-        if ( cvResult == std::cv_status::timeout )
+        if ( !senderResult.success )
         {
-            result.statusMessage = std::string("Message sending timed out.");
-            result.success = false;
+            return MessagingResult( senderResult.messsage, false );
         }
-        else
-        {
-            result.success = true;
-            if ( !_blockingDataBuffer.empty() )
-            {
-                result.rawData.resize( _blockingDataBuffer.size() );
-                std::memcpy( result.rawData.data(), _blockingDataBuffer.data(), _blockingDataBuffer.size() );
-                _blockingDataBuffer.clear();
-            }
-        }
-        
-        return result;
+
+        return _blockingMessageDataService.awaitBlockingMessage( timeout );
     }
 
     MessagingResult sendMessageBlocking( Ip6Addr& receiver, DistributionMessageType messageType, int timeout = 100 )
     {
-        MessagingResult result;
-        result.success = false;
-
         if ( !IsMessageTypeBlocking( messageType ) )
         {
-            result.statusMessage = std::string("Non-blocking message type provided. Aborting.");
-            return result;
+            return MessagingResult( std::string("Non-blocking message type provided. Aborting."), false );
         }
 
-        _sender.sendMessage( messageType, receiver );
-
-        std::unique_lock lk ( _lock );
-        auto cvResult = _blockingMessageCV.wait_for( lk, std::chrono::microseconds( timeout ) );
-
-
-        if ( cvResult == std::cv_status::timeout )
+        auto senderResult = _sender.sendMessage( messageType, receiver );
+        if ( !senderResult.success )
         {
-            result.statusMessage = std::string("Message sending timed out.");
+            return MessagingResult( senderResult.messsage, false );
         }
-        else
-        {
-            result.success = true;
-            if ( !_blockingDataBuffer.empty() )
-            {
-                result.rawData.resize( _blockingDataBuffer.size() );
-                std::memcpy( result.rawData.data(), _blockingDataBuffer.data(), _blockingDataBuffer.size() );
-                _blockingDataBuffer.clear();
-            }
-        }
-        
-        return result;
+
+        return _blockingMessageDataService.awaitBlockingMessage( timeout );
+    }
+
+    void completeBlockingMessage( uint8_t* data, size_t size )
+    {
+        _blockingMessageDataService.completeBlockingMessage( data, size );
     }
 };
