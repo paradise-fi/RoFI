@@ -56,11 +56,6 @@ class FunctionRegistry
 public:   
     FunctionRegistry( LoggingService& loggingService ) : _loggingService( loggingService ), _functionManager( loggingService ) {}
 
-    /// @brief Registers a function. The function handle, which is used for invoking the function over the network, is then retrieved from the function registry with getFunctionHandle().
-    /// @tparam Result A trivially copyable type, or a type that implements Serializable. Denotes the type of the function's result.
-    /// @tparam ...Arguments A pack of trivially copyable types, or types that implement Serializable. Denotes the types of the function's parameters.
-    /// @param userFunction The distributed function implementation.
-    /// @return True if the function was successfully registered, otherwise false.
     template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments,
               std::derived_from< DistributedFunction< Result, Arguments... > > Func >
     bool registerFunction( const Func& function )

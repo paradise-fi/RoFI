@@ -43,7 +43,7 @@ public:
             if ( result.has_value() )
             {
                 std::cout << "Loop found at: " << result->first << ", connector: " << result->second << std::endl;
-                auto handle = _manager.getFunctionHandle< bool, int >( 1 );
+                auto handle = _manager.functions().getFunctionHandle< bool, int >( 1 );
                 if ( handle.has_value() )
                 {
                     handle.value()( result->first, 0, false, { result->second } );

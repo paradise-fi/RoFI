@@ -72,7 +72,7 @@ public:
         if ( fizzbuzzLimit <= fizzBuzzOps )
         {
             std::cout << "Example complete. Terminating pipeline." << std::endl;
-            auto terminateHandle = _manager.getFunctionHandle< bool >( 101 ).value();
+            auto terminateHandle = _manager.functions().getFunctionHandle< bool >( 101 ).value();
             terminateHandle( origin, 1, false, std::tuple<>() );
             return false;
         }
@@ -121,13 +121,13 @@ public:
         }
         std::cout << std::endl;
 
-        auto barrierHandle = _manager.getFunctionHandle< Ip6Addr >( 100 ).value();
+        auto barrierHandle = _manager.functions().getFunctionHandle< Ip6Addr >( 100 ).value();
         if ( !barrierHandle( origin, 1, false, std::tuple<>()) )
         {
             std::cout << "Execution of function " << functionName() << " failed." << std::endl;
         }
 
-        auto fizzbuzzHandle = _manager.getFunctionHandle< FizzBuzzMetaData, int >( 1 ).value();
+        auto fizzbuzzHandle = _manager.functions().getFunctionHandle< FizzBuzzMetaData, int >( 1 ).value();
         if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( getNextMemorySlotAddress( data.value().value ) ) ) )
         {
             std::cout << "Execution of function " << functionName() << "failed." << std::endl;

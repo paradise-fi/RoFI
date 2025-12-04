@@ -49,7 +49,7 @@ public:
         if ( value.message != std::string( "end" ) )
         {
             _ended = true;
-            auto messageSendHandle = _manager.getFunctionHandle< Message, Message >( functionId() ).value();
+            auto messageSendHandle = _manager.functions().getFunctionHandle< Message, Message >( functionId() ).value();
             Message toSend = Message( std::string( "end" ) );
             if ( !messageSendHandle( origin, 1, false, { toSend } ) )
             {

@@ -72,10 +72,10 @@ void distributionManagerFizzBuzz() {
         } );
 
     // Register the distributed functions.
-    manager.registerFunction< int >( InitialFunction( id, manager ) );
-    manager.registerFunction< int, int >( Read( id, manager ) );
-    manager.registerFunction< int, int >( SendSave( id, manager ) );
-    manager.registerFunction< int, int >( Check( id, manager ) );
+    manager.functions().registerFunction< int >( InitialFunction( id, manager ) );
+    manager.functions().registerFunction< int, int >( Read( id, manager ) );
+    manager.functions().registerFunction< int, int >( SendSave( id, manager ) );
+    manager.functions().registerFunction< int, int >( Check( id, manager ) );
 
     // Register the memory implementation - the memory implementation is responsible for 
     // initiating memory-relevant communication, hence why the sender is passed too.

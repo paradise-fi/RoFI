@@ -41,7 +41,7 @@ public:
             return false;
         }
 
-        auto checkHandle = _manager.getFunctionHandle< int, int >( "Check" ).value();
+        auto checkHandle = _manager.functions().getFunctionHandle< int, int >( "Check" ).value();
         if ( !checkHandle( origin, 1, false, { data.value() } ) )
         {
             std::cout << "Execution of next function failed." << std::endl;
