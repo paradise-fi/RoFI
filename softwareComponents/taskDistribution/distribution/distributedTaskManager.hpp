@@ -121,12 +121,12 @@ public:
         return _callbackService;
     }
 
-    MemoryFacade memory()
+    [[nodiscard]] MemoryFacade memory()
     {
         return MemoryFacade( _memoryService );
     }
 
-    FunctionFacade functions()
+    [[nodiscard]] FunctionFacade functions()
     {
         return FunctionFacade( _functionRegistry );
     }
