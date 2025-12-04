@@ -96,16 +96,16 @@ The data buffer received into the callback contains only the body of the message
 
 ```c++
 CallbackFacade& callbacks();
-MemoryFacade& memory();
-FunctionRegistry& functionRegistry()
+[[nodiscard]] MemoryFacade memory();
+[[nodiscard]] FunctionFacade functionRegistry()
 LoggingService& loggingService();
 ```
 
 These methods provide direct access to some of the lower level subsystems that make up the task manager. 
 
 - ``CallbackFacade`` provides a wrapper around callback management within the distributed task manager. It allows users to register callbacks to specified events.
-- ``DistributedMemoryService`` provides a wrapper around custom memory implementations. It allows users to store and read data in the distributed system.
-- ``FunctionRegistry`` provides lower-level access to the function and task subsystem. However, typical required functionality is provided as part of the DistributedTaskManager.
+- ``MemoryFacade`` provides a wrapper around custom memory implementations. It allows users to store and read data in the distributed system. It is important that this facade does not outlive the ``DistributedTaskManager``!
+- ``FunctionFacade`` provides a wrapper around the function and task subsystem, allowing users to register functions, retrieve function handles and manipulate task queues in a limited manner. It is important that this facade does not outlive the ``DistributedTaskManager``!
 - ``LoggingService`` is concerned with logging. You can use this service to send log messages from your application, in which case they will end up in the same channels as the system logging.
 
 
@@ -117,10 +117,11 @@ void doWork();
 Executes a single run of the standard workflow loop of the task manager. This method must be continuously invoked for the task manager to function properly.
 
 ```c++
-void start( int moduleId );
+void start( int initialElectionDelay, int electionCyclesBeforeStabilization = 3 )
 ```
 
 Performs important initialization for the task manager. Namely, this method starts the election algorithm, which is necessary for the task manager to function correctly.
+The arguments are used to modify the behaviour of the election algorithm (namely its initial delay before election starts) and the number of election "cycles" (leader liveness checks) that must pass before we consider the election stable and the distributed task manager can begin to do work.
 
 ##### Unblock Queue Signals
 ```c++
@@ -171,33 +172,6 @@ bool sendFunctionExecutionOrder( std::string functionName, const Ip6Addr& target
 bool requestTask();
 ```
 These methods allow for manual requests of task executions and task scheduling. These actions are typically performed as part of the task manager pipeline between leaders and followers, but they are needed when the user needs to manually start the pipeline of tasks again.
-
-##### GetFunctionHandle
-```c++
-template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
-std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( const std::string& functionName );
-
-template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
-std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( int functionId );
-```
-
-These functions allow the user to retrieve a handle to their custom-defined ``DistributedFunction``. The handle is a functional object which can be invoked with the ``()`` operator.
-
-##### Register Function
-
-```c++
-template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments,
-              std::derived_from< DistributedFunction< Result, Arguments... > > Func >
-bool registerFunction( const Func& function );
-```
-
-Registers a custom defined ``DistributedFunction`` into the task manager.
-
-##### ClearAllTasks
-```c++
-void clearAllTasks();
-```
-Used to clear all tasks from the queues on this module. Can be useful for failure recovery.
 
 <hr>
 
@@ -357,6 +331,46 @@ std::optional< std::reference_wrapper< DistributedMemoryBase > > memory()
 ```
 
 Used to fetch the DistributedMemoryBase implementation provided by the user. This method should only be used if a the user requires to retrieve the memory implementation for very specific workflows. This method should not be necessary for regular memory-related workflows as the internals of the task manager handle all the details.
+
+<hr>
+
+### FunctionFacade
+Provides access to methods that allow for the registration of functions and task scheduler cleanup.
+
+
+##### GetFunctionHandle
+```c++
+template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
+std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( const std::string& functionName );
+
+template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
+std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( int functionId );
+```
+
+These functions allow the user to retrieve a handle to their custom-defined ``DistributedFunction``. The handle is a functional object which can be invoked with the ``()`` operator.
+
+##### Register Function
+
+```c++
+template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments,
+              std::derived_from< DistributedFunction< Result, Arguments... > > Func >
+bool registerFunction( const Func& function );
+```
+
+Registers a custom defined ``DistributedFunction`` into the task manager.
+
+##### ClearAllTasks
+```c++
+void clearAllTasks();
+```
+Used to clear all tasks from the queues on this module. Can be useful for failure recovery.
+
+##### Unblock Task Schedulers
+```c++
+void unblockTaskSchedulers( bool hardUnblock = false )
+```
+
+Used to unblock all task schedulers on the module from blocking tasks. The ``hardUnblock`` argument, if true, ensures that barrier tasks are also cleared.
 
 <hr>
 
