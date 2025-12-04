@@ -34,11 +34,11 @@ public:
         std::cout << "Initial ModuleId: " << moduleId << std::endl;
 
         // Register participants into the naive barrier.
-        auto barrierHandle = _manager.getFunctionHandle< Ip6Addr >( 100 ).value();
+        auto barrierHandle = _manager.functions().getFunctionHandle< Ip6Addr >( 100 ).value();
         auto& barrierImplementation = static_cast< NaiveBarrier& >( barrierHandle.implementation() );
         barrierImplementation.registerParticipant( origin );
 
-        auto fizzbuzzHandle = _manager.getFunctionHandle< FizzBuzzMetaData, int >( 1 ).value();
+        auto fizzbuzzHandle = _manager.functions().getFunctionHandle< FizzBuzzMetaData, int >( 1 ).value();
 
         if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( moduleId ) ) )
         {

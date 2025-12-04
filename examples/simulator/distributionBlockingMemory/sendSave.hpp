@@ -46,7 +46,7 @@ public:
 
         std::cout << "Received success for " << functionName() << std::endl;
 
-        auto readHandle = _manager.getFunctionHandle< int, int >( "Read" ).value();
+        auto readHandle = _manager.functions().getFunctionHandle< int, int >( "Read" ).value();
         if ( !readHandle( origin, 1, false, std::tuple< int >( data.value() ) ) )
         {
             std::cout << "Execution of next function failed." << std::endl;
