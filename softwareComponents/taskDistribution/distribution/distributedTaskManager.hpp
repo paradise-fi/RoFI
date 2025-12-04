@@ -1,7 +1,7 @@
 #pragma once
 
-#include "messagingService.hpp"
-#include "functionRegistry.hpp"
+#include "services/messagingService.hpp"
+#include "services/functionRegistry.hpp"
 #include "services/memoryFacade.hpp"
 #include "services/workflowService.hpp"
 #include "services/electionService.hpp"
