@@ -1,10 +1,10 @@
 #pragma once
 
-#include "../functions/functionManager.hpp"
-#include "../tasks/taskManager.hpp"
+#include "../../functions/functionManager.hpp"
+#include "../../tasks/taskManager.hpp"
 #include "lwip++.hpp"
-#include "../tasks/serializable/serializable.hpp"
-#include "services/loggingService.hpp"
+#include "../../tasks/serializable/serializable.hpp"
+#include "loggingService.hpp"
 
 using namespace rofi::net;
 

@@ -1,9 +1,9 @@
 #include "memoryService.hpp"
 #include "functionRegistry.hpp"
 #include "loggingService.hpp"
-#include "messaging/messageSender.hpp"
-#include "messaging/customMessageQueueManager.hpp"
-#include "messaging/messageDispatcher.hpp"
+#include "../messaging/messageSender.hpp"
+#include "../messaging/customMessageQueueManager.hpp"
+#include "../messaging/messageDispatcher.hpp"
 
 class WorkFlowService
 {

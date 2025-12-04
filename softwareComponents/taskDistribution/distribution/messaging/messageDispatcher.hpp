@@ -1,6 +1,6 @@
 #pragma once
 #include "lwip++.hpp"
-#include "../functionRegistry.hpp"
+#include "../services/functionRegistry.hpp"
 #include "../services/memoryService.hpp"
 #include "../callbacks/userCallbackInvoker.hpp"
 #include "customMessageQueueManager.hpp"

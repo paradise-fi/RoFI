@@ -3,7 +3,7 @@
 #include <queue>
 #include "lwip++.hpp"
 #include "atoms/util.hpp"
-#include "../messagingService.hpp"
+#include "messagingService.hpp"
 #include "../memory/memoryRequestType.hpp"
 #include "loggingService.hpp"
 #include "callbacks/callbackService.hpp"

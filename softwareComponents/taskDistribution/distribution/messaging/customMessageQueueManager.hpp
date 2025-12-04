@@ -3,7 +3,7 @@
 #include <vector>
 #include <queue>
 #include "../callbacks/userCallbackInvoker.hpp"
-#include "messagingService.hpp"
+#include "../services/messagingService.hpp"
 
 struct CustomMessageRequest
 {
