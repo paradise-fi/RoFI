@@ -56,7 +56,7 @@ void distributionManagerFizzBuzz() {
     bool terminate = false;
 
     manager.callbacks().registerBlockingCustomMessageCallback( 
-        []( DistributedTaskManager& manager, const Ip6Addr&, uint8_t* dataBuffer, unsigned int bufferSize )
+        []( DistributedTaskManager& mgr, const Ip6Addr&, uint8_t* dataBuffer, unsigned int bufferSize )
         {
             std::cout << "Blocking message custom callback" << std::endl;
             MessagingResult result( false, sizeof( int ) );
@@ -65,7 +65,7 @@ void distributionManagerFizzBuzz() {
                 result.success = true;
                 int data = as< int >( dataBuffer );
                 int toStore = data + 1;
-                manager.memory().saveData< int >( std::move( toStore ), data );
+                mgr.memory().saveData< int >( std::move( toStore ), data );
                 std::memcpy( result.rawData.data(), &data, result.rawData.size() );
             }
             return result;

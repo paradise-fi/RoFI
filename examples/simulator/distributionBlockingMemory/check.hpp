@@ -31,7 +31,7 @@ public:
     }
 
     /// This function is called by the leader node if the FunctionResult fom execute indicates a success.
-    virtual bool onFunctionSuccess( std::optional< int > data, const Ip6Addr& origin ) override
+    virtual bool onFunctionSuccess( std::optional< int >, const Ip6Addr& origin ) override
     {
         std::cout << "Function success obtained from " << origin << std::endl;
         std::cout << "Terminating pipeline." << std::endl;
