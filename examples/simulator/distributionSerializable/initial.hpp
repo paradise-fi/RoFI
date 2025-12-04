@@ -40,7 +40,7 @@ public:
 
         if ( _currentFollowers == _followers )
         {
-            auto messageHandle = _manager.getFunctionHandle< Message, Message >( 1 ).value();
+            auto messageHandle = _manager.functions().getFunctionHandle< Message, Message >( 1 ).value();
 
             if ( !messageHandle( origin, 1, false, std::tuple< Message >( Message( std::string( "Hello, follower." ) ) ) ) )
             {

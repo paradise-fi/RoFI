@@ -93,9 +93,9 @@ void distributionManagerFizzBuzz() {
     });
 
     // Register the distributed functions.
-    manager.registerFunction< ModuleState >( InitialFunction( manager, botState, requesters ) );
-    manager.registerFunction< int, int >( Disconnect( manager, botState ) );
-    manager.registerFunction< MoveResult, int, float, float >( Move( manager, botState ) ); 
+    manager.functions().registerFunction< ModuleState >( InitialFunction( manager, botState, requesters ) );
+    manager.functions().registerFunction< int, int >( Disconnect( manager, botState ) );
+    manager.functions().registerFunction< MoveResult, int, float, float >( Move( manager, botState ) ); 
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );

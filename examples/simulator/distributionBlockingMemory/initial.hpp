@@ -38,7 +38,7 @@ public:
             return false;
         }
 
-        auto sendSaveHandle= _manager.getFunctionHandle< int, int >( 1 ).value();
+        auto sendSaveHandle= _manager.functions().getFunctionHandle< int, int >( 1 ).value();
 
         if ( !sendSaveHandle( origin, 1, false, { 3 } ) )
         {

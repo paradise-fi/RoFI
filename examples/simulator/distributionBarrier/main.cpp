@@ -71,10 +71,10 @@ void distributionManagerFizzBuzz() {
 
     bool terminate = false;
     // Register the distributed functions.
-    manager.registerFunction< int >( InitialFunction( id, manager ) );
-    manager.registerFunction< FizzBuzzMetaData, int >( FizzBuzz( id, manager ) );
-    manager.registerFunction< bool >( TerminateFunction( terminate, manager ) );
-    if ( !manager.registerFunction< Ip6Addr >( NaiveBarrier( addr, manager ) ) )
+    manager.functions().registerFunction< int >( InitialFunction( id, manager ) );
+    manager.functions().registerFunction< FizzBuzzMetaData, int >( FizzBuzz( id, manager ) );
+    manager.functions().registerFunction< bool >( TerminateFunction( terminate, manager ) );
+    if ( !manager.functions().registerFunction< Ip6Addr >( NaiveBarrier( addr, manager ) ) )
     {
         std::cout << "Failed to register barrier." << std::endl;
         return;

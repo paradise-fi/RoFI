@@ -65,7 +65,7 @@ public:
 
         if ( result < _fizzBuzzTreshold )
         {
-            auto fizzbuzzHandle = _manager.getFunctionHandle< int, int >( functionId() ).value();
+            auto fizzbuzzHandle = _manager.functions().getFunctionHandle< int, int >( functionId() ).value();
             if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( result ) ) )
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
@@ -73,7 +73,7 @@ public:
         }
         else
         {
-            auto cleanupHandle = _manager.getFunctionHandle< int >( "Cleanup" ).value();
+            auto cleanupHandle = _manager.functions().getFunctionHandle< int >( "Cleanup" ).value();
             if ( !cleanupHandle( origin, 1, false, {} ) )
             {
                 std::cout << "Execution of Cleanup Function failed." << std::endl;

@@ -58,8 +58,8 @@ void distributionManagerFizzBuzz( int followers ) {
         *reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
 
     // Register the distributed functions.
-    manager.registerFunction< int >( InitialFunction( id, manager, followers ) );
-    manager.registerFunction< Message, Message >( MessageSend( manager, id ) );
+    manager.functions().registerFunction< int >( InitialFunction( id, manager, followers ) );
+    manager.functions().registerFunction< Message, Message >( MessageSend( manager, id ) );
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );

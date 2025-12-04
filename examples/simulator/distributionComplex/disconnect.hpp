@@ -41,7 +41,7 @@ public:
 
         auto stubJoint = _state.findLongestStubArm();
 
-        auto moveHandle = _manager.getFunctionHandle< MoveResult, int, float, float >( 2 );
+        auto moveHandle = _manager.functions().getFunctionHandle< MoveResult, int, float, float >( 2 );
 
         if ( !moveHandle.has_value() )
         {
