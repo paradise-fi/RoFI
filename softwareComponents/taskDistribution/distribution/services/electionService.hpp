@@ -13,15 +13,17 @@ class ElectionService
     std::optional< std::function< void() > > _onLeaderFailed;
     int _electedCount = 0;
     bool _isRunning = false;
+    int _electionCyclesBeforeStabilization = 3;
 
     void onLeaderElected()
     {
-        if ( _electedCount == 3 )
+        if ( _electedCount == _electionCyclesBeforeStabilization )
         {
             _onLeaderSuccess( _election->getLeader() );
             _electedCount++;
         }
-        if (_electedCount < 3)
+
+        if (_electedCount < _electionCyclesBeforeStabilization )
         {
             _electedCount++;
         }
@@ -45,10 +47,11 @@ public:
         _election->registerElectionFinishedCallback( [ this ] { onLeaderElected(); } );
     }
 
-    void start( int moduleId, std::function< void( const Ip6Addr& ) >&& electionFinishedCallback )
+    void start( int initialElectionDelay, std::function< void( const Ip6Addr& ) >&& electionFinishedCallback, int electionCyclesBeforeStabilization = 3 )
     {
+        _electionCyclesBeforeStabilization = electionCyclesBeforeStabilization;
         _onLeaderSuccess = std::forward< std::function< void( const Ip6Addr& ) > >( electionFinishedCallback );
-        _election->start( moduleId );
+        _election->start( initialElectionDelay );
         _isRunning = true;
     }
 
@@ -59,7 +62,7 @@ public:
 
     bool isElectionComplete()
     {
-        return _electedCount > 3;
+        return _electedCount > _electionCyclesBeforeStabilization;
     }
 
     const Ip6Addr& getLeader()

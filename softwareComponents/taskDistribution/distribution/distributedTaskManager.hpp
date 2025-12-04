@@ -158,12 +158,12 @@ public:
         _workFlowService.doWorkFollower( _address, _election.getLeader() );
     }
     
-    void start( int moduleId )
+    void start( int initialElectionDelay, int electionCyclesBeforeStabilization = 3 )
     {
-        _election.start( moduleId,
+        _election.start( initialElectionDelay,
             [ this ]( const Ip6Addr& leader) {
                 onElectionSuccesful( leader );
-            });
+            }, electionCyclesBeforeStabilization);
     }
 
     std::optional< Ip6Addr > getLeader()
