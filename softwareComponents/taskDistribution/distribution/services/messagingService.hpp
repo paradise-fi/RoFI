@@ -5,11 +5,11 @@
 #include <mutex>
 #include <chrono>
 #include "lwip++.hpp"
-#include "messaging/messageReceiver.hpp"
-#include "messaging/messageSender.hpp"
-#include "../tasks/serializable/serializable.hpp"
-#include "messaging/messagingResult.hpp"
-#include "messaging/blockingMessageDataService.hpp"
+#include "../messaging/messageReceiver.hpp"
+#include "../messaging/messageSender.hpp"
+#include "../../tasks/serializable/serializable.hpp"
+#include "../messaging/messagingResult.hpp"
+#include "../messaging/blockingMessageDataService.hpp"
 
 using namespace rofi::net;
 
