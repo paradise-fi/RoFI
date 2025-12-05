@@ -83,14 +83,14 @@ public:
     template< SerializableOrTrivial Result >
     bool enqueueTask( const Ip6Addr& addr, int functionId, FunctionCompletionType completionType, bool enqueueFront = false )
     {
-        auto task = Task< Result >( ++_taskId, TaskStatus::Enqueued, functionId, enqueueFront );
+        auto task = Task< Result >( ++_taskId, TaskStatus::Pending, functionId, enqueueFront );
         return _schedulers[ addr ].enqueueTask( std::make_unique< TaskBase >( task ), completionType );
     }
 
     template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     bool enqueueTask( const Ip6Addr& addr, int functionId, int priority, bool enqueueFront, FunctionCompletionType completionType, std::tuple< Arguments... >&& arguments )
     {
-        auto task = Task< Result, Arguments... >( ++_taskId, TaskStatus::Enqueued, functionId, priority, enqueueFront, arguments );
+        auto task = Task< Result, Arguments... >( ++_taskId, TaskStatus::Pending, functionId, priority, enqueueFront, arguments );
         return _schedulers[ addr ].enqueueTask( std::make_unique< Task< Result, Arguments... > >( task ), completionType );
     }
 

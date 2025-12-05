@@ -10,15 +10,7 @@ using namespace rofi::net;
 #include <vector>
 #include <variant>
 #include "serializable/serializable.hpp"
-
-enum TaskStatus {
-    Enqueued, // Still in Queue 
-    InProgress, // Has been sent out
-    Complete, // Returned with a success
-    Failed, // Returned with a failure
-    RepeatLocally, // Reschedule at the executor
-    RepeatDistributed, // Reschedule at the central authority / leader
-};
+#include "enums/taskStatus.hpp"
 
 class TaskBase 
 {
@@ -87,7 +79,7 @@ class Task : public TaskBase {
     public:
     Task() {}
     Task( int functionId ) : _functionId( functionId ) {
-        _status = TaskStatus::InProgress;
+        _status = TaskStatus::Pending;
         _id = 0;
     }
     Task( int id, TaskStatus status, int functionId, int priority, bool enqueueFront )
