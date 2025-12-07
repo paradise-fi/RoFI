@@ -1,4 +1,5 @@
 #include "../tasks/serializable/serializable.hpp"
+#include <optional>
 
 enum FunctionResultType
 {

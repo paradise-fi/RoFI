@@ -5,6 +5,7 @@
 #include <networking/protocol.hpp>
 #include <networking/interface.hpp>
 #include <networking/routingTable.hpp>
+#include <networking/networkManager.hpp>
 
 #include <atoms/util.hpp>
 

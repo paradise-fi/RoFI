@@ -29,63 +29,17 @@ public:
         MessageDistributor& distributor,
         std::unique_ptr< udp_pcb > pcb,
         MessageQueueManager& messageQueueManager,
-        int receiverMethodId )
-    : _pcb( std::move( pcb ) ),
-      _receiver( distributionPort, _pcb.get(), messageQueueManager, distributor, receiverMethodId, _blockingMessageDataService ),
-      _sender( address, distributionPort, _pcb.get(), distributor )
-    {}
+        int receiverMethodId );
 
-    MessageSender& sender()
-    {
-        return _sender;
-    }
+    MessageSender& sender();
 
-    MessageReceiver& receiver()
-    {
-        return _receiver;
-    }
+    MessageReceiver& receiver();
 
-    udp_pcb& pcb()
-    {
-        return *( _pcb.get() );
-    }
+    udp_pcb& pcb();
 
+    MessagingResult sendMessageBlocking( Ip6Addr& receiver, DistributionMessageType messageType, uint8_t* message, size_t messageSize, int timeout = 600 );
 
-    MessagingResult sendMessageBlocking( Ip6Addr& receiver, DistributionMessageType messageType, uint8_t* message, size_t messageSize, int timeout = 600 )
-    {
-        if ( !IsMessageTypeBlocking( messageType ) )
-        {
-            return MessagingResult( std::string("Non-blocking message type provided. Aborting."), false );
-        }
+    MessagingResult sendMessageBlocking( Ip6Addr& receiver, DistributionMessageType messageType, int timeout = 100 );
 
-        auto senderResult = _sender.sendMessage( messageType, message, messageSize, receiver );
-
-        if ( !senderResult.success )
-        {
-            return MessagingResult( senderResult.messsage, false );
-        }
-
-        return _blockingMessageDataService.awaitBlockingMessage( timeout );
-    }
-
-    MessagingResult sendMessageBlocking( Ip6Addr& receiver, DistributionMessageType messageType, int timeout = 100 )
-    {
-        if ( !IsMessageTypeBlocking( messageType ) )
-        {
-            return MessagingResult( std::string("Non-blocking message type provided. Aborting."), false );
-        }
-
-        auto senderResult = _sender.sendMessage( messageType, receiver );
-        if ( !senderResult.success )
-        {
-            return MessagingResult( senderResult.messsage, false );
-        }
-
-        return _blockingMessageDataService.awaitBlockingMessage( timeout );
-    }
-
-    void completeBlockingMessage( uint8_t* data, size_t size )
-    {
-        _blockingMessageDataService.completeBlockingMessage( data, size );
-    }
+    void completeBlockingMessage( uint8_t* data, size_t size );
 };

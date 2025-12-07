@@ -1,6 +1,4 @@
 #pragma once
-using namespace rofi::hal;
-using namespace rofi::net;
 
 #include <lwip++.hpp>
 #include <lwip/udp.h>
@@ -11,6 +9,9 @@ using namespace rofi::net;
 #include <variant>
 #include "serializable/serializable.hpp"
 #include "enums/taskStatus.hpp"
+
+using namespace rofi::hal;
+using namespace rofi::net;
 
 class TaskBase 
 {

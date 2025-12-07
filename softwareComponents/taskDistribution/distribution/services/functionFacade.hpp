@@ -4,7 +4,13 @@ class FunctionFacade
 {
     FunctionRegistry& _functionRegistry;
 public:
-    FunctionFacade( FunctionRegistry& functionRegistry ) : _functionRegistry( functionRegistry ) {}
+    FunctionFacade( FunctionRegistry& functionRegistry );
+
+    /// @brief Removes all tasks from all schedulers on this module.
+    void clearAllTasks();
+    /// @brief Clears all task schedulers for scheduling tasks.
+    /// @param hardUnblock Removes active barrier if true, otherwise the barrier remains active.
+    void unblockTaskSchedulers( bool hardUnblock = false );
 
     /// @brief Retrieves a function handle. The function handle is used for invoking a function over the network.
     /// @tparam Result A trivially copyable type, or a type that implements Serializable. Denotes the type of the function's result. 
@@ -35,16 +41,4 @@ public:
         return _functionRegistry.registerFunction< Result, Arguments... >( function );
     }
 
-    /// @brief Removes all tasks from all schedulers on this module.
-    void clearAllTasks()
-    {
-        _functionRegistry.clearTasks();
-    }
-
-    /// @brief Clears all task schedulers for scheduling tasks.
-    /// @param hardUnblock Removes active barrier if true, otherwise the barrier remains active.
-    void unblockTaskSchedulers( bool hardUnblock = false )
-    {
-        _functionRegistry.unblockTaskSchedulers( hardUnblock );
-    }
 };
