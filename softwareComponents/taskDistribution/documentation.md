@@ -55,14 +55,6 @@ Constructs a distributed task manager instance. It is strongly recommended that 
 
 #### Methods
 
-##### Logger Registration
-```c++
-template< std::derived_from< LoggerBase > Logger >
-void useLogger( const Logger& logger );
-```
-
-Registers a logger instance. The logger instance can be custom made, but it must inherit the Logger abstract class. When a logger is provided, the task manager will automatically write messages for different events, warnings and errors into the logger.
-
 ##### Event Callbacks
 ```c++
 bool registerLeaderFailureCallback( std::function< void() > callback );
