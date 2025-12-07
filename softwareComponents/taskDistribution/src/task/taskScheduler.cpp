@@ -147,6 +147,12 @@ void TaskScheduler::ageTasks()
 {
     for( auto taskEntry = _tasks.begin(); taskEntry != _tasks.end(); ++taskEntry)
     {
+        // Skip aging tasks that are behind the barrier.
+        if ( _activeBarrierTaskId.has_value() && taskEntry->task->id() > _activeBarrierTaskId.value() )
+        {
+            continue;
+        }
+        
         taskEntry->task->incrementAge();
     }
 }
