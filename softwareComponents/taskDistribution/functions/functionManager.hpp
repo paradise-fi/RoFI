@@ -7,9 +7,10 @@
 #include "functionHandle.hpp"
 #include <networking/networkManager.hpp>
 #include "../distribution/services/loggingService.hpp"
+#include "lwip++.hpp"
 
-template < typename Result, typename... Arguments >
-using Executor = std::function< bool( const Ip6Addr&, int, bool, FunctionModel< Result, Arguments...>& fn, std::tuple< Arguments...> && arguments ) >;
+// template < typename Result, typename... Arguments >
+// using Executor = std::function< bool( const Ip6Addr&, int, bool, FunctionModel< Result, Arguments...>& fn, std::tuple< Arguments...> && arguments ) >;
 
 class FunctionManager
 {
@@ -18,12 +19,9 @@ class FunctionManager
     LoggingService& _loggingService;
 
 public:
-    FunctionManager( LoggingService& loggingService ) : _loggingService( loggingService ) {}
+    FunctionManager( LoggingService& loggingService );
 
-    bool isFunctionRegistered( int id ) const
-    {
-        return _functions.find( id ) != _functions.end();
-    }
+    bool isFunctionRegistered( int id ) const;
 
     template < typename Result, typename... Arguments >
     bool addFunction( 
@@ -48,89 +46,15 @@ public:
         return true;
     }
 
-    bool removeFunction( int id )
-    {
-        auto fnCandidate = _functions.find( id );
+    bool removeFunction( int id );
 
-        if ( fnCandidate == _functions.end() )
-        {
-            return false;
-        }
+    bool removeFunction( const std::string& name );
 
-        _nameToIdMap.erase( fnCandidate->second->functionName() );
+    bool invokeFunction( TaskBase& task );
 
-        return _functions.erase( id ) != 0;
-    }
+    FunctionResultType invokeReaction( const Ip6Addr& addr, const TaskBase& task );
 
-    bool removeFunction( const std::string& name )
-    {
-        auto idCandidate = _nameToIdMap.find( name );
-        
-        if ( idCandidate == _nameToIdMap.end() )
-        {
-            return false;
-        }
+    std::optional< std::reference_wrapper< FunctionConcept > > getFunction( int functionId );
 
-        return removeFunction( idCandidate->second );
-    }
-
-    bool invokeFunction( TaskBase& task )
-    {
-        const auto& fn = _functions.find( task.functionId() );
-        
-        if ( fn == _functions.end() )
-        {
-            std::ostringstream stream;
-            stream << "Function " << task.functionId() << " not found during function invocation.";
-            _loggingService.logWarning( stream.str() );
-            task.setStatus( TaskStatus::Failed );
-            return false;
-        }
-
-        fn->second->perform( task );
-        return true;
-    }
-
-    FunctionResultType invokeReaction( const Ip6Addr& addr, const TaskBase& task )
-    {
-        const auto& fn = _functions.find( task.functionId() );
-        if ( fn == _functions.end() )
-        {
-            std::ostringstream stream;
-            stream << "Function " << task.functionId() << " not found when trying to react to module task completion.";
-            _loggingService.logError( stream.str() );
-            return FunctionResultType::FAILURE;
-        }
-
-        if ( task.status() != TaskStatus::Complete )
-        {
-            return fn->second->onFailure( addr, task ) ? FunctionResultType::TRY_AGAIN_LOCAL : FunctionResultType::SUCCESS;
-        }
-        
-        return fn->second->onSuccess( addr, task ) ? FunctionResultType::TRY_AGAIN_LOCAL : FunctionResultType::SUCCESS;
-    }
-
-    std::optional< std::reference_wrapper< FunctionConcept > > getFunction( int functionId )
-    {
-        auto kv = _functions.find( functionId );
-        
-        if ( kv == _functions.end() )
-        {
-            return std::nullopt;
-        }
-
-        return *( kv->second.get() );
-    }
-
-    std::optional< std::reference_wrapper< FunctionConcept > > getFunction( const std::string& functionName )
-    {
-        auto idCandidate = _nameToIdMap.find( functionName );
-        
-        if ( idCandidate == _nameToIdMap.end() )
-        {
-            return std::nullopt;
-        }
-
-        return getFunction( idCandidate->second );
-    }
+    std::optional< std::reference_wrapper< FunctionConcept > > getFunction( const std::string& functionName );
 };

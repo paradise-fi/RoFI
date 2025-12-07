@@ -3,6 +3,7 @@
 #include "enums/functionCompletionType.hpp"
 #include "enums/functionDistributionType.hpp"
 #include "enums/functionType.hpp"
+#include <lwip++.hpp>
 #include <optional>
 
 template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
@@ -20,13 +21,13 @@ public:
     /// @param result The result obtained from the follower module.
     /// @param origin The address of the module that performed the function call.
     /// @return True if processing of the result (this function) should be re-scheduled, else false.
-    virtual bool onFunctionSuccess( std::optional< Result > result, const Ip6Addr& origin ) = 0;
+    virtual bool onFunctionSuccess( std::optional< Result > result, const rofi::hal::Ip6Addr& origin ) = 0;
 
     /// @brief Invoked on the leader module after receiving a failure result from its follower module.
     /// @param result The result value obtained from the module.
     /// @param origin The address of the module that performed the function call.
     /// @return True if processing of the result (this function) should be re-scheduled, else false.
-    virtual bool onFunctionFailure( std::optional< Result > result, const Ip6Addr& origin ) = 0;
+    virtual bool onFunctionFailure( std::optional< Result > result, const rofi::hal::Ip6Addr& origin ) = 0;
 
     /// @brief Returns unique function name for user-friendly function retrieval.
     /// @return Unique function name.

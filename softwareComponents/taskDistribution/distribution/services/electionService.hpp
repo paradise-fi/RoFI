@@ -15,80 +15,22 @@ class ElectionService
     bool _isRunning = false;
     int _electionCyclesBeforeStabilization = 3;
 
-    void onLeaderElected()
-    {
-        if ( _electedCount == _electionCyclesBeforeStabilization )
-        {
-            _onLeaderSuccess( _election->getLeader() );
-            _electedCount++;
-        }
+    void onLeaderElected();
 
-        if (_electedCount < _electionCyclesBeforeStabilization )
-        {
-            _electedCount++;
-        }
-    }
-
-    void onLeaderFailed()
-    {
-        _electedCount = 0;
-
-        if ( _onLeaderFailed.has_value() )
-        {
-            _onLeaderFailed.value()();
-        }
-    }
+    void onLeaderFailed();
 
 public:
-    ElectionService( std::unique_ptr< ElectionProtocolBase > election )
-    : _election( std::move( election ) )
-    {
-        _election->registerElectionFailedCallback( [ this ] { onLeaderFailed(); } );
-        _election->registerElectionFinishedCallback( [ this ] { onLeaderElected(); } );
-    }
+    ElectionService( std::unique_ptr< ElectionProtocolBase > election );
 
-    void start( int initialElectionDelay, std::function< void( const Ip6Addr& ) >&& electionFinishedCallback, int electionCyclesBeforeStabilization = 3 )
-    {
-        _electionCyclesBeforeStabilization = electionCyclesBeforeStabilization;
-        _onLeaderSuccess = std::forward< std::function< void( const Ip6Addr& ) > >( electionFinishedCallback );
-        _election->start( initialElectionDelay );
-        _isRunning = true;
-    }
+    void start( int initialElectionDelay, std::function< void( const Ip6Addr& ) >&& electionFinishedCallback, int electionCyclesBeforeStabilization = 3 );
 
-    bool isRunning()
-    {
-        return _isRunning;
-    }
+    bool isRunning();
 
-    bool isElectionComplete()
-    {
-        return _electedCount > _electionCyclesBeforeStabilization;
-    }
+    bool isElectionComplete();
 
-    const Ip6Addr& getLeader()
-    {
-        return _election->getLeader();
-    }
+    const Ip6Addr& getLeader();
 
-    bool registerLeaderFailureCallback( std::function< void() >&& callback )
-    {
-        if ( _onLeaderFailed.has_value() )
-        {
-            return false;
-        }
+    bool registerLeaderFailureCallback( std::function< void() >&& callback );
 
-        _onLeaderFailed = std::forward< std::function< void() > >( callback );
-        return true;
-    }
-
-    bool unregisterLeaderFailureCallback()
-    {
-        if ( !_onLeaderFailed.has_value() )
-        {
-            return false;
-        }
-
-        _onLeaderFailed.reset();
-        return true;
-    }
+    bool unregisterLeaderFailureCallback();
 };
