@@ -33,7 +33,7 @@ public:
 
         std::cout << "Initial ModuleId: " << moduleId << std::endl;
 
-        // Register participants into the naive barrier.
+        // IMPORTANT!!! - Register participants into the naive barrier.
         auto barrierHandle = _manager.functions().getFunctionHandle< Ip6Addr >( 100 ).value();
         auto& barrierImplementation = static_cast< NaiveBarrier& >( barrierHandle.implementation() );
         barrierImplementation.registerParticipant( origin );
