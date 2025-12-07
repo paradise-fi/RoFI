@@ -2,6 +2,7 @@
 
 #include <shared_mutex>
 #include <queue>
+#include <set>
 #include "task.hpp"
 #include "functionModel.hpp"
 #include "taskScheduler.hpp"
@@ -17,8 +18,11 @@ class TaskManager
     std::deque< TaskResultEntry > _taskResults;
     std::map< Ip6Addr, TaskScheduler > _schedulers;
     mutable std::shared_mutex _mutex;
+    std::set< int > _barrierFunctions;
 
     void updateTaskIdIfStale( int newId );
+
+    bool enqueueTaskInternal( const Ip6Addr& addr, std::unique_ptr< TaskBase >&& task, FunctionCompletionType completionType );
 
 public:
     void registerBarrierFunction( int functionId );
@@ -39,14 +43,16 @@ public:
     bool enqueueTask( const Ip6Addr& addr, int functionId, FunctionCompletionType completionType, bool enqueueFront = false )
     {
         auto task = Task< Result >( ++_taskId, TaskStatus::Pending, functionId, enqueueFront );
-        return _schedulers[ addr ].enqueueTask( std::make_unique< TaskBase >( task ), completionType );
+        // return _schedulers[ addr ].enqueueTask( std::make_unique< TaskBase >( task ), completionType );
+        return enqueueTaskInternal( addr, std::make_unique< Task< Result > >( task ), completionType );
     }
 
     template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
     bool enqueueTask( const Ip6Addr& addr, int functionId, int priority, bool enqueueFront, FunctionCompletionType completionType, std::tuple< Arguments... >&& arguments )
     {
         auto task = Task< Result, Arguments... >( ++_taskId, TaskStatus::Pending, functionId, priority, enqueueFront, arguments );
-        return _schedulers[ addr ].enqueueTask( std::make_unique< Task< Result, Arguments... > >( task ), completionType );
+        // return _schedulers[ addr ].enqueueTask( std::make_unique< Task< Result, Arguments... > >( task ), completionType );
+        return enqueueTaskInternal( addr, std::make_unique< Task< Result, Arguments... > >( task ), completionType );
     }
 
     bool enqueueTask( const Ip6Addr& addr, const FunctionConcept& relatedFunction, const uint8_t* buffer );
@@ -66,4 +72,6 @@ public:
     void clearTasks();
 
     void unblockSchedulers( bool hardUnblock = false );
+
+    void unblockScheduler( const Ip6Addr& address, bool hardUnblock = false );
 };

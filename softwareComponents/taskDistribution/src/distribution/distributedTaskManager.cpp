@@ -114,11 +114,13 @@ bool DistributedTaskManager::requestTask()
 
 void DistributedTaskManager::broadcastUnblockSignal()
 {
+    _functionRegistry.unblockTaskSchedulers( true );
     _messaging.sender().broadcastMessage(DistributionMessageType::BlockingTaskRelease, METHOD_ID);
 }
 
-void DistributedTaskManager::sendUnblockSignal( Ip6Addr& receiver )
+void DistributedTaskManager::sendUnblockSignal( const Ip6Addr& receiver )
 {
+    _functionRegistry.unblockTaskScheduler( receiver, true );
     _messaging.sender().sendMessage(DistributionMessageType::BlockingTaskRelease, receiver );
 }
 

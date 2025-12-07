@@ -185,3 +185,8 @@ void FunctionRegistry::unblockTaskSchedulers( bool hardUnblock )
 {
     _taskManager.unblockSchedulers( hardUnblock );
 }
+
+void FunctionRegistry::unblockTaskScheduler( const Ip6Addr& schedulerAddr, bool hardUnblock )
+{
+    _taskManager.unblockScheduler( schedulerAddr, hardUnblock );
+}

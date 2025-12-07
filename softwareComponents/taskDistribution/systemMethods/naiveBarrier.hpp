@@ -1,3 +1,5 @@
+#pragma once
+
 // A simple barrier that requires all of the participants to respond.
 #include "distributedTaskManager.hpp"
 #include "distributedFunction.hpp"

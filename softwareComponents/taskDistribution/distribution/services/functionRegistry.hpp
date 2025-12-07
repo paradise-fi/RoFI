@@ -63,6 +63,7 @@ public:
         std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction = std::make_unique< Func >( function );
         if ( userFunction->functionType() == FunctionType::Barrier )
         {
+            std::cout << "Registering barrier function." << std::endl;
             return registerBarrier( std::move( userFunction ) );
         }
 
@@ -182,6 +183,12 @@ public:
     void clearTasks();
 
     /// @brief Clears all task schedulers for scheduling tasks.
-    /// @param hardUnblock Removes active barrier if true, otherwise the barrier remains active.
+    /// @param hardUnblock Removes active barrier if true, otherwise the barrier remains active and only blocking regular function tasks are removed.
     void unblockTaskSchedulers( bool hardUnblock = false );
+
+    /// @brief Clears specific task scheduler on this module.
+    /// @param schedulerAddr - The address of the schedulder
+    /// @param hardUnblock Removes active barrier if true, otherwise the barrier remains active and only blocking regular function tasks are removed.
+    void unblockTaskScheduler( const Ip6Addr& schedulerAddr, bool hardUnblock = false );
+
 };

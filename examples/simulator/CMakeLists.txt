@@ -8,9 +8,12 @@ add_subdirectory(basicMove)
 add_subdirectory(communication)
 add_subdirectory(networkManager)
 add_subdirectory(election)
+
+# Distribution Manager Examples
 add_subdirectory(distributionSimple)
 add_subdirectory(distributionMemory)
 add_subdirectory(distributionBarrier)
 add_subdirectory(distributionSerializable)
 add_subdirectory(distributionComplex)
 add_subdirectory(distributionBlockingMemory)
+add_subdirectory(distributionBlockingTask)

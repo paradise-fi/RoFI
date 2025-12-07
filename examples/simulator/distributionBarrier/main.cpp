@@ -11,7 +11,6 @@
 #include "distributedTaskManager.hpp"
 #include "initial.hpp"
 #include "fizzbuzz.hpp"
-#include "terminate.hpp"
 #include "implementation/replicatedMemory.hpp"
 #include "exampleLogger.hpp"
 
@@ -62,7 +61,7 @@ void distributionManagerFizzBuzz() {
         *reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     
     // Register logger implementation
-    manager.loggingService().useLogger( ExampleLogger() );
+    // manager.loggingService().useLogger( ExampleLogger() );
 
     // Register the memory implementation - the memory implementation is responsible for 
     // initiating memory-relevant communication, hence why the sender is passed too.
@@ -73,7 +72,6 @@ void distributionManagerFizzBuzz() {
     // Register the distributed functions.
     manager.functions().registerFunction< int >( InitialFunction( id, manager ) );
     manager.functions().registerFunction< FizzBuzzMetaData, int >( FizzBuzz( id, manager ) );
-    manager.functions().registerFunction< bool >( TerminateFunction( terminate, manager ) );
     if ( !manager.functions().registerFunction< Ip6Addr >( NaiveBarrier( addr, manager ) ) )
     {
         std::cout << "Failed to register barrier." << std::endl;

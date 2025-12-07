@@ -9,22 +9,26 @@
 #include <string>
 
 #include "distributedTaskManager.hpp"
-#include "testMemory.hpp"
 #include "exampleLogger.hpp"
 #include "initial.hpp"
-#include "read.hpp"
-#include "sendSave.hpp"
-#include "check.hpp"
-#include "address.cpp"
+#include "blocking.hpp"
+#include "nonBlocking.hpp"
+#include "naiveBarrier.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
 using namespace rofi::leadership;
 using namespace std::chrono_literals;
 
-/// In this simple example, you will learn how to use distributed memory within the memory manager. 
-/// In this example, follower nodes will generate values that will be stored in memory. 
-///The leader will take these values and play the fizzbuzz game with them.
+Ip6Addr createAddress( int id ) {
+    std::stringstream ss;
+    ss << "fc07:0:0:";
+    ss << id;
+    ss << "::1";
+
+    return Ip6Addr( ss.str() );
+}
+/// This example serves to show the semantics of blocking tasks and barrier tasks.
 void distributionManagerFizzBuzz() {
     std::cout << "Starting RoFI Distribution Manager FizzBuzz example with distributed memory and blocking distributed reads\n";
     tcpip_init( nullptr, nullptr );
@@ -40,9 +44,10 @@ void distributionManagerFizzBuzz() {
     net.addAddress( addr, 80, net.interface( "rl0" ) );
     net.setUp();
     
+    
     auto rtProto = net.addProtocol( rofi::net::SimpleReactive() );
     net.setProtocol( *rtProto );
-
+    
     auto messageDistributor = net.addProtocol( rofi::net::MessageDistributor( addr, net ) );
     net.setProtocol( *messageDistributor );
     
@@ -52,45 +57,22 @@ void distributionManagerFizzBuzz() {
     DistributedTaskManager manager(
         std::move( election ), addr,
         *reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ), 500 );
-
+        
     bool terminate = false;
+    bool nonBlockingCalledFirst = false;
 
-    manager.callbacks().registerBlockingCustomMessageCallback( 
-        []( DistributedTaskManager& mgr, const Ip6Addr&, uint8_t* dataBuffer, unsigned int bufferSize )
-        {
-            std::cout << "Blocking message custom callback" << std::endl;
-            MessagingResult result( false, sizeof( int ) );
-            if ( bufferSize > 0 )
-            {
-                result.success = true;
-                int data = as< int >( dataBuffer );
-                int toStore = data + 1;
-                mgr.memory().saveData< int >( std::move( toStore ), data );
-                std::memcpy( result.rawData.data(), &data, result.rawData.size() );
-            }
-            return result;
-        } );
 
     // Register the distributed functions.
     manager.functions().registerFunction< int >( InitialFunction( id, manager ) );
-    manager.functions().registerFunction< int, int >( Read( id, manager ) );
-    manager.functions().registerFunction< int, int >( SendSave( id, manager ) );
-    manager.functions().registerFunction< int, int >( Check( id, manager ) );
-
-    // Register the memory implementation - the memory implementation is responsible for 
-    // initiating memory-relevant communication, hence why the sender is passed too.
-    manager.memory().useMemory( 
-        std::make_unique< TestMemory >( id ) );
+    manager.functions().registerFunction< int, int >( BlockingFunction( id, manager, nonBlockingCalledFirst ) );
+    manager.functions().registerFunction< int, int >( NonBlockingFunction( id, manager, nonBlockingCalledFirst ) );
+    if ( !manager.functions().registerFunction< Ip6Addr >( NaiveBarrier( addr, manager ) ) )
+    {
+        std::cout << "Barrier failed to register." << std::endl;
+    }
 
     // Register logger implementation
     manager.loggingService().useLogger( ExampleLogger() );
-
-    // Register onMemoryStoredMessage - You may use this to detect memory writes, react on them, etc.
-    manager.callbacks().registerOnMemoryStoredCallback(
-        []( int addr, bool, MemoryFacade)
-    {
-        std::cout << "[ON MEMORY STORED CALLBACK] Detected memory storage on address " << addr << std::endl;
-    });
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );

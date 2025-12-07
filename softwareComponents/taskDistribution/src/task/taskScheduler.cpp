@@ -1,8 +1,10 @@
 #include "../../tasks/taskScheduler.hpp"
 
+TaskScheduler::TaskScheduler( std::set< int >& registeredBarrierFunctionIds ) : _registeredBarrierFunctionIds( registeredBarrierFunctionIds ) {}
+
 void TaskScheduler::registerBarrier( int barrierId )
 {
-    _registeredBarrierFunctionId = barrierId;
+    _registeredBarrierFunctionIds.emplace( barrierId );
 }
 
 bool TaskScheduler::schedulerIsBlocked()
@@ -84,7 +86,7 @@ std::unique_ptr< TaskBase > TaskScheduler::clearAndGetActiveTask()
 
 std::optional< std::reference_wrapper< TaskBase > > TaskScheduler::popTask( bool isLeader )
 {
-    if ( _tasks.empty() || ( !isLeader && schedulerIsBlocked() ) )
+    if ( _tasks.empty() || ( isLeader && schedulerIsBlocked() ) )
     {
         return std::nullopt;
     }
@@ -119,10 +121,11 @@ std::optional< std::reference_wrapper< TaskBase > > TaskScheduler::popTask( bool
 bool TaskScheduler::enqueueTask( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType )
 {
     // This is where we figure out the task is a barrier and put it where it belongs.
-    if ( task->functionId() == _registeredBarrierFunctionId )
+    if ( _registeredBarrierFunctionIds.find( task->functionId() ) != _registeredBarrierFunctionIds.end() )
     {
         if ( _activeBarrierTaskId.has_value() )
         {
+            std::cout << "ActiveBarrierTaskId Has Value!" << std::endl;
             return false;
         }
 

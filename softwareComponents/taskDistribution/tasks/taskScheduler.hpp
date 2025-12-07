@@ -10,8 +10,8 @@ class TaskScheduler
 {
     std::vector< TaskEntry > _tasks;
     
-    std::optional< int > _registeredBarrierFunctionId;
     std::optional< int > _activeBarrierTaskId;
+    std::set< int > _registeredBarrierFunctionIds;
 
     std::unique_ptr< TaskEntry > _active;
 
@@ -20,6 +20,8 @@ class TaskScheduler
     bool pushTaskToFront( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType );
 
 public:
+    TaskScheduler( std::set< int >& registeredBarrierFunctionIds );
+
     void registerBarrier( int barrierId );
 
     bool schedulerIsBlocked();

@@ -2,6 +2,7 @@
 
 void TaskManager::registerBarrierFunction( int functionId )
 {
+    _barrierFunctions.emplace( functionId );
     for( auto it = _schedulers.begin(); it != _schedulers.end(); ++it)
     {
         it->second.registerBarrier( functionId );
@@ -43,7 +44,26 @@ bool TaskManager::enqueueTaskRequest( const Ip6Addr& addr )
 
 bool TaskManager::popTaskRequest( Ip6Addr& result )
 {
-    return _taskRequests.pop( result );
+    auto success = _taskRequests.pop( result );
+    if ( !success )
+    {
+        return false;
+    }
+
+    auto scheduler = _schedulers.find( result );
+
+    if ( scheduler == _schedulers.end() )
+    {
+        return true;
+    }
+
+    if ( scheduler->second.schedulerIsBlocked() )
+    {
+        _taskRequests.push( result );
+        return false;
+    }
+
+    return true;
 }
 
 bool TaskManager::anyTaskRequests()
@@ -53,7 +73,9 @@ bool TaskManager::anyTaskRequests()
 
 bool TaskManager::enqueueTask( const Ip6Addr& addr, std::unique_ptr< TaskBase >&&  task, FunctionCompletionType completionType )
 {
-    return _schedulers[ addr ].enqueueTask( std::move( task ), completionType );
+    updateTaskIdIfStale( task->id() );
+
+    return enqueueTaskInternal( addr, std::move( task ), completionType );
 }
 
 bool TaskManager::enqueueTask( const Ip6Addr& addr, const FunctionConcept& relatedFunction, const uint8_t* buffer )
@@ -61,7 +83,8 @@ bool TaskManager::enqueueTask( const Ip6Addr& addr, const FunctionConcept& relat
     auto task = relatedFunction.createTask();
     task->fillFromBuffer( buffer );
     updateTaskIdIfStale( task->id() );
-    return _schedulers[ addr ].enqueueTask( std::move( task ), relatedFunction.completionType() );
+
+    return enqueueTaskInternal( addr, std::move( task ), relatedFunction.completionType() );
 }
 
 bool TaskManager::setInitialTask( const FunctionConcept& relatedFunction )
@@ -133,10 +156,24 @@ std::unique_ptr< TaskBase > TaskManager::finishAndGetActiveTask ( const Ip6Addr&
 
 void TaskManager::unblockSchedulers( bool hardUnblock )
 {
+    std::string hardUb = hardUnblock ? std::string("True") : std::string("False");
     for( auto it = _schedulers.begin(); it != _schedulers.end(); ++it)
     {
+        std::cout << "Unblock Task Schedulers with hardUnblock as " << hardUb << std::endl;
         it->second.clearActiveTask( hardUnblock );
     }
+}
+
+void TaskManager::unblockScheduler( const Ip6Addr& address, bool hardUnblock )
+{
+    auto scheduler = _schedulers.find( address );
+
+    if ( scheduler == _schedulers.end() )
+    {
+        return;
+    }
+    
+    scheduler->second.clearActiveTask( hardUnblock );
 }
 
 void TaskManager::clearTasks()
@@ -149,4 +186,21 @@ void TaskManager::clearTasks()
 void TaskManager::updateTaskIdIfStale( int newId )
 {
     _taskId = _taskId < newId ? newId : _taskId;
+}
+
+bool TaskManager::enqueueTaskInternal( const Ip6Addr& addr, std::unique_ptr< TaskBase >&& task, FunctionCompletionType completionType )
+{
+    auto scheduler = _schedulers.find( addr );
+    if ( scheduler != _schedulers.end() )
+    {
+        return scheduler->second.enqueueTask( std::move( task ), completionType );
+    }
+
+    auto emplacedScheduler = _schedulers.emplace( addr, TaskScheduler( _barrierFunctions ) );
+    if ( !emplacedScheduler.second )
+    {
+        return false;
+    }
+
+    return emplacedScheduler.first->second.enqueueTask( std::move( task ), completionType );
 }

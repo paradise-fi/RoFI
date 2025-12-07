@@ -69,7 +69,7 @@ public:
 
     void broadcastUnblockSignal();
 
-    void sendUnblockSignal( Ip6Addr& receiver );
+    void sendUnblockSignal( const Ip6Addr& receiver );
 
     /// @brief Used to manually send a function execution order to a module. This should be done from the leader to the follower. You do NOT need to use this if you use functionHandle instead.
     template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments > 
