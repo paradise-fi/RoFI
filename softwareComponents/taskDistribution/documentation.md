@@ -177,7 +177,7 @@ using OnTaskRequestCallback = std::function< bool( DistributedTaskManager& manag
 using OnTaskFailureCallback = std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, const int functionId ) >;
 using OnCustomMessageCallback = std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
 using OnCustomMessageBlockingCallback = std::function< MessagingResult( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
-using OnMemoryStoredCallback = std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) >;
+using OnMemoryStoredCallback = std::function< void( int memoryAddress, bool isLeaderMemory, MemoryFacade memory ) >;
 ```
 
 #### Leader Failure Callback
@@ -220,11 +220,11 @@ These callbacks are used for non-blocking and blocking custom messages respectiv
 
 #### OnMemoryStored Callback
 ```c++
-using OnMemoryStoredCallback = std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) >;
+using OnMemoryStoredCallback = std::function< void( int memoryAddress, bool isLeaderMemory, MemoryFacade memory ) >;
 virtual void registerOnMemoryStoredCallback( OnMemoryStoredCallback&& callback ) = 0;
 ```
 
-This callback is used for the event that memory is written into in this module. This callback is invoked in the DistributedMemoryService subsystem of the task manager.
+This callback is used for the event that memory is written into in this module. This callback is invoked in the DistributedMemoryService subsystem of the task manager. 
 
 <hr>
 

@@ -3,6 +3,7 @@
 #include "lwip++.hpp"
 #include "../messaging/messagingResult.hpp"
 #include "../services/electionService.hpp"
+#include "../services/memoryFacade.hpp"
 
 class DistributedTaskManager;
 class DistributedMemoryService;
@@ -14,7 +15,7 @@ public:
     using OnTaskFailureCallback = std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, const int functionId ) >;
     using OnCustomMessageCallback = std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
     using OnCustomMessageBlockingCallback = std::function< MessagingResult( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
-    using OnMemoryStoredCallback = std::function< void( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) >;
+    using OnMemoryStoredCallback = std::function< void( int memoryAddress, bool isLeaderMemory, MemoryFacade memory ) >;
 
     /// @brief Registers a callback that is called when leader election fails.
     /// @param callback The callback function.
