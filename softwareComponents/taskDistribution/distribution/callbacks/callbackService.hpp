@@ -9,11 +9,26 @@
 class CallbackService : public CallbackFacade, public SystemCallbackManager
 {
 private:
-    OnTaskRequestCallback _onTaskRequest;
-    OnTaskFailureCallback _onTaskFailure;
-    OnCustomMessageCallback _onCustomMessage;
-    OnCustomMessageBlockingCallback _onCustomMessageBlocking;
-    OnMemoryStoredCallback _onMemoryStored;
+    std::function< bool( DistributedTaskManager& manager,
+                         const rofi::hal::Ip6Addr& requester ) > _onTaskRequest;
+
+    std::function< void( DistributedTaskManager& manager,
+                             const rofi::hal::Ip6Addr& sender,
+                             const int functionId ) > _onTaskFailure;
+
+    std::function< void( DistributedTaskManager& manager,
+                         const rofi::hal::Ip6Addr& sender,
+                         uint8_t* data,
+                         const size_t size ) > _onCustomMessage;
+
+    std::function< MessagingResult( DistributedTaskManager& manager,
+                                    const rofi::hal::Ip6Addr& sender,
+                                    uint8_t* data,
+                                    const size_t size ) > _onCustomMessageBlocking;
+
+    std::function< void( int memoryAddress,
+                         bool isLeaderMemory,
+                         MemoryFacade memory ) > _onMemoryStored;
 
     ElectionService& _electionService;
     LoggingService& _loggingService;
@@ -42,13 +57,29 @@ public:
     
     /// @brief Registers a callback that is called when a task request is received.
     /// @param callback Your custom callback. Returns true if the task request pipeline should not continue after this callback (e.g. to avoid double-scheduling of a task)
-    virtual void registerTaskRequestCallback( OnTaskRequestCallback&& callback ) override;
+    virtual void registerTaskRequestCallback(
+        std::function< bool( DistributedTaskManager& manager,
+                             const rofi::hal::Ip6Addr& requester ) >&& callback ) override;
 
-    virtual void registerTaskFailedCallback( OnTaskFailureCallback&& callback ) override;
+    virtual void registerTaskFailedCallback( 
+        std::function< void( DistributedTaskManager& manager,
+                             const rofi::hal::Ip6Addr& sender,
+                             const int functionId ) >&& callback ) override;
 
-    virtual void registerNonBlockingCustomMessageCallback( OnCustomMessageCallback&& callback ) override;
+    virtual void registerNonBlockingCustomMessageCallback( 
+        std::function< void( DistributedTaskManager& manager,
+                             const rofi::hal::Ip6Addr& sender,
+                             uint8_t* data,
+                             const size_t size ) >&& callback ) override;
 
-    virtual void registerBlockingCustomMessageCallback( OnCustomMessageBlockingCallback&& callback ) override;
+    virtual void registerBlockingCustomMessageCallback(
+        std::function< MessagingResult( DistributedTaskManager& manager,
+                                        const rofi::hal::Ip6Addr& sender,
+                                        uint8_t* data,
+                                        const size_t size ) >&& callback ) override;
 
-    virtual void registerOnMemoryStoredCallback( OnMemoryStoredCallback&& callback ) override;
+    virtual void registerOnMemoryStoredCallback(
+        std::function< void( int memoryAddress,
+                             bool isLeaderMemory,
+                             MemoryFacade memory ) >&& callback ) override;
 };
