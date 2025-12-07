@@ -43,7 +43,7 @@ void CallbackService::invokeOnMemoryStored( int memoryAddress, bool isLeaderMemo
 {
     if ( _onMemoryStored )
     {
-        _onMemoryStored( memoryAddress, isLeaderMemory, memoryService );
+        _onMemoryStored( memoryAddress, isLeaderMemory, MemoryFacade( memoryService ) );
     }
 }
 
