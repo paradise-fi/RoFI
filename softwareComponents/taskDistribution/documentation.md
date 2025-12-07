@@ -171,13 +171,22 @@ These methods allow for manual requests of task executions and task scheduling. 
 Provides access to registration of callback mechanisms within the distributed task manager.
 
 #### Callback Types
-This is a list of all the callback types available within the task manager.
+This is a list of all the callback types available within the task manager. Note that these usings are not actually present within the code and serve simply
 ```c++
-using OnTaskRequestCallback = std::function< bool( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& requester ) >;
-using OnTaskFailureCallback = std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, const int functionId ) >;
-using OnCustomMessageCallback = std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
-using OnCustomMessageBlockingCallback = std::function< MessagingResult( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
-using OnMemoryStoredCallback = std::function< void( int memoryAddress, bool isLeaderMemory, MemoryFacade memory ) >;
+// onTaskRequestCallback
+std::function< bool( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& requester ) >;
+
+// onTaskFailureCallback
+std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, const int functionId ) >;
+
+// onCustomMessageCallback
+std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
+
+// onCustomMessageBlockingCallback
+std::function< MessagingResult( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
+
+// onMemoryStoredCallback
+std::function< void( int memoryAddress, bool isLeaderMemory, MemoryFacade memory ) >;
 ```
 
 #### Leader Failure Callback
@@ -193,38 +202,49 @@ These methods are used to register (unregister) a callback that is called in the
 
 #### Task Request Callback
 ```c++
-using OnTaskRequestCallback = std::function< bool( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& requester ) >;
-virtual void registerTaskRequestCallback( OnTaskRequestCallback&& callback ) = 0;
+virtual void registerTaskRequestCallback( 
+    std::function< bool( DistributedTaskManager& manager,
+                         const rofi::hal::Ip6Addr& requester ) >&& callback ) = 0;
 ```
 
 Used to register a callback for the event of a task request message being processed by the module. The boolean return value of the OnTaskRequestCallback function informs the distributed task manager about whether it should still continue with the task request pipeline, namely whether it should put the task into its task scheduler or not. Task scheduling is **not** performed if OnTaskRequestCallback returns **true**.
 
 #### Task Failed Callback
 ```c++
-using OnTaskFailureCallback = std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, const int functionId ) >;
-virtual void registerTaskFailedCallback( OnTaskFailureCallback&& callback ) = 0;
+virtual void registerTaskFailedCallback( 
+    std::function< void( DistributedTaskManager& manager,
+                         const rofi::hal::Ip6Addr& sender,
+                         const int functionId ) >&& callback ) = 0;
 ```
 
 Used to register a callback for the event of a task failure message being processed by the module. Note that this callback is invoked for exceptional failure, namely the event of a function not being registered at the executing module. This callback can be, for example, used to log the issue at the leader side and then perform a graceful shutdown of the whole system.
 
 #### Custom Message Callbacks
 ```c++
-using OnCustomMessageCallback = std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
-virtual void registerNonBlockingCustomMessageCallback( OnCustomMessageCallback&& callback ) = 0;
+virtual void registerNonBlockingCustomMessageCallback( 
+    std::function< void( DistributedTaskManager& manager,
+                         const rofi::hal::Ip6Addr& sender,
+                         uint8_t* data,
+                         const size_t size ) >&& callback ) = 0;
 
-using OnCustomMessageBlockingCallback = std::function< MessagingResult( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) >;
-virtual void registerBlockingCustomMessageCallback( OnCustomMessageBlockingCallback&& callback ) = 0;
+virtual void registerBlockingCustomMessageCallback( 
+    std::function< MessagingResult( DistributedTaskManager& manager,
+                                    const rofi::hal::Ip6Addr& sender,
+                                    uint8_t* data,
+                                    const size_t size ) >&& callback ) = 0;
 ```
 
 These callbacks are used for non-blocking and blocking custom messages respectively. Custom messages serve as a mechanism for implementing a user's own type of messaging without having to handle low-level details of networking.
 
 #### OnMemoryStored Callback
 ```c++
-using OnMemoryStoredCallback = std::function< void( int memoryAddress, bool isLeaderMemory, MemoryFacade memory ) >;
-virtual void registerOnMemoryStoredCallback( OnMemoryStoredCallback&& callback ) = 0;
+virtual void registerOnMemoryStoredCallback( 
+    std::function< void( int memoryAddress,
+                         bool isLeaderMemory,
+                         MemoryFacade memory ) >&& callback ) = 0;
 ```
 
-This callback is used for the event that memory is written into in this module. This callback is invoked in the DistributedMemoryService subsystem of the task manager. 
+This callback is used for the event that memory is written into in this module. This callback is invoked in the DistributedMemoryService subsystem of the task manager.
 
 <hr>
 

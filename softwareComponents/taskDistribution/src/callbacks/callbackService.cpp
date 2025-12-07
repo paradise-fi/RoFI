@@ -57,27 +57,50 @@ bool CallbackService::unregisterLeaderFailureCallback()
     return _electionService.unregisterLeaderFailureCallback();
 }
 
-void CallbackService::registerTaskRequestCallback( OnTaskRequestCallback&& callback )
+void CallbackService::registerTaskRequestCallback( 
+        std::function< bool( DistributedTaskManager& manager,
+                             const rofi::hal::Ip6Addr& requester ) >&& callback )
 { 
-    _onTaskRequest = std::forward< OnTaskRequestCallback >( callback );
+    _onTaskRequest = std::forward< 
+        std::function< bool( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& requester ) > >( callback );
 }
 
-void CallbackService::registerTaskFailedCallback( OnTaskFailureCallback&& callback )
+void CallbackService::registerTaskFailedCallback(  
+        std::function< void( DistributedTaskManager& manager,
+                             const rofi::hal::Ip6Addr& sender,
+                             const int functionId ) >&& callback )
 { 
-    _onTaskFailure = std::forward< OnTaskFailureCallback >( callback );
+    _onTaskFailure = std::forward<
+        std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, 
+                             const int functionId ) > >( callback );
 }
 
-void CallbackService::registerNonBlockingCustomMessageCallback( OnCustomMessageCallback&& callback )
+void CallbackService::registerNonBlockingCustomMessageCallback( 
+        std::function< void( DistributedTaskManager& manager,
+                             const rofi::hal::Ip6Addr& sender,
+                             uint8_t* data,
+                             const size_t size ) >&& callback )
 { 
-    _onCustomMessage = std::forward< OnCustomMessageCallback >( callback );
+    _onCustomMessage = std::forward<
+        std::function< void( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, const size_t size ) > >( callback );
 }
 
-void CallbackService::registerBlockingCustomMessageCallback( OnCustomMessageBlockingCallback&& callback )
+void CallbackService::registerBlockingCustomMessageCallback( 
+        std::function< MessagingResult( DistributedTaskManager& manager,
+                                        const rofi::hal::Ip6Addr& sender,
+                                        uint8_t* data,
+                                        const size_t size ) >&& callback )
 { 
-    _onCustomMessageBlocking = std::forward< OnCustomMessageBlockingCallback >( callback );
+    _onCustomMessageBlocking = std::forward< 
+        std::function< MessagingResult( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender,
+                                        uint8_t* data, const size_t size ) > >( callback );
 }
 
-void CallbackService::registerOnMemoryStoredCallback( OnMemoryStoredCallback&& callback )
+void CallbackService::registerOnMemoryStoredCallback( 
+        std::function< void( int memoryAddress,
+                             bool isLeaderMemory,
+                             MemoryFacade memory ) >&& callback )
 {
-    _onMemoryStored = std::forward< OnMemoryStoredCallback >( callback );
+    _onMemoryStored = std::forward<
+        std::function< void( int memoryAddress, bool isLeaderMemory, MemoryFacade memory ) >>( callback );
 }
