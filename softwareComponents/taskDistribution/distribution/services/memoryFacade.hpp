@@ -7,25 +7,17 @@ private:
     DistributedMemoryService& _memoryService;
 
 public:
-    MemoryFacade( DistributedMemoryService& memoryService ) : _memoryService( memoryService ) {}
-    bool isMemoryRegistered()
-    {
-        return _memoryService.isMemoryRegistered();
-    }
+    MemoryFacade( DistributedMemoryService& memoryService );
+
+    bool isMemoryRegistered();
 
     /// @brief Removes / deregisters the shared memory implementation from DistributedMemoryService.
     /// @return True if the memory implementation was deregistered, otherwise false.
-    bool deleteMemory()
-    {
-        return _memoryService.deleteMemory();
-    }
+    bool deleteMemory();
 
     /// @brief Checks whether the memory, in this instant, is going to process any more write operations that are queued.
     /// @return True if there are no more pending writes.
-    bool isMemoryStable()
-    {
-        return _memoryService.isMemoryStable();
-    }
+    bool isMemoryStable();
 
     /// @brief Save data in memory.
     /// @param data The data to be stored.
@@ -40,51 +32,27 @@ public:
     /// @brief Reads data from specified address in memory.
     /// @param address The memory address to be read
     /// @return MemoryReadResult struct containing information about read success and a method for extracting the data read.
-    MemoryReadResult readData( int address )
-    {
-        return _memoryService.readData( address );
-    }
+    MemoryReadResult readData( int address );
     
     /// @brief Remove data at specified address
     /// @param address The address of the data in memory
-    void removeData( int address )
-    {
-        return _memoryService.removeData( address );
-    }
+    void removeData( int address );
     
     /// @brief Remove all data from this module's memory.
-    void clearLocalMemory()
-    {
-        return _memoryService.clearLocalMemory();
-    }
+    void clearLocalMemory();
 
     /// @brief Remove all entries in this module's storage queue.
-    void clearLocalQueue()
-    {
-        return _memoryService.clearLocalQueue();
-    }
+    void clearLocalQueue();
     
-    MemoryReadResult readMetadata( int address, const std::string& key )
-    {
-        return _memoryService.readMetadata( address, key );
-    }
+    MemoryReadResult readMetadata( int address, const std::string& key );
 
-    bool saveMetadata( int address, const std::string& key, uint8_t* metadata, std::size_t metadataSize )
-    {
-        return _memoryService.saveMetadata( address, key, metadata, metadataSize );
-    }
+    bool saveMetadata( int address, const std::string& key, uint8_t* metadata, std::size_t metadataSize );
 
-    void removeMetadata( int address, const std::string& key )
-    {
-        return _memoryService.removeMetadata( address, key );
-    }
+    void removeMetadata( int address, const std::string& key );
     
     /// @brief Retrieves the internal implementation of memory for custom functionality that may require this access.
     /// @return NULLOPT if no memory has been registered. Otherwise a reference for the memory.
-    std::optional< std::reference_wrapper< DistributedMemoryBase > > memory()
-    {
-        return _memoryService.memory();
-    }
+    std::optional< std::reference_wrapper< DistributedMemoryBase > > memory();
 
     /// @brief Registers a shared memory implementation in the memory service. Only one implementation may be registered at a time.
     /// @tparam Memory
