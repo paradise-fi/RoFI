@@ -83,7 +83,7 @@ void distributionManagerFizzBuzz() {
         std::make_unique< TestMemory >( id ) );
 
     // Register logger implementation
-    manager.useLogger( ExampleLogger() );
+    manager.loggingService().useLogger( ExampleLogger() );
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );

@@ -45,12 +45,6 @@ public:
         std::unique_ptr< udp_pcb > pcb,
         int blockingMessageTimeoutMs = 300 ); 
 
-    template< std::derived_from< LoggerBase > Logger >
-    void useLogger( const Logger& logger )
-    {
-        _loggingService.useLogger( logger );
-    }
-
     CallbackFacade& callbacks();
 
     [[nodiscard]] MemoryFacade memory();

@@ -62,7 +62,7 @@ void distributionManagerFizzBuzz() {
         *reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     
     // Register logger implementation
-    manager.useLogger( ExampleLogger() );
+    manager.loggingService().useLogger( ExampleLogger() );
 
     // Register the memory implementation - the memory implementation is responsible for 
     // initiating memory-relevant communication, hence why the sender is passed too.
