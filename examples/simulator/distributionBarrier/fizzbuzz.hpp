@@ -46,20 +46,20 @@ public:
     /// @return A function result structure, which contains both the result value and whether the function is considered a success.
     virtual FunctionResult< FizzBuzzMetaData > execute( int memoryAddress ) override 
     {
-        std::cout << "FizzBuzz Memory Address: " << memoryAddress << std::endl;
         MemoryReadResult result = _manager.memory().readData( memoryAddress );
         int resultValue;
         if ( !result.success )
         {
-            std::cout << "FizzBuzz value not in memory, generating..." << std::endl;
             resultValue = _identity + ( memoryAddress * _identity );
+            std::cout << "Fizzbuzz value not in memory at address " << memoryAddress << ", generated and stored " << resultValue << " there." << std::endl;
         }
         else
         {
-            std::cout << "Value in memory slot " << memoryAddress << ": " << result.data< int >() << std::endl;
-            resultValue = _identity + ( result.data< int >() * _identity );
+            int previous = result.data< int >();
+            resultValue = _identity + (previous * _identity );
+            std::cout << "Fizbuzz value " << previous << " found in memory slot " << memoryAddress << ", updating and storing value " << resultValue << "there." << std::endl;
         }
-        std::cout << "FizzBuzz Value " << resultValue << " will be stored to memory slot " << memoryAddress << std::endl;
+
         _manager.memory().saveData< int >( std::forward< int >( resultValue ), memoryAddress );
 
         auto metaData = FizzBuzzMetaData{ memoryAddress, _identity };
@@ -71,9 +71,7 @@ public:
     {
         if ( fizzbuzzLimit <= fizzBuzzOps )
         {
-            std::cout << "Example complete. Terminating pipeline." << std::endl;
-            auto terminateHandle = _manager.functions().getFunctionHandle< bool >( 101 ).value();
-            terminateHandle( origin, 1, false, std::tuple<>() );
+            std::cout << "Example complete for " << origin << ". Terminating pipeline." << std::endl;
             return false;
         }
         
@@ -121,12 +119,14 @@ public:
         }
         std::cout << std::endl;
 
+        std::cout << "Invoking the barrier." << std::endl;
         auto barrierHandle = _manager.functions().getFunctionHandle< Ip6Addr >( 100 ).value();
         if ( !barrierHandle( origin, 1, false, std::tuple<>()) )
         {
-            std::cout << "Execution of function " << functionName() << " failed." << std::endl;
+            std::cout << "Execution of barrier function failed." << std::endl;
         }
 
+        std::cout << "Invoking new fizzbuzz."<< std::endl;
         auto fizzbuzzHandle = _manager.functions().getFunctionHandle< FizzBuzzMetaData, int >( 1 ).value();
         if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( getNextMemorySlotAddress( data.value().value ) ) ) )
         {
