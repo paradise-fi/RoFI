@@ -80,7 +80,7 @@ void distributionManagerFizzBuzz() {
         std::move( election ), addr,
         *reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
     
-    manager.useLogger( ExampleLogger() );
+    manager.loggingService().useLogger( ExampleLogger() );
 
     std::set< Ip6Addr > requesters;
 
