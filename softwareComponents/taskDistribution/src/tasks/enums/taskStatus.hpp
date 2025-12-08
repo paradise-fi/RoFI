@@ -1,6 +1,6 @@
 #pragma once
 
-enum TaskStatus {
+enum class TaskStatus {
     Pending, // Default status
     Complete, // Returned with a success
     Failed, // Returned with a failure

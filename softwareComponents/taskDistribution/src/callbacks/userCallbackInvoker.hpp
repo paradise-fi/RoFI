@@ -2,7 +2,7 @@
 #include "lwip++.hpp"
 #include "../messaging/messagingResult.hpp"
 
-enum CallbackType
+enum class CallbackType
 {
     TaskRequestCb,
     TaskFailureCb,

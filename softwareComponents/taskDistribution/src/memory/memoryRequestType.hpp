@@ -1,6 +1,6 @@
 #include "../distribution/distributionMessageType.hpp"
 
-enum MemoryRequestType
+enum class MemoryRequestType
 {
     MemoryDelete,
     MemoryWrite,

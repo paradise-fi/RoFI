@@ -1,13 +1,6 @@
 #include "../../include/serializable.hpp"
+#include "enums/functionResultType.hpp"
 #include <optional>
-
-enum FunctionResultType
-{
-    SUCCESS,
-    FAILURE,
-    TRY_AGAIN,
-    TRY_AGAIN_LOCAL,
-};
 
 template< SerializableOrTrivial Result >
 struct FunctionResult
