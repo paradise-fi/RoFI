@@ -1,4 +1,4 @@
-#include "../../distribution/messaging/messageReceiver.hpp"
+#include "messageReceiver.hpp"
 
 static void recv_message( void* receiver, 
         struct udp_pcb* pcb,

@@ -1,4 +1,4 @@
-#include "../../../systemMethods/exampleLogger.hpp"
+#include "../../../include/systemMethods/exampleLogger.hpp"
 
 ExampleLogger::ExampleLogger() : _logLevel( LogLevel::Info ) {}
 ExampleLogger::ExampleLogger( LogLevel logLevel ) : _logLevel( logLevel ) {}

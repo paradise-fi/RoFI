@@ -11,8 +11,8 @@
 #include "distributedTaskManager.hpp"
 #include "initial.hpp"
 #include "fizzbuzz.hpp"
-#include "implementation/replicatedMemory.hpp"
-#include "exampleLogger.hpp"
+#include "systemMethods/replicatedMemory.hpp"
+#include "systemMethods/exampleLogger.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;

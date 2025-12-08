@@ -10,7 +10,7 @@
 
 #include "distributedTaskManager.hpp"
 #include "testMemory.hpp"
-#include "exampleLogger.hpp"
+#include "systemMethods/exampleLogger.hpp"
 #include "initial.hpp"
 #include "read.hpp"
 #include "sendSave.hpp"

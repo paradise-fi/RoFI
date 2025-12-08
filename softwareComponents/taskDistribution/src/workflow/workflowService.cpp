@@ -1,4 +1,4 @@
-#include "../../distribution/services/workflowService.hpp"
+#include "workflowService.hpp"
 
 WorkFlowService::WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService,
     LoggingService& loggingService, CustomMessageQueueManager& customMessageQueueManager, MessageDispatcher& messageDispatcher )

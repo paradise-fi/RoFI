@@ -9,7 +9,7 @@
 #include <string>
 
 #include "distributedTaskManager.hpp"
-#include "exampleLogger.hpp"
+#include "systemMethods/exampleLogger.hpp"
 #include "initial.hpp"
 #include "disconnect.hpp"
 

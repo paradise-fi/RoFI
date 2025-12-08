@@ -1,4 +1,4 @@
-#include "../../distribution/services/electionService.hpp"
+#include "electionService.hpp"
 
 ElectionService::ElectionService( std::unique_ptr< ElectionProtocolBase > election )
 : _election( std::move( election ) )

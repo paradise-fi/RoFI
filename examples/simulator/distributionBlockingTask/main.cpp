@@ -9,11 +9,11 @@
 #include <string>
 
 #include "distributedTaskManager.hpp"
-#include "exampleLogger.hpp"
+#include "systemMethods/exampleLogger.hpp"
 #include "initial.hpp"
 #include "blocking.hpp"
 #include "nonBlocking.hpp"
-#include "naiveBarrier.hpp"
+#include "systemMethods/naiveBarrier.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;

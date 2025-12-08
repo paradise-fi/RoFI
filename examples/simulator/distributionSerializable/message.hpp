@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "serializable/serializable.hpp"
+#include "serializable.hpp"
 #include <cstring>
 
 /// @brief The serializable 'interface' allows us to send more complex structures over the network, provided we implement our own serialization/deserialization.

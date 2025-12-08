@@ -1,4 +1,4 @@
-#include "../../distribution/distributedTaskManager.hpp"
+#include "../../include/distributedTaskManager.hpp"
 
 DistributedTaskManager::DistributedTaskManager(
     std::unique_ptr< ElectionProtocolBase > election,

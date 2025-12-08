@@ -1,4 +1,4 @@
-#include "../../memory/memoryRequestType.hpp"
+#include "memoryRequestType.hpp"
 
 MemoryRequestType mapMessageToMemoryRequest( const DistributionMessageType messageType )
 {

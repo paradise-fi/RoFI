@@ -1,4 +1,4 @@
-#include "../../../memory/implementation/replicatedMemory.hpp"
+#include "../../../include/systemMethods/replicatedMemory.hpp"
 
 MemoryStorageBehavior ReplicatedMemory::storageBehavior() const
 {

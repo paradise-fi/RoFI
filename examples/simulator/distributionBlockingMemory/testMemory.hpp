@@ -1,7 +1,6 @@
 #pragma once
 
 #include <shared_mutex>
-#include "../distribution/messaging/messageSender.hpp"
 #include "distributedMemoryBase.hpp"
 #include <map>
 #include "address.cpp"

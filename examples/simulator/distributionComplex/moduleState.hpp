@@ -1,7 +1,7 @@
 #pragma once
 
 #include "lwip++.hpp"
-#include "serializable/serializable.hpp"
+#include "serializable.hpp"
 #include "atoms/util.hpp"
 #include <vector>
 #include <string>
