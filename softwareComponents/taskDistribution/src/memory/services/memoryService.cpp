@@ -1,4 +1,4 @@
-#include "../../../distribution/services/memoryService.hpp"
+#include "memoryService.hpp"
 
 DistributedMemoryService::DistributedMemoryService( MessageDistributor& distributor, MessagingService& messaging,
     Ip6Addr& currentModuleAddress, LoggingService& loggingService, 

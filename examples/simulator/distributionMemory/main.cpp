@@ -9,8 +9,8 @@
 #include <string>
 
 #include "distributedTaskManager.hpp"
-#include "implementation/replicatedMemory.hpp"
-#include "exampleLogger.hpp"
+#include "systemMethods/replicatedMemory.hpp"
+#include "systemMethods/exampleLogger.hpp"
 #include "initial.hpp"
 #include "fizzbuzz.hpp"
 #include "cleanup.hpp"

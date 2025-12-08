@@ -1,4 +1,4 @@
-#include "../../distribution/services/messagingService.hpp"
+#include "messagingService.hpp"
 
 MessagingService::MessagingService(
     Ip6Addr& address,

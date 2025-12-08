@@ -1,4 +1,4 @@
-#include "../../distribution/messaging/customMessageQueueManager.hpp"
+#include "customMessageQueueManager.hpp"
 
 CustomMessageQueueManager::CustomMessageQueueManager( UserCallbackInvoker& callbackInvoker, MessagingService& messagingService )
 : _callbackInvoker( callbackInvoker ), _messagingService( messagingService ) {}

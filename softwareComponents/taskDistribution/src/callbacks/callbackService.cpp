@@ -1,4 +1,4 @@
-#include "../distribution/callbacks/callbackService.hpp"
+#include "callbackService.hpp"
 
 CallbackService::CallbackService( ElectionService& electionService, LoggingService& loggingService )
     : _electionService( electionService ), _loggingService( loggingService ) {}
