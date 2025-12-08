@@ -1,0 +1,1 @@
+This example should be run with only three modules, it is not intended to run with less or more modules.
