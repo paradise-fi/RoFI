@@ -1,6 +1,6 @@
 #pragma once
 
-enum DistributionMessageType {
+enum class DistributionMessageType {
     TaskRequest,
     TaskAssignment,
     TaskResult,
