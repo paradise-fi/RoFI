@@ -135,14 +135,14 @@ void DistributedTaskManager::onElectionSuccesful( const Ip6Addr& leader )
 
     if ( _address == leader )
     {
-        _loggingService.logInfo( "I have been elected as the leader." );
+        _loggingService.logInfo( "I have been elected as the leader.", LogVerbosity::Low );
         return;
     }
 
     _functionRegistry.clearTasks();
     std::ostringstream stream;
     stream << "I am a follower of " << leader;
-    _loggingService.logInfo( stream.str() );
+    _loggingService.logInfo( stream.str(), LogVerbosity::Low );
     requestTask();
 }
 
