@@ -83,8 +83,8 @@ void distributionManagerFizzBuzz() {
         std::make_unique< TestMemory >( id ) );
 
     // Register logger implementation
-    manager.loggingService().useLogger( ExampleLogger() );
-
+    manager.loggingService().useLogger( ExampleLogger(), LogVerbosity::High );
+    
     // Register onMemoryStoredMessage - You may use this to detect memory writes, react on them, etc.
     manager.callbacks().registerOnMemoryStoredCallback(
         []( int addr, bool, MemoryFacade)

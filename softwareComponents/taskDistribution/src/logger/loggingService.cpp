@@ -1,8 +1,13 @@
 #include "loggingService.hpp"
 
-void LoggingService::logInfo( const std::string& message )
+void LoggingService::logInfo( const std::string& message, LogVerbosity messageVerbosityLevel )
 {
     if ( _logger == nullptr )
+    {
+        return;
+    }
+
+    if ( messageVerbosityLevel > _verbosity )
     {
         return;
     }

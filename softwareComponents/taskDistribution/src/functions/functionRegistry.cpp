@@ -81,7 +81,7 @@ void FunctionRegistry::processTaskResultQueue()
     if ( reactionResult == FunctionResultType::TRY_AGAIN_LOCAL )
     {
         
-        _loggingService.logInfo( "processTaskResultQueue - Task result placed back in queue." );
+        _loggingService.logInfo( "processTaskResultQueue - Task result placed back in queue.", LogVerbosity::High );
         if ( !_taskManager.enqueueTaskResult( std::move( taskResultOptional->task ), taskResultOptional->origin, true ) )
         {
             _loggingService.logError( "processTaskResultQueue - Failed to enqueue task result." );

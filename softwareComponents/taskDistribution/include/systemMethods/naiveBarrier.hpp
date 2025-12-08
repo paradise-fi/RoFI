@@ -21,13 +21,13 @@ public:
     {
         std::ostringstream stream;
         stream << functionName() << " :Registering participant " << participant << std::endl;
-        _manager.loggingService().logInfo( stream.str() );
+        _manager.loggingService().logInfo( stream.str(), LogVerbosity::High );
 
         _participants.insert( participant );
     }
 
     virtual FunctionResult< Ip6Addr > execute() override {
-        _manager.loggingService().logInfo("Executing NaiveBarrier.");
+        _manager.loggingService().logInfo("Reached NaiveBarrier.", LogVerbosity::Medium );
         return FunctionResult< Ip6Addr >( _address, FunctionResultType::SUCCESS );
     }
 
@@ -37,12 +37,12 @@ public:
 
         std::ostringstream stream;
         stream << "NaiveBarrier reached by " << origin;
-        _manager.loggingService().logInfo(stream.str());
+        _manager.loggingService().logInfo( stream.str(), LogVerbosity::Medium );
         
         if (_reached == _participants)
         {
             _reached.clear();
-            _manager.loggingService().logInfo("NaiveBarrier Unblocking.");
+            _manager.loggingService().logInfo( "NaiveBarrier Unblocking.", LogVerbosity::Medium );
             _manager.broadcastUnblockSignal();
         }
 
