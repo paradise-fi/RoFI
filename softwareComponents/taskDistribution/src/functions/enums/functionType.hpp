@@ -1,6 +1,6 @@
 #pragma once
 
-enum FunctionType
+enum class FunctionType
 {
     Regular, // Registers the function as a regular function
     Barrier, // Registers the function as a barrier function
