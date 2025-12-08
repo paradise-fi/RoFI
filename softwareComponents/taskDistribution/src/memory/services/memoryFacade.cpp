@@ -1,4 +1,4 @@
-#include "../../../distribution/services/memoryFacade.hpp"
+#include "../../../include/memoryFacade.hpp"
 
 MemoryFacade::MemoryFacade( DistributedMemoryService& memoryService ) : _memoryService( memoryService ) {}
     

@@ -1,7 +1,7 @@
 #include "distributedTaskManager.hpp"
 #include "distributedFunction.hpp"
 #include "functionHandle.hpp"
-#include "naiveBarrier.hpp"
+#include "systemMethods/naiveBarrier.hpp"
 #include "message.hpp"
 
 /// @brief The initial function is best used to handle distributed initialization. In this example, it does not do much

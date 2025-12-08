@@ -1,4 +1,4 @@
-#include "../../distribution/distributionMessageType.hpp"
+#include "distributionMessageType.hpp"
 
 bool IsMessageTypeBlocking( DistributionMessageType messageType )
 {

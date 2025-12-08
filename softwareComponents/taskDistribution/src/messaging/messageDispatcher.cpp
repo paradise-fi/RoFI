@@ -1,4 +1,4 @@
-#include "../../distribution/messaging/messageDispatcher.hpp"
+#include "messageDispatcher.hpp"
 
 MessageDispatcher::MessageDispatcher( rofi::hal::Ip6Addr& address, UserCallbackInvoker& callbackInvoker, FunctionRegistry& functionRegistry,
     MessagingService& messagingService, DistributedMemoryService& memoryService, LoggingService& loggingService, 

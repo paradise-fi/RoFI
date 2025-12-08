@@ -2,7 +2,7 @@
 #include "distributedFunction.hpp"
 #include "functionHandle.hpp"
 #include "fizzbuzz.hpp"
-#include "naiveBarrier.hpp"
+#include "systemMethods/naiveBarrier.hpp"
 
 /// @brief The initial function is best used to handle distributed initialization. In this example, it does not do much
 /// in terms of initialization, but you may use it to, for example, gather information about the network.

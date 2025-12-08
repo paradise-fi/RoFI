@@ -1,4 +1,4 @@
-#include "../../distribution/messaging/messageSender.hpp"
+#include "messageSender.hpp"
 #include "networking/protocols/messageDistributor.hpp"
 
 MessageSender::MessageSender(Ip6Addr& address, u16_t port, udp_pcb* pcb, MessageDistributor& messageDistributor)

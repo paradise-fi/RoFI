@@ -1,4 +1,4 @@
-#include "../../distribution/services/loggingService.hpp"
+#include "loggingService.hpp"
 
 void LoggingService::logInfo( const std::string& message )
 {

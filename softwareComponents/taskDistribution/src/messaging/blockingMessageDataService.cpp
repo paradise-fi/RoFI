@@ -1,4 +1,4 @@
-#include "../../distribution/messaging/blockingMessageDataService.hpp"
+#include "blockingMessageDataService.hpp"
 
 void BlockingMessageDataService::completeBlockingMessage( uint8_t* message, size_t messageSize )
 {

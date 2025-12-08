@@ -1,4 +1,4 @@
-#include "../../distribution/messaging/messageQueueManager.hpp"
+#include "messageQueueManager.hpp"
 
 void MessageQueueManager::pushMessage( const rofi::hal::Ip6Addr& sender, DistributionMessageType messageType, uint8_t* data, size_t size )
 {
