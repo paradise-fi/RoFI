@@ -63,7 +63,6 @@ public:
         std::unique_ptr< DistributedFunction< Result, Arguments... > > userFunction = std::make_unique< Func >( function );
         if ( userFunction->functionType() == FunctionType::Barrier )
         {
-            std::cout << "Registering barrier function." << std::endl;
             return registerBarrier( std::move( userFunction ) );
         }
 
