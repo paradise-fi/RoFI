@@ -389,20 +389,33 @@ Used to unblock all task schedulers on the module from blocking tasks. The ``har
 ### LoggingService 
 Provides a simple wrapper around a custom-defined logger, ensuring ease of use and managing internal logger status.
 
+#### Verbosity
+Verbosity is used for messages of the Information log level. You may set verbosity to limit the number of informative messages written to the logger.
+
+```c++
+enum class LogVerbosity
+{
+    Low = 1,
+    Medium = 2,
+    High = 3,
+};
+```
+
 #### Methods
 
 ##### UseLogger
 ```c++
 template< std::derived_from< LoggerBase > Logger >
-void useLogger( const Logger& logger );
+void useLogger( const Logger& logger, LogVerbosity verbosity );
 ```
 
 Registers a logger instance within the logging service. Only one logger instance can be registered at a time.
+The verbosity level passed to this function configures the logging service to that verbosity.
 
 ##### Logging
 
 ```c++
-void logInfo( const std::string& message );
+void logInfo( const std::string& message, LogVerbosity messageVerbosityLevel = LogVerbosity::Medium );
 void logWarning( const std::string& message );
 void logError( const std::string& message );
 ```

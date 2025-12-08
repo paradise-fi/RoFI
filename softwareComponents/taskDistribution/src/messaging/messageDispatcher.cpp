@@ -31,7 +31,7 @@ void MessageDispatcher::dispatchMessage( const Ip6Addr& sender, DistributionMess
 {
     std::ostringstream receivedMessageStream;
     receivedMessageStream << "Received " << getMessageTypeName( messageType ) << " from " << sender;
-    _loggingService.logInfo( receivedMessageStream.str() );
+    _loggingService.logInfo( receivedMessageStream.str(), LogVerbosity::High );
 
     switch ( messageType )
     {
@@ -109,7 +109,7 @@ void MessageDispatcher::handleTaskAssignment( std::unique_ptr< TaskBase > task, 
 {
     std::ostringstream stream;
     stream << "Task Assignment for task with ID " << task->id();
-    _loggingService.logInfo( stream.str() );
+    _loggingService.logInfo( stream.str(), LogVerbosity::High );
     
     if ( !_functionRegistry.enqueueTask( _addr, std::move( task ), fn.get().completionType() ) )
     {
@@ -126,7 +126,7 @@ void MessageDispatcher::handleTaskResult( const rofi::net::Ip6Addr& sender,
 
     std::ostringstream stream;
     stream << "Result for Task with ID " << taskId;
-    _loggingService.logInfo( stream.str() );
+    _loggingService.logInfo( stream.str(), LogVerbosity::High );
 
     if ( task->status() == TaskStatus::RepeatDistributed )
     {
