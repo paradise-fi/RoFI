@@ -156,10 +156,8 @@ std::unique_ptr< TaskBase > TaskManager::finishAndGetActiveTask ( const Ip6Addr&
 
 void TaskManager::unblockSchedulers( bool hardUnblock )
 {
-    std::string hardUb = hardUnblock ? std::string("True") : std::string("False");
     for( auto it = _schedulers.begin(); it != _schedulers.end(); ++it)
     {
-        std::cout << "Unblock Task Schedulers with hardUnblock as " << hardUb << std::endl;
         it->second.clearActiveTask( hardUnblock );
     }
 }

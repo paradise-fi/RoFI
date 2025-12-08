@@ -1,0 +1,2 @@
+This example should be ran with five modules using the ring.json configuration. 
+Other configurations may not be setup for this kind of movement (they may use rigid bodies that will cause an error if moved).
