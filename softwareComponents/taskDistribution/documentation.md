@@ -103,10 +103,12 @@ These methods provide direct access to some of the lower level subsystems that m
 
 ##### Standard Workflow
 ```c++
-void doWork();
+void doWork( int messageProcessingBatch = 5 );
 ```
 
 Executes a single run of the standard workflow loop of the task manager. This method must be continuously invoked for the task manager to function properly.
+
+The messageProcessingBatch argument is used to configure the **maximum** number of incoming messages that will be processed and dispatched to subsystems during a single iteration.
 
 ```c++
 void start( int initialElectionDelay, int electionCyclesBeforeStabilization = 3 )
