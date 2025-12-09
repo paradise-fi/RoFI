@@ -53,7 +53,9 @@ public:
     
     LoggingService& loggingService();
 
-    void doWork();
+    /// @brief Performs a single iteration of the task manager workflow loop.
+    /// @param messageProcessingBatch - The maximum number of incoming messages in the message queue that will be processed by the dispatcher during the loop.
+    void doWork( int messageProcessingBatch = 5 );
     
     void start( int initialElectionDelay, int electionCyclesBeforeStabilization = 3 );
 
