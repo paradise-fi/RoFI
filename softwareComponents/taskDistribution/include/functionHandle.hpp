@@ -35,15 +35,14 @@ public:
     /// @return True if the task was queued succesfully, otherwise false.
     bool operator()( const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments )
     {
-        auto result = _taskManager.enqueueTask< Result >(
-            target, _implementation.functionId(), priority,
-            setTopPriority, _implementation.completionType(), std::move( arguments ) );
-
-        if ( result )
+        if ( !_taskManager.enqueueTask< Result >(
+                target, _implementation.functionId(), priority,
+                setTopPriority, _implementation.completionType(), 
+                std::move( arguments ) ) )
         {
-            result = _taskManager.enqueueTaskRequest( target );
+            return false;   
         }
 
-        return result;
+        return _taskManager.enqueueTaskRequest( target );
     }
 };
