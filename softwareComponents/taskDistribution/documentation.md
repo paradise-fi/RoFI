@@ -103,12 +103,17 @@ These methods provide direct access to some of the lower level subsystems that m
 
 ##### Standard Workflow
 ```c++
-void doWork( int messageProcessingBatch = 5 );
+void doWork( unsigned int messageProcessingBatch = 5, unsigned int memoryWriteProcessingBatch = 1, 
+        unsigned int memoryReadProcessingBatch = 5 );
 ```
 
 Executes a single run of the standard workflow loop of the task manager. This method must be continuously invoked for the task manager to function properly.
 
-The messageProcessingBatch argument is used to configure the **maximum** number of incoming messages that will be processed and dispatched to subsystems during a single iteration.
+The **messageProcessingBatch** argument is used to configure the **maximum** number of incoming messages that will be processed and dispatched to subsystems during a single iteration.
+
+The **memoryWriteProcessingBatch** argument is used to configure the **maximum** number of memory write requests that will be processed during a single iteration.
+
+The **memoryReadProcessingBatch** argument is used to configure the **maximum** number of memory read requests sent in by other modules that will be processed during a single iteration.
 
 ```c++
 void start( int initialElectionDelay, int electionCyclesBeforeStabilization = 3 )

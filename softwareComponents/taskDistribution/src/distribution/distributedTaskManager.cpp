@@ -43,7 +43,8 @@ LoggingService& DistributedTaskManager::loggingService()
     return _loggingService;
 }
 
-void DistributedTaskManager::doWork( int messageProcessingBatch )
+void DistributedTaskManager::doWork( unsigned int messageProcessingBatch, unsigned int memoryWriteProcessingBatch, 
+        unsigned int memoryReadProcessingBatch )
 {
     if ( !_election.isRunning() )
     {
@@ -58,11 +59,11 @@ void DistributedTaskManager::doWork( int messageProcessingBatch )
 
     if ( _address == _election.getLeader() )
     {
-        _workFlowService.doWorkLeader( METHOD_ID, messageProcessingBatch );
+        _workFlowService.doWorkLeader( METHOD_ID, messageProcessingBatch, memoryWriteProcessingBatch, memoryReadProcessingBatch );
         return;
     }
     
-    _workFlowService.doWorkFollower( _address, _election.getLeader(), messageProcessingBatch );
+    _workFlowService.doWorkFollower( _address, _election.getLeader(), messageProcessingBatch, memoryWriteProcessingBatch, memoryReadProcessingBatch );
 }
 
 void DistributedTaskManager::start( int initialElectionDelay, int electionCyclesBeforeStabilization )

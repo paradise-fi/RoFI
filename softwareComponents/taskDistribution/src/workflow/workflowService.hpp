@@ -27,5 +27,5 @@ public:
                        unsigned int memoryWriteProcessingBatch = 1, unsigned int memoryReadProcessingBatch = 5 );
 
     void doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader, unsigned int messageProcessingBatch = 5, 
-                         unsigned int memoryWriteProcessingBatch = 1, unsigned int memoryReadProcessingBatch = 5  );
+                         unsigned int memoryWriteProcessingBatch = 1, unsigned int memoryReadProcessingBatch = 5 );
 };
