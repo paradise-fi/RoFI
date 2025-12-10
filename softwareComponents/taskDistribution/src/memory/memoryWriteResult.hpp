@@ -13,9 +13,6 @@ struct MemoryWriteResult
     // Instructs the system that the memory storage pipeline should continue as normal.
     bool success = false;
 
-    // Instructs the system that this module did actually store the memory.
-    bool stored = false;
-
     // Instructs the system to only write metadata.
     bool metadataOnly = false;
 
@@ -27,9 +24,9 @@ struct MemoryWriteResult
 
     MemoryWriteResult() = default;
 
-    MemoryWriteResult( bool success, bool stored, bool metadataOnly, MemoryPropagationType propagationType, Ip6Addr target )
-    : success( success ), stored( stored ), metadataOnly( metadataOnly ), propagationType( propagationType ), propagationTarget( target ) {}
+    MemoryWriteResult( bool success,bool metadataOnly, MemoryPropagationType propagationType, Ip6Addr target )
+    : success( success ), metadataOnly( metadataOnly ), propagationType( propagationType ), propagationTarget( target ) {}
 
-    MemoryWriteResult( bool success, bool stored, bool metadataOnly, MemoryPropagationType propagationType )
-    : success( success ), stored( stored ), metadataOnly( metadataOnly ), propagationType( propagationType ) {}
+    MemoryWriteResult( bool success, bool metadataOnly, MemoryPropagationType propagationType )
+    : success( success ), metadataOnly( metadataOnly ), propagationType( propagationType ) {}
 };

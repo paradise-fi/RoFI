@@ -1,10 +1,8 @@
 #include "memoryService.hpp"
 
 DistributedMemoryService::DistributedMemoryService( MessageDistributor& distributor, MessagingService& messaging,
-    Ip6Addr& currentModuleAddress, LoggingService& loggingService, 
-    SystemCallbackManager& callbackService, int blockingMessageTimeoutMs )
-:   _loggingService( loggingService ), 
-    _callbackService( callbackService ), 
+    Ip6Addr& currentModuleAddress, LoggingService& loggingService, int blockingMessageTimeoutMs )
+:   _loggingService( loggingService ),
     _memoryMessagingWrapper( MemoryMessagingWrapper( messaging, loggingService, METHOD_ID, currentModuleAddress ) ),
     _memoryWriter( MemoryWriter(  _memoryMessagingWrapper, currentModuleAddress, loggingService ) ),
     _memoryReader( MemoryReader( _memoryMessagingWrapper, currentModuleAddress, messaging, loggingService, blockingMessageTimeoutMs ) )

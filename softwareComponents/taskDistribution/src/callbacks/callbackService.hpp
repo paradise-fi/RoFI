@@ -26,10 +26,6 @@ private:
                                     uint8_t* data,
                                     const size_t size ) > _onCustomMessageBlocking;
 
-    std::function< void( int memoryAddress,
-                         bool isLeaderMemory,
-                         MemoryFacade memory ) > _onMemoryStored;
-
     ElectionService& _electionService;
     LoggingService& _loggingService;
 
@@ -43,8 +39,6 @@ public:
     virtual void invokeOnCustomMessage( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, size_t size ) override;
 
     virtual MessagingResult invokeOnCustomMessageBlocking( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender, uint8_t* data, size_t size ) override;
-
-    virtual void invokeOnMemoryStored( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService ) override;
 
     /// @brief Registers a callback that is called when leader election fails.
     /// @param callback The callback function.
@@ -77,9 +71,4 @@ public:
                                         const rofi::hal::Ip6Addr& sender,
                                         uint8_t* data,
                                         const size_t size ) >&& callback ) override;
-
-    virtual void registerOnMemoryStoredCallback(
-        std::function< void( int memoryAddress,
-                             bool isLeaderMemory,
-                             MemoryFacade memory ) >&& callback ) override;
 };
