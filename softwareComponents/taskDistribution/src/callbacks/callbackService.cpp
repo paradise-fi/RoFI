@@ -39,14 +39,6 @@ MessagingResult CallbackService::invokeOnCustomMessageBlocking( DistributedTaskM
     return _onCustomMessageBlocking( manager, sender, data, size );
 }
 
-void CallbackService::invokeOnMemoryStored( int memoryAddress, bool isLeaderMemory, DistributedMemoryService& memoryService )
-{
-    if ( _onMemoryStored )
-    {
-        _onMemoryStored( memoryAddress, isLeaderMemory, MemoryFacade( memoryService ) );
-    }
-}
-
 bool CallbackService::registerLeaderFailureCallback( std::function< void() >&& callback )
 { 
     return _electionService.registerLeaderFailureCallback( std::forward< std::function< void() > >( callback ) ); 
@@ -94,13 +86,4 @@ void CallbackService::registerBlockingCustomMessageCallback(
     _onCustomMessageBlocking = std::forward< 
         std::function< MessagingResult( DistributedTaskManager& manager, const rofi::hal::Ip6Addr& sender,
                                         uint8_t* data, const size_t size ) > >( callback );
-}
-
-void CallbackService::registerOnMemoryStoredCallback( 
-        std::function< void( int memoryAddress,
-                             bool isLeaderMemory,
-                             MemoryFacade memory ) >&& callback )
-{
-    _onMemoryStored = std::forward<
-        std::function< void( int memoryAddress, bool isLeaderMemory, MemoryFacade memory ) >>( callback );
 }

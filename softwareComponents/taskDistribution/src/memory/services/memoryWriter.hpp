@@ -76,8 +76,6 @@ public:
             {
                 auto result = _memory->writeData( dataBuffer.data(), dataBuffer.size(), address, true );
 
-                if ( result.stored)
-                
                 if ( result.success )
                 {
                     _memoryMessaging.propagateMemoryChange( result.propagationType, address, dataBuffer.data(), 

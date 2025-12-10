@@ -11,8 +11,6 @@ MemoryWriteResult ReplicatedMemory::writeData( uint8_t* data, size_t size, int a
     result.metadataOnly = false;
     unsigned int timestamp = as< unsigned int >( data );
     result.success = saveData( address, timestamp, data + sizeof( unsigned int ), size - sizeof( unsigned int ), isLeader );
-    result.stored = result.success;
-
     result.propagationType = isLeader ? MemoryPropagationType::SEND_TO_ALL : MemoryPropagationType::NONE;
     
     return result;
@@ -47,8 +45,6 @@ MemoryWriteResult ReplicatedMemory::removeData( int address, bool isLeader )
     if ( _storage.erase( address ) > 0 )
     {
         result.success = true;
-        result.stored = result.success;
-
         result.propagationType = isLeader ? MemoryPropagationType::SEND_TO_ALL : MemoryPropagationType::NONE;
     }
 

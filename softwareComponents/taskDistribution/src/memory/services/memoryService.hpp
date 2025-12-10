@@ -6,7 +6,6 @@
 #include "../../messaging/messagingService.hpp"
 #include "../memoryRequestType.hpp"
 #include "../../logger/loggingService.hpp"
-#include "../../callbacks/systemCallbackManager.hpp"
 #include "../memoryRequestQueueItem.hpp"
 #include "memoryWriter.hpp"
 #include "memoryReader.hpp"
@@ -20,7 +19,6 @@ class DistributedMemoryService
     const unsigned int METHOD_ID = 2;
 
     LoggingService& _loggingService;
-    SystemCallbackManager& _callbackService;
     MemoryMessagingWrapper _memoryMessagingWrapper;
     MemoryWriter _memoryWriter;
     MemoryReader _memoryReader;
@@ -28,10 +26,11 @@ class DistributedMemoryService
 
 public:
     DistributedMemoryService( MessageDistributor& distributor, MessagingService& messaging,
-        Ip6Addr& currentModuleAddress, LoggingService& loggingService, 
-        SystemCallbackManager& callbackService, int blockingMessageTimeoutMs = 300 );
+        Ip6Addr& currentModuleAddress, LoggingService& loggingService, int blockingMessageTimeoutMs = 300 );
 
     bool isMemoryRegistered();
+
+    void setBlockingReadTimeout( unsigned int timeoutMs );
 
     /// @brief Removes / deregisters the shared memory implementation from DistributedMemoryService.
     /// @return True if the memory implementation was deregistered, otherwise false.

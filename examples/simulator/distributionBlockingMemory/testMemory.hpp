@@ -86,7 +86,6 @@ public:
             auto moduleAddress = createAddress( starterDigit );
             std::cout << "I am the leader and I have determined that address " << address << " belongs to " << moduleAddress << std::endl;
             result.success = true;
-            result.stored = false;
             result.propagationTarget = moduleAddress;
             result.propagationType = MemoryPropagationType::ONE_TARGET;
             return result;
@@ -98,14 +97,12 @@ public:
         {
             std::cout << "I am the data holder for address " << address << ", writing..." << std::endl; 
             result.success = saveData( address, data, size, isLeader );
-            result.stored = result.success;
             result.propagationType = MemoryPropagationType::NONE;
         }
         else
         {
             std::cout << "I am not the data holder for address " << address << ", going to request leader to find the data." << std::endl;
             result.success = true;
-            result.stored = false;
             // By default, this will now target the leader.
             result.propagationTarget = std::nullopt;
         }
@@ -171,7 +168,6 @@ public:
             auto target = createAddress( starterDigit );
             std::cout << "I am the leader and have routed " << address << " to " << target << std::endl;
             result.success = true;
-            result.stored = false;
             result.propagationTarget = target;
             result.propagationType = MemoryPropagationType::ONE_TARGET;
             return result;
@@ -182,7 +178,6 @@ public:
             std::cout << "I am not the data holder of " << address << ", nor am I the leader. I will request the leader to find the data holder." << std::endl;
             result.propagationType = MemoryPropagationType::ONE_TARGET;
             result.success = true;
-            result.stored = false;
             return result;
         }
 
@@ -192,7 +187,6 @@ public:
         {
             std::cout << "I am the data holder of " << address << " and have erased the data." << std::endl;
             result.success = true;
-            result.stored = true;
             result.propagationType = MemoryPropagationType::NONE;
         }
 
