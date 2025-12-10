@@ -28,7 +28,7 @@ udp_pcb& MessagingService::pcb()
 }
 
 
-MessagingResult MessagingService::sendMessageBlocking( Ip6Addr& receiver, 
+MessagingResult MessagingService::sendMessageBlocking( const Ip6Addr& receiver, 
     DistributionMessageType messageType, uint8_t* message, size_t messageSize, int timeout )
 {
     if ( !IsMessageTypeBlocking( messageType ) )
@@ -46,7 +46,7 @@ MessagingResult MessagingService::sendMessageBlocking( Ip6Addr& receiver,
     return _blockingMessageDataService.awaitBlockingMessage( timeout );
 }
 
-MessagingResult MessagingService::sendMessageBlocking( Ip6Addr& receiver, DistributionMessageType messageType, int timeout )
+MessagingResult MessagingService::sendMessageBlocking( const Ip6Addr& receiver, DistributionMessageType messageType, int timeout )
 {
     if ( !IsMessageTypeBlocking( messageType ) )
     {

@@ -4,15 +4,9 @@
 #include <cstdint>
 #include <optional>
 #include "lwip++.hpp"
+#include "memoryPropagationType.hpp"
 
 using namespace rofi::hal;
-
-enum MemoryPropagationType
-{
-    NONE,
-    ONE_TARGET,
-    SEND_TO_ALL,
-};
 
 struct MemoryWriteResult
 {

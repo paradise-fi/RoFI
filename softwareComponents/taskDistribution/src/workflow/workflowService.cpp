@@ -6,32 +6,36 @@ WorkFlowService::WorkFlowService(MessageSender& sender, FunctionRegistry& functi
     _loggingService( loggingService ), _customMessageQueueManager( customMessageQueueManager ),
     _messageDispatcher( messageDispatcher ) {}
 
-void WorkFlowService::doWorkLeader( int methodId, int messageProcessingBatch )
+void WorkFlowService::doWorkLeader( int methodId, unsigned int messageProcessingBatch, 
+    unsigned int memoryWriteProcessingBatch, unsigned int memoryReadProcessingBatch )
 {
-    for ( int i = 0; i < messageProcessingBatch; ++i)
+    for ( unsigned int i = 0; i < messageProcessingBatch; ++i)
     {
         if ( !_messageDispatcher.dispatchMessageFromQueue() )
         {
             break;
         }
     }
+    
     _customMessageQueueManager.processQueue();
     tryDistributeNewTask( methodId );
-    _memoryService.processQueue();
+    _memoryService.processQueues( memoryWriteProcessingBatch, memoryReadProcessingBatch );
     _functionRegistry.processTaskResultQueue();
 }
 
-void WorkFlowService::doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader, int messageProcessingBatch )
+void WorkFlowService::doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader, unsigned int messageProcessingBatch, 
+    unsigned int memoryWriteProcessingBatch, unsigned int memoryReadProcessingBatch )
 {
-    for ( int i = 0; i < messageProcessingBatch; ++i)
+    for ( unsigned int i = 0; i < messageProcessingBatch; ++i)
     {
         if ( !_messageDispatcher.dispatchMessageFromQueue() )
         {
             break;
         }
     }
-    _memoryService.processQueue();
+    
     _customMessageQueueManager.processQueue();
+    _memoryService.processQueues( memoryWriteProcessingBatch, memoryReadProcessingBatch );
 
     auto taskCandidate = _functionRegistry.popTaskForAddress( address );
 
@@ -118,7 +122,6 @@ void WorkFlowService::tryDistributeNewTask( int methodId )
         {
             case FunctionDistributionType::Broadcast: 
             {
-                std::cout << "Broadcasting task " << task.id() << std::endl;
                 _sender.broadcastMessage( DistributionMessageType::TaskAssignment, task, methodId );
                 return;
             }

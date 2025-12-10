@@ -1,12 +1,11 @@
 #pragma once
 
-// A simple barrier that requires all of the participants to respond.
+// A simple barrier that requires all of the registered participants to respond.
 #include "../distributedTaskManager.hpp"
 #include "../distributedFunction.hpp"
 
 class NaiveBarrier : public DistributedFunction< Ip6Addr >
 {
-    // Needs to be atomic
     std::set< Ip6Addr > _participants;
     std::set< Ip6Addr > _reached;
     Ip6Addr& _address;
@@ -51,6 +50,7 @@ public:
 
     virtual bool onFunctionFailure( std::optional< Ip6Addr >, const Ip6Addr& ) override
     {
+        _manager.loggingService().logError( "Naive barrier failure. This function should never be invoked." );
         return false;
     }
 
@@ -64,18 +64,21 @@ public:
         return 100;
     }
 
-    // This means that the barrier will not be dequeued upon completion.
+    // A barrier function cannot be registered if completionType() is not set to FunctionCompletionType::Blocking!
+    // Non-barrier functions' tasks with this completion type will prevent additional tasks from being scheduled until
+    // the scheduler is cleared manually. However, unlike a barrier function tasks, regular but blocking tasks can be
+    // overtaken by tasks with higher priority.
     virtual FunctionCompletionType completionType() const override
     {
         return FunctionCompletionType::Blocking;
     }
 
-    // Setting this to broadcast will ensure that the barrier is sent out to all modules when it is invoked.
     virtual FunctionDistributionType distributionType() const override
     {
         return FunctionDistributionType::Unicast;
     }
 
+    // This is crucial, otherwise the function would not be registered as a barrier!
     virtual FunctionType functionType() const override
     {
         return FunctionType::Barrier;

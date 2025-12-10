@@ -37,9 +37,9 @@ public:
 
     udp_pcb& pcb();
 
-    MessagingResult sendMessageBlocking( Ip6Addr& receiver, DistributionMessageType messageType, uint8_t* message, size_t messageSize, int timeout = 600 );
+    MessagingResult sendMessageBlocking( const Ip6Addr& receiver, DistributionMessageType messageType, uint8_t* message, size_t messageSize, int timeout = 600 );
 
-    MessagingResult sendMessageBlocking( Ip6Addr& receiver, DistributionMessageType messageType, int timeout = 100 );
+    MessagingResult sendMessageBlocking( const Ip6Addr& receiver, DistributionMessageType messageType, int timeout = 100 );
 
     void completeBlockingMessage( uint8_t* data, size_t size );
 };

@@ -57,7 +57,7 @@ public:
     /// @param messageProcessingBatch - The maximum number of incoming messages in the message queue that will be processed by the dispatcher during the loop.
     void doWork( int messageProcessingBatch = 5 );
     
-    void start( int initialElectionDelay, int electionCyclesBeforeStabilization = 3 );
+    void start( int initialElectionDelay = 1, int electionCyclesBeforeStabilization = 3 );
 
     std::optional< Ip6Addr > getLeader();
 
