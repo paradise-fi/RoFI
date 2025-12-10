@@ -1,3 +1,4 @@
+#pragma once
 #include "../distribution/distributionMessageType.hpp"
 
 enum class MemoryRequestType
