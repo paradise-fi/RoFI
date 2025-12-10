@@ -8,8 +8,9 @@
 #include "../../logger/loggingService.hpp"
 #include "../../callbacks/systemCallbackManager.hpp"
 #include "../memoryRequestQueueItem.hpp"
-
-class SystemCallbackManager; 
+#include "memoryWriter.hpp"
+#include "memoryReader.hpp"
+#include "memoryMessagingWrapper.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
@@ -17,52 +18,13 @@ using namespace rofi::net;
 class DistributedMemoryService
 {
     const unsigned int METHOD_ID = 2;
-    const unsigned int READ_BATCH_SIZE = 5;
 
-    MessagingService& _messaging;
-    Ip6Addr _leader;
-    const Ip6Addr& _currentModuleAddress;
-    std::unique_ptr< DistributedMemoryBase > _memory;
-    
-    // For external read requests that need to be sent over network.
-    std::queue<MemoryRequestQueueItem> _memoryReadQueue;
-    
-    // For external write requests.
-    std::queue<MemoryRequestQueueItem> _memoryStorageQueue;
     LoggingService& _loggingService;
     SystemCallbackManager& _callbackService;
-    int _blockingMessageTimeoutMs = 300;
-
-    bool isLeaderMemory();
-
-    size_t genericMemoryMessageHeaderSize();
-    
-    void prepareMemoryMessageData( uint8_t* buffer, int address, const uint8_t* data, size_t dataSize, bool isMetadataOnly );
-
-    void sendDataBroadcast( int address, const uint8_t* data, size_t size, bool isMetadataOnly, DistributionMessageType messageType );
-    void sendDataUnicast( int address, const uint8_t* data, size_t size, bool isMetadataOnly, const Ip6Addr& target, DistributionMessageType messageType );
-
-    void propagateMemoryChange( const MemoryPropagationType type, int address, uint8_t* data, size_t size,
-        bool isMetadataOnly, std::optional< Ip6Addr > target, DistributionMessageType messageType );
-
-    void propagateMetadataChange( MemoryPropagationType type, int address, const std::string& key, uint8_t* metadata, 
-        size_t metadataSize, std::optional< Ip6Addr > target, DistributionMessageType messageType);
-
-    MemoryWriteResult handleMetadataUpdate( MemoryRequestQueueItem& memoryItem );
-
-    MemoryWriteResult handleDataUpdate( MemoryRequestQueueItem& memoryItem );
-
-    MemoryReadResult readDataBlocking( Ip6Addr& target, uint8_t* data, size_t dataSize );
-
-    MemoryReadResult forwardReadRequest( Ip6Addr& target, uint8_t* data, size_t dataSize );
-
-    MemoryReadResult readDataInternal( int address, const Ip6Addr& origin, bool isUserCall );
-
-    MemoryReadResult readMetadataInternal( int address, const Ip6Addr& origin, const std::string& key, bool isUserCall );
-
-    void handleReadRequest( MemoryRequestQueueItem& memoryItem );
-
-    bool processMemoryQueue( std::queue< MemoryRequestQueueItem >& queue );
+    MemoryMessagingWrapper _memoryMessagingWrapper;
+    MemoryWriter _memoryWriter;
+    MemoryReader _memoryReader;
+    std::unique_ptr< DistributedMemoryBase > _memory;
 
 public:
     DistributedMemoryService( MessageDistributor& distributor, MessagingService& messaging,
@@ -81,7 +43,7 @@ public:
     /// @return True if there are no more pending writes.
     bool isMemoryStable();
 
-    void processQueue();
+    void processQueues( unsigned int writeQueueBatchSize = 1, unsigned int readQueueBatchSize = 5 );
     
     /// @brief Save data in memory.
     /// @param data The data to be stored.
@@ -90,54 +52,7 @@ public:
     template < SerializableOrTrivial T >
     bool saveData( T&& data, int address )
     {
-        if ( !isMemoryRegistered() )
-        {
-            return false;
-        }
-        // Convert the data to the memory format required by the implementation
-        std::vector< uint8_t > dataBuffer;
-
-        if constexpr ( std::is_base_of_v< Serializable, T > )
-        {
-            std::vector< uint8_t > buffer;
-            buffer.resize( data.size() );
-            data.serialize( buffer );
-            dataBuffer = _memory->serializeDataToMemoryFormat( buffer.data(), buffer.size(), address, false );
-        }
-        else
-        {
-            dataBuffer = _memory->serializeDataToMemoryFormat( reinterpret_cast< uint8_t* >( &data ), sizeof( T ), address );
-        }
-
-        if ( _memory->storageBehavior() == MemoryStorageBehavior::LeaderFirstStorage )
-        {
-            if ( isLeaderMemory() )
-            {
-                auto result = _memory->writeData( dataBuffer.data(), dataBuffer.size(), address, true );
-                
-                if ( result.success )
-                {
-                    propagateMemoryChange( result.propagationType, address, dataBuffer.data(), dataBuffer.size(), 
-                        false, result.propagationTarget, DistributionMessageType::DataStorageRequest );
-                }
-
-                return result.success;
-            }
-
-            propagateMemoryChange( MemoryPropagationType::ONE_TARGET, address, 
-                dataBuffer.data(), dataBuffer.size(), false, _leader, 
-                DistributionMessageType::DataStorageRequest );
-
-            return true;
-        }
-
-        auto result = _memory->writeData( dataBuffer.data(), dataBuffer.size(), address, false );
-        if ( result.success )
-        {
-            propagateMemoryChange( result.propagationType, address, dataBuffer.data(), dataBuffer.size(), 
-                false, result.propagationTarget, DistributionMessageType::DataStorageRequest );
-        }
-        return result.success;
+        return _memoryWriter.saveData< T >( std::forward< T >( data ), address );
     }
 
     /// @brief Reads data from specified address in memory.
@@ -180,6 +95,9 @@ public:
         }
 
         _memory = std::move( memory );
+        _memoryWriter.registerMemory( _memory.get() );
+        _memoryReader.registerMemory( _memory.get() );
+        _memoryMessagingWrapper.registerMemory( _memory.get() );
         return true;
     }
 };

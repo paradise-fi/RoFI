@@ -1,0 +1,228 @@
+#include "memoryReader.hpp"
+
+MemoryReader::MemoryReader( MemoryMessagingWrapper& memoryMessaging, rofi::hal::Ip6Addr currentModuleAddress, 
+    MessagingService& messaging, LoggingService& logging, int blockingMessageTimeoutMs ) 
+: _memoryMessaging( memoryMessaging ), _currentModuleAddress( currentModuleAddress ), 
+  _messaging( messaging ), _loggingService( logging ), _blockingMessageTimeoutMs( blockingMessageTimeoutMs ) {}
+
+/// @brief Reads data from specified address in memory.
+/// @param address The memory address to be read
+/// @return MemoryReadResult struct containing information about read success and a method for extracting the data read.
+MemoryReadResult MemoryReader::readData( int address )
+{
+    if ( _memory == nullptr )
+    {
+        return MemoryReadResult{ false, false, std::nullopt, std::vector< uint8_t >() };
+    }
+    return readDataInternal( address, _currentModuleAddress, true );
+}
+    
+MemoryReadResult MemoryReader::readMetadata( int address, const std::string& key )
+{
+    if ( _memory == nullptr )
+    {
+        return MemoryReadResult{ false, false, std::nullopt, std::vector< uint8_t >() };
+    }
+
+    return readMetadataInternal( address, _currentModuleAddress, key,  true );
+}
+
+/// @brief Remove all entries in this module's storage queue.
+void MemoryReader::clearLocalQueue()
+{
+    while ( !_memoryReadQueue.empty() )
+    {
+        _memoryReadQueue.pop();
+    }
+}
+
+void MemoryReader::unregisterMemory()
+{
+    _memory = nullptr;
+}
+
+void MemoryReader::registerMemory( DistributedMemoryBase* memory )
+{
+    _memory = memory;
+}
+
+// =============== PRIVATE
+MemoryReadResult MemoryReader::readDataBlocking( const Ip6Addr& target, uint8_t* data, size_t dataSize )
+{
+    MemoryReadResult result;
+    result.success = false;
+    auto remoteReadResult = _messaging.sendMessageBlocking( target, DistributionMessageType::DataReadRequestBlocking, data, dataSize, _blockingMessageTimeoutMs );
+    if ( remoteReadResult.success )
+    {
+        auto success = as< bool >( remoteReadResult.rawData.data() + _memoryMessaging.genericMemoryMessageHeaderSize() );
+        size_t readSize = as< size_t >( remoteReadResult.rawData.data() + sizeof( bool ) + _memoryMessaging.genericMemoryMessageHeaderSize() );
+        
+        if ( success )
+        {
+            result.rawData.resize( readSize );
+            std::memcpy( result.rawData.data(), remoteReadResult.rawData.data() + sizeof( bool ) + sizeof( size_t ) + _memoryMessaging.genericMemoryMessageHeaderSize(), readSize );
+            result.success = true;
+        }
+    }
+    else
+    {
+        std::ostringstream stream;
+        stream << "MemoryService - Remote Data Retrieval at " << target << " failed, reason: " << remoteReadResult.statusMessage;
+        _loggingService.logError( stream.str() );
+    }
+
+    return result;
+}
+
+MemoryReadResult MemoryReader::forwardReadRequest( const Ip6Addr& target, uint8_t* data, size_t dataSize )
+{
+    MemoryReadResult result;
+    result.success = true;
+    result.requestRemoteRead = true;
+    auto remoteReadRequestResult = _messaging.sender().sendMessage( DistributionMessageType::DataReadRequest, data, dataSize, target );
+    
+    if ( !remoteReadRequestResult.success )
+    {
+        result.success = false;
+        std::ostringstream stream;
+        stream << "MemoryService - Remote Data Retrieval relay to " << target << " failed, reason: " << remoteReadRequestResult.messsage;
+        _loggingService.logError( stream.str() );
+    }
+
+    return result;
+}
+
+MemoryReadResult MemoryReader::readDataInternal( int address, const Ip6Addr& origin, bool isUserCall )
+{
+    auto result = _memory->readData( address, _memoryMessaging.getLeader() == _currentModuleAddress );
+
+    std::vector< uint8_t > data;
+    if ( !result.requestRemoteRead && isUserCall )
+    {
+        return result;
+    }
+
+    if ( !result.requestRemoteRead && !isUserCall )
+    {
+        data.resize( result.rawData.size() + sizeof( size_t ) + sizeof( bool ) );
+        as< bool >( data.data() ) = result.success;
+        as< size_t >( data.data() + sizeof( bool ) ) = result.success ? result.rawData.size() : 0;
+        if ( result.success )
+        {
+            std::memcpy( data.data() + sizeof( bool ) + sizeof( size_t ), result.rawData.data(), result.rawData.size() );
+        }
+
+        // Send a message to the origin.
+        _memoryMessaging.sendDataUnicast( address, data.data(), data.size(), false, origin, DistributionMessageType::BlockingMessageResponse );
+        return result;
+    }
+
+    result.success = false;
+    const Ip6Addr& target = result.readTarget.has_value() ? result.readTarget.value() : _memoryMessaging.getLeader();
+    data.resize( sizeof( int ) + sizeof( bool ) + sizeof( size_t ) + sizeof( Ip6Addr ) + sizeof(u8_t));
+    as< Ip6Addr >( data.data() ) = origin;
+    as< u8_t >( data.data() + sizeof( Ip6Addr ) ) = origin.zone;
+    as< int >( data.data() + sizeof( Ip6Addr ) + sizeof(u8_t) ) = address;
+    as< bool >( data.data() + sizeof( int ) + sizeof( Ip6Addr ) + sizeof(u8_t)  ) = false;
+    as< size_t >( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof(u8_t)  ) = 0;
+
+    if ( isUserCall ) 
+    {
+        return readDataBlocking( target, data.data(), data.size() );
+    }
+
+    auto forwardResult = forwardReadRequest( target, data.data(), data.size() );
+
+    if ( !forwardResult.success )
+    {
+        std::vector< uint8_t > errorMessage;
+        errorMessage.resize( sizeof( bool ) + sizeof( size_t ) );
+        as< bool >( errorMessage.data() ) = false;
+        as< size_t >( errorMessage.data() + sizeof( bool ) ) = 0;
+        auto messageResult = _messaging.sender().sendMessage( DistributionMessageType::BlockingMessageResponse, errorMessage.data(), errorMessage.size(), origin );
+        if ( !messageResult.success )
+        {
+            std::ostringstream stream;
+            stream << "MemoyService - Error while fetching data for blocking read for " << origin << ", reason: " << messageResult.messsage;
+            _loggingService.logError( stream.str() );
+        }
+    }
+
+    return forwardResult;
+}
+
+MemoryReadResult MemoryReader::readMetadataInternal( int address, const Ip6Addr& origin, const std::string& key, bool isUserCall )
+{
+    auto result = _memory->readMetadata( address, key, _memoryMessaging.getLeader() == _currentModuleAddress );
+
+    std::vector< uint8_t > data;
+    if ( !result.requestRemoteRead && isUserCall )
+    {
+        return result;
+    }
+
+    if ( !result.requestRemoteRead && !isUserCall )
+    {
+        data.resize( result.rawData.size() + sizeof( size_t ) + sizeof( bool ) );
+        as< bool >( data.data() ) = result.success;
+        as< size_t >( data.data() + sizeof( bool ) ) = result.success ? result.rawData.size() : 0;
+        if ( result.success )
+        {
+            std::memcpy( data.data() + sizeof( bool ) + sizeof( size_t ), result.rawData.data(), result.rawData.size() );
+        }
+
+        // Send a message to the origin.
+        _memoryMessaging.sendDataUnicast( address, data.data(), data.size(), true, origin, DistributionMessageType::BlockingMessageResponse );
+        return result;
+    }
+
+    result.success = false;
+    const Ip6Addr& target = result.readTarget.has_value() ? result.readTarget.value() : _memoryMessaging.getLeader();
+    
+    data.resize( sizeof( int ) + sizeof( bool ) + sizeof( size_t ) + sizeof( Ip6Addr ) + key.size() + sizeof( u8_t ) );
+    as< Ip6Addr >( data.data() ) = origin;
+    as< u8_t >( data.data() + sizeof( Ip6Addr ) ) = origin.zone;
+    as< int >( data.data() + sizeof( Ip6Addr ) + sizeof( u8_t ) ) = address;
+    as< bool >( data.data() + sizeof( int ) + sizeof( Ip6Addr ) + sizeof( u8_t ) ) = false;
+    as< size_t >( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof( u8_t )  ) = key.size();
+    std::memcpy( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof( size_t ) + sizeof( u8_t ),
+                    key.data(), key.size() );
+
+    return isUserCall 
+        ? readDataBlocking( target, data.data(), data.size() )
+        : forwardReadRequest( target, data.data(), data.size() );
+}
+
+void MemoryReader::emplaceIntoQueue( Ip6Addr& sender, uint8_t* data, size_t dataSize,
+    int address, bool isMetadataOnly, MemoryRequestType requestType )
+{
+    _memoryReadQueue.emplace( sender, data, dataSize, address, isMetadataOnly, requestType );
+}
+
+bool MemoryReader::processQueue()
+{
+    if ( _memory == nullptr || _memoryReadQueue.empty() )
+    {
+        return false;
+    }
+
+    auto memoryItem = _memoryReadQueue.front();
+    _memoryReadQueue.pop();
+
+    MemoryReadResult readResult;
+    if ( memoryItem.isMetadataOnly )
+    {
+        size_t keySize = as< size_t >( memoryItem.data.data() );
+        std::string key;
+        key.resize( keySize );
+        std::memcpy( key.data(), memoryItem.data.data() + sizeof( size_t ), keySize );
+
+        readResult = readMetadataInternal( memoryItem.address, memoryItem.sender, key, false ); 
+    }
+    else
+    {
+        readResult = readDataInternal( memoryItem.address, memoryItem.sender, false );
+    }
+
+    return true;
+}
