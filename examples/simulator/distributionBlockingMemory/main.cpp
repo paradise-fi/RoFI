@@ -22,10 +22,8 @@ using namespace rofi::net;
 using namespace rofi::leadership;
 using namespace std::chrono_literals;
 
-/// In this simple example, you will learn how to use distributed memory within the memory manager. 
-/// In this example, follower nodes will generate values that will be stored in memory. 
-///The leader will take these values and play the fizzbuzz game with them.
-void distributionManagerFizzBuzz() {
+/// In this simple example, you will learn how to use distributed memory with blocking reading within the memory manager. 
+void distributionManagerBlockingMemory() {
     std::cout << "Starting RoFI Distribution Manager FizzBuzz example with distributed memory and blocking distributed reads\n";
     tcpip_init( nullptr, nullptr );
 
@@ -102,6 +100,6 @@ void distributionManagerFizzBuzz() {
 }
 
 int main( void ) {
-    distributionManagerFizzBuzz( );
+    distributionManagerBlockingMemory( );
     return 0;
 }

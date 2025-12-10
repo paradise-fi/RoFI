@@ -63,7 +63,7 @@ void distributionManagerFizzBuzz() {
     manager.functions().registerFunction< int, int >( FizzBuzz( id, manager ) );
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
-    manager.start( id );
+    manager.start();
 
     while ( true ){
         // A single 'tick' of the manager instance.
