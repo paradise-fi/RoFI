@@ -32,12 +32,6 @@ bool MemoryWriter::processQueue()
 
     if ( result.success )
     {
-        // TODO
-        // if ( result.stored )
-        // {
-        //     _callbackService.invokeOnMemoryStored( memoryItem.address, _memoryMessaging.getLeader() == _currentModuleAddress, *this );
-        // }
-        
         _memoryMessaging.propagateMemoryChange( result.propagationType, memoryItem.address, memoryItem.data.data(),
             memoryItem.data.size(), result.metadataOnly, result.propagationTarget, 
             memoryItem.isDeleteRequest() ? DistributionMessageType::DataRemovalRequest : DistributionMessageType::DataStorageRequest );

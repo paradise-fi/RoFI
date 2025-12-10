@@ -48,11 +48,4 @@ public:
                                         const rofi::hal::Ip6Addr& sender,
                                         uint8_t* data,
                                         const size_t size ) >&& callback ) = 0;
-
-    /// @brief Registers a callback for the event of memory being succesfully written into on this module.
-    /// @param callback Your custom callback.
-    virtual void registerOnMemoryStoredCallback( 
-        std::function< void( int memoryAddress,
-                             bool isLeaderMemory,
-                             MemoryFacade memory ) >&& callback ) = 0;
 };

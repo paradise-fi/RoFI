@@ -82,13 +82,6 @@ void distributionManagerBlockingMemory() {
 
     // Register logger implementation
     manager.loggingService().useLogger( ExampleLogger(), LogVerbosity::High );
-    
-    // Register onMemoryStoredMessage - You may use this to detect memory writes, react on them, etc.
-    manager.callbacks().registerOnMemoryStoredCallback(
-        []( int addr, bool, MemoryFacade)
-    {
-        std::cout << "[ON MEMORY STORED CALLBACK] Detected memory storage on address " << addr << std::endl;
-    });
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );
