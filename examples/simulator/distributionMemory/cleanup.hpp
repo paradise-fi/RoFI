@@ -19,6 +19,7 @@ public:
     {
         std::cout << "Removing address " << _identity << " from memory." << std::endl;
         _manager.memory().removeData( _identity );
+        std::cout << "==============[PIPELINE TERMINATED]==============" << std::endl;
         return FunctionResult< int >( _identity, FunctionResultType::SUCCESS );
     }
 

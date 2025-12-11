@@ -23,9 +23,7 @@ public:
     WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService,
         LoggingService& loggingService, CustomMessageQueueManager& customMessageQueueManager, MessageDispatcher& messageDispatcher );
 
-    void doWorkLeader( int methodId, unsigned int messageProcessingBatch = 5, 
-                       unsigned int memoryWriteProcessingBatch = 1, unsigned int memoryReadProcessingBatch = 5 );
+    void doWorkLeader( int methodId, unsigned int messageProcessingBatch = 5 );
 
-    void doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader, unsigned int messageProcessingBatch = 5, 
-                         unsigned int memoryWriteProcessingBatch = 1, unsigned int memoryReadProcessingBatch = 5 );
+    void doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader, unsigned int messageProcessingBatch = 5 );
 };

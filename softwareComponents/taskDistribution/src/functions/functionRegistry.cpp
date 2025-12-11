@@ -27,66 +27,53 @@ bool FunctionRegistry::invokeFunction( TaskBase& task )
 /// @param sender The address of the module sending the result.
 /// @param task The task representing the function to be reacted to.
 /// @return The result of the function contained in the FunctionResultType enum.
-FunctionResultType FunctionRegistry::invokeFunctionReaction( Ip6Addr& sender, TaskBase& task )
+FunctionResultType FunctionRegistry::invokeFunctionReaction( const Ip6Addr& sender, TaskBase& task )
 {
     return _functionManager.invokeReaction( sender, task );
 }
 
-/// @brief Places a task into the sender's queue.
-/// @param task The task
-/// @param sender The address of the queue
-/// @return True if the enqueue operation succeeded.
-bool FunctionRegistry::enqueueTaskResult( std::unique_ptr< TaskBase > task, Ip6Addr sender )
+bool FunctionRegistry::processTaskResult( std::unique_ptr< TaskBase > task, const Ip6Addr& sender )
 {
-    return _taskManager.enqueueTaskResult( std::move( task ), sender );
-}
-
-/// @brief Handles the flow of the task result queue.
-void FunctionRegistry::processTaskResultQueue()
-{
-    auto taskResultOptional = _taskManager.popTaskResult();
-    if ( !taskResultOptional.has_value() )
+    std::cout << "processTaskResult" << std::endl;
+    if ( task == nullptr )
     {
-        return;
+        _loggingService.logError( "processTaskResult - Task in TaskResult is null." );
+        return false;
     }
 
-    if ( taskResultOptional.value().task == nullptr )
+    if ( task->status() == TaskStatus::RepeatDistributed )
     {
-        _loggingService.logError( "processTaskResultQueue - Task in TaskResult is null." );
-        return;
-    }
-
-    if ( taskResultOptional.value().task->status() == TaskStatus::RepeatDistributed )
-    {
-        auto fn = _functionManager.getFunction(taskResultOptional.value().task->functionId());
+        auto fn = _functionManager.getFunction( task->functionId() );
         if ( !fn.has_value() )
         {
             _loggingService.logError("Trying to requeue task in result processing, but no such function exists.");
         }
 
-        _taskManager.enqueueTask( taskResultOptional.value().origin, std::move( taskResultOptional.value().task ), fn.value().get().completionType() );
-        return;
+        return _taskManager.enqueueTask( sender, std::move( task ), fn.value().get().completionType() );
     }
 
-    auto reactionResult = invokeFunctionReaction( taskResultOptional->origin, *taskResultOptional->task );
+    auto reactionResult = invokeFunctionReaction( sender, *task.get() );
 
     if ( reactionResult == FunctionResultType::FAILURE )
     {
         std::ostringstream stream;
-        stream << "processTaskResultQueue - Function reaction invocation failed for Task " << taskResultOptional->task->id();
+        stream << "processTaskResultQueue - Function reaction invocation failed for Task " << task->id();
         _loggingService.logError( stream.str() );
-        return;
+        return false;
     }
 
     if ( reactionResult == FunctionResultType::TRY_AGAIN_LOCAL )
     {
         
         _loggingService.logInfo( "processTaskResultQueue - Task result placed back in queue.", LogVerbosity::High );
-        if ( !_taskManager.enqueueTaskResult( std::move( taskResultOptional->task ), taskResultOptional->origin, true ) )
+        if ( !_taskManager.enqueueTaskResult( std::move( task ), sender, true ) )
         {
             _loggingService.logError( "processTaskResultQueue - Failed to enqueue task result." );
+            return false;
         }
     }
+
+    return true;
 }
 
 /// @brief Places a module's request into the task request queue.

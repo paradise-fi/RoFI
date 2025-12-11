@@ -6,8 +6,7 @@ WorkFlowService::WorkFlowService(MessageSender& sender, FunctionRegistry& functi
     _loggingService( loggingService ), _customMessageQueueManager( customMessageQueueManager ),
     _messageDispatcher( messageDispatcher ) {}
 
-void WorkFlowService::doWorkLeader( int methodId, unsigned int messageProcessingBatch, 
-    unsigned int memoryWriteProcessingBatch, unsigned int memoryReadProcessingBatch )
+void WorkFlowService::doWorkLeader( int methodId, unsigned int messageProcessingBatch )
 {
     for ( unsigned int i = 0; i < messageProcessingBatch; ++i)
     {
@@ -19,12 +18,10 @@ void WorkFlowService::doWorkLeader( int methodId, unsigned int messageProcessing
     
     _customMessageQueueManager.processQueue();
     tryDistributeNewTask( methodId );
-    _memoryService.processQueues( memoryWriteProcessingBatch, memoryReadProcessingBatch );
-    _functionRegistry.processTaskResultQueue();
+    // _functionRegistry.processTaskResultQueue();
 }
 
-void WorkFlowService::doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader, unsigned int messageProcessingBatch, 
-    unsigned int memoryWriteProcessingBatch, unsigned int memoryReadProcessingBatch )
+void WorkFlowService::doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader, unsigned int messageProcessingBatch )
 {
     for ( unsigned int i = 0; i < messageProcessingBatch; ++i)
     {
@@ -35,7 +32,6 @@ void WorkFlowService::doWorkFollower( const Ip6Addr& address, const Ip6Addr& lea
     }
     
     _customMessageQueueManager.processQueue();
-    _memoryService.processQueues( memoryWriteProcessingBatch, memoryReadProcessingBatch );
 
     auto taskCandidate = _functionRegistry.popTaskForAddress( address );
 
@@ -115,8 +111,8 @@ void WorkFlowService::tryDistributeNewTask( int methodId )
         distributeTask( function.value().get().distributionType(), task.value().get(), methodId, requester.value() );
     }
 
-    void WorkFlowService::distributeTask( FunctionDistributionType distributionType, TaskBase& task, 
-        int methodId, const Ip6Addr& requester )
+void WorkFlowService::distributeTask( FunctionDistributionType distributionType, TaskBase& task, 
+    int methodId, const Ip6Addr& requester )
     {
         switch ( distributionType )
         {
