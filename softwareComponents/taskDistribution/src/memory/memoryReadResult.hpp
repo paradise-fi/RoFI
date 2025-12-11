@@ -21,7 +21,8 @@ struct MemoryReadResult
         {
             
             T var{};
-            var.deserialize( rawData.data() );
+            const uint8_t* dataPtr = rawData.data();
+            var.deserialize( dataPtr );
             return var;
         }
 

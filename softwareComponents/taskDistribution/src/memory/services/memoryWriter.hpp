@@ -53,7 +53,9 @@ public:
         {
             std::vector< uint8_t > buffer;
             buffer.resize( data.size() );
-            data.serialize( buffer );
+
+            uint8_t* dataPtr = buffer.data();
+            data.serialize( dataPtr );
             dataBuffer = _memory->serializeDataToMemoryFormat( buffer.data(), buffer.size(), address, false );
         }
         else
