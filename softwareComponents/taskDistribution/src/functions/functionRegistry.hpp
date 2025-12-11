@@ -132,11 +132,13 @@ public:
     /// @return The result of the function contained in the FunctionResultType enum.
     FunctionResultType invokeFunctionReaction( const Ip6Addr& sender, TaskBase& task );
 
-    /// @brief Processes a task result
+    /// @brief Places a task into the sender's queue
     /// @param task The task
     /// @param sender The address of the sender
     /// @return True if the enqueue operation succeeded.
-    bool processTaskResult( std::unique_ptr< TaskBase > task, const Ip6Addr& sender );
+    bool enqueueTaskResult( std::unique_ptr< TaskBase > task, const Ip6Addr& sender );
+
+    void processTaskResultQueue();
 
     /// @brief Places a module's request into the task request queue.
     /// @param requester The address of the task requester

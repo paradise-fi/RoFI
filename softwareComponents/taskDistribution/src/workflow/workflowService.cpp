@@ -18,7 +18,7 @@ void WorkFlowService::doWorkLeader( int methodId, unsigned int messageProcessing
     
     _customMessageQueueManager.processQueue();
     tryDistributeNewTask( methodId );
-    // _functionRegistry.processTaskResultQueue();
+    _functionRegistry.processTaskResultQueue();
 }
 
 void WorkFlowService::doWorkFollower( const Ip6Addr& address, const Ip6Addr& leader, unsigned int messageProcessingBatch )
