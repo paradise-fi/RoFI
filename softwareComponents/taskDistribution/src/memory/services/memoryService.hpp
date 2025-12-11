@@ -16,7 +16,7 @@ using namespace rofi::net;
 
 class DistributedMemoryService
 {
-    const unsigned int METHOD_ID = 2;
+    const unsigned int METHOD_ID = 3;
 
     LoggingService& _loggingService;
     MemoryMessagingWrapper _memoryMessagingWrapper;
@@ -25,12 +25,10 @@ class DistributedMemoryService
     std::unique_ptr< DistributedMemoryBase > _memory;
 
 public:
-    DistributedMemoryService( MessageDistributor& distributor, MessagingService& messaging,
-        Ip6Addr& currentModuleAddress, LoggingService& loggingService, int blockingMessageTimeoutMs = 300 );
+    DistributedMemoryService( MessagingService& messaging, Ip6Addr& currentModuleAddress, 
+        LoggingService& loggingService, int blockingMessageTimeoutMs = 300 );
 
     bool isMemoryRegistered();
-
-    void setBlockingReadTimeout( unsigned int timeoutMs );
 
     /// @brief Removes / deregisters the shared memory implementation from DistributedMemoryService.
     /// @return True if the memory implementation was deregistered, otherwise false.
@@ -38,12 +36,6 @@ public:
     
     void onMemoryMessage( Ip6Addr sender, uint8_t* data, size_t size, MemoryRequestType requestType );
 
-    /// @brief Checks whether the memory, in this instant, is going to process any more write operations that are queued.
-    /// @return True if there are no more pending writes.
-    bool isMemoryStable();
-
-    void processQueues( unsigned int writeQueueBatchSize = 1, unsigned int readQueueBatchSize = 5 );
-    
     /// @brief Save data in memory.
     /// @param data The data to be stored.
     /// @param size The size of the data.
@@ -55,9 +47,7 @@ public:
     }
 
     /// @brief Reads data from specified address in memory.
-    /// @param address The memory address to be read
-    /// @return MemoryReadResult struct containing information about read success and a method for extracting the data read.
-    MemoryReadResult readData( int address );
+    MemoryReadResult readData( int address, bool isUserCall = true );
     
     /// @brief Remove data at specified address
     /// @param address The address of the data in memory
@@ -65,11 +55,8 @@ public:
     
     /// @brief Remove all data from this module's memory.
     void clearLocalMemory();
-
-    /// @brief Remove all entries in this module's storage queue.
-    void clearLocalQueue();
     
-    MemoryReadResult readMetadata( int address, const std::string& key );
+    MemoryReadResult readMetadata( int address, const std::string& key, bool isUserCall = true );
 
     bool saveMetadata( int address, const std::string& key, uint8_t* metadata, std::size_t metadataSize );
 

@@ -12,11 +12,6 @@ bool MemoryFacade::deleteMemory()
     return _memoryService.deleteMemory();
 }
 
-bool MemoryFacade::isMemoryStable()
-{
-    return _memoryService.isMemoryStable();
-}
-
 MemoryReadResult MemoryFacade::readData( int address )
 {
     return _memoryService.readData( address );
@@ -30,11 +25,6 @@ void MemoryFacade::removeData( int address )
 void MemoryFacade::clearLocalMemory()
 {
     return _memoryService.clearLocalMemory();
-}
-
-void MemoryFacade::clearLocalQueue()
-{
-    return _memoryService.clearLocalQueue();
 }
 
 MemoryReadResult MemoryFacade::readMetadata( int address, const std::string& key )

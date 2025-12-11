@@ -146,12 +146,13 @@ void MessageDispatcher::handleTaskResult( const rofi::net::Ip6Addr& sender,
         return;
     }
 
-    if ( !_functionRegistry.enqueueTaskResult( std::move( task ), sender ) )
-    {
-        std::ostringstream failStream;
-        failStream << "Failed to persist result from task " << taskId << " for function " << fn.get().functionId();
-        _loggingService.logError( failStream.str() );
-    }
+    _functionRegistry.processTaskResult( std::move( task ), sender );
+    // if ( !_functionRegistry.enqueueTaskResult( std::move( task ), sender ) )
+    // {
+    //     std::ostringstream failStream;
+    //     failStream << "Failed to persist result from task " << taskId << " for function " << fn.get().functionId();
+    //     _loggingService.logError( failStream.str() );
+    // }
 }
 
 void MessageDispatcher::handleTaskMessage( const Ip6Addr& sender, const DistributionMessageType type, uint8_t* data )

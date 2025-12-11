@@ -130,16 +130,13 @@ public:
     /// @param sender The address of the module sending the result.
     /// @param task The task representing the function to be reacted to.
     /// @return The result of the function contained in the FunctionResultType enum.
-    FunctionResultType invokeFunctionReaction( Ip6Addr& sender, TaskBase& task );
+    FunctionResultType invokeFunctionReaction( const Ip6Addr& sender, TaskBase& task );
 
-    /// @brief Places a task into the sender's queue.
+    /// @brief Processes a task result
     /// @param task The task
-    /// @param sender The address of the queue
+    /// @param sender The address of the sender
     /// @return True if the enqueue operation succeeded.
-    bool enqueueTaskResult( std::unique_ptr< TaskBase > task, Ip6Addr sender );
-
-    /// @brief Handles the flow of the task result queue.
-    void processTaskResultQueue();
+    bool processTaskResult( std::unique_ptr< TaskBase > task, const Ip6Addr& sender );
 
     /// @brief Places a module's request into the task request queue.
     /// @param requester The address of the task requester

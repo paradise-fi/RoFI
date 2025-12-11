@@ -18,10 +18,6 @@ class MemoryReader
     MessagingService& _messaging;
     LoggingService& _loggingService;
     int _blockingMessageTimeoutMs = 300;
-    
-
-    // For external read requests that need to be sent over network.
-    std::queue<MemoryRequestQueueItem> _memoryReadQueue;
 
     MemoryReadResult readDataBlocking( const Ip6Addr& target, uint8_t* data, size_t dataSize );
 
@@ -37,15 +33,11 @@ class MemoryReader
     /// @brief Reads data from specified address in memory.
     /// @param address The memory address to be read
     /// @return MemoryReadResult struct containing information about read success and a method for extracting the data read.
-    MemoryReadResult readData( int address );
+    MemoryReadResult readData( int address, bool isUserCall = true );
     
-    MemoryReadResult readMetadata( int address, const std::string& key );
+    MemoryReadResult readMetadata( int address, const std::string& key, bool isUserCall = true );
     
-    void emplaceIntoQueue( Ip6Addr& sender, uint8_t* data, size_t dataSize, int address, bool isMetadataOnly, MemoryRequestType requestType );
-    bool processQueue();
-
-    /// @brief Remove all entries in this module's storage queue.
-    void clearLocalQueue();
+    void handleRemoteDataReadRequest( Ip6Addr& sender, uint8_t* data, size_t dataSize, int address, bool isMetadataOnly );
 
     void unregisterMemory();
 

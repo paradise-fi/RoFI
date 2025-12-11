@@ -15,10 +15,6 @@ public:
     /// @return True if the memory implementation was deregistered, otherwise false.
     bool deleteMemory();
 
-    /// @brief Checks whether the memory, in this instant, is going to process any more write operations that are queued.
-    /// @return True if there are no more pending writes.
-    bool isMemoryStable();
-
     /// @brief Save data in memory.
     /// @param data The data to be stored.
     /// @param size The size of the data.
@@ -41,9 +37,6 @@ public:
     /// @brief Remove all data from this module's memory.
     void clearLocalMemory();
 
-    /// @brief Remove all entries in this module's storage queue.
-    void clearLocalQueue();
-    
     MemoryReadResult readMetadata( int address, const std::string& key );
 
     bool saveMetadata( int address, const std::string& key, uint8_t* metadata, std::size_t metadataSize );

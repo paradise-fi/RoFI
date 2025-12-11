@@ -5,6 +5,7 @@ class FizzBuzz : public DistributedFunction< int, int >
 {
     const int _fizzBuzzTreshold = 600;
     int _identity;
+    int _iteration = 1;
     DistributedTaskManager& _manager;
 
 public:
@@ -17,9 +18,13 @@ public:
     /// @return A function result structure, which contains both the result value and whether the function is considered a success.
     virtual FunctionResult< int > execute( int value ) override 
     {
-        std::cout << "Received value from leader: " << value << std::endl;
-        int result = _identity + value;
-        std::cout << "FizzBuzz Value:" << result << std::endl;
+        int result = _identity * _iteration + value;
+        _iteration++;
+        std::cout << "Received value " << value << ", processed it into " << result << " which I will send as a result." << std::endl;
+        if ( result >= _fizzBuzzTreshold )
+        {
+            std::cout << "==============[PIPELINE WILL BE TERMINATED]==============" << std::endl;
+        }
         return FunctionResult< int >( result, FunctionResultType::SUCCESS );
     }
 
@@ -53,6 +58,10 @@ public:
             {
                 std::cout << "Execution of function " << functionName() << "failed." << std::endl;
             }
+        }
+        else
+        {
+            std::cout << "Terminating pipeline for " << origin << std::endl;
         }
 
         return false;
