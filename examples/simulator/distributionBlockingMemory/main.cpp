@@ -16,6 +16,7 @@
 #include "sendSave.hpp"
 #include "check.hpp"
 #include "address.cpp"
+#include "message.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
@@ -65,7 +66,7 @@ void distributionManagerBlockingMemory() {
                 result.success = true;
                 int data = as< int >( dataBuffer );
                 int toStore = data + 1;
-                mgr.memory().saveData< int >( std::move( toStore ), data );
+                mgr.memory().saveData< Message >( Message( std::string( "Stored Message" ) ), data );
                 std::memcpy( result.rawData.data(), &data, result.rawData.size() );
             }
             return result;
