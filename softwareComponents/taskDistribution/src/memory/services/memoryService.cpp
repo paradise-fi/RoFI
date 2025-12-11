@@ -1,20 +1,11 @@
 #include "memoryService.hpp"
 
-DistributedMemoryService::DistributedMemoryService( MessageDistributor& distributor, MessagingService& messaging,
+DistributedMemoryService::DistributedMemoryService( MessagingService& messaging,
     Ip6Addr& currentModuleAddress, LoggingService& loggingService, int blockingMessageTimeoutMs )
 :   _loggingService( loggingService ),
     _memoryMessagingWrapper( MemoryMessagingWrapper( messaging, loggingService, METHOD_ID, currentModuleAddress ) ),
     _memoryWriter( MemoryWriter(  _memoryMessagingWrapper, currentModuleAddress, loggingService ) ),
-    _memoryReader( MemoryReader( _memoryMessagingWrapper, currentModuleAddress, messaging, loggingService, blockingMessageTimeoutMs ) )
-{
-    distributor.registerMethod( METHOD_ID, 
-        [ this ] ( Ip6Addr sender, uint8_t* data, unsigned int size ) 
-        {
-            auto messageType = as< DistributionMessageType >( data );
-            onMemoryMessage( sender, data + _memoryMessagingWrapper.genericMessageHeaderSize(), size, mapMessageToMemoryRequest(messageType) ); 
-        },
-        [] () { return; } );
-}
+    _memoryReader( MemoryReader( _memoryMessagingWrapper, currentModuleAddress, messaging, loggingService, blockingMessageTimeoutMs ) ) {}
 
 bool DistributedMemoryService::isMemoryRegistered()
 {
@@ -83,43 +74,21 @@ void DistributedMemoryService::onMemoryMessage( Ip6Addr sender, uint8_t* data, s
 
     if ( requestType == MemoryRequestType::MemoryRead )
     {
-        _memoryReader.emplaceIntoQueue( sender, data + offset,
-        dataSize, address, isMetadataOnly, requestType );   
+        _memoryReader.handleRemoteDataReadRequest( sender, data + offset,
+        dataSize, address, isMetadataOnly );   
     }
     else
     {
-        _memoryWriter.emplaceIntoQueue( sender, data + offset,
+        _memoryWriter.handleRemoteDataWriteRequest( sender, data + offset,
             dataSize, address, isMetadataOnly, requestType );
+        // _memoryWriter.emplaceIntoQueue( sender, data + offset,
+        //     dataSize, address, isMetadataOnly, requestType );
     }
 }
 
-bool DistributedMemoryService::isMemoryStable()
+MemoryReadResult DistributedMemoryService::readData( int address, bool isUserCall )
 {
-    return _memoryWriter.isMemoryStable();
-}
-
-void DistributedMemoryService::processQueues( unsigned int writeQueueBatchSize, unsigned int readQueueBatchSize )
-{
-    for ( unsigned int i = 0; i < writeQueueBatchSize; ++i )
-    {
-        if ( !_memoryWriter.processQueue() )
-        {
-            break;
-        }
-    }
-
-    for ( unsigned int i = 0; i < readQueueBatchSize; ++i )
-    {
-        if ( !_memoryReader.processQueue() )
-        {
-            break;
-        }
-    }
-}
-
-MemoryReadResult DistributedMemoryService::readData( int address )
-{
-    return _memoryReader.readData( address );
+    return _memoryReader.readData( address, isUserCall );
 }
 
 void DistributedMemoryService::removeData( int address )
@@ -133,16 +102,9 @@ void DistributedMemoryService::clearLocalMemory()
     return _memory->clear();
 }
 
-/// @brief Remove all entries in this module's storage queue.
-void DistributedMemoryService::clearLocalQueue()
+MemoryReadResult DistributedMemoryService::readMetadata( int address, const std::string& key, bool isUserCall )
 {
-    _memoryReader.clearLocalQueue();
-    _memoryWriter.clearLocalQueue();
-}
-
-MemoryReadResult DistributedMemoryService::readMetadata( int address, const std::string& key )
-{
-    return _memoryReader.readMetadata( address, key );
+    return _memoryReader.readMetadata( address, key, isUserCall );
 }
 
 bool DistributedMemoryService::saveMetadata( int address, const std::string& key, uint8_t* metadata, std::size_t metadataSize )

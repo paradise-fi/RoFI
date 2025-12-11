@@ -12,7 +12,7 @@ DistributedTaskManager::DistributedTaskManager(
   _callbackService( _election, _loggingService ),
   _messaging( address, DISTRIBUTION_PORT, distributor, std::move( pcb ), 
                _messageQueueManager, METHOD_ID ),
-  _memoryService( distributor, _messaging, address, _loggingService, blockingMessageTimeoutMs ),
+  _memoryService( _messaging, address, _loggingService, blockingMessageTimeoutMs ),
   _customMessageQueueManager( *this, _messaging ),
   _messageDispatcher( address, *this, _functionRegistry, _messaging, 
                       _memoryService, _loggingService, _customMessageQueueManager, 
@@ -42,8 +42,7 @@ LoggingService& DistributedTaskManager::loggingService()
     return _loggingService;
 }
 
-void DistributedTaskManager::doWork( unsigned int messageProcessingBatch, unsigned int memoryWriteProcessingBatch, 
-        unsigned int memoryReadProcessingBatch )
+void DistributedTaskManager::doWork( unsigned int messageProcessingBatch )
 {
     if ( !_election.isRunning() )
     {
@@ -58,11 +57,11 @@ void DistributedTaskManager::doWork( unsigned int messageProcessingBatch, unsign
 
     if ( _address == _election.getLeader() )
     {
-        _workFlowService.doWorkLeader( METHOD_ID, messageProcessingBatch, memoryWriteProcessingBatch, memoryReadProcessingBatch );
+        _workFlowService.doWorkLeader( METHOD_ID, messageProcessingBatch );
         return;
     }
     
-    _workFlowService.doWorkFollower( _address, _election.getLeader(), messageProcessingBatch, memoryWriteProcessingBatch, memoryReadProcessingBatch );
+    _workFlowService.doWorkFollower( _address, _election.getLeader(), messageProcessingBatch );
 }
 
 void DistributedTaskManager::start( int initialElectionDelay, int electionCyclesBeforeStabilization )

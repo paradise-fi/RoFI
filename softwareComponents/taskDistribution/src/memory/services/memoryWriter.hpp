@@ -13,23 +13,12 @@ class MemoryWriter
 
     std::queue<MemoryRequestQueueItem> _memoryStorageQueue;
 
-    MemoryWriteResult handleMetadataUpdate( MemoryRequestQueueItem& memoryItem );
+    MemoryWriteResult handleMetadataUpdate( int address, uint8_t* data, size_t dataSize, MemoryRequestType requestType );
 
-    MemoryWriteResult handleDataUpdate( MemoryRequestQueueItem& memoryItem );
-
+    MemoryWriteResult handleDataUpdate( int address, uint8_t* data, size_t dataSize, MemoryRequestType requestType );
 
 public:
     MemoryWriter( MemoryMessagingWrapper& memoryMessaging, rofi::hal::Ip6Addr currentModuleAddress, LoggingService& loggingService );
-
-    /// @brief Checks whether the memory, in this instant, is going to process any more write operations that are queued.
-    /// @return True if there are no more pending writes.
-    bool isMemoryStable();
-
-    void emplaceIntoQueue( Ip6Addr& sender, uint8_t* data, size_t dataSize, int address, bool isMetadataOnly, MemoryRequestType requestType );
-    bool processQueue();
-
-    /// @brief Remove all entries in this module's storage queue.
-    void clearLocalQueue();
 
     void unregisterMemory();
 
@@ -42,6 +31,8 @@ public:
     /// @brief Remove data at specified address
     /// @param address The address of the data in memory
     void removeData( int address );
+
+    void handleRemoteDataWriteRequest( Ip6Addr& sender, uint8_t* data, size_t dataSize, int address, bool isMetadataOnly, MemoryRequestType requestType );
 
     /// @brief Save data in memory.
     /// @param data The data to be stored.

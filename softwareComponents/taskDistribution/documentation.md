@@ -103,17 +103,12 @@ These methods provide direct access to some of the lower level subsystems that m
 
 ##### Standard Workflow
 ```c++
-void doWork( unsigned int messageProcessingBatch = 5, unsigned int memoryWriteProcessingBatch = 1, 
-        unsigned int memoryReadProcessingBatch = 5 );
+void doWork( unsigned int messageProcessingBatch = 5 );
 ```
 
 Executes a single run of the standard workflow loop of the task manager. This method must be continuously invoked for the task manager to function properly.
 
 The **messageProcessingBatch** argument is used to configure the **maximum** number of incoming messages that will be processed and dispatched to subsystems during a single iteration.
-
-The **memoryWriteProcessingBatch** argument is used to configure the **maximum** number of memory write requests that will be processed during a single iteration.
-
-The **memoryReadProcessingBatch** argument is used to configure the **maximum** number of memory read requests sent in by other modules that will be processed during a single iteration.
 
 ```c++
 void start( int initialElectionDelay, int electionCyclesBeforeStabilization = 3 )
@@ -314,11 +309,6 @@ void clearLocalMemory();
 
 Removes all data from local memory.
 
-```c++
-void clearLocalQueue();
-```
-Removes all entries in the memory queues - all pending memory changes and pending remote reads.
-
 ##### Metadata Access Methods
 
 ```c++
@@ -342,7 +332,6 @@ Used to fetch the DistributedMemoryBase implementation provided by the user. Thi
 
 ### FunctionFacade
 Provides access to methods that allow for the registration of functions and task scheduler cleanup.
-
 
 ##### GetFunctionHandle
 ```c++
@@ -611,9 +600,6 @@ struct MemoryWriteResult
 {
     // Instructs the system that the memory storage pipeline should continue as normal.
     bool success;
-
-    // Instructs the system that this module did actually store the memory.
-    bool stored;
 
     // Instructs the system to only write metadata.
     bool metadataOnly;

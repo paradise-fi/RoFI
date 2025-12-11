@@ -8,32 +8,23 @@ MemoryReader::MemoryReader( MemoryMessagingWrapper& memoryMessaging, rofi::hal::
 /// @brief Reads data from specified address in memory.
 /// @param address The memory address to be read
 /// @return MemoryReadResult struct containing information about read success and a method for extracting the data read.
-MemoryReadResult MemoryReader::readData( int address )
+MemoryReadResult MemoryReader::readData( int address, bool isUserCall )
 {
     if ( _memory == nullptr )
     {
         return MemoryReadResult{ false, false, std::nullopt, std::vector< uint8_t >() };
     }
-    return readDataInternal( address, _currentModuleAddress, true );
+    return readDataInternal( address, _currentModuleAddress, isUserCall );
 }
     
-MemoryReadResult MemoryReader::readMetadata( int address, const std::string& key )
+MemoryReadResult MemoryReader::readMetadata( int address, const std::string& key, bool isUserCall )
 {
     if ( _memory == nullptr )
     {
         return MemoryReadResult{ false, false, std::nullopt, std::vector< uint8_t >() };
     }
 
-    return readMetadataInternal( address, _currentModuleAddress, key,  true );
-}
-
-/// @brief Remove all entries in this module's storage queue.
-void MemoryReader::clearLocalQueue()
-{
-    while ( !_memoryReadQueue.empty() )
-    {
-        _memoryReadQueue.pop();
-    }
+    return readMetadataInternal( address, _currentModuleAddress, key, isUserCall );
 }
 
 void MemoryReader::unregisterMemory()
@@ -44,6 +35,25 @@ void MemoryReader::unregisterMemory()
 void MemoryReader::registerMemory( DistributedMemoryBase* memory )
 {
     _memory = memory;
+}
+
+void MemoryReader::handleRemoteDataReadRequest( Ip6Addr& sender, uint8_t* data, size_t dataSize,
+    int address, bool isMetadataOnly )
+{
+    if ( isMetadataOnly )
+    {
+        // Extract key
+        size_t keySize = as< size_t >( data );
+        std::string key;
+        key.resize( keySize );
+        std::memcpy( key.data(), data + sizeof( size_t ), keySize );
+
+        readMetadataInternal( address, sender, key, false ); 
+    }
+    else
+    {
+        readDataInternal( address, sender, false );
+    }
 }
 
 // =============== PRIVATE
@@ -191,38 +201,4 @@ MemoryReadResult MemoryReader::readMetadataInternal( int address, const Ip6Addr&
     return isUserCall 
         ? readDataBlocking( target, data.data(), data.size() )
         : forwardReadRequest( target, data.data(), data.size() );
-}
-
-void MemoryReader::emplaceIntoQueue( Ip6Addr& sender, uint8_t* data, size_t dataSize,
-    int address, bool isMetadataOnly, MemoryRequestType requestType )
-{
-    _memoryReadQueue.emplace( sender, data, dataSize, address, isMetadataOnly, requestType );
-}
-
-bool MemoryReader::processQueue()
-{
-    if ( _memory == nullptr || _memoryReadQueue.empty() )
-    {
-        return false;
-    }
-
-    auto memoryItem = _memoryReadQueue.front();
-    _memoryReadQueue.pop();
-
-    MemoryReadResult readResult;
-    if ( memoryItem.isMetadataOnly )
-    {
-        size_t keySize = as< size_t >( memoryItem.data.data() );
-        std::string key;
-        key.resize( keySize );
-        std::memcpy( key.data(), memoryItem.data.data() + sizeof( size_t ), keySize );
-
-        readResult = readMetadataInternal( memoryItem.address, memoryItem.sender, key, false ); 
-    }
-    else
-    {
-        readResult = readDataInternal( memoryItem.address, memoryItem.sender, false );
-    }
-
-    return true;
 }

@@ -47,15 +47,19 @@ void distributionManagerFizzBuzz( int followers ) {
     auto rtProto = net.addProtocol( rofi::net::SimpleReactive() );
     net.setProtocol( *rtProto );
 
-    auto messageDistributor = net.addProtocol( rofi::net::MessageDistributor( addr, net ) );
-    net.setProtocol( *messageDistributor );
+    // Instantiate and register the message distributor protocol in the network manager. This protocol is important for brodacasting messages.
+    auto messageDistributorProtocol = net.addProtocol( rofi::net::MessageDistributor( addr, net ) );
+    net.setProtocol( *messageDistributorProtocol );
     
-    std::unique_ptr< ElectionProtocolBase > election = std::make_unique< LRElect >( net, *reinterpret_cast< MessageDistributor* >( messageDistributor ), addr, 1, 3 );
+    // Instantiate the election protocol.
+    std::unique_ptr< ElectionProtocolBase > election = std::make_unique< LRElect >( net, *reinterpret_cast< MessageDistributor* >( messageDistributorProtocol ), addr, 1, 3 );
+
+    MessageDistributor* messageDistributor = reinterpret_cast< MessageDistributor* >( messageDistributorProtocol );
 
     // Instantiate the Distribution Manager
     DistributedTaskManager manager(
         std::move( election ), addr,
-        *reinterpret_cast< MessageDistributor* >( messageDistributor ), std::move( pcb ) );
+        *messageDistributor, std::move( pcb ) );
 
     // Register the distributed functions.
     manager.functions().registerFunction< int >( InitialFunction( id, manager, followers ) );

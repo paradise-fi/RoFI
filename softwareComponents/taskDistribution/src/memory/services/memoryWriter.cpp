@@ -3,52 +3,6 @@
 MemoryWriter::MemoryWriter( MemoryMessagingWrapper& memoryMessaging, rofi::hal::Ip6Addr currentModuleAddress, LoggingService& loggingService )
 : _memoryMessaging( memoryMessaging ), _currentModuleAddress( currentModuleAddress ), _loggingService( loggingService ) {}
 
-/// @brief Checks whether the memory, in this instant, is going to process any more write operations that are queued.
-/// @return True if there are no more pending writes.
-bool MemoryWriter::isMemoryStable()
-{
-    return _memoryStorageQueue.empty();
-}
-
-void MemoryWriter::emplaceIntoQueue( Ip6Addr& sender, uint8_t* data, size_t dataSize,
-    int address, bool isMetadataOnly, MemoryRequestType requestType )
-{
-    _memoryStorageQueue.emplace( sender, data, dataSize, address, isMetadataOnly, requestType );
-}
-
-bool MemoryWriter::processQueue()
-{
-    if ( _memory == nullptr || _memoryStorageQueue.empty() )
-    {
-        return false;
-    }
-
-    auto memoryItem = _memoryStorageQueue.front();
-    _memoryStorageQueue.pop();
-
-    MemoryWriteResult result = memoryItem.isMetadataOnly 
-        ? handleMetadataUpdate( memoryItem )
-        : handleDataUpdate ( memoryItem );
-
-    if ( result.success )
-    {
-        _memoryMessaging.propagateMemoryChange( result.propagationType, memoryItem.address, memoryItem.data.data(),
-            memoryItem.data.size(), result.metadataOnly, result.propagationTarget, 
-            memoryItem.isDeleteRequest() ? DistributionMessageType::DataRemovalRequest : DistributionMessageType::DataStorageRequest );
-    }
-
-    return true;
-}
-
-/// @brief Remove all entries in this module's storage queue.
-void MemoryWriter::clearLocalQueue()
-{
-    while ( !_memoryStorageQueue.empty() )
-    {
-        _memoryStorageQueue.pop();
-    }
-}
-
 void MemoryWriter::unregisterMemory()
 {
     _memory = nullptr;
@@ -169,36 +123,52 @@ void MemoryWriter::removeData( int address )
     }
 }
 
+void MemoryWriter::handleRemoteDataWriteRequest( Ip6Addr& sender, uint8_t* data, size_t dataSize, int address, bool isMetadataOnly, MemoryRequestType requestType )
+{
+    auto memoryItem = MemoryRequestQueueItem( sender, data, dataSize, address, isMetadataOnly, requestType );
+    MemoryWriteResult result = isMetadataOnly 
+        ? handleMetadataUpdate( address, data, dataSize, requestType )
+        : handleDataUpdate ( address, data, dataSize, requestType );
+
+    if ( result.success )
+    {
+        _memoryMessaging.propagateMemoryChange( result.propagationType, 
+            address, data, dataSize, result.metadataOnly, result.propagationTarget, 
+            requestType == MemoryRequestType::MemoryDelete 
+                ? DistributionMessageType::DataRemovalRequest 
+                : DistributionMessageType::DataStorageRequest );
+    }
+}
+
 // ================== PRIVATE
 
-MemoryWriteResult MemoryWriter::handleMetadataUpdate( MemoryRequestQueueItem& memoryItem )
+MemoryWriteResult MemoryWriter::handleMetadataUpdate( int address, uint8_t* data, size_t dataSize, MemoryRequestType requestType )
 {
     MemoryWriteResult result;
 
-    size_t keySize = as< size_t >( memoryItem.data.data() );
+    size_t keySize = as< size_t >( data );
     std::string key;
     key.resize( keySize );
-    std::memcpy( key.data(), memoryItem.data.data() + sizeof( size_t ), keySize );
+    std::memcpy( key.data(), data + sizeof( size_t ), keySize );
 
     size_t keyDataSize = sizeof( size_t ) + keySize;
 
-    if ( memoryItem.isDeleteRequest() )
+    if ( requestType == MemoryRequestType::MemoryDelete )
     {
-        return _memory->removeMetadata( memoryItem.address, key, _memoryMessaging.isLeaderMemory() );
+        return _memory->removeMetadata( address, key, _memoryMessaging.isLeaderMemory() );
     }
 
-    return _memory->writeMetadata( memoryItem.address, key, 
-        memoryItem.data.data() + keyDataSize,
-        memoryItem.data.size() - keyDataSize,
+    return _memory->writeMetadata( address, key, 
+        data + keyDataSize, dataSize - keyDataSize,
         _memoryMessaging.isLeaderMemory() );
 }
 
-MemoryWriteResult MemoryWriter::handleDataUpdate( MemoryRequestQueueItem& memoryItem )
+MemoryWriteResult MemoryWriter::handleDataUpdate( int address, uint8_t* data, size_t dataSize, MemoryRequestType requestType )
 {
-    if ( memoryItem.isDeleteRequest() )
+    if ( requestType == MemoryRequestType::MemoryDelete )
     {
-        return _memory->removeData( memoryItem.address, _memoryMessaging.isLeaderMemory() );
+        return _memory->removeData(address, _memoryMessaging.isLeaderMemory() );
     }
     
-    return _memory->writeData( memoryItem.data.data(), memoryItem.data.size(), memoryItem.address, _memoryMessaging.isLeaderMemory() );
+    return _memory->writeData( data, dataSize, address, _memoryMessaging.isLeaderMemory() );
 }

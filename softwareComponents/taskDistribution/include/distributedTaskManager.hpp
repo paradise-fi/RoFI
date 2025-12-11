@@ -55,10 +55,7 @@ public:
 
     /// @brief Performs a single iteration of the task manager workflow loop.
     /// @param messageProcessingBatch - The maximum number of incoming messages in the message queue that will be processed by the dispatcher during the loop.
-    /// @param memoryWriteProcessingBatch - The maximum number of memory write requests in the memory write request queue that will be processed by the dispatcher during the loop.
-    /// @param memoryReadProcessingBatch - The maximum number of memory read requests in the memory read request queue that will be processed by the dispatcher during the loop. These requests represent read requests from remote modules.
-    void doWork( unsigned int messageProcessingBatch = 5, unsigned int memoryWriteProcessingBatch = 1, 
-        unsigned int memoryReadProcessingBatch = 5 );
+    void doWork( unsigned int messageProcessingBatch = 5 );
     
     void start( int initialElectionDelay = 1, int electionCyclesBeforeStabilization = 3 );
 
