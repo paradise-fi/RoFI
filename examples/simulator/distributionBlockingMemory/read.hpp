@@ -1,5 +1,6 @@
 #include "distributedTaskManager.hpp"
 #include "distributedFunction.hpp"
+#include "message.hpp"
 
 class Read : public DistributedFunction< int, int >
 
@@ -21,7 +22,7 @@ public:
         auto readResult = _manager.memory().readData( target );
         if ( readResult.success )
         {
-            std::cout << "I have received the data succesfully, the data is: " << readResult.data< int >() << std::endl;
+            std::cout << "I have received the data succesfully, the data is: " << readResult.data< Message >().message << std::endl;
             std::cout << "Now requesting the data to be deleted." << std::endl;
             _manager.memory().removeData( target );
             return FunctionResult< int >( target, FunctionResultType::SUCCESS );
