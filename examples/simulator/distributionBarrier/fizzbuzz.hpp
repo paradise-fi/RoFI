@@ -119,14 +119,12 @@ public:
         }
         std::cout << std::endl;
 
-        std::cout << "Invoking the barrier." << std::endl;
         auto barrierHandle = _manager.functions().getFunctionHandle< Ip6Addr >( 100 ).value();
         if ( !barrierHandle( origin, 1, false, std::tuple<>()) )
         {
             std::cout << "Execution of barrier function failed." << std::endl;
         }
 
-        std::cout << "Invoking new fizzbuzz."<< std::endl;
         auto fizzbuzzHandle = _manager.functions().getFunctionHandle< FizzBuzzMetaData, int >( 1 ).value();
         if ( !fizzbuzzHandle( origin, 1, false, std::tuple< int >( getNextMemorySlotAddress( data.value().value ) ) ) )
         {
