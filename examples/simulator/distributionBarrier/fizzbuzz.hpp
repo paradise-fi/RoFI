@@ -51,13 +51,13 @@ public:
         if ( !result.success )
         {
             resultValue = _identity + ( memoryAddress * _identity );
-            std::cout << "Fizzbuzz value not in memory at address " << memoryAddress << ", generated and stored " << resultValue << " there." << std::endl;
+            std::cout << "Fizzbuzz value not in memory at address " << memoryAddress << ", generated and stored " << _identity << " + (" << memoryAddress << " * " << _identity << ") = "  << resultValue << " there." << std::endl;
         }
         else
         {
             int previous = result.data< int >();
-            resultValue = _identity + (previous * _identity );
-            std::cout << "Fizbuzz value " << previous << " found in memory slot " << memoryAddress << ", updating and storing value " << resultValue << "there." << std::endl;
+            resultValue = _identity + ( previous * _identity );
+            std::cout << "Fizbuzz value " << previous << " found in memory slot " << memoryAddress << ", updating and storing value " << _identity << " + (" << previous << " * " << _identity << ") = "  << resultValue << " there." << std::endl;
         }
 
         _manager.memory().saveData< int >( std::forward< int >( resultValue ), memoryAddress );
