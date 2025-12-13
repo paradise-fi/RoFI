@@ -28,12 +28,8 @@ Ip6Addr createAddress( int id ) {
     return Ip6Addr( ss.str() );
 }
 
-/// In this simple example, you will learn how to create a simple program using
-/// the distribution manager. In this example, follower nodes will generate values
-/// that will be sent to the leader. The leader will take these values and play the fizzbuzz
-/// game with them.
 void distributionManagerFizzBuzz() {
-    std::cout << "Starting simple RoFI Distribution Manager FizzBuzz with memory example\n";
+    std::cout << "Starting simple RoFI Distribution Manager barrier synchronization example\n";
     tcpip_init( nullptr, nullptr );
 
     LOCK_TCPIP_CORE();
@@ -74,6 +70,8 @@ void distributionManagerFizzBuzz() {
     // Register the distributed functions.
     manager.functions().registerFunction< int >( InitialFunction( id, manager ) );
     manager.functions().registerFunction< FizzBuzzMetaData, int >( FizzBuzz( id, manager ) );
+
+    // Register the barrier.
     if ( !manager.functions().registerFunction< Ip6Addr >( NaiveBarrier( addr, manager ) ) )
     {
         std::cout << "Failed to register barrier." << std::endl;
@@ -81,7 +79,7 @@ void distributionManagerFizzBuzz() {
     }
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
-    manager.start( id );
+    manager.start( 2 );
 
     while ( !terminate ) {
         // A single 'tick' of the manager instance.
