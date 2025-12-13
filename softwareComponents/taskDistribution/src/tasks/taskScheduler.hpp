@@ -1,24 +1,29 @@
 #pragma once
 
 #include <algorithm>
-#include <queue>
 #include "task.hpp"
 #include "../functions/functionModel.hpp"
 #include "taskEntry.hpp"
+#include <algorithm>
 
 class TaskScheduler
 {
+    unsigned int _globalAge = 0;
     std::vector< TaskEntry > _tasks;
-    
+    std::vector< TaskEntry > _blockedTasks;
+
     std::optional< int > _activeBarrierTaskId;
     std::set< int > _registeredBarrierFunctionIds;
 
     std::unique_ptr< TaskEntry > _active;
 
+    bool pushTaskToFront( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType, bool isRegisteredBarrier );
+
+    void moveBlockedTasks();
+
+    void normalizeTaskPriorities();
+
     void ageTasks();
-
-    bool pushTaskToFront( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType );
-
 public:
     TaskScheduler( std::set< int >& registeredBarrierFunctionIds );
 
