@@ -27,10 +27,9 @@ public:
     virtual void copyToBuffer( uint8_t* buffer ) = 0;
     virtual void fillFromBuffer( const uint8_t* buffer ) = 0;
 
-    virtual int getPriority() const = 0;
-    virtual int getEffectivePriority() const = 0;
-    virtual void incrementAge() = 0;
+    virtual unsigned int getPriority() const = 0;
     virtual void setPriority( int priority ) = 0;
+    virtual void addPriority( int toAdd ) = 0;
 
     virtual bool isQueuedToFront() = 0;
 };
@@ -41,7 +40,7 @@ class Task : public TaskBase {
     TaskStatus _status;
     int _age = 0;
     int _functionId;
-    int _priority;
+    unsigned int _priority;
     std::optional< Result > _result;
     bool _enqueueFront;
     std::tuple< Arguments... > _args;
@@ -83,13 +82,13 @@ class Task : public TaskBase {
         _status = TaskStatus::Pending;
         _id = 0;
     }
-    Task( int id, TaskStatus status, int functionId, int priority, bool enqueueFront )
+    Task( int id, TaskStatus status, int functionId, unsigned int priority, bool enqueueFront )
         : _id( id ), _status( status ), _functionId( functionId ), _priority( priority ), _enqueueFront( enqueueFront ) {}
 
-    Task( int id, TaskStatus status, int functionId, int result, int priority, bool enqueueFront )
+    Task( int id, TaskStatus status, int functionId, int result, unsigned int priority, bool enqueueFront )
         : _id( id ), _status( status ), _functionId( functionId ), _result( result ), _priority( priority ), _enqueueFront( enqueueFront ) {}
     
-        Task( int id, TaskStatus status, int functionId, int priority, bool enqueueFront, std::tuple< Arguments... > args)
+        Task( int id, TaskStatus status, int functionId, unsigned int priority, bool enqueueFront, std::tuple< Arguments... > args)
         : _id( id ), _status( status ), _functionId( functionId ), _priority( priority ), _enqueueFront( enqueueFront ), _args ( args ) {}
 
     int id() const override { return _id; }
@@ -168,7 +167,7 @@ class Task : public TaskBase {
     {
         _functionId = readFromBuffer< int >( buffer );
         _id = readFromBuffer< int >( buffer );
-        _priority = readFromBuffer< int >( buffer );
+        _priority = readFromBuffer< unsigned int >( buffer );
         _enqueueFront = readFromBuffer< bool >( buffer );
         _status = readFromBuffer< TaskStatus >( buffer );
         bool hasValue = readFromBuffer< bool >( buffer );
@@ -207,13 +206,11 @@ class Task : public TaskBase {
 
     bool operator== (const Task& rhs) { return _id == rhs.id(); }
     
-    virtual int getPriority() const override { return _priority; }
-
-    virtual int getEffectivePriority() const override { return _priority + _age; }
-    
-    virtual void incrementAge() override { _age++; }
+    virtual unsigned int getPriority() const override { return _priority; }
 
     virtual void setPriority( int priority ) override { _priority = priority; }
+
+    virtual void addPriority( int toAdd ) override { _priority += toAdd; }
 
     virtual bool isQueuedToFront() override { return _enqueueFront; }
 };

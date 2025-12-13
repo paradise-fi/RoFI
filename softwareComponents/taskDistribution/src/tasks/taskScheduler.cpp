@@ -32,6 +32,7 @@ void TaskScheduler::clearActiveTask( bool clearBarrier )
         }
 
         _activeBarrierTaskId = std::nullopt;
+        moveBlockedTasks();
     }
 
     _active.reset( nullptr );
@@ -60,6 +61,7 @@ void TaskScheduler::clearActiveTask( int id, bool clearBarrier )
             }
 
             _activeBarrierTaskId = std::nullopt;
+            moveBlockedTasks();
         }
         
         _active.reset();
@@ -79,6 +81,12 @@ std::unique_ptr< TaskBase > TaskScheduler::clearAndGetActiveTask()
         return nullptr;
     }
 
+    if ( _active->task->id() == _activeBarrierTaskId )
+    {
+        _activeBarrierTaskId = std::nullopt;
+        moveBlockedTasks();
+    }
+
     auto activeTask = std::move( _active->task );
     _active = nullptr;
     return activeTask;
@@ -96,24 +104,17 @@ std::optional< std::reference_wrapper< TaskBase > > TaskScheduler::popTask( bool
         ageTasks();
     }
 
-    auto oldest = std::max_element( _tasks.begin(), _tasks.end(), 
-        [ this ]( const TaskEntry& lhs, const TaskEntry& rhs ) 
-        { 
-            if ( _activeBarrierTaskId.has_value() && rhs.task->id() > _activeBarrierTaskId.value() )
-            {
-                return false;
-            }
-
-            return lhs.task->getEffectivePriority() < rhs.task->getEffectivePriority(); 
-        } );
-
-    std::swap( *oldest, _tasks.back() );
+    std::pop_heap( _tasks.begin(), _tasks.end(), TaskEntryComparator( _globalAge ) );
     auto taskEntry = std::move( _tasks.back() );
-    
-    _active.reset(nullptr);
-    _active = std::make_unique< TaskEntry >( std::move( taskEntry.task ), taskEntry.completionType );
 
     _tasks.pop_back();
+
+    _active.reset(nullptr);
+    unsigned int effectivePriority = taskEntry.effectivePriority( _globalAge );
+    _active = std::make_unique< TaskEntry >( std::move( taskEntry.task ), taskEntry.completionType, taskEntry.onPushGlobalAge );
+    
+    // Update priority to match the final result.
+    _active->task->setPriority( effectivePriority );
 
     return std::reference_wrapper< TaskBase >(*(_active.get()->task.get()));
 }
@@ -121,7 +122,8 @@ std::optional< std::reference_wrapper< TaskBase > > TaskScheduler::popTask( bool
 bool TaskScheduler::enqueueTask( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType )
 {
     // This is where we figure out the task is a barrier and put it where it belongs.
-    if ( _registeredBarrierFunctionIds.find( task->functionId() ) != _registeredBarrierFunctionIds.end() )
+    bool isRegisteredBarrier = _registeredBarrierFunctionIds.find( task->functionId() ) != _registeredBarrierFunctionIds.end();
+    if ( isRegisteredBarrier )
     {
         if ( _activeBarrierTaskId.has_value() )
         {
@@ -134,38 +136,79 @@ bool TaskScheduler::enqueueTask( std::unique_ptr< TaskBase > task, FunctionCompl
     // We have to make sure that a task being queued when a barrier is active does not queue over it.
     if ( task.get()->isQueuedToFront() )
     {
-        return pushTaskToFront( std::move( task ), completionType );
+        return pushTaskToFront( std::move( task ), completionType, isRegisteredBarrier );
     }
 
-    _tasks.push_back( TaskEntry( std::move( task ), completionType ) );
+    if ( _activeBarrierTaskId.has_value() && !isRegisteredBarrier )
+    {
+        _blockedTasks.push_back( TaskEntry( std::move( task ), completionType, _globalAge ) );
+        std::push_heap( _blockedTasks.begin(), _blockedTasks.end(), TaskEntryComparator( _globalAge ) );
+        return true;
+    }
+
+    _tasks.push_back( TaskEntry( std::move( task ), completionType, _globalAge ) );
+    std::push_heap(_tasks.begin(), _tasks.end(), TaskEntryComparator( _globalAge ) );
     return true;
+}
+
+void TaskScheduler::ageTasks()
+{
+    _globalAge++;
+    // Magical constants - todo
+    if ( _globalAge + 1000 > std::numeric_limits< unsigned int >::max() - 5000 )
+    {
+        normalizeTaskPriorities();
+    }
 }
 
 // ============ PRIVATE
-void TaskScheduler::ageTasks()
-{
-    for( auto taskEntry = _tasks.begin(); taskEntry != _tasks.end(); ++taskEntry)
-    {
-        // Skip aging tasks that are behind the barrier.
-        if ( _activeBarrierTaskId.has_value() && taskEntry->task->id() > _activeBarrierTaskId.value() )
-        {
-            continue;
-        }
 
-        taskEntry->task->incrementAge();
-    }
-}
-
-bool TaskScheduler::pushTaskToFront( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType )
+bool TaskScheduler::pushTaskToFront( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType, bool isRegisteredBarrier )
 {
     if ( !_tasks.empty() )
     {
-        auto oldest = std::max_element( _tasks.begin(), _tasks.end(), 
-        [](const TaskEntry& lhs, const TaskEntry& rhs ) { return lhs.task->getEffectivePriority() < rhs.task->getEffectivePriority(); } );
-
-        task->setPriority( oldest->task->getEffectivePriority() + 1 );
+        task->setPriority( _tasks.front().effectivePriority( _globalAge ) );
+    }
+    else if ( !_blockedTasks.empty() )
+    {
+        task->setPriority( _blockedTasks.front().effectivePriority( _globalAge ) );
     }
 
-    _tasks.push_back( TaskEntry( std::move( task ), completionType ) );
+
+    if ( _activeBarrierTaskId.has_value() && !isRegisteredBarrier )
+    {
+        _blockedTasks.push_back( TaskEntry( std::move( task ), completionType, _globalAge ) );
+        std::push_heap( _blockedTasks.begin(), _blockedTasks.end(), TaskEntryComparator( _globalAge ) );
+        return true;
+    }
+
+    _tasks.push_back( TaskEntry( std::move( task ), completionType, _globalAge ) );
+    std::push_heap( _tasks.begin(), _tasks.end(), TaskEntryComparator( _globalAge ) );
     return true;
+}
+
+void TaskScheduler::moveBlockedTasks()
+{
+    _tasks.reserve( _tasks.size() + _blockedTasks.size() );
+    _tasks.insert( _tasks.end(), std::make_move_iterator( _blockedTasks.begin() ), std::make_move_iterator( _blockedTasks.end() ) );
+    _blockedTasks.clear();
+    std::make_heap( _tasks.begin(), _tasks.end(), TaskEntryComparator( _globalAge ) );
+}
+
+void TaskScheduler::normalizeTaskPriorities()
+{
+    for ( auto it = _tasks.begin(); it != _tasks.end(); ++it )
+    {
+        it->task->addPriority( it->priorityTimestamp( _globalAge ) );
+    }
+
+    for ( auto ibt = _blockedTasks.begin(); ibt != _blockedTasks.end(); ++ibt )
+    {
+        ibt->task->addPriority( ibt->priorityTimestamp( _globalAge ) );
+    }
+
+    _globalAge = 0;
+
+    std::make_heap( _tasks.begin(), _tasks.end(), TaskEntryComparator( 0 ) );
+    std::make_heap( _blockedTasks.begin(), _blockedTasks.end(), TaskEntryComparator( 0 ) );
 }
