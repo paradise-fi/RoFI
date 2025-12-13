@@ -30,7 +30,7 @@ Ip6Addr createAddress( int id ) {
 }
 /// This example serves to show the semantics of blocking tasks and barrier tasks.
 void distributionManagerFizzBuzz() {
-    std::cout << "Starting RoFI Distribution Manager FizzBuzz example with distributed memory and blocking distributed reads\n";
+    std::cout << "Starting RoFI Distribution Manager example showing off blocking task semantics\n";
     tcpip_init( nullptr, nullptr );
 
     LOCK_TCPIP_CORE();
@@ -82,7 +82,6 @@ void distributionManagerFizzBuzz() {
     while ( !terminate ) {
         // A single 'tick' of the manager instance.
         manager.doWork();
-        sleep( 1 );
     }
 }
 
