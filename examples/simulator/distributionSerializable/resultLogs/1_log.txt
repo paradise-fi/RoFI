@@ -1,0 +1,19 @@
+Starting simple RoFI Distribution Manager MessageSend example with 4 followers.
+This module is: 1
+Initial ModuleId: 2
+Initial ModuleId: 3
+Initial ModuleId: 4
+Initial ModuleId: 5
+All followers contacted me. Sending out message.
+Received message "Hi from 2" from FC07::2:0:0:0:1
+Received message "Hi from 3" from FC07::3:0:0:0:1
+Received message "Hi from 4" from FC07::4:0:0:0:1
+Received message "Hi from 5" from FC07::5:0:0:0:1
+Received message "end" from FC07::2:0:0:0:1
+---Sending custom message to FC07::2:0:0:0:1 and ending their pipeline ---
+Received message "end" from FC07::3:0:0:0:1
+---Sending custom message to FC07::3:0:0:0:1 and ending their pipeline ---
+Received message "end" from FC07::4:0:0:0:1
+---Sending custom message to FC07::4:0:0:0:1 and ending their pipeline ---
+Received message "end" from FC07::5:0:0:0:1
+---Sending custom message to FC07::5:0:0:0:1 and ending their pipeline ---

@@ -1,0 +1,30 @@
+Starting RoFI Distribution Manager example showing off blocking task semantics
+This module is: 1
+Info: I have been elected as the leader.
+Info: Received Task Request from FC07::2:0:0:0:1
+Info: Received Task Result from FC07::2:0:0:0:1
+Info: Result for Task with ID 0
+Info: NaiveBarrier :Registering participant FC07::2:0:0:0:1
+
+Initial ModuleId: 2
+Pushing blocking non-barrier task into queue with priority 1 and value 1.
+Pushing non-blocking task into queue with priority 3 and value 2.
+Pushing barrier task into queue with priority 1.
+Pushing non-blocking task into queue with priority 10 and value 4
+Pushng non-blocking task into queue with priority TOP and value 3
+Info: Received Task Result from FC07::2:0:0:0:1
+Info: Result for Task with ID 3
+[NonBlocking]  Function Success.
+Info: Received Task Result from FC07::2:0:0:0:1
+Info: Result for Task with ID 2
+[Blocking]  Function Success. Sending back a soft unblock signal.
+Info: Received Task Result from FC07::2:0:0:0:1
+Info: Result for Task with ID 4
+Info: NaiveBarrier reached by FC07::2:0:0:0:1, total reached: 1/1
+Info: NaiveBarrier Unblocking.
+Info: Received Task Result from FC07::2:0:0:0:1
+Info: Result for Task with ID 6
+[NonBlocking]  Function Success.
+Info: Received Task Result from FC07::2:0:0:0:1
+Info: Result for Task with ID 5
+[NonBlocking]  Function Success.

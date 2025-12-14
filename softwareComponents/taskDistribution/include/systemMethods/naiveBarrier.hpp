@@ -8,12 +8,16 @@ class NaiveBarrier : public DistributedFunction< Ip6Addr >
 {
     std::set< Ip6Addr > _participants;
     std::set< Ip6Addr > _reached;
+
     Ip6Addr& _address;
     DistributedTaskManager& _manager;
+    
+    int _totalFollowerCount;
+    int _followerCount = 0;
 
 public:
-    NaiveBarrier( Ip6Addr& address, DistributedTaskManager& manager )
-    : _address( address ), _manager( manager ) {}
+    NaiveBarrier( Ip6Addr& address, DistributedTaskManager& manager, int totalFollowerCount )
+    : _address( address ), _manager( manager ), _totalFollowerCount( totalFollowerCount ) {}
 
     // See the Initial class in examples using this barrier to see how to use this.
     void registerParticipant( Ip6Addr participant )
@@ -33,13 +37,15 @@ public:
     virtual bool onFunctionSuccess( std::optional< Ip6Addr >, const Ip6Addr& origin ) override
     {
         _reached.insert( origin );
+        _followerCount++;
 
         std::ostringstream stream;
-        stream << "NaiveBarrier reached by " << origin;
+        stream << "NaiveBarrier reached by " << origin << ", total reached: " << _followerCount << "/" << _totalFollowerCount;
         _manager.loggingService().logInfo( stream.str(), LogVerbosity::Medium );
         
-        if (_reached == _participants)
+        if ( _reached == _participants && _followerCount == _totalFollowerCount )
         {
+            _followerCount = 0;
             _reached.clear();
             _manager.loggingService().logInfo( "NaiveBarrier Unblocking.", LogVerbosity::Medium );
             _manager.broadcastUnblockSignal();

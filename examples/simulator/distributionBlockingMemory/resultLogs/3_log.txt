@@ -1,0 +1,17 @@
+Starting RoFI Distribution Manager FizzBuzz example with distributed memory and blocking distributed reads
+This module is: 3
+Info: I am a follower of FC07::1:0:0:0:1
+Info: Received Task Assignment from FC07::1:0:0:0:1
+Info: Task Assignment for task with ID 0
+[TestMemory] I am not the leader, I am not writing metadata and will request writing from the leader.
+Info: Received Data Storage Request from FC07::1:0:0:0:1
+[TestMemory] I am the data holder for address 3, writing...
+Info: Received Forwarding Data Read Request from FC07::1:0:0:0:1
+[TestMemory] Inside Memory Implementation trying to read 3
+[TestMemory] Data under address 3 found in this module's memory.
+Info: Received Data Removal Request from FC07::1:0:0:0:1
+[TestMemory] Inside Memory Implementation - Responding to Remove Request
+[TestMemory] I am the data holder of 3 and have erased the data.
+Info: Received Forwarding Data Read Request from FC07::1:0:0:0:1
+[TestMemory] Inside Memory Implementation trying to read 3
+[TestMemory] Data under address 3 not found under this module.

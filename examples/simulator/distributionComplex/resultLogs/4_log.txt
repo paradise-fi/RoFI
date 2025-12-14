@@ -1,0 +1,9 @@
+Starting Complex RoFI Distribution Manager example
+This module is: 4
+Info: I am a follower of FC07::1:0:0:0:1
+Info: Received Task Assignment from FC07::1:0:0:0:1
+Info: Task Assignment for task with ID 0
+Returning module state for FC07::4:0:0:0:1
+Info: Received Task Assignment from FC07::1:0:0:0:1
+Info: Task Assignment for task with ID 2
+Disconnect with connectorId 5
