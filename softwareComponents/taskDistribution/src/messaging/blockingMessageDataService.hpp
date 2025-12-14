@@ -15,5 +15,7 @@ class BlockingMessageDataService
 public:
     void completeBlockingMessage( uint8_t* message, size_t messageSize );
 
+    void clearFlag();
+
     MessagingResult awaitBlockingMessage( int timeout );
 };

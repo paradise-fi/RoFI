@@ -37,16 +37,50 @@ void MemoryReader::registerMemory( DistributedMemoryBase* memory )
     _memory = memory;
 }
 
-void MemoryReader::handleRemoteDataReadRequest( Ip6Addr& sender, uint8_t* data, size_t dataSize,
+void MemoryReader::processRemoteDataReadRequest( uint8_t* data, size_t size )
+{
+    // This header contains the address of the original sender in the case of message forwarding.
+    size_t headerSize = _memoryMessaging.genericMemoryMessageHeaderSize() + sizeof( Ip6Addr );
+
+    if ( size < headerSize )
+    {
+        _loggingService.logError( "Distributed Memory - Malformed message deceted. Data not saved." );
+        return;
+    }
+
+    size_t offset = 0;
+
+    Ip6Addr sender = as< Ip6Addr >( data );
+    sender.zone = as< u8_t >( data + sizeof( Ip6Addr ) );
+
+    offset += sizeof( Ip6Addr ) + sizeof( u8_t );
+
+    int address = as< int >( data + offset );
+    offset += sizeof( int );
+
+    bool isMetadataOnly = as< bool >( data + offset );
+    offset += sizeof( bool );
+
+    handleRemoteDataReadRequest( sender, data + offset, size - offset, address, isMetadataOnly );
+}
+
+// =============== PRIVATE
+void MemoryReader::handleRemoteDataReadRequest( const Ip6Addr& sender, uint8_t* data, size_t dataSize,
     int address, bool isMetadataOnly )
 {
     if ( isMetadataOnly )
     {
-        // Extract key
-        size_t keySize = as< size_t >( data );
         std::string key;
-        key.resize( keySize );
-        std::memcpy( key.data(), data + sizeof( size_t ), keySize );
+        // Extract key
+        if ( dataSize > 0 )
+        {
+            size_t keySize = as< size_t >( data );
+            if ( keySize > 0 )
+            {
+                key.resize( keySize );
+                std::memcpy( key.data(), data + sizeof( size_t ), keySize );
+            }
+        }
 
         readMetadataInternal( address, sender, key, false ); 
     }
@@ -56,7 +90,6 @@ void MemoryReader::handleRemoteDataReadRequest( Ip6Addr& sender, uint8_t* data, 
     }
 }
 
-// =============== PRIVATE
 MemoryReadResult MemoryReader::readDataBlocking( const Ip6Addr& target, uint8_t* data, size_t dataSize )
 {
     MemoryReadResult result;
@@ -129,12 +162,25 @@ MemoryReadResult MemoryReader::readDataInternal( int address, const Ip6Addr& ori
 
     result.success = false;
     const Ip6Addr& target = result.readTarget.has_value() ? result.readTarget.value() : _memoryMessaging.getLeader();
-    data.resize( sizeof( int ) + sizeof( bool ) + sizeof( size_t ) + sizeof( Ip6Addr ) + sizeof(u8_t));
-    as< Ip6Addr >( data.data() ) = origin;
-    as< u8_t >( data.data() + sizeof( Ip6Addr ) ) = origin.zone;
-    as< int >( data.data() + sizeof( Ip6Addr ) + sizeof(u8_t) ) = address;
-    as< bool >( data.data() + sizeof( int ) + sizeof( Ip6Addr ) + sizeof(u8_t)  ) = false;
-    as< size_t >( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof(u8_t)  ) = 0;
+    data.resize( _memoryMessaging.readRequestBufferSize() );
+
+    if ( !_memoryMessaging.composeReadRequest( data.data(), data.size(), origin, address ) )
+    {
+        _loggingService.logError("MemoryReader: Failed to compose data read request message.");
+        return result;
+    }
+    // // Requester Address
+    // as< Ip6Addr >( data.data() ) = origin;
+    // as< u8_t >( data.data() + sizeof( Ip6Addr ) ) = origin.zone;
+
+    // // Data Address
+    // as< int >( data.data() + sizeof( Ip6Addr ) + sizeof(u8_t) ) = address;
+    
+    // // IsMetadataRequest
+    // as< bool >( data.data() + sizeof( int ) + sizeof( Ip6Addr ) + sizeof(u8_t)  ) = false;
+
+    // // Size of other data.
+    // as< size_t >( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof(u8_t)  ) = 0;
 
     if ( isUserCall ) 
     {
@@ -164,8 +210,8 @@ MemoryReadResult MemoryReader::readDataInternal( int address, const Ip6Addr& ori
 MemoryReadResult MemoryReader::readMetadataInternal( int address, const Ip6Addr& origin, const std::string& key, bool isUserCall )
 {
     auto result = _memory->readMetadata( address, key, _memoryMessaging.getLeader() == _currentModuleAddress );
-
     std::vector< uint8_t > data;
+
     if ( !result.requestRemoteRead && isUserCall )
     {
         return result;
@@ -189,14 +235,29 @@ MemoryReadResult MemoryReader::readMetadataInternal( int address, const Ip6Addr&
     result.success = false;
     const Ip6Addr& target = result.readTarget.has_value() ? result.readTarget.value() : _memoryMessaging.getLeader();
     
-    data.resize( sizeof( int ) + sizeof( bool ) + sizeof( size_t ) + sizeof( Ip6Addr ) + key.size() + sizeof( u8_t ) );
-    as< Ip6Addr >( data.data() ) = origin;
-    as< u8_t >( data.data() + sizeof( Ip6Addr ) ) = origin.zone;
-    as< int >( data.data() + sizeof( Ip6Addr ) + sizeof( u8_t ) ) = address;
-    as< bool >( data.data() + sizeof( int ) + sizeof( Ip6Addr ) + sizeof( u8_t ) ) = false;
-    as< size_t >( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof( u8_t )  ) = key.size();
-    std::memcpy( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof( size_t ) + sizeof( u8_t ),
-                    key.data(), key.size() );
+    data.resize( _memoryMessaging.readRequestBufferSize() + key.size() );
+    if ( !_memoryMessaging.composeMetadataReadRequest( data.data(), data.size(), origin, address, key ) )
+    {
+        _loggingService.logError("MemoryReader: Failed to compose metadata read request message.");
+        return result;
+    }
+
+    // // Requester Address
+    // as< Ip6Addr >( data.data() ) = origin;
+    // as< u8_t >( data.data() + sizeof( Ip6Addr ) ) = origin.zone;
+
+    // // Data Address
+    // as< int >( data.data() + sizeof( Ip6Addr ) + sizeof( u8_t ) ) = address;
+
+    // // IsMetadataRequest -> TRUE
+    // as< bool >( data.data() + sizeof( int ) + sizeof( Ip6Addr ) + sizeof( u8_t ) ) = true;
+
+    // // Size of Metadata Key
+    // as< size_t >( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof( u8_t )  ) = key.size();
+
+    // // Key
+    // std::memcpy( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof( size_t ) + sizeof( u8_t ),
+    //                 key.data(), key.size() );
 
     return isUserCall 
         ? readDataBlocking( target, data.data(), data.size() )

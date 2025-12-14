@@ -32,7 +32,7 @@ public:
     /// @param address The address of the data in memory
     void removeData( int address );
 
-    void handleRemoteDataWriteRequest( Ip6Addr& sender, uint8_t* data, size_t dataSize, int address, bool isMetadataOnly, MemoryRequestType requestType );
+    void processRemoteDataWriteRequest( const Ip6Addr& sender, uint8_t* data, size_t size, MemoryRequestType requestType );
 
     /// @brief Save data in memory.
     /// @param data The data to be stored.

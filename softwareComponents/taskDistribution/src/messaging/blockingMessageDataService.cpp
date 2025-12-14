@@ -1,14 +1,21 @@
 #include "blockingMessageDataService.hpp"
+#include <iostream>
 
 void BlockingMessageDataService::completeBlockingMessage( uint8_t* message, size_t messageSize )
 {
     {
         std::lock_guard lk( _lock );
         _blockingDataBuffer.resize( messageSize );
-        std::memcpy(_blockingDataBuffer.data(), message, messageSize );
+        std::memcpy( _blockingDataBuffer.data(), message, messageSize );
         _dataReady = true;
     }
     _blockingMessageCV.notify_all();
+}
+
+void BlockingMessageDataService::clearFlag()
+{
+    std::lock_guard lk( _lock );
+    _dataReady = false;
 }
 
 MessagingResult BlockingMessageDataService::awaitBlockingMessage( int timeout )

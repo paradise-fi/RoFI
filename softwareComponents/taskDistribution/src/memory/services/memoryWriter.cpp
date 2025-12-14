@@ -123,17 +123,35 @@ void MemoryWriter::removeData( int address )
     }
 }
 
-void MemoryWriter::handleRemoteDataWriteRequest( Ip6Addr& sender, uint8_t* data, size_t dataSize, int address, bool isMetadataOnly, MemoryRequestType requestType )
+void MemoryWriter::processRemoteDataWriteRequest( const Ip6Addr& sender, uint8_t* data, size_t size, MemoryRequestType requestType )
 {
-    auto memoryItem = MemoryRequestQueueItem( sender, data, dataSize, address, isMetadataOnly, requestType );
+    size_t headerSize = _memoryMessaging.genericMemoryMessageHeaderSize();
+
+    if ( size < headerSize )
+    {
+        _loggingService.logError( "Distributed Memory - Malformed message deceted. Data not saved." );
+        return;
+    }
+
+    size_t offset = 0;
+
+    int address = as< int >( data );
+    offset += sizeof( int );
+
+    bool isMetadataOnly = as< bool >( data + offset );
+    offset += sizeof( bool );
+
+    size_t dataSize = as< size_t >( data + offset );
+    offset += sizeof( size_t );
+
     MemoryWriteResult result = isMetadataOnly 
-        ? handleMetadataUpdate( address, data, dataSize, requestType )
-        : handleDataUpdate ( address, data, dataSize, requestType );
+        ? handleMetadataUpdate( address, data + offset, dataSize, requestType )
+        : handleDataUpdate ( address, data + offset, dataSize, requestType );
 
     if ( result.success )
     {
         _memoryMessaging.propagateMemoryChange( result.propagationType, 
-            address, data, dataSize, result.metadataOnly, result.propagationTarget, 
+            address, data + offset, dataSize, result.metadataOnly, result.propagationTarget, 
             requestType == MemoryRequestType::MemoryDelete 
                 ? DistributionMessageType::DataRemovalRequest 
                 : DistributionMessageType::DataStorageRequest );
@@ -148,9 +166,12 @@ MemoryWriteResult MemoryWriter::handleMetadataUpdate( int address, uint8_t* data
 
     size_t keySize = as< size_t >( data );
     std::string key;
-    key.resize( keySize );
-    std::memcpy( key.data(), data + sizeof( size_t ), keySize );
-
+    if ( keySize > 0 )
+    {
+        key.resize( keySize );
+        std::memcpy( key.data(), data + sizeof( size_t ), keySize );
+    }
+    
     size_t keyDataSize = sizeof( size_t ) + keySize;
 
     if ( requestType == MemoryRequestType::MemoryDelete )

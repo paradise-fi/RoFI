@@ -17,19 +17,6 @@ class MessageReceiver
     MessageQueueManager& _messageQueueManager;
     BlockingMessageDataService& _blockingMessageDataService;
 
-    // static void recv_message( void* receiver, 
-    //     struct udp_pcb* pcb,
-    //     struct pbuf* p,
-    //     const ip6_addr_t* addr,
-    //     u16_t port )
-    // {
-    //     MessageReceiver* self = static_cast< MessageReceiver* >( receiver );
-    //     if ( self )
-    //     {
-    //         self->receiveMessage( nullptr, pcb, p, addr, port );
-    //     }   
-    // }
-    
 public:
     MessageReceiver(
         u16_t port, 

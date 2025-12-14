@@ -37,4 +37,9 @@ public:
 
     void propagateMetadataChange( MemoryPropagationType type, int address, const std::string& key, uint8_t* metadata, 
         size_t metadataSize, std::optional< Ip6Addr > target, DistributionMessageType messageType);
+
+    bool composeReadRequest( uint8_t* buffer, size_t bufferSize, const Ip6Addr& origin, int address );
+    bool composeMetadataReadRequest( uint8_t* buffer, size_t bufferSize, const Ip6Addr& origin, int address, const std::string& key );
+
+    size_t readRequestBufferSize();
 };

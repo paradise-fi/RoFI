@@ -22,14 +22,17 @@ public:
         MemoryReadResult memoryResult = _manager.memory().readData( _identity );
         if ( !memoryResult.success )
         {
-            std::cout << "FizzBuzz value not in memory, generating..." << std::endl;
+            std::cout << "Value not in memory, generating..." << std::endl;
             result = _identity + value ;
+            std::cout << "Value " << _identity << " + " << value;
         }
         else
         {
+            // The MemoryReadResult structure provides a useful method for data retrieval using templates.
             result = _identity + memoryResult.data< int >();
+            std::cout << "Value " << _identity << " + " << memoryResult.data< int >();
         }
-        std::cout << "FizzBuzz Value " << result << " will be stored to memory." << std::endl;
+        std::cout << " = " << result << " will be stored to memory." << std::endl;
         _manager.memory().saveData< int >( std::forward< int >( result ), _identity );
         return FunctionResult< int >( _identity, FunctionResultType::SUCCESS );
     }
