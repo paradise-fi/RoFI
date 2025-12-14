@@ -12,7 +12,7 @@ class TaskScheduler
     std::vector< TaskEntry > _tasks;
     std::vector< TaskEntry > _blockedTasks;
 
-    std::optional< int > _activeBarrierTaskId;
+    std::optional< unsigned int > _activeBarrierTaskId;
     std::set< int > _registeredBarrierFunctionIds;
 
     std::unique_ptr< TaskEntry > _active;
@@ -33,7 +33,7 @@ public:
 
     void clearActiveTask( bool clearBarrier = false );
 
-    void clearActiveTask( int id, bool clearBarrier = false );
+    void clearActiveTask( unsigned int id, bool clearBarrier = false );
 
     std::unique_ptr< TaskBase > clearAndGetActiveTask();
 

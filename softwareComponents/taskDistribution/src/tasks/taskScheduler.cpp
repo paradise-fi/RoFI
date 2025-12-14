@@ -38,7 +38,7 @@ void TaskScheduler::clearActiveTask( bool clearBarrier )
     _active.reset( nullptr );
 }
 
-void TaskScheduler::clearActiveTask( int id, bool clearBarrier )
+void TaskScheduler::clearActiveTask( unsigned int id, bool clearBarrier )
 {
     if ( _active == nullptr || _active.get() == nullptr )
     {

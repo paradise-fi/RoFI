@@ -11,8 +11,7 @@
 
 class TaskManager
 {
-    // ToDo: This int should be atomic!
-    int _taskId = 1;
+    unsigned int _taskId = 1;
     std::unique_ptr< TaskBase > _initialTask;
     boost::lockfree::queue< ip6_addr_t > _taskRequests = boost::lockfree::queue< ip6_addr_t >( 1024 );
     std::deque< TaskResultEntry > _taskResults;
@@ -20,7 +19,7 @@ class TaskManager
     mutable std::shared_mutex _mutex;
     std::set< int > _barrierFunctions;
 
-    void updateTaskIdIfStale( int newId );
+    void updateTaskIdIfStale( unsigned int newId );
 
     bool enqueueTaskInternal( const Ip6Addr& addr, std::unique_ptr< TaskBase >&& task, FunctionCompletionType completionType );
 
@@ -63,7 +62,7 @@ public:
 
     void finishActiveTask( const Ip6Addr& address );
 
-    void finishActiveTask( const Ip6Addr& address, int id );
+    void finishActiveTask( const Ip6Addr& address, unsigned int taskId );
 
     std::unique_ptr< TaskBase > finishAndGetActiveTask ( const Ip6Addr& address );
 
