@@ -8,10 +8,11 @@ class MessageSend : public DistributedFunction< Message, Message >
     DistributedTaskManager& _manager;
     int _moduleId;
     bool _ended = false;
+    int _followers;
 
 public:
-    MessageSend( DistributedTaskManager& manager, int moduleId )
-    : _manager( manager ), _moduleId( moduleId )
+    MessageSend( DistributedTaskManager& manager, int moduleId, int followers )
+    : _manager( manager ), _moduleId( moduleId ), _followers( followers )
     {}
 
     /// @brief The execute() function is performed by the follower node.
@@ -19,8 +20,9 @@ public:
     /// @return A function result structure, which contains both the result value and whether the function is considered a success.
     virtual FunctionResult< Message > execute( Message message ) override 
     {
-        if ( message.message == std::string("end"))
+        if ( message.message == std::string("end") && !_ended )
         {
+            _ended = true;
             return FunctionResult< Message >( Message( std::string( "end" ) ), FunctionResultType::SUCCESS );
         }
 
@@ -43,10 +45,16 @@ public:
 
         if ( _ended )
         {
+            std::cout << "---Sending custom message to " << origin << " and ending their pipeline ---" << std::endl;
+            std::vector< uint8_t > data( sizeof( int ) );
+            std::memcpy( data.data(), &_moduleId, sizeof( int ) );
+            _manager.sendCustomMessage( data.data(), data.size(), origin );
             return false;
         }
 
-        if ( value.message != std::string( "end" ) )
+        _followers--;
+        
+        if ( value.message != std::string( "end" ) && _followers <= 0 )
         {
             _ended = true;
             auto messageSendHandle = _manager.functions().getFunctionHandle< Message, Message >( functionId() ).value();
@@ -57,7 +65,7 @@ public:
             }
             return false;
         }
-        std::cout << "Function end." << std::endl;
+        
         return false;
     }
 

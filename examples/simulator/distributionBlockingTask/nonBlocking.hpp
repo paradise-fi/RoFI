@@ -9,6 +9,7 @@ class NonBlockingFunction : public DistributedFunction< int, int >
     int _moduleId;
     DistributedTaskManager& _manager;
     bool& _nonBlockingFirstFlag;
+    int _previous = 0;
 
 public:
     NonBlockingFunction( int moduleId, DistributedTaskManager& manager, bool& nonBlockingFirstFlag )
@@ -18,6 +19,15 @@ public:
     {
         std::cout << "[" << functionName() << "] Executing non-blocking function with value " << value << std::endl;
         _nonBlockingFirstFlag = true;
+        
+        if ( _previous > value )
+        {
+            std::cout << "Previous value is higher than current value. This means that there was a scheduling error." << std::endl;
+            _previous = value;
+            return FunctionResult< int >( _moduleId, FunctionResultType::FAILURE );
+        }
+
+        _previous = value;
         return FunctionResult< int >( _moduleId, FunctionResultType::SUCCESS );
     }
 

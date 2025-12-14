@@ -1,1 +1,2 @@
-This example should be run with only three modules, other modules will not be used within this example.
+This example should be run with only three modules, other modules will not be used within this example. The third module is only used as data storage
+to show off how remote reads work. The leader stores all the metadata.

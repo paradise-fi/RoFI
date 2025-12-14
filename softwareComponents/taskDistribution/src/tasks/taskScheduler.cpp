@@ -165,13 +165,19 @@ void TaskScheduler::ageTasks()
 
 bool TaskScheduler::pushTaskToFront( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType, bool isRegisteredBarrier )
 {
-    if ( !_tasks.empty() )
+    if ( !_tasks.empty() && !_blockedTasks.empty() )
     {
-        task->setPriority( _tasks.front().effectivePriority( _globalAge ) );
+        unsigned int tasksTop = _tasks.front().effectivePriority( _globalAge );
+        unsigned int blockedTop = _blockedTasks.front().effectivePriority( _globalAge );
+        task->setPriority( tasksTop > blockedTop ? tasksTop + 1: blockedTop + 1 );
+    }
+    else if ( !_tasks.empty() )
+    {
+        task->setPriority( _tasks.front().effectivePriority( _globalAge ) + 1 );
     }
     else if ( !_blockedTasks.empty() )
     {
-        task->setPriority( _blockedTasks.front().effectivePriority( _globalAge ) );
+        task->setPriority( _blockedTasks.front().effectivePriority( _globalAge ) + 1 );
     }
 
 

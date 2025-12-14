@@ -1,0 +1,11 @@
+Starting Complex RoFI Distribution Manager example
+This module is: 3
+Info: I am a follower of FC07::1:0:0:0:1
+Info: Received Task Assignment from FC07::1:0:0:0:1
+Info: Task Assignment for task with ID 0
+Returning module state for FC07::3:0:0:0:1
+Info: Received Task Assignment from FC07::1:0:0:0:1
+Info: Task Assignment for task with ID 5
+Move with jointId 0
+Velocity: 1, Position: 1rad
+Done
