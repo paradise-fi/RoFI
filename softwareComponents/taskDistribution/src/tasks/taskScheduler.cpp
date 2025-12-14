@@ -200,11 +200,13 @@ void TaskScheduler::normalizeTaskPriorities()
     for ( auto it = _tasks.begin(); it != _tasks.end(); ++it )
     {
         it->task->addPriority( it->priorityTimestamp( _globalAge ) );
+        it->onPushGlobalAge = 0;
     }
 
     for ( auto ibt = _blockedTasks.begin(); ibt != _blockedTasks.end(); ++ibt )
     {
         ibt->task->addPriority( ibt->priorityTimestamp( _globalAge ) );
+        ibt->onPushGlobalAge = 0;
     }
 
     _globalAge = 0;
