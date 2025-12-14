@@ -11,7 +11,6 @@
 #include <boost/lockfree/queue.hpp>
 #include "../src/logger/loggingService.hpp"
 #include "../src/messaging/messageDispatcher.hpp"
-#include "../src/messaging/customMessageQueueManager.hpp"
 
 class DistributedTaskManager : public UserCallbackInvoker
 {
@@ -23,7 +22,6 @@ class DistributedTaskManager : public UserCallbackInvoker
     CallbackService _callbackService;
     MessagingService _messaging;
     DistributedMemoryService _memoryService;
-    CustomMessageQueueManager _customMessageQueueManager;
     MessageQueueManager _messageQueueManager;
     MessageDispatcher _messageDispatcher;
     WorkFlowService _workFlowService;
@@ -45,11 +43,14 @@ public:
         std::unique_ptr< udp_pcb > pcb,
         int blockingMessageTimeoutMs = 300 ); 
 
+    /// @brief Retrieves a facade look at the callback subsystem. Used to register custom callbacks.
     CallbackFacade& callbacks();
 
-    [[nodiscard]] MemoryFacade memory();
+    /// @brief Retrieves a facade look at the memory subsystem. IMPORTANT - This facade must not outlive the task manager.
+    MemoryFacade memory();
 
-    [[nodiscard]] FunctionFacade functions();
+    /// @brief Retrieves a facade look at the function subsystem. IMPORTANT - This facade must not outlive the task manager.
+    FunctionFacade functions();
     
     LoggingService& loggingService();
 

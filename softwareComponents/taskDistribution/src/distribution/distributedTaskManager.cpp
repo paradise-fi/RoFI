@@ -13,12 +13,9 @@ DistributedTaskManager::DistributedTaskManager(
   _messaging( address, DISTRIBUTION_PORT, distributor, std::move( pcb ), 
                _messageQueueManager, METHOD_ID ),
   _memoryService( _messaging, address, _loggingService, blockingMessageTimeoutMs ),
-  _customMessageQueueManager( *this, _messaging ),
-  _messageDispatcher( address, *this, _functionRegistry, _messaging, 
-                      _memoryService, _loggingService, _customMessageQueueManager, 
-                      _messageQueueManager, blockingMessageTimeoutMs ),
-  _workFlowService( _messaging.sender(), _functionRegistry, _memoryService, 
-                    _loggingService, _customMessageQueueManager, _messageDispatcher ),
+  _messageDispatcher( address, *this, _functionRegistry, _messaging, _memoryService,
+                      _loggingService, _messageQueueManager, blockingMessageTimeoutMs ),
+  _workFlowService( _messaging.sender(), _functionRegistry, _memoryService, _loggingService, _messageDispatcher ),
   _blockingMessageTimeoutMs( blockingMessageTimeoutMs )
 {}
 

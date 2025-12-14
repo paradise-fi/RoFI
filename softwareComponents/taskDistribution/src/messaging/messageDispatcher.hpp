@@ -3,7 +3,6 @@
 #include "../functions/functionRegistry.hpp"
 #include "../memory/services/memoryService.hpp"
 #include "../callbacks/userCallbackInvoker.hpp"
-#include "customMessageQueueManager.hpp"
 #include "messageQueueManager.hpp"
 #include <functional>
 #include <queue>
@@ -16,7 +15,6 @@ class MessageDispatcher
     MessagingService& _messagingService;
     DistributedMemoryService& _memoryService;
     LoggingService& _loggingService;
-    CustomMessageQueueManager& _customMessageQueueManager;
     MessageQueueManager& _messageQueueManager;
     int _blockingMessageTimeoutMs;
 
@@ -35,10 +33,12 @@ class MessageDispatcher
 
     void handleTaskMessage( const Ip6Addr& sender, const DistributionMessageType type, uint8_t* data );
 
+    void handleCustomBlockingMessage( const Ip6Addr& sender, uint8_t* data, size_t size );
+
 public:
     MessageDispatcher( rofi::hal::Ip6Addr& address, UserCallbackInvoker& callbackInvoker, FunctionRegistry& functionRegistry,
         MessagingService& messagingService, DistributedMemoryService& memoryService, LoggingService& loggingService, 
-        CustomMessageQueueManager& customMessageQueueManager, MessageQueueManager& messageQueueManager, int blockingMessageTimeoutMS );
+        MessageQueueManager& messageQueueManager, int blockingMessageTimeoutMS );
 
     bool dispatchMessageFromQueue();
 
