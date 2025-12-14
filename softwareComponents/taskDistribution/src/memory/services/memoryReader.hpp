@@ -27,7 +27,9 @@ class MemoryReader
 
     MemoryReadResult readMetadataInternal( int address, const Ip6Addr& origin, const std::string& key, bool isUserCall );
 
-    public:
+    void handleRemoteDataReadRequest( const Ip6Addr& sender, uint8_t* data, size_t dataSize, int address, bool isMetadataOnly );
+
+public:
     MemoryReader( MemoryMessagingWrapper& memoryMessaging, rofi::hal::Ip6Addr currentModuleAddress, MessagingService& messaging, LoggingService& logging, int blockingMessageTimeoutMs );
     
     /// @brief Reads data from specified address in memory.
@@ -36,8 +38,8 @@ class MemoryReader
     MemoryReadResult readData( int address, bool isUserCall = true );
     
     MemoryReadResult readMetadata( int address, const std::string& key, bool isUserCall = true );
-    
-    void handleRemoteDataReadRequest( Ip6Addr& sender, uint8_t* data, size_t dataSize, int address, bool isMetadataOnly );
+
+    void processRemoteDataReadRequest( uint8_t* data, size_t size );
 
     void unregisterMemory();
 

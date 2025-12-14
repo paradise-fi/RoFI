@@ -65,9 +65,7 @@ void MemoryMessagingWrapper::sendDataBroadcast( int address, const uint8_t* data
 void MemoryMessagingWrapper::sendDataUnicast( int address, const uint8_t* data, size_t size, bool isMetadataOnly, const Ip6Addr& target, DistributionMessageType messageType )
 {
     PBuf packet = PBuf::allocate( static_cast< int >( genericMemoryMessageHeaderSize() + size ) );
-    
     prepareMemoryMessageData( packet.payload(), address, data, size, isMetadataOnly );
-
     auto sendResult = _messaging.sender().sendMessage( messageType, std::move( packet ), target );
 
     if ( !sendResult.success )
@@ -105,12 +103,83 @@ void MemoryMessagingWrapper::propagateMetadataChange( MemoryPropagationType type
 
     std::size_t keySize = key.size();
 
-    auto dataBuffer = _memory->serializeDataToMemoryFormat( metadata, metadataSize, address, true );
+    std::vector< uint8_t > dataBuffer;
+    if ( metadata != nullptr )
+    {
+        dataBuffer = _memory->serializeDataToMemoryFormat( metadata, metadataSize, address, true );
+    }
+
+    size_t originalDataSize = dataBuffer.size();
     dataBuffer.resize( key.size() + dataBuffer.size() + sizeof( size_t ) );
 
-    std::memmove( dataBuffer.data() + key.size(), dataBuffer.data(), dataBuffer.size() - key.size() );
+    // Move data to the back of the buffer.
+    std::memmove( dataBuffer.data() + key.size() + sizeof( size_t ), dataBuffer.data(), originalDataSize );
+    
+    // Key
     std::memcpy( dataBuffer.data(), &keySize, sizeof( size_t ) );
-    std::memcpy( dataBuffer.data() + sizeof( size_t ), key.data(), key.size() );
-
+    if ( keySize > 0 )
+    {
+        std::memcpy( dataBuffer.data() + sizeof( size_t ), key.data(), key.size() );
+    }
+    
+    // std::memcpy( dataBuffer.data() + sizeof( size_t ) + keySize, dataBuffer.data(), dataBuffer.size() );
+    
     propagateMemoryChange( type, address, dataBuffer.data(), dataBuffer.size(), true, target, messageType );
+}
+
+bool MemoryMessagingWrapper::composeReadRequest( uint8_t* buffer, size_t bufferSize, const Ip6Addr& origin, int address )
+{
+    if ( bufferSize < readRequestBufferSize() )
+    {
+        return false;
+    }
+
+    // Requester Address
+    as< Ip6Addr >( buffer ) = origin;
+    as< u8_t >( buffer + sizeof( Ip6Addr ) ) = origin.zone;
+
+    // Data Address
+    as< int >( buffer + sizeof( Ip6Addr ) + sizeof(u8_t) ) = address;
+    
+    // IsMetadataRequest
+    as< bool >( buffer + sizeof( int ) + sizeof( Ip6Addr ) + sizeof(u8_t)  ) = false;
+
+    // Size of other data.
+    as< size_t >( buffer + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof(u8_t) ) = 0;
+
+    return true;
+}
+
+bool MemoryMessagingWrapper::composeMetadataReadRequest( uint8_t* buffer, size_t bufferSize, const Ip6Addr& origin, int address, const std::string& key )
+{
+    if ( bufferSize < readRequestBufferSize() + key.size() )
+    {
+        return false;
+    }
+
+    // Requester Address
+    as< Ip6Addr >( buffer ) = origin;
+    as< u8_t >( buffer + sizeof( Ip6Addr ) ) = origin.zone;
+
+    // Data Address
+    as< int >( buffer + sizeof( Ip6Addr ) + sizeof( u8_t ) ) = address;
+
+    // IsMetadataRequest -> TRUE
+    as< bool >( buffer + sizeof( int ) + sizeof( Ip6Addr ) + sizeof( u8_t ) ) = true;
+
+    // Size of Metadata Key
+    as< size_t >( buffer + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof( u8_t )  ) = key.size();
+
+    // Key
+    if ( key.size() > 0 )
+    {
+        std::memcpy( buffer + readRequestBufferSize(), key.data(), key.size() );    
+    }
+
+    return true;
+}
+
+size_t MemoryMessagingWrapper::readRequestBufferSize()
+{
+    return sizeof( Ip6Addr ) + sizeof( u8_t ) + sizeof( int ) + sizeof( bool ) + sizeof( size_t );
 }

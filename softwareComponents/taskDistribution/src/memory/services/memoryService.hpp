@@ -34,7 +34,7 @@ public:
     /// @return True if the memory implementation was deregistered, otherwise false.
     bool deleteMemory();
     
-    void onMemoryMessage( Ip6Addr sender, uint8_t* data, size_t size, MemoryRequestType requestType );
+    void onMemoryMessage( const Ip6Addr& sender, uint8_t* data, size_t size, MemoryRequestType requestType );
 
     /// @brief Save data in memory.
     /// @param data The data to be stored.

@@ -65,7 +65,6 @@ void distributionManagerBlockingMemory() {
             {
                 result.success = true;
                 int data = as< int >( dataBuffer );
-                int toStore = data + 1;
                 mgr.memory().saveData< Message >( Message( std::string( "Stored Message" ) ), data );
                 std::memcpy( result.rawData.data(), &data, result.rawData.size() );
             }
@@ -73,7 +72,7 @@ void distributionManagerBlockingMemory() {
         } );
 
     // Register the distributed functions.
-    manager.functions().registerFunction< int >( InitialFunction( id, manager ) );
+    manager.functions().registerFunction< int >( InitialFunction( id, manager, addr ) );
     manager.functions().registerFunction< int, int >( Read( id, manager ) );
     manager.functions().registerFunction< int, int >( SendSave( id, manager ) );
     manager.functions().registerFunction< int, int >( Check( id, manager ) );

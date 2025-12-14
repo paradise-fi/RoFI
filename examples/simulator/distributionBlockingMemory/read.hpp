@@ -18,20 +18,34 @@ public:
     /// @return A function result structure, which contains both the result value and whether the function is considered a success.
     virtual FunctionResult< int > execute( int target ) override 
     {
-        std::cout << "Going to read data from address " << target << std::endl;
+        std::cout << "Going to read data and metadata from address " << target << std::endl;
         auto readResult = _manager.memory().readData( target );
         if ( readResult.success )
         {
             std::cout << "I have received the data succesfully, the data is: " << readResult.data< Message >().message << std::endl;
             std::cout << "Now requesting the data to be deleted." << std::endl;
             _manager.memory().removeData( target );
-            return FunctionResult< int >( target, FunctionResultType::SUCCESS );
         }
         else
         {
             std::cout << "Read failed." << std::endl;
             return FunctionResult< int >( target, FunctionResultType::FAILURE );
         }
+
+        auto metadataReadResult = _manager.memory().readMetadata( target, std::string( "metadata" ) );
+        if ( metadataReadResult.success )
+        {
+            std::cout << "I have succesfully received metadata, the metadata is " << metadataReadResult.data< int >() << std::endl;
+            std::cout << "I am now requesting the metadata to be deleted." << std::endl;
+            _manager.memory().removeMetadata( target, std::string( "metadata" ) );
+            return FunctionResult< int >( target, FunctionResultType::SUCCESS );
+        }
+        else
+        {
+            std::cout << "Metadata read failed." << std::endl;
+            return FunctionResult< int >( target, FunctionResultType::FAILURE );
+        }
+
     }
 
     /// This function is called by the leader node if the FunctionResult fom execute indicates a success.
