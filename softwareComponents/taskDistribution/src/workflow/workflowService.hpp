@@ -2,7 +2,6 @@
 #include "../functions/functionRegistry.hpp"
 #include "../logger/loggingService.hpp"
 #include "../messaging/messageSender.hpp"
-#include "../messaging/customMessageQueueManager.hpp"
 #include "../messaging/messageDispatcher.hpp"
 
 class WorkFlowService
@@ -11,7 +10,6 @@ class WorkFlowService
     FunctionRegistry& _functionRegistry;
     DistributedMemoryService& _memoryService;
     LoggingService& _loggingService;
-    CustomMessageQueueManager& _customMessageQueueManager;
     MessageDispatcher& _messageDispatcher;
 
     void tryDistributeNewTask( int methodId );
@@ -21,7 +19,7 @@ class WorkFlowService
 
 public:
     WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService,
-        LoggingService& loggingService, CustomMessageQueueManager& customMessageQueueManager, MessageDispatcher& messageDispatcher );
+        LoggingService& loggingService, MessageDispatcher& messageDispatcher );
 
     void doWorkLeader( int methodId, unsigned int messageProcessingBatch = 5 );
 

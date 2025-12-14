@@ -2,10 +2,10 @@
 
 MessageDispatcher::MessageDispatcher( rofi::hal::Ip6Addr& address, UserCallbackInvoker& callbackInvoker, FunctionRegistry& functionRegistry,
     MessagingService& messagingService, DistributedMemoryService& memoryService, LoggingService& loggingService, 
-    CustomMessageQueueManager& customMessageQueueManager, MessageQueueManager& messageQueueManager, int blockingMessageTimeoutMS )
+    MessageQueueManager& messageQueueManager, int blockingMessageTimeoutMS )
 : _addr( address ), _callbackInvoker( callbackInvoker ), _functionRegistry( functionRegistry ), _messagingService( messagingService ),
-    _memoryService( memoryService ), _loggingService( loggingService ), _customMessageQueueManager( customMessageQueueManager ),
-    _messageQueueManager( messageQueueManager ), _blockingMessageTimeoutMs( blockingMessageTimeoutMS ) { }
+    _memoryService( memoryService ), _loggingService( loggingService ), _messageQueueManager( messageQueueManager ),
+    _blockingMessageTimeoutMs( blockingMessageTimeoutMS ) { }
 
 bool MessageDispatcher::dispatchMessageFromQueue()
 {
@@ -39,7 +39,7 @@ void MessageDispatcher::dispatchMessage( const Ip6Addr& sender, DistributionMess
             return handleCustomMessage( sender, data, size );
         
         case DistributionMessageType::CustomMessageBlocking:
-            _customMessageQueueManager.emplaceRequest( sender, data, size );
+            return handleCustomBlockingMessage( sender, data, size );
             break;
 
         case DistributionMessageType::BlockingTaskRelease:
@@ -67,6 +67,13 @@ void MessageDispatcher::dispatchMessage( const Ip6Addr& sender, DistributionMess
 void MessageDispatcher::handleCustomMessage( const Ip6Addr& sender, uint8_t* data, size_t size )
 {
     _callbackInvoker.invokeUserCallback( CallbackType::CustomMessageCb, sender, data, size );
+}
+
+void MessageDispatcher::handleCustomBlockingMessage( const Ip6Addr& sender, uint8_t* data, size_t size )
+{
+    MessagingResult result = _callbackInvoker.invokeUserCallback( CallbackType::CustomMessageBlockingCb, sender, data, size );
+
+    _messagingService.sender().sendMessage( DistributionMessageType::BlockingMessageResponse, result.rawData.data(), result.rawData.size(), sender );
 }
 
 void MessageDispatcher::handleTaskRequest( const rofi::hal::Ip6Addr& sender )

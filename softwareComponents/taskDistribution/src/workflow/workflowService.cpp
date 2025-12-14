@@ -1,10 +1,9 @@
 #include "workflowService.hpp"
 
 WorkFlowService::WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService,
-    LoggingService& loggingService, CustomMessageQueueManager& customMessageQueueManager, MessageDispatcher& messageDispatcher )
+    LoggingService& loggingService, MessageDispatcher& messageDispatcher )
 : _sender( sender ), _functionRegistry( functionRegistry ), _memoryService( memoryService ),
-    _loggingService( loggingService ), _customMessageQueueManager( customMessageQueueManager ),
-    _messageDispatcher( messageDispatcher ) {}
+    _loggingService( loggingService ), _messageDispatcher( messageDispatcher ) {}
 
 void WorkFlowService::doWorkLeader( int methodId, unsigned int messageProcessingBatch )
 {
@@ -16,7 +15,6 @@ void WorkFlowService::doWorkLeader( int methodId, unsigned int messageProcessing
         }
     }
     
-    _customMessageQueueManager.processQueue();
     tryDistributeNewTask( methodId );
     _functionRegistry.processTaskResultQueue();
 }
@@ -31,8 +29,6 @@ void WorkFlowService::doWorkFollower( const Ip6Addr& address, const Ip6Addr& lea
         }
     }
     
-    _customMessageQueueManager.processQueue();
-
     auto taskCandidate = _functionRegistry.popTaskForAddress( address );
 
     if ( !taskCandidate.has_value() )
