@@ -76,7 +76,7 @@ void distributionManagerFizzBuzz() {
         std::make_unique< ReplicatedMemory >() );
 
     // Register logger implementation
-    manager.loggingService().useLogger( ExampleLogger(), LogVerbosity::High );
+    manager.loggingService().useLogger( ExampleLogger(), LogVerbosity::Low );
     
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( id );

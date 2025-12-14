@@ -36,6 +36,7 @@ MessagingResult MessagingService::sendMessageBlocking( const Ip6Addr& receiver,
         return MessagingResult( std::string("Non-blocking message type provided. Aborting."), false );
     }
 
+    _blockingMessageDataService.clearFlag();
     auto senderResult = _sender.sendMessage( messageType, message, messageSize, receiver );
 
     if ( !senderResult.success )
@@ -53,7 +54,9 @@ MessagingResult MessagingService::sendMessageBlocking( const Ip6Addr& receiver, 
         return MessagingResult( std::string("Non-blocking message type provided. Aborting."), false );
     }
 
+    _blockingMessageDataService.clearFlag();
     auto senderResult = _sender.sendMessage( messageType, receiver );
+    
     if ( !senderResult.success )
     {
         return MessagingResult( senderResult.messsage, false );

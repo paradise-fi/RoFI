@@ -28,61 +28,20 @@ bool DistributedMemoryService::deleteMemory()
     return true;
 }
 
-void DistributedMemoryService::onMemoryMessage( Ip6Addr sender, uint8_t* data, size_t size, MemoryRequestType requestType )
+void DistributedMemoryService::onMemoryMessage( const Ip6Addr& sender, uint8_t* data, size_t size, MemoryRequestType requestType )
 {
-    if ( requestType == MemoryRequestType::InvalidOperation )
+    switch ( requestType )
     {
-        _loggingService.logError( "Distributed Memory - Invalid Memory Operation Request detected. Likely caused by a non-memory message passed to memory.");
-    }
-
-    size_t headerSize = sizeof( int ) + sizeof( bool ) + sizeof( size_t );
-    
-    if ( requestType == MemoryRequestType::MemoryRead )
-    {
-        headerSize += sizeof( Ip6Addr );
-    }
-    
-    if ( size < headerSize )
-    {
-        _loggingService.logError( "Distributed Memory - Malformed message deceted. Data not saved." );
-        return;
-    }
-            
-    size_t offset = 0;
-    
-    if ( requestType == MemoryRequestType::MemoryRead )
-    {
-        sender = as< Ip6Addr >( data );
-        sender.zone = as< u8_t >( data + sizeof( Ip6Addr ) );
-        offset += sizeof( Ip6Addr ) + sizeof( u8_t );
-    }
-    
-    int address = as< int >( data + offset );
-    offset += sizeof( int );
-    bool isMetadataOnly = as< bool >( data + offset );
-    offset += sizeof( bool );
-    size_t dataSize = as< size_t >( data + offset );
-    offset += sizeof( size_t );
-    
-    if ( size < headerSize + dataSize )
-    {
-        std::ostringstream stream;
-        stream << "Distributed Memory -  The total data size " << headerSize + dataSize << " does not match expected size " << size;
-        _loggingService.logError( stream.str() );
-        return;
-    }
-
-    if ( requestType == MemoryRequestType::MemoryRead )
-    {
-        _memoryReader.handleRemoteDataReadRequest( sender, data + offset,
-        dataSize, address, isMetadataOnly );   
-    }
-    else
-    {
-        _memoryWriter.handleRemoteDataWriteRequest( sender, data + offset,
-            dataSize, address, isMetadataOnly, requestType );
-        // _memoryWriter.emplaceIntoQueue( sender, data + offset,
-        //     dataSize, address, isMetadataOnly, requestType );
+        case MemoryRequestType::MemoryDelete:
+        case MemoryRequestType::MemoryWrite:
+            _memoryWriter.processRemoteDataWriteRequest( sender, data, size, requestType );
+            return;
+        case MemoryRequestType::MemoryRead:
+            _memoryReader.processRemoteDataReadRequest( data, size );
+            return;
+        default:
+            _loggingService.logError( "Distributed Memory - Invalid Memory Operation Request detected. Likely caused by a non-memory message passed to memory.");
+            return;
     }
 }
 

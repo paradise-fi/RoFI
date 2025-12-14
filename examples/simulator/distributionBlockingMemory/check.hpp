@@ -26,6 +26,15 @@ public:
             return FunctionResult< int >( target, FunctionResultType::FAILURE );
         }
 
+        std::cout << "Going to read metadata from address " << target << " but there should not be any " << std::endl;
+        auto metadataReadResult = _manager.memory().readMetadata( target, std::string( "metadata" ) );
+        if ( metadataReadResult.success )
+        {
+            std::cout << "I have received the metadata succesfully, the metadata is: " << metadataReadResult.data< Ip6Addr >() << std::endl;
+            std::cout << "This is BAD. I should not have received any metadata!" << std::endl;
+            return FunctionResult< int >( target, FunctionResultType::FAILURE );
+        }
+
         std::cout << "No data found. The delete was succesful." << std::endl;
         return FunctionResult< int >( target, FunctionResultType::SUCCESS );
     }
