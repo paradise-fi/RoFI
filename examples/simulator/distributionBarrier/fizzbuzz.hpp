@@ -93,7 +93,7 @@ public:
         if ( metadata.data< int >() <= prevStamp.stamp && prevStamp.staleCount < 4 )
         {
             prevStamp.staleCount++;
-            std::cout << "Stale data detected." << std::endl;
+            std::cout << "Stale data detected. Going to retry this function to attempt to load fresher data." << std::endl;
             return true;
         }
 

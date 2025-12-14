@@ -169,18 +169,6 @@ MemoryReadResult MemoryReader::readDataInternal( int address, const Ip6Addr& ori
         _loggingService.logError("MemoryReader: Failed to compose data read request message.");
         return result;
     }
-    // // Requester Address
-    // as< Ip6Addr >( data.data() ) = origin;
-    // as< u8_t >( data.data() + sizeof( Ip6Addr ) ) = origin.zone;
-
-    // // Data Address
-    // as< int >( data.data() + sizeof( Ip6Addr ) + sizeof(u8_t) ) = address;
-    
-    // // IsMetadataRequest
-    // as< bool >( data.data() + sizeof( int ) + sizeof( Ip6Addr ) + sizeof(u8_t)  ) = false;
-
-    // // Size of other data.
-    // as< size_t >( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof(u8_t)  ) = 0;
 
     if ( isUserCall ) 
     {
@@ -241,23 +229,6 @@ MemoryReadResult MemoryReader::readMetadataInternal( int address, const Ip6Addr&
         _loggingService.logError("MemoryReader: Failed to compose metadata read request message.");
         return result;
     }
-
-    // // Requester Address
-    // as< Ip6Addr >( data.data() ) = origin;
-    // as< u8_t >( data.data() + sizeof( Ip6Addr ) ) = origin.zone;
-
-    // // Data Address
-    // as< int >( data.data() + sizeof( Ip6Addr ) + sizeof( u8_t ) ) = address;
-
-    // // IsMetadataRequest -> TRUE
-    // as< bool >( data.data() + sizeof( int ) + sizeof( Ip6Addr ) + sizeof( u8_t ) ) = true;
-
-    // // Size of Metadata Key
-    // as< size_t >( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof( u8_t )  ) = key.size();
-
-    // // Key
-    // std::memcpy( data.data() + sizeof( int ) + sizeof( bool ) + sizeof( Ip6Addr ) + sizeof( size_t ) + sizeof( u8_t ),
-    //                 key.data(), key.size() );
 
     return isUserCall 
         ? readDataBlocking( target, data.data(), data.size() )

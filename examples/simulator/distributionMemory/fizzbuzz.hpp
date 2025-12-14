@@ -19,6 +19,7 @@ public:
     virtual FunctionResult< int > execute( int value ) override 
     {
         int result;
+        std::cout << "Reading memory from address " << _identity << "..." << std::endl;
         MemoryReadResult memoryResult = _manager.memory().readData( _identity );
         if ( !memoryResult.success )
         {

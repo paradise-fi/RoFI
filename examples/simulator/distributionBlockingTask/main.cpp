@@ -39,6 +39,10 @@ void distributionManagerFizzBuzz() {
 
     int id = RoFI::getLocalRoFI().getId();
     std::cout << "This module is: " << id << "\n";
+    if ( id > 2 )
+    {
+        std::cout << "WARNING!!! This example is intended for only 2 modules!" << std::endl;
+    }
     NetworkManager net( RoFI::getLocalRoFI() );
     Ip6Addr addr = createAddress( id );
     net.addAddress( addr, 80, net.interface( "rl0" ) );
@@ -68,7 +72,7 @@ void distributionManagerFizzBuzz() {
     manager.functions().registerFunction< int >( InitialFunction( id, manager ) );
     manager.functions().registerFunction< int, int >( BlockingFunction( id, manager, nonBlockingCalledFirst ) );
     manager.functions().registerFunction< int, int >( NonBlockingFunction( id, manager, nonBlockingCalledFirst ) );
-    if ( !manager.functions().registerFunction< Ip6Addr >( NaiveBarrier( addr, manager ) ) )
+    if ( !manager.functions().registerFunction< Ip6Addr >( NaiveBarrier( addr, manager, 1) ) )
     {
         std::cout << "Barrier failed to register." << std::endl;
     }
@@ -81,6 +85,7 @@ void distributionManagerFizzBuzz() {
 
     while ( !terminate ) {
         // A single 'tick' of the manager instance.
+        sleep( 2 );
         manager.doWork();
     }
 }

@@ -38,6 +38,11 @@ void distributionManagerFizzBuzz() {
 
     int id = RoFI::getLocalRoFI().getId();
     std::cout << "This module is: " << id << "\n";
+    if ( id > 3 )
+    {
+        std::cout << "WARNING!!! THIS EXAMPLE IS INTENDED FOR THREE MODULES!!!" << std::endl;
+    }
+
     NetworkManager net( RoFI::getLocalRoFI() );
     Ip6Addr addr = createAddress( id );
     net.addAddress( addr, 80, net.interface( "rl0" ) );
@@ -59,7 +64,7 @@ void distributionManagerFizzBuzz() {
         *messageDistributor, std::move( pcb ) );
     
     // Register logger implementation
-    // manager.loggingService().useLogger( ExampleLogger() );
+    manager.loggingService().useLogger( ExampleLogger(), LogVerbosity::Medium );
 
     // Register the memory implementation - the memory implementation is responsible for 
     // initiating memory-relevant communication, hence why the sender is passed too.
@@ -72,7 +77,7 @@ void distributionManagerFizzBuzz() {
     manager.functions().registerFunction< FizzBuzzMetaData, int >( FizzBuzz( id, manager ) );
 
     // Register the barrier.
-    if ( !manager.functions().registerFunction< Ip6Addr >( NaiveBarrier( addr, manager ) ) )
+    if ( !manager.functions().registerFunction< Ip6Addr >( NaiveBarrier( addr, manager, 2 ) ) )
     {
         std::cout << "Failed to register barrier." << std::endl;
         return;

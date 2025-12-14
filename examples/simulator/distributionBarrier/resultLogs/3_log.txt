@@ -1,0 +1,24 @@
+Starting simple RoFI Distribution Manager barrier synchronization example
+This module is: 3
+Info: I am a follower of FC07::1:0:0:0:1
+Fizzbuzz value not in memory at address 3, generated and stored 3 + (3 * 3) = 12 there.
+Info: Reached NaiveBarrier.
+Fizbuzz value 6 found in memory slot 2, updating and storing value 3 + (6 * 3) = 21 there.
+Info: Reached NaiveBarrier.
+Fizbuzz value 26 found in memory slot 3, updating and storing value 3 + (26 * 3) = 81 there.
+Info: Reached NaiveBarrier.
+Fizbuzz value 44 found in memory slot 2, updating and storing value 3 + (44 * 3) = 135 there.
+Info: Reached NaiveBarrier.
+Fizbuzz value 164 found in memory slot 3, updating and storing value 3 + (164 * 3) = 495 there.
+Info: Reached NaiveBarrier.
+Fizbuzz value 272 found in memory slot 2, updating and storing value 3 + (272 * 3) = 819 there.
+Info: Reached NaiveBarrier.
+Fizbuzz value 992 found in memory slot 3, updating and storing value 3 + (992 * 3) = 2979 there.
+Info: Reached NaiveBarrier.
+Fizbuzz value 1640 found in memory slot 2, updating and storing value 3 + (1640 * 3) = 4923 there.
+Info: Reached NaiveBarrier.
+Fizbuzz value 5960 found in memory slot 3, updating and storing value 3 + (5960 * 3) = 17883 there.
+Info: Reached NaiveBarrier.
+Fizbuzz value 9848 found in memory slot 2, updating and storing value 3 + (9848 * 3) = 29547 there.
+Info: Reached NaiveBarrier.
+Fizbuzz value 35768 found in memory slot 3, updating and storing value 3 + (35768 * 3) = 107307 there.

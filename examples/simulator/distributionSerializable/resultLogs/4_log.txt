@@ -1,0 +1,5 @@
+Starting simple RoFI Distribution Manager MessageSend example with 4 followers.
+This module is: 4
+Received value from leader: Hello, follower.
+Received custom message with data 1
+---Example Ended---

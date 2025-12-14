@@ -48,7 +48,7 @@ public:
         auto blockingHandle = _manager.functions().getFunctionHandle< int, int >( 1 ).value();
 
         std::cout << "Pushing blocking non-barrier task into queue with priority 1 and value 1." << std::endl;
-        if ( !blockingHandle( origin, 2, false, { 1 } ) )
+        if ( !blockingHandle( origin, 2, false, { 2 } ) )
         {
             std::cout << "Execution of the blocking function failed." << std::endl;
         }
@@ -56,20 +56,26 @@ public:
         auto nonBlockingHandle = _manager.functions().getFunctionHandle< int, int >( 2 ).value();
 
         std::cout << "Pushing non-blocking task into queue with priority 3 and value 2." << std::endl;
-        if ( !nonBlockingHandle( origin, 3, false, { 2 } ) )
+        if ( !nonBlockingHandle( origin, 3, false, { 1 } ) )
         {
             std::cout << "Execution of the non-blocking function failed." << std::endl;
         }
 
-        std::cout << "Pushing barrier task into queue with priority 5." << std::endl;
+        std::cout << "Pushing barrier task into queue with priority 1." << std::endl;
 
         if ( !barrierHandle( origin, 1, false, { } ) )
         {
             std::cout << "Execution of barrier function failed." << std::endl;
         }
 
-        std::cout << "Pushing non-blocking task into queue with priority 10 and value 3" << std::endl;
-        if ( !nonBlockingHandle( origin, 10, false, { 3 } ) )
+        std::cout << "Pushing non-blocking task into queue with priority 10 and value 4" << std::endl;
+        if ( !nonBlockingHandle( origin, 10, false, { 4 } ) )
+        {
+            std::cout << "Execution of non-blockingfunction failed" << std::endl;
+        }
+
+        std::cout << "Pushng non-blocking task into queue with priority TOP and value 3" << std::endl;
+        if ( !nonBlockingHandle( origin, 1, true, { 3 } ) )
         {
             std::cout << "Execution of non-blockingfunction failed" << std::endl;
         }
