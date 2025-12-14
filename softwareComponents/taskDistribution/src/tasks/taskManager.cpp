@@ -130,7 +130,7 @@ void TaskManager::finishActiveTask( const Ip6Addr& address )
     taskQueue->second.clearActiveTask();
 }
 
-void TaskManager::finishActiveTask( const Ip6Addr& address, int id )
+void TaskManager::finishActiveTask( const Ip6Addr& address, unsigned int id )
 {
     const auto& taskQueue = _schedulers.find( address );
 
@@ -181,8 +181,14 @@ void TaskManager::clearTasks()
 }
 
 // =================== PRIVATE
-void TaskManager::updateTaskIdIfStale( int newId )
+void TaskManager::updateTaskIdIfStale( unsigned int newId )
 {
+    // Overflow reset - todo magic constant
+    if ( _taskId > newId && _taskId - newId > std::numeric_limits< unsigned int >::max() - 5000 )
+    {
+        _taskId = newId;
+    }
+
     _taskId = _taskId < newId ? newId : _taskId;
 }
 

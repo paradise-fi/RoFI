@@ -18,7 +18,7 @@ class TaskBase
 public:
     virtual ~TaskBase() = default;
 
-    virtual int id() const = 0;
+    virtual unsigned int id() const = 0;
     virtual size_t size() = 0;
     virtual int functionId() const = 0;
     virtual void setStatus( TaskStatus status ) = 0;
@@ -36,7 +36,7 @@ public:
 
 template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
 class Task : public TaskBase {
-    int _id;
+    unsigned int _id;
     TaskStatus _status;
     int _age = 0;
     int _functionId;
@@ -82,16 +82,16 @@ class Task : public TaskBase {
         _status = TaskStatus::Pending;
         _id = 0;
     }
-    Task( int id, TaskStatus status, int functionId, unsigned int priority, bool enqueueFront )
+    Task( unsigned int id, TaskStatus status, int functionId, unsigned int priority, bool enqueueFront )
         : _id( id ), _status( status ), _functionId( functionId ), _priority( priority ), _enqueueFront( enqueueFront ) {}
 
-    Task( int id, TaskStatus status, int functionId, int result, unsigned int priority, bool enqueueFront )
+    Task( unsigned int id, TaskStatus status, int functionId, int result, unsigned int priority, bool enqueueFront )
         : _id( id ), _status( status ), _functionId( functionId ), _result( result ), _priority( priority ), _enqueueFront( enqueueFront ) {}
     
-        Task( int id, TaskStatus status, int functionId, unsigned int priority, bool enqueueFront, std::tuple< Arguments... > args)
+        Task( unsigned int id, TaskStatus status, int functionId, unsigned int priority, bool enqueueFront, std::tuple< Arguments... > args)
         : _id( id ), _status( status ), _functionId( functionId ), _priority( priority ), _enqueueFront( enqueueFront ), _args ( args ) {}
 
-    int id() const override { return _id; }
+    unsigned int id() const override { return _id; }
 
     template< SerializableOrTrivial T >
     std::size_t getSerializableOrTrivialSize( const T& argument )
@@ -166,7 +166,7 @@ class Task : public TaskBase {
     virtual void fillFromBuffer( const uint8_t* buffer ) override
     {
         _functionId = readFromBuffer< int >( buffer );
-        _id = readFromBuffer< int >( buffer );
+        _id = readFromBuffer< unsigned int >( buffer );
         _priority = readFromBuffer< unsigned int >( buffer );
         _enqueueFront = readFromBuffer< bool >( buffer );
         _status = readFromBuffer< TaskStatus >( buffer );
