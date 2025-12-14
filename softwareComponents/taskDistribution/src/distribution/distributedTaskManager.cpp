@@ -24,12 +24,12 @@ CallbackFacade& DistributedTaskManager::callbacks()
     return _callbackService;
 }
 
-[[nodiscard]] MemoryFacade DistributedTaskManager::memory()
+MemoryFacade DistributedTaskManager::memory()
 {
     return MemoryFacade( _memoryService );
 }
 
-[[nodiscard]] FunctionFacade DistributedTaskManager::functions()
+FunctionFacade DistributedTaskManager::functions()
 {
     return FunctionFacade( _functionRegistry );
 }
