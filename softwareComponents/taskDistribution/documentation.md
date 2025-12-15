@@ -59,41 +59,10 @@ Constructs a distributed task manager instance. It is strongly recommended that 
 
 #### Methods
 
-##### Event Callbacks
-```c++
-bool registerLeaderFailureCallback( std::function< void() > callback );
-bool unregisterLeaderFailureCallback();
-```
-
-Registers (and unregisters) a callback function for the event of leader failure (disconnect, crash, etc.). This is especially useful for failure recovery mechanisms.
-
-```c++
-void registerTaskRequestCallback( std::function< bool(DistributedTaskManager& manager, rofi::net::Ip6Addr& requester ) > callback );
-void unregisterTaskRequestCallback();
-```
-
-Registers (and unregisters) a callback function for the event of task requests from follower modules. This allows for custom task request handling code. The callback should return true if the task request pipeline should be terminated after this callback.
-
-```c++
-void registerTaskFailedCallback( std::function< void(DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, int functionId ) > callback );
-void unregisterTaskFailedCallback();
-```
-
-Registers (and unregisters) a callback function for the event of a system failure when executing a function. This type of failure is not the same failure indicated by your own function defined in ``DistributedFunction``, but rather a failure of system configuration. For example, this could mean that a function was not registered on one of the modules, and thus the task manager failed to execute the function on that module.
-
-```c++
-void registerCustomMessageCallback( std::function< void( DistributedTaskManager& manager, rofi::net::Ip6Addr& sender, uint8_t* dataBuffer, unsigned int bufferSize ) > callback );
-void unregisterCustomMessageCallback();
-```
-
-Registers (and unregisters) a callback function for the receiving of [custom messages](#sendcustommessage). Custom messages allow the user to implement and use their own messaging scheme within the task manager system. The user can also achieve this by using the lower level messaging API built over lwIP - this is a feature of convenience.
-
-The data buffer received into the callback contains only the body of the message, headers are already parsed out at this point.
-
 ```c++
 CallbackFacade& callbacks();
-[[nodiscard]] MemoryFacade memory();
-[[nodiscard]] FunctionFacade functionRegistry()
+MemoryFacade memory();
+FunctionFacade functionRegistry()
 LoggingService& loggingService();
 ```
 
@@ -115,11 +84,11 @@ Executes a single run of the standard workflow loop of the task manager. This me
 The **messageProcessingBatch** argument is used to configure the **maximum** number of incoming messages that will be processed and dispatched to subsystems during a single iteration.
 
 ```c++
-void start( int initialElectionDelay, int electionCyclesBeforeStabilization = 3 )
+void start( int initialElectionDelay = 1, int electionCyclesBeforeStabilization = 3 )
 ```
 
 Performs important initialization for the task manager. Namely, this method starts the election algorithm, which is necessary for the task manager to function correctly.
-The arguments are used to modify the behaviour of the election algorithm (namely its initial delay before election starts) and the number of election "cycles" (leader liveness checks) that must pass before we consider the election stable and the distributed task manager can begin to do work.
+The arguments are used to modify the behaviour of the election algorithm (namely its initial delay in seconds before election starts) and the number of election "cycles" (leader liveness checks) that must pass before we consider the election stable and the distributed task manager can begin to do work.
 
 ##### Unblock Queue Signals
 ```c++
@@ -159,17 +128,11 @@ Sends a custom message that stalls program execution until a response is receive
 If an error has occured during sending or receiving of the message, success is set to false and the reason message can be found in ``statusMessage``.
 
 
-##### Manual Task Distribution
+##### Manual Task Request
 ```c++
-template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments > 
-bool sendFunctionExecutionOrder( int functionId, const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments );
-
-template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments > 
-bool sendFunctionExecutionOrder( std::string functionName, const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments );
-
 bool requestTask();
 ```
-These methods allow for manual requests of task executions and task scheduling. These actions are typically performed as part of the task manager pipeline between leaders and followers, but they are needed when the user needs to manually start the pipeline of tasks again.
+This method allows for manual requests of task. This is typically performed as part of the task manager pipeline between leaders and followers, but manual requests may be needed when the user needs to manually start the pipeline of tasks again.
 
 ##### Cleanup
 ```c++
