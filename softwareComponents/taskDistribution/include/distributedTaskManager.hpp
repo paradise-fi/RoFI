@@ -60,44 +60,34 @@ public:
     /// @param messageProcessingBatch - The maximum number of incoming messages in the message queue that will be processed by the dispatcher during the loop.
     void doWork( unsigned int messageProcessingBatch = 10 );
     
+    /// @brief Starts the task manager by initiating the election process.
+    /// @param initialElectionDelay The initial delay of the election process in seconds.
+    /// @param electionCyclesBeforeStabilization The number of election cycles before a leader is considered to be elected and the task manager can start work.
     void start( int initialElectionDelay = 1, int electionCyclesBeforeStabilization = 3 );
 
     std::optional< Ip6Addr > getLeader();
 
+    /// @brief Sends a custom message. This function will end immediately and not wait for a response or a timeout.
+    /// @param data The data for the custom message
+    /// @param dataSize The size of the data
+    /// @param target The recipient
     void sendCustomMessage( uint8_t* data, size_t dataSize, std::optional< Ip6Addr > target );
 
+    /// @brief Sends a custom blocking message. This function will end once the target module responds or a timeout runs out
+    /// @param data The data for the custom message
+    /// @param dataSize The size of the data
+    /// @param target The recipient
+    /// @return A response
     MessagingResult sendCustomMessageBlocking( uint8_t* data, size_t dataSize, Ip6Addr& target );
 
     /// @brief  Used to manually send a function request to the leader. You should not need to use this in a typical workflow, but it may be useful for situations where you want the follower to request a task outside of the typical workflow.
     /// @return Returns false if the module is a leader and thus a request was not sent out.
     bool requestTask();
 
+    /// @brief Broadcasts an unblock scheduler signal to all modules.
     void broadcastUnblockSignal();
 
+    /// @brief Sends an unblock scheduler signal to a given module.
+    /// @param receiver The module address
     void sendUnblockSignal( const Ip6Addr& receiver );
-
-    /// @brief Used to manually send a function execution order to a module. This should be done from the leader to the follower. You do NOT need to use this if you use functionHandle instead.
-    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments > 
-    bool sendFunctionExecutionOrder( int functionId, const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments )
-    {
-        auto functionHandle = _functionRegistry.getFunctionHandle< Result, Arguments... >( functionId );
-        if ( functionHandle.has_value() )
-        {
-            return functionHandle.value()( target, priority, setTopPriority, arguments );
-        }
-        return false;
-    }
-
-    /// @brief Used to manually send a function execution order to a module. This should be done from the leader to the follower. You do NOT need to use this if you use functionHandle instead.
-    template< SerializableOrTrivial Result, SerializableOrTrivial... Arguments > 
-    bool sendFunctionExecutionOrder( std::string functionName, const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments )
-    {
-        auto functionHandle = _functionRegistry.getFunctionHandle< Result, Arguments... >( functionName );
-        if ( functionHandle.has_value() )
-        {
-            return functionHandle.value()( target, priority, setTopPriority, arguments );
-        }
-        return false;
-    }
-
 };
