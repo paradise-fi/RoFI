@@ -70,7 +70,6 @@ void distributionManagerFizzBuzz() {
     while ( true ){
         // A single 'tick' of the manager instance.
         manager.doWork();
-        manager.cleanUp();
     }
 }
 
