@@ -1,19 +1,48 @@
 Starting simple RoFI Distribution Manager MessageSend example with 4 followers.
 This module is: 1
+Info: I have been elected as the leader.
+Info: Received Task Request from FC07::2:0:0:0:1
+Info: Received Task Request from FC07::5:0:0:0:1
+Info: Received Task Request from FC07::3:0:0:0:1
+Info: Received Task Result from FC07::2:0:0:0:1
+Info: Result for Task with ID 0
 Initial ModuleId: 2
+Info: Received Task Request from FC07::4:0:0:0:1
+Info: Received Task Result from FC07::3:0:0:0:1
+Info: Result for Task with ID 0
 Initial ModuleId: 3
-Initial ModuleId: 4
+Info: Received Task Result from FC07::5:0:0:0:1
+Info: Result for Task with ID 0
 Initial ModuleId: 5
+Info: Received Task Result from FC07::4:0:0:0:1
+Info: Result for Task with ID 0
+Initial ModuleId: 4
 All followers contacted me. Sending out message.
-Received message "Hi from 2" from FC07::2:0:0:0:1
+Info: Received Task Result from FC07::3:0:0:0:1
+Info: Result for Task with ID 2
 Received message "Hi from 3" from FC07::3:0:0:0:1
+Info: Received Task Result from FC07::4:0:0:0:1
+Info: Result for Task with ID 2
 Received message "Hi from 4" from FC07::4:0:0:0:1
+Info: Received Task Result from FC07::2:0:0:0:1
+Info: Result for Task with ID 2
+Received message "Hi from 2" from FC07::2:0:0:0:1
+Info: Received Task Result from FC07::5:0:0:0:1
+Info: Result for Task with ID 2
 Received message "Hi from 5" from FC07::5:0:0:0:1
-Received message "end" from FC07::2:0:0:0:1
----Sending custom message to FC07::2:0:0:0:1 and ending their pipeline ---
+Info: Received Task Result from FC07::3:0:0:0:1
+Info: Result for Task with ID 3
 Received message "end" from FC07::3:0:0:0:1
 ---Sending custom message to FC07::3:0:0:0:1 and ending their pipeline ---
+Info: Received Task Result from FC07::4:0:0:0:1
+Info: Result for Task with ID 3
 Received message "end" from FC07::4:0:0:0:1
 ---Sending custom message to FC07::4:0:0:0:1 and ending their pipeline ---
+Info: Received Task Result from FC07::2:0:0:0:1
+Info: Result for Task with ID 3
+Received message "end" from FC07::2:0:0:0:1
+---Sending custom message to FC07::2:0:0:0:1 and ending their pipeline ---
+Info: Received Task Result from FC07::5:0:0:0:1
+Info: Result for Task with ID 3
 Received message "end" from FC07::5:0:0:0:1
 ---Sending custom message to FC07::5:0:0:0:1 and ending their pipeline ---
