@@ -26,3 +26,8 @@ bool MessageQueueManager::isEmpty()
 {
     return _messageQueue.empty();
 }
+
+void MessageQueueManager::clearQueue()
+{
+    _messageQueue.clear();
+}

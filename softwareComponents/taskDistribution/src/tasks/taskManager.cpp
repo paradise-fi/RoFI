@@ -37,21 +37,22 @@ std::optional< TaskResultEntry > TaskManager::popTaskResult()
 }
 
 
-bool TaskManager::enqueueTaskRequest( const Ip6Addr& addr )
+void TaskManager::enqueueTaskRequest( const Ip6Addr& addr )
 {
-    return _taskRequests.push( addr );
+    _taskRequests.push_back( addr );
 }
 
 bool TaskManager::popTaskRequest( Ip6Addr& result )
 {
-    auto success = _taskRequests.pop( result );
-    if ( !success )
+    if ( _taskRequests.empty() )
     {
         return false;
     }
 
+    result = _taskRequests.front();
     auto scheduler = _schedulers.find( result );
-
+    _taskRequests.pop_front();
+    
     if ( scheduler == _schedulers.end() )
     {
         return true;
@@ -59,7 +60,7 @@ bool TaskManager::popTaskRequest( Ip6Addr& result )
 
     if ( scheduler->second.schedulerIsBlocked() )
     {
-        _taskRequests.push( result );
+        _taskRequests.push_front( result );
         return false;
     }
 
@@ -174,10 +175,16 @@ void TaskManager::unblockScheduler( const Ip6Addr& address, bool hardUnblock )
     scheduler->second.clearActiveTask( hardUnblock );
 }
 
-void TaskManager::clearTasks()
+void TaskManager::clearAll()
 {
     unblockSchedulers();
+    for ( auto sched = _schedulers.begin(); sched != _schedulers.end(); ++sched )
+    {
+        sched->second.cleanUp();
+    }
     _schedulers.clear();
+    _taskRequests.clear();
+    _taskResults.clear();
 }
 
 // =================== PRIVATE

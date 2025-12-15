@@ -1,5 +1,7 @@
 # Distributed RoFI Task Manager
-The RoFI Task Manager is a tool to enable better distributed programming. The task manager is built on an election protocol and provides a centralized way to orchestration actions of the RoFIbot at runtime.
+The RoFI Task Manager is a tool intended to enable better distributed programming. The task manager is built on an election protocol and provides a centralized way to orchestration actions of the RoFIbot at runtime.
+
+Within the system, there is one privileged module that we refer to the leader module. This module is chosen by an election round that takes place before any task distribution can happen. This module is intended to act as an orchestrator, and task distribution should only happen within this module.
 
 <hr>
 
@@ -11,6 +13,8 @@ To find out how to use the RoFI task manager, consult examples provided in ~RoFI
 3. distributionBarrier - An extension of distributionMemory which shows how to use a barrier within the task manager.
 4. distributionComplex - A complex example that demonstrates many aspects of the task manager, including custom serialization of complex objects that are not trivially copyable, and movement of a RoFIBot orchestrated by the leader module.
 5. distributionSerializable - A simple example showcasing how to serialize custom, not trivially copyable data to be sent over the task manager.
+6. distributionBlockingTasks - A simple example for two modules that showcases blocking task semantics and priorities.
+7. distributionBlockingMemory - A simple example showing off blocking read operations on a custom memory implementation.
 
 <hr>
 
@@ -166,6 +170,13 @@ bool sendFunctionExecutionOrder( std::string functionName, const Ip6Addr& target
 bool requestTask();
 ```
 These methods allow for manual requests of task executions and task scheduling. These actions are typically performed as part of the task manager pipeline between leaders and followers, but they are needed when the user needs to manually start the pipeline of tasks again.
+
+##### Cleanup
+```c++
+void cleanUp( bool cleanSchedulers = true, bool cleanMemory = false, bool cleanMessages = true );
+```
+
+Use this method to clean up selected parts of the task manager after leader failure.
 
 <hr>
 
@@ -344,6 +355,8 @@ std::optional< FunctionHandle< Result, Arguments...> > getFunctionHandle( int fu
 
 These functions allow the user to retrieve a handle to their custom-defined ``DistributedFunction``. The handle is a functional object which can be invoked with the ``()`` operator.
 
+**IMPORTANT: The function handle should never be used outside of the leader module, as it can lead to unexpected and undefined behaviours within the task manager.**
+
 ##### Register Function
 
 ```c++
@@ -358,7 +371,8 @@ Registers a custom defined ``DistributedFunction`` into the task manager.
 ```c++
 void clearAllTasks();
 ```
-Used to clear all tasks from the queues on this module. Can be useful for failure recovery.
+Removes all tasks from all schedulers on this module. Also clears all pending task requests and task results.
+This function is called as part of ``DistrbutedTaskManager::cleanUp()``.
 
 ##### Unblock Task Schedulers
 ```c++
@@ -393,7 +407,7 @@ void useLogger( const Logger& logger, LogVerbosity verbosity );
 ```
 
 Registers a logger instance within the logging service. Only one logger instance can be registered at a time.
-The verbosity level passed to this function configures the logging service to that verbosity.
+The verbosity level passed to this function configures the logging service to use that verbosity level for informational messages.
 
 ##### Logging
 
@@ -500,7 +514,7 @@ The other three methods determine how the function is handled within the schedul
 ```c++
 enum FunctionCompletionType
 {
-    Blocking, // Task waits for a general signal and does not get unblocked by a response from the leader
+    Blocking, // Task waits for a general signal and its scheduler does not get unblocked until that signal is received
     NonBlocking, // Task does not wait.
 };
 ```
@@ -517,10 +531,12 @@ enum FunctionDistributionType
 enum FunctionType
 {
     Regular, // Registers the function as a regular function
-    Barrier, // Registers the function as a barrier function
+    Barrier, // Registers the function as a barrier function - no task, regardless of priority, put after this function into a scheduler will be queued before this task is cleared.
     Initial, // Registers the function as an initial function. There can only be one initial function.
 };
 ```
+
+**IMPORTANT!** Barrier functions also require ``FunctionCompletionType`` to be set to Blocking, otherwise they shall not be registered as barrier functions with schedulers. This is because the semantics ``FunctionCompletionType`` affect what happens *after* a task is chosen to leave the queue, while ``FunctionType::Barrier`` provides guarantees on priority-scheduling blocking.
 
 <hr>
 
@@ -530,16 +546,17 @@ The wrapper for ``DistributedFunction``. The ``FunctionHandle`` is a functional 
 #### Methods
 ##### Invocation
 ```c++
-bool operator()( const Ip6Addr& target, int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments );
+bool operator()( const Ip6Addr& target, unsigned int priority, bool setTopPriority, std::tuple< Arguments... >&& arguments );
 ```
 Used at the leader side. This call to the FunctionHandle queues the ``DistributedFunction`` execution for execution at the ``target`` follower.
 
 - ``target`` - The module receiving the order to execute this ``DistributedFunction`` invocation.
-- ``priority`` - The priority of the task. Higher priority tasks take are executed sooner than lower priority tasks.
+- ``priority`` - The priority of the task. Higher priority tasks take are executed sooner than lower priority tasks. The maximum that can be set here is 100. Otherwise, the function will not be executed.
 - ``setTopPriority`` - Setting this flag ignores the priority setting. This task will be given the highest priority in the scheduler at the time of scheduling.
 - ``arguments`` - An ``std::tuple`` representing the arguments for the function invocation.
 
 The function returns true if the queueing process succeeded. Note that this only informs you of the success to queue this ``DistributedFunction`` invocation task on the leader's side. 
+**Important:** Modules are expected to work at a one-thread workflow loop. Attempting to execute functions under ``FunctionHandle`` from multiple threads may lead to undefined behaviour.
 
 <hr>
 

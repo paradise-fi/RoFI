@@ -4,7 +4,7 @@ FunctionFacade::FunctionFacade( FunctionRegistry& functionRegistry ) : _function
 
 void FunctionFacade::clearAllTasks()
 {
-    _functionRegistry.clearTasks();
+    _functionRegistry.clearAll();
 }
 
 /// @brief Clears all task schedulers for scheduling tasks.

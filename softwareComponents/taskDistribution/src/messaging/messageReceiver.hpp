@@ -16,6 +16,8 @@ class MessageReceiver
 {
     MessageQueueManager& _messageQueueManager;
     BlockingMessageDataService& _blockingMessageDataService;
+    MessageDistributor& _messageDistributor;
+    int _receiveMethodId;
 
 public:
     MessageReceiver(
@@ -25,6 +27,8 @@ public:
         MessageDistributor& messageDistributor,
         int receiveMethodId,
         BlockingMessageDataService& blockingMessageDataService );
+
+    ~MessageReceiver();
 
     void receiveMessage( void*,
         struct udp_pcb*,
