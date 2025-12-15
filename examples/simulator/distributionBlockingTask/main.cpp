@@ -85,7 +85,6 @@ void distributionManagerFizzBuzz() {
 
     while ( !terminate ) {
         // A single 'tick' of the manager instance.
-        sleep( 2 );
         manager.doWork();
     }
 }

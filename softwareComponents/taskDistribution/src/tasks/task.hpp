@@ -32,6 +32,7 @@ public:
     virtual void addPriority( int toAdd ) = 0;
 
     virtual bool isQueuedToFront() = 0;
+    virtual void setQueuedToFront( bool queuedToFront ) = 0;
 };
 
 template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
@@ -213,4 +214,6 @@ class Task : public TaskBase {
     virtual void addPriority( int toAdd ) override { _priority += toAdd; }
 
     virtual bool isQueuedToFront() override { return _enqueueFront; }
+
+    virtual void setQueuedToFront( bool queuedToFront ) { _enqueueFront = queuedToFront; }
 };
