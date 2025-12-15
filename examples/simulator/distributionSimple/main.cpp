@@ -51,6 +51,7 @@ void distributionManagerFizzBuzz() {
     auto messageDistributorProtocol = net.addProtocol( rofi::net::MessageDistributor( addr, net ) );
     net.setProtocol( *messageDistributorProtocol );
     
+    // Instantiate the election protocol. LRElect will internally register its necessary functionality with the network manager, so we only need to instantiate it.
     std::unique_ptr< ElectionProtocolBase > election = std::make_unique< LRElect >( net, *reinterpret_cast< MessageDistributor* >( messageDistributorProtocol ), addr, 1, 3 );
 
     MessageDistributor* messageDistributor = reinterpret_cast< MessageDistributor* >( messageDistributorProtocol );

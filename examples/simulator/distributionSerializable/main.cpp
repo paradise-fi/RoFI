@@ -11,6 +11,7 @@
 #include "distributedTaskManager.hpp"
 #include "initial.hpp"
 #include "messageSend.hpp"
+#include "systemMethods/exampleLogger.hpp"
 
 using namespace rofi::hal;
 using namespace rofi::net;
@@ -72,6 +73,9 @@ void distributionManagerSerializable( int followers ) {
             std::cout << "Received custom message with data " << as< int >( data ) << std::endl;
             std::cout << "---Example Ended---" << std::endl;
         });
+
+    // Register logger implementation
+    manager.loggingService().useLogger( ExampleLogger(), LogVerbosity::High );
 
     // Start the Distribution Manager -> Ensures the used election algorithm is running.
     manager.start( 1 );

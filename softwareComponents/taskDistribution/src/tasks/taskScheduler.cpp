@@ -116,6 +116,12 @@ std::optional< std::reference_wrapper< TaskBase > > TaskScheduler::popTask( bool
     // Update priority to match the final result.
     _active->task->setPriority( effectivePriority );
 
+    // Prevent follower from using the queued to front semantics and messing with their queue.
+    if ( isLeader )
+    {
+        _active->task->setQueuedToFront( false );
+    }
+
     return std::reference_wrapper< TaskBase >(*(_active.get()->task.get()));
 }
 
