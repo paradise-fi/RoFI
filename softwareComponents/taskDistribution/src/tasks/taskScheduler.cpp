@@ -161,6 +161,15 @@ void TaskScheduler::ageTasks()
     }
 }
 
+void TaskScheduler::cleanUp()
+{
+    _globalAge = 0;
+    _activeBarrierTaskId.reset();
+    _active.reset();
+    _blockedTasks.clear();
+    _tasks.clear();
+}
+
 // ============ PRIVATE
 
 bool TaskScheduler::pushTaskToFront( std::unique_ptr< TaskBase > task, FunctionCompletionType completionType, bool isRegisteredBarrier )

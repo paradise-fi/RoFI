@@ -43,6 +43,8 @@ public:
         std::unique_ptr< udp_pcb > pcb,
         int blockingMessageTimeoutMs = 300 ); 
 
+    void cleanUp( bool cleanSchedulers = true, bool cleanMemory = false, bool cleanMessages = true );
+
     /// @brief Retrieves a facade look at the callback subsystem. Used to register custom callbacks.
     CallbackFacade& callbacks();
 

@@ -23,4 +23,6 @@ public:
     std::optional< MessageEntry > popMessage();
 
     bool isEmpty();
+
+    void clearQueue();
 };

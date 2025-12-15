@@ -1,8 +1,8 @@
 #include "workflowService.hpp"
 
-WorkFlowService::WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService,
+WorkFlowService::WorkFlowService(MessagingService& messagingService, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService,
     LoggingService& loggingService, MessageDispatcher& messageDispatcher )
-: _sender( sender ), _functionRegistry( functionRegistry ), _memoryService( memoryService ),
+: _messagingService( messagingService ), _functionRegistry( functionRegistry ), _memoryService( memoryService ),
     _loggingService( loggingService ), _messageDispatcher( messageDispatcher ) {}
 
 void WorkFlowService::doWorkLeader( int methodId, unsigned int messageProcessingBatch )
@@ -60,7 +60,7 @@ void WorkFlowService::doWorkFollower( const Ip6Addr& address, const Ip6Addr& lea
 
     if  ( !functionInvocationSucceeded )
     {
-        _sender.sendMessage( DistributionMessageType::TaskFailed, task.get(), leader );
+        _messagingService.sender().sendMessage( DistributionMessageType::TaskFailed, task.get(), leader );
 
         if ( !fn.has_value() || fn.value().get().completionType() != FunctionCompletionType::Blocking )
         {
@@ -69,7 +69,7 @@ void WorkFlowService::doWorkFollower( const Ip6Addr& address, const Ip6Addr& lea
         return;
     }
 
-    _sender.sendMessage( DistributionMessageType::TaskResult, task.get(), leader );
+    _messagingService.sender().sendMessage( DistributionMessageType::TaskResult, task.get(), leader );
     if ( !fn.has_value() || fn.value().get().completionType() != FunctionCompletionType::Blocking )
     {
         _functionRegistry.finishActiveTask( address );
@@ -114,13 +114,13 @@ void WorkFlowService::distributeTask( FunctionDistributionType distributionType,
         {
             case FunctionDistributionType::Broadcast: 
             {
-                _sender.broadcastMessage( DistributionMessageType::TaskAssignment, task, methodId );
+                _messagingService.sender().broadcastMessage( DistributionMessageType::TaskAssignment, task, methodId );
                 return;
             }
 
             case FunctionDistributionType::Unicast:
             {
-                _sender.sendMessage( DistributionMessageType::TaskAssignment, task, requester );
+                _messagingService.sender().sendMessage( DistributionMessageType::TaskAssignment, task, requester );
                 return;
             }
 

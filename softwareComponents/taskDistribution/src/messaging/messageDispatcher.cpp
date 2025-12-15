@@ -84,11 +84,7 @@ void MessageDispatcher::handleTaskRequest( const rofi::hal::Ip6Addr& sender )
         return;
     }
         
-    if ( !_functionRegistry.enqueueTaskRequest( sender ) )
-    {
-        _loggingService.logError( "Failed to enqueue task request." );
-    }
-    return;   
+    _functionRegistry.enqueueTaskRequest( sender );
 }
 
 void MessageDispatcher::handleMemoryMessage( const Ip6Addr& sender, const DistributionMessageType type,
@@ -145,10 +141,7 @@ void MessageDispatcher::handleTaskResult( const rofi::net::Ip6Addr& sender,
             return;
         }
         
-        if ( !_functionRegistry.enqueueTaskRequest( sender ) )
-        {
-            _loggingService.logError( "Failed to enqueue task request." );
-        }
+        _functionRegistry.enqueueTaskRequest( sender );
 
         return;
     }

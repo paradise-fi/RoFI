@@ -143,7 +143,7 @@ public:
     /// @brief Places a module's request into the task request queue.
     /// @param requester The address of the task requester
     /// @return True if the task request was placed in the queue.
-    bool enqueueTaskRequest( const Ip6Addr& requester );
+    void enqueueTaskRequest( const Ip6Addr& requester );
 
     /// @brief Places a task into the module's task queue.
     /// @param address The address of the task executor and their queue.
@@ -178,7 +178,7 @@ public:
     std::unique_ptr< TaskBase > getTaskFromBuffer( uint8_t* buffer, int functionId );
 
     /// @brief Removes all tasks from all schedulers on this module.
-    void clearTasks();
+    void clearAll();
 
     /// @brief Clears all task schedulers for scheduling tasks.
     /// @param hardUnblock Removes active barrier if true, otherwise the barrier remains active and only blocking regular function tasks are removed.

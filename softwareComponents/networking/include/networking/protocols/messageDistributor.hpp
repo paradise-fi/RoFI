@@ -151,7 +151,7 @@ namespace rofi::net {
             return true;
         }
 
-        void unregisterMethod( unsigned int method_id )
+        void unregisterMethod( unsigned int method_id ) noexcept
         {
             _registry.erase( method_id );
         }

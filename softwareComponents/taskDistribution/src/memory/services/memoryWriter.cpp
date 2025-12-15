@@ -123,7 +123,7 @@ void MemoryWriter::removeData( int address )
     }
 }
 
-void MemoryWriter::processRemoteDataWriteRequest( const Ip6Addr& sender, uint8_t* data, size_t size, MemoryRequestType requestType )
+void MemoryWriter::processRemoteDataWriteRequest( uint8_t* data, size_t size, MemoryRequestType requestType )
 {
     size_t headerSize = _memoryMessaging.genericMemoryMessageHeaderSize();
 

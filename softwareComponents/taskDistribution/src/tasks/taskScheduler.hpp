@@ -27,6 +27,8 @@ class TaskScheduler
 public:
     TaskScheduler( std::set< int >& registeredBarrierFunctionIds );
 
+    void cleanUp();
+
     void registerBarrier( int barrierId );
 
     bool schedulerIsBlocked();

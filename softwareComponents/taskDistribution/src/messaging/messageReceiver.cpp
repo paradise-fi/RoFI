@@ -21,7 +21,9 @@ MessageReceiver::MessageReceiver(
     int receiveMethodId,
     BlockingMessageDataService& blockingMessageDataService )
 : _messageQueueManager( messageQueueManager ),
-    _blockingMessageDataService( blockingMessageDataService )
+  _blockingMessageDataService( blockingMessageDataService ),
+  _messageDistributor( messageDistributor ),
+  _receiveMethodId( receiveMethodId )
 {
     if ( !pcb )
     {
@@ -40,6 +42,11 @@ MessageReceiver::MessageReceiver(
             data + sizeof( DistributionMessageType ) + sizeof( Ip6Addr ), 
             size - ( sizeof( DistributionMessageType ) + sizeof( Ip6Addr ) ) );
     }, [](){});
+}
+
+MessageReceiver::~MessageReceiver()
+{
+    _messageDistributor.unregisterMethod( _receiveMethodId );
 }
 
 void MessageReceiver::receiveMessage( void*,

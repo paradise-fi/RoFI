@@ -28,13 +28,18 @@ bool DistributedMemoryService::deleteMemory()
     return true;
 }
 
-void DistributedMemoryService::onMemoryMessage( const Ip6Addr& sender, uint8_t* data, size_t size, MemoryRequestType requestType )
+void DistributedMemoryService::onMemoryMessage( const Ip6Addr&, uint8_t* data, size_t size, MemoryRequestType requestType )
 {
+    if ( _memory == nullptr )
+    {
+        return;
+    }
+
     switch ( requestType )
     {
         case MemoryRequestType::MemoryDelete:
         case MemoryRequestType::MemoryWrite:
-            _memoryWriter.processRemoteDataWriteRequest( sender, data, size, requestType );
+            _memoryWriter.processRemoteDataWriteRequest( data, size, requestType );
             return;
         case MemoryRequestType::MemoryRead:
             _memoryReader.processRemoteDataReadRequest( data, size );
@@ -47,32 +52,62 @@ void DistributedMemoryService::onMemoryMessage( const Ip6Addr& sender, uint8_t* 
 
 MemoryReadResult DistributedMemoryService::readData( int address, bool isUserCall )
 {
+    if ( _memory == nullptr )
+    {
+        return MemoryReadResult{ false };
+    }
+
     return _memoryReader.readData( address, isUserCall );
 }
 
 void DistributedMemoryService::removeData( int address )
 {
+    if ( _memory == nullptr )
+    {
+        return;
+    }
+
     _memoryWriter.removeData( address );
 }
 
 /// @brief Remove all data from this module's memory.
 void DistributedMemoryService::clearLocalMemory()
 {
-    return _memory->clear();
+    if ( _memory == nullptr )
+    {
+        return;
+    }
+
+    _memory->clear();
 }
 
 MemoryReadResult DistributedMemoryService::readMetadata( int address, const std::string& key, bool isUserCall )
 {
+    if ( _memory == nullptr )
+    {
+        return MemoryReadResult{ false };
+    }
+
     return _memoryReader.readMetadata( address, key, isUserCall );
 }
 
 bool DistributedMemoryService::saveMetadata( int address, const std::string& key, uint8_t* metadata, std::size_t metadataSize )
 {
+    if ( _memory == nullptr )
+    {
+        return false;
+    }
+
     return _memoryWriter.saveMetadata( address, key, metadata, metadataSize );
 }
 
 void DistributedMemoryService::removeMetadata( int address, const std::string& key )
 {
+    if ( _memory == nullptr )
+    {
+        return;
+    }
+
     return _memoryWriter.removeMetadata( address, key );
 }
 
@@ -85,7 +120,7 @@ void DistributedMemoryService::setLeader( const Ip6Addr& leader )
 /// @return NULLOPT if no memory has been registered. Otherwise a reference for the memory.
 std::optional< std::reference_wrapper< DistributedMemoryBase > > DistributedMemoryService::memory()
 {
-    if ( _memory == nullptr )
+    if ( _memory != nullptr )
     {
         return *_memory;
     }
