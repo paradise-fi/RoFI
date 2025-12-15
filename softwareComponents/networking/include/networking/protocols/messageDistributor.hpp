@@ -13,6 +13,7 @@
 #include <map>
 #include <set>
 #include <utility>
+#include <deque>
 
 namespace rofi::net {
     struct DistributorRecord 
@@ -34,6 +35,7 @@ namespace rofi::net {
         std::function< void( Ip6Addr sender_addr, uint8_t* data, unsigned int size ) > messageReceived;
         std::function< void( ) > connectionChanged;
         std::atomic< unsigned int > timestamp = 0;
+        std::deque< DistributorRecord > history;
 
         DistributorMethodRegistry(std::function< void( Ip6Addr sender_addr, uint8_t* data, unsigned int size ) > messageReceived,
             std::function< void( ) > connectionChanged) 
@@ -50,6 +52,7 @@ namespace rofi::net {
 
             messageReceived = other.messageReceived;
             connectionChanged = other.connectionChanged;
+            history = other.history;
             timestamp.store( other.timestamp.load() );
         }
 
@@ -64,24 +67,11 @@ namespace rofi::net {
         std::vector< std::reference_wrapper< const Interface > > _managedInterfaces;
         std::vector< std::pair< ConfigAction, ConfigChange > > _configChanges;
         
-        std::vector< DistributorRecord > _history;
         std::map< methodId, DistributorMethodRegistry > _registry; 
         const Ip6Addr& _myAddr;
         NetworkManager& _manager;
 
         unsigned int _stampClearTreshold = 5;
-
-        void _eraseOldMethodHistory( Ip6Addr& addr, unsigned int method_id, unsigned int stamp ) {
-            for ( auto record_it = _history.begin(); record_it != _history.end(); ) {
-                if ( record_it->sender_address == addr
-                  && record_it->stamp <= stamp - 1
-                  && record_it->method_id == method_id ) {
-                    record_it = _history.erase( record_it );
-                } else {
-                    ++record_it;
-                }
-            }
-        }
 
         void _sendMessagesInner( uint8_t* data, int size, const std::string& noSendInterfaceName )
         {
@@ -163,42 +153,50 @@ namespace rofi::net {
             unsigned int method_id = as< unsigned int >( packet.payload() + Ip6Addr::size() );
             unsigned int stamp = as< unsigned int >( packet.payload() + Ip6Addr::size()  + sizeof( unsigned int ) );
             
-            auto res = std::find_if( _history.begin(), _history.end(),
+            const auto& methodRegistryEntry = _registry.find( method_id );
+
+            // Method not registered.
+            if ( methodRegistryEntry == _registry.end() )
+            {
+                return false;
+            }
+            
+            auto& methodRegistry = methodRegistryEntry->second;
+
+            auto res = std::find_if( methodRegistry.history.begin(),
+                                     methodRegistry.history.end(),
                                     [ senderAddr, method_id, stamp ]( DistributorRecord& record ) {
                                         return senderAddr == record.sender_address
                                             && method_id == record.method_id
                                             && stamp == record.stamp;
                                     } );
             
-            if ( res != _history.end() || senderAddr == _myAddr )
+            if ( res != methodRegistry.history.end() || senderAddr == _myAddr )
             {
                 return false;
             }
 
-            const auto& methodRegistryEntry = _registry.find( method_id );
-
-            if ( methodRegistryEntry == _registry.end() )
-            {
-                return false;
-            }
             
             if ( stamp >= _stampClearTreshold )
             {
-                _eraseOldMethodHistory( senderAddr, method_id, stamp );
                 // Reset the timestamp.
-                methodRegistryEntry->second.timestamp.store( 0 );
+                methodRegistry.timestamp.store( 0 );
             }
             else
             {
-                unsigned int timestamp = methodRegistryEntry->second.timestamp.load();
+                unsigned int timestamp = methodRegistry.timestamp.load();
 
                 if (stamp > timestamp )
                 {
-                    methodRegistryEntry->second.timestamp.fetch_add(stamp + 1);
+                    methodRegistry.timestamp.fetch_add(stamp + 1);
                 }
             }
             
-            _history.emplace_back( DistributorRecord{ senderAddr, method_id, stamp } );
+            methodRegistry.history.push_back( DistributorRecord{ senderAddr, method_id, stamp } );
+            while ( methodRegistry.history.size() > _stampClearTreshold )
+            {
+                methodRegistry.history.pop_front();
+            }
             
             unsigned int header_size = Ip6Addr::size()  + sizeof( unsigned int ) * 2; 
             methodRegistryEntry->second.messageReceived( senderAddr, packet.payload() + header_size, packet.size() - header_size ); 
