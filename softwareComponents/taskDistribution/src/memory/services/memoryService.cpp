@@ -54,7 +54,7 @@ MemoryReadResult DistributedMemoryService::readData( int address, bool isUserCal
 {
     if ( _memory == nullptr )
     {
-        return MemoryReadResult{ false };
+        return MemoryReadResult{ false, false, std::nullopt, std::vector< uint8_t >() };
     }
 
     return _memoryReader.readData( address, isUserCall );
@@ -85,7 +85,7 @@ MemoryReadResult DistributedMemoryService::readMetadata( int address, const std:
 {
     if ( _memory == nullptr )
     {
-        return MemoryReadResult{ false };
+        return MemoryReadResult{ false, false, std::nullopt, std::vector< uint8_t >() };
     }
 
     return _memoryReader.readMetadata( address, key, isUserCall );
