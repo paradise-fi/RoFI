@@ -8,16 +8,34 @@ DistributedTaskManager::DistributedTaskManager(
     int blockingMessageTimeoutMs ) 
 : _address( address ),
   _functionRegistry( _loggingService ),
-  _election( std::move( election ) ),
+  _election( std::move( election ), _loggingService ),
   _callbackService( _election, _loggingService ),
   _messaging( address, DISTRIBUTION_PORT, distributor, std::move( pcb ), 
                _messageQueueManager, METHOD_ID ),
   _memoryService( _messaging, address, _loggingService, blockingMessageTimeoutMs ),
   _messageDispatcher( address, *this, _functionRegistry, _messaging, _memoryService,
                       _loggingService, _messageQueueManager, blockingMessageTimeoutMs ),
-  _workFlowService( _messaging.sender(), _functionRegistry, _memoryService, _loggingService, _messageDispatcher ),
+  _workFlowService( _messaging, _functionRegistry, _memoryService, _loggingService, _messageDispatcher ),
   _blockingMessageTimeoutMs( blockingMessageTimeoutMs )
 {}
+
+void DistributedTaskManager::cleanUp( bool cleanTasks, bool cleanMemory, bool cleanMessages )
+{
+    if ( cleanTasks )
+    {
+        _functionRegistry.clearAll();
+    }
+
+    if ( cleanMemory )
+    {
+        _memoryService.clearLocalMemory();
+    }
+
+    if ( cleanMessages )
+    {
+        _messageQueueManager.clearQueue();
+    }
+}
 
 CallbackFacade& DistributedTaskManager::callbacks()
 {
@@ -135,7 +153,7 @@ void DistributedTaskManager::onElectionSuccesful( const Ip6Addr& leader )
         return;
     }
 
-    _functionRegistry.clearTasks();
+    _functionRegistry.clearAll();
     std::ostringstream stream;
     stream << "I am a follower of " << leader;
     _loggingService.logInfo( stream.str(), LogVerbosity::Low );

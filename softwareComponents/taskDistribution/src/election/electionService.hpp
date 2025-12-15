@@ -1,6 +1,6 @@
 #pragma once
 #include "electionProtocolBase.hpp"
-#include "../memory/services/memoryService.hpp"
+#include "../logger/loggingService.hpp"
 
 using namespace rofi::net;
 using namespace rofi::leadership;
@@ -15,12 +15,16 @@ class ElectionService
     bool _isRunning = false;
     int _electionCyclesBeforeStabilization = 3;
 
+    LoggingService& _logger;
+
     void onLeaderElected();
 
     void onLeaderFailed();
 
 public:
-    ElectionService( std::unique_ptr< ElectionProtocolBase > election );
+    ElectionService( std::unique_ptr< ElectionProtocolBase > election, LoggingService& logger );
+
+    ~ElectionService();
 
     void start( int initialElectionDelay, std::function< void( const Ip6Addr& ) >&& electionFinishedCallback, int electionCyclesBeforeStabilization = 3 );
 

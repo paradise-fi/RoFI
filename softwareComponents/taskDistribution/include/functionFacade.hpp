@@ -6,8 +6,9 @@ class FunctionFacade
 public:
     FunctionFacade( FunctionRegistry& functionRegistry );
 
-    /// @brief Removes all tasks from all schedulers on this module.
+    /// @brief Removes all tasks from all schedulers on this module. Also clears all pending task requests and task results.
     void clearAllTasks();
+    
     /// @brief Clears all task schedulers for scheduling tasks.
     /// @param hardUnblock Removes active barrier if true, otherwise the barrier remains active.
     void unblockTaskSchedulers( bool hardUnblock = false );

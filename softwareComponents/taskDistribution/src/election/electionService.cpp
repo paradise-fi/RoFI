@@ -1,10 +1,18 @@
 #include "electionService.hpp"
 
-ElectionService::ElectionService( std::unique_ptr< ElectionProtocolBase > election )
-: _election( std::move( election ) )
+ElectionService::ElectionService( std::unique_ptr< ElectionProtocolBase > election, LoggingService& logger )
+: _election( std::move( election ) ), _logger( logger )
 {
     _election->registerElectionFailedCallback( [ this ] { onLeaderFailed(); } );
     _election->registerElectionFinishedCallback( [ this ] { onLeaderElected(); } );
+}
+
+ElectionService::~ElectionService()
+{
+    if ( _election )
+    {
+        _election->unregisterCallbacks();
+    }
 }
 
 void ElectionService::start( int initialElectionDelay,
@@ -36,6 +44,7 @@ bool ElectionService::registerLeaderFailureCallback( std::function< void() >&& c
 {
     if ( _onLeaderFailed.has_value() )
     {
+        _logger.logWarning( "[ElectionService] onLeaderFailure already registered. This call had no effect." );
         return false;
     }
 
@@ -71,6 +80,7 @@ void ElectionService::onLeaderElected()
 
 void ElectionService::onLeaderFailed()
 {
+    _logger.logInfo("[ElectionService] Leader failure detected.", LogVerbosity::Medium );
     _electedCount = 0;
 
     if ( _onLeaderFailed.has_value() )

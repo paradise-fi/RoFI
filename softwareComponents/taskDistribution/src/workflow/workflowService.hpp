@@ -1,12 +1,12 @@
 #include "../memory/services/memoryService.hpp"
 #include "../functions/functionRegistry.hpp"
 #include "../logger/loggingService.hpp"
-#include "../messaging/messageSender.hpp"
+#include "../messaging/messagingService.hpp"
 #include "../messaging/messageDispatcher.hpp"
 
 class WorkFlowService
 {
-    MessageSender& _sender;
+    MessagingService& _messagingService;
     FunctionRegistry& _functionRegistry;
     DistributedMemoryService& _memoryService;
     LoggingService& _loggingService;
@@ -18,7 +18,7 @@ class WorkFlowService
         int methodId, const Ip6Addr& requester );
 
 public:
-    WorkFlowService(MessageSender& sender, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService,
+    WorkFlowService(MessagingService& messagingService, FunctionRegistry& functionRegistry, DistributedMemoryService& memoryService,
         LoggingService& loggingService, MessageDispatcher& messageDispatcher );
 
     void doWorkLeader( int methodId, unsigned int messageProcessingBatch = 5 );

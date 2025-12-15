@@ -87,10 +87,9 @@ void FunctionRegistry::processTaskResultQueue()
 
 /// @brief Places a module's request into the task request queue.
 /// @param requester The address of the task requester
-/// @return True if the task request was placed in the queue.
-bool FunctionRegistry::enqueueTaskRequest( const Ip6Addr& requester )
+void FunctionRegistry::enqueueTaskRequest( const Ip6Addr& requester )
 {
-    return _taskManager.enqueueTaskRequest( requester );
+    _taskManager.enqueueTaskRequest( requester );
 }
 
 /// @brief Places a task into the module's task queue.
@@ -170,9 +169,9 @@ std::unique_ptr< TaskBase > FunctionRegistry::getTaskFromBuffer( uint8_t* buffer
 }
 
 /// @brief Removes all tasks from all schedulers on this module.
-void FunctionRegistry::clearTasks()
+void FunctionRegistry::clearAll()
 {
-    _taskManager.clearTasks();
+    _taskManager.clearAll();
 }
 
 /// @brief Clears all task schedulers for scheduling tasks.

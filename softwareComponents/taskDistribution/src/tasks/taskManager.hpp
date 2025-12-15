@@ -7,13 +7,13 @@
 #include "../functions/functionModel.hpp"
 #include "taskScheduler.hpp"
 #include "taskResultEntry.hpp"
-#include <boost/lockfree/queue.hpp>
+#include <deque>
 
 class TaskManager
 {
     unsigned int _taskId = 1;
     std::unique_ptr< TaskBase > _initialTask;
-    boost::lockfree::queue< ip6_addr_t > _taskRequests = boost::lockfree::queue< ip6_addr_t >( 1024 );
+    std::deque< ip6_addr_t > _taskRequests;
     std::deque< TaskResultEntry > _taskResults;
     std::map< Ip6Addr, TaskScheduler > _schedulers;
     mutable std::shared_mutex _mutex;
@@ -24,13 +24,15 @@ class TaskManager
     bool enqueueTaskInternal( const Ip6Addr& addr, std::unique_ptr< TaskBase >&& task, FunctionCompletionType completionType );
 
 public:
+    const unsigned int MaxUserAssignedPriority = 100;
+
     void registerBarrierFunction( int functionId );
 
     bool enqueueTaskResult( std::unique_ptr< TaskBase > task, const Ip6Addr& origin, bool pushToFront = false );
 
     std::optional< TaskResultEntry > popTaskResult();
 
-    bool enqueueTaskRequest( const Ip6Addr& addr );
+    void enqueueTaskRequest( const Ip6Addr& addr );
 
     bool popTaskRequest( Ip6Addr& result );
 
@@ -46,7 +48,7 @@ public:
     }
 
     template < SerializableOrTrivial Result, SerializableOrTrivial... Arguments >
-    bool enqueueTask( const Ip6Addr& addr, int functionId, int priority, bool enqueueFront, FunctionCompletionType completionType, std::tuple< Arguments... >&& arguments )
+    bool enqueueTask( const Ip6Addr& addr, int functionId, unsigned int priority, bool enqueueFront, FunctionCompletionType completionType, std::tuple< Arguments... >&& arguments )
     {
         auto task = Task< Result, Arguments... >( ++_taskId, TaskStatus::Pending, functionId, priority, enqueueFront, arguments );
         return enqueueTaskInternal( addr, std::make_unique< Task< Result, Arguments... > >( task ), completionType );
@@ -66,7 +68,7 @@ public:
 
     std::unique_ptr< TaskBase > finishAndGetActiveTask ( const Ip6Addr& address );
 
-    void clearTasks();
+    void clearAll();
 
     void unblockSchedulers( bool hardUnblock = false );
 

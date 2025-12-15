@@ -26,6 +26,9 @@ namespace rofi::leadership {
         /// @param cb - a callback function that will be invoked by the ElectionProtocolBase instance on leader failure.
         virtual void registerElectionFailedCallback( std::function< void() > cb ) = 0;
 
+        /// @brief Used by services to unregister all callbacks.
+        virtual void unregisterCallbacks() = 0;
+
         /// @brief Retrieves the address of the current leader.
         /// @return IP address of the leader.
         virtual const Ip6Addr& getLeader() = 0;

@@ -50,7 +50,6 @@ void MemoryMessagingWrapper::prepareMemoryMessageData( uint8_t* buffer, int addr
     }
 }
 
-
 void MemoryMessagingWrapper::sendDataBroadcast( int address, const uint8_t* data, size_t size, bool isMetadataOnly, DistributionMessageType messageType )
 {
     // ADDRESS - IS METADATA ONLY - DATA SIZE - DATA
@@ -121,8 +120,6 @@ void MemoryMessagingWrapper::propagateMetadataChange( MemoryPropagationType type
     {
         std::memcpy( dataBuffer.data() + sizeof( size_t ), key.data(), key.size() );
     }
-    
-    // std::memcpy( dataBuffer.data() + sizeof( size_t ) + keySize, dataBuffer.data(), dataBuffer.size() );
     
     propagateMemoryChange( type, address, dataBuffer.data(), dataBuffer.size(), true, target, messageType );
 }

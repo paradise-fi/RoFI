@@ -146,6 +146,11 @@ namespace rofi::leadership {
             _failed_callback = callBack;
         }
 
+        virtual void unregisterCallbacks() override {
+            _elected_callback.reset();
+            _failed_callback.reset();
+        }
+
         const Ip6Addr& getLeader() {
             return _leader;
         }
