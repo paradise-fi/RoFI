@@ -60,7 +60,7 @@ bool TaskManager::popTaskRequest( Ip6Addr& result )
 
     if ( scheduler->second.schedulerIsBlocked() )
     {
-        _taskRequests.push_front( result );
+        _taskRequests.push_back( result );
         return false;
     }
 
