@@ -1,0 +1,13 @@
+Starting simple RoFI Distribution Manager MessageSend example with 4 followers.
+This module is: 3
+Info: I am a follower of FC07::1:0:0:0:1
+Info: Received Task Assignment from FC07::1:0:0:0:1
+Info: Task Assignment for task with ID 0
+Info: Received Task Assignment from FC07::1:0:0:0:1
+Info: Task Assignment for task with ID 2
+Received value from leader: Hello, follower.
+Info: Received Task Assignment from FC07::1:0:0:0:1
+Info: Task Assignment for task with ID 3
+Info: Received Custom Message from FC07::1:0:0:0:1
+Received custom message with data 1
+---Example Ended---

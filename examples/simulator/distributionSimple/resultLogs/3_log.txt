@@ -1,0 +1,23 @@
+Starting simple RoFI Distribution Manager FizzBuzz example
+This module is: 3
+Received value 1, processed it into 4 which I will send as a result.
+Received value 4, processed it into 10 which I will send as a result.
+Received value 10, processed it into 19 which I will send as a result.
+Received value 19, processed it into 31 which I will send as a result.
+Received value 31, processed it into 46 which I will send as a result.
+Received value 46, processed it into 64 which I will send as a result.
+Received value 64, processed it into 85 which I will send as a result.
+Received value 85, processed it into 109 which I will send as a result.
+Received value 109, processed it into 136 which I will send as a result.
+Received value 136, processed it into 166 which I will send as a result.
+Received value 166, processed it into 199 which I will send as a result.
+Received value 199, processed it into 235 which I will send as a result.
+Received value 235, processed it into 274 which I will send as a result.
+Received value 274, processed it into 316 which I will send as a result.
+Received value 316, processed it into 361 which I will send as a result.
+Received value 361, processed it into 409 which I will send as a result.
+Received value 409, processed it into 460 which I will send as a result.
+Received value 460, processed it into 514 which I will send as a result.
+Received value 514, processed it into 571 which I will send as a result.
+Received value 571, processed it into 631 which I will send as a result.
+==============[PIPELINE WILL BE TERMINATED]==============

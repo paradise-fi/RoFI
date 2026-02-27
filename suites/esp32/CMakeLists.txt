@@ -8,6 +8,8 @@ include(CollectTargets)
 include(ESP32)
 include(ColoredOutput)
 
+set(ESP32_BUILD 1)
+
 project(rofi)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fconcepts")
@@ -77,6 +79,8 @@ add_component(rofiHalInc)
 add_component(rofiHalEsp32)
 add_component(libfi)
 add_component(firmwareUpdater)
+add_component(networking)
+
 # Introduce alias
 add_library(rofi::hal ALIAS rofi_hal_esp32)
 
@@ -93,8 +97,7 @@ add_application(examples/hal/connectorHal)
 add_application(examples/hal/connectorMovementHal)
 add_application(examples/hal/connectorHalStatus)
 add_application(examples/hal/firmwareUpdater)
-
-
+add_application(examples/hal/communication)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS 1)
 list_targets()
