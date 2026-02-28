@@ -196,8 +196,6 @@ add_component(lwipcore)
 # Temporary alias:
 add_library(idf::lwip ALIAS lwipcore)
 add_component(networking)
-add_component(leadership)
-add_component(taskDistribution)
 add_component(snake_reconfig)
 
 if (${BUILD_GAZEBO})
