@@ -72,7 +72,7 @@
 #define IPV6_FRAG_COPYHEADER      1
 #define LWIP_MULTICAST_TX_OPTIONS 1
 
-#define MEMP_NUM_MLD6_GROUP       16
+#define MEMP_NUM_MLD6_GROUP       256
 #define MEMP_NUM_IGMP_GROUP       16
 
 #define LWIP_DONT_PROVIDE_BYTEORDER_FUNCTIONS  0
@@ -115,7 +115,7 @@
  * MEM_SIZE: the size of the heap memory. If the application will send
  * a lot of data that needs to be copied, this should be set high.
  */
-#define MEM_SIZE                        1600
+#define MEM_SIZE                        3200
 
 /*
    ------------------------------------------------

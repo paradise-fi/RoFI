@@ -1,0 +1,28 @@
+Starting Complex RoFI Distribution Manager example
+This module is: 1
+Info: I have been elected as the leader.
+Info: Received Task Request from FC07::3:0:0:0:1
+Info: Received Task Request from FC07::4:0:0:0:1
+Info: Received Task Request from FC07::2:0:0:0:1
+Info: Received Task Request from FC07::5:0:0:0:1
+Info: Received Task Result from FC07::3:0:0:0:1
+Info: Result for Task with ID 0
+Info: Received Task Result from FC07::4:0:0:0:1
+Info: Result for Task with ID 0
+Info: Received Task Result from FC07::2:0:0:0:1
+Info: Result for Task with ID 0
+Info: Received Task Result from FC07::5:0:0:0:1
+Info: Result for Task with ID 0
+Requesters empty. All module information obtained.
+Loop found at: FC07::4:0:0:0:1, connector: 5
+Info: Received Task Result from FC07::4:0:0:0:1
+Info: Result for Task with ID 2
+Disconnected connector ID 5 on FC07::4:0:0:0:1
+Info: Received Task Result from FC07::5:0:0:0:1
+Info: Result for Task with ID 3
+Info: Received Task Result from FC07::2:0:0:0:1
+Info: Result for Task with ID 4
+Info: Received Task Result from FC07::3:0:0:0:1
+Info: Result for Task with ID 5
+Info: Received Task Assignment from FC07::1:0:0:0:1
+Info: Task Assignment for task with ID 6

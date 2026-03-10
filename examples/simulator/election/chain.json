@@ -1,0 +1,108 @@
+{
+    "modules": [
+        {
+            "id": 1,
+            "type": "universal",
+            "alpha": 0,
+            "beta": 0,
+            "gamma": 0
+        },
+        {
+            "id": 2,
+            "type": "universal",
+            "alpha": 0,
+            "beta": 0,
+            "gamma": 0
+        },
+        {
+            "id": 3,
+            "type": "universal",
+            "alpha": 0,
+            "beta": 0,
+            "gamma": 0
+        },
+        {
+            "id": 4,
+            "type": "universal",
+            "alpha": 0,
+            "beta": 0,
+            "gamma": 0
+        },
+        {
+            "id": 5,
+            "type": "universal",
+            "alpha": 0,
+            "beta": 0,
+            "gamma": 0
+        }
+    ],
+    "spaceJoints": [
+        {
+            "point": [ 0, 0, 0 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity",
+                "positions": []
+            },
+            "to": { "id": 1, "component": 7 }
+        },
+        {
+            "point": [ 0, 0, 8 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity",
+                "positions": []
+            },
+            "to": { "id": 2, "component": 7 }
+        },
+        {
+            "point": [ 0, 0, 4 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity",
+                "positions": []
+            },
+            "to": { "id": 3, "component": 7 }
+        },
+        {
+            "point": [ 0, 0, 6 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity",
+                "positions": []
+            },
+            "to": { "id": 4, "component": 7 }
+        },
+        {
+            "point": [ 0, 0, 2 ],
+            "joint": {
+                "type": "rigid",
+                "sourceToDestination": "identity",
+                "positions": []
+            },
+            "to": { "id": 5, "component": 7 }
+        }
+    ],
+    "moduleJoints": [
+        {
+            "from": { "id": 1, "connector": "B-Z" },
+            "to": { "id": 5, "connector": "A-Z" },
+            "orientation": "South"
+        },
+        {
+            "from": { "id": 5, "connector": "B-Z" },
+            "to": { "id": 3, "connector": "A-Z" },
+            "orientation": "South"
+        },
+        {
+            "from": { "id": 3, "connector": "B-Z" },
+            "to": { "id": 4, "connector": "A-Z" },
+            "orientation": "South"
+        },
+        {
+            "from": { "id": 4, "connector": "B-Z" },
+            "to": { "id": 2, "connector": "A-Z" },
+            "orientation": "South"
+        }
+    ]
+}
