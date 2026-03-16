@@ -2,11 +2,13 @@
 #include <string>
 #include <string_view>
 #include <vector>
+#include <filesystem>
+#include <future>
 
 #include <gazebo/gazebo_client.hh>
+#include <atoms/units.hpp>
 
 #include "rofi_hal.hpp"
-
 
 enum class JointCmd
 {
@@ -21,6 +23,8 @@ enum class JointCmd
 
 enum class ConnectorCmd
 {
+    RETRACT,
+    EXTEND,
     CONNECT,
     DISCONNECT,
     GET_STATE,
@@ -126,6 +130,53 @@ std::string toString( rofi::hal::ConnectorOrientation orientation )
 }
 
 
+class Jobs
+{
+private:
+
+    Jobs() {}
+    Jobs( const Jobs& ) = delete;
+
+    std::unordered_map< int, std::promise<void> > _jobs;
+    int _nextId = 0;
+
+public:
+
+    static Jobs& get()
+    {
+        static Jobs jobsInstance;
+        return jobsInstance;
+    }
+
+    int startNew()
+    {
+        _jobs.insert( { _nextId, std::promise<void>() } );
+        return _nextId++;
+    }
+
+    void finish( int job )
+    {
+        if ( !_jobs.contains( job ) ) throw std::runtime_error( "Job does not exist" );
+        _jobs[job].set_value();
+    }
+
+    void waitFor( int job )
+    {
+        if ( !_jobs.contains( job ) ) throw std::runtime_error( "Job does not exist" );
+        _jobs[job].get_future().get();
+        _jobs.erase( job ); 
+    }
+
+    void synchronize()
+    {
+        for ( auto& [ _, prom ] : _jobs )
+            prom.get_future().get();
+
+        _jobs.clear();
+    }
+
+};
+
 JointCmd getJointCmdType( std::string_view token )
 {
     const std::map< std::string_view, JointCmd > map = {
@@ -149,6 +200,10 @@ inline ConnectorCmd getConnectorCmdType( std::string_view token )
     const std::map< std::string_view, ConnectorCmd > map = {
         { "gs", ConnectorCmd::GET_STATE },
         { "getstate", ConnectorCmd::GET_STATE },
+        { "r", ConnectorCmd::RETRACT },
+        { "retract", ConnectorCmd::RETRACT },
+        { "e", ConnectorCmd::DISCONNECT },
+        { "extend", ConnectorCmd::EXTEND },
         { "c", ConnectorCmd::CONNECT },
         { "connect", ConnectorCmd::CONNECT },
         { "d", ConnectorCmd::DISCONNECT },
@@ -171,6 +226,11 @@ void printHelp()
 {
     std::cerr << "\nUsage:\n";
     std::cerr << "\tquit (q)\n";
+    std::cerr << "\texec (e) <command_file>\n";
+    std::cerr << "\tsynchronize (s)\n";
+    std::cerr << "\tmodule (m) <module_id> <module_command>\n";
+
+    std::cerr<< "\nModule Commands:\n";
     std::cerr << "\tdescriptor (d)\n";
     std::cerr << "\tjoint (j) <joint_number> <joint_command>\n";
     std::cerr << "\tconnector (c) <connector_number> <connector_command>\n";
@@ -180,18 +240,25 @@ void printHelp()
     std::cerr << "\tgetposition (gp)\n";
     std::cerr << "\tgetvelocity (gv)\n";
     std::cerr << "\tgettorque (gt)\n";
-    std::cerr << "\tsetposition (sp) <position> <velocity>\n";
+    std::cerr << "\tsetposition (sp) <position> [velocity=1]\n";
     std::cerr << "\tsetvelocity (sv) <velocity>\n";
     std::cerr << "\tsettorque (st) <torque>\n";
 
     std::cerr << "\nConnector commands:\n";
     std::cerr << "\tgetstate (gs)\n";
+    std::cerr << "\tretract (r)\n";
+    std::cerr << "\textend (e)\n";
     std::cerr << "\tconnect (c)\n";
     std::cerr << "\tdisconnect (d)\n";
     // std::cerr << "\tsendpacket (sp)\n"; // not implemented
     // std::cerr << "\tconnectpower (cp)\n"; // not implemented
     // std::cerr << "\tdisconnectpower (dp)\n"; // not implemented
 }
+
+void processCmds( 
+    std::istream & commandStream,
+    std::unordered_map< int, rofi::hal::RoFI > & modules, 
+    std::ofstream* logFile = nullptr );
 
 void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_view > & tokens )
 {
@@ -239,13 +306,21 @@ void processJointCmd( rofi::hal::RoFI & rofi, const std::vector< std::string_vie
         }
         case JointCmd::SET_POSITION:
         {
-            if ( tokens.size() != 5 )
-            {
+            if ( tokens.size() != 4 && tokens.size() != 5 )
                 throw std::runtime_error( "Wrong number of arguments" );
-            }
-            joint.setPosition( readFloat( tokens[ 3 ] ),
-                               readFloat( tokens[ 4 ] ),
-                               []( rofi::hal::Joint ) { std::cout << "Position reached\n"; } );
+
+            float speed = 1;
+            if ( tokens.size() == 5 )
+                speed = readFloat( tokens[ 4 ] );
+
+            int job = Jobs::get().startNew();
+            joint.setPosition( Angle::deg( readFloat( tokens[ 3 ] ) ).rad(),
+                               speed,
+                               [ job ]( rofi::hal::Joint ) 
+                                { 
+                                    std::cout << "Position reached\n"; 
+                                    Jobs::get().finish( job ); 
+                                } );
             break;
         }
         case JointCmd::GET_TORQUE:
@@ -277,16 +352,82 @@ void processConnectorCmd( rofi::hal::RoFI & rofi, const std::vector< std::string
 
     switch ( getConnectorCmdType( tokens[ 2 ] ) )
     {
+        case ConnectorCmd::RETRACT:
+        {
+            auto state = connector.getState();
+            if ( state.position == rofi::hal::ConnectorPosition::Retracted ) {
+                std::cout << "Connector is already retracted" << std::endl;
+                break;
+            }
+
+            connector.disconnect();
+            std::cout << "Retracting connector" << std::endl;
+            break;
+        }
+        case ConnectorCmd::EXTEND:
+        {
+            auto state = connector.getState();
+            if ( state.position == rofi::hal::ConnectorPosition::Extended ) {
+                std::cout << "Connector is already extended" << std::endl;
+                break;
+            }
+
+            connector.connect();
+            std::cout << "Extending connector" << std::endl;
+            break;
+        }
         case ConnectorCmd::CONNECT:
         {
+            auto state = connector.getState();
+
+            if ( state.connected )
+                throw std::runtime_error( "Connector is already connected" );
+
+            if ( state.position == rofi::hal::ConnectorPosition::Extended )
+            {
+                connector.disconnect();
+                std::cout << "Retracting connector" << std::endl;
+            }
+
+            int job = Jobs::get().startNew();
+            auto onceFlag = std::once_flag{}; // does the once flag matter?
+            connector.onConnectorEvent( [ & ]( rofi::hal::Connector, rofi::hal::ConnectorEvent event ) {
+                if ( event == rofi::hal::ConnectorEvent::Connected ) {
+                    std::cout << "Connected" << std::endl;
+                    std::call_once( onceFlag, [ & ]() { Jobs::get().finish( job ); } );
+                }
+            });
             connector.connect();
-            std::cout << "Connecting\n";
+            std::cout << "Extending connector" << std::endl;
+            Jobs::get().waitFor( job ); // assumes there is a connector to connect to, otherwise waits
+
+            // Clear callback to avoid dangling references in lambda
+            connector.onConnectorEvent( nullptr );
             break;
         }
         case ConnectorCmd::DISCONNECT:
         {
+            auto state = connector.getState();
+
+            if ( !state.connected )
+                throw std::runtime_error( "Connector is already disconnected" );
+
+            assert( state.position == rofi::hal::ConnectorPosition::Extended );
+
+            int job = Jobs::get().startNew();
+            auto onceFlag = std::once_flag{}; // does the once flag matter?
+            connector.onConnectorEvent( [ & ]( rofi::hal::Connector, rofi::hal::ConnectorEvent event ) {
+                if ( event == rofi::hal::ConnectorEvent::Disconnected ) {
+                    std::cout << "Disconnected" << std::endl;
+                    std::call_once( onceFlag, [ & ]() { Jobs::get().finish( job ); } );
+                }
+            });
             connector.disconnect();
-            std::cout << "Disconnecting\n";
+            std::cout << "Retracting connector" << std::endl;
+            Jobs::get().waitFor( job ); // must successfully disconnect
+
+            // Clear callback to avoid dangling references in lambda
+            connector.onConnectorEvent( nullptr );
             break;
         }
         case ConnectorCmd::GET_STATE:
@@ -311,82 +452,124 @@ void processConnectorCmd( rofi::hal::RoFI & rofi, const std::vector< std::string
     }
 }
 
-rofi::hal::RoFI getRoFI( std::optional< rofi::hal::RoFI::Id > id )
+void processModuleCmd( std::unordered_map< int, rofi::hal::RoFI > & modules, std::vector< std::string_view > & tokens )
 {
-    if ( id )
+    if ( tokens.size() < 3 )
+        throw std::runtime_error( "Wrong number of arguments" );
+
+    int rofiId = readInt( tokens[ 1 ] );
+
+    if ( !modules.contains( rofiId ) )
+        modules.emplace( rofiId, rofi::hal::RoFI::getRemoteRoFI( rofiId ) );
+
+    auto [ _, rofi ] = *(modules.find( rofiId ));
+
+    tokens.erase( tokens.begin(), tokens.begin() + 2 );
+
+    if ( tokens.front() == "d" || tokens.front() == "descriptor" )
     {
-        return rofi::hal::RoFI::getRemoteRoFI( *id );
+        auto descriptor = rofi.getDescriptor();
+        std::cout << "Joint count: " << descriptor.jointCount << "\n";
+        std::cout << "Connector count: " << descriptor.connectorCount << "\n";
+        return;
     }
-    return rofi::hal::RoFI::getLocalRoFI();
+    
+    if ( tokens.front() == "j" || tokens.front() == "joint" )
+    {
+        processJointCmd( rofi, tokens );
+        return;
+    }
+
+    if ( tokens.front() == "c" || tokens.front() == "connector" )
+    {
+        processConnectorCmd( rofi, tokens );
+        return;
+    }
+
+    std::cerr << "Unknown module command\n";
+    printHelp();
 }
 
+void processExecCmd( std::unordered_map< int, rofi::hal::RoFI > & modules, std::vector< std::string_view > & tokens )
+{
+    assert( tokens[ 0 ] == "e" || tokens[ 0 ] == "exec" );
+    tokens.erase( tokens.begin() );
+
+    for ( const auto& filePath : tokens )
+    {
+        std::ifstream commandFile{ std::string( filePath ) };
+
+        if ( !commandFile ) 
+            throw std::runtime_error( "Command file \"" + std::string( filePath ) + "\" cannot be opened" );
+
+        // record only the exec command itself, not all executed subcommands
+        processCmds( commandFile, modules );
+    }
+}
+
+void processCmds( 
+    std::istream & commandStream,
+    std::unordered_map< int, rofi::hal::RoFI > & modules, 
+    std::ofstream* logFile )
+{
+    for ( std::string line; std::getline( commandStream, line ); )
+    {
+        try
+        {
+            auto tokens = split( line );
+
+            if ( tokens.empty() )
+                continue;
+
+            if ( tokens.front() == "q" || tokens.front() == "quit" )
+                break;
+
+            if ( tokens.front() == "e" || tokens.front() == "exec" )
+            {
+                if ( logFile ) *logFile << line << std::endl;
+                processExecCmd( modules, tokens );
+                continue;
+            }
+
+            if ( tokens.front() == "m" || tokens.front() == "module" )
+            {
+                if ( logFile ) *logFile << line << std::endl;
+                processModuleCmd( modules, tokens );
+                continue;
+            }
+
+            if ( tokens.front() == "s" || tokens.front() == "synchronize" )
+            {
+                if ( logFile ) *logFile << line << std::endl;
+                Jobs::get().synchronize();
+                std::cout << "Synchronized\n"; 
+                continue;
+            }
+
+            std::cerr << "Unknown command\n";
+            printHelp();
+        }
+        catch ( const std::runtime_error & e )
+        {
+            std::cerr << "ERROR: " << e.what() << "\n";
+        }
+    }
+}
 
 int main( int argc, char ** argv )
 {
+    printHelp();
+
     try
     {
-        std::optional< rofi::hal::RoFI::Id > rofiId;
+        std::ofstream logFile;
 
         if ( argc > 1 )
-        {
-            rofiId = readInt( argv[ 1 ] );
-        }
+            logFile = std::ofstream( argv[ 1 ] );
 
-        if ( rofiId )
-        {
-            std::cerr << "Connecting to RoFI " << *rofiId << "\n";
-        }
-        else
-        {
-            std::cerr << "Connecting to local RoFI\n";
-        }
+        std::unordered_map< int, rofi::hal::RoFI > modules;
 
-        auto rofi = getRoFI( rofiId );
-        std::cerr << "Connected to RoFI " << rofi.getId() << "\n";
-
-        for ( std::string line; std::getline( std::cin, line ); )
-        {
-            try
-            {
-                auto tokens = split( line );
-                if ( tokens.empty() )
-                {
-                    continue;
-                }
-
-                if ( tokens.front() == "q" || tokens.front() == "quit" )
-                {
-                    break;
-                }
-
-                if ( tokens.front() == "d" || tokens.front() == "descriptor" )
-                {
-                    auto descriptor = rofi.getDescriptor();
-                    std::cout << "Joint count: " << descriptor.jointCount << "\n";
-                    std::cout << "Connector count: " << descriptor.connectorCount << "\n";
-                    continue;
-                }
-
-                if ( tokens.front() == "j" || tokens.front() == "joint" )
-                {
-                    processJointCmd( rofi, tokens );
-                    continue;
-                }
-
-                if ( tokens.front() == "c" || tokens.front() == "connector" )
-                {
-                    processConnectorCmd( rofi, tokens );
-                    continue;
-                }
-
-                std::cerr << "Unknown command\n";
-                printHelp();
-            }
-            catch ( const std::runtime_error & e )
-            {
-                std::cerr << "ERROR: " << e.what() << "\n";
-            }
-        }
+        processCmds( std::cin, modules, &logFile );
     }
     catch ( const gazebo::common::Exception & e )
     {

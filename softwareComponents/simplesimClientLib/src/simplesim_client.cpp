@@ -69,6 +69,7 @@ vtkAlgorithmOutput * getComponentModel( rofi::configuration::ComponentType type 
             { ComponentType::Roficom, LOAD_RESOURCE_FILE_LAZY( model_connector_obj ) },
             { ComponentType::UmBody, LOAD_RESOURCE_FILE_LAZY( model_body_obj ) },
             { ComponentType::UmShoe, LOAD_RESOURCE_FILE_LAZY( model_shoe_obj ) },
+            { ComponentType::CubeBody, LOAD_RESOURCE_FILE_LAZY( model_cube_obj ) },
     } );
     static std::map< ComponentType, vtkSmartPointer< vtkTransformPolyDataFilter > > cache;
 
@@ -475,8 +476,10 @@ void SimplesimClient::initInfoTree( const rofi::configuration::RofiWorld & rofiw
             _ui->treeWidget->addTopLevelItem( qtModule );
         }
         QTreeWidgetItem * components = new QTreeWidgetItem( qtModule, { QString( "Components" ) } );
+        int compInd = 0;
         for ( const auto & c : rModule.components() ) {
-            std::string comp = rofi::configuration::serialization::componentTypeToString( c.type );
+            std::string comp = std::to_string(compInd) + " " + rofi::configuration::serialization::componentTypeToString( c.type );
+            ++compInd;
             new QTreeWidgetItem( components, { QString( comp.c_str() ) } );
         }
         if ( auto * universalModule = dynamic_cast< const UniversalModule * >( &rModule ) ) {

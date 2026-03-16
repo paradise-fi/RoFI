@@ -112,6 +112,8 @@ private:
                 return ConnectorEvent::Disconnected;
             case ConnectorCmd::POWER_CHANGED:
                 return ConnectorEvent::PowerChanged;
+            default:
+                break;
         }
         ROFI_UNREACHABLE( "Unknown connector event type" );
     }
@@ -163,6 +165,8 @@ private:
                 } );
                 return;
             }
+            default:
+                break;
         }
         ROFI_UNREACHABLE( "Unknown connector response type" );
     }

@@ -109,9 +109,18 @@ private:
             return it->second;
         }
 
+        // Subscribe to ~/distributor/response before sending to ~/distributor/request
+        auto sub = PublishWorker::get().subscribe(
+                [ & ]( auto resp ) { std::cout << "Subscribed to response\n"; } );
+
+        // Lock the module if not locked already
         rofi::messages::DistributorReq req;
-        req.set_reqtype( rofi::messages::DistributorReq::GET_INFO );
+        req.set_reqtype( rofi::messages::DistributorReq::TRY_LOCK );
         req.set_sessionid( SessionId::get().bytes() );
+        req.set_rofiid( rofiId );
+        publish( std::move( req ) );
+
+        req.set_reqtype( rofi::messages::DistributorReq::GET_INFO );
         publish( std::move( req ) );
 
         _onRofiTopicsUpdate.wait( lock, [ this, rofiId ] {

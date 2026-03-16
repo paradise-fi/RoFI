@@ -13,7 +13,7 @@ add_executable(rofi-sim-ping ping.cpp)
 target_link_libraries(rofi-sim-ping rofi::hal)
 
 add_executable(rofi-sim-commandLine commandLine.cpp)
-target_link_libraries(rofi-sim-commandLine PRIVATE rofi::hal ${GAZEBO_LIBRARIES})
+target_link_libraries(rofi-sim-commandLine PRIVATE rofi::hal ${GAZEBO_LIBRARIES} atoms)
 target_include_directories(rofi-sim-commandLine SYSTEM PRIVATE ${GAZEBO_INCLUDE_DIRS})
 
 add_executable(rofi-sim-roficomCmd roficomCmd.cpp)
