@@ -1,22 +1,25 @@
 //! Metric based on finding mappings by going through all mappings
 //! and evaluating the difference of worlds fixed to these mappings.
+//!
+//! Cannot use the best assignment algorith since it compares
+//! the connection graphs of the configurations as well.
 
 use self::graph::{Graph, Mapping, Node};
-use super::{cost::Cost, Metric};
+use super::potential_fn::{ISqrtSum, PotentialFn};
 use crate::voxel::{JointPosition, Voxel};
 use crate::voxel_world::NormVoxelWorld;
-use num::integer::Roots;
 use std::marker::PhantomData;
 
-pub struct NaiveMetric<TWorld>
+pub struct NaivePotential<TWorld>
 where
     TWorld: NormVoxelWorld,
 {
     goal: Graph<TWorld::IndexType>,
     __phantom: PhantomData<TWorld>,
 }
+pub type NaiveMetric<TWorld> = ISqrtSum<TWorld, NaivePotential<TWorld>>;
 
-impl<TWorld> NaiveMetric<TWorld>
+impl<TWorld> NaivePotential<TWorld>
 where
     TWorld: NormVoxelWorld,
 {
@@ -80,7 +83,7 @@ where
     }
 }
 
-impl<TWorld> Metric<TWorld> for NaiveMetric<TWorld>
+impl<TWorld> PotentialFn<TWorld> for NaivePotential<TWorld>
 where
     TWorld: NormVoxelWorld,
 {
@@ -98,10 +101,6 @@ where
 
     fn get_potential(&mut self, state: &TWorld) -> Self::Potential {
         self.compute_best_potential(state)
-    }
-
-    fn estimated_cost(cost: Cost<Self::Potential>) -> Self::EstimatedCost {
-        cost.potential + cost.real_cost.sqrt()
     }
 }
 

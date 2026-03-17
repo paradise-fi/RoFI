@@ -246,9 +246,14 @@ def check_input_files(files: List[str]):
         [
             "bfs",
             "astar-zero",
-            "astar-zero-opt",
             "astar-naive",
             "astar-naive-opt",
+            "astar-assg-posjoint",
+            "astar-assg-posjoint-opt",
+            "astar-assg-pos",
+            "astar-assg-pos-opt",
+            "astar-assg-joint",
+            "astar-assg-joint-opt",
         ]
     ),
     default="bfs",
@@ -263,6 +268,7 @@ def check_input_files(files: List[str]):
     show_default=True,
     help="Use connections with specified representation",
 )
+@click.option("--bidir", "-b", is_flag=True, help="Use bidirectional path finding")
 @click.option(
     "--log-counters",
     "-l",
@@ -309,6 +315,7 @@ def rofi_voxel(
     repr: str,
     alg: str,
     connections: Optional[str],
+    bidir: bool,
     log_counters: Optional[str],
     short: bool,
     verbose: int,
@@ -333,6 +340,7 @@ def rofi_voxel(
         format if goal_format is None else goal_format,
         args=["--repr", repr, "--alg", alg]
         + ([] if connections is None else ["--connections", connections])
+        + ([] if not bidir else ["--bidir"])
         + ([] if log_counters is None else ["--log-counters", log_counters])
         + ([] if not short else ["--short"]),
         output=output,

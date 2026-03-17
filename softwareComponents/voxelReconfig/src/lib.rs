@@ -3,7 +3,8 @@
     assert_matches,
     associated_type_defaults,
     map_try_insert,
-    impl_trait_in_assoc_type
+    impl_trait_in_assoc_type,
+    return_position_impl_trait_in_trait
 )]
 
 pub mod atoms;

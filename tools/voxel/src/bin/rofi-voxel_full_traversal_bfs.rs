@@ -6,7 +6,7 @@ use itertools::Itertools;
 use rofi_voxel_cli::{FileErrOutput, FileInput, LogArgs};
 use rofi_voxel_reconfig::counters::Counter;
 use rofi_voxel_reconfig::reconfig::all_next_worlds_norm;
-use rofi_voxel_reconfig::voxel_world::impls::MapVoxelWorld;
+use rofi_voxel_reconfig::voxel_world::impls::SortvecVoxelWorld;
 use rofi_voxel_reconfig::voxel_world::NormVoxelWorld;
 use rofi_voxel_reconfig::voxel_world::{as_one_of_norm_eq_world, normalized_eq_worlds};
 use rofi_voxel_reconfig::voxel_world::{check_voxel_world, is_normalized};
@@ -229,7 +229,7 @@ fn main() -> Result<()> {
     };
 
     let world = args.get_world()?;
-    let (world, _min_pos) = world.to_world_and_min_pos::<MapVoxelWorld<_>>()?;
+    let (world, _min_pos) = world.to_world_and_min_pos::<SortvecVoxelWorld<_>>()?;
     assert_matches!(check_voxel_world(&world), Ok(()));
 
     let results_data = compute_steps(world, args.max())?;

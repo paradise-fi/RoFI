@@ -11,13 +11,13 @@ pub use centered::CenteredVoxelWorld;
 pub use rotated::{rotate_voxel, RotatedVoxelWorld};
 pub use subworld::VoxelSubworld;
 pub use traits::{NormVoxelWorld, VoxelWorld};
+pub use world_rotation::WorldRotation;
 
 use crate::module_repr::get_other_body;
 use crate::pos::{minimal_pos_hull, Pos, SizeRanges, Sizes};
 use crate::voxel::{get_other_body_pos, PosVoxel};
 use iter_fixed::IntoIteratorFixed;
 use std::assert_matches::debug_assert_matches;
-use world_rotation::WorldRotation;
 
 #[derive(Debug, Clone, amplify::Error)]
 pub enum InvalidVoxelWorldError<TIndex: std::fmt::Debug + num::Num + Ord> {
