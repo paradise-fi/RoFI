@@ -12,8 +12,6 @@
 #include "pidLoader.hpp"
 
 
-constexpr std::array< const char *, 2 > shoeNames = { "shoeA", "shoeB" };
-
 using namespace gazebo;
 using namespace rofi::configuration::matrices;
 
@@ -209,9 +207,6 @@ void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & conf
 {
     using namespace gz::math;
 
-    auto state = getOnlyChildOrCreate( world, "state" );
-    setAttribute( state, "world_name", getAttribute< std::string >( world, "name" ) );
-
     auto distributorSdf = getDistributorPluginSdf( world );
     if ( !distributorSdf )
     {
@@ -224,15 +219,10 @@ void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & conf
         assert( id == module.getId() );
 
         auto moduleSdf = newRoFIUniversalModule( id );
-        insertElement( world, moduleSdf );
-
-
-        auto moduleStateSdf = newElement( "model" );
-        setAttribute( moduleStateSdf, "name", getAttribute< std::string >( moduleSdf, "name" ) );
-        insertElement( state, moduleStateSdf );
 
         auto & matrices = config.config.getMatrices().at( id );
-        setModulePosition( moduleStateSdf, module, matrices, config.pose );
+        setModulePosition( moduleSdf, module, matrices, config.pose );
+        insertElement( world, moduleSdf );
 
         auto modulePluginSdf = getRoFIModulePluginSdf( moduleSdf );
         if ( !modulePluginSdf )
@@ -252,18 +242,10 @@ void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & conf
                 continue;
             }
             assert( i < 6 );
-            auto shoeId = i < 3 ? A : B;
             bool extended = edges.at( i ).has_value();
             i++;
 
             setRoficomExtendedPlugin( getRoFICoMPluginSdf( roficomSdf ), extended );
-
-            auto shoeStateSdf =
-                    getElemByName< true >( moduleStateSdf, "link", shoeNames.at( shoeId ) );
-            auto modulePose = composePose(
-                    composePose( moveShoeToCenter( shoeId ), matrixToPose( matrices.at( shoeId ) ) ),
-                    config.pose );
-            insertElement( moduleStateSdf, createRoficomState( roficomSdf, extended, modulePose ) );
         }
         assert( i == 6 );
     }
@@ -328,9 +310,6 @@ void setModulePosition( sdf::ElementPtr moduleStateSdf,
 
     TwoPoses matrixPoses = { matrixToPose( matrices[ A ] ), matrixToPose( matrices[ B ] ) };
 
-    TwoPoses shoePoses = { composePose( moveShoeToCenter( A ), matrixPoses[ A ] ),
-                           composePose( moveShoeToCenter( B ), matrixPoses[ B ] ) };
-
     TwoPoses bodyPoses = {
             composePose( composePose( moveShoeToCenter( A ),
                                       Pose3d( {}, { GZ_DTOR( module.getJoint( Alpha ) ), 0, 0 } ) ),
@@ -344,19 +323,7 @@ void setModulePosition( sdf::ElementPtr moduleStateSdf,
     {
         throw std::runtime_error( "Error in computing the position of module bodies" );
     }
-
-    TwoPoses origShoePoses = { Pose3d( -0.0265, -0.05, 0, 0, -0, 0 ),
-                               Pose3d( -0.0265, 0.05, 0.0015, 0, -0, 0 ) };
-
     setPose( moduleStateSdf, composePose( bodyPoses[ A ], beginPose ) );
-    setPose( getElemByNameOrCreate( moduleStateSdf, "link", "bodyA" ),
-             composePose( bodyPoses[ A ], beginPose ) );
-    setPose( getElemByNameOrCreate( moduleStateSdf, "link", "bodyB" ),
-             composePose( bodyPoses[ B ], beginPose ) );
-    setPose( getElemByNameOrCreate( moduleStateSdf, "link", "shoeA" ),
-             composePose( composePose( origShoePoses[ A ], shoePoses[ A ] ), beginPose ) );
-    setPose( getElemByNameOrCreate( moduleStateSdf, "link", "shoeB" ),
-             composePose( composePose( origShoePoses[ B ], shoePoses[ B ] ), beginPose ) );
 }
 
 void setModulePIDPositionController( sdf::ElementPtr modulePluginSdf, const Module & module )
@@ -393,41 +360,6 @@ void setRoficomExtendedPlugin( sdf::ElementPtr pluginSdf, bool extended )
     assert( pluginSdf );
 
     setValue( getOnlyChildOrCreate( pluginSdf, "extend" ), extended );
-}
-
-sdf::ElementPtr createRoficomState( sdf::ElementPtr roficomSdf,
-                                    bool extended,
-                                    const gz::math::Pose3d & parentPose )
-{
-    using namespace gz::math;
-    using namespace gazebo;
-
-    assert( roficomSdf );
-    assert( isRoFICoM( roficomSdf ) );
-
-    auto roficomStateSdf = newElement( "model" );
-    setAttribute( roficomStateSdf, "name", getAttribute< std::string >( roficomSdf, "name" ) );
-
-    auto poseSdf = getOnlyChild< false >( roficomSdf, "pose" );
-    auto roficomPose =
-            composePose( poseSdf ? poseSdf->Get< Pose3d >() : Pose3d(), parentPose );
-    setPose( roficomStateSdf, roficomPose );
-
-
-    auto innerName = getRoFICoMInnerName( roficomSdf );
-
-    auto roficomModelSdf = getOnlyChild< true >( roficomSdf, "model" );
-    auto innerSdf = getElemByName< true >( roficomModelSdf, "link", innerName );
-    auto innerPoseSdf = getOnlyChild< false >( innerSdf, "pose" );
-    Pose3d innerPose =
-            composePose( innerPoseSdf ? innerPoseSdf->Get< Pose3d >() : Pose3d(), roficomPose );
-
-    auto innerStateSdf = getElemByNameOrCreate( roficomStateSdf, "link", innerName );
-
-    auto pos = Vector3d( 0, 0, extended ? 7e-3 : 0 ); // TODO read from sdf
-    setPose( innerStateSdf, composePose( Pose3d( pos, {} ), innerPose ) );
-
-    return roficomStateSdf;
 }
 
 void setAttached( sdf::ElementPtr worldSdf, const Configuration & config )

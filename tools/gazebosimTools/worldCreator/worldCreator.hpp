@@ -67,9 +67,6 @@ void setModulePosition( sdf::ElementPtr moduleStateSdf,
                         const gz::math::Pose3d & beginPose );
 void setModulePIDPositionController( sdf::ElementPtr modulePluginSdf, const Module & module );
 void setRoficomExtendedPlugin( sdf::ElementPtr pluginSdf, bool extended );
-sdf::ElementPtr createRoficomState( sdf::ElementPtr roficomSdf,
-                                    bool extended,
-                                    const gz::math::Pose3d & parentPose );
 void setAttached( sdf::ElementPtr worldSdf, const Configuration & config );
 
 sdf::ElementPtr_V getModules( sdf::ElementPtr worldSdf );

@@ -1,5 +1,6 @@
 #include "roficomPlugin.hpp"
 
+#include <gz/sim/Joint.hh>
 #include <gz/plugin/Register.hh>
 
 namespace gazebo
@@ -59,12 +60,35 @@ void RoFICoMPlugin::loadJoint( gz::sim::EntityComponentManager & ecm )
         throw std::runtime_error( "No controlled joint found in RoFICoM model" );
     }
 
-    updatePosition( controllerValues.position() );
+    gz::sim::Joint joint( jointEntity );
+    auto axis = joint.Axis( ecm );
+    if ( !axis || axis->empty() )
+    {
+        throw std::runtime_error( "Controlled RoFICoM joint has no axis information" );
+    }
+
+    double lower = axis->front().Lower();
+    double upper = axis->front().Upper();
+    if ( controllerValues.limitSdf )
+    {
+        if ( auto lowerSdf = getOnlyChild< false >( controllerValues.limitSdf, "lower" ) )
+        {
+            lower = lowerSdf->Get< double >();
+        }
+        if ( auto upperSdf = getOnlyChild< false >( controllerValues.limitSdf, "upper" ) )
+        {
+            upper = upperSdf->Get< double >();
+        }
+    }
+
+    const auto startupState = controllerValues.startupState();
+    joint.ResetPosition( ecm, { startupState == Position::Extended ? upper : lower } );
+    updatePosition( startupState );
     extendJoint = std::make_unique< JointData< RoficomController > >(
             jointEntity,
             controllerValues.limitSdf,
             ecm,
-            controllerValues.position(),
+            startupState,
             [ this ]( Position pos ) { jointPositionReachedCallback( pos ); } );
 }
 

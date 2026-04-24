@@ -3,6 +3,7 @@
 #include <algorithm>
 
 #include <gz/plugin/Register.hh>
+#include <gz/sim/Joint.hh>
 
 namespace gazebo
 {
@@ -98,6 +99,11 @@ void RoFIModulePlugin::findAndInitJoints( gz::sim::EntityComponentManager & ecm 
         {
             gzerr << "No joint '" << pidValues.jointName << "' found in module\n";
             continue;
+        }
+
+        if ( pidValues.position.initTarget )
+        {
+            gz::sim::Joint( jointEntity ).ResetPosition( ecm, { *pidValues.position.initTarget } );
         }
 
         joints.emplace_back( jointEntity,

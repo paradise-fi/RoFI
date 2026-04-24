@@ -95,7 +95,6 @@
                     <effort>50</effort>
                     <velocity>25e-3</velocity>
                 </limit>
-                <initial_position>0</initial_position>
                 <dynamics>
                     <friction>0</friction>
                     <spring_reference>0</spring_reference>

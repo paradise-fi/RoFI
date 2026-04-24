@@ -160,9 +160,9 @@ public:
         sdf::ElementPtr limitSdf;
         bool extend = false;
 
-        RoFICoMPosition position() const
+        RoFICoMPosition startupState() const
         {
-            return extend ? RoFICoMPosition::Extending : RoFICoMPosition::Retracting;
+            return extend ? RoFICoMPosition::Extended : RoFICoMPosition::Retracted;
         }
     };
 
