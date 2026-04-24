@@ -3,7 +3,7 @@ set -e
 
 docker build -t ghcr.io/paradise-fi/rofi.debian .
 docker build -t ghcr.io/paradise-fi/rofi .
-docker build -t ghcr.io/paradise-fi/rofi.ubuntu --build-arg BASE=ubuntu:22.04 .
+docker build -t ghcr.io/paradise-fi/rofi.ubuntu --build-arg BASE=ubuntu:24.04 .
 docker build -t ghcr.io/paradise-fi/rofi.doc -f Dockerfile.doc .
 
 docker push ghcr.io/paradise-fi/rofi

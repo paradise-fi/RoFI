@@ -6,8 +6,8 @@ on:
     - cron: '0 3 * * *'
 jobs:
   build_desktop:
-    name: "Build suite desktop"
-    runs-on: ubuntu-20.04
+    name: "Build suite desktop (headless during migration)"
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         environment: [Debug, Release]
@@ -19,11 +19,11 @@ jobs:
       image: ${{ matrix.image }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build
         run: |
           source setup.sh ${{ matrix.environment }}
-          rcfg desktop
+          rcfg desktop -- -DBUILD_HEADLESS=ON -DBUILD_GAZEBO=OFF -DBUILD_RUST=OFF
           rmake desktop
       - name: Run tests
         run: |
@@ -31,7 +31,7 @@ jobs:
           rmake --test --all
   build_esp32:
     name: "Build suite esp32"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         environment: [Debug, Release]
@@ -42,7 +42,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build
         run: |
           source setup.sh -i ${{ matrix.environment }}
@@ -58,7 +58,7 @@ jobs:
           rmake esp32
   build_stm32:
     name: "Build suite stm32"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     strategy:
       matrix:
         environment: [Debug, Release]
@@ -69,7 +69,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build
         run: |
           source setup.sh ${{ matrix.environment }}
@@ -79,7 +79,7 @@ jobs:
           rmake stm32
   build_doc:
     name: "Build documentation"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     container:
       image: ghcr.io/paradise-fi/rofi.doc
     defaults:
@@ -90,7 +90,7 @@ jobs:
       - name: Change Owner of Container Working Directory
         run: chown root:root .
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Build
         run: |
           source setup.sh Debug
@@ -112,21 +112,21 @@ jobs:
 
           releng/doc/buildAllBranches.sh
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: documentation
           path: build.Debug/doc/web
           retention-days: 14
   deploy:
     name: "Deploy documentation"
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
     needs: build_doc
     if: github.ref == 'refs/heads/master'
     steps:
       - name: Checkout # Required for GH-pages deployment
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: "Download web"
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: documentation
           path: documentation

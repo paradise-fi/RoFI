@@ -1,4 +1,4 @@
-ARG BASE=debian:bullseye
+ARG BASE=debian:bookworm
 
 FROM $BASE
 
@@ -7,40 +7,37 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        apt-utils wget software-properties-common gnupg
-
-RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add -; \
-    add-apt-repository "deb http://apt.llvm.org/bullseye/ llvm-toolchain-bullseye-11 main";
+        apt-utils ca-certificates curl git gnupg python3-click rsync software-properties-common ssh tar wget
 
 RUN DEBIAN_FRONTEND=noninteractive TZ="Europe/London" \
         apt-get install -y --no-install-recommends \
         build-essential \
-        git ssh rsync curl tar \
-        clang-11  llvm-11 clang-tidy-11 libc++-11-dev libc++abi-11-dev \
-        gcc-10 g++-10 \
+        clang llvm clang-tidy libc++-dev libc++abi-dev \
+        gcc g++ \
         cmake make ninja-build valgrind gdb \
         python3 python3-pip python3-venv python3-dev python3-numpy \
         doxygen graphviz \
-        libarmadillo-dev libvtk7-dev libvtk7-qt-dev qtdeclarative5-dev \
-        gazebo libgazebo-dev libz3-dev \
+        libarmadillo-dev libvtk9-dev libvtk9-qt-dev qtdeclarative5-dev \
+        libz3-dev \
         coinor-clp coinor-libclp-dev
-RUN pip3 install click
 
 # Install ARM Toolchain for STM32
 RUN cd /tmp && \
-    wget https://developer.arm.com/-/media/Files/downloads/gnu-rm/10.3-2021.10/gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 && \
-    tar -xf gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2 --directory /opt && \
+    curl -fsSL -o arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz \
+        https://developer.arm.com/-/media/Files/downloads/gnu/15.2.rel1/binrel/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz && \
+    tar -xf arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz --directory /opt && \
     cd /tmp && \
-    rm gcc-arm-none-eabi-10.3-2021.10-x86_64-linux.tar.bz2
-ENV PATH="/opt/gcc-arm-none-eabi-10.3-2021.10/bin:${PATH}"
+    rm arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz
+ENV PATH="/opt/arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi/bin:${PATH}"
 RUN arm-none-eabi-g++ --version
 RUN arm-none-eabi-gcc --version
 
 # Install Xtensa Toolchan for ESP32
 ENV ROFI_TOOLS_PATH=/opt/esp32
+ENV ROFI_ESP_IDF_VERSION=v5.0-beta1
 RUN mkdir -p $ROFI_TOOLS_PATH && \
     IDF_PATH=$ROFI_TOOLS_PATH/esp-idf && \
-    git clone --depth 1 --branch v4.3.2 --recursive \
+    git clone --depth 1 --branch ${ROFI_ESP_IDF_VERSION} --recursive \
             https://github.com/espressif/esp-idf.git $IDF_PATH
 RUN export IDF_PATH=$ROFI_TOOLS_PATH/esp-idf && \
     export IDF_TOOLS_PATH=$ROFI_TOOLS_PATH/esp-tools && \
@@ -65,12 +62,6 @@ RUN if [ ! -e /usr/lib/x86_64-linux-gnu/libdl.so ] ; then \
     fi
 
 RUN ldconfig
-
-RUN for i in `dpkg-query -L llvm-11 | cut -d: -f2 | grep '/usr/bin/[^/]*-11'`; do F=`echo $i | sed 's/-11$//'`; test -f $F || { echo $F; ln -s $i $F; }; done
-RUN for i in `dpkg-query -L clang-11 | cut -d: -f2 | grep '/usr/bin/[^/]*-11'`; do F=`echo $i | sed 's/-11$//'`; test -f $F || { echo $F; ln -s $i $F; }; done
-RUN for i in `dpkg-query -L clang-tidy-11 | cut -d: -f2 | grep '/usr/bin/[^/]*-11'`; do F=`echo $i | sed 's/-11//'`; test -f $F || { echo $F; ln -s $i $F; }; done
-RUN for i in `dpkg-query -L gcc-10 | cut -d: -f2 | grep '/usr/bin/[^/].*-10'`; do F=`echo $i | sed 's/-10$//'`; test -f $F || { echo $F; ln -s $i $F; }; done
-RUN for i in `dpkg-query -L g++-10 | cut -d: -f2 | grep '/usr/bin/[^/].*-10'`; do F=`echo $i | sed 's/-10$//'`; test -f $F || { echo $F; ln -s $i $F; }; done
 
 RUN cmake --version
 RUN clang++ --version
