@@ -1,10 +1,17 @@
 include($ENV{IDF_PATH}/tools/cmake/idf.cmake)
-include($ENV{IDF_PATH}/tools/cmake/toolchain-esp32.cmake)
+
+# ESP-IDF 6 expects the toolchain to be loaded by CMake during project()
+# initialization, not by direct inclusion from user code.
+set(CMAKE_TOOLCHAIN_FILE "$ENV{IDF_PATH}/tools/cmake/toolchain-esp32.cmake"
+    CACHE FILEPATH "ESP-IDF toolchain file")
 
 set(IMG_DIR ${CMAKE_BINARY_DIR}/img)
 file(MAKE_DIRECTORY "${IMG_DIR}")
 
 function(generate_image_from A_ELF_TARGET A_FLASH_SIZE)
+    idf_component_get_property(esptool_py_cmd esptool_py ESPTOOLPY_CMD)
+    idf_component_get_property(esptool_elf2image_args esptool_py ESPTOOL_PY_ELF2IMAGE_ARGS)
+
     get_filename_component(NAME_BASE "${A_ELF_TARGET}" NAME_WLE)
     set(IMG_NAME "${NAME_BASE}.bin")
     set(ELF_NAME "${NAME_BASE}.elf")
@@ -20,7 +27,7 @@ function(generate_image_from A_ELF_TARGET A_FLASH_SIZE)
     endif()
 
     add_custom_command(OUTPUT "${TSTAMP}"
-        COMMAND ${ESPTOOLPY} elf2image ${FLASH_ARGS}
+        COMMAND ${esptool_py_cmd} elf2image ${FLASH_ARGS}
             -o "${IMG_DIR}/${IMG_NAME}" "$<TARGET_FILE:${A_ELF_TARGET}>"
         COMMAND ln -s -f "$<TARGET_FILE:${A_ELF_TARGET}>" "${IMG_DIR}/${ELF_NAME}"
         COMMAND ${CMAKE_COMMAND} -E echo "${IMG_DIR}/${IMG_NAME}"
@@ -38,7 +45,7 @@ function(set_partition_table target tablefile)
     get_filename_component(NAME_BASE "${target}" NAME_WLE)
     set(TABLE_BIN_NAME "${NAME_BASE}.table")
     add_custom_command(OUTPUT "${IMG_DIR}/${TABLE_BIN_NAME}"
-        COMMAND python $ENV{IDF_PATH}/components/partition_table/gen_esp32part.py
+        COMMAND ${PYTHON} $ENV{IDF_PATH}/components/partition_table/gen_esp32part.py
                         "${tablefile}" "${IMG_DIR}/${TABLE_BIN_NAME}"
         DEPENDS "${tablefile}"
         VERBATIM

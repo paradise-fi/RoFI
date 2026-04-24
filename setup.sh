@@ -84,7 +84,7 @@ setGazeboVariables() {
 }
 
 setupIdf() {
-    IDF_REQUIRED_VERSION=v5.0-beta1
+    IDF_REQUIRED_VERSION=v6.0
 
     # We allow the user to set a global path to build dependencies that are
     # fetched autonomously, e.g., in the script ~/rofi.pre.env. If there is no
@@ -106,7 +106,11 @@ setupIdf() {
     if [ ! -d $IDF_PATH ]; then
         git clone --depth 1 --branch ${IDF_REQUIRED_VERSION} --recursive \
             https://github.com/espressif/esp-idf.git $IDF_PATH
-        $IDF_PATH/install.sh
+        IDF_POST_INSTALL=1
+    fi
+
+    if ! python3 $IDF_PATH/tools/idf_tools.py --idf-path "$IDF_PATH" check >/dev/null 2>&1; then
+        $IDF_PATH/install.sh esp32
         IDF_POST_INSTALL=1
     fi
     source $IDF_PATH/export.sh

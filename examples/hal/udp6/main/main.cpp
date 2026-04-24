@@ -10,7 +10,7 @@
 
 
 void setupStack() {
-    esp_netif_init();
+    ESP_ERROR_CHECK( esp_netif_init() );
 }
 
 const char* getOwn( int id ) {

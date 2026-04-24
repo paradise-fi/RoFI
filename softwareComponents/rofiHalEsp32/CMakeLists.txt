@@ -4,7 +4,17 @@ macro(setup_hal NAME)
     add_library("${NAME}" ${SRC})
     target_include_directories("${NAME}" PUBLIC src)
     set_property(TARGET "${NAME}" PROPERTY CXX_STANDARD 20)
-    target_link_libraries("${NAME}" PUBLIC idf::driver idf::esp_wifi idf::esp_rom idf::esp_timer idf::app_update atoms rofi::hal::inc)
+    target_link_libraries("${NAME}" PUBLIC
+        idf::esp_driver_gpio
+        idf::esp_driver_spi
+        idf::esp_driver_uart
+        idf::esp_wifi
+        idf::esp_rom
+        idf::esp_timer
+        idf::app_update
+        idf::spi_flash
+        atoms
+        rofi::hal::inc)
     target_compile_options("${NAME}" PUBLIC -mtext-section-literals -mlongcalls)
 endmacro()
 

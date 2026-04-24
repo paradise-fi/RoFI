@@ -21,6 +21,7 @@
 #include <esp_heap_caps.h>
 #include <esp_ota_ops.h>
 #include <esp_partition.h>
+#include <spi_flash_mmap.h>
 
 #include <espDriver/gpio.hpp>
 #include <espDriver/spi.hpp>
@@ -912,7 +913,7 @@ public:
                                     bsp::gammaRatio )
         } ),
     #endif
-        _connectorBus( HSPI_HOST, GPIO_NUM_19, GPIO_NUM_18, 1'000'000 ),
+        _connectorBus( SPI2_HOST, GPIO_NUM_19, GPIO_NUM_18, 1'000'000 ),
         _connectors( {
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_27 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_25 ),

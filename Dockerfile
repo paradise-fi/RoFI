@@ -34,7 +34,7 @@ RUN arm-none-eabi-gcc --version
 
 # Install Xtensa Toolchan for ESP32
 ENV ROFI_TOOLS_PATH=/opt/esp32
-ENV ROFI_ESP_IDF_VERSION=v5.0-beta1
+ENV ROFI_ESP_IDF_VERSION=v6.0
 RUN mkdir -p $ROFI_TOOLS_PATH && \
     IDF_PATH=$ROFI_TOOLS_PATH/esp-idf && \
     git clone --depth 1 --branch ${ROFI_ESP_IDF_VERSION} --recursive \
@@ -42,7 +42,7 @@ RUN mkdir -p $ROFI_TOOLS_PATH && \
 RUN export IDF_PATH=$ROFI_TOOLS_PATH/esp-idf && \
     export IDF_TOOLS_PATH=$ROFI_TOOLS_PATH/esp-tools && \
     echo $IDF_PATH, $IDF_TOOLS_PATH && \
-    $IDF_PATH/install.sh && \
+    $IDF_PATH/install.sh esp32 && \
     # When we use IDF, it brings python venv; thus if we want to build doc,
     # we have to install spinx and breathe into the venv
     . $IDF_PATH/export.sh && \

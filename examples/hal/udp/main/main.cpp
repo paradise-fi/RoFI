@@ -1,5 +1,5 @@
 #include <driver/gpio.h>
-#include <tcpip_adapter.h>
+#include <esp_netif.h>
 
 #include <vector>
 #include <tuple>
@@ -11,7 +11,7 @@
 
 
 void setupStack() {
-    tcpip_adapter_init();
+    ESP_ERROR_CHECK( esp_netif_init() );
 }
 
 int getId() {

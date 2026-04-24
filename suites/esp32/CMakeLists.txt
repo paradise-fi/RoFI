@@ -18,31 +18,34 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fconcepts")
 FetchContent_Declare(
   magic_enum
   GIT_REPOSITORY https://github.com/Neargye/magic_enum.git
-  GIT_TAG        v0.7.3
+  GIT_TAG        v0.9.7
 )
-FetchContent_GetProperties(magic_enum)
-if(NOT magic_enum_POPULATED)
-  FetchContent_Populate(magic_enum)
-  add_subdirectory(${magic_enum_SOURCE_DIR} ${magic_enum_BINARY_DIR})
-endif()
+FetchContent_MakeAvailable(magic_enum)
 
 FetchContent_Declare(
   lib_fort
   GIT_REPOSITORY https://github.com/seleznevae/libfort.git
   GIT_TAG        v0.4.2
 )
-FetchContent_GetProperties(lib_fort)
-if(NOT lib_fort_POPULATED)
-  FetchContent_Populate(lib_fort)
-  option(FORT_ENABLE_TESTING "Enables building tests and examples" OFF)
-  add_subdirectory(${lib_fort_SOURCE_DIR} ${lib_fort_BINARY_DIR})
-endif()
+set(FORT_ENABLE_TESTING OFF CACHE BOOL "Enables building tests and examples" FORCE)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+FetchContent_MakeAvailable(lib_fort)
 
 
 function(add_rofi_firmware name)
     cmake_parse_arguments(A "" "FLASH_SIZE" "SOURCES" ${ARGN})
     add_executable(${name} ${A_SOURCES})
-    idf_build_executable(${name})
+    idf_build_get_property(link_options LINK_OPTIONS)
+    if(link_options)
+        set_property(TARGET ${name} APPEND PROPERTY LINK_OPTIONS "${link_options}")
+    endif()
+
+    idf_build_get_property(link_depends __LINK_DEPENDS)
+    if(link_depends)
+        set_property(TARGET ${name} APPEND PROPERTY LINK_DEPENDS "${link_depends}")
+    endif()
+
+    add_dependencies(${name} __idf_build_target build_hack)
     generate_image_from(${name} "${A_FLASH_SIZE}")
 endfunction()
 
@@ -55,9 +58,11 @@ function(add_application path)
 endfunction()
 
 idf_build_process(esp32
-    COMPONENTS idf::freertos idf::esptool_py idf::esp_http_client idf::esp_wifi
-               idf::lwip idf::console idf::nvs_flash idf::esp_hw_support idf::esp_rom
-               idf::esp_timer
+    COMPONENTS idf::freertos idf::esptool_py idf::esp_http_client idf::esp_netif
+               idf::esp_wifi idf::lwip idf::console idf::nvs_flash
+               idf::esp_hw_support idf::esp_rom idf::esp_timer idf::app_update
+               idf::spi_flash idf::esp_driver_gpio idf::esp_driver_spi
+               idf::esp_driver_uart
     SDKCONFIG ${CMAKE_CURRENT_LIST_DIR}/sdkconfig
     BUILD_DIR ${CMAKE_BINARY_DIR})
 

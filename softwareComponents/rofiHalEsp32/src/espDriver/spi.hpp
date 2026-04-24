@@ -11,7 +11,18 @@ namespace rofi::esp32 {
 
 class SpiBus {
 public:
-    SpiBus(): _s{ -1, -1, -1, -1, -1, 0, 0, 0 } {}
+    SpiBus(): _s{} {
+        _s.mosi_io_num = -1;
+        _s.miso_io_num = -1;
+        _s.sclk_io_num = -1;
+        _s.quadwp_io_num = -1;
+        _s.quadhd_io_num = -1;
+        _s.data4_io_num = -1;
+        _s.data5_io_num = -1;
+        _s.data6_io_num = -1;
+        _s.data7_io_num = -1;
+        _s.isr_cpu_id = ESP_INTR_CPU_AFFINITY_AUTO;
+    }
     operator spi_bus_config_t() const { return _s; }
     SpiBus& mosiIoNum( int p ) { _s.mosi_io_num = p; return *this; }
     SpiBus& misoIoNum( int p ) { _s.miso_io_num = p; return *this; }
@@ -29,9 +40,12 @@ std::ostream& operator<<( std::ostream& o, spi_bus_config_t s );
 
 class SpiDeviceInterface {
 public:
-    SpiDeviceInterface():
-        _s{ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0 }
-    {}
+    SpiDeviceInterface(): _s{} {
+        _s.clock_source = SPI_CLK_SRC_DEFAULT;
+        _s.sample_point = SPI_SAMPLING_POINT_PHASE_0;
+        _s.spics_io_num = -1;
+        _s.queue_size = 1;
+    }
     operator spi_device_interface_config_t() const { return _s; }
     SpiDeviceInterface& commandBits( uint8_t p ) { _s.command_bits = p; return *this; }
     SpiDeviceInterface& addressBits( uint8_t p ) { _s.address_bits = p; return *this; }
