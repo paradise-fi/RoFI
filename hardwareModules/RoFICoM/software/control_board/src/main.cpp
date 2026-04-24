@@ -39,7 +39,7 @@ enum ConnectorStateFlags {
     /**
      * Usually is affected by ambient light.
      * Ob00 = autonomous distance measurement
-     * 0b01 = short distance measurement <= 1.3m 
+     * 0b01 = short distance measurement <= 1.3m
      * 0b10 = long distance measurement <= 4m
     */
     LidarDistanceMode = 0b11 << 3,
@@ -190,7 +190,7 @@ void lidarGet( Lidar& lidar, std::optional< LidarResult >& currentLidarMeasureme
                 } );
             });
     });
-    
+
     if ( !result ) {
         currentLidarMeasurement = LidarResult::error( result.assume_error() );
         Dbg::error( "\nError get: " );
@@ -221,7 +221,7 @@ int main() {
     ConnectorStatus connectorStatus ( bsp::connectorSenseA, bsp::connectorSenseB );
     Lidar lidar( &*bsp::i2c, bsp::lidarEnablePin, bsp::lidarIRQPin );
 
-    lidarInit( lidar, currentLidarMeasurement );
+    // lidarInit( lidar, currentLidarMeasurement );
 
     ConnComInterface connComInterface( std::move( bsp::connectorComm ).value() );
 
@@ -278,7 +278,10 @@ int main() {
             }
         }
 
+        Dbg::error("Pos: %d", slider._position());
+
         slider.run();
+        // HAL_Delay(1000);
 
         connComInterface.run();
 

@@ -37,8 +37,10 @@ public:
         assert( blob.get() );
         IdleTask::defer([this, b = std::move( blob )]() mutable {
             int length = blobLen( b );
-            uint32_t crc = Crc::compute( blobBody( b ), length );
-            crcField( b ) = crc;
+            uint32_t crcRh = Crc::compute( blobBody( b ), length );
+            Dbg::blockingInfo("Sending: ");
+            Dbg::hexDump( blobBody( b ), length );
+            crcField( b ) = crcRh;
             _outQueue.push_back( std::move( b ) );
         });
     }
@@ -54,43 +56,39 @@ public:
     }
 private:
     void _receiveFrame() {
-        _reader.readBlock( memory::Pool::allocate( 1 ), 0, 1, 0,
-            [this]( Block b, int size ) {
-                if ( size == 0 || b[ 0 ] != 0xAA ) {
-                    _receiveFrame();
-                    return;
-                }
-                _reader.readBlock( memory::Pool::allocate( 1 ), 0, 1, _timeout,
-                    [this]( Block /**/, int size ) {
-                        if ( size == 0 ) {
-                            _receiveFrame();
-                            return;
-                        }
-                        _receiveBlob();
-                    } );
-            } );
-    }
-
-    void _receiveBlob() {
         auto buffer = memory::Pool::allocate( BLOB_LIMIT );
-        if ( !buffer ) {
+        if ( !buffer.get() ) {
             Dbg::warning( "Cannot allocate memory for reception" );
             _receiveFrame();
             return;
         }
+
+        _reader.readBlock( std::move( buffer ), 0, 2, 0,
+            [ this ] ( Block rxBuffer, int size ) {
+                if ( size != 2 || rxBuffer[ 0 ] != 0xAA ) {
+                    _receiveFrame();
+                    return;
+                }
+                _receiveBlob( std::move( rxBuffer ) );
+            } );
+    }
+
+    void _receiveBlob( memory::Pool::Block buffer ) {
         _reader.readBlock( std::move( buffer ), 0, BLOB_HEADER_SIZE, _timeout,
-            [this]( Block b, int size ) {
+            [&]( Block b, int size ) {
                 if ( size != BLOB_HEADER_SIZE ) {
+                    Dbg::blockingInfo("E2 %d", size);
                     _receiveFrame();
                     return;
                 }
                 uint16_t length = blobLen( b );
                 if ( length > BLOB_LIMIT ) {
+                    Dbg::blockingInfo("E3");
                     _receiveFrame();
                     return;
                 }
                 _reader.readBlock( std::move( b ), BLOB_HEADER_SIZE, length + CRC_SIZE, _timeout,
-                    [this]( Block b, int s ) {
+                    [&]( Block b, int s ) {
                         _onNewBlob( std::move( b ), s );
                         _receiveFrame();
                     } );
@@ -99,15 +97,16 @@ private:
 
     void _onNewBlob( Block b, int size ) {
         IdleTask::defer([this, blob = std::move( b ), size ]() mutable {
+            Dbg::blockingInfo( "Receiving" );
+            Dbg::hexDump( blob.get(), size );
             int length = blobLen( blob );
             if ( length + CRC_SIZE != size ) {
-                Dbg::hexDump( blob.get(), size );
-                Dbg::warning( "Invalid blob size, %d, %d", length, size - CRC_SIZE );
+                Dbg::warning( "Invalid blob size, %d, %d, %d", length, size - CRC_SIZE, size );
                 return;
             }
             uint32_t crc = Crc::compute( blobBody( blob ), length );
             if ( crc != crcField( blob ) ) {
-                Dbg::warning( "Blob CRC mismatch" );
+                Dbg::warning( "Blob CRC mismatch, %lu, %lu", crc, crcField( blob ) );
                 return;
             }
             if ( !_inQueue.push_back( std::move( blob ) ) ) {
@@ -139,6 +138,7 @@ private:
 
     void _transmitBlob( Block blob ) {
         uint16_t length = blobLen( blob );
+        Dbg::blockingInfo("TLen: %d", length);
         _writer.writeBlock( std::move( blob ), 0, 4 + length + CRC_SIZE,
             [this]( Block /*blob*/, int /*size*/) {
                 _busy = false;
@@ -152,7 +152,7 @@ private:
     RingBuffer< Block, memory::Pool > _inQueue, _outQueue;
     std::function< void(void) > _notifyNewBlob;
     Block _txBlock;
-    static const int _timeout = 256;
+    static const int _timeout = 2048;
 };
 
 enum ConnectorOrientation {

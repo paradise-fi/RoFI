@@ -26,6 +26,7 @@ public:
     }
 
     void set( int val ) {
+        // Dbg::error("Pwr: %d", val);
         if (val < -100 || val > 100 ) {
             Dbg::info("Invalid motor value %d", val);
         }
@@ -157,17 +158,24 @@ public:
     int _position() {
         auto readCount = 0;
         auto readPosSum = 0;
+        std::array<bool, cfg::motorSensorsCount> readValues;
         for ( auto i = 0; auto posPin : _positionPins ) {
-            if ( ! posPin.read() ) {
+            readValues[ i ] = posPin.read();
+            if ( !posPin.read() ) {
                 ++readCount;
                 readPosSum += i;
             }
             ++i;
         }
-        return 
-        readCount == 0
-        ? -1
-        : ( 100 * readPosSum / ( readCount ) )  / ( _positionPins.size() - 1 );
+
+        Dbg::error("[%d, %d, %d, %d, %d, %d, %d, %d, %d, %d]", readValues[0], readValues[1], readValues[2], readValues[3], readValues[4], readValues[5], readValues[6], readValues[7], readValues[8], readValues[9]);
+
+        if (readCount == 0)
+            return -1;
+
+        float avgActivePosition = float(readPosSum) / readCount;
+        Dbg::error("avgActivePosition: %f", avgActivePosition);
+        return 100 * avgActivePosition / (_positionPins.size() - 1);
     }
 
     Motor _motor;

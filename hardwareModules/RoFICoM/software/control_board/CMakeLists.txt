@@ -7,8 +7,8 @@ set(CMAKE_POSITION_INDEPENDENT_CODE OFF)
 # The flags `-fstack-protector-all` and `-fstack-check` are added due to bugs discovered in development
 # where the stack got corrupted, this was fixed by reducing packet buckets.
 # The flag `-Os` in debug build is to assure the debug build can be fitted to the mcu FLASH memory.
-set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fstack-protector-all -fstack-check -Os")
-set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -fstack-protector-all -fstack-check -Os")
+set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Os")
+set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Os")
 
 project(control_board C CXX ASM)
 
