@@ -13,22 +13,22 @@ void printPacket( rofi::hal::Connector, uint16_t contentType, rofi::hal::PBuf pa
         for ( int i = 0; i != it->size(); i++ )
             std::cout << it->mem()[ i ];
     }
-    std::cout << "\n";
+    std::cout << "|\n";
 }
 
 extern "C" void app_main() {
     std::cout << "Program starts\n";
     auto localRoFI = rofi::hal::RoFI::getLocalRoFI();
     std::cout << "Got local RoFI\n";
-    auto conn1 = localRoFI.getConnector( 1 );
-    auto conn2 = localRoFI.getConnector( 2 );
+    auto conn1 = localRoFI.getConnector( 0 );
+    auto conn2 = localRoFI.getConnector( 1 );
 
     conn1.onPacket( printPacket );
     conn2.onPacket( printPacket );
 
     char counter = 0;
     while( true ) {
-        std::cout << "Send\n";
+        std::cout << "Message for connector 2\n";
         counter++;
         const char* msg = "Hello from 1! ";
         const int len = strlen( msg );
@@ -37,8 +37,9 @@ extern "C" void app_main() {
             buf[ i ] = msg[ i ];
         buf[ len - 1 ] = 'a' + ( counter ) % 26;
         conn1.send( 42, std::move( buf ) );
+        conn1.getState();
 
-        std::cout << "Message for connector 2\n";
+        std::cout << "Message for connector 1\n";
         const char* msg2 = "Hello form 2! ";
         const int len2 = strlen( msg2 );
         auto buf2 = rofi::hal::PBuf::allocate( len2 );

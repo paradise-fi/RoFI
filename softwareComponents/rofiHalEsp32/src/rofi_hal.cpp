@@ -321,7 +321,9 @@ public:
 
     virtual void send( uint16_t contentType, PBuf packet ) override {
         ConnectorBus::SendCommand c { this, contentType, std::move( packet ) };
+        ConnectorBus::VersionCommand v{ this };
         _bus->schedule( std::move( c ) );
+        _bus->schedule( std::move( v ) );
     }
 
     virtual void connectPower( ConnectorLine line ) override {
@@ -406,6 +408,7 @@ private:
     }
 
     void finish( ConnectorBus::VersionCommand, ConnectorVersion ver ) {
+        // ets_printf( "Version: %d, %d\n", ver.protocolRevision, ver.variant );
         // Not implemented yet - currently, there is no need to distinguish
         // versions of the connectors
     }
@@ -430,6 +433,7 @@ private:
             rofi::log::debug("invalid pending receive");
             status.pendingReceive = 0;
         }
+        ets_printf( "S: %d, %d\n", status.pendingSend, status.pendingReceive );
         while ( _receiveCmdCounter < status.pendingReceive )
             _issueReceiveCmd();
         _status = status;
@@ -908,7 +912,7 @@ public:
                                     bsp::gammaRatio )
         } ),
     #endif
-        _connectorBus( HSPI_HOST, GPIO_NUM_19, GPIO_NUM_18, 50'000'000 ),
+        _connectorBus( HSPI_HOST, GPIO_NUM_19, GPIO_NUM_18, 1'000'000 ),
         _connectors( {
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_27 ),
             std::make_shared< ConnectorLocal >( &_connectorBus, GPIO_NUM_25 ),

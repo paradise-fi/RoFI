@@ -146,6 +146,7 @@ public:
         if ( !_q.push( idx, c ) ) {
             ets_printf( "Cannot push to queue! 1\n" );
             _idxs.push( idx, c );
+            abort();
         } else {
             o.release();
         }
@@ -157,6 +158,7 @@ public:
         if ( !_q.push( idx, c ) ) {
             ets_printf( "Cannot push to queue! 2\n" );
             _idxs.push( idx, c );
+            abort();
         } else {
             o.release();
         }
@@ -169,6 +171,7 @@ public:
         if ( !_q.push( idx ) ) {
             ets_printf( "Cannot push to queue! 3\n" );
             _idxs.push( idx );
+            abort();
         } else {
             o.release();
         }
