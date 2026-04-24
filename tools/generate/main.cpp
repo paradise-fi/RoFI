@@ -11,7 +11,7 @@
 using namespace IO;
 
 using ConfigPair = std::pair<Configuration, Configuration>;
-std::string folder = "../data/trees/";
+std::string folder = "/tmp/data/";
 
 void printToFile(const Configuration& cfg, const std::string& path)
 {
@@ -144,8 +144,8 @@ ConfigPair generateTest(unsigned modules, unsigned path, unsigned step)
 
 int main()
 {
-    unsigned moduleCount[] = {50}; //,25,30,40,50};
-    unsigned pathSize[] = {5};
+    unsigned moduleCount[] = {3, 4, 5, 6, 7, 8, 9, 10, 20, 30, 40, 50};
+    unsigned pathSize[] = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150};
 
     for (unsigned i : moduleCount)
     {
