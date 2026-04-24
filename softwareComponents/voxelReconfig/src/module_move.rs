@@ -9,7 +9,6 @@ use enum_iterator::Sequence;
 use itertools::Itertools;
 use modular_bitfield::prelude::*;
 use static_assertions::const_assert_eq;
-use std::assert_matches::debug_assert_matches;
 use std::collections::HashMap;
 use std::hash::BuildHasher;
 
@@ -220,7 +219,7 @@ impl Move {
         let (mut result, new_rot_center) = second.combine_with(&first)?;
         self.apply_to_rotation_center(&mut result, new_rot_center, orig_rot_voxel, rotation);
 
-        debug_assert_matches!(check_voxel_world(&result), Ok(_));
+        debug_assert!(matches!(check_voxel_world(&result), Ok(_)));
         Some(result)
     }
 

@@ -1,6 +1,6 @@
 pub use complement::ComplementVoxelSubworld;
 
-use super::VoxelWorld;
+use super::{BoxPosVoxelIter, VoxelWorld};
 use crate::pos::ord::OrdPos;
 use crate::pos::{minimal_pos_hull, Pos, SizeRanges};
 use crate::voxel::{PosVoxel, Voxel};
@@ -108,16 +108,21 @@ impl<'a, TWorld: VoxelWorld> VoxelSubworld<'a, TWorld> {
 
 impl<'a, TWorld: VoxelWorld> VoxelWorld for VoxelSubworld<'a, TWorld> {
     type IndexType = TWorld::IndexType;
-    type PosVoxelIter<'b> = impl Iterator<Item = PosVoxel<Self::IndexType>> where Self: 'b;
+    type PosVoxelIter<'b>
+        = BoxPosVoxelIter<'b, Self::IndexType>
+    where
+        Self: 'b;
 
     fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
         self.size_ranges
     }
 
     fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
-        self.included
-            .iter()
-            .map(|&OrdPos(pos)| (pos, self.world.get_voxel(pos).unwrap()))
+        Box::new(
+            self.included
+                .iter()
+                .map(|&OrdPos(pos)| (pos, self.world.get_voxel(pos).unwrap())),
+        )
     }
 
     fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {
@@ -133,7 +138,7 @@ pub mod complement {
     use super::VoxelSubworld;
     use crate::pos::{Pos, SizeRanges};
     use crate::voxel::{PosVoxel, Voxel};
-    use crate::voxel_world::{debug_fmt_voxels, VoxelWorld};
+    use crate::voxel_world::{debug_fmt_voxels, BoxPosVoxelIter, VoxelWorld};
     use std::marker::PhantomData;
 
     /// Can represent a world that is not valid (has voxels with missing other body)
@@ -197,7 +202,10 @@ pub mod complement {
         TWorldRef: std::borrow::Borrow<VoxelSubworld<'a, TWorld>>,
     {
         type IndexType = TWorld::IndexType;
-        type PosVoxelIter<'b> = impl Iterator<Item = PosVoxel<Self::IndexType>> where Self: 'b;
+        type PosVoxelIter<'b>
+            = BoxPosVoxelIter<'b, Self::IndexType>
+        where
+            Self: 'b;
 
         #[allow(clippy::misnamed_getters)] // Getting size_range of the complement's complement
         fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
@@ -205,9 +213,11 @@ pub mod complement {
         }
 
         fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
-            self.underlying_world()
-                .all_voxels()
-                .filter(|&(pos, _)| self.contains(pos))
+            Box::new(
+                self.underlying_world()
+                    .all_voxels()
+                    .filter(|&(pos, _)| self.contains(pos)),
+            )
         }
 
         fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {

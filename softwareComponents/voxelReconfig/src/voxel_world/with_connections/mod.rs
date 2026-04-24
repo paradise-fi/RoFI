@@ -16,6 +16,8 @@ use smallvec::SmallVec;
 use std::collections::BTreeSet;
 use std::rc::Rc;
 
+type BoxConnectionIter<'a, TIndex> = Box<dyn Iterator<Item = (Pos<TIndex>, Axis)> + 'a>;
+
 pub trait Connections {
     type IndexType: num::Signed + Copy;
     type ConnectionIter<'a>: Iterator<Item = (Pos<Self::IndexType>, Axis)>

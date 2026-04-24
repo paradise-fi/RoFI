@@ -2,7 +2,7 @@ use crate::pos::ord::OrdPos;
 use crate::pos::{Pos, SizeRanges, Sizes};
 use crate::voxel::{PosVoxel, Voxel};
 use crate::voxel_world::{check_pos, debug_fmt_voxels, InvalidVoxelWorldError};
-use crate::voxel_world::{NormVoxelWorld, VoxelWorld};
+use crate::voxel_world::{BoxPosVoxelIter, NormVoxelWorld, VoxelWorld};
 use litemap::LiteMap;
 
 pub trait SortvecVoxelWorldIndex:
@@ -54,14 +54,17 @@ impl<TIndex: SortvecVoxelWorldIndex> std::fmt::Debug for SortvecVoxelWorld<TInde
 
 impl<TIndex: SortvecVoxelWorldIndex> VoxelWorld for SortvecVoxelWorld<TIndex> {
     type IndexType = TIndex;
-    type PosVoxelIter<'a> = impl Iterator<Item = PosVoxel<Self::IndexType>> where Self: 'a;
+    type PosVoxelIter<'a>
+        = BoxPosVoxelIter<'a, Self::IndexType>
+    where
+        Self: 'a;
 
     fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
         SizeRanges::from_sizes(self.sizes())
     }
 
     fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
-        self.data.iter().map(|(&OrdPos(pos), &voxel)| (pos, voxel))
+        Box::new(self.data.iter().map(|(&OrdPos(pos), &voxel)| (pos, voxel)))
     }
 
     fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {

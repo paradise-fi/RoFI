@@ -85,6 +85,7 @@ where
     TWorld: NormVoxelWorld,
 {
     type Potential = usize;
+    type EstimatedCost = usize;
 
     fn new(goal: &TWorld) -> Self
     where

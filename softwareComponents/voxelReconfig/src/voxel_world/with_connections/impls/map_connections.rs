@@ -37,7 +37,7 @@ fn axes_from_inner_value(axes_connected: [bool; 3]) -> smallvec::SmallVec<[Axis;
 
 impl<TIndex: MapConnectionsIndex> Connections for MapConnections<TIndex> {
     type IndexType = TIndex;
-    type ConnectionIter<'a> = impl 'a + Iterator<Item = (Pos<Self::IndexType>, Axis)>
+    type ConnectionIter<'a> = super::super::BoxConnectionIter<'a, Self::IndexType>
     where
         Self: 'a;
 
@@ -71,11 +71,11 @@ impl<TIndex: MapConnectionsIndex> Connections for MapConnections<TIndex> {
     }
 
     fn all_connections(&self) -> Self::ConnectionIter<'_> {
-        self.connections.iter().flat_map(|(&OrdPos(pos), &axes)| {
+        Box::new(self.connections.iter().flat_map(|(&OrdPos(pos), &axes)| {
             axes_from_inner_value(axes)
                 .into_iter()
                 .map(move |axis| (pos, axis))
-        })
+        }))
     }
 
     fn from_connections(

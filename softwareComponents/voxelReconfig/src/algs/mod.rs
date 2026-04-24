@@ -4,6 +4,8 @@ use std::hash::BuildHasher;
 pub mod astar;
 pub mod bfs;
 
+pub type BoxStateIter<'a, TState> = Box<dyn Iterator<Item = TState> + 'a>;
+
 #[derive(Debug, Clone, Copy, amplify::Display, amplify::Error)]
 #[display(doc_comments)]
 pub enum Error {

@@ -1,5 +1,3 @@
-#![feature(assert_matches)]
-
 use anyhow::Result;
 use clap::Parser;
 use itertools::Itertools;
@@ -11,7 +9,6 @@ use rofi_voxel_reconfig::voxel_world::NormVoxelWorld;
 use rofi_voxel_reconfig::voxel_world::{as_one_of_norm_eq_world, normalized_eq_worlds};
 use rofi_voxel_reconfig::voxel_world::{check_voxel_world, is_normalized};
 use rustc_hash::FxHashMap;
-use std::assert_matches::{assert_matches, debug_assert_matches};
 use std::io::Write;
 use std::rc::Rc;
 use std::time::SystemTime;
@@ -144,10 +141,10 @@ where
     let mut next_worlds_count = 0;
 
     for current in worlds_to_visit {
-        debug_assert_matches!(check_voxel_world(current.as_ref()), Ok(()));
+        debug_assert!(matches!(check_voxel_world(current.as_ref()), Ok(())));
         debug_assert!(is_normalized(current.as_ref()));
         for new_world in all_next_worlds_norm(current.as_ref()) {
-            debug_assert_matches!(check_voxel_world(&new_world), Ok(()));
+            debug_assert!(matches!(check_voxel_world(&new_world), Ok(())));
             debug_assert!(is_normalized(&new_world));
 
             if parent_map.contains_key(&new_world) {
@@ -185,7 +182,7 @@ where
     TWorld: NormVoxelWorld + Eq + std::hash::Hash,
     TWorld::IndexType: num::Integer + std::hash::Hash,
 {
-    assert_matches!(check_voxel_world(&init), Ok(()));
+    assert!(matches!(check_voxel_world(&init), Ok(())));
     let init = as_one_of_norm_eq_world(init);
 
     let mut init_worlds = normalized_eq_worlds(&init).map(Rc::new).peekable();
@@ -230,7 +227,7 @@ fn main() -> Result<()> {
 
     let world = args.get_world()?;
     let (world, _min_pos) = world.to_world_and_min_pos::<MapVoxelWorld<_>>()?;
-    assert_matches!(check_voxel_world(&world), Ok(()));
+    assert!(matches!(check_voxel_world(&world), Ok(())));
 
     let results_data = compute_steps(world, args.max())?;
 

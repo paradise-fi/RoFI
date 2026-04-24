@@ -1,5 +1,5 @@
 use super::{Connections, VoxelWorldWithConnections};
-use crate::algs::StateGraph;
+use crate::algs::{BoxStateIter, StateGraph};
 use crate::atoms::Direction;
 use crate::connectivity::get_bodies_connected_to;
 use crate::counters::Counter;
@@ -10,7 +10,6 @@ use crate::voxel::PosVoxel;
 use crate::voxel_world::{check_voxel_world, is_normalized, normalized_eq_worlds_with_rot};
 use crate::voxel_world::{NormVoxelWorld, VoxelWorld};
 use rustc_hash::FxHashMap;
-use std::assert_matches::{assert_matches, debug_assert_matches};
 use std::marker::PhantomData;
 use std::rc::Rc;
 
@@ -190,19 +189,19 @@ where
 {
     type StateType = VoxelWorldWithConnections<TWorld, TConnections>;
 
-    type EqStatesIter<'a> = impl 'a + Iterator<Item = Self::StateType>;
-    type NextStatesIter<'a> = impl 'a + Iterator<Item = Self::StateType>;
+    type EqStatesIter<'a> = BoxStateIter<'a, Self::StateType>;
+    type NextStatesIter<'a> = BoxStateIter<'a, Self::StateType>;
 
     fn debug_check_state(state: &Self::StateType) {
-        debug_assert_matches!(check_voxel_world(state.world()), Ok(()));
+        debug_assert!(matches!(check_voxel_world(state.world()), Ok(())));
         debug_assert!(is_normalized(state.world()));
         debug_assert!(state.check_is_valid());
     }
     fn init_check(init: &Self::StateType, goal: &Self::StateType) -> bool {
         assert!(is_normalized(init.world()));
         assert!(is_normalized(goal.world()));
-        assert_matches!(check_voxel_world(init.world()), Ok(()));
-        assert_matches!(check_voxel_world(goal.world()), Ok(()));
+        assert!(matches!(check_voxel_world(init.world()), Ok(())));
+        assert!(matches!(check_voxel_world(goal.world()), Ok(())));
 
         assert!(init.check_is_valid());
         assert!(goal.check_is_valid());
@@ -211,9 +210,9 @@ where
     }
 
     fn equivalent_states(state: &Self::StateType) -> Self::EqStatesIter<'_> {
-        normalized_eq_worlds(state)
+        Box::new(normalized_eq_worlds(state))
     }
     fn next_states(state: &Self::StateType) -> Self::NextStatesIter<'_> {
-        all_next_worlds(state)
+        Box::new(all_next_worlds(state))
     }
 }

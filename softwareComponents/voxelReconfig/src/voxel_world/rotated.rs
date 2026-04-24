@@ -1,4 +1,4 @@
-use super::{InvalidVoxelWorldError, NormVoxelWorld, VoxelWorld};
+use super::{BoxPosVoxelIter, InvalidVoxelWorldError, NormVoxelWorld, VoxelWorld};
 use crate::atoms;
 use crate::pos::{Pos, SizeRanges, Sizes};
 use crate::voxel::{JointPosition, PosVoxel, Voxel};
@@ -154,7 +154,10 @@ where
     TWorld::IndexType: num::Integer,
 {
     type IndexType = TWorld::IndexType;
-    type PosVoxelIter<'a> = impl Iterator<Item = PosVoxel<Self::IndexType>> where Self: 'a;
+    type PosVoxelIter<'a>
+        = BoxPosVoxelIter<'a, Self::IndexType>
+    where
+        Self: 'a;
 
     fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
         let size_ranges = self.world().size_ranges().as_ranges_array();
@@ -166,11 +169,11 @@ where
     }
 
     fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
-        self.world().all_voxels().map(|(orig_pos, voxel)| {
+        Box::new(self.world().all_voxels().map(|(orig_pos, voxel)| {
             let rot_voxel = rotate_voxel(voxel, self.rotation);
             let rot_pos = self.get_new_pos(orig_pos);
             (rot_pos, rot_voxel)
-        })
+        }))
     }
 
     fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {

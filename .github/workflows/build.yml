@@ -23,7 +23,7 @@ jobs:
       - name: Build
         run: |
           source setup.sh ${{ matrix.environment }}
-          rcfg desktop -- -DBUILD_HEADLESS=ON -DBUILD_GAZEBO=OFF -DBUILD_RUST=OFF
+          rcfg desktop -- -DBUILD_HEADLESS=ON -DBUILD_GAZEBO=OFF
           rmake desktop
       - name: Run tests
         run: |

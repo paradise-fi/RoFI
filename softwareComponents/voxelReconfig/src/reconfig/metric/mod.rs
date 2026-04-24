@@ -4,8 +4,8 @@ pub mod naive;
 use self::cost::Cost;
 
 pub trait Metric<TState> {
-    type Potential: std::cmp::Ord + Default + Copy + std::fmt::Debug = usize;
-    type EstimatedCost: std::cmp::Ord + Default + std::fmt::Debug = Self::Potential;
+    type Potential: std::cmp::Ord + Default + Copy + std::fmt::Debug;
+    type EstimatedCost: std::cmp::Ord + Default + std::fmt::Debug;
 
     fn new(goal: &TState) -> Self
     where

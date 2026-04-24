@@ -34,7 +34,7 @@ fn iter_adaptor<TIndex: num::Num + Copy>(value: &(OrdPos<TIndex>, Axis)) -> (Pos
 
 impl<TIndex: SetConnectionsIndex> Connections for SetConnections<TIndex> {
     type IndexType = TIndex;
-    type ConnectionIter<'a> = impl 'a + Iterator<Item = (Pos<Self::IndexType>, Axis)>
+    type ConnectionIter<'a> = super::super::BoxConnectionIter<'a, Self::IndexType>
     where
         Self: 'a;
 
@@ -60,7 +60,7 @@ impl<TIndex: SetConnectionsIndex> Connections for SetConnections<TIndex> {
     }
 
     fn all_connections(&self) -> Self::ConnectionIter<'_> {
-        self.connections.iter().map(iter_adaptor)
+        Box::new(self.connections.iter().map(iter_adaptor))
     }
 
     fn from_connections(

@@ -1,12 +1,9 @@
-#![feature(assert_matches)]
-
 use anyhow::Result;
 use clap::Parser;
 use itertools::Itertools;
 use rofi_voxel_cli::{FileInput, LogArgs};
 use rofi_voxel_reconfig::voxel_world::impls::MapVoxelWorld;
 use rofi_voxel_reconfig::voxel_world::{check_voxel_world, normalized_eq_worlds};
-use std::assert_matches::assert_matches;
 
 type IndexType = i8;
 
@@ -44,7 +41,7 @@ fn main() -> Result<()> {
 
     let InputWorlds { world } = args.get_worlds()?;
     let (world, _min_pos) = world.to_world_and_min_pos::<MapVoxelWorld<_>>()?;
-    assert_matches!(check_voxel_world(&world), Ok(()));
+    assert!(matches!(check_voxel_world(&world), Ok(())));
 
     let norm_worlds = normalized_eq_worlds(&world)
         .unique()

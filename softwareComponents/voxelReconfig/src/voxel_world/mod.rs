@@ -10,13 +10,12 @@ pub mod with_connections;
 pub use centered::CenteredVoxelWorld;
 pub use rotated::{rotate_voxel, RotatedVoxelWorld};
 pub use subworld::VoxelSubworld;
-pub use traits::{NormVoxelWorld, VoxelWorld};
+pub use traits::{BoxPosVoxelIter, NormVoxelWorld, VoxelWorld};
 
 use crate::module_repr::get_other_body;
 use crate::pos::{minimal_pos_hull, Pos, SizeRanges, Sizes};
 use crate::voxel::{get_other_body_pos, PosVoxel};
 use iter_fixed::IntoIteratorFixed;
-use std::assert_matches::debug_assert_matches;
 use world_rotation::WorldRotation;
 
 #[derive(Debug, Clone, amplify::Error)]
@@ -120,13 +119,13 @@ pub fn normalized_eq_worlds_with_rot<TWorld>(
 where
     TWorld: NormVoxelWorld,
 {
-    debug_assert_matches!(check_voxel_world(world), Ok(()));
+    debug_assert!(matches!(check_voxel_world(world), Ok(())));
     enum_iterator::all::<WorldRotation>().filter_map(move |world_rot| {
         let transformed_sizes = world_rot.rotate_sizes(world.sizes());
         if sizes_normalized(transformed_sizes) {
             let transformed_world = world_rot.rotate_world(world);
             debug_assert_eq!(transformed_world.sizes(), transformed_sizes);
-            debug_assert_matches!(check_voxel_world(&transformed_world), Ok(()));
+            debug_assert!(matches!(check_voxel_world(&transformed_world), Ok(())));
             debug_assert!(is_normalized(&transformed_world));
             Some((transformed_world, world_rot))
         } else {

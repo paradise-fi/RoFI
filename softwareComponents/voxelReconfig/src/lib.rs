@@ -1,11 +1,3 @@
-#![feature(
-    array_methods,
-    assert_matches,
-    associated_type_defaults,
-    map_try_insert,
-    impl_trait_in_assoc_type
-)]
-
 pub mod atoms;
 pub mod pos;
 pub mod voxel;

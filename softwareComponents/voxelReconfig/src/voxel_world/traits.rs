@@ -2,6 +2,8 @@ use super::*;
 use crate::pos::{Pos, SizeRanges, Sizes};
 use crate::voxel::{PosVoxel, Voxel};
 
+pub type BoxPosVoxelIter<'a, TIndex> = Box<dyn Iterator<Item = PosVoxel<TIndex>> + 'a>;
+
 pub trait VoxelWorld {
     type IndexType: std::fmt::Debug + num::Signed + Ord + Copy;
     type PosVoxelIter<'a>: Iterator<Item = PosVoxel<Self::IndexType>>

@@ -1,4 +1,4 @@
-use super::VoxelWorld;
+use super::{BoxPosVoxelIter, VoxelWorld};
 use crate::pos::{Pos, SizeRanges};
 use crate::voxel::{PosVoxel, Voxel};
 
@@ -71,7 +71,10 @@ where
     TWorldRef: std::borrow::Borrow<TWorld>,
 {
     type IndexType = TWorld::IndexType;
-    type PosVoxelIter<'a> = impl Iterator<Item = PosVoxel<Self::IndexType>> where Self: 'a;
+    type PosVoxelIter<'a>
+        = BoxPosVoxelIter<'a, Self::IndexType>
+    where
+        Self: 'a;
 
     fn size_ranges(&self) -> SizeRanges<Self::IndexType> {
         let (start, end) = self.world().size_ranges().start_end();
@@ -79,9 +82,11 @@ where
     }
 
     fn all_voxels(&self) -> Self::PosVoxelIter<'_> {
-        self.world()
-            .all_voxels()
-            .map(|(orig_pos, voxel)| (self.get_new_pos(orig_pos), voxel))
+        Box::new(
+            self.world()
+                .all_voxels()
+                .map(|(orig_pos, voxel)| (self.get_new_pos(orig_pos), voxel)),
+        )
     }
 
     fn get_voxel(&self, pos: Pos<Self::IndexType>) -> Option<Voxel> {

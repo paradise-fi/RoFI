@@ -1,5 +1,3 @@
-#![feature(assert_matches)]
-
 use anyhow::Result;
 use clap::Parser;
 use rofi_voxel_cli::{FileInput, LogArgs};
@@ -8,7 +6,6 @@ use rofi_voxel_reconfig::voxel_world::impls::MapVoxelWorld;
 use rofi_voxel_reconfig::voxel_world::normalized_eq_worlds;
 use rofi_voxel_reconfig::voxel_world::NormVoxelWorld;
 use rofi_voxel_reconfig::voxel_world::{check_voxel_world, is_normalized};
-use std::assert_matches::assert_matches;
 
 type IndexType = i8;
 
@@ -48,7 +45,7 @@ fn get_next_worlds<TWorld: NormVoxelWorld>(world: &TWorld) -> Vec<TWorld>
 where
     TWorld::IndexType: num::Integer + std::hash::Hash,
 {
-    assert_matches!(check_voxel_world(world), Ok(()));
+    assert!(matches!(check_voxel_world(world), Ok(())));
     assert!(is_normalized(world));
 
     all_next_worlds_not_norm(world).collect()
@@ -61,7 +58,7 @@ fn main() -> Result<()> {
 
     let InputWorlds { world } = args.get_worlds()?;
     let (world, _min_pos) = world.to_world_and_min_pos::<MapVoxelWorld<_>>()?;
-    assert_matches!(check_voxel_world(&world), Ok(()));
+    assert!(matches!(check_voxel_world(&world), Ok(())));
 
     let world = if !is_normalized(&world) {
         if !args.normalize {

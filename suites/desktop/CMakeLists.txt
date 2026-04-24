@@ -77,7 +77,7 @@ endif()
 FetchContent_Declare(
   pybind11
   GIT_REPOSITORY https://github.com/pybind/pybind11.git
-  GIT_TAG        v2.6.2
+  GIT_TAG        v2.13.6
 )
 FetchContent_GetProperties(pybind11)
 if(NOT pybind11_POPULATED)
@@ -88,8 +88,8 @@ endif()
 
 FetchContent_Declare(
   json
-  GIT_REPOSITORY https://github.com/ArthurSonzogni/nlohmann_json_cmake_fetchcontent.git
-  GIT_TAG        v3.10.2
+  GIT_REPOSITORY https://github.com/nlohmann/json.git
+  GIT_TAG        v3.11.3
 )
 FetchContent_GetProperties(json)
 if(NOT json_POPULATED)
@@ -123,7 +123,7 @@ endif()
 FetchContent_Declare(
   cxxopts
   GIT_REPOSITORY https://github.com/jarro2783/cxxopts.git
-  GIT_TAG        v2.2.0
+  GIT_TAG        v3.2.0
 )
 FetchContent_GetProperties(cxxopts)
 if(NOT cxxopts_POPULATED)

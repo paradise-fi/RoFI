@@ -1,9 +1,24 @@
-set(CARGO_BUILD_TYPE
-    $<$<CONFIG:Debug>:dev>
-    $<$<CONFIG:Release>:release>
-    $<$<CONFIG:RelWithDebInfo>:rel-with-deb-info>
-    $<$<CONFIG:MinSizeRel>:min-size-rel>
+get_filename_component(
+    RMAKE_RUST_GET_EXECUTABLES_TOOL
+    "${CMAKE_CURRENT_LIST_DIR}/../tools/_get_rust_executables.py"
+    ABSOLUTE
 )
+
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set(CARGO_PROFILE_NAME dev)
+    set(CARGO_PROFILE_DIR debug)
+elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
+    set(CARGO_PROFILE_NAME release)
+    set(CARGO_PROFILE_DIR release)
+elseif(CMAKE_BUILD_TYPE STREQUAL "RelWithDebInfo")
+    set(CARGO_PROFILE_NAME rel-with-deb-info)
+    set(CARGO_PROFILE_DIR rel-with-deb-info)
+elseif(CMAKE_BUILD_TYPE STREQUAL "MinSizeRel")
+    set(CARGO_PROFILE_NAME min-size-rel)
+    set(CARGO_PROFILE_DIR min-size-rel)
+else()
+    message(FATAL_ERROR "Unsupported CMAKE_BUILD_TYPE for Rust: ${CMAKE_BUILD_TYPE}")
+endif()
 
 function(add_rust_library TARGET_NAME)
     set(FLAG_KEYWORDS ALL_FEATURES)
@@ -36,24 +51,26 @@ function(add_rust_library TARGET_NAME)
         set(ALL_FEATURES_FLAG "")
     endif()
 
+    set(BUILT_LIBRARY_FILE "${CMAKE_CURRENT_BINARY_DIR}/${CARGO_PROFILE_DIR}/${CMAKE_SHARED_LIBRARY_PREFIX}${TARGET_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
     set(TARGET_LIBRARY_FILE "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/${CMAKE_SHARED_LIBRARY_PREFIX}${TARGET_NAME}${CMAKE_SHARED_LIBRARY_SUFFIX}")
 
     add_custom_target(
         ${TARGET_NAME}-build
         ALL
         COMMAND
+            ${CMAKE_COMMAND} -E make_directory "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
+        COMMAND
             cargo
                 build
                 --lib
                 --package "${TARGET_NAME}"
-                -Z unstable-options
-                --out-dir "${CMAKE_LIBRARY_OUTPUT_DIRECTORY}"
-
-                --profile ${CARGO_BUILD_TYPE}
+                --profile "${CARGO_PROFILE_NAME}"
                 --manifest-path "${RRC_MANIFEST_PATH}"
                 --target-dir "${CMAKE_CURRENT_BINARY_DIR}"
                 ${ALL_FEATURES_FLAG}
                 ${FEATURES_FLAG}
+        COMMAND
+            ${CMAKE_COMMAND} -E copy_if_different "${BUILT_LIBRARY_FILE}" "${TARGET_LIBRARY_FILE}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         USES_TERMINAL
         COMMAND_EXPAND_LISTS
@@ -94,21 +111,25 @@ function(add_rust_executable TARGET_NAME)
         set(ALL_FEATURES_FLAG "")
     endif()
 
+    set(BUILT_EXECUTABLE_FILE "${CMAKE_CURRENT_BINARY_DIR}/${CARGO_PROFILE_DIR}/${TARGET_NAME}")
+    set(TARGET_EXECUTABLE_FILE "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET_NAME}")
+
     add_custom_target(
         ${TARGET_NAME}
         ALL
         COMMAND
+            ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+        COMMAND
             cargo
                 build
                 --bin "${TARGET_NAME}"
-                -Z unstable-options
-                --out-dir "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
-
-                --profile ${CARGO_BUILD_TYPE}
+                --profile "${CARGO_PROFILE_NAME}"
                 --manifest-path "${RRC_MANIFEST_PATH}"
                 --target-dir "${CMAKE_CURRENT_BINARY_DIR}"
                 ${ALL_FEATURES_FLAG}
                 ${FEATURES_FLAG}
+        COMMAND
+            ${CMAKE_COMMAND} -E copy_if_different "${BUILT_EXECUTABLE_FILE}" "${TARGET_EXECUTABLE_FILE}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         USES_TERMINAL
         COMMAND_EXPAND_LISTS
@@ -163,7 +184,7 @@ function(add_rust_tests TARGET_NAME)
                 ${PACKAGE_FLAG}
                 --message-format=json-render-diagnostics
 
-                --profile ${CARGO_BUILD_TYPE}
+                --profile "${CARGO_PROFILE_NAME}"
                 --manifest-path "${RRC_MANIFEST_PATH}"
                 --target-dir "${CMAKE_CURRENT_BINARY_DIR}"
                 ${ALL_FEATURES_FLAG}
@@ -172,7 +193,7 @@ function(add_rust_tests TARGET_NAME)
         COMMAND
             ${CMAKE_COMMAND} -E make_directory "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
         COMMAND
-            cat "${COMPILER_ARTIFACTS_FILE}" | _get_rust_executables.py script "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET_NAME}"
+            cat "${COMPILER_ARTIFACTS_FILE}" | python3 "${RMAKE_RUST_GET_EXECUTABLES_TOOL}" script "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/${TARGET_NAME}"
         WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
         USES_TERMINAL
         COMMAND_EXPAND_LISTS
