@@ -1,137 +1,134 @@
 #pragma once
 
-#include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
+#include <cmath>
+#include <limits>
+
+#include <gz/math/Vector2.hh>
+#include <gz/sim/EntityComponentManager.hh>
+#include <gz/sim/Joint.hh>
+#include <sdf/Joint.hh>
 
 #include "utils.hpp"
 
 namespace gazebo
 {
-template < msgs::Joint::Type >
+template < sdf::JointType >
 struct Precision
 {
 };
 
 template <>
-struct Precision< msgs::Joint::REVOLUTE >
+struct Precision< sdf::JointType::REVOLUTE >
 {
-    // Used for position set callback and for boundaries
-    // Revolute joints: [rad]
     static constexpr double position = 1e-2;
-
-    // Used for position set callback and for boundaries
-    // Revolute joints: [rad/s]
     static constexpr double velocity = 1e-2;
 };
 
 template <>
-struct Precision< msgs::Joint::PRISMATIC >
+struct Precision< sdf::JointType::PRISMATIC >
 {
-    // Used for position set callback and for boundaries
-    // Prismatic joints: [m]
     static constexpr double position = 1e-4;
-
-    // Used for position set callback and for boundaries
-    // Prismatic joints: [m/s]
     static constexpr double velocity = 1e-4;
 };
 
 struct JointDataBase
 {
-    // Used for position set callback and for boundaries
-    // Prismatic joints: [m]
-    // Revolute joints: [rad]
     double getPositionPrecision() const
     {
-        if ( joint->GetMsgType() == msgs::Joint::PRISMATIC )
+        if ( jointType == sdf::JointType::PRISMATIC )
         {
-            return Precision< msgs::Joint::PRISMATIC >::position;
+            return Precision< sdf::JointType::PRISMATIC >::position;
         }
-        return Precision< msgs::Joint::REVOLUTE >::position;
+        return Precision< sdf::JointType::REVOLUTE >::position;
     }
 
-    // Used for position set callback and for boundaries
-    // Prismatic joints: [m/s]
-    // Revolute joints: [rad/s]
     double getVelocityPrecision() const
     {
-        if ( joint->GetMsgType() == msgs::Joint::PRISMATIC )
+        if ( jointType == sdf::JointType::PRISMATIC )
         {
-            return Precision< msgs::Joint::PRISMATIC >::velocity;
+            return Precision< sdf::JointType::PRISMATIC >::velocity;
         }
-        return Precision< msgs::Joint::REVOLUTE >::velocity;
+        return Precision< sdf::JointType::REVOLUTE >::velocity;
     }
 
-    // Prismatic joints: [m]
-    // Revolute joints: [rad]
-    double minPosition = std::numeric_limits< double >::lowest();
-    // Prismatic joints: [m]
-    // Revolute joints: [rad]
-    double maxPosition = std::numeric_limits< double >::max();
-    // Prismatic joints: [m/s]
-    // Revolute joints: [rad/s]
-    double minSpeed = std::numeric_limits< double >::min();
-    // Prismatic joints: [m/s]
-    // Revolute joints: [rad/s]
-    double maxSpeed = std::numeric_limits< double >::max();
-    // Prismatic joints: [N]
-    // Revolute joints: [Nm]
-    double maxEffort = std::numeric_limits< double >::max();
-
-    // Prismatic joints: [m]
-    // Revolute joints: [rad]
     double getMaxPosition() const
     {
         return maxPosition - getPositionPrecision();
     }
 
-    // Prismatic joints: [m]
-    // Revolute joints: [rad]
     double getMinPosition() const
     {
         return minPosition + getPositionPrecision();
     }
 
-    // Prismatic joints: [m/s]
-    // Revolute joints: [rad/s]
     double getMaxVelocity() const
     {
         return maxSpeed - getVelocityPrecision();
     }
 
-    // Prismatic joints: [m/s]
-    // Revolute joints: [rad/s]
     double getLowestVelocity() const
     {
         return -getMaxVelocity();
     }
 
-    // Prismatic joints: [m/s]
-    // Revolute joints: [rad/s]
     double getMinVelocity() const
     {
         return minSpeed + getVelocityPrecision();
     }
 
-    // Prismatic joints: [N]
-    // Revolute joints: [Nm]
     double getMaxEffort() const
     {
         return maxEffort;
     }
 
-    // Prismatic joints: [N]
-    // Revolute joints: [Nm]
     double getLowestEffort() const
     {
         return -getMaxEffort();
     }
 
-    physics::JointPtr joint;
+    double position( const gz::sim::EntityComponentManager & ecm ) const
+    {
+        auto current = joint.Position( ecm );
+        if ( !current || current->empty() )
+        {
+            return 0;
+        }
+        return current->front();
+    }
+
+    double velocity( const gz::sim::EntityComponentManager & ecm ) const
+    {
+        auto current = joint.Velocity( ecm );
+        if ( !current || current->empty() )
+        {
+            return 0;
+        }
+        return current->front();
+    }
+
+    void setForce( gz::sim::EntityComponentManager & ecm, double force )
+    {
+        joint.SetForce( ecm, { force } );
+    }
+
+    void setPositionLimits( gz::sim::EntityComponentManager & ecm, double lower, double upper )
+    {
+        joint.SetPositionLimits( ecm, { gz::math::Vector2d( lower, upper ) } );
+    }
+
+    gz::sim::Joint joint;
+    gz::sim::Entity jointEntity = gz::sim::kNullEntity;
+    sdf::JointType jointType = sdf::JointType::REVOLUTE;
+
+    double minPosition = std::numeric_limits< double >::lowest();
+    double maxPosition = std::numeric_limits< double >::max();
+    double minSpeed = 0;
+    double maxSpeed = std::numeric_limits< double >::max();
+    double maxEffort = std::numeric_limits< double >::max();
 
     operator bool() const
     {
-        return bool( joint );
+        return jointEntity != gz::sim::kNullEntity;
     }
 
 protected:
@@ -140,49 +137,58 @@ protected:
     JointDataBase( const JointDataBase & ) = default;
     JointDataBase & operator=( const JointDataBase & ) = default;
 
-    explicit JointDataBase( physics::JointPtr jointPtr, sdf::ElementPtr limitSdf )
-            : joint( std::move( jointPtr ) )
+    explicit JointDataBase( gz::sim::Entity jointEntity_,
+                            sdf::ElementPtr limitSdf,
+                            gz::sim::EntityComponentManager & ecm )
+            : joint( jointEntity_ )
+            , jointEntity( jointEntity_ )
     {
-        if ( !joint )
+        if ( jointEntity == gz::sim::kNullEntity || !joint.Valid( ecm ) )
         {
+            jointEntity = gz::sim::kNullEntity;
             return;
         }
 
-        auto limits = joint->GetSDF()->GetElement( "axis" )->GetElement( "limit" );
-        limits->GetElement( "lower" )->GetValue()->Get( minPosition );
-        limits->GetElement( "upper" )->GetValue()->Get( maxPosition );
-        limits->GetElement( "velocity" )->GetValue()->Get( maxSpeed );
-        limits->GetElement( "effort" )->GetValue()->Get( maxEffort );
+        joint.EnablePositionCheck( ecm );
+        joint.EnableVelocityCheck( ecm );
+        joint.EnableTransmittedWrenchCheck( ecm );
+
+        auto type = joint.Type( ecm );
+        if ( type )
+        {
+            jointType = *type;
+        }
+
+        auto axes = joint.Axis( ecm );
+        if ( !axes || axes->empty() )
+        {
+            throw std::runtime_error( "Joint has no axis information" );
+        }
+
+        const auto & axis = axes->front();
+        minPosition = axis.Lower();
+        maxPosition = axis.Upper();
+        maxSpeed = axis.MaxVelocity();
+        maxEffort = axis.Effort();
 
         if ( limitSdf )
         {
-            auto lowerSdf = getOnlyChildOrCreate( limitSdf, "lower" );
-            if ( !lowerSdf->GetValue() )
+            if ( auto lowerSdf = getOnlyChild< false >( limitSdf, "lower" ) )
             {
-                setValue( lowerSdf, minPosition );
+                minPosition = lowerSdf->Get< double >();
             }
-            minPosition = lowerSdf->Get< double >();
-
-            auto upperSdf = getOnlyChildOrCreate( limitSdf, "upper" );
-            if ( !upperSdf->GetValue() )
+            if ( auto upperSdf = getOnlyChild< false >( limitSdf, "upper" ) )
             {
-                setValue( upperSdf, maxPosition );
+                maxPosition = upperSdf->Get< double >();
             }
-            maxPosition = upperSdf->Get< double >();
-
-            auto velocitySdf = getOnlyChildOrCreate( limitSdf, "velocity" );
-            if ( !velocitySdf->GetValue() )
+            if ( auto velocitySdf = getOnlyChild< false >( limitSdf, "velocity" ) )
             {
-                setValue( velocitySdf, maxSpeed );
+                maxSpeed = velocitySdf->Get< double >();
             }
-            maxSpeed = velocitySdf->Get< double >();
-
-            auto effortSdf = getOnlyChildOrCreate( limitSdf, "effort" );
-            if ( !effortSdf->GetValue() )
+            if ( auto effortSdf = getOnlyChild< false >( limitSdf, "effort" ) )
             {
-                setValue( effortSdf, maxEffort );
+                maxEffort = effortSdf->Get< double >();
             }
-            maxEffort = effortSdf->Get< double >();
         }
 
         if ( minPosition > maxPosition )
@@ -191,14 +197,14 @@ protected:
             throw std::runtime_error( "Maximal position is not larger than minimal" );
         }
 
-        if ( maxSpeed < 0 )
+        if ( !std::isfinite( maxSpeed ) || maxSpeed < 0 )
         {
-            gzmsg << "No max speed in " << joint->GetScopedName() << "\n";
+            gzwarn << "No max speed on joint entity " << jointEntity << "\n";
             maxSpeed = std::numeric_limits< double >::max();
         }
-        if ( maxEffort < 0 )
+        if ( !std::isfinite( maxEffort ) || maxEffort < 0 )
         {
-            gzmsg << "No max effort in " << joint->GetScopedName() << "\n";
+            gzwarn << "No max effort on joint entity " << jointEntity << "\n";
             maxEffort = std::numeric_limits< double >::max();
         }
 
@@ -214,13 +220,14 @@ struct JointData : public JointDataBase
     Controller controller;
 
     template < typename... Args >
-    explicit JointData( physics::JointPtr joint, sdf::ElementPtr limitSdf, Args &&... args )
-            : JointDataBase( std::move( joint ), std::move( limitSdf ) )
-            , controller( *this, std::forward< Args >( args )... )
+    explicit JointData( gz::sim::Entity jointEntity,
+                        sdf::ElementPtr limitSdf,
+                        gz::sim::EntityComponentManager & ecm,
+                        Args &&... args )
+            : JointDataBase( jointEntity, std::move( limitSdf ), ecm )
+            , controller( *this, ecm, std::forward< Args >( args )... )
     {
     }
-
-    ~JointData() = default;
 };
 
 } // namespace gazebo

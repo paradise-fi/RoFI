@@ -1,18 +1,23 @@
 #pragma once
 
 #include <array>
+#include <mutex>
 #include <optional>
+#include <string>
+#include <utility>
+#include <vector>
 
-#include <gazebo/common/Events.hh>
-#include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
+#include <boost/shared_ptr.hpp>
+#include <gz/sim/EntityComponentManager.hh>
 
+#include <rofi/gz_transport.hpp>
+
+#include "roficomConnect.hpp"
 #include "roficomUtils.hpp"
 
 #include <connectorAttachInfo.pb.h>
 #include <connectorCmd.pb.h>
 #include <connectorResp.pb.h>
-
 
 namespace gazebo
 {
@@ -25,48 +30,53 @@ public:
     using PacketPtr = boost::shared_ptr< const rofi::messages::Packet >;
     using AttachInfoPtr = boost::shared_ptr< const rofi::messages::ConnectorAttachInfo >;
 
-    void load( RoFICoMPlugin & roficomPlugin, physics::ModelPtr model, transport::NodePtr node );
-
+    void load( RoFICoMPlugin & roficomPlugin,
+               gz::sim::Entity model,
+               const gz::sim::EntityComponentManager & ecm,
+               const rofi::gz::NodePtr & node );
 
     bool isConnected() const;
-    std::optional< Orientation > getOrientation() const
-    {
-        return _orientation;
-    }
+    std::optional< Orientation > getOrientation() const;
 
-    void connectToNearbyRequest();
-    void connectRequest( physics::ModelPtr otherRoficom,
-                         RoficomConnection::Orientation orientation );
+    void connectToNearbyRequest( const gz::sim::EntityComponentManager & ecm );
+    void connectRequest( gz::sim::Entity otherRoficom,
+                         Orientation orientation,
+                         const gz::sim::EntityComponentManager & ecm );
     void disconnectRequest();
 
     void sendPacket( const rofi::messages::Packet & packet );
-    void onPacket( const PacketPtr & packet );
+    void processPending( const gz::sim::EntityComponentManager & ecm );
 
+private:
+    std::optional< Orientation > canBeConnected( gz::sim::Entity roficom,
+                                                 const gz::sim::EntityComponentManager & ecm ) const;
+    void startCommunication( const std::string & otherRoficomName );
+    void disconnect();
+
+    void onPacket( const PacketPtr & packet );
     void onAttachEvent( const AttachInfoPtr & attachInfo );
     void onConnectEvent( const std::string & otherRoficomName, Orientation orientation );
     void onDisconnectEvent( const std::string & otherRoficomName );
 
-private:
-    std::optional< Orientation > canBeConnected( physics::ModelPtr roficom ) const;
-
-    void startCommunication( physics::ModelPtr otherRoficom );
-
-    void disconnect();
-
     std::optional< Orientation > _orientation;
 
     RoFICoMPlugin * _roficomPlugin = nullptr;
-    physics::ModelPtr _model;
+    gz::sim::Entity _model = gz::sim::kNullEntity;
+    std::string _scopedName;
+    std::string _worldScopedName;
 
-    transport::NodePtr _node;
-    transport::PublisherPtr _pubToOther;
-    transport::SubscriberPtr _subToOther;
+    rofi::gz::NodePtr _node;
+    rofi::gz::PublisherPtr _pubToOther;
+    rofi::gz::SubscriberPtr _subToOther;
 
-    transport::PublisherPtr _pubAttachEvent;
-    transport::SubscriberPtr _subAttachEvent;
+    rofi::gz::PublisherPtr _pubAttachEvent;
+    rofi::gz::SubscriberPtr _subAttachEvent;
 
     std::string _connectedToName;
-    physics::ModelPtr _connectedTo;
+
+    mutable std::mutex _mutex;
+    std::vector< rofi::messages::Packet > _pendingPackets;
+    std::vector< rofi::messages::ConnectorAttachInfo > _pendingAttachInfos;
 };
 
 } // namespace gazebo

@@ -28,7 +28,7 @@ public:
     using ConfigurationMsgPtr = boost::shared_ptr< const google::protobuf::StringValue >;
 
     explicit SimplesimMsgSubscriber( simplesim::SimplesimClient & client )
-            : _client( client ), _node( boost::make_shared< rofi::gz::Node >() )
+            : _client( client ), _node( std::make_shared< rofi::gz::Node >() )
     {
         assert( _node );
         _node->Init();
@@ -105,7 +105,7 @@ int main( int argc, char * argv[] )
 
     auto msgsClient = rofi::msgs::Client( cli.progName(), *clientArgs );
 
-    auto node = boost::make_shared< rofi::gz::Node >();
+    auto node = std::make_shared< rofi::gz::Node >();
     node->Init();
 
     auto settingsCmdPub = node->Advertise< simplesim::msgs::SettingsCmd >( "~/control" );

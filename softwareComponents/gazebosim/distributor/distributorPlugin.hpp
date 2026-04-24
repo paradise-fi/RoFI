@@ -1,16 +1,20 @@
 #pragma once
 
 #include <map>
+#include <mutex>
+#include <optional>
 #include <set>
 
-#include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
+#include <boost/shared_ptr.hpp>
+#include <gz/sim/System.hh>
+#include <gz/sim/World.hh>
+
+#include <rofi/gz_transport.hpp>
 
 #include "utils.hpp"
 
 #include <distributorReq.pb.h>
 #include <distributorResp.pb.h>
-
 
 class RofiDatabase
 {
@@ -20,102 +24,19 @@ public:
 
     void registerNewRofiId( RofiId rofiId, std::string topic )
     {
-        if ( _rofiTopics.find( rofiId ) != _rofiTopics.end() )
-        {
-            gzerr << "RoFI with this ID already exists (ID: " << rofiId << ", topic: " << topic
-                  << ")\n";
-            return;
-        }
-        assert( _lockedRofis.find( rofiId ) == _lockedRofis.end() );
-        assert( _freeRofis.find( rofiId ) == _freeRofis.end() );
-
-        _rofiTopics[ rofiId ] = std::move( topic );
+        _rofiTopics.emplace( rofiId, std::move( topic ) );
         _freeRofis.insert( rofiId );
     }
 
-    std::optional< RofiId > lockFreeRofi( SessionId sessionId )
-    {
-        auto it = _freeRofis.begin();
-        if ( it == _freeRofis.end() )
-        {
-            return {};
-        }
-        RofiId rofiId = *it;
-        _freeRofis.erase( it );
+    std::optional< RofiId > lockFreeRofi( SessionId sessionId );
+    bool tryLockRofi( RofiId rofiId, SessionId sessionId );
+    bool unlockRofi( RofiId rofiId, SessionId sessionId );
 
-        _lockedRofis[ rofiId ] = sessionId;
-        return rofiId;
-    }
-
-    bool tryLockRofi( RofiId rofiId, SessionId sessionId )
-    {
-        auto it = _freeRofis.find( rofiId );
-        if ( it == _freeRofis.end() )
-        {
-            return false;
-        }
-
-        assert( _lockedRofis.find( rofiId ) == _lockedRofis.end() );
-        _freeRofis.erase( it );
-        _lockedRofis[ rofiId ] = sessionId;
-        return true;
-    }
-
-    bool unlockRofi( RofiId rofiId, SessionId sessionId )
-    {
-        auto it = _lockedRofis.find( rofiId );
-        if ( it == _lockedRofis.end() )
-        {
-            return true;
-        }
-
-        if ( it->second != sessionId )
-        {
-            return false;
-        }
-
-        _lockedRofis.erase( it );
-        _freeRofis.insert( rofiId );
-        return true;
-    }
-
-    std::optional< SessionId > getSessionId( RofiId rofiId ) const
-    {
-        auto it = _lockedRofis.find( rofiId );
-        if ( it != _lockedRofis.end() )
-        {
-            return it->second;
-        }
-        return {};
-    }
-
-    std::string getTopic( RofiId rofiId ) const
-    {
-        auto it = _rofiTopics.find( rofiId );
-        if ( it != _rofiTopics.end() )
-        {
-            return it->second;
-        }
-        return {};
-    }
-
-    auto & getTopics() const
-    {
-        return _rofiTopics;
-    }
-
-    bool isRegistered( RofiId rofiId ) const
-    {
-        return _rofiTopics.find( rofiId ) != _rofiTopics.end();
-    }
-
-    bool isLocked( RofiId rofiId ) const
-    {
-        assert( _rofiTopics.find( rofiId ) != _rofiTopics.end() );
-        bool result = _freeRofis.find( rofiId ) == _freeRofis.end();
-        assert( result == ( _lockedRofis.find( rofiId ) != _lockedRofis.end() ) );
-        return result;
-    }
+    std::optional< SessionId > getSessionId( RofiId rofiId ) const;
+    std::string getTopic( RofiId rofiId ) const;
+    const auto & getTopics() const { return _rofiTopics; }
+    bool isRegistered( RofiId rofiId ) const { return _rofiTopics.contains( rofiId ); }
+    bool isLocked( RofiId rofiId ) const { return _freeRofis.find( rofiId ) == _freeRofis.end(); }
 
 private:
     std::map< RofiId, std::string > _rofiTopics;
@@ -123,29 +44,30 @@ private:
     std::set< RofiId > _freeRofis;
 };
 
-
 namespace gazebo
 {
-class RofiDistributorPlugin : public WorldPlugin
+class RofiDistributorPlugin : public gz::sim::System,
+                              public gz::sim::ISystemConfigure,
+                              public gz::sim::ISystemPostUpdate
 {
     using RequestPtr = boost::shared_ptr< const rofi::messages::DistributorReq >;
     using RofiId = RofiDatabase::RofiId;
     using SessionId = RofiDatabase::SessionId;
 
 public:
-    RofiDistributorPlugin() = default;
+    void Configure( const gz::sim::Entity & entity,
+                    const std::shared_ptr< const sdf::Element > & sdf,
+                    gz::sim::EntityComponentManager & ecm,
+                    gz::sim::EventManager & eventMgr ) override;
 
-    RofiDistributorPlugin( const RofiDistributorPlugin & ) = delete;
-    RofiDistributorPlugin & operator=( const RofiDistributorPlugin & ) = delete;
+    void PostUpdate( const gz::sim::UpdateInfo & info,
+                     const gz::sim::EntityComponentManager & ecm ) override;
 
-    void Load( physics::WorldPtr world, sdf::ElementPtr sdf ) override;
-
-    void loadRofis();
-    std::map< std::string, RofiId > getRofisFromSdf();
+    void loadRofis( const gz::sim::EntityComponentManager & ecm );
+    void refreshRofis( const gz::sim::EntityComponentManager & ecm );
+    std::map< std::string, RofiId > getRofisFromSdf() const;
 
     void onRequest( const RequestPtr & req );
-    void onAddEntity( std::string added );
-
     static sdf::ElementPtr createRofiElem( RofiId id, const std::string & name );
 
 private:
@@ -154,14 +76,13 @@ private:
     rofi::messages::DistributorResp onTryLockReq( RofiId rofiId, SessionId sessionId );
     rofi::messages::DistributorResp onUnlockReq( RofiId rofiId, SessionId sessionId );
 
-    physics::WorldPtr _world;
-    sdf::ElementPtr _sdf;
+    gz::sim::Entity _worldEntity = gz::sim::kNullEntity;
+    gz::sim::World _world;
+    std::shared_ptr< const sdf::Element > _sdf;
 
-    transport::NodePtr _node;
-    transport::PublisherPtr _pub;
-    transport::SubscriberPtr _sub;
-
-    event::ConnectionPtr _onAddEntityConnection;
+    rofi::gz::NodePtr _node;
+    rofi::gz::PublisherPtr _pub;
+    rofi::gz::SubscriberPtr _sub;
 
     RofiDatabase _rofis;
     int _nextRofiId = 1;

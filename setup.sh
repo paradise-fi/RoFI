@@ -62,6 +62,9 @@ setGazeboVariables() {
     backup GAZEBO_RESOURCE_PATH
     backup GAZEBO_PLUGIN_PATH
     backup GAZEBO_MODEL_PATH
+    backup GZ_SIM_RESOURCE_PATH
+    backup GZ_SIM_SYSTEM_PLUGIN_PATH
+    backup GZ_FILE_PATH
 
     if [ -z "$GAZEBO_NAME" ]; then
         GAZEBO_NAME="gazebo"
@@ -230,6 +233,13 @@ run() {
     export GAZEBO_PLUGIN_PATH="$ROFI_BUILD_DIR/desktop/lib:$GAZEBO_PLUGIN_PATH"
     export GAZEBO_RESOURCE_PATH="$ROFI_ROOT/data/gazebo:$GAZEBO_RESOURCE_PATH"
     export GAZEBO_RESOURCE_PATH="$ROFI_BUILD_DIR/desktop/data/gazebo:$GAZEBO_RESOURCE_PATH"
+
+    # Gazebo Sim / gz-sim uses the GZ_* environment variables instead of the
+    # classic GAZEBO_* ones. Keep both updated so the migrated simulator and
+    # any remaining legacy tooling can resolve the same assets.
+    export GZ_SIM_RESOURCE_PATH="$ROFI_ROOT/data/gazebo/models:$ROFI_ROOT/data/gazebo:$ROFI_BUILD_DIR/desktop/data/gazebo${GZ_SIM_RESOURCE_PATH:+:$GZ_SIM_RESOURCE_PATH}"
+    export GZ_SIM_SYSTEM_PLUGIN_PATH="$ROFI_BUILD_DIR/desktop/lib${GZ_SIM_SYSTEM_PLUGIN_PATH:+:$GZ_SIM_SYSTEM_PLUGIN_PATH}"
+    export GZ_FILE_PATH="$ROFI_ROOT/data/gazebo/models:$ROFI_ROOT/data/gazebo/worlds:$ROFI_ROOT/data/gazebo:$ROFI_BUILD_DIR/desktop/data/gazebo${GZ_FILE_PATH:+:$GZ_FILE_PATH}"
 
     export PATH="$(realpath releng/tools):$ORIGINAL_PATH"
     ## Add bin directories of the suites to path

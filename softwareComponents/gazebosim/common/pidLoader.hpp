@@ -4,8 +4,8 @@
 #include <limits>
 #include <type_traits>
 
-#include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
+#include <gz/common/Console.hh>
+#include <gz/math/PID.hh>
 
 #include "utils.hpp"
 
@@ -17,18 +17,18 @@ class PIDLoader
 public:
     struct PIDValues
     {
-        ignition::math::Vector3d pidGains;
+        gz::math::Vector3d pidGains;
         std::optional< double > initTarget = {};
 
-        common::PID getPID( double minCmd, double maxCmd ) const
+        gz::math::PID getPID( double minCmd, double maxCmd ) const
         {
-            return common::PID( pidGains.X(),
-                                pidGains.Y(),
-                                pidGains.Z(),
-                                maxCmd,
-                                minCmd,
-                                maxCmd,
-                                minCmd );
+            return gz::math::PID( pidGains.X(),
+                                  pidGains.Y(),
+                                  pidGains.Z(),
+                                  maxCmd,
+                                  minCmd,
+                                  maxCmd,
+                                  minCmd );
         }
     };
     struct ControllerValues
@@ -79,7 +79,7 @@ public:
         checkChildrenNames( pidSdf, { "pid_gains", "init_target" } );
 
         pidValues.pidGains =
-                getOnlyChild< true >( pidSdf, "pid_gains" )->Get< ignition::math::Vector3d >();
+                getOnlyChild< true >( pidSdf, "pid_gains" )->Get< gz::math::Vector3d >();
         auto initTarget = getOnlyChild< false >( pidSdf, "init_target" );
         if ( initTarget )
         {
@@ -208,15 +208,6 @@ public:
                 loadedValues.push_back( controllerValues );
                 loadedValues.back().jointName = joint->Get< std::string >();
             }
-        }
-
-        for ( auto elem : getChildren( pluginSdf, "controller" ) )
-        {
-            elem->RemoveFromParent();
-        }
-        for ( const auto & values : loadedValues )
-        {
-            insertElement( pluginSdf, createController( values ) );
         }
 
         return loadedValues;

@@ -1,211 +1,204 @@
 #include "distributorPlugin.hpp"
 
+#include <algorithm>
+
+#include <gz/plugin/Register.hh>
+#include <gz/sim/Model.hh>
+
 #include <rofiCmd.pb.h>
 #include <rofiResp.pb.h>
 
+std::optional< RofiDatabase::RofiId > RofiDatabase::lockFreeRofi( SessionId sessionId )
+{
+    auto it = _freeRofis.begin();
+    if ( it == _freeRofis.end() )
+    {
+        return {};
+    }
+    auto rofiId = *it;
+    _freeRofis.erase( it );
+    _lockedRofis[ rofiId ] = std::move( sessionId );
+    return rofiId;
+}
+
+bool RofiDatabase::tryLockRofi( RofiId rofiId, SessionId sessionId )
+{
+    auto it = _freeRofis.find( rofiId );
+    if ( it == _freeRofis.end() )
+    {
+        return false;
+    }
+    _freeRofis.erase( it );
+    _lockedRofis[ rofiId ] = std::move( sessionId );
+    return true;
+}
+
+bool RofiDatabase::unlockRofi( RofiId rofiId, SessionId sessionId )
+{
+    auto it = _lockedRofis.find( rofiId );
+    if ( it == _lockedRofis.end() )
+    {
+        return true;
+    }
+    if ( it->second != sessionId )
+    {
+        return false;
+    }
+    _lockedRofis.erase( it );
+    _freeRofis.insert( rofiId );
+    return true;
+}
+
+std::optional< RofiDatabase::SessionId > RofiDatabase::getSessionId( RofiId rofiId ) const
+{
+    auto it = _lockedRofis.find( rofiId );
+    return it == _lockedRofis.end() ? std::optional< SessionId >() : std::optional< SessionId >( it->second );
+}
+
+std::string RofiDatabase::getTopic( RofiId rofiId ) const
+{
+    auto it = _rofiTopics.find( rofiId );
+    return it == _rofiTopics.end() ? std::string() : it->second;
+}
 
 namespace gazebo
 {
-using RDP = RofiDistributorPlugin;
-
-void RDP::Load( physics::WorldPtr world, sdf::ElementPtr sdf )
+void RofiDistributorPlugin::Configure( const gz::sim::Entity & entity,
+                                       const std::shared_ptr< const sdf::Element > & sdf,
+                                       gz::sim::EntityComponentManager & ecm,
+                                       gz::sim::EventManager & )
 {
-    _world = std::move( world );
-    _sdf = std::move( sdf );
-    assert( _world );
-    assert( _sdf );
+    _worldEntity = entity;
+    _world = gz::sim::World( entity );
+    _sdf = sdf;
 
-    _node = boost::make_shared< transport::Node >();
-    if ( !_node )
-    {
-        gzerr << "Could not create new Node\n";
-        throw std::runtime_error( "Could not create new Node" );
-    }
-    _node->Init( _world->Name() + "/distributor" );
-    assert( _node->IsInitialized() );
-
-    loadRofis();
-
+    _node = std::make_shared< rofi::gz::Node >();
+    _node->Init( _world.Name( ecm ).value_or( "default" ) + "/distributor" );
     _pub = _node->Advertise< rofi::messages::DistributorResp >( "~/response" );
-    if ( !_pub )
-    {
-        gzerr << "Publisher could not be created\n";
-        throw std::runtime_error( "Publisher could not be created" );
-    }
+    _sub = _node->Subscribe( "~/request", &RofiDistributorPlugin::onRequest, this );
 
-    _sub = _node->Subscribe( "~/request", &RDP::onRequest, this );
-    if ( !_sub )
-    {
-        gzerr << "Subcriber could not be created\n";
-        throw std::runtime_error( "Subcriber could not be created" );
-    }
-
-    _onAddEntityConnection =
-            event::Events::ConnectAddEntity( [ this ]( auto added ) { onAddEntity( added ); } );
-
-    gzmsg << "RoFI distributor running\n";
+    loadRofis( ecm );
 }
 
-void RDP::loadRofis()
+void RofiDistributorPlugin::PostUpdate( const gz::sim::UpdateInfo &,
+                                        const gz::sim::EntityComponentManager & ecm )
 {
-    assert( _sdf );
+    refreshRofis( ecm );
+}
 
+void RofiDistributorPlugin::loadRofis( const gz::sim::EntityComponentManager & ecm )
+{
     auto config = getRofisFromSdf();
-
     std::set< RofiId > usedIds;
-    for ( auto & elem : config )
+    for ( const auto & [ _, id ] : config )
     {
-        auto inserted = usedIds.insert( elem.second ).second;
-        if ( !inserted )
-        {
-            gzerr << "Two rofis with same ID: " << elem.second << "\n";
-        }
+        usedIds.insert( id );
     }
 
-    std::lock_guard< std::mutex > lock( _rofisMutex );
-
-    auto getNextId = [ & ]( physics::ModelPtr model ) {
-        auto it = config.find( model->GetName() );
-        if ( it != config.end() )
-        {
-            auto result = it->second;
-            config.erase( it );
-            return result;
-        }
-
-        while ( usedIds.find( _nextRofiId ) != usedIds.end() )
-        {
-            _nextRofiId++;
-        }
-        return _nextRofiId++;
-    };
-
-    for ( auto & child : getChildren( _sdf, "rofi" ) )
+    std::lock_guard lock( _rofisMutex );
+    for ( auto model : _world.Models( ecm ) )
     {
-        child->RemoveFromParent();
-    }
-
-    for ( auto model : _world->Models() )
-    {
-        if ( !isRoFIModule( model ) )
+        if ( !isRoFIModule( model, ecm ) )
         {
             continue;
         }
 
-        RofiId id = getNextId( model );
-        auto topic = "/gazebo/" + getElemPath( model );
+        auto modelName = gz::sim::Model( model ).Name( ecm );
+        auto it = config.find( modelName );
+        RofiId id = 0;
+        if ( it != config.end() )
+        {
+            id = it->second;
+            config.erase( it );
+        }
+        else
+        {
+            while ( usedIds.contains( _nextRofiId ) || _rofis.isRegistered( _nextRofiId ) )
+            {
+                ++_nextRofiId;
+            }
+            id = _nextRofiId++;
+        }
 
-        insertElement( _sdf, createRofiElem( id, model->GetName() ) );
-        _rofis.registerNewRofiId( id, topic );
+        if ( _rofis.isRegistered( id ) )
+        {
+            continue;
+        }
 
-        gzmsg << "Loaded RoFI '" << model->GetName() << "' with ID: " << id << "\n";
-    }
-
-    for ( auto elem : config )
-    {
-        gzerr << "Could not find RoFI module '" + elem.first + "'\n";
+        _rofis.registerNewRofiId( id, "/gazebo/" + getElemPath( model, ecm ) );
     }
 }
 
-std::map< std::string, RDP::RofiId > RDP::getRofisFromSdf()
+void RofiDistributorPlugin::refreshRofis( const gz::sim::EntityComponentManager & ecm )
 {
-    assert( _sdf );
-
-    std::map< std::string, RofiId > config;
-
-    checkChildrenNames( _sdf, { "rofi" } );
-    for ( auto rofiSdf : getChildren( _sdf, "rofi" ) )
+    std::lock_guard lock( _rofisMutex );
+    for ( auto model : _world.Models( ecm ) )
     {
-        checkChildrenNames( rofiSdf, { "id", "name" } );
+        if ( !isRoFIModule( model, ecm ) )
+        {
+            continue;
+        }
+
+        const auto topic = "/gazebo/" + getElemPath( model, ecm );
+        const bool alreadyKnown = std::any_of(
+                _rofis.getTopics().begin(),
+                _rofis.getTopics().end(),
+                [ & ]( const auto & entry ) { return entry.second == topic; } );
+        if ( alreadyKnown )
+        {
+            continue;
+        }
+
+        while ( _rofis.isRegistered( _nextRofiId ) )
+        {
+            ++_nextRofiId;
+        }
+        _rofis.registerNewRofiId( _nextRofiId++, topic );
+    }
+}
+
+std::map< std::string, RofiDistributorPlugin::RofiId > RofiDistributorPlugin::getRofisFromSdf() const
+{
+    std::map< std::string, RofiId > config;
+    auto sdf = std::const_pointer_cast< sdf::Element >( _sdf );
+    checkChildrenNames( sdf, { "rofi" } );
+    for ( auto rofiSdf : getChildren( sdf, "rofi" ) )
+    {
         RofiId id = getOnlyChild< true >( rofiSdf, "id" )->Get< int >();
         std::string name = getOnlyChild< true >( rofiSdf, "name" )->Get< std::string >();
-
-        auto inserted = config.insert( { name, id } ).second;
-        if ( !inserted )
-        {
-            gzerr << "Two rofis with same name: '" << name << "'\n";
-        }
+        config.emplace( std::move( name ), id );
     }
-
     return config;
 }
 
-void RDP::onRequest( const RequestPtr & req )
+void RofiDistributorPlugin::onRequest( const RequestPtr & req )
 {
-    using rofi::messages::DistributorReq;
-
-    switch ( req->reqtype() )
-    {
-        case DistributorReq::NO_REQ:
-        {
-            break;
-        }
-        case DistributorReq::GET_INFO:
-        {
-            if ( req->rofiid() != 0 )
-            {
-                gzwarn << "Got GET_INFO distributor request with non-zero id\n";
-            }
-            _pub->Publish( onGetInfoReq(), true );
-            break;
-        }
-        case DistributorReq::LOCK_ONE:
-        {
-            if ( req->rofiid() != 0 )
-            {
-                gzwarn << "Got LOCK_ONE distributor request with non-zero id\n";
-            }
-
-            _pub->Publish( onLockOneReq( req->sessionid() ), true );
-            break;
-        }
-        case DistributorReq::TRY_LOCK:
-        {
-            _pub->Publish( onTryLockReq( req->rofiid(), req->sessionid() ), true );
-            break;
-        }
-        case DistributorReq::UNLOCK:
-        {
-            _pub->Publish( onUnlockReq( req->rofiid(), req->sessionid() ), true );
-            break;
-        }
-        default:
-        {
-            gzwarn << "Unknown distributor request type: " << req->reqtype() << "\n";
-            break;
-        }
-    }
-}
-
-void RDP::onAddEntity( std::string added )
-{
-    assert( _world );
-    assert( _sdf );
-
-    // World::ModelByName freezes the simulation
-    auto model = boost::dynamic_pointer_cast< physics::Model >( _world->EntityByName( added ) );
-    if ( !model || !isRoFIModule( model ) )
+    if ( !req )
     {
         return;
     }
 
-    std::lock_guard< std::mutex > lock( _rofisMutex );
-
-    while ( _rofis.isRegistered( _nextRofiId ) )
+    using rofi::messages::DistributorReq;
+    switch ( req->reqtype() )
     {
-        _nextRofiId++;
+        case DistributorReq::GET_INFO:
+            _pub->Publish( onGetInfoReq(), true );
+            break;
+        case DistributorReq::LOCK_ONE:
+            _pub->Publish( onLockOneReq( req->sessionid() ), true );
+            break;
+        case DistributorReq::TRY_LOCK:
+            _pub->Publish( onTryLockReq( req->rofiid(), req->sessionid() ), true );
+            break;
+        case DistributorReq::UNLOCK:
+            _pub->Publish( onUnlockReq( req->rofiid(), req->sessionid() ), true );
+            break;
+        default:
+            break;
     }
-    RofiId id = _nextRofiId++;
-
-    auto topic = "/gazebo/" + getElemPath( model );
-
-    insertElement( _sdf, createRofiElem( id, model->GetName() ) );
-    _rofis.registerNewRofiId( id, topic );
-
-    gzmsg << "Added new RoFI '" << model->GetName() << "' with ID: " << id << "\n";
 }
 
-sdf::ElementPtr RDP::createRofiElem( RofiId id, const std::string & name )
+sdf::ElementPtr RofiDistributorPlugin::createRofiElem( RofiId id, const std::string & name )
 {
     auto rofiElem = newElement( "rofi" );
     insertElement( rofiElem, newElemWithValue( "name", name ) );
@@ -213,92 +206,73 @@ sdf::ElementPtr RDP::createRofiElem( RofiId id, const std::string & name )
     return rofiElem;
 }
 
-
-rofi::messages::DistributorResp RDP::onGetInfoReq()
+rofi::messages::DistributorResp RofiDistributorPlugin::onGetInfoReq()
 {
     rofi::messages::DistributorResp resp;
     resp.set_resptype( rofi::messages::DistributorReq::GET_INFO );
 
-    std::lock_guard< std::mutex > lock( _rofisMutex );
-
-    for ( auto & [ id, topic ] : _rofis.getTopics() )
+    std::lock_guard lock( _rofisMutex );
+    for ( const auto & [ id, topic ] : _rofis.getTopics() )
     {
         auto & info = *resp.add_rofiinfos();
         info.set_rofiid( id );
         info.set_topic( topic );
         info.set_lock( _rofis.isLocked( id ) );
     }
-
     return resp;
 }
 
-rofi::messages::DistributorResp RDP::onLockOneReq( RDP::SessionId sessionId )
+rofi::messages::DistributorResp RofiDistributorPlugin::onLockOneReq( SessionId sessionId )
 {
     rofi::messages::DistributorResp resp;
     resp.set_resptype( rofi::messages::DistributorReq::LOCK_ONE );
     resp.set_sessionid( sessionId );
 
-    std::lock_guard< std::mutex > lock( _rofisMutex );
-
-    auto freeId = _rofis.lockFreeRofi( sessionId );
-    if ( !freeId )
+    std::lock_guard lock( _rofisMutex );
+    if ( auto freeId = _rofis.lockFreeRofi( sessionId ) )
     {
-        return resp;
+        auto & info = *resp.add_rofiinfos();
+        info.set_rofiid( *freeId );
+        info.set_topic( _rofis.getTopic( *freeId ) );
+        info.set_lock( true );
     }
-
-    auto & info = *resp.add_rofiinfos();
-    info.set_rofiid( *freeId );
-    info.set_topic( _rofis.getTopic( *freeId ) );
-    info.set_lock( true );
-
     return resp;
 }
 
-rofi::messages::DistributorResp RDP::onTryLockReq( RDP::RofiId rofiId, RDP::SessionId sessionId )
+rofi::messages::DistributorResp RofiDistributorPlugin::onTryLockReq( RofiId rofiId,
+                                                                     SessionId sessionId )
 {
     rofi::messages::DistributorResp resp;
     resp.set_resptype( rofi::messages::DistributorReq::TRY_LOCK );
     resp.set_sessionid( sessionId );
 
-    std::lock_guard< std::mutex > lock( _rofisMutex );
-
+    std::lock_guard lock( _rofisMutex );
     auto & info = *resp.add_rofiinfos();
     info.set_rofiid( rofiId );
     info.set_topic( _rofis.getTopic( rofiId ) );
     info.set_lock( _rofis.tryLockRofi( rofiId, sessionId ) );
-
     return resp;
 }
 
-rofi::messages::DistributorResp RDP::onUnlockReq( RDP::RofiId rofiId, RDP::SessionId sessionId )
+rofi::messages::DistributorResp RofiDistributorPlugin::onUnlockReq( RofiId rofiId,
+                                                                    SessionId sessionId )
 {
     rofi::messages::DistributorResp resp;
     resp.set_resptype( rofi::messages::DistributorReq::UNLOCK );
     resp.set_sessionid( sessionId );
 
-    std::lock_guard< std::mutex > lock( _rofisMutex );
-
+    std::lock_guard lock( _rofisMutex );
     auto & info = *resp.add_rofiinfos();
     info.set_rofiid( rofiId );
-
-    if ( !_rofis.isRegistered( rofiId ) )
-    {
-        gzwarn << "Got UNLOCK distributor request without id belonging to rofi\n";
-        return resp;
-    }
-
-    if ( !_rofis.isLocked( rofiId ) )
-    {
-        gzwarn << "Got UNLOCK distributor request without id locked\n";
-        return resp;
-    }
-
     info.set_topic( _rofis.getTopic( rofiId ) );
     info.set_lock( !_rofis.unlockRofi( rofiId, sessionId ) );
-
     return resp;
 }
 
-GZ_REGISTER_WORLD_PLUGIN( RofiDistributorPlugin )
-
 } // namespace gazebo
+
+GZ_ADD_PLUGIN( gazebo::RofiDistributorPlugin,
+               gz::sim::System,
+               gz::sim::ISystemConfigure,
+               gz::sim::ISystemPostUpdate )
+GZ_ADD_PLUGIN_ALIAS( gazebo::RofiDistributorPlugin, "rofi::sim::systems::RofiDistributorPlugin" )

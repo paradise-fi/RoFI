@@ -1,8 +1,6 @@
 #include <iostream>
 
-#include <gazebo/gazebo.hh>
-#include <gazebo/gazebo_client.hh>
-
+#include <rofi/gz_transport.hpp>
 #include <connectorAttachInfo.pb.h>
 
 
@@ -33,9 +31,7 @@ int main( int argc, char ** /* argv */ )
 
     using Info = rofi::messages::ConnectorAttachInfo;
 
-    gazebo::client::setup();
-
-    auto node = boost::make_shared< gazebo::transport::Node >();
+    auto node = std::make_shared< rofi::gz::Node >();
 
     std::string tmpString;
 

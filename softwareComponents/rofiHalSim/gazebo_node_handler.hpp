@@ -27,7 +27,7 @@ public:
     GazeboNodeHandler()
             : _node( [] {
                 GazeboClientHolder::run();
-                auto node = boost::make_shared< rofi::gz::Node >();
+                auto node = std::make_shared< rofi::gz::Node >();
                 node->Init();
                 return node;
             }() )

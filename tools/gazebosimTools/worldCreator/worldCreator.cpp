@@ -2,7 +2,11 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstdlib>
+#include <filesystem>
 #include <sstream>
+
+#include <gz/common/Util.hh>
 
 #include <legacy/configuration/IO.h>
 #include "pidLoader.hpp"
@@ -12,6 +16,83 @@ constexpr std::array< const char *, 2 > shoeNames = { "shoeA", "shoeB" };
 
 using namespace gazebo;
 using namespace rofi::configuration::matrices;
+
+#ifndef WORLD_FILE
+#define WORLD_FILE ""
+#endif
+
+#define STRINGIFY_IMPL( x ) #x
+#define STRINGIFY( x ) STRINGIFY_IMPL( x )
+
+namespace
+{
+std::string detectRofiRoot()
+{
+    if ( const char * rofiRoot = std::getenv( "ROFI_ROOT" ); rofiRoot && *rofiRoot )
+    {
+        return rofiRoot;
+    }
+
+    auto worldFile = std::filesystem::path( STRINGIFY( WORLD_FILE ) );
+    if ( !worldFile.empty() )
+    {
+        return worldFile.parent_path().parent_path().parent_path().parent_path().string();
+    }
+
+    return {};
+}
+
+void configureGazeboFilePaths()
+{
+    static const bool configured = [] {
+        const auto rofiRoot = detectRofiRoot();
+        if ( rofiRoot.empty() )
+        {
+            return true;
+        }
+
+        const auto dataPath = std::filesystem::path( rofiRoot ) / "data" / "gazebo";
+        const auto modelPath = dataPath / "models";
+        const auto worldPath = dataPath / "worlds";
+
+        if ( auto * systemPaths = gz::common::systemPaths() )
+        {
+            systemPaths->AddFilePaths( dataPath.string() + ":" + modelPath.string() + ":"
+                                       + worldPath.string() );
+        }
+
+        gz::common::addFindFileURICallback(
+                [ modelPath ]( const gz::common::URI & uri ) -> std::string {
+                    if ( uri.Scheme() != "model" )
+                    {
+                        return {};
+                    }
+
+                    auto relativePath = uri.Path().Str();
+                    while ( !relativePath.empty() && relativePath.front() == '/' )
+                    {
+                        relativePath.erase( relativePath.begin() );
+                    }
+
+                    auto candidate = modelPath / relativePath;
+                    if ( std::filesystem::exists( candidate ) )
+                    {
+                        return candidate.string();
+                    }
+
+                    candidate /= "model.sdf";
+                    if ( std::filesystem::exists( candidate ) )
+                    {
+                        return candidate.string();
+                    }
+
+                    return {};
+                } );
+        return true;
+    }();
+    (void)configured;
+}
+} // namespace
 
 
 std::optional< ConfigWithPose > ConfigWithPose::tryReadConfiguration( std::istream & input )
@@ -50,12 +131,12 @@ std::optional< ConfigWithPose > ConfigWithPose::tryReadConfiguration( std::istre
                 continue;
             }
 
-            ignition::math::Vector3d angles;
+            gz::math::Vector3d angles;
             lineStream >> config->pose.Pos() >> angles;
             if ( !lineStream.eof() )
                 lineStream >> std::ws;
 
-            config->pose.Rot() = ignition::math::Quaterniond( IGN_DTOR( angles ) );
+            config->pose.Rot() = gz::math::Quaterniond( GZ_DTOR( angles ) );
             if ( !lineStream || !lineStream.eof() )
             {
                 std::cerr << "Error while reading Configuration pose. Ignoring...\n";
@@ -107,9 +188,10 @@ std::optional< ConfigWithPose > ConfigWithPose::tryReadConfiguration( std::istre
 sdf::SDFPtr createWorld( const std::string & worldPath,
                          const std::vector< ConfigWithPose > & configs )
 {
-    using namespace ignition::math;
+    using namespace gz::math;
 
-    sdf::setFindCallback( []( auto & filename ) { return gazebo::common::find_file( filename ); } );
+    configureGazeboFilePaths();
+    sdf::setFindCallback( []( auto & filename ) { return gz::common::findFile( filename ); } );
 
     auto sdf = loadFromFile( worldPath );
     assert( sdf );
@@ -125,7 +207,7 @@ sdf::SDFPtr createWorld( const std::string & worldPath,
 
 void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & config )
 {
-    using namespace ignition::math;
+    using namespace gz::math;
 
     auto state = getOnlyChildOrCreate( world, "state" );
     setAttribute( state, "world_name", getAttribute< std::string >( world, "name" ) );
@@ -152,7 +234,11 @@ void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & conf
         auto & matrices = config.config.getMatrices().at( id );
         setModulePosition( moduleStateSdf, module, matrices, config.pose );
 
-        auto modulePluginSdf = getElemByName< true >( moduleSdf, "plugin", "rofiModulePlugin" );
+        auto modulePluginSdf = getRoFIModulePluginSdf( moduleSdf );
+        if ( !modulePluginSdf )
+        {
+            throw std::runtime_error( "Could not get module plugin" );
+        }
         setModulePIDPositionController( modulePluginSdf, module );
 
         addModuleToDistributor( distributorSdf, id );
@@ -174,8 +260,9 @@ void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & conf
 
             auto shoeStateSdf =
                     getElemByName< true >( moduleStateSdf, "link", shoeNames.at( shoeId ) );
-            auto modulePose = moveShoeToCenter( shoeId ) + matrixToPose( matrices.at( shoeId ) )
-                              + config.pose;
+            auto modulePose = composePose(
+                    composePose( moveShoeToCenter( shoeId ), matrixToPose( matrices.at( shoeId ) ) ),
+                    config.pose );
             insertElement( moduleStateSdf, createRoficomState( roficomSdf, extended, modulePose ) );
         }
         assert( i == 6 );
@@ -187,13 +274,14 @@ void addConfigurationToWorld( sdf::ElementPtr world, const ConfigWithPose & conf
 sdf::SDFPtr loadFromFile( const std::string & filename )
 {
     auto sdf = std::make_shared< sdf::SDF >();
+    configureGazeboFilePaths();
 
     if ( !sdf::init( sdf ) )
     {
         throw std::runtime_error( "Unable to initialize sdf" );
     }
 
-    auto fullPath = common::find_file( filename );
+    auto fullPath = gz::common::findFile( filename );
     if ( fullPath.empty() )
     {
         std::cerr << "Could not find file '" + filename + "'. Did you set path variables?\n";
@@ -228,9 +316,9 @@ void addModuleToDistributor( sdf::ElementPtr distributorSdf, ID rofiId )
 void setModulePosition( sdf::ElementPtr moduleStateSdf,
                         const Module & module,
                         const std::array< Matrix, 2 > & matrices,
-                        const ignition::math::Pose3d & beginPose )
+                        const gz::math::Pose3d & beginPose )
 {
-    using namespace ignition::math;
+    using namespace gz::math;
 
     using TwoPoses = std::array< Pose3d, 2 >;
     static_assert( A == 0 && B == 1 );
@@ -240,18 +328,19 @@ void setModulePosition( sdf::ElementPtr moduleStateSdf,
 
     TwoPoses matrixPoses = { matrixToPose( matrices[ A ] ), matrixToPose( matrices[ B ] ) };
 
-    TwoPoses shoePoses = { moveShoeToCenter( A ) + matrixPoses[ A ],
-                           moveShoeToCenter( B ) + matrixPoses[ B ] };
+    TwoPoses shoePoses = { composePose( moveShoeToCenter( A ), matrixPoses[ A ] ),
+                           composePose( moveShoeToCenter( B ), matrixPoses[ B ] ) };
 
-    TwoPoses bodyPoses = { moveShoeToCenter( A )
-                                   + Pose3d( {}, { IGN_DTOR( module.getJoint( Alpha ) ), 0, 0 } )
-                                   + matrixPoses[ A ],
-                           moveShoeToCenter( B )
-                                   + Pose3d( {}, { IGN_DTOR( module.getJoint( Beta ) ), 0, 0 } )
-                                   + matrixPoses[ B ] };
+    TwoPoses bodyPoses = {
+            composePose( composePose( moveShoeToCenter( A ),
+                                      Pose3d( {}, { GZ_DTOR( module.getJoint( Alpha ) ), 0, 0 } ) ),
+                         matrixPoses[ A ] ),
+            composePose( composePose( moveShoeToCenter( B ),
+                                      Pose3d( {}, { GZ_DTOR( module.getJoint( Beta ) ), 0, 0 } ) ),
+                         matrixPoses[ B ] ) };
 
-    auto gammaRotation = Pose3d( {}, { 0, IGN_DTOR( module.getJoint( Gamma ) ), 0 } );
-    if ( !equalPose( gammaRotation + bodyPoses[ A ], bodyPoses[ B ] ) )
+    auto gammaRotation = Pose3d( {}, { 0, GZ_DTOR( module.getJoint( Gamma ) ), 0 } );
+    if ( !equalPose( composePose( gammaRotation, bodyPoses[ A ] ), bodyPoses[ B ] ) )
     {
         throw std::runtime_error( "Error in computing the position of module bodies" );
     }
@@ -259,35 +348,43 @@ void setModulePosition( sdf::ElementPtr moduleStateSdf,
     TwoPoses origShoePoses = { Pose3d( -0.0265, -0.05, 0, 0, -0, 0 ),
                                Pose3d( -0.0265, 0.05, 0.0015, 0, -0, 0 ) };
 
-    setPose( moduleStateSdf, bodyPoses[ A ] + beginPose );
-    setPose( getElemByNameOrCreate( moduleStateSdf, "link", "bodyA" ), bodyPoses[ A ] + beginPose );
-    setPose( getElemByNameOrCreate( moduleStateSdf, "link", "bodyB" ), bodyPoses[ B ] + beginPose );
+    setPose( moduleStateSdf, composePose( bodyPoses[ A ], beginPose ) );
+    setPose( getElemByNameOrCreate( moduleStateSdf, "link", "bodyA" ),
+             composePose( bodyPoses[ A ], beginPose ) );
+    setPose( getElemByNameOrCreate( moduleStateSdf, "link", "bodyB" ),
+             composePose( bodyPoses[ B ], beginPose ) );
     setPose( getElemByNameOrCreate( moduleStateSdf, "link", "shoeA" ),
-             origShoePoses[ A ] + shoePoses[ A ] + beginPose );
+             composePose( composePose( origShoePoses[ A ], shoePoses[ A ] ), beginPose ) );
     setPose( getElemByNameOrCreate( moduleStateSdf, "link", "shoeB" ),
-             origShoePoses[ B ] + shoePoses[ B ] + beginPose );
+             composePose( composePose( origShoePoses[ B ], shoePoses[ B ] ), beginPose ) );
 }
 
 void setModulePIDPositionController( sdf::ElementPtr modulePluginSdf, const Module & module )
 {
-    PIDLoader::loadControllerValues( modulePluginSdf );
-
-    for ( auto controllerSdf : getChildren( modulePluginSdf, "controller" ) )
+    auto controllerValues = PIDLoader::loadControllerValues( modulePluginSdf );
+    for ( auto & controllerValue : controllerValues )
     {
-        auto jointName = getOnlyChild< true >( controllerSdf, "joint" )->Get< std::string >();
-        Joint jointIndex = [ &jointName ]() {
-            if ( jointName == "shoeAJoint" )
+        Joint jointIndex = [ &controllerValue ]() {
+            if ( controllerValue.jointName == "shoeAJoint" )
                 return Joint::Alpha;
-            if ( jointName == "shoeBJoint" )
+            if ( controllerValue.jointName == "shoeBJoint" )
                 return Joint::Beta;
-            if ( jointName == "bodyJoint" )
+            if ( controllerValue.jointName == "bodyJoint" )
                 return Joint::Gamma;
             throw std::runtime_error( "Unrecognized module joint in sdf" );
         }();
 
-        auto positionControllerSdf = getOnlyChild< true >( controllerSdf, "position" );
-        auto initTargetPosSdf = getOnlyChildOrCreate( positionControllerSdf, "init_target" );
-        setValue( initTargetPosSdf, IGN_DTOR( module.getJoint( jointIndex ) ) );
+        controllerValue.position.initTarget = GZ_DTOR( module.getJoint( jointIndex ) );
+    }
+
+    for ( auto controllerSdf : getChildren( modulePluginSdf, "controller" ) )
+    {
+        controllerSdf->RemoveFromParent();
+    }
+
+    for ( const auto & controllerValue : controllerValues )
+    {
+        insertElement( modulePluginSdf, PIDLoader::createController( controllerValue ) );
     }
 }
 
@@ -300,9 +397,9 @@ void setRoficomExtendedPlugin( sdf::ElementPtr pluginSdf, bool extended )
 
 sdf::ElementPtr createRoficomState( sdf::ElementPtr roficomSdf,
                                     bool extended,
-                                    const ignition::math::Pose3d & parentPose )
+                                    const gz::math::Pose3d & parentPose )
 {
-    using namespace ignition::math;
+    using namespace gz::math;
     using namespace gazebo;
 
     assert( roficomSdf );
@@ -312,20 +409,23 @@ sdf::ElementPtr createRoficomState( sdf::ElementPtr roficomSdf,
     setAttribute( roficomStateSdf, "name", getAttribute< std::string >( roficomSdf, "name" ) );
 
     auto poseSdf = getOnlyChild< false >( roficomSdf, "pose" );
-    auto roficomPose = ( poseSdf ? poseSdf->Get< Pose3d >() : Pose3d() ) + parentPose;
+    auto roficomPose =
+            composePose( poseSdf ? poseSdf->Get< Pose3d >() : Pose3d(), parentPose );
     setPose( roficomStateSdf, roficomPose );
 
 
     auto innerName = getRoFICoMInnerName( roficomSdf );
 
-    auto innerSdf = getElemByName< true >( roficomSdf, "link", innerName );
+    auto roficomModelSdf = getOnlyChild< true >( roficomSdf, "model" );
+    auto innerSdf = getElemByName< true >( roficomModelSdf, "link", innerName );
     auto innerPoseSdf = getOnlyChild< false >( innerSdf, "pose" );
-    Pose3d innerPose = ( innerPoseSdf ? innerPoseSdf->Get< Pose3d >() : Pose3d() ) + roficomPose;
+    Pose3d innerPose =
+            composePose( innerPoseSdf ? innerPoseSdf->Get< Pose3d >() : Pose3d(), roficomPose );
 
     auto innerStateSdf = getElemByNameOrCreate( roficomStateSdf, "link", innerName );
 
     auto pos = Vector3d( 0, 0, extended ? 7e-3 : 0 ); // TODO read from sdf
-    setPose( innerStateSdf, Pose3d( pos, {} ) + innerPose );
+    setPose( innerStateSdf, composePose( Pose3d( pos, {} ), innerPose ) );
 
     return roficomStateSdf;
 }
@@ -388,6 +488,26 @@ sdf::ElementPtr newRoFIUniversalModule( ID rofiId )
     auto modelSdf = getOnlyChild< true >( sdf->Root(), "model" );
     assert( isRoFIModule( modelSdf ) );
 
+    for ( auto connectorSdf : getChildren( modelSdf, "model" ) )
+    {
+        auto includeSdf = getOnlyChild< false >( connectorSdf, "include" );
+        if ( !includeSdf )
+        {
+            continue;
+        }
+
+        auto uriSdf = getOnlyChild< false >( includeSdf, "uri" );
+        if ( !uriSdf || uriSdf->Get< std::string >() != "model://roficom" )
+        {
+            continue;
+        }
+
+        auto roficomSdf = loadFromFile( "model://roficom/model.sdf" );
+        auto roficomModelSdf = getOnlyChild< true >( roficomSdf->Root(), "model" );
+        insertElement( connectorSdf, roficomModelSdf );
+        includeSdf->RemoveFromParent();
+    }
+
     setAttribute( modelSdf, "name", rofiName( rofiId ) );
 
     return modelSdf;
@@ -398,17 +518,18 @@ std::string getRoFICoMInnerName( sdf::ElementPtr roficomSdf )
     assert( roficomSdf );
     assert( isRoFICoM( roficomSdf ) );
 
+    auto roficomModelSdf = getOnlyChild< true >( roficomSdf, "model" );
     auto pluginSdf = getRoFICoMPluginSdf( roficomSdf );
     assert( pluginSdf );
 
     auto jointName = getOnlyChild< true >( pluginSdf, "joint" )->Get< std::string >();
-    auto jointSdf = getElemByName< true >( roficomSdf, "joint", jointName );
+    auto jointSdf = getElemByName< true >( roficomModelSdf, "joint", jointName );
     return getOnlyChild< true >( jointSdf, "child" )->Get< std::string >();
 }
 
-ignition::math::Pose3d matrixToPose( const Matrix & matrix )
+gz::math::Pose3d matrixToPose( const Matrix & matrix )
 {
-    using namespace ignition;
+    using namespace gz;
 
     assert( matrix.n_rows == 4 );
     assert( matrix.n_cols == 4 );

@@ -10,9 +10,9 @@
     </include>
 
     <!-- Distributor plugin -->
-    <plugin name='distributor' filename='libdistributorPlugin.so'/>
+    <plugin name='rofi::sim::systems::RofiDistributorPlugin' filename='distributorPlugin'/>
 
     <!-- Attacher plugin -->
-    <plugin name='attacher' filename='libattacherPlugin.so'/>
+    <plugin name='rofi::sim::systems::AttacherPlugin' filename='attacherPlugin'/>
   </world>
 </sdf>

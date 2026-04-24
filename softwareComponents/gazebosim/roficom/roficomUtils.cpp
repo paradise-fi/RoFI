@@ -3,78 +3,70 @@
 
 namespace gazebo
 {
-physics::LinkPtr getLinkByName( physics::ModelPtr roficom, const std::string & linkName )
+namespace
 {
-    assert( roficom );
-    assert( isRoFICoM( roficom ) );
-
-    auto linkPtr = roficom->GetLink( linkName );
-    if ( !linkPtr )
+bool nameMatches( const std::string & actual, const std::string & desired )
+{
+    if ( actual == desired )
     {
-        linkPtr = roficom->GetLink( "RoFICoM::" + linkName );
+        return true;
     }
-    if ( !linkPtr )
+    if ( actual.size() > desired.size() + 2
+         && actual.compare( actual.size() - desired.size(), desired.size(), desired ) == 0
+         && actual.compare( actual.size() - desired.size() - 2, 2, "::" ) == 0 )
     {
-        for ( auto link : roficom->GetLinks() )
-        {
-            auto name = link->GetName();
-            size_t nameSize = name.size();
-            size_t compareSize = linkName.size() + 2;
+        return true;
+    }
+    return false;
+}
+} // namespace
 
-            if ( nameSize < compareSize )
-            {
-                continue;
-            }
-            if ( name.compare( nameSize - compareSize, compareSize, "::" + name ) == 0 )
-            {
-                if ( linkPtr )
-                {
-                    gzwarn << "Found two " << linkName << " links: " << linkPtr->GetName() << ", "
-                           << link->GetName() << "\n";
-                    break;
-                }
-                linkPtr = std::move( link );
-            }
+std::optional< gz::sim::Entity > getLinkByName( gz::sim::Entity roficom,
+                                                const gz::sim::EntityComponentManager & ecm,
+                                                const std::string & linkName )
+{
+    assert( roficom != gz::sim::kNullEntity );
+    assert( isRoFICoM( roficom, ecm ) );
+
+    gz::sim::Model model( roficom );
+    if ( auto entity = model.LinkByName( ecm, linkName ); entity != gz::sim::kNullEntity )
+    {
+        return entity;
+    }
+
+    for ( auto linkEntity : model.Links( ecm ) )
+    {
+        gz::sim::Link link( linkEntity );
+        if ( auto name = link.Name( ecm ); name && nameMatches( *name, linkName ) )
+        {
+            return linkEntity;
         }
     }
-    return linkPtr;
+    return std::nullopt;
 }
 
-physics::JointPtr getJointByName( physics::ModelPtr roficom, const std::string & jointName )
+std::optional< gz::sim::Entity > getJointByName( gz::sim::Entity roficom,
+                                                 const gz::sim::EntityComponentManager & ecm,
+                                                 const std::string & jointName )
 {
-    assert( roficom );
-    assert( isRoFICoM( roficom ) );
+    assert( roficom != gz::sim::kNullEntity );
+    assert( isRoFICoM( roficom, ecm ) );
 
-    auto jointPtr = roficom->GetJoint( jointName );
-    if ( !jointPtr )
+    gz::sim::Model model( roficom );
+    if ( auto entity = model.JointByName( ecm, jointName ); entity != gz::sim::kNullEntity )
     {
-        jointPtr = roficom->GetJoint( "RoFICoM::" + jointName );
+        return entity;
     }
-    if ( !jointPtr )
-    {
-        for ( auto joint : roficom->GetJoints() )
-        {
-            auto name = joint->GetName();
-            size_t nameSize = name.size();
-            size_t compareSize = jointName.size() + 2;
 
-            if ( nameSize < compareSize )
-            {
-                continue;
-            }
-            if ( name.compare( nameSize - compareSize, compareSize, "::" + name ) == 0 )
-            {
-                if ( jointPtr )
-                {
-                    gzwarn << "Found two " << jointName << " joints: " << jointPtr->GetName()
-                           << ", " << joint->GetName() << "\n";
-                    break;
-                }
-                jointPtr = std::move( joint );
-            }
+    for ( auto jointEntity : model.Joints( ecm ) )
+    {
+        gz::sim::Joint joint( jointEntity );
+        if ( auto name = joint.Name( ecm ); name && nameMatches( *name, jointName ) )
+        {
+            return jointEntity;
         }
     }
-    return jointPtr;
+    return std::nullopt;
 }
 
 } // namespace gazebo

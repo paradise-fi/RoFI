@@ -1,30 +1,11 @@
 #include <cassert>
+#include <chrono>
 #include <string_view>
+#include <thread>
 
-#include <gazebo/gazebo_client.hh>
-#include <gazebo/transport/transport.hh>
-
+#include <rofi/gz_transport.hpp>
 #include <rofiCmd.pb.h>
 #include <rofiResp.pb.h>
-
-class GazeboClientHolder
-{
-public:
-    GazeboClientHolder()
-    {
-        std::cerr << "Starting gazebo client" << std::endl;
-        gazebo::client::setup();
-    }
-
-    GazeboClientHolder( const GazeboClientHolder & ) = delete;
-    GazeboClientHolder & operator=( const GazeboClientHolder & ) = delete;
-
-    ~GazeboClientHolder()
-    {
-        gazebo::client::shutdown();
-        std::cerr << "Ending gazebo client" << std::endl;
-    }
-};
 
 
 template < typename Message >
@@ -42,16 +23,15 @@ int main( int argc, char ** argv )
         return 1;
     }
 
-    auto clientHolder = GazeboClientHolder();
-
-    auto node = boost::make_shared< gazebo::transport::Node >();
+    auto node = std::make_shared< rofi::gz::Node >();
     node->Init();
-    auto sub = node->Subscribe( argv[ 1 ], printMessage< rofi::messages::RofiCmd > );
+    auto sub = node->Subscribe< rofi::messages::RofiCmd >(
+            argv[ 1 ], printMessage< rofi::messages::RofiCmd > );
     assert( sub );
     std::cout << "Listening on " << sub->GetTopic() << std::endl;
 
     while ( true )
     {
-        gazebo::common::Time::MSleep( 10 );
+        std::this_thread::sleep_for( std::chrono::milliseconds( 10 ) );
     }
 }

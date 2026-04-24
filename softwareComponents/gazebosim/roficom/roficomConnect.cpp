@@ -3,7 +3,7 @@
 #include <cassert>
 #include <cmath>
 
-#include <ignition/math/Angle.hh>
+#include <gz/math/Angle.hh>
 
 
 struct RoficomConnectConfig
@@ -11,17 +11,17 @@ struct RoficomConnectConfig
     static constexpr double maxDistance = 5e-3;       // [m]
     static constexpr double maxTilt = 0.1;            // [rad] ( 6 deg )
     static constexpr double maxShift = 4e-3;          // [m]
-    static constexpr double maxRotation = IGN_PI / 8; // [rad]
+    static constexpr double maxRotation = GZ_PI / 8; // [rad]
 
 
-    static_assert( 4 * 2 * maxRotation < 2 * IGN_PI );
+    static_assert( 4 * 2 * maxRotation < 2 * GZ_PI );
 };
 
 
 namespace detail
 {
-bool checkMaxAngle( const ignition::math::Vector3d & lhs,
-                    const ignition::math::Vector3d & rhs,
+bool checkMaxAngle( const gz::math::Vector3d & lhs,
+                    const gz::math::Vector3d & rhs,
                     double maxAngle )
 {
     auto cosAngle = lhs.Dot( rhs ) / ( lhs.Length() * rhs.Length() );
@@ -31,25 +31,25 @@ bool checkMaxAngle( const ignition::math::Vector3d & lhs,
 }
 
 
-bool checkCenterDistance( const ignition::math::Vector3d & lhs,
-                          const ignition::math::Vector3d & rhs )
+bool checkCenterDistance( const gz::math::Vector3d & lhs,
+                          const gz::math::Vector3d & rhs )
 {
     return lhs.Distance( rhs ) <= RoficomConnectConfig::maxDistance;
 }
 
-bool checkOneWayShift( const ignition::math::Pose3d & lhs, const ignition::math::Pose3d & rhs )
+bool checkOneWayShift( const gz::math::Pose3d & lhs, const gz::math::Pose3d & rhs )
 {
     auto secondPoint = rhs.Pos() + rhs.Rot().RotateVector( { 0, 0, 1 } );
-    auto distToLine = ignition::math::Vector3d( lhs.Pos() ).DistToLine( rhs.Pos(), secondPoint );
+    auto distToLine = gz::math::Vector3d( lhs.Pos() ).DistToLine( rhs.Pos(), secondPoint );
     return distToLine <= RoficomConnectConfig::maxShift;
 }
 
-bool checkShift( const ignition::math::Pose3d & lhs, const ignition::math::Pose3d & rhs )
+bool checkShift( const gz::math::Pose3d & lhs, const gz::math::Pose3d & rhs )
 {
     return checkOneWayShift( lhs, rhs ) && checkOneWayShift( rhs, lhs );
 }
 
-bool checkTilt( const ignition::math::Quaterniond & lhs, const ignition::math::Quaterniond & rhs )
+bool checkTilt( const gz::math::Quaterniond & lhs, const gz::math::Quaterniond & rhs )
 {
     auto left = lhs.RotateVector( { 0, 0, 1 } );
     auto right = rhs.RotateVector( { 0, 0, -1 } );
@@ -57,13 +57,13 @@ bool checkTilt( const ignition::math::Quaterniond & lhs, const ignition::math::Q
 }
 
 std::optional< rofi::messages::ConnectorState::Orientation > getMutualOrientation(
-        const ignition::math::Quaterniond & lhs,
-        const ignition::math::Quaterniond & rhs )
+        const gz::math::Quaterniond & lhs,
+        const gz::math::Quaterniond & rhs )
 {
-    using ignition::math::Quaterniond;
+    using gz::math::Quaterniond;
     for ( int i = 0; i < 4; i++ )
     {
-        auto leftVector = Quaterniond( 0, 0, i * ignition::math::Angle::HalfPi() )
+        auto leftVector = Quaterniond( 0, 0, i * gz::math::Angle::HalfPi() )
                                   .RotateVector( { 1, 0, 0 } );
         auto left = lhs.RotateVector( leftVector );
         auto right = rhs.RotateVector( { 1, 0, 0 } );
@@ -93,8 +93,8 @@ std::optional< rofi::messages::ConnectorState::Orientation > getMutualOrientatio
 
 
 std::optional< rofi::messages::ConnectorState::Orientation > canRoficomBeConnected(
-        const ignition::math::Pose3d & lhs,
-        const ignition::math::Pose3d & rhs )
+        const gz::math::Pose3d & lhs,
+        const gz::math::Pose3d & rhs )
 {
     if ( !detail::checkCenterDistance( lhs.Pos(), rhs.Pos() ) )
     {

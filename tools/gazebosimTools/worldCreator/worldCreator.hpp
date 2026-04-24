@@ -2,22 +2,29 @@
 #include <istream>
 #include <optional>
 
-#include <gazebo/gazebo.hh>
+#include <gz/math/Helpers.hh>
+#include <gz/math/Pose3.hh>
 #include <sdf/sdf.hh>
 
 #include <legacy/configuration/Configuration.h>
 #include "utils.hpp"
 
 
-inline bool equalPose( const ignition::math::Pose3d & lhs, const ignition::math::Pose3d & rhs )
+inline bool equalPose( const gz::math::Pose3d & lhs, const gz::math::Pose3d & rhs )
 {
     return lhs.Pos() == rhs.Pos() && ( lhs.Rot() == rhs.Rot() || lhs.Rot() == -rhs.Rot() );
+}
+
+inline gz::math::Pose3d composePose( const gz::math::Pose3d & localPose,
+                                     const gz::math::Pose3d & parentPose )
+{
+    return parentPose * localPose;
 }
 
 struct ConfigWithPose
 {
     Configuration config;
-    ignition::math::Pose3d pose;
+    gz::math::Pose3d pose;
 
     static std::optional< ConfigWithPose > tryReadConfiguration( std::istream & input );
 
@@ -57,12 +64,12 @@ void addModuleToDistributor( sdf::ElementPtr distributorSdf, ID rofiId );
 void setModulePosition( sdf::ElementPtr moduleStateSdf,
                         const Module & module,
                         const std::array< rofi::configuration::matrices::Matrix, 2 > & matrices,
-                        const ignition::math::Pose3d & beginPose );
+                        const gz::math::Pose3d & beginPose );
 void setModulePIDPositionController( sdf::ElementPtr modulePluginSdf, const Module & module );
 void setRoficomExtendedPlugin( sdf::ElementPtr pluginSdf, bool extended );
 sdf::ElementPtr createRoficomState( sdf::ElementPtr roficomSdf,
                                     bool extended,
-                                    const ignition::math::Pose3d & parentPose );
+                                    const gz::math::Pose3d & parentPose );
 void setAttached( sdf::ElementPtr worldSdf, const Configuration & config );
 
 sdf::ElementPtr_V getModules( sdf::ElementPtr worldSdf );
@@ -120,9 +127,9 @@ inline sdf::ElementPtr getElemByNameOrCreate( sdf::ElementPtr sdf,
     return elem;
 }
 
-ignition::math::Pose3d matrixToPose( const rofi::configuration::matrices::Matrix & matrix );
+gz::math::Pose3d matrixToPose( const rofi::configuration::matrices::Matrix & matrix );
 
-inline void setPose( sdf::ElementPtr elem, const ignition::math::Pose3d & pose )
+inline void setPose( sdf::ElementPtr elem, const gz::math::Pose3d & pose )
 {
     using namespace gazebo;
 
@@ -130,9 +137,9 @@ inline void setPose( sdf::ElementPtr elem, const ignition::math::Pose3d & pose )
     setValue( getOnlyChildOrCreate( elem, "pose" ), pose );
 }
 
-inline ignition::math::Pose3d moveShoeToCenter( ShoeId shoeId )
+inline gz::math::Pose3d moveShoeToCenter( ShoeId shoeId )
 {
-    using namespace ignition::math;
+    using namespace gz::math;
 
     if ( shoeId == A )
     {

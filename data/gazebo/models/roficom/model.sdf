@@ -104,7 +104,7 @@
                 <use_parent_model_frame>1</use_parent_model_frame>
             </axis>
         </joint>
-        <plugin name='roficomPlugin' filename='libroficomPlugin.so'>
+        <plugin name='rofi::sim::systems::RoFICoMPlugin' filename='roficomPlugin'>
             <joint>extendJoint</joint>
             <extend>false</extend>
         </plugin>

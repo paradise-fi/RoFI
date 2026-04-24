@@ -141,6 +141,7 @@ if (${BUILD_GAZEBO})
 endif()
 
 if (${BUILD_GZ_SIMULATOR})
+  find_package(gz-plugin 4 REQUIRED COMPONENTS register)
   find_package(gz-sim 10 REQUIRED)
 endif()
 

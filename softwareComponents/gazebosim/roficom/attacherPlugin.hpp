@@ -1,15 +1,20 @@
 #pragma once
 
-#include <iostream>
 #include <map>
+#include <mutex>
 #include <optional>
 #include <utility>
 #include <variant>
+#include <vector>
 
-#include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
-#include <gazebo/transport/transport.hh>
-#include <sdf/sdf.hh>
+#include <boost/shared_ptr.hpp>
+#include <gz/math/Quaternion.hh>
+#include <gz/sim/System.hh>
+
+#include <rofi/gz_transport.hpp>
+
+#include "roficomConnect.hpp"
+#include "roficomUtils.hpp"
 
 #include <connectorAttachInfo.pb.h>
 
@@ -17,76 +22,66 @@ namespace gazebo
 {
 std::pair< std::string, std::string > sortNames( std::pair< std::string, std::string > names );
 rofi::messages::ConnectorState::Orientation readOrientation( const std::string & str );
-ignition::math::Quaterniond rotation( rofi::messages::ConnectorState::Orientation orientation );
+gz::math::Quaterniond rotation( rofi::messages::ConnectorState::Orientation orientation );
 
-class AttacherPlugin : public WorldPlugin
+class AttacherPlugin : public gz::sim::System,
+                       public gz::sim::ISystemConfigure,
+                       public gz::sim::ISystemPreUpdate
 {
 public:
     using ConnectorAttachInfoPtr = boost::shared_ptr< const rofi::messages::ConnectorAttachInfo >;
     using Orientation = rofi::messages::ConnectorState::Orientation;
     using StringPair = std::pair< std::string, std::string >;
-    using LinkPair = std::pair< physics::LinkPtr, physics::LinkPtr >;
 
-    static constexpr double distancePrecision = 2e-3; // [m]
-    static constexpr double connectionForce = 4;      // [N]
+    void Configure( const gz::sim::Entity & entity,
+                    const std::shared_ptr< const sdf::Element > & sdf,
+                    gz::sim::EntityComponentManager & ecm,
+                    gz::sim::EventManager & eventMgr ) override;
 
-
-    AttacherPlugin() = default;
-
-    AttacherPlugin( const AttacherPlugin & ) = delete;
-    AttacherPlugin & operator=( const AttacherPlugin & ) = delete;
-
-    void Load( physics::WorldPtr world, sdf::ElementPtr sdf ) override;
+    void PreUpdate( const gz::sim::UpdateInfo & info,
+                    gz::sim::EntityComponentManager & ecm ) override;
 
     void loadConnectionsFromSdf();
-    void addConnectionToSdf( StringPair modelNames, std::optional< Orientation > orientation );
-    void removeConnectionFromSdf( StringPair modelNames );
+    bool attach( StringPair modelNames,
+                 std::optional< Orientation > orientation,
+                 gz::sim::EntityComponentManager & ecm );
+    std::optional< Orientation > detach( StringPair modelNames, gz::sim::EntityComponentManager & ecm );
 
-    bool attach( StringPair modelNames, std::optional< Orientation > orientation );
-    std::optional< Orientation > detach( StringPair modelNames );
-
-    void sendAttachInfo( std::string modelName1,
-                         std::string modelName2,
+    void sendAttachInfo( const std::string & modelName1,
+                         const std::string & modelName2,
                          bool attach,
                          Orientation orientation );
-
     void attach_event_callback( const ConnectorAttachInfoPtr & msg );
 
-    void onPhysicsUpdate();
-
-    static bool applyAttractForce( LinkPair links, Orientation orientation );
-    static physics::JointPtr createFixedJoint( physics::PhysicsEnginePtr physics, LinkPair links );
+    static gz::sim::Entity createFixedJoint( gz::sim::Entity parentLink,
+                                             gz::sim::Entity childLink,
+                                             const std::string & name,
+                                             gz::sim::EntityComponentManager & ecm );
 
 private:
     struct ConnectedInfo
     {
         Orientation orientation;
-        std::variant< LinkPair, physics::JointPtr > info;
-
-        ConnectedInfo( Orientation orientation, std::variant< LinkPair, physics::JointPtr > info )
-                : orientation( orientation )
-                , info( info )
-        {
-        }
+        gz::sim::Entity jointEntity = gz::sim::kNullEntity;
     };
 
-    void sendAttachInfoToOne( std::string roficomName,
-                              std::string connectedToName,
+    void sendAttachInfoToOne( const std::string & roficomName,
+                              const std::string & connectedToName,
                               bool attach,
                               Orientation orientation );
 
+    gz::sim::Entity _worldEntity = gz::sim::kNullEntity;
+    std::string _worldName;
+    std::shared_ptr< const sdf::Element > _sdf;
 
-    event::ConnectionPtr _onUpdate;
-
-    transport::NodePtr _node;
-    transport::SubscriberPtr _subAttachEvent;
+    rofi::gz::NodePtr _node;
+    rofi::gz::SubscriberPtr _subAttachEvent;
 
     std::map< StringPair, ConnectedInfo > _connected;
     std::mutex _connectedMutex;
 
-    physics::PhysicsEnginePtr _physics;
-    physics::WorldPtr _world;
-    sdf::ElementPtr _sdf;
+    std::mutex _queueMutex;
+    std::vector< rofi::messages::ConnectorAttachInfo > _pendingAttachRequests;
 };
 
 } // namespace gazebo

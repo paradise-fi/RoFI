@@ -2,18 +2,18 @@
 
 #define CATCH_CONFIG_FALLBACK_STRINGIFIER fallback_stringifier
 #include <catch2/catch.hpp>
-#include <ignition/math/Angle.hh>
+#include <gz/math/Angle.hh>
 
 #include "roficomConnect.hpp"
 
 
 using ConnectorState = rofi::messages::ConnectorState;
-using namespace ignition::math;
+using namespace gz::math;
 
-using detail::checkCenterDistance;
-using detail::checkShift;
-using detail::checkTilt;
-using detail::getMutualOrientation;
+using ::detail::checkCenterDistance;
+using ::detail::checkShift;
+using ::detail::checkTilt;
+using ::detail::getMutualOrientation;
 
 
 template < typename Function >
@@ -38,8 +38,8 @@ void forAllOrientations( Function function, const Pose3d & lhs, const Pose3d & r
         CHECK( lhs == rhs );                       \
     } while ( false )
 
-void checkMutualOrientationImpl( const ignition::math::Quaterniond & lhs,
-                                 const ignition::math::Quaterniond & rhs,
+void checkMutualOrientationImpl( const gz::math::Quaterniond & lhs,
+                                 const gz::math::Quaterniond & rhs,
                                  std::optional< ConnectorState::Orientation > desiredOrientation )
 {
     INFO( "lhs rotation: " << lhs );

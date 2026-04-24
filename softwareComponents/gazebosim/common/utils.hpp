@@ -1,14 +1,23 @@
 #pragma once
 
 #include <algorithm>
+#include <cassert>
+#include <cmath>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
 
-#include <gazebo/common/Events.hh>
-#include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
-
+#include <gz/common/Console.hh>
+#include <gz/sim/EntityComponentManager.hh>
+#include <gz/sim/Types.hh>
+#include <gz/sim/Util.hh>
+#include <gz/sim/components/Model.hh>
+#include <gz/sim/components/Name.hh>
+#include <gz/sim/components/World.hh>
+#include <sdf/Element.hh>
+#include <sdf/Model.hh>
+#include <sdf/World.hh>
 
 namespace gazebo
 {
@@ -39,7 +48,63 @@ inline bool equal( double first, double second, double precision )
     return std::abs( first - second ) <= precision;
 }
 
-inline std::string getElemPath( gazebo::physics::BasePtr elem,
+inline std::string normalizePluginFilename( std::string filename )
+{
+    if ( filename.ends_with( ".so" ) )
+    {
+        filename.resize( filename.size() - 3 );
+    }
+    if ( filename.starts_with( "lib" ) )
+    {
+        filename.erase( 0, 3 );
+    }
+    return filename;
+}
+
+inline std::string getElemPath( gz::sim::Entity elem,
+                                const gz::sim::EntityComponentManager & ecm,
+                                const std::string & delim = "/",
+                                bool prependWorldName = true )
+{
+    assert( elem != gz::sim::kNullEntity );
+
+    std::vector< std::string > names;
+    auto current = elem;
+    while ( current != gz::sim::kNullEntity )
+    {
+        const auto * name = ecm.Component< gz::sim::components::Name >( current );
+        if ( !name )
+        {
+            break;
+        }
+
+        const auto isWorld = ecm.Component< gz::sim::components::World >( current ) != nullptr;
+        if ( isWorld && !prependWorldName )
+        {
+            break;
+        }
+
+        names.push_back( name->Data() );
+
+        if ( isWorld )
+        {
+            break;
+        }
+        current = ecm.ParentEntity( current );
+    }
+
+    assert( !names.empty() );
+    std::reverse( names.begin(), names.end() );
+
+    std::string elemPath = names.front();
+    for ( size_t i = 1; i < names.size(); ++i )
+    {
+        elemPath += delim + names[ i ];
+    }
+    return elemPath;
+}
+
+inline std::string getElemPath( sdf::ElementPtr elem,
                                 const std::string & delim = "/",
                                 bool prependWorldName = true )
 {
@@ -49,11 +114,15 @@ inline std::string getElemPath( gazebo::physics::BasePtr elem,
 
     while ( elem )
     {
-        if ( !prependWorldName && !elem->GetParent() )
+        if ( !prependWorldName && elem->GetName() == "world" )
         {
             break;
         }
-        names.push_back( elem->GetName() );
+        names.push_back( elem->Get< std::string >( "name", "" ).first );
+        if ( elem->GetName() == "world" )
+        {
+            break;
+        }
         elem = elem->GetParent();
     }
 
@@ -68,6 +137,29 @@ inline std::string getElemPath( gazebo::physics::BasePtr elem,
     return elemPath;
 }
 
+inline std::string GetScopedName( gz::sim::Entity elem,
+                                  const gz::sim::EntityComponentManager & ecm,
+                                  bool prependWorldName = true )
+{
+    return getElemPath( elem, ecm, "::", prependWorldName );
+}
+
+inline std::string GetScopedName( sdf::ElementPtr elem, bool prependWorldName = false )
+{
+    return getElemPath( elem, "::", prependWorldName );
+}
+
+inline std::string scopedNameToPath( std::string scopedName )
+{
+    size_t start = 0;
+    while ( ( start = scopedName.find( "::", start ) ) != std::string::npos )
+    {
+        scopedName.replace( start, 2, "/" );
+        ++start;
+    }
+    return scopedName;
+}
+
 inline sdf::ElementPtr getPluginSdf( sdf::ElementPtr modelSdf, const std::string & pluginName )
 {
     assert( modelSdf );
@@ -77,6 +169,7 @@ inline sdf::ElementPtr getPluginSdf( sdf::ElementPtr modelSdf, const std::string
         return {};
     }
 
+    const auto normalizedName = normalizePluginFilename( pluginName );
     for ( auto child = modelSdf->GetElement( "plugin" ); child;
           child = child->GetNextElement( "plugin" ) )
     {
@@ -86,12 +179,22 @@ inline sdf::ElementPtr getPluginSdf( sdf::ElementPtr modelSdf, const std::string
         }
 
         auto value = child->Get< std::string >( "filename", "" );
-        if ( value.second && value.first == pluginName )
+        if ( value.second && normalizePluginFilename( value.first ) == normalizedName )
         {
             return child;
         }
     }
     return {};
+}
+
+inline sdf::ElementPtr getPluginSdf( const sdf::Model & modelSdf, const std::string & pluginName )
+{
+    return modelSdf.Element() ? getPluginSdf( modelSdf.Element(), pluginName ) : sdf::ElementPtr();
+}
+
+inline sdf::ElementPtr getPluginSdf( const sdf::World & worldSdf, const std::string & pluginName )
+{
+    return worldSdf.Element() ? getPluginSdf( worldSdf.Element(), pluginName ) : sdf::ElementPtr();
 }
 
 inline void insertElement( sdf::ElementPtr parent, sdf::ElementPtr child )
@@ -184,44 +287,6 @@ T getAttribute( sdf::ElementPtr elem, const std::string & key, const T & default
     return value;
 }
 
-inline std::string getElemPath( sdf::ElementPtr elem,
-                                const std::string & delim = "/",
-                                bool prependWorldName = true )
-{
-    assert( elem );
-
-    std::vector< std::string > names;
-
-    while ( elem )
-    {
-        if ( !prependWorldName && elem->GetName() == "world" )
-        {
-            break;
-        }
-        names.push_back( getAttribute< std::string >( elem, "name" ) );
-        if ( elem->GetName() == "world" )
-        {
-            break;
-        }
-        elem = elem->GetParent();
-    }
-
-    assert( !names.empty() );
-    auto it = names.rbegin();
-    std::string elemPath = *it++;
-    while ( it != names.rend() )
-    {
-        elemPath += delim + *it++;
-    }
-
-    return elemPath;
-}
-
-inline std::string GetScopedName( sdf::ElementPtr elem, bool prependWorldName = false )
-{
-    return getElemPath( elem, "::", prependWorldName );
-}
-
 inline sdf::ElementPtr_V getChildren( sdf::ElementPtr sdf, const std::string & name )
 {
     assert( sdf );
@@ -296,22 +361,60 @@ inline void checkChildrenNames( sdf::ElementPtr sdf, const std::vector< std::str
 
 inline sdf::ElementPtr getRoFICoMPluginSdf( sdf::ElementPtr modelSdf )
 {
-    return getPluginSdf( modelSdf, "libroficomPlugin.so" );
+    if ( !modelSdf )
+    {
+        return {};
+    }
+
+    if ( auto pluginSdf = getPluginSdf( modelSdf, "roficomPlugin" ) )
+    {
+        return pluginSdf;
+    }
+
+    for ( auto childModelSdf : getChildren( modelSdf, "model" ) )
+    {
+        if ( auto pluginSdf = getRoFICoMPluginSdf( childModelSdf ) )
+        {
+            return pluginSdf;
+        }
+    }
+
+    return {};
+}
+
+inline sdf::ElementPtr getRoFICoMPluginSdf( const sdf::Model & modelSdf )
+{
+    return getPluginSdf( modelSdf, "roficomPlugin" );
 }
 
 inline sdf::ElementPtr getRoFIModulePluginSdf( sdf::ElementPtr modelSdf )
 {
-    return getPluginSdf( modelSdf, "librofiModulePlugin.so" );
+    return getPluginSdf( modelSdf, "rofiModulePlugin" );
+}
+
+inline sdf::ElementPtr getRoFIModulePluginSdf( const sdf::Model & modelSdf )
+{
+    return getPluginSdf( modelSdf, "rofiModulePlugin" );
 }
 
 inline sdf::ElementPtr getAttacherPluginSdf( sdf::ElementPtr worldSdf )
 {
-    return getPluginSdf( worldSdf, "libattacherPlugin.so" );
+    return getPluginSdf( worldSdf, "attacherPlugin" );
+}
+
+inline sdf::ElementPtr getAttacherPluginSdf( const sdf::World & worldSdf )
+{
+    return getPluginSdf( worldSdf, "attacherPlugin" );
 }
 
 inline sdf::ElementPtr getDistributorPluginSdf( sdf::ElementPtr worldSdf )
 {
-    return getPluginSdf( worldSdf, "libdistributorPlugin.so" );
+    return getPluginSdf( worldSdf, "distributorPlugin" );
+}
+
+inline sdf::ElementPtr getDistributorPluginSdf( const sdf::World & worldSdf )
+{
+    return getPluginSdf( worldSdf, "distributorPlugin" );
 }
 
 inline bool isRoFIModule( sdf::ElementPtr modelSdf )
@@ -319,9 +422,9 @@ inline bool isRoFIModule( sdf::ElementPtr modelSdf )
     return modelSdf && getRoFIModulePluginSdf( modelSdf ) != nullptr;
 }
 
-inline bool isRoFIModule( physics::ModelPtr model )
+inline bool isRoFIModule( const sdf::Model & modelSdf )
 {
-    return model && isRoFIModule( model->GetSDF() );
+    return getRoFIModulePluginSdf( modelSdf ) != nullptr;
 }
 
 inline bool isRoFICoM( sdf::ElementPtr modelSdf )
@@ -329,14 +432,42 @@ inline bool isRoFICoM( sdf::ElementPtr modelSdf )
     return modelSdf && getRoFICoMPluginSdf( modelSdf ) != nullptr;
 }
 
-inline bool isRoFICoM( physics::ModelPtr model )
+inline bool isRoFICoM( const sdf::Model & modelSdf )
 {
-    return model && isRoFICoM( model->GetSDF() );
+    return getRoFICoMPluginSdf( modelSdf ) != nullptr;
 }
 
-inline bool hasAttacherPlugin( physics::WorldPtr world )
+inline bool isRoFIModule( gz::sim::Entity model, const gz::sim::EntityComponentManager & ecm )
 {
-    return world && getAttacherPluginSdf( world->SDF() ) != nullptr;
+    const auto * modelSdf = ecm.Component< gz::sim::components::ModelSdf >( model );
+    return modelSdf && isRoFIModule( modelSdf->Data() );
+}
+
+inline bool isRoFICoM( gz::sim::Entity model, const gz::sim::EntityComponentManager & ecm )
+{
+    const auto * modelSdf = ecm.Component< gz::sim::components::ModelSdf >( model );
+    return modelSdf && isRoFICoM( modelSdf->Data() );
+}
+
+inline bool hasAttacherPlugin( gz::sim::Entity world, const gz::sim::EntityComponentManager & ecm )
+{
+    const auto * worldSdf = ecm.Component< gz::sim::components::WorldSdf >( world );
+    return worldSdf && getAttacherPluginSdf( worldSdf->Data() ) != nullptr;
+}
+
+inline std::optional< gz::sim::Entity > findModelEntityByScopedName(
+        const std::string & scopedName,
+        const gz::sim::EntityComponentManager & ecm,
+        gz::sim::Entity relativeTo = gz::sim::kNullEntity )
+{
+    for ( auto entity : gz::sim::entitiesFromScopedName( scopedName, ecm, relativeTo, "::" ) )
+    {
+        if ( ecm.Component< gz::sim::components::Model >( entity ) != nullptr )
+        {
+            return entity;
+        }
+    }
+    return std::nullopt;
 }
 
 } // namespace gazebo

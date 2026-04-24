@@ -334,7 +334,7 @@
             <parent>shoeB</parent>
         </joint>
 
-        <plugin name='rofiModulePlugin' filename='librofiModulePlugin.so'>
+        <plugin name='rofi::sim::systems::RoFIModulePlugin' filename='rofiModulePlugin'>
             <controller>
                 <joint>shoeAJoint</joint>
                 <joint>shoeBJoint</joint>

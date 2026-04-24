@@ -1,206 +1,136 @@
 #include "rofiModulePlugin.hpp"
 
-#include <cassert>
-#include <cmath>
-#include <functional>
+#include <algorithm>
 
+#include <gz/plugin/Register.hh>
 
 namespace gazebo
 {
-using RMP = RoFIModulePlugin;
-
-void RMP::Load( physics::ModelPtr model, sdf::ElementPtr sdf )
+void RoFIModulePlugin::Configure( const gz::sim::Entity & entity,
+                                  const std::shared_ptr< const sdf::Element > & sdf,
+                                  gz::sim::EntityComponentManager & ecm,
+                                  gz::sim::EventManager & )
 {
-    _model = std::move( model );
-    _sdf = std::move( sdf );
-    assert( _model );
-    assert( _sdf );
+    _entity = entity;
+    _model = gz::sim::Model( entity );
+    _sdf = sdf;
 
-    gzmsg << "The UM plugin is attached to model [" << _model->GetScopedName() << "]\n";
-
-    initCommunication();
-
-    findAndInitJoints();
-    findAndInitConnectors();
-
-    onUpdateConnection =
-            event::Events::ConnectWorldUpdateBegin( std::bind( &RMP::onUpdate, this ) );
-
-    gzmsg << "Number of joints is " << joints.size() << "\n";
-    gzmsg << "Number of connectors is " << connectors.size() << "\n";
-
+    initCommunication( ecm );
+    findAndInitJoints( ecm );
+    findAndInitConnectors( ecm );
     startListening();
-    gzmsg << "UM plugin ready (" << _model->GetScopedName() << ")\n";
 }
 
-void RMP::initCommunication()
+void RoFIModulePlugin::PreUpdate( const gz::sim::UpdateInfo & info,
+                                  gz::sim::EntityComponentManager & ecm )
 {
-    if ( !_model )
+    std::vector< rofi::messages::RofiCmd > pendingCommands;
+    std::vector< rofi::messages::ConnectorResp > pendingConnectorResponses;
     {
-        gzerr << "Model has to be set before initializing communication\n";
-        throw std::runtime_error( "Model has to be set before initializing communication" );
-        ;
+        std::lock_guard lock( _queueMutex );
+        pendingCommands.swap( _pendingCommands );
+        pendingConnectorResponses.swap( _pendingConnectorResponses );
     }
 
-    if ( _node )
+    for ( const auto & cmd : pendingCommands )
     {
-        _node->Fini();
+        handleRofiCmd( cmd, info, ecm );
     }
 
-    _node = boost::make_shared< transport::Node >();
-    if ( !_node )
+    for ( const auto & response : pendingConnectorResponses )
     {
-        gzerr << "Could not create new Node\n";
-        throw std::runtime_error( "Could not create new Node" );
-    }
-    _node->Init( getElemPath( _model ) );
-
-    _pub = _node->Advertise< rofi::messages::RofiResp >( "~/response" );
-    if ( !_pub )
-    {
-        gzerr << "Publisher could not be created\n";
-        throw std::runtime_error( "Publisher could not be created" );
-    }
-}
-
-void RMP::startListening()
-{
-    if ( !_node || !_node->IsInitialized() )
-    {
-        gzerr << "Init communication before starting to listen\n";
-        throw std::runtime_error( "Init communication before starting to listen" );
+        _pub->Publish( getConnectorRofiResp( response ) );
     }
 
-    _sub = _node->Subscribe( "~/control", &RMP::onRofiCmd, this );
-    if ( !_sub )
+    processWaitCallbacks( info );
+
+    if ( !info.paused )
     {
-        gzerr << "Subcriber could not be created\n";
-        throw std::runtime_error( "Subcriber could not be created" );
-    }
-
-    gzmsg << "Model is listening on topic '" << _sub->GetTopic() << "'\n";
-}
-
-void RMP::addConnector( gazebo::physics::ModelPtr connectorModel )
-{
-    assert( connectorModel );
-
-    if ( !_node || !_node->IsInitialized() )
-    {
-        gzerr << "Init communication before adding connectors\n";
-        throw std::runtime_error( "Init communication before adding connectors" );
-    }
-
-    std::string topicName = "/gazebo/" + getElemPath( connectorModel );
-
-    auto pub = _node->Advertise< rofi::messages::ConnectorCmd >( topicName + "/control" );
-    auto sub = _node->Subscribe( topicName + "/response", &RMP::onConnectorResp, this );
-
-    if ( !sub )
-    {
-        gzerr << "Connector subcriber could not be created\n";
-        return;
-    }
-
-    if ( !pub )
-    {
-        gzerr << "Connector publisher could not be created\n";
-        return;
-    }
-
-    for ( auto & elem : connectors )
-    {
-        if ( pub->GetTopic() == elem.first->GetTopic() )
+        for ( auto & joint : joints )
         {
-            gzerr << "All connector names have to be different\n";
-            return;
+            joint.controller.update( info, ecm );
         }
     }
+}
+
+void RoFIModulePlugin::initCommunication( const gz::sim::EntityComponentManager & ecm )
+{
+    _node = std::make_shared< rofi::gz::Node >();
+    _node->Init( getElemPath( _entity, ecm ) );
+    _pub = _node->Advertise< rofi::messages::RofiResp >( "~/response" );
+}
+
+void RoFIModulePlugin::startListening()
+{
+    _sub = _node->Subscribe( "~/control", &RoFIModulePlugin::onRofiCmd, this );
+}
+
+void RoFIModulePlugin::addConnector( gz::sim::Entity connectorModel,
+                                     const gz::sim::EntityComponentManager & ecm )
+{
+    std::string topicName = "/gazebo/" + getElemPath( connectorModel, ecm );
+    auto pub = _node->Advertise< rofi::messages::ConnectorCmd >( topicName + "/control" );
+    auto sub = _node->Subscribe( topicName + "/response", &RoFIModulePlugin::onConnectorResp, this );
 
     connectors.emplace_back( std::move( pub ), std::move( sub ) );
 
     rofi::messages::ConnectorCmd emptyCmd;
-    emptyCmd.set_connector( int( connectors.size() ) - 1 );
+    emptyCmd.set_connector( static_cast< int >( connectors.size() ) - 1 );
     emptyCmd.set_cmdtype( rofi::messages::ConnectorCmd::NO_CMD );
-    connectors.back().first->Publish( std::move( emptyCmd ) );
+    connectors.back().first->Publish( emptyCmd );
 }
 
-void RMP::clearConnectors()
+void RoFIModulePlugin::clearConnectors()
 {
-    for ( auto & pair : connectors )
-    {
-        if ( pair.first )
-        {
-            pair.first->Fini();
-        }
-    }
     connectors.clear();
 }
 
-void RMP::findAndInitJoints()
+void RoFIModulePlugin::findAndInitJoints( gz::sim::EntityComponentManager & ecm )
 {
-    assert( _sdf );
-
-    if ( !_node || !_node->IsInitialized() )
-    {
-        gzerr << "Init communication before adding joints\n";
-        throw std::runtime_error( "Init communication before adding joints" );
-    }
-
     joints.clear();
 
-    const auto callback = [ this ]( int joint, double desiredPosition ) {
-        gzmsg << "Returning position reached of joint " << joint << ": " << desiredPosition << "\n";
-
-        _pub->Publish( getJointRofiResp( rofi::messages::JointCmd::SET_POS_WITH_SPEED,
-                                         joint,
-                                         float( desiredPosition ) ) );
-    };
-
-    checkChildrenNames( _sdf, { "controller" } );
-    auto pidValuesVector = PIDLoader::loadControllerValues( _sdf );
-    for ( auto & pidValues : pidValuesVector )
+    auto controllerValues = PIDLoader::loadControllerValues(
+            std::const_pointer_cast< sdf::Element >( _sdf ) );
+    for ( const auto & pidValues : controllerValues )
     {
-        auto joint = _model->GetJoint( pidValues.jointName );
-        if ( !joint )
+        auto jointEntity = _model.JointByName( ecm, pidValues.jointName );
+        if ( jointEntity == gz::sim::kNullEntity )
         {
-            gzerr << "No joint '" + pidValues.jointName + "' found in module\n";
+            gzerr << "No joint '" << pidValues.jointName << "' found in module\n";
             continue;
         }
 
-        assert( joints.size() <= INT_MAX );
-        joints.emplace_back( std::move( joint ),
+        joints.emplace_back( jointEntity,
                              nullptr,
+                             ecm,
                              pidValues,
-                             std::bind( callback, joints.size(), std::placeholders::_1 ),
+                             [ this, index = joints.size() ]( double desiredPosition ) {
+                                 auto resp = getJointRofiResp(
+                                         rofi::messages::JointCmd::SET_POS_WITH_SPEED,
+                                         static_cast< int >( index ),
+                                         static_cast< float >( desiredPosition ) );
+                                 _pub->Publish( resp );
+                             },
                              static_cast< uint8_t >( joints.size() ) );
-        assert( joints.back() );
-        assert( joints.back().joint->GetMsgType() == msgs::Joint::REVOLUTE );
     }
 }
 
-void RMP::findAndInitConnectors()
+void RoFIModulePlugin::findAndInitConnectors( const gz::sim::EntityComponentManager & ecm )
 {
-    if ( !_node || !_node->IsInitialized() )
-    {
-        gzerr << "Init communication before adding connectors\n";
-        throw std::runtime_error( "Init communication before adding connectors" );
-    }
-
     clearConnectors();
-
-    for ( auto nested : _model->NestedModels() )
+    for ( auto nested : _model.Models( ecm ) )
     {
-        if ( isRoFICoM( nested ) )
+        if ( isRoFICoM( nested, ecm ) )
         {
-            addConnector( nested );
+            addConnector( nested, ecm );
         }
     }
 }
 
-rofi::messages::RofiResp RMP::getJointRofiResp( rofi::messages::JointCmd::Type resptype,
-                                                int joint,
-                                                float value ) const
+rofi::messages::RofiResp RoFIModulePlugin::getJointRofiResp(
+        rofi::messages::JointCmd::Type resptype,
+        int joint,
+        float value ) const
 {
     rofi::messages::RofiResp resp;
     resp.set_rofiid( rofiId.value_or( 0 ) );
@@ -209,13 +139,11 @@ rofi::messages::RofiResp RMP::getJointRofiResp( rofi::messages::JointCmd::Type r
     auto & jointResp = *resp.mutable_jointresp();
     jointResp.set_joint( joint );
     jointResp.set_resptype( resptype );
-
     jointResp.set_value( value );
-
     return resp;
 }
 
-rofi::messages::RofiResp RMP::getConnectorRofiResp(
+rofi::messages::RofiResp RoFIModulePlugin::getConnectorRofiResp(
         const rofi::messages::ConnectorResp & connectorResp ) const
 {
     rofi::messages::RofiResp resp;
@@ -225,29 +153,52 @@ rofi::messages::RofiResp RMP::getConnectorRofiResp(
     return resp;
 }
 
-void RMP::onRofiCmd( const RMP::RofiCmdPtr & msg )
+void RoFIModulePlugin::onRofiCmd( const RofiCmdPtr & msg )
+{
+    if ( !msg )
+    {
+        return;
+    }
+    std::lock_guard lock( _queueMutex );
+    _pendingCommands.push_back( *msg );
+}
+
+void RoFIModulePlugin::onConnectorResp( const ConnectorRespPtr & msg )
+{
+    if ( !msg )
+    {
+        return;
+    }
+    std::lock_guard lock( _queueMutex );
+    _pendingConnectorResponses.push_back( *msg );
+}
+
+void RoFIModulePlugin::handleRofiCmd( const rofi::messages::RofiCmd & msg,
+                                      const gz::sim::UpdateInfo & info,
+                                      gz::sim::EntityComponentManager & ecm )
 {
     using rofi::messages::RofiCmd;
 
-    if ( rofiId && *rofiId != msg->rofiid() )
+    if ( rofiId && *rofiId != msg.rofiid() )
     {
-        gzwarn << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg->rofiid() << "\n";
+        gzwarn << "Had ID: " << *rofiId << ", but got cmd with ID: " << msg.rofiid() << "\n";
     }
-    switch ( msg->cmdtype() )
+
+    switch ( msg.cmdtype() )
     {
         case RofiCmd::NO_CMD:
             break;
         case RofiCmd::JOINT_CMD:
-            onJointCmd( msg->jointcmd() );
+            onJointCmd( msg.jointcmd(), ecm );
             break;
         case RofiCmd::CONNECTOR_CMD:
-            onConnectorCmd( msg->connectorcmd() );
+            onConnectorCmd( msg.connectorcmd() );
             break;
         case RofiCmd::DESCRIPTION:
         {
             if ( !rofiId )
             {
-                rofiId = msg->rofiid();
+                rofiId = msg.rofiid();
                 for ( auto & joint : joints )
                 {
                     joint.controller.setRofiId( rofiId.value() );
@@ -255,143 +206,105 @@ void RMP::onRofiCmd( const RMP::RofiCmdPtr & msg )
             }
 
             rofi::messages::RofiResp resp;
-            resp.set_rofiid( rofiId.value() );
+            resp.set_rofiid( rofiId.value_or( 0 ) );
             resp.set_resptype( rofi::messages::RofiCmd::DESCRIPTION );
-            auto description = resp.mutable_rofidescription();
-            description->set_jointcount( int( joints.size() ) );
-            description->set_connectorcount( int( connectors.size() ) );
-            gzmsg << "Returning description (" << resp.rofidescription().jointcount() << " joints, "
-                  << resp.rofidescription().connectorcount() << " connectors)\n";
-            _pub->Publish( std::move( resp ) );
+            auto * description = resp.mutable_rofidescription();
+            description->set_jointcount( static_cast< int >( joints.size() ) );
+            description->set_connectorcount( static_cast< int >( connectors.size() ) );
+            _pub->Publish( resp );
             break;
         }
         case RofiCmd::WAIT_CMD:
         {
-            gzmsg << "Starting waiting (" << msg->waitcmd().waitms()
-                  << " ms, ID: " << msg->waitcmd().waitid() << ")\n";
-            int32_t sec = msg->waitcmd().waitms() / 1000;
-            int32_t nsec = ( msg->waitcmd().waitms() % 1000 ) * 1000000;
-            auto afterWaited = _model->GetWorld()->SimTime() + common::Time( sec, nsec );
-
-            {
-                std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
-                waitCallbacksMap.emplace(
-                        afterWaited,
-                        [ this, waitId = msg->waitcmd().waitid() ]() {
-                            rofi::messages::RofiResp resp;
-                            resp.set_rofiid( rofiId.value_or( 0 ) );
-                            resp.set_resptype( rofi::messages::RofiCmd::WAIT_CMD );
-                            resp.set_waitid( waitId );
-                            gzmsg << "Returning waiting ended (ID: " << waitId << ")\n";
-                            _pub->Publish( std::move( resp ) );
-                        } );
-            }
-
+            const auto afterWaited =
+                    std::chrono::duration< double >( info.simTime ).count()
+                    + static_cast< double >( msg.waitcmd().waitms() ) / 1000.0;
+            std::lock_guard lock( waitCallbacksMapMutex );
+            waitCallbacksMap.emplace(
+                    afterWaited,
+                    [ this, waitId = msg.waitcmd().waitid() ]() {
+                        rofi::messages::RofiResp resp;
+                        resp.set_rofiid( rofiId.value_or( 0 ) );
+                        resp.set_resptype( rofi::messages::RofiCmd::WAIT_CMD );
+                        resp.set_waitid( waitId );
+                        _pub->Publish( resp );
+                    } );
             break;
         }
         default:
             gzwarn << "Unknown RoFI command type\n";
+            break;
     }
 }
 
-void RMP::onJointCmd( const rofi::messages::JointCmd & msg )
+void RoFIModulePlugin::onJointCmd( const rofi::messages::JointCmd & msg,
+                                   gz::sim::EntityComponentManager & ecm )
 {
     using rofi::messages::JointCmd;
 
-    int joint = msg.joint();
-    if ( joint < 0 || static_cast< size_t >( joint ) >= joints.size() )
+    int jointIndex = msg.joint();
+    if ( jointIndex < 0 || static_cast< size_t >( jointIndex ) >= joints.size() )
     {
-        gzwarn << "Invalid joint " << joint << " specified\n";
+        gzwarn << "Invalid joint " << jointIndex << " specified\n";
         return;
     }
 
+    auto & jointData = joints.at( static_cast< size_t >( jointIndex ) );
     switch ( msg.cmdtype() )
     {
         case JointCmd::NO_CMD:
             break;
         case JointCmd::GET_CAPABILITIES:
         {
-            auto & jointData = joints.at( joint );
-
             rofi::messages::RofiResp resp;
             resp.set_rofiid( rofiId.value_or( 0 ) );
             resp.set_resptype( rofi::messages::RofiCmd::JOINT_CMD );
-
             auto & jointResp = *resp.mutable_jointresp();
-            jointResp.set_joint( joint );
+            jointResp.set_joint( jointIndex );
             jointResp.set_resptype( JointCmd::GET_CAPABILITIES );
-
             auto & capabilities = *jointResp.mutable_capabilities();
-            capabilities.set_maxposition( float( jointData.getMaxPosition() ) );
-            capabilities.set_minposition( float( jointData.getMinPosition() ) );
-            capabilities.set_maxspeed( float( jointData.getMaxVelocity() ) );
-            capabilities.set_minspeed( float(  jointData.getMinVelocity() ) );
-            capabilities.set_maxtorque( float(  jointData.getMaxEffort() ) );
-
-            gzmsg << "Returning capabilities of joint (" << joint << ")\n";
-
+            capabilities.set_maxposition( static_cast< float >( jointData.getMaxPosition() ) );
+            capabilities.set_minposition( static_cast< float >( jointData.getMinPosition() ) );
+            capabilities.set_maxspeed( static_cast< float >( jointData.getMaxVelocity() ) );
+            capabilities.set_minspeed( static_cast< float >( jointData.getMinVelocity() ) );
+            capabilities.set_maxtorque( static_cast< float >( jointData.getMaxEffort() ) );
             _pub->Publish( resp );
             break;
         }
         case JointCmd::GET_VELOCITY:
-        {
-            double velocity = joints.at( joint ).joint->GetVelocity( 0 );
-            gzmsg << "Returning current velocity of joint " << joint << ": " << velocity << "\n";
-            _pub->Publish( getJointRofiResp( JointCmd::GET_VELOCITY, joint, float( velocity ) ) );
+            _pub->Publish( getJointRofiResp( JointCmd::GET_VELOCITY,
+                                             jointIndex,
+                                             static_cast< float >( jointData.velocity( ecm ) ) ) );
             break;
-        }
         case JointCmd::SET_VELOCITY:
-        {
-            double velocity = msg.setvelocity().velocity();
-
-            setVelocity( joint, velocity );
-            gzmsg << "Setting velocity of joint " << joint << " to " << velocity << "\n";
+            setVelocity( jointIndex, msg.setvelocity().velocity() );
             break;
-        }
         case JointCmd::GET_POSITION:
-        {
-            double position = joints.at( joint ).joint->Position();
-            gzmsg << "Returning current position of joint " << joint << ": " << position << "\n";
-            _pub->Publish( getJointRofiResp( JointCmd::GET_POSITION, joint, float( position ) ) );
+            _pub->Publish( getJointRofiResp( JointCmd::GET_POSITION,
+                                             jointIndex,
+                                             static_cast< float >( jointData.position( ecm ) ) ) );
             break;
-        }
         case JointCmd::SET_POS_WITH_SPEED:
-        {
-            double position = msg.setposwithspeed().position();
-            double speed = msg.setposwithspeed().speed();
-
-            setPositionWithSpeed( joint, position, speed );
-
-            gzmsg << "Setting position of joint " << joint << " to " << position << " with speed "
-                  << speed << "\n";
+            setPositionWithSpeed( jointIndex,
+                                  msg.setposwithspeed().position(),
+                                  msg.setposwithspeed().speed(),
+                                  ecm );
             break;
-        }
         case JointCmd::GET_TORQUE:
-        {
-            double torque = -1.0;
-            gzwarn << "Get torque joint command not implemented\n";
-
-            gzmsg << "Returning current torque of joint " << joint << ": " << torque << "\n";
-            _pub->Publish( getJointRofiResp( JointCmd::GET_TORQUE, joint, float( torque ) ) );
+            _pub->Publish( getJointRofiResp( JointCmd::GET_TORQUE, jointIndex, -1.F ) );
             break;
-        }
         case JointCmd::SET_TORQUE:
-        {
-            double torque = msg.settorque().torque();
-            setTorque( joint, torque );
-            gzmsg << "Setting torque of joint " << joint << " to " << torque << "\n";
+            setTorque( jointIndex, msg.settorque().torque() );
             break;
-        }
         default:
-            gzwarn << "Unknown command type " << msg.cmdtype() << " of joint " << joint << "\n";
+            gzwarn << "Unknown command type " << msg.cmdtype() << " of joint " << jointIndex
+                   << "\n";
             break;
     }
 }
 
-void RMP::onConnectorCmd( const rofi::messages::ConnectorCmd & msg )
+void RoFIModulePlugin::onConnectorCmd( const rofi::messages::ConnectorCmd & msg )
 {
-    using rofi::messages::ConnectorCmd;
-
     int connector = msg.connector();
     if ( connector < 0 || static_cast< size_t >( connector ) >= connectors.size() )
     {
@@ -399,70 +312,52 @@ void RMP::onConnectorCmd( const rofi::messages::ConnectorCmd & msg )
         return;
     }
 
-    connectors[ connector ].first->Publish( msg );
+    connectors.at( static_cast< size_t >( connector ) ).first->Publish( msg );
 }
 
-void RMP::onConnectorResp( const RMP::ConnectorRespPtr & msg )
+void RoFIModulePlugin::processWaitCallbacks( const gz::sim::UpdateInfo & info )
 {
-    _pub->Publish( getConnectorRofiResp( *msg ) );
-}
+    const auto now = std::chrono::duration< double >( info.simTime ).count();
 
-void RMP::onUpdate()
-{
-    assert( _model );
-    auto actualTime = _model->GetWorld()->SimTime();
-
-    std::multimap< common::Time, std::function< void() > > tmpMap;
-
+    std::multimap< double, std::function< void() > > ready;
     {
-        std::lock_guard< std::mutex > lock( waitCallbacksMapMutex );
-
+        std::lock_guard lock( waitCallbacksMapMutex );
         auto it = waitCallbacksMap.begin();
-        while ( it != waitCallbacksMap.end() )
+        while ( it != waitCallbacksMap.end() && it->first <= now )
         {
-            if ( it->first > actualTime )
-            {
-                break;
-            }
-            tmpMap.insert( tmpMap.end(), waitCallbacksMap.extract( it++ ) );
+            ready.insert( ready.end(), waitCallbacksMap.extract( it++ ) );
         }
     }
 
-    for ( auto & elem : tmpMap )
+    for ( auto & callback : ready )
     {
-        elem.second();
+        callback.second();
     }
 }
 
-void RMP::setVelocity( int joint, double velocity )
+void RoFIModulePlugin::setVelocity( int joint, double velocity )
 {
-    auto & jointData = joints.at( joint );
-    auto targets = PIDLoader::InitTargets::newVelocity( jointData.joint->GetName(), velocity );
-
-    PIDLoader::updateInitTargetsSdf( _sdf, targets );
-    jointData.controller.setTargetVelocity( velocity );
+    joints.at( static_cast< size_t >( joint ) ).controller.setTargetVelocity( velocity );
 }
 
-void RMP::setTorque( int joint, double torque )
+void RoFIModulePlugin::setTorque( int joint, double torque )
 {
-    auto & jointData = joints.at( joint );
-    auto targets = PIDLoader::InitTargets::newForce( jointData.joint->GetName(), torque );
-
-    PIDLoader::updateInitTargetsSdf( _sdf, targets );
-    jointData.controller.setTargetForce( torque );
+    joints.at( static_cast< size_t >( joint ) ).controller.setTargetForce( torque );
 }
 
-void RMP::setPositionWithSpeed( int joint, double desiredPosition, double speed )
+void RoFIModulePlugin::setPositionWithSpeed( int joint,
+                                             double desiredPosition,
+                                             double speed,
+                                             const gz::sim::EntityComponentManager & ecm )
 {
-    using InitTargets = PIDLoader::InitTargets;
-
-    auto & jointData = joints.at( joint );
-    auto targets = InitTargets::newPosition( jointData.joint->GetName(), desiredPosition, speed );
-
-    PIDLoader::updateInitTargetsSdf( _sdf, targets );
-    jointData.controller.setTargetPositionWithSpeed( desiredPosition, speed );
+    joints.at( static_cast< size_t >( joint ) )
+            .controller.setTargetPositionWithSpeed( desiredPosition, speed, ecm );
 }
-
-GZ_REGISTER_MODEL_PLUGIN( RoFIModulePlugin )
 
 } // namespace gazebo
+
+GZ_ADD_PLUGIN( gazebo::RoFIModulePlugin,
+               gz::sim::System,
+               gz::sim::ISystemConfigure,
+               gz::sim::ISystemPreUpdate )
+GZ_ADD_PLUGIN_ALIAS( gazebo::RoFIModulePlugin, "rofi::sim::systems::RoFIModulePlugin" )

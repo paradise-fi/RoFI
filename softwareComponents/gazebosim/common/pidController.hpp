@@ -2,16 +2,17 @@
 
 #include <array>
 #include <cassert>
+#include <chrono>
 #include <limits>
 #include <type_traits>
 
-#include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
+#include <gz/common/Console.hh>
+#include <gz/math/PID.hh>
+#include <gz/sim/System.hh>
 
 #include "jointData.hpp"
 #include "lorrisConnector.hpp"
 #include "pidLoader.hpp"
-
 
 namespace gazebo
 {
@@ -27,13 +28,10 @@ class Buffer
 public:
     void update( double value )
     {
-        assert( _pos >= 0 );
-        assert( static_cast< size_t >( _pos ) < _buffer.size() );
-
-        auto old = _buffer[ _pos ];
-        _buffer[ _pos ] = value;
-        _sum += ( value - old ) / double( _buffer.size() );
-        _pos = ( _pos + 1 ) % int( _buffer.size() );
+        auto old = _buffer.at( static_cast< size_t >( _pos ) );
+        _buffer.at( static_cast< size_t >( _pos ) ) = value;
+        _sum += ( value - old ) / static_cast< double >( N );
+        _pos = ( _pos + 1 ) % static_cast< int >( N );
     }
 
     double getAverage() const
@@ -58,47 +56,38 @@ protected:
 private:
     double _targetForce = 0;
 
-    bool forceAtPositionBoundary() const
+    bool forceAtPositionBoundary( const gz::sim::EntityComponentManager & ecm ) const
     {
-        assert( _jointData );
-        assert( _jointData.joint );
-
         if ( _targetForce == 0 )
         {
             return false;
         }
         if ( _targetForce < 0 )
         {
-            return _jointData.joint->Position() <= _jointData.getMinPosition();
+            return _jointData.position( ecm ) <= _jointData.getMinPosition();
         }
-        return _jointData.joint->Position() >= _jointData.getMaxPosition();
+        return _jointData.position( ecm ) >= _jointData.getMaxPosition();
     }
 
 public:
-    ForceController( JointDataBase & jointData ) : _jointData( jointData )
+    explicit ForceController( JointDataBase & jointData ) : _jointData( jointData )
     {
-        assert( _jointData );
     }
 
-    void forcePhysicsUpdate()
+    void forcePhysicsUpdate( gz::sim::EntityComponentManager & ecm )
     {
-        assert( _jointData );
-        assert( _jointData.joint );
-
         if ( _targetForce == 0 )
         {
             return;
         }
 
-        if ( forceAtPositionBoundary() )
+        if ( forceAtPositionBoundary( ecm ) )
         {
             gzmsg << "Boundary reached with force: " << _targetForce << ", setting to 0.\n";
             _targetForce = 0;
         }
 
-        assert( _targetForce <= _jointData.maxEffort );
-        assert( _targetForce >= -_jointData.maxEffort );
-        _jointData.joint->SetForce( 0, _targetForce );
+        _jointData.setForce( ecm, _targetForce );
     }
 
     void setTargetForce( double targetForce )
@@ -112,32 +101,26 @@ public:
 
 class VelocityPIDController : public ForceController
 {
-    common::PID _velController;
-    common::Time _velPrevUpdateTime;
-
+    gz::math::PID _velController;
     detail::Buffer< 5 > _velBuffer;
     double _targetVelocity = 0;
 
-    bool velocityAtPositionBoundary() const
+    bool velocityAtPositionBoundary( const gz::sim::EntityComponentManager & ecm ) const
     {
-        assert( _jointData );
-        assert( _jointData.joint );
-
         if ( _targetVelocity == 0 )
         {
             return false;
         }
         if ( _targetVelocity < 0 )
         {
-            return _jointData.joint->Position() <= _jointData.getMinPosition();
+            return _jointData.position( ecm ) <= _jointData.getMinPosition();
         }
-        return _jointData.joint->Position() >= _jointData.getMaxPosition();
+        return _jointData.position( ecm ) >= _jointData.getMaxPosition();
     }
 
     uint8_t _jointId = 0;
     std::optional< uint8_t > _rofiId;
     static constexpr int numOfJointBitsInId = 2;
-    static_assert( numOfJointBitsInId > 0 && numOfJointBitsInId < 8 );
 
 protected:
     std::optional< uint8_t > getCombinedId() const
@@ -146,71 +129,39 @@ protected:
         {
             return {};
         }
-
-        [[maybe_unused]] constexpr auto jointBitsMask = ( 1 << numOfJointBitsInId ) - 1;
-        assert( ( *_rofiId & jointBitsMask ) == 0 );
-        assert( ( _jointId & ~jointBitsMask ) == 0 );
-
         return *_rofiId | _jointId;
     }
 
 public:
     VelocityPIDController( JointDataBase & jointData,
+                           gz::sim::EntityComponentManager &,
                            const PIDLoader::ControllerValues & pidValues,
                            uint8_t jointId )
             : ForceController( jointData )
             , _velController( pidValues.velocity.getPID( _jointData.getLowestEffort(),
                                                          _jointData.getMaxEffort() ) )
-            , _jointId( jointId % ( 1 << numOfJointBitsInId ) )
+            , _jointId( static_cast< uint8_t >( jointId % ( 1 << numOfJointBitsInId ) ) )
     {
-        assert( _jointData );
-        _velPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
-
-        if ( static_cast< int >( _jointId ) != jointId )
-        {
-            gzwarn << "Lorris will use joint id '" << _jointId << "' instead of '" << jointId
-                   << "'\n";
-        }
     }
 
     void setRofiId( int rofiId )
     {
-        gzwarn << "Setting RoFI Id to '" << rofiId << "'\n";
-        if ( _rofiId )
-        {
-            gzwarn << "RoFI Id in controller already set\n";
-        }
-
-        static_assert( numOfJointBitsInId > 0 && numOfJointBitsInId < 8 );
-
         if ( rofiId < 0 || rofiId >= ( 1 << ( 8 - numOfJointBitsInId ) ) )
         {
-            int newRofiId = rofiId % ( 1 << ( 8 - numOfJointBitsInId ) );
-            assert( newRofiId >= 0 );
-
-            gzwarn << "For lorris, RoFI Id '" << rofiId << "' is changed to '" << newRofiId
-                   << "'\n";
-            rofiId = newRofiId;
+            rofiId %= ( 1 << ( 8 - numOfJointBitsInId ) );
         }
-
-        {
-            using IdLimits [[maybe_unused]] = std::numeric_limits< decltype( _rofiId )::value_type >;
-            assert( rofiId >= IdLimits::min() );
-            assert( rofiId <= IdLimits::max() );
-            assert( rofiId << numOfJointBitsInId >= IdLimits::min() );
-            assert( rofiId << numOfJointBitsInId <= IdLimits::max() );
-        }
-
-        _rofiId = rofiId << numOfJointBitsInId;
+        _rofiId = static_cast< uint8_t >( rofiId << numOfJointBitsInId );
     }
 
     template < bool Verbose = true >
-    void velPhysicsUpdate()
+    void velPhysicsUpdate( const gz::sim::UpdateInfo & info, gz::sim::EntityComponentManager & ecm )
     {
-        assert( _jointData );
-        assert( _jointData.joint );
+        if ( info.paused )
+        {
+            return;
+        }
 
-        if ( velocityAtPositionBoundary() )
+        if ( velocityAtPositionBoundary( ecm ) )
         {
             if constexpr ( Verbose )
             {
@@ -220,46 +171,38 @@ public:
             _targetVelocity = 0;
         }
 
-        common::Time currTime = _jointData.joint->GetWorld()->SimTime();
-        common::Time stepTime = currTime - _velPrevUpdateTime;
-        _velPrevUpdateTime = currTime;
-        assert( stepTime >= 0 && "time went backwards" );
+        auto stepTime = std::chrono::duration< double >( info.dt );
+        if ( stepTime.count() <= 0 )
+        {
+            return;
+        }
 
-        _velBuffer.update( _jointData.joint->GetVelocity( 0 ) );
+        _velBuffer.update( _jointData.velocity( ecm ) );
         double velocity = _velBuffer.getAverage();
         double linearError = velocity - _targetVelocity;
 
         double force = _velController.Update( linearError, stepTime );
-        assert( force <= _jointData.maxEffort );
-        assert( force >= -_jointData.maxEffort );
+        _jointData.setForce( ecm, force );
 
-        _jointData.joint->SetForce( 0, force );
-
-        auto combinedId = getCombinedId();
-        if ( combinedId )
+        if ( auto combinedId = getCombinedId() )
         {
             lorris::Packet packet;
             packet.devId() = *combinedId;
             packet.command() = 0;
-            packet.push< float >( float( _targetVelocity ) ); // Target
-            packet.push< float >( float( velocity ) );        // Current
-            packet.push< float >( float( force ) );           // Output
+            packet.push< float >( static_cast< float >( _targetVelocity ) );
+            packet.push< float >( static_cast< float >( velocity ) );
+            packet.push< float >( static_cast< float >( force ) );
             packet.send();
         }
     }
 
     void resetVelocityPID( PidControlType lastControlType )
     {
-        switch ( lastControlType )
+        if ( lastControlType == PidControlType::Position
+             || lastControlType == PidControlType::Velocity )
         {
-            case PidControlType::Position:
-            case PidControlType::Velocity:
-                return;
-            case PidControlType::Force:
-                break;
+            return;
         }
-
-        _velPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
         _velController.Reset();
     }
 
@@ -279,13 +222,12 @@ public:
 
 class PositionPIDController : public VelocityPIDController
 {
-    common::PID _posController;
-    common::Time _posPrevUpdateTime;
+    gz::math::PID _posController;
 
     double _desiredPosition = 0;
     double _targetPosition = 0;
     double _maxSpeed = 0;
-    std::optional< bool > _targetDirection; // If _targetDirection is nullopt, position is reached
+    std::optional< bool > _targetDirection;
     const std::function< void( double ) > _positionReachedCallback;
 
     template < bool Verbose = true >
@@ -309,15 +251,12 @@ class PositionPIDController : public VelocityPIDController
 
     void setMaxSpeed( double maxSpeed )
     {
-        assert( _jointData.getMinVelocity() >= _jointData.getVelocityPrecision() );
-
         _maxSpeed = verboseClamp( maxSpeed,
                                   _jointData.getMinVelocity(),
                                   _jointData.getMaxVelocity(),
                                   "maxSpeed" );
         _posController.SetCmdMin( -_maxSpeed );
         _posController.SetCmdMax( _maxSpeed );
-
         _posController.SetIMin( -_maxSpeed );
         _posController.SetIMax( _maxSpeed );
     }
@@ -325,73 +264,63 @@ class PositionPIDController : public VelocityPIDController
 public:
     template < typename PositionCallback >
     PositionPIDController( JointDataBase & jointData,
+                           gz::sim::EntityComponentManager & ecm,
                            const PIDLoader::ControllerValues & pidValues,
                            PositionCallback && positionReached,
                            uint8_t jointId )
-            : VelocityPIDController( jointData, pidValues, jointId )
+            : VelocityPIDController( jointData, ecm, pidValues, jointId )
             , _posController( pidValues.position.getPID( _jointData.getLowestVelocity(),
                                                          _jointData.getMaxVelocity() ) )
             , _positionReachedCallback( std::forward< PositionCallback >( positionReached ) )
     {
-        assert( _jointData );
-        assert( _jointData.getLowestVelocity() == -_jointData.getMaxVelocity() );
-        _posPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
         setTargetPosition< false >( _desiredPosition );
     }
 
-    void posPhysicsUpdate()
+    void posPhysicsUpdate( const gz::sim::UpdateInfo & info, gz::sim::EntityComponentManager & ecm )
     {
-        assert( _jointData );
-        assert( _jointData.joint );
+        if ( info.paused )
+        {
+            return;
+        }
 
-        common::Time currTime = _jointData.joint->GetWorld()->SimTime();
-        common::Time stepTime = currTime - _posPrevUpdateTime;
-        _posPrevUpdateTime = currTime;
-        assert( stepTime >= 0 && "time went backwards" );
+        auto stepTime = std::chrono::duration< double >( info.dt );
+        if ( stepTime.count() <= 0 )
+        {
+            return;
+        }
 
-        double position = _jointData.joint->Position();
+        double position = _jointData.position( ecm );
         double linearError = position - _targetPosition;
 
         if ( _targetDirection )
         {
-            if ( ( *_targetDirection && -linearError <= _jointData.getPositionPrecision() )
-                 || ( !*_targetDirection && linearError <= _jointData.getPositionPrecision() ) )
+            const bool reachedFromPositiveDirection =
+                    *_targetDirection && -linearError <= _jointData.getPositionPrecision();
+            const bool reachedFromNegativeDirection =
+                    !*_targetDirection && linearError <= _jointData.getPositionPrecision();
+
+            if ( reachedFromPositiveDirection || reachedFromNegativeDirection )
             {
                 _targetDirection = std::nullopt;
-
                 if ( _positionReachedCallback )
                 {
-                    assert( _targetPosition
-                            == clamp( _desiredPosition,
-                                      _jointData.getMinPosition(),
-                                      _jointData.getMaxPosition() ) );
                     _positionReachedCallback( _desiredPosition );
-                }
-                else
-                {
-                    gzwarn << "Position reached, but callback not set\n";
                 }
             }
         }
 
         auto velocity = _posController.Update( linearError, stepTime );
-        assert( _maxSpeed >= _jointData.getMinVelocity() );
-        assert( _maxSpeed <= _jointData.getMaxVelocity() );
-
-        assert( std::abs( velocity ) <= _maxSpeed + _jointData.getPositionPrecision() );
-
         VelocityPIDController::setTargetVelocity( velocity, std::nullopt );
-        VelocityPIDController::velPhysicsUpdate< false >();
+        VelocityPIDController::velPhysicsUpdate< false >( info, ecm );
 
-        auto combinedId = getCombinedId();
-        if ( combinedId )
+        if ( auto combinedId = getCombinedId() )
         {
             lorris::Packet packet;
             packet.devId() = *combinedId;
             packet.command() = 1;
-            packet.push< float >( float( _targetPosition ) ); // Target
-            packet.push< float >( float( position ) );        // Current
-            packet.push< float >( float( velocity ) );        // Output
+            packet.push< float >( static_cast< float >( _targetPosition ) );
+            packet.push< float >( static_cast< float >( position ) );
+            packet.push< float >( static_cast< float >( velocity ) );
             packet.send();
         }
     }
@@ -402,21 +331,19 @@ public:
         {
             return;
         }
-
-        _posPrevUpdateTime = _jointData.joint->GetWorld()->SimTime();
         _posController.Reset();
-
         VelocityPIDController::resetVelocityPID( lastControlType );
     }
 
     void setTargetPositionWithSpeed( double targetPosition,
                                      double maxSpeed,
-                                     std::optional< PidControlType > lastControlType )
+                                     std::optional< PidControlType > lastControlType,
+                                     const gz::sim::EntityComponentManager & ecm )
     {
         if ( maxSpeed <= 0 )
         {
-            gzwarn << "Speed non-positive for setting position, setting desired position to current position\n";
-            setCurrentPosition( lastControlType );
+            gzwarn << "Speed non-positive for setting position, keeping current position\n";
+            setCurrentPosition( lastControlType, ecm );
             return;
         }
 
@@ -427,10 +354,11 @@ public:
 
         setMaxSpeed( maxSpeed );
         setTargetPosition( targetPosition );
-        _targetDirection = targetPosition > _jointData.joint->Position();
+        _targetDirection = targetPosition > _jointData.position( ecm );
     }
 
-    void setCurrentPosition( std::optional< PidControlType > lastControlType )
+    void setCurrentPosition( std::optional< PidControlType > lastControlType,
+                             const gz::sim::EntityComponentManager & ecm )
     {
         if ( lastControlType )
         {
@@ -438,7 +366,7 @@ public:
         }
 
         setMaxSpeed( _jointData.getMaxVelocity() );
-        setTargetPosition< false >( _jointData.joint->Position() );
+        setTargetPosition< false >( _jointData.position( ecm ) );
         _targetDirection = std::nullopt;
     }
 };
@@ -447,27 +375,7 @@ class PIDController
 {
     JointDataBase & _jointData;
     PositionPIDController _controller;
-
     PidControlType activeController = PidControlType::Force;
-
-    event::ConnectionPtr _connection;
-
-    void onPhysicsUpdate()
-    {
-        switch ( activeController )
-        {
-            case PidControlType::Force:
-                _controller.forcePhysicsUpdate();
-                return;
-            case PidControlType::Position:
-                _controller.posPhysicsUpdate();
-                return;
-            case PidControlType::Velocity:
-                _controller.velPhysicsUpdate();
-                return;
-        }
-        assert( false && "unrecognized pid control type value" );
-    }
 
 public:
     PIDController( const PIDController & ) = delete;
@@ -476,23 +384,22 @@ public:
     template < typename PositionCallback,
                typename = std::enable_if_t< std::is_invocable_v< PositionCallback, double > > >
     PIDController( JointDataBase & jointData,
+                   gz::sim::EntityComponentManager & ecm,
                    const PIDLoader::ControllerValues & pidValues,
                    PositionCallback && positionReached,
                    uint8_t jointId )
             : _jointData( jointData )
             , _controller( jointData,
+                           ecm,
                            pidValues,
                            std::forward< PositionCallback >( positionReached ),
                            jointId )
     {
-        _connection = event::Events::ConnectBeforePhysicsUpdate(
-                std::bind( &PIDController::onPhysicsUpdate, this ) );
-
         if ( pidValues.position.initTarget )
         {
             auto position = *pidValues.position.initTarget;
             auto speed = pidValues.velocity.initTarget.value_or( _jointData.getMaxVelocity() );
-            setTargetPositionWithSpeed( position, speed );
+            setTargetPositionWithSpeed( position, speed, ecm );
         }
         else if ( pidValues.velocity.initTarget )
         {
@@ -504,8 +411,24 @@ public:
         }
         else
         {
-            _controller.setCurrentPosition( PidControlType::Force );
+            _controller.setCurrentPosition( PidControlType::Force, ecm );
             activeController = PidControlType::Position;
+        }
+    }
+
+    void update( const gz::sim::UpdateInfo & info, gz::sim::EntityComponentManager & ecm )
+    {
+        switch ( activeController )
+        {
+            case PidControlType::Force:
+                _controller.forcePhysicsUpdate( ecm );
+                break;
+            case PidControlType::Position:
+                _controller.posPhysicsUpdate( info, ecm );
+                break;
+            case PidControlType::Velocity:
+                _controller.velPhysicsUpdate( info, ecm );
+                break;
         }
     }
 
@@ -521,9 +444,11 @@ public:
         activeController = PidControlType::Velocity;
     }
 
-    void setTargetPositionWithSpeed( double position, double speed )
+    void setTargetPositionWithSpeed( double position,
+                                     double speed,
+                                     const gz::sim::EntityComponentManager & ecm )
     {
-        _controller.setTargetPositionWithSpeed( position, speed, activeController );
+        _controller.setTargetPositionWithSpeed( position, speed, activeController, ecm );
         activeController = PidControlType::Position;
     }
 

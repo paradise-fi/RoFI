@@ -3,9 +3,9 @@
 #include <string_view>
 #include <vector>
 
-#include <gazebo/gazebo.hh>
-#include <gazebo/gazebo_client.hh>
+#include <chrono>
 
+#include <rofi/gz_transport.hpp>
 #include <connectorCmd.pb.h>
 
 
@@ -30,9 +30,6 @@ std::string_view trim( std::string_view line, std::string_view ws = " \t" )
 
 int main( int argc, char ** argv )
 {
-    gazebo::client::setup( argc, argv );
-
-
     std::cout << "Write the world name:\n";
 
     std::string worldName;
@@ -45,7 +42,7 @@ int main( int argc, char ** argv )
         worldName = "default";
     }
 
-    auto node = boost::make_shared< gazebo::transport::Node >();
+    auto node = std::make_shared< rofi::gz::Node >();
     node->Init( worldName );
 
 
@@ -89,7 +86,7 @@ int main( int argc, char ** argv )
 
 
         auto pub = node->Advertise< msgs::ConnectorCmd >( "~/" + roficomName + "/control" );
-        if ( !pub->WaitForConnection( gazebo::common::Time::Second ) )
+        if ( !pub->WaitForConnection( std::chrono::seconds( 1 ) ) )
         {
             std::cerr << "Could not connect to topic '" << pub->GetTopic() << "'\n\n";
             continue;
@@ -98,6 +95,4 @@ int main( int argc, char ** argv )
 
         pub->Publish( msg, true );
     }
-
-    gazebo::client::shutdown();
 }

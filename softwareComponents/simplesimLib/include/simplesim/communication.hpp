@@ -17,7 +17,7 @@ public:
                    std::string worldName = "default" )
             : _worldName( std::move( worldName ) )
             , _node( [ this ] {
-                auto node = boost::make_shared< rofi::gz::Node >();
+                auto node = std::make_shared< rofi::gz::Node >();
                 assert( node );
                 node->Init( this->_worldName );
                 return node;

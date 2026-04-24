@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <functional>
+#include <memory>
 #include <string>
 #include <thread>
 #include <type_traits>
@@ -265,5 +266,5 @@ private:
     bool _initialized = false;
 };
 
-using NodePtr = boost::shared_ptr< Node >;
+using NodePtr = std::shared_ptr< Node >;
 } // namespace rofi::gz

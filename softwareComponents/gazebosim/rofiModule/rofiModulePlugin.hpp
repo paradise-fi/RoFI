@@ -2,12 +2,17 @@
 
 #include <deque>
 #include <limits>
+#include <map>
+#include <mutex>
+#include <optional>
 #include <utility>
 #include <vector>
 
-#include <gazebo/common/Events.hh>
-#include <gazebo/gazebo.hh>
-#include <gazebo/physics/physics.hh>
+#include <boost/shared_ptr.hpp>
+#include <gz/sim/Model.hh>
+#include <gz/sim/System.hh>
+
+#include <rofi/gz_transport.hpp>
 
 #include "pidController.hpp"
 #include "pidLoader.hpp"
@@ -18,40 +23,32 @@
 
 namespace gazebo
 {
-class RoFIModulePlugin : public ModelPlugin
+class RoFIModulePlugin : public gz::sim::System,
+                         public gz::sim::ISystemConfigure,
+                         public gz::sim::ISystemPreUpdate
 {
 public:
     static constexpr double doublePrecision = 0.001;
 
-    RoFIModulePlugin() = default;
+    void Configure( const gz::sim::Entity & entity,
+                    const std::shared_ptr< const sdf::Element > & sdf,
+                    gz::sim::EntityComponentManager & ecm,
+                    gz::sim::EventManager & eventMgr ) override;
 
-    RoFIModulePlugin( const RoFIModulePlugin & ) = delete;
-    RoFIModulePlugin & operator=( const RoFIModulePlugin & ) = delete;
-
-    ~RoFIModulePlugin()
-    {
-        clearConnectors();
-        if ( _node )
-        {
-            _node->Fini();
-        }
-    }
-
-    virtual void Load( physics::ModelPtr model, sdf::ElementPtr sdf );
+    void PreUpdate( const gz::sim::UpdateInfo & info,
+                    gz::sim::EntityComponentManager & ecm ) override;
 
 private:
     using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
     using ConnectorRespPtr = boost::shared_ptr< const rofi::messages::ConnectorResp >;
 
-    void initCommunication();
+    void initCommunication( const gz::sim::EntityComponentManager & ecm );
     void startListening();
 
-    // Connectors have to be models, that have attached plugin "libroficomPlugin.so"
-    // Ideally these are nested models of RoFICoM
-    void addConnector( gazebo::physics::ModelPtr connectorModel );
+    void addConnector( gz::sim::Entity connectorModel, const gz::sim::EntityComponentManager & ecm );
     void clearConnectors();
-    void findAndInitJoints();
-    void findAndInitConnectors();
+    void findAndInitJoints( gz::sim::EntityComponentManager & ecm );
+    void findAndInitConnectors( const gz::sim::EntityComponentManager & ecm );
 
     rofi::messages::RofiResp getJointRofiResp( rofi::messages::JointCmd::Type cmdtype,
                                                int joint,
@@ -60,33 +57,41 @@ private:
             const rofi::messages::ConnectorResp & connectorResp ) const;
 
     void onRofiCmd( const RofiCmdPtr & msg );
-    void onJointCmd( const rofi::messages::JointCmd & msg );
-    void onConnectorCmd( const rofi::messages::ConnectorCmd & msg );
-
     void onConnectorResp( const ConnectorRespPtr & msg );
 
-    void onUpdate();
+    void handleRofiCmd( const rofi::messages::RofiCmd & msg,
+                        const gz::sim::UpdateInfo & info,
+                        gz::sim::EntityComponentManager & ecm );
+    void onJointCmd( const rofi::messages::JointCmd & msg, gz::sim::EntityComponentManager & ecm );
+    void onConnectorCmd( const rofi::messages::ConnectorCmd & msg );
+
+    void processWaitCallbacks( const gz::sim::UpdateInfo & info );
 
     void setVelocity( int joint, double velocity );
     void setTorque( int joint, double torque );
-    void setPositionWithSpeed( int joint, double desiredPosition, double speed );
-
+    void setPositionWithSpeed( int joint,
+                               double desiredPosition,
+                               double speed,
+                               const gz::sim::EntityComponentManager & ecm );
 
     std::optional< int > rofiId;
-    physics::ModelPtr _model;
-    sdf::ElementPtr _sdf;
+    gz::sim::Entity _entity = gz::sim::kNullEntity;
+    gz::sim::Model _model;
+    std::shared_ptr< const sdf::Element > _sdf;
 
-    transport::NodePtr _node;
-    transport::SubscriberPtr _sub;
-    transport::PublisherPtr _pub;
-
-    event::ConnectionPtr onUpdateConnection;
+    rofi::gz::NodePtr _node;
+    rofi::gz::SubscriberPtr _sub;
+    rofi::gz::PublisherPtr _pub;
 
     std::deque< JointData< PIDController > > joints;
-    std::vector< std::pair< transport::PublisherPtr, transport::SubscriberPtr > > connectors;
+    std::vector< std::pair< rofi::gz::PublisherPtr, rofi::gz::SubscriberPtr > > connectors;
 
-    std::multimap< common::Time, std::function< void() > > waitCallbacksMap;
+    std::multimap< double, std::function< void() > > waitCallbacksMap;
     std::mutex waitCallbacksMapMutex;
+
+    std::mutex _queueMutex;
+    std::vector< rofi::messages::RofiCmd > _pendingCommands;
+    std::vector< rofi::messages::ConnectorResp > _pendingConnectorResponses;
 };
 
 } // namespace gazebo
