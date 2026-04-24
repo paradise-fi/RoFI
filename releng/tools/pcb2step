@@ -28,6 +28,8 @@ def maximizeWindow(windowId: int) -> None:
     xdotool(["windowsize", windowId, "100%", "100%"])
     xdotool(["windowactivate", "--sync", windowId])
 
+sys.exit(0)
+
 
 with SmartDisplay(size=(1000, 1000)) as display:
     command = ["kicad2step"] + sys.argv[1:]
