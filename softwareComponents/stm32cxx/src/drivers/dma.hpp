@@ -82,7 +82,7 @@ public:
 
         template < typename Callback >
         void onComplete( Callback callback ) {
-            Dma::channelData( _periph, _channel )._complete = Handler( callback );
+            Dma::channelData( _periph, _channel )._complete = Handler( std::move( callback ) );
             _enableOnComplete();
         }
 
@@ -93,7 +93,7 @@ public:
 
         template < typename Callback >
         void onHalf( Callback callback ) {
-            Dma::channelData( _periph, _channel )._half = Handler( callback );
+            Dma::channelData( _periph, _channel )._half = Handler( std::move( callback ) );
             _enableOnHalf();
         }
 
@@ -104,7 +104,7 @@ public:
 
         template < typename Callback >
         void onError( Callback callback ) {
-            Dma::channelData( _periph, _channel )._error = Handler( callback );
+            Dma::channelData( _periph, _channel )._error = Handler( std::move( callback ) );
             _enableOnError();
         }
 

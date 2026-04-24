@@ -6,6 +6,7 @@
 class Crc {
 public:
     static uint32_t compute( uint8_t *begin, int length ) {
+        instance()._periph.Instance->INIT = 0;
         return HAL_CRC_Calculate( &instance()._periph,
             reinterpret_cast< uint32_t *>( begin ), length );
     }

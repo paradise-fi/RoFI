@@ -24,7 +24,7 @@ public:
         }
 
         LL_DMA_SetDataTransferDirection( _channel, _channel, LL_DMA_DIRECTION_PERIPH_TO_MEMORY );
-        _channel.setPriority( LL_DMA_PRIORITY_LOW );
+        _channel.setPriority( LL_DMA_PRIORITY_VERYHIGH );
         LL_DMA_SetPeriphIncMode( _channel, _channel, LL_DMA_PERIPH_NOINCREMENT );
         LL_DMA_SetMemoryIncMode( _channel, _channel, LL_DMA_MEMORY_INCREMENT );
         LL_DMA_SetPeriphSize( _channel, _channel, LL_DMA_PDATAALIGN_BYTE );
@@ -44,35 +44,41 @@ public:
         LL_DMA_SetMemoryAddress( _channel, _channel, uint32_t( _block.get() + offset ) );
         LL_DMA_SetDataLength( _channel, _channel, size );
 
+        _blockHandler = std::move( callback );
+
+        _channel.disableOnHalf();
+        _channel.onComplete( [this, size]() {
+            _channel.disable();
+            int read = size - LL_DMA_GetDataLength( _channel, _channel );
+            _blockHandler( std::move( _block ), read );
+        } );
+
         if constexpr ( UartD::supportsTimeout ) {
+            LL_USART_ClearFlag_RTO( _uart.periph() );
+
             if ( bitTimeout == 0 )
                 _uart.disableTimout();
             else {
-                _uart.enableTimeout( bitTimeout, [this, callback, size]() {
+                _uart.enableTimeout( bitTimeout, [this, size]() {
                     _channel.disable();
                     int read = size - LL_DMA_GetDataLength( _channel, _channel );
-                    callback( std::move( _block ), read );
+                    _blockHandler( std::move( _block ), read );
                 } );
             }
         }
         else if constexpr ( UartD::supportsIdle ) {
             assert( bitTimeout == 8 && "UART only supports idle detection" );
+            LL_USART_ClearFlag_IDLE( _uart.periph() );
 
-            _uart.enableTimeout( [this, callback, size]() {
+            _uart.enableTimeout( [this, size]() {
                 _channel.disable();
                 int read = size - LL_DMA_GetDataLength( _channel, _channel );
-                callback( std::move( _block ), read );
+                _blockHandler( std::move( _block ), read );
             } );
         }
         else {
             assert( bitTimeout == 0 && "UART does not support bit timeout" );
         }
-
-        _channel.onComplete( [this, callback, size]() {
-            _channel.disable();
-            int read = size - LL_DMA_GetDataLength( _channel, _channel );
-            callback( std::move( _block ), read );
-        } );
 
         _channel.enable();
     }
@@ -228,6 +234,7 @@ private:
     Mem _block;
     int _lastPos, _bufferSize;
     std::function< void( const uint8_t*, int size ) > _newDataHandler;
+    std::function< void( Mem, int ) > _blockHandler;
 };
 
 template < typename Reader >

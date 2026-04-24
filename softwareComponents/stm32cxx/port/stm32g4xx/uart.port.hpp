@@ -86,7 +86,7 @@ public:
     template < typename Callback >
     void enableTimeout( int bitDuration, Callback callback ) {
         LL_USART_SetRxTimeout( self()._periph, bitDuration );
-        self().handlers().rxTimeout = typename Self::Handler( callback );
+        self().handlers().rxTimeout = typename Self::Handler( std::move( callback ) );
         enableTimeout();
     }
 

@@ -165,7 +165,7 @@ public:
 
     template < typename Callback >
     void enableTimeout( Callback callback ) {
-        self().handlers().rxTimeout = typename Self::Handler( callback );
+        self().handlers().rxTimeout = typename Self::Handler( std::move( callback ) );
         enableTimeout();
     }
 
