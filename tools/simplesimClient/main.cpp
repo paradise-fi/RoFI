@@ -6,9 +6,8 @@
 #include <thread>
 
 #include <dimcli/cli.h>
-#include <gazebo/gazebo_client.hh>
-#include <gazebo/transport/Node.hh>
 #include <google/protobuf/wrappers.pb.h>
+#include <rofi/gz_transport.hpp>
 #include <nlohmann/json.hpp>
 
 #include "configuration/serialization.hpp"
@@ -16,6 +15,8 @@
 #include "simplesim_client.hpp"
 
 #include <QtWidgets/QApplication>
+#include <QSurfaceFormat>
+#include <QVTKOpenGLNativeWidget.h>
 
 
 namespace configuration = rofi::configuration;
@@ -27,7 +28,7 @@ public:
     using ConfigurationMsgPtr = boost::shared_ptr< const google::protobuf::StringValue >;
 
     explicit SimplesimMsgSubscriber( simplesim::SimplesimClient & client )
-            : _client( client ), _node( boost::make_shared< gazebo::transport::Node >() )
+            : _client( client ), _node( boost::make_shared< rofi::gz::Node >() )
     {
         assert( _node );
         _node->Init();
@@ -77,9 +78,9 @@ private:
 
     simplesim::SimplesimClient & _client;
 
-    gazebo::transport::NodePtr _node;
-    gazebo::transport::SubscriberPtr _configurationSub;
-    gazebo::transport::SubscriberPtr _settingsSub;
+    rofi::gz::NodePtr _node;
+    rofi::gz::SubscriberPtr _configurationSub;
+    rofi::gz::SubscriberPtr _settingsSub;
 };
 
 
@@ -98,12 +99,13 @@ int main( int argc, char * argv[] )
 
     auto qtCArgs = rofi::msgs::getCStyleArgs( argv[ 0 ], *qtArgs );
     auto qtCArgc = static_cast< int >( qtCArgs.size() );
+    QSurfaceFormat::setDefaultFormat( QVTKOpenGLNativeWidget::defaultFormat() );
     auto app = QApplication( qtCArgc, qtCArgs.data() );
     setlocale( LC_NUMERIC, "C" );
 
     auto msgsClient = rofi::msgs::Client( cli.progName(), *clientArgs );
 
-    auto node = boost::make_shared< gazebo::transport::Node >();
+    auto node = boost::make_shared< rofi::gz::Node >();
     node->Init();
 
     auto settingsCmdPub = node->Advertise< simplesim::msgs::SettingsCmd >( "~/control" );

@@ -9,10 +9,12 @@ message("Model resources: ${modelResources}")
 add_executable(rofi-vis ${modelResources} ${ARMADILLO_LIBRARIES}
     main.cpp Generator.h Camera.h Animator.h)
 target_link_libraries(rofi-vis PUBLIC legacy-configuration atoms atoms-heavy cxxopts ${VTK_LIBRARIES})
+vtk_module_autoinit(TARGETS rofi-vis MODULES ${VTK_LIBRARIES})
 
 add_executable(test-rofi-vis ${modelResources} test/test.cpp)
 target_link_libraries(test-rofi-vis PUBLIC legacy-configuration atoms atoms-heavy ${ARMADILLO_LIBRARIES} ${VTK_LIBRARIES} Catch2WithMain)
 target_include_directories(test-rofi-vis PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
+vtk_module_autoinit(TARGETS test-rofi-vis MODULES ${VTK_LIBRARIES})
 
 
 add_custom_command(OUTPUT ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/rofi-vis-build-video
@@ -44,5 +46,6 @@ if(Qt5_FOUND)
 
   target_link_libraries(rofi-app
     Qt5::Widgets legacy-configuration atoms atoms-heavy cxxopts ${VTK_LIBRARIES})
+  vtk_module_autoinit(TARGETS rofi-app MODULES ${VTK_LIBRARIES})
 
 endif()

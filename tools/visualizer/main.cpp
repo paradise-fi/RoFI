@@ -255,7 +255,7 @@ void parse(int argc, char* argv[], Parameters& p){
             exit(1);
         }
 
-    } catch (cxxopts::OptionException& e){
+    } catch ( cxxopts::exceptions::exception & e ) {
         std::cerr << e.what();
         exit(1);
     }

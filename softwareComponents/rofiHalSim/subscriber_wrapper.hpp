@@ -4,7 +4,7 @@
 #include <functional>
 #include <memory>
 
-#include <gazebo/transport/transport.hh>
+#include <rofi/gz_transport.hpp>
 
 #include "gazebo_node_handler.hpp"
 #include "message_logger.hpp"
@@ -57,7 +57,7 @@ private:
     const std::function< void( const Message & ) > _callback;
     GazeboNodeHandler _node;
     std::string _topic;
-    gazebo::transport::SubscriberPtr _sub;
+    rofi::gz::SubscriberPtr _sub;
 };
 
 template < typename Message >

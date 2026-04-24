@@ -1,15 +1,12 @@
 #pragma once
 
-// #include <vtkGenericOpenGLRenderWindow.h> // VTK 8.2 and newer
-
+#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkSmartPointer.h>
 #include <vtkSphereSource.h>
 #include <vtkPolyDataMapper.h>
 #include <vtkActor.h>
-#include <vtkRenderWindow.h>
 #include <vtkRenderer.h>
 #include <vtkProperty.h>
-#include <vtkRenderWindowInteractor.h>
 #include <vtkProperty.h>
 #include <vtkSTLReader.h>
 #include <vtkMatrix4x4.h>

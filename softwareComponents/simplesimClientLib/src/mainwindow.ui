@@ -86,7 +86,7 @@
      </widget>
     </item>
     <item row="0" column="0" colspan="2">
-     <widget class="QVTKWidget" name="widget" native="true">
+     <widget class="QVTKOpenGLNativeWidget" name="widget" native="true">
       <property name="minimumSize">
        <size>
         <width>484</width>
@@ -150,9 +150,9 @@
  </widget>
  <customwidgets>
   <customwidget>
-   <class>QVTKWidget</class>
+   <class>QVTKOpenGLNativeWidget</class>
    <extends>QWidget</extends>
-   <header>QVTKWidget.h</header>
+   <header>QVTKOpenGLNativeWidget.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

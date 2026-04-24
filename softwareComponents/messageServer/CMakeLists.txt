@@ -6,6 +6,5 @@ set (FILES
 )
 
 add_library(messageServer ${FILES})
-target_link_libraries(messageServer PRIVATE ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
-target_include_directories(messageServer SYSTEM PUBLIC ${GAZEBO_INCLUDE_DIRS})
+target_link_libraries(messageServer PUBLIC gzTransportCompat)
 target_include_directories(messageServer PUBLIC include)

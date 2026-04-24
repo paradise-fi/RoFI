@@ -11,11 +11,10 @@
 
 #include <vtkActor.h>
 #include <vtkCamera.h>
+#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkInteractorStyle.h>
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkNew.h>
-#include <vtkRenderWindow.h>
-#include <vtkRenderWindowInteractor.h>
 #include <vtkRenderer.h>
 #include <vtkSmartPointer.h>
 
@@ -82,7 +81,6 @@ public:
         }
 
         assert( _renderWindow.Get() != nullptr );
-        assert( _renderWindowInteractor.Get() != nullptr );
 
         initInfoTree( *getCurrentConfig() );
 
@@ -203,9 +201,8 @@ private:
 
     std::unique_ptr< ChangeColor > _changeColorWindow;
     vtkNew< vtkRenderer > _renderer;
-    vtkNew< vtkRenderWindow > _renderWindow;
+    vtkNew< vtkGenericOpenGLRenderWindow > _renderWindow;
     vtkNew< vtkInteractorStyleTrackballCamera > _interactorStyle;
-    vtkNew< vtkRenderWindowInteractor > _renderWindowInteractor;
 
     int _timerId;      // ID of the timer that refreshes frames
     int _simStep = 10; // ms to refresh the frame

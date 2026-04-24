@@ -10,6 +10,7 @@
 #include <vtkAxesActor.h>
 #include <vtkCamera.h>
 #include <vtkCylinderSource.h>
+#include <vtkGenericOpenGLRenderWindow.h>
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkMatrix4x4.h>
 #include <vtkNamedColors.h>
@@ -313,12 +314,11 @@ SimplesimClient::SimplesimClient( OnSettingsCmdCallback onSettingsCmdCallback )
     _renderWindow->SetWindowName( "RoFI simulation" );
     _renderWindow->AddRenderer( _renderer.Get() );
 
-    _renderWindowInteractor->SetRenderWindow( _renderWindow.Get() );
-    _renderWindowInteractor->SetInteractorStyle( _interactorStyle.Get() );
-
-    _renderWindowInteractor->Initialize();
-
-    _ui->widget->SetRenderWindow( _renderWindow.Get() );
+    _ui->widget->setRenderWindow( _renderWindow.Get() );
+    if ( auto * interactor = _renderWindow->GetInteractor() ) {
+        interactor->SetInteractorStyle( _interactorStyle.Get() );
+        interactor->Initialize();
+    }
 
     connect( _ui->doubleSpinBox,
              SIGNAL( valueChanged( double ) ),

@@ -8,6 +8,7 @@
 #include "configuration/serialization.hpp"
 #include "configuration/universalModule.hpp"
 #include "message_server.hpp"
+#include <rofi/gz_transport.hpp>
 #include "simplesim/collision.hpp"
 #include "simplesim/packet_filters/py_filter.hpp"
 #include "simplesim/simplesim.hpp"
@@ -64,9 +65,9 @@ private:
 
     simplesim::Simplesim & _simplesim;
 
-    gazebo::transport::NodePtr _node;
-    gazebo::transport::PublisherPtr _pub;
-    gazebo::transport::SubscriberPtr _sub;
+    rofi::gz::NodePtr _node;
+    rofi::gz::PublisherPtr _pub;
+    rofi::gz::SubscriberPtr _sub;
 };
 
 

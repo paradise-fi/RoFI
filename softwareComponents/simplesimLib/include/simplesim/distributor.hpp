@@ -3,7 +3,7 @@
 #include <cassert>
 #include <thread>
 
-#include <gazebo/transport/transport.hh>
+#include <rofi/gz_transport.hpp>
 
 #include <message_logger.hpp>
 
@@ -27,7 +27,7 @@ public:
 
     // Initializes the Distributor
     // Make sure, that Gazebo communication is running before calling this
-    Distributor( gazebo::transport::Node & node,
+    Distributor( rofi::gz::Node & node,
                  ModulesCommunication & modulesCommunication,
                  bool verbose );
 
@@ -76,7 +76,7 @@ private:
     ModulesCommunication & _modulesCommunication;
 
     msgs::MessageLogger _logger;
-    gazebo::transport::PublisherPtr _pub;
-    gazebo::transport::SubscriberPtr _sub;
+    rofi::gz::PublisherPtr _pub;
+    rofi::gz::SubscriberPtr _sub;
 };
 } // namespace rofi::simplesim

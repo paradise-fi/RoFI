@@ -9,7 +9,7 @@
 #include <variant>
 
 #include <atoms/concurrent_queue.hpp>
-#include <gazebo/transport/transport.hh>
+#include <rofi/gz_transport.hpp>
 
 #include <rofi_hal.hpp>
 
@@ -181,7 +181,7 @@ private:
     std::condition_variable _onRofiTopicsUpdate;
     SubscriberWrapperPtr< rofi::messages::DistributorResp > _rofiTopicsSub;
 
-    std::map< std::string, gazebo::transport::PublisherPtr > _pubs;
+    std::map< std::string, rofi::gz::PublisherPtr > _pubs;
 
     std::jthread _workerThread;
 };

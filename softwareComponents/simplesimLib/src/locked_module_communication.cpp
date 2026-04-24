@@ -5,7 +5,7 @@
 using namespace rofi::simplesim;
 
 LockedModuleCommunication::LockedModuleCommunication( CommandHandler & commandHandler,
-                                                      gazebo::transport::Node & node,
+                                                      rofi::gz::Node & node,
                                                       std::string moduleTopicName,
                                                       ModuleId moduleId,
                                                       bool verbose )

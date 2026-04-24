@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-#include <gazebo/transport/transport.hh>
+#include <rofi/gz_transport.hpp>
 
 #include "atoms/guarded.hpp"
 #include "command_handler.hpp"
@@ -26,7 +26,7 @@ class ModulesCommunication {
 
 public:
     ModulesCommunication( std::shared_ptr< CommandHandler > commandHandler,
-                          gazebo::transport::NodePtr node,
+                          rofi::gz::NodePtr node,
                           bool verbose )
             : _commandHandler( std::move( commandHandler ) )
             , _node( std::move( node ) )
@@ -116,7 +116,7 @@ private:
 private:
     std::shared_ptr< CommandHandler > _commandHandler;
 
-    gazebo::transport::NodePtr _node;
+    rofi::gz::NodePtr _node;
     bool _verbose;
 
     atoms::Guarded< std::map< ModuleId, LockedModuleCommunicationPtr >, std::shared_mutex >

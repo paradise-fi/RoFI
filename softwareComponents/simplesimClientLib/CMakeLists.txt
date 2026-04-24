@@ -30,3 +30,4 @@ target_link_libraries(simplesimClient PUBLIC configuration simplesimConfigMsgs
         configurationWithJson ${VTK_LIBRARIES} Qt5::Core Qt5::Widgets)
 target_include_directories(simplesimClient SYSTEM PUBLIC ${VTK_INCLUDE_DIRS})
 target_include_directories(simplesimClient PUBLIC include)
+vtk_module_autoinit(TARGETS simplesimClient MODULES ${VTK_LIBRARIES})

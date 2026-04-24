@@ -7,6 +7,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} $ENV{ROFI_ROOT}/releng/cmake)
 option(BUILD_SMTRECONFIG "Build SMT-based reconfiguration library." FALSE)
 option(BUILD_HEADLESS "Build only parts of the project, that can run headlessly." FALSE)
 option(BUILD_GAZEBO "Build parts that require gazebo libraries." TRUE)
+option(BUILD_GZ_SIMULATOR "Build simulator plugins and Gazebo worlds." FALSE)
 option(BUILD_RUST "Build parts that contain or depend on Rust." TRUE)
 include(ColoredOutput)
 
@@ -136,33 +137,29 @@ find_package(Armadillo REQUIRED)
 find_package(CLP REQUIRED)
 
 if (${BUILD_GAZEBO})
-  find_package(gazebo REQUIRED)
+  find_package(gz-transport 15 REQUIRED)
+endif()
 
-  if (${gazebo_VERSION_MAJOR} LESS 11)
-    message(WARNING "Old version of gazebo detected")
-  endif()
-
-  # Workaround for bug in gazebo that causes problems on `g++11` with `-std=c++20`
-  set(GAZEBO_INCLUDE_DIRS "$ENV{ROFI_ROOT}/gazebo_include" ${GAZEBO_INCLUDE_DIRS})
-
-  find_library(LibTBB NAMES tbb)
-  link_libraries(gazebo ${LibTBB})
-
-  find_package(Protobuf REQUIRED)
-  # Include Gazebo messages
-  set(PROTOBUF_IMPORT_DIRS)
-  foreach(ITR ${GAZEBO_INCLUDE_DIRS})
-      if(ITR MATCHES ".*gazebo-[0-9.]+$")
-          set(PROTOBUF_IMPORT_DIRS "${ITR}/gazebo/msgs/proto")
-      endif()
-  endforeach()
+if (${BUILD_GZ_SIMULATOR})
+  find_package(gz-sim 10 REQUIRED)
 endif()
 
 if (NOT ${BUILD_HEADLESS})
-  find_package(VTK REQUIRED)
-  include(${VTK_USE_FILE})
-  # Silences warnings from VTK headers
-  include_directories(SYSTEM ${VTK_INCLUDE_DIRS})
+  find_package(VTK REQUIRED COMPONENTS
+      CommonColor
+      CommonCore
+      CommonDataModel
+      FiltersCore
+      FiltersGeneral
+      FiltersHybrid
+      FiltersSources
+      GUISupportQt
+      IOGeometry
+      IOImage
+      InteractionStyle
+      RenderingAnnotation
+      RenderingCore
+      RenderingOpenGL2)
 endif()
 
 
@@ -201,6 +198,7 @@ add_component(taskDistribution)
 add_component(snake_reconfig)
 
 if (${BUILD_GAZEBO})
+  add_component(gzTransportCompat)
   add_component(rofisimMessages)
   add_component(messageLogger)
 
@@ -210,12 +208,15 @@ if (${BUILD_GAZEBO})
   add_component(rofiHalSim)
   add_component(rofiHalSimPy)
 
-  add_component(gazebosim)
   add_component(simplesimConfigMsgs)
   add_component(simplesimLib)
   add_component(simplesimPacketFilters)
   add_component(simplesimClientLib)
   add_component(simplesimServerLib)
+
+  if (${BUILD_GZ_SIMULATOR})
+    add_component(gazebosim)
+  endif()
 
   # Introduce alias for the HAL
   add_library(rofi::hal ALIAS rofi_hal_sim)
@@ -240,7 +241,9 @@ if (NOT ${BUILD_HEADLESS})
 endif()
 
 if (${BUILD_GAZEBO})
-  add_tool(gazebosimTools)
+  if (${BUILD_GZ_SIMULATOR})
+    add_tool(gazebosimTools)
+  endif()
   add_tool(simplesimServer)
 
   if (NOT ${BUILD_HEADLESS})
@@ -254,7 +257,7 @@ if (${BUILD_RUST})
 endif()
 
 
-if (${BUILD_GAZEBO})
+if (${BUILD_GAZEBO} AND ${BUILD_GZ_SIMULATOR})
   add_subdirectory($ENV{ROFI_ROOT}/data/gazebo/worlds data/gazebo/worlds)
   add_subdirectory($ENV{ROFI_ROOT}/examples/simulator examples/simulator)
   add_subdirectory($ENV{ROFI_ROOT}/tutorials/simulator tutorials/simulator)

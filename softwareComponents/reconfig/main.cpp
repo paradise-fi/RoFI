@@ -160,7 +160,7 @@ void parse(int argc, char* argv[])
             }
         }
     }
-    catch (cxxopts::OptionException& e)
+    catch ( cxxopts::exceptions::exception & e )
     {
         std::cerr << e.what() << "\n";
         exit(0);

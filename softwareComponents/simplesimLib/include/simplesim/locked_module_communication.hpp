@@ -3,7 +3,7 @@
 #include <string>
 #include <thread>
 
-#include <gazebo/transport/transport.hh>
+#include <rofi/gz_transport.hpp>
 
 #include <message_logger.hpp>
 
@@ -20,7 +20,7 @@ public:
     using RofiCmdPtr = boost::shared_ptr< const rofi::messages::RofiCmd >;
 
     LockedModuleCommunication( CommandHandler & commandHandler,
-                               gazebo::transport::Node & node,
+                               rofi::gz::Node & node,
                                std::string moduleTopicName,
                                ModuleId moduleId,
                                bool verbose );
@@ -64,8 +64,8 @@ private:
     std::string _topic;
 
     msgs::MessageLogger _logger;
-    gazebo::transport::PublisherPtr _pub;
-    gazebo::transport::SubscriberPtr _sub;
+    rofi::gz::PublisherPtr _pub;
+    rofi::gz::SubscriberPtr _sub;
 };
 
 } // namespace rofi::simplesim

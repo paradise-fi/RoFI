@@ -3,7 +3,7 @@
 #include <cassert>
 #include <string>
 
-#include <gazebo/transport/transport.hh>
+#include <rofi/gz_transport.hpp>
 
 #include "modules_communication.hpp"
 
@@ -17,7 +17,7 @@ public:
                    std::string worldName = "default" )
             : _worldName( std::move( worldName ) )
             , _node( [ this ] {
-                auto node = boost::make_shared< gazebo::transport::Node >();
+                auto node = boost::make_shared< rofi::gz::Node >();
                 assert( node );
                 node->Init( this->_worldName );
                 return node;
@@ -38,14 +38,14 @@ public:
         _modules.sendRofiResponses( std::forward< ResponsesContainer >( responses ) );
     }
 
-    gazebo::transport::NodePtr node() const
+    rofi::gz::NodePtr node() const
     {
         return _node;
     }
 
 private:
     const std::string _worldName;
-    gazebo::transport::NodePtr _node;
+    rofi::gz::NodePtr _node;
 
     ModulesCommunication _modules;
 };

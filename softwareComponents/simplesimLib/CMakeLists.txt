@@ -11,6 +11,5 @@ set(FILES
 )
 
 add_library(simplesim ${FILES})
-target_link_libraries(simplesim PUBLIC rofisimMessages configuration simplesimConfigMsgs messageLogger atoms fmt ${GAZEBO_LIBRARIES} ${Boost_LIBRARIES})
-target_include_directories(simplesim SYSTEM PUBLIC ${GAZEBO_INCLUDE_DIRS})
+target_link_libraries(simplesim PUBLIC rofisimMessages configuration simplesimConfigMsgs messageLogger atoms fmt gzTransportCompat)
 target_include_directories(simplesim PUBLIC include)

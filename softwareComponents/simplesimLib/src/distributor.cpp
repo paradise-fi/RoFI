@@ -5,7 +5,7 @@
 
 using namespace rofi::simplesim;
 
-Distributor::Distributor( gazebo::transport::Node & node,
+Distributor::Distributor( rofi::gz::Node & node,
                           ModulesCommunication & modulesCommunication,
                           bool verbose )
         : _modulesCommunication( modulesCommunication ), _logger( verbose )
