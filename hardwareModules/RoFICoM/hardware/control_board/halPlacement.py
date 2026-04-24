@@ -1,7 +1,7 @@
 import pcbnew
 import math
 
-CENTER_X = 140
+CENTER_X = 80
 CENTER_Y = 90
 BASE_ROT = 180
 ANGLE_OFFSET = 7.5
@@ -18,7 +18,7 @@ for i, s in enumerate(sensors):
     rotation = (BASE_ROT - angle) % 360
     x = math.cos(angle * math.pi / 180) * RADIUS + CENTER_X
     y = math.sin(angle * math.pi / 180) * RADIUS + CENTER_Y
-    s.SetPosition(pcbnew.wxPointMM(x, y))
+    s.SetPosition(pcbnew.VECTOR2I_MM(x, y))
     s.SetOrientation(pcbnew.EDA_ANGLE(rotation, pcbnew.DEGREES_T))
     print(f"s {x}, {y}")
 

@@ -1,0 +1,3599 @@
+(kicad_sch
+	(version 20250114)
+	(generator "eeschema")
+	(generator_version "9.0")
+	(uuid "6b055575-1067-474e-b236-eaebfbfe4784")
+	(paper "A4")
+	(lib_symbols
+		(symbol "+3V3_5"
+			(power)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "+3V3_5"
+				(at 0 3.556 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"+3V3\""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "+3V3_5_0_1"
+				(polyline
+					(pts
+						(xy -0.762 1.27) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 2.54) (xy 0.762 1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 2.54)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "+3V3_5_1_1"
+				(pin power_in line
+					(at 0 0 90)
+					(length 0)
+					(hide yes)
+					(name "+3V3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "GND_7"
+			(power)
+			(pin_names
+				(offset 0)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "#PWR"
+				(at 0 -6.35 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Value" "GND_7"
+				(at 0 -3.81 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+				)
+			)
+			(property "Footprint" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "global power"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "GND_7_0_1"
+				(polyline
+					(pts
+						(xy 0 0) (xy 0 -1.27) (xy 1.27 -1.27) (xy 0 -2.54) (xy -1.27 -1.27) (xy 0 -1.27)
+					)
+					(stroke
+						(width 0)
+						(type default)
+					)
+					(fill
+						(type none)
+					)
+				)
+			)
+			(symbol "GND_7_1_1"
+				(pin power_in line
+					(at 0 0 270)
+					(length 0)
+					(hide yes)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+		(symbol "rofi:TMAG5231C1GQDMRR"
+			(pin_names
+				(offset 0.254)
+			)
+			(exclude_from_sim no)
+			(in_bom yes)
+			(on_board yes)
+			(property "Reference" "U"
+				(at -4.318 -9.144 0)
+				(effects
+					(font
+						(size 1.524 1.524)
+					)
+				)
+			)
+			(property "Value" "TMAG5231C1GQDMRR"
+				(at 12.954 -9.398 0)
+				(effects
+					(font
+						(size 1.524 1.524)
+					)
+				)
+			)
+			(property "Footprint" "rofi:X2SON_31H1DQDMRR_TEX"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(italic yes)
+					)
+					(hide yes)
+				)
+			)
+			(property "Datasheet" "https://www.ti.com/lit/gpn/tmag5231"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+						(italic yes)
+					)
+					(hide yes)
+				)
+			)
+			(property "Description" ""
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_keywords" "TMAG5231C1GQDMRR"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(property "ki_fp_filters" "X2SON_31H1DQDMRR_TEX X2SON_31H1DQDMRR_TEX-M X2SON_31H1DQDMRR_TEX-L"
+				(at 0 0 0)
+				(effects
+					(font
+						(size 1.27 1.27)
+					)
+					(hide yes)
+				)
+			)
+			(symbol "TMAG5231C1GQDMRR_1_1"
+				(rectangle
+					(start -5.08 7.62)
+					(end 5.08 -7.62)
+					(stroke
+						(width 0)
+						(type solid)
+					)
+					(fill
+						(type background)
+					)
+				)
+				(pin no_connect line
+					(at -7.62 2.54 0)
+					(length 2.54)
+					(name "NC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "2"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin no_connect line
+					(at -7.62 0 0)
+					(length 2.54)
+					(name "PAD-NC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "5"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin power_in line
+					(at 0 10.16 270)
+					(length 2.54)
+					(name "VCC"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "4"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin passive line
+					(at 0 -10.16 90)
+					(length 2.54)
+					(name "GND"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "1"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+				(pin output line
+					(at 7.62 2.54 180)
+					(length 2.54)
+					(name "OUT"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+					(number "3"
+						(effects
+							(font
+								(size 1.27 1.27)
+							)
+						)
+					)
+				)
+			)
+			(embedded_fonts no)
+		)
+	)
+	(no_connect
+		(at 165.1 91.44)
+		(uuid "0d2f4004-cb1c-47a0-b44c-9781dbe50e07")
+	)
+	(no_connect
+		(at 240.03 93.98)
+		(uuid "1368ec8b-7b09-4c0d-aa1e-74c31f78c5f0")
+	)
+	(no_connect
+		(at 165.1 93.98)
+		(uuid "13f14a59-b331-4897-9cd4-e016729326bb")
+	)
+	(no_connect
+		(at 92.71 93.98)
+		(uuid "1766dfd9-27f9-4ba2-8eb4-cb0627fe0596")
+	)
+	(no_connect
+		(at 20.32 93.98)
+		(uuid "182d4bdd-28df-4e5c-93a7-3d920c858262")
+	)
+	(no_connect
+		(at 69.85 93.98)
+		(uuid "1942be44-3444-4658-9c50-abdfe007db3d")
+	)
+	(no_connect
+		(at 214.63 91.44)
+		(uuid "4a60f4b3-1489-4d20-b16d-b1f2f065d889")
+	)
+	(no_connect
+		(at 69.85 91.44)
+		(uuid "5630a31a-db7c-421a-bd20-aca46c97cf13")
+	)
+	(no_connect
+		(at 140.97 91.44)
+		(uuid "5b5f172c-a552-480f-90ab-dad2d6bca951")
+	)
+	(no_connect
+		(at 189.23 91.44)
+		(uuid "64b44e8a-d3fd-4cf2-8004-ef4c4bcf7c16")
+	)
+	(no_connect
+		(at 189.23 93.98)
+		(uuid "68fa5e46-30c8-4267-a711-d7beb77562f9")
+	)
+	(no_connect
+		(at 20.32 91.44)
+		(uuid "956b73e2-5fff-4d2b-998b-8ec660d2a435")
+	)
+	(no_connect
+		(at 214.63 93.98)
+		(uuid "9715294f-909a-4297-9c04-6bb31be11cd1")
+	)
+	(no_connect
+		(at 45.72 91.44)
+		(uuid "b3329244-5313-4fcf-ba15-b0557281df1c")
+	)
+	(no_connect
+		(at 116.84 91.44)
+		(uuid "b538a04c-f0cb-4f75-a035-bdd736b105b4")
+	)
+	(no_connect
+		(at 45.72 93.98)
+		(uuid "c267e006-2808-45be-81d5-75dc0187a056")
+	)
+	(no_connect
+		(at 240.03 91.44)
+		(uuid "c4dbb6ab-0a60-4a07-b108-d8ca7bb0ec8e")
+	)
+	(no_connect
+		(at 92.71 91.44)
+		(uuid "d2506b0a-f78d-4b57-b9ed-403ab9e06b86")
+	)
+	(no_connect
+		(at 140.97 93.98)
+		(uuid "e4617b41-0130-4a10-8b7e-08332d228e7f")
+	)
+	(no_connect
+		(at 116.84 93.98)
+		(uuid "f98249f8-1f3a-45ec-bcf2-670b964f83aa")
+	)
+	(bus_entry
+		(at 229.87 76.2)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0cc394c0-d9be-4ba3-bc43-7fc40a29f9c2")
+	)
+	(bus_entry
+		(at 308.61 76.2)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3005c5fd-e54d-469f-b3fe-8f37d64b56c9")
+	)
+	(bus_entry
+		(at 156.21 76.2)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3759b8ee-acc7-4b1f-a938-67cf887a82f1")
+	)
+	(bus_entry
+		(at 107.95 76.2)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5ce27346-015d-42a2-b511-10c68cce9a53")
+	)
+	(bus_entry
+		(at 85.09 76.2)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6cbfac9e-0f5b-461b-ae5d-6a8b899250c8")
+	)
+	(bus_entry
+		(at 204.47 76.2)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8ced18fd-0ce3-40a6-9cef-91d45f9c50c6")
+	)
+	(bus_entry
+		(at 280.67 76.2)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9077ea2a-3617-4363-8ece-11c133b8ed2b")
+	)
+	(bus_entry
+		(at 255.27 76.2)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a44e255f-e01b-4eb2-8499-67f38634bc23")
+	)
+	(bus_entry
+		(at 180.34 76.2)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "a85dbb65-f853-468c-930e-82d2b795d0e6")
+	)
+	(bus_entry
+		(at 132.08 76.2)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bc489908-c607-4fd2-9276-a6231bca4b5a")
+	)
+	(bus_entry
+		(at 60.96 76.2)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c2f68638-eed3-4675-a6fa-083a006a6965")
+	)
+	(bus_entry
+		(at 35.56 76.2)
+		(size 2.54 2.54)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e6a62d4a-e8f8-413f-ba9a-9d3783a1d392")
+	)
+	(bus
+		(pts
+			(xy 180.34 76.2) (xy 204.47 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "04ed06c5-03f3-4757-8f39-ad23335d6e41")
+	)
+	(bus
+		(pts
+			(xy 229.87 76.2) (xy 255.27 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "0d9da1c2-1a03-4022-8bee-39d29ec3f528")
+	)
+	(wire
+		(pts
+			(xy 311.15 78.74) (xy 311.15 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "123465a7-4a90-4b4a-a35b-7df89e88dc9a")
+	)
+	(wire
+		(pts
+			(xy 110.49 91.44) (xy 107.95 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "1ce4012e-6561-40b0-9f6c-46c43fe89488")
+	)
+	(wire
+		(pts
+			(xy 134.62 91.44) (xy 132.08 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "3037e75d-3e19-49d9-ad13-8f0be8e53081")
+	)
+	(bus
+		(pts
+			(xy 25.4 76.2) (xy 35.56 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "307bde51-4529-468f-a055-966f1aed3987")
+	)
+	(bus
+		(pts
+			(xy 35.56 76.2) (xy 60.96 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "37ea9b36-3d31-4381-b2ac-152e43db2acb")
+	)
+	(wire
+		(pts
+			(xy 232.41 91.44) (xy 229.87 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "38ca4db1-b332-4c2e-9adc-8db30ca81007")
+	)
+	(wire
+		(pts
+			(xy 38.1 78.74) (xy 38.1 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "39ee1957-b295-459a-8f72-bcba07ae2e08")
+	)
+	(bus
+		(pts
+			(xy 132.08 76.2) (xy 156.21 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4209a483-e35b-414f-8978-a48ea916c951")
+	)
+	(wire
+		(pts
+			(xy 63.5 91.44) (xy 60.96 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "4680974c-274a-4017-a7b8-b35894ede8a4")
+	)
+	(bus
+		(pts
+			(xy 280.67 76.2) (xy 308.61 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "581a48f6-bc70-4a5e-b65d-50975ece11a2")
+	)
+	(bus
+		(pts
+			(xy 308.61 76.2) (xy 316.23 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "5ac3bddd-c0ee-4013-b397-f821dc949178")
+	)
+	(wire
+		(pts
+			(xy 87.63 78.74) (xy 87.63 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "676d6d15-3b6f-47cc-bdcb-6a2671444180")
+	)
+	(wire
+		(pts
+			(xy 38.1 91.44) (xy 35.56 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "67939a62-11f0-4756-b986-e3c420f5bb2a")
+	)
+	(wire
+		(pts
+			(xy 257.81 78.74) (xy 257.81 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "6b4681ae-29d8-49f9-a554-e89392cb67e2")
+	)
+	(wire
+		(pts
+			(xy 257.81 91.44) (xy 255.27 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "72815b5e-2e63-40d9-8b0d-a13700f6bd96")
+	)
+	(bus
+		(pts
+			(xy 107.95 76.2) (xy 132.08 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "74dc4db6-b49d-43dd-ad17-f5e068e41c33")
+	)
+	(wire
+		(pts
+			(xy 158.75 78.74) (xy 158.75 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "7bc8aa6d-1621-44f9-a03a-ed42521d4a18")
+	)
+	(wire
+		(pts
+			(xy 207.01 78.74) (xy 207.01 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "898461a8-ca72-46f9-a4d6-0fb89f7a427c")
+	)
+	(bus
+		(pts
+			(xy 60.96 76.2) (xy 85.09 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "8e46009f-4289-4e16-97bf-2ba9dc523375")
+	)
+	(wire
+		(pts
+			(xy 110.49 78.74) (xy 110.49 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "99e8ac02-086e-46f3-8798-a4286593e043")
+	)
+	(wire
+		(pts
+			(xy 182.88 78.74) (xy 182.88 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9d83592b-2f16-44ca-ab0c-18f7e9823a31")
+	)
+	(wire
+		(pts
+			(xy 283.21 91.44) (xy 280.67 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9feca34f-20a8-46a6-9782-214d6b1f29ba")
+	)
+	(wire
+		(pts
+			(xy 87.63 91.44) (xy 85.09 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "9ff1e68d-9fb2-4ce9-a1e3-abb79ea65060")
+	)
+	(wire
+		(pts
+			(xy 283.21 78.74) (xy 283.21 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ac115df7-3ca4-4dd1-a45a-586e6b6b3b5f")
+	)
+	(bus
+		(pts
+			(xy 204.47 76.2) (xy 229.87 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "ae513287-2a63-44f1-882f-490485e9eda9")
+	)
+	(wire
+		(pts
+			(xy 207.01 91.44) (xy 204.47 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b267f8cc-a348-4465-a01d-7527247152bc")
+	)
+	(bus
+		(pts
+			(xy 255.27 76.2) (xy 280.67 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b6ee3e62-86da-47f4-9617-376f18a7c3c1")
+	)
+	(wire
+		(pts
+			(xy 63.5 78.74) (xy 63.5 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "b6fd9c72-74e3-4288-b116-fe4583b197d3")
+	)
+	(bus
+		(pts
+			(xy 25.4 58.42) (xy 25.4 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "bf739637-b35b-4d23-a91b-1c39cda3a10b")
+	)
+	(wire
+		(pts
+			(xy 311.15 91.44) (xy 308.61 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "c5cfed38-b741-470c-ab24-9ec7d70c24cc")
+	)
+	(wire
+		(pts
+			(xy 182.88 91.44) (xy 180.34 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d2bedc59-6564-4189-a389-d3da6873f336")
+	)
+	(wire
+		(pts
+			(xy 158.75 91.44) (xy 156.21 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e5cea7b6-15a7-4231-b1a3-04f8b9676d78")
+	)
+	(wire
+		(pts
+			(xy 232.41 78.74) (xy 232.41 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e7940059-33af-4504-b908-9589b3461611")
+	)
+	(bus
+		(pts
+			(xy 156.21 76.2) (xy 180.34 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "e9411724-b69d-498d-b2e5-e42f7c822d61")
+	)
+	(bus
+		(pts
+			(xy 85.09 76.2) (xy 107.95 76.2)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "efd37159-3b78-4467-8f03-d7e9154095a1")
+	)
+	(wire
+		(pts
+			(xy 134.62 78.74) (xy 134.62 91.44)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "f275a2ee-48e6-454d-b85e-0bbd8f0ca2bd")
+	)
+	(label "POS1"
+		(at 38.1 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "31e614f2-fab4-4aad-be68-3270e9bd44c2")
+	)
+	(label "POS7"
+		(at 182.88 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "52eaeed7-c9dd-42cf-bbad-89bd83113e9c")
+	)
+	(label "POS10"
+		(at 257.81 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "60bc6a84-d625-4694-abc5-d177e20ccfa5")
+	)
+	(label "POS6"
+		(at 158.75 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "65b100b4-cf05-4b73-9ed0-b9e8d8c8ea2d")
+	)
+	(label "POS4"
+		(at 110.49 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "699b5e80-a2b3-4b3e-9f02-8b88c4c8c884")
+	)
+	(label "POS5"
+		(at 134.62 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "720d15ae-60aa-49a2-8b76-558a18999231")
+	)
+	(label "POS8"
+		(at 207.01 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "8b67f84f-81e1-4777-ad62-279f765c5d62")
+	)
+	(label "POS2"
+		(at 63.5 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "b13c5fb4-3fe1-4b02-9a22-95861ba84de6")
+	)
+	(label "POS12"
+		(at 311.15 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "dbcc819d-6abf-4fe9-a655-3518b72e01c8")
+	)
+	(label "POS9"
+		(at 232.41 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "e124b2db-4b4d-4590-8297-60af87a887be")
+	)
+	(label "POS3"
+		(at 87.63 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "f9e42c9f-8ce2-40ce-9548-95ff1c8d4049")
+	)
+	(label "POS11"
+		(at 283.21 83.82 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "ffeed91b-891c-4e7e-bb70-9b7dbd6318a0")
+	)
+	(hierarchical_label "POS[1..12]"
+		(shape input)
+		(at 25.4 58.42 90)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left)
+		)
+		(uuid "f5a252e5-69cd-4dd0-85f1-0d8900f67028")
+	)
+	(symbol
+		(lib_name "GND_7")
+		(lib_id "power:GND")
+		(at 222.25 104.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "04c12270-2996-4e0e-82ff-b0b0084d38ec")
+		(property "Reference" "#PWR018"
+			(at 222.25 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 224.79 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 222.25 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 222.25 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 222.25 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "6f502d6b-ed63-447d-b2ab-f6eab1b33c74")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR018")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "GND_7")
+		(lib_id "power:GND")
+		(at 148.59 104.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "21dfcfc5-68d1-4efe-945b-2b0c8462f039")
+		(property "Reference" "#PWR012"
+			(at 148.59 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 151.13 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 148.59 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 148.59 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 148.59 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "9f5c5048-e193-4e45-9cf4-ec5dd8a0b2f5")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR012")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "GND_7")
+		(lib_id "power:GND")
+		(at 196.85 104.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "22e68d75-c643-4960-a5e3-c3fa055a62d8")
+		(property "Reference" "#PWR016"
+			(at 196.85 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 199.39 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 196.85 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 196.85 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 196.85 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "58068c35-eeef-4823-aeba-4f4acd4b6f0a")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR016")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "GND_7")
+		(lib_id "power:GND")
+		(at 273.05 104.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "2647e73a-5ca3-4fe8-af0e-5abce4d59f49")
+		(property "Reference" "#PWR022"
+			(at 273.05 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 275.59 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 273.05 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 273.05 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 273.05 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "09744cc5-c10c-4d4e-bac8-1b6bc5b271e4")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR022")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "rofi:TMAG5231C1GQDMRR")
+		(at 77.47 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "2c1d769f-b158-4549-b0dc-8b3e54124789")
+		(property "Reference" "HAL3"
+			(at 68.834 100.076 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "TMAG5231C1GQDMRR"
+			(at 77.47 112.522 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "rofi:X2SON_31H1DQDMRR_TEX"
+			(at 77.47 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tmag5231"
+			(at 77.47 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 77.47 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "f1c9c9f7-c82c-4406-b77f-f3d6c188d4e6")
+		)
+		(pin "4"
+			(uuid "840a6ef7-7784-4cc7-a526-1ca449573b34")
+		)
+		(pin "5"
+			(uuid "9d711cc4-e058-4582-9062-ed385e38cc10")
+		)
+		(pin "1"
+			(uuid "d29c7dc9-ddf0-410f-865e-89a618255b24")
+		)
+		(pin "2"
+			(uuid "82714ded-b3b2-4d07-94dc-1f3037331562")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "HAL3")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_5")
+		(lib_id "power:+3V3")
+		(at 124.46 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "3a2d9de1-8cd9-482e-a5d5-3cefba8d9357")
+		(property "Reference" "#PWR09"
+			(at 124.46 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 128.27 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 124.46 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 124.46 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 124.46 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "c70e3f92-716e-4b92-8827-3856714b67f4")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR09")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "rofi:TMAG5231C1GQDMRR")
+		(at 172.72 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "3c595b93-1a89-4538-82bd-fa8b425f9e5f")
+		(property "Reference" "HAL7"
+			(at 164.084 100.076 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "TMAG5231C1GQDMRR"
+			(at 172.72 112.522 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "rofi:X2SON_31H1DQDMRR_TEX"
+			(at 172.72 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tmag5231"
+			(at 172.72 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 172.72 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "0c505466-58fd-4cdf-88dd-a5f121cf158c")
+		)
+		(pin "4"
+			(uuid "63c55183-c84a-4489-be63-41c0719ace96")
+		)
+		(pin "5"
+			(uuid "f134d3f9-64d9-4901-b48f-e41b75b91c61")
+		)
+		(pin "1"
+			(uuid "a7e7c73e-0499-4bef-bcd7-63161637da84")
+		)
+		(pin "2"
+			(uuid "fd3fa5a6-acca-4f3f-b547-0f9adad163bc")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "HAL7")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "rofi:TMAG5231C1GQDMRR")
+		(at 100.33 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "44b0cc67-7f72-4c9d-8592-8b42381f5b7a")
+		(property "Reference" "HAL4"
+			(at 91.694 100.076 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "TMAG5231C1GQDMRR"
+			(at 100.33 112.522 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "rofi:X2SON_31H1DQDMRR_TEX"
+			(at 100.33 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tmag5231"
+			(at 100.33 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 100.33 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "79292840-9b61-401b-ab19-d62226e936ca")
+		)
+		(pin "4"
+			(uuid "05da9700-e1d3-438e-914d-b49bdb1b6322")
+		)
+		(pin "5"
+			(uuid "587d3c1d-69a4-4db2-9a30-b26599cf2e85")
+		)
+		(pin "1"
+			(uuid "f29d3b39-6bd7-4873-b724-ccdc8b2db294")
+		)
+		(pin "2"
+			(uuid "0f71f08c-270b-4d8f-a799-f8b6e089f309")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "HAL4")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "GND_7")
+		(lib_id "power:GND")
+		(at 77.47 104.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "4a759b33-d512-40b0-a08a-cf00cb3218f7")
+		(property "Reference" "#PWR06"
+			(at 77.47 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 80.01 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 77.47 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 77.47 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 77.47 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "37534ab5-84fb-46fc-9d19-4f73dd90e7e3")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR06")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "GND_7")
+		(lib_id "power:GND")
+		(at 27.94 104.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "4e5ba5e7-ae5e-4c6b-85eb-3379c4444542")
+		(property "Reference" "#PWR01"
+			(at 27.94 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 30.48 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 27.94 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 27.94 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 27.94 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "9659a1cb-8407-4512-b496-c8239ebf455b")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR01")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_5")
+		(lib_id "power:+3V3")
+		(at 196.85 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "53ecb783-51d1-4385-a0a6-0afd9c563065")
+		(property "Reference" "#PWR015"
+			(at 196.85 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 200.66 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 196.85 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 196.85 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 196.85 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "a0c9bca5-d4c6-4ae5-adfe-e04f43d3b71e")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR015")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_5")
+		(lib_id "power:+3V3")
+		(at 172.72 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "594a8cc6-2013-4291-8af7-c1ebcce8da0b")
+		(property "Reference" "#PWR013"
+			(at 172.72 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 176.53 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 172.72 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 172.72 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 172.72 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "c22dbeda-e408-45b7-8529-318b321ee9fa")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR013")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "rofi:TMAG5231C1GQDMRR")
+		(at 27.94 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "596ae6ea-b65f-4a19-9448-86aeb09cf1ac")
+		(property "Reference" "HAL1"
+			(at 19.304 100.076 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "TMAG5231C1GQDMRR"
+			(at 27.94 112.522 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "rofi:X2SON_31H1DQDMRR_TEX"
+			(at 27.94 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tmag5231"
+			(at 27.94 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 27.94 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "d6e57734-30ad-4175-823e-22e510fe2ba7")
+		)
+		(pin "4"
+			(uuid "46926220-98bb-43b2-a1e0-8016c972e5a9")
+		)
+		(pin "5"
+			(uuid "bc2b07e7-6e2e-4a77-ba3e-2d5c9a2b55b7")
+		)
+		(pin "1"
+			(uuid "95989211-2e3d-4600-8ca0-57bd548f0014")
+		)
+		(pin "2"
+			(uuid "ff698ccd-e1ee-4a6d-b029-bf4792730005")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "HAL1")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "GND_7")
+		(lib_id "power:GND")
+		(at 124.46 104.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "6cee05b7-772f-4300-8c67-918dca4a485a")
+		(property "Reference" "#PWR010"
+			(at 124.46 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 127 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 124.46 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 124.46 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 124.46 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "3f505758-a2d5-45b8-879d-37a740839d99")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR010")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "rofi:TMAG5231C1GQDMRR")
+		(at 247.65 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "6dd6742e-461a-4f94-994d-a748ff737ef9")
+		(property "Reference" "HAL10"
+			(at 239.014 100.076 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "TMAG5231C1GQDMRR"
+			(at 247.65 112.522 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "rofi:X2SON_31H1DQDMRR_TEX"
+			(at 247.65 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tmag5231"
+			(at 247.65 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 247.65 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "330735f3-5630-4e54-89de-c03289eeeeee")
+		)
+		(pin "4"
+			(uuid "20e238f6-bb6a-4d2e-9fd0-2eae954984e1")
+		)
+		(pin "5"
+			(uuid "369c0027-5930-42c6-b188-6d06b34c8779")
+		)
+		(pin "1"
+			(uuid "60d3aebb-95b9-4fa7-abd2-91da1de96b03")
+		)
+		(pin "2"
+			(uuid "7f81c626-d07a-4174-a2f7-507b584d30d1")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "HAL10")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "rofi:TMAG5231C1GQDMRR")
+		(at 124.46 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "728b8d21-ece8-4d0a-9b81-6c75e562fcaa")
+		(property "Reference" "HAL5"
+			(at 115.824 100.076 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "TMAG5231C1GQDMRR"
+			(at 124.46 112.522 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "rofi:X2SON_31H1DQDMRR_TEX"
+			(at 124.46 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tmag5231"
+			(at 124.46 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 124.46 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "9daf6853-d465-4d5b-8ee0-b0ed1112a8db")
+		)
+		(pin "4"
+			(uuid "4028cd0a-7281-41c0-9b97-a7bae5136173")
+		)
+		(pin "5"
+			(uuid "5c6ecc7c-2088-4d48-9052-f63d84a2ce16")
+		)
+		(pin "1"
+			(uuid "0fe481d5-e92a-4ff9-ad47-fff5210d1393")
+		)
+		(pin "2"
+			(uuid "3c8a3fba-f178-4a0e-8ed8-a64e90656008")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "HAL5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "GND_7")
+		(lib_id "power:GND")
+		(at 53.34 104.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "73409bdb-cdee-48e8-9072-795bb4eab9e8")
+		(property "Reference" "#PWR04"
+			(at 53.34 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 55.88 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 53.34 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 53.34 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 53.34 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "a17e8ad0-2679-43d8-92a2-6bf7061363ab")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR04")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "rofi:TMAG5231C1GQDMRR")
+		(at 53.34 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "7c092704-fef8-4a35-a2d7-3705b2960b2f")
+		(property "Reference" "HAL2"
+			(at 44.704 100.076 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "TMAG5231C1GQDMRR"
+			(at 53.34 112.522 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "rofi:X2SON_31H1DQDMRR_TEX"
+			(at 53.34 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tmag5231"
+			(at 53.34 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 53.34 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "68f0e6cc-311a-4e37-a197-f7e834c11ad3")
+		)
+		(pin "4"
+			(uuid "a7e20844-4d4b-4e27-8c6d-78220fe29760")
+		)
+		(pin "5"
+			(uuid "4ecfd9e1-ac49-4190-84d9-2b97ca87788c")
+		)
+		(pin "1"
+			(uuid "43576d3f-b4ac-486f-afef-1ed5043d77ff")
+		)
+		(pin "2"
+			(uuid "2a884ba4-faf2-4b7c-ad1f-cb87bbebf92d")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "HAL2")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_5")
+		(lib_id "power:+3V3")
+		(at 247.65 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "7c1d2bd8-669e-4cfa-a3e2-b3c433809822")
+		(property "Reference" "#PWR019"
+			(at 247.65 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 251.46 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 247.65 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 247.65 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 247.65 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "778f785c-2957-4595-9779-90e8bccb38db")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR019")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_5")
+		(lib_id "power:+3V3")
+		(at 77.47 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "8012162f-a632-4b12-8e9f-7cbf89ee9fef")
+		(property "Reference" "#PWR05"
+			(at 77.47 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 81.28 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 77.47 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 77.47 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 77.47 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "24a32160-0a21-4143-9b4f-b6fedbae04a9")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR05")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_5")
+		(lib_id "power:+3V3")
+		(at 300.99 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "85d51ecb-5129-41ce-b645-1949677ff86e")
+		(property "Reference" "#PWR023"
+			(at 300.99 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 304.8 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 300.99 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 300.99 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 300.99 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "beeebba6-8e9d-4ea9-977a-66138a38259c")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR023")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_5")
+		(lib_id "power:+3V3")
+		(at 222.25 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "8d925305-9661-462c-a76d-3608df23e574")
+		(property "Reference" "#PWR017"
+			(at 222.25 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 226.06 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 222.25 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 222.25 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 222.25 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "08ddd661-b2e6-488c-aa7f-2a68e5758803")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR017")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "rofi:TMAG5231C1GQDMRR")
+		(at 196.85 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "90ae3324-4547-44ae-9e1f-9edd19d36b50")
+		(property "Reference" "HAL8"
+			(at 188.214 100.076 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "TMAG5231C1GQDMRR"
+			(at 196.85 112.522 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "rofi:X2SON_31H1DQDMRR_TEX"
+			(at 196.85 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tmag5231"
+			(at 196.85 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 196.85 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "b5464057-6b87-4a65-9cd7-275e21dfbabb")
+		)
+		(pin "4"
+			(uuid "05c6edca-2c67-4c78-a8fa-47ddaf6226c1")
+		)
+		(pin "5"
+			(uuid "b46d88b8-a70f-4afc-a338-67a15f4fe4e5")
+		)
+		(pin "1"
+			(uuid "e5197eda-0401-4db8-bc43-df61a30e6b0c")
+		)
+		(pin "2"
+			(uuid "eb89d5ce-b33e-4297-a48a-43e0d578af5e")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "HAL8")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "rofi:TMAG5231C1GQDMRR")
+		(at 300.99 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "95794eba-87e2-457d-8ec2-2b263c773ca2")
+		(property "Reference" "HAL12"
+			(at 292.354 100.076 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "TMAG5231C1GQDMRR"
+			(at 300.99 112.522 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "rofi:X2SON_31H1DQDMRR_TEX"
+			(at 300.99 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tmag5231"
+			(at 300.99 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 300.99 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "890b3bc5-bc83-4743-98e9-8b6ef838a866")
+		)
+		(pin "4"
+			(uuid "259bc32a-cf6f-4d61-ac39-921e06e5a607")
+		)
+		(pin "5"
+			(uuid "b753f764-e04b-4b68-8757-b76d051691a6")
+		)
+		(pin "1"
+			(uuid "2589425e-d182-4feb-b212-c0d00626921c")
+		)
+		(pin "2"
+			(uuid "f8ec883f-4071-4755-ada3-aa815485b1ea")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "HAL12")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "rofi:TMAG5231C1GQDMRR")
+		(at 222.25 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "a9df57c8-d260-4b4c-9029-f645bedef687")
+		(property "Reference" "HAL9"
+			(at 213.614 100.076 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "TMAG5231C1GQDMRR"
+			(at 222.25 112.522 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "rofi:X2SON_31H1DQDMRR_TEX"
+			(at 222.25 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tmag5231"
+			(at 222.25 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 222.25 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "d83cf481-3005-47f6-ba7d-6edfbcb810f6")
+		)
+		(pin "4"
+			(uuid "606dc44c-bb33-4161-a37c-db4737a9155d")
+		)
+		(pin "5"
+			(uuid "942997f3-c397-46cd-ae06-2d53377eb484")
+		)
+		(pin "1"
+			(uuid "d612fa8d-0326-4d38-88e8-1e1ac8e29743")
+		)
+		(pin "2"
+			(uuid "c637dfef-3465-4df9-a456-f6485fad4f0f")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "HAL9")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_5")
+		(lib_id "power:+3V3")
+		(at 148.59 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "aacf56af-8ca1-4e53-9e53-c3ee8356b41e")
+		(property "Reference" "#PWR011"
+			(at 148.59 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 152.4 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 148.59 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 148.59 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 148.59 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "7a18d1f2-3c5d-45c5-abf4-d2b8d5a0c802")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR011")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "GND_7")
+		(lib_id "power:GND")
+		(at 172.72 104.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "ab6741bd-fbf2-48f9-aa6e-ef659fdfef41")
+		(property "Reference" "#PWR014"
+			(at 172.72 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 175.26 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 172.72 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 172.72 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 172.72 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "9615c7b5-f0a3-4c27-ae76-988e459f9bcb")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR014")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "GND_7")
+		(lib_id "power:GND")
+		(at 247.65 104.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "b0956fb3-0f3e-45ac-a982-54abfd5e267d")
+		(property "Reference" "#PWR020"
+			(at 247.65 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 250.19 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 247.65 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 247.65 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 247.65 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "d12b3685-5040-4240-8d0c-b8d49b4f3008")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR020")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_5")
+		(lib_id "power:+3V3")
+		(at 27.94 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "b1ade7e0-f28c-42df-95be-fadb955572c9")
+		(property "Reference" "#PWR02"
+			(at 27.94 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 31.75 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 27.94 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 27.94 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 27.94 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "d06974af-0b65-420e-9c0c-c755f84418e5")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR02")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_5")
+		(lib_id "power:+3V3")
+		(at 53.34 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "b2fe2430-1608-435c-91e1-24db4fc6e2d8")
+		(property "Reference" "#PWR03"
+			(at 53.34 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 57.15 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 53.34 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 53.34 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 53.34 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "122bc376-9de1-471d-8a97-6beedf8000f2")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR03")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_5")
+		(lib_id "power:+3V3")
+		(at 100.33 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "c629e8ba-fd70-4141-8a28-1b7b4c60850d")
+		(property "Reference" "#PWR07"
+			(at 100.33 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 104.14 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 100.33 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 100.33 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 100.33 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "0d12662b-f106-44df-a4ed-0f55537bbcba")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR07")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "rofi:TMAG5231C1GQDMRR")
+		(at 273.05 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "dbb1fccd-23f8-4762-828c-068a32f5862c")
+		(property "Reference" "HAL11"
+			(at 264.414 100.076 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "TMAG5231C1GQDMRR"
+			(at 273.05 112.522 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "rofi:X2SON_31H1DQDMRR_TEX"
+			(at 273.05 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tmag5231"
+			(at 273.05 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 273.05 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "d1c40958-86d2-4e94-a0b9-3ede860151a1")
+		)
+		(pin "4"
+			(uuid "3333711e-ac60-4186-ad84-cc3ea330d85c")
+		)
+		(pin "5"
+			(uuid "ce3677cb-982d-4562-8305-515b3fefe636")
+		)
+		(pin "1"
+			(uuid "1b25a9cf-ee2f-4bfd-a69b-cee80666bebb")
+		)
+		(pin "2"
+			(uuid "3b43556b-bb39-4d84-aed9-f2569aa08333")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "HAL11")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "GND_7")
+		(lib_id "power:GND")
+		(at 300.99 104.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e30e435f-a816-4a6f-b525-0c8ac1472d2d")
+		(property "Reference" "#PWR024"
+			(at 300.99 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 303.53 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 300.99 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 300.99 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 300.99 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "4390adc6-e5a9-4225-9c9d-ab21d7f37347")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR024")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "GND_7")
+		(lib_id "power:GND")
+		(at 100.33 104.14 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "e30ef50b-5f18-42b6-badc-df70b4da9911")
+		(property "Reference" "#PWR08"
+			(at 100.33 110.49 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "GND"
+			(at 102.87 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 100.33 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 100.33 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 100.33 104.14 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "b9ef16d0-62a9-43c0-ab26-499f15b52a16")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR08")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_name "+3V3_5")
+		(lib_id "power:+3V3")
+		(at 273.05 83.82 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "f307e102-952f-48c6-bf83-83037ada876b")
+		(property "Reference" "#PWR021"
+			(at 273.05 87.63 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Value" "+3V3"
+			(at 276.86 82.55 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Footprint" ""
+			(at 273.05 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" ""
+			(at 273.05 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 273.05 83.82 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "9cf43c98-d42e-486f-a3a6-e32e5010dae9")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "#PWR021")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "rofi:TMAG5231C1GQDMRR")
+		(at 148.59 93.98 0)
+		(unit 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(dnp no)
+		(uuid "ff8aeab5-01f6-4324-a2d4-ddceac375774")
+		(property "Reference" "HAL6"
+			(at 139.954 100.076 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Value" "TMAG5231C1GQDMRR"
+			(at 148.59 112.522 0)
+			(effects
+				(font
+					(size 1.524 1.524)
+				)
+			)
+		)
+		(property "Footprint" "rofi:X2SON_31H1DQDMRR_TEX"
+			(at 148.59 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Datasheet" "https://www.ti.com/lit/gpn/tmag5231"
+			(at 148.59 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+					(italic yes)
+				)
+				(hide yes)
+			)
+		)
+		(property "Description" ""
+			(at 148.59 93.98 0)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(hide yes)
+			)
+		)
+		(pin "3"
+			(uuid "66bee95d-34d1-4d34-b154-c0336940d908")
+		)
+		(pin "4"
+			(uuid "8c401d0b-cd77-459b-b9e8-c5127f09488c")
+		)
+		(pin "5"
+			(uuid "1741f358-89b5-4b9a-9e8e-fab9b80899e9")
+		)
+		(pin "1"
+			(uuid "66e9ab64-cbc1-40ba-b783-56e3116ab4e7")
+		)
+		(pin "2"
+			(uuid "1c68b71c-e166-4ae3-8734-01ea9378b10e")
+		)
+		(instances
+			(project "control_board"
+				(path "/84fafecd-c3e6-4089-9b33-ddad3a23aee4/6a43376b-1fea-40b3-8cf3-ab815d14ec87"
+					(reference "HAL6")
+					(unit 1)
+				)
+			)
+		)
+	)
+)
