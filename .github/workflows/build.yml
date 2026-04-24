@@ -29,6 +29,25 @@ jobs:
         run: |
           source setup.sh ${{ matrix.environment }}
           rmake --test --all
+  build_desktop_gazebo:
+    name: "Build suite desktop with Gazebo Sim"
+    runs-on: ubuntu-24.04
+    strategy:
+      matrix:
+        environment: [Debug, Release]
+    defaults:
+      run:
+        shell: bash
+    container:
+      image: ghcr.io/paradise-fi/rofi.ubuntu
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build
+        run: |
+          source setup.sh ${{ matrix.environment }}
+          rcfg desktop -- -DBUILD_GAZEBO=ON -DBUILD_GZ_SIMULATOR=ON
+          rmake desktop
   build_esp32:
     name: "Build suite esp32"
     runs-on: ubuntu-24.04

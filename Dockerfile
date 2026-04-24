@@ -21,6 +21,27 @@ RUN DEBIAN_FRONTEND=noninteractive TZ="Europe/London" \
         libz3-dev \
         coinor-clp coinor-libclp-dev
 
+# Install Gazebo Sim packages on Ubuntu Noble images. The Debian image keeps a
+# leaner headless toolchain and is still used for non-simulator lanes.
+RUN . /etc/os-release && \
+    if [ "$ID" = "ubuntu" ]; then \
+        curl -fsSL https://packages.osrfoundation.org/gazebo.gpg \
+            -o /usr/share/keyrings/pkgs-osrf-archive-keyring.gpg && \
+        echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/pkgs-osrf-archive-keyring.gpg] https://packages.osrfoundation.org/gazebo/ubuntu-stable ${VERSION_CODENAME} main" \
+            > /etc/apt/sources.list.d/gazebo-stable.list && \
+        apt-get update && \
+        DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
+            gz-sim10-cli \
+            gz-sim10-server \
+            libgz-common7-dev \
+            libgz-gui10-dev \
+            libgz-math9-dev \
+            libgz-msgs12-dev \
+            libgz-plugin4-dev \
+            libgz-sim10-dev \
+            libgz-transport15-dev; \
+    fi
+
 # Install ARM Toolchain for STM32
 RUN cd /tmp && \
     curl -fsSL -o arm-gnu-toolchain-15.2.rel1-x86_64-arm-none-eabi.tar.xz \
@@ -55,8 +76,8 @@ ENV PATH="/cargo/bin:$PATH"
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.95.0
 
-# Newer Ubuntu (21.10) miss libdl.so which is (probably) required by VTK.
-# This is a temporary work-around until we migrate to VTK 9.
+# Some Noble images omit the unversioned libdl soname that older VTK / Qt
+# tooling still looks for.
 RUN if [ ! -e /usr/lib/x86_64-linux-gnu/libdl.so ] ; then \
         ln -s /usr/lib/x86_64-linux-gnu/libdl.so.2 /usr/lib/x86_64-linux-gnu/libdl.so; \
     fi
