@@ -35,7 +35,7 @@ jobs:
       image: ${{ matrix.image }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Build
         run: |
           source setup.sh ${{ matrix.environment }}
@@ -59,7 +59,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Build
         run: |
           source setup.sh -i ${{ matrix.environment }}
@@ -86,7 +86,7 @@ jobs:
         shell: bash
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Build
         run: |
           source setup.sh ${{ matrix.environment }}
@@ -107,7 +107,7 @@ jobs:
       - name: Change Owner of Container Working Directory
         run: chown root:root .
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Build
         run: |
           source setup.sh Debug
@@ -129,7 +129,7 @@ jobs:
 
           releng/doc/buildAllBranches.sh
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: documentation
           path: build.Debug/doc/web
@@ -141,9 +141,9 @@ jobs:
     if: github.ref == 'refs/heads/master'
     steps:
       - name: Checkout # Required for GH-pages deployment
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: "Download web"
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           name: documentation
           path: documentation
