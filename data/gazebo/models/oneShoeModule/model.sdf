@@ -52,74 +52,650 @@
 
         <model name='connectorPlusX'>
             <pose>0.043 0 0 -1.5708 0 -1.5708</pose>
-            <include>
-                <uri>model://roficom</uri>
-            </include>
+            <link name='connectorPlusX__outer'>
+                <inertial>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <mass>10e-3</mass>
+                    <inertia>
+                        <ixx>1.775833e-6</ixx>
+                        <iyy>1.775833e-6</iyy>
+                        <izz>3.125e-6</izz>
+                        <ixy>0.0</ixy>
+                        <ixz>0.0</ixz>
+                        <iyz>0.0</iyz>
+                    </inertia>
+                </inertial>
+                <collision name='outer-collision'>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>25e-3</radius>
+                            <length>17e-3</length>
+                        </cylinder>
+                    </geometry>
+                </collision>
+                <visual name='outer-visual'>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>25e-3</radius>
+                            <length>17e-3</length>
+                        </cylinder>
+                    </geometry>
+                    <material>
+                        <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/DarkGrey</name>
+                        </script>
+                    </material>
+                </visual>
+            </link>
+            <link name='connectorPlusX__inner'>
+                <inertial>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <mass>10e-3</mass>
+                    <inertia>
+                        <ixx>1.3633e-6</ixx>
+                        <iyy>1.3633e-6</iyy>
+                        <izz>2.645e-6</izz>
+                        <ixy>0.0</ixy>
+                        <ixz>0.0</ixz>
+                        <iyz>0.0</iyz>
+                    </inertia>
+                </inertial>
+                <collision name='inner-collision'>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>23e-3</radius>
+                            <length>7e-3</length>
+                        </cylinder>
+                    </geometry>
+                </collision>
+                <visual name='inner-visual'>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>23e-3</radius>
+                            <length>7e-3</length>
+                        </cylinder>
+                    </geometry>
+                    <material>
+                        <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/DarkGrey</name>
+                        </script>
+                    </material>
+                </visual>
+            </link>
+            <joint name='connectorPlusX__extendJoint' type='prismatic'>
+                <parent>connectorPlusX__outer</parent>
+                <child>connectorPlusX__inner</child>
+                <axis>
+                    <xyz>0 0 1</xyz>
+                    <limit>
+                        <lower>0</lower>
+                        <upper>7e-3</upper>
+                        <effort>50</effort>
+                        <velocity>25e-3</velocity>
+                    </limit>
+                    <dynamics>
+                        <friction>0</friction>
+                        <spring_reference>0</spring_reference>
+                        <spring_stiffness>0</spring_stiffness>
+                    </dynamics>
+                    <use_parent_model_frame>1</use_parent_model_frame>
+                </axis>
+            </joint>
+            <plugin name='rofi::sim::systems::RoFICoMPlugin' filename='roficomPlugin'>
+                <joint>connectorPlusX__extendJoint</joint>
+                <extend>false</extend>
+            </plugin>
         </model>
 
         <model name='connectorMinusX'>
             <pose>-0.043 0 0 -1.5708 0 1.5708</pose>
-            <include>
-                <uri>model://roficom</uri>
-            </include>
+            <link name='connectorMinusX__outer'>
+                <inertial>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <mass>10e-3</mass>
+                    <inertia>
+                        <ixx>1.775833e-6</ixx>
+                        <iyy>1.775833e-6</iyy>
+                        <izz>3.125e-6</izz>
+                        <ixy>0.0</ixy>
+                        <ixz>0.0</ixz>
+                        <iyz>0.0</iyz>
+                    </inertia>
+                </inertial>
+                <collision name='outer-collision'>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>25e-3</radius>
+                            <length>17e-3</length>
+                        </cylinder>
+                    </geometry>
+                </collision>
+                <visual name='outer-visual'>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>25e-3</radius>
+                            <length>17e-3</length>
+                        </cylinder>
+                    </geometry>
+                    <material>
+                        <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/DarkGrey</name>
+                        </script>
+                    </material>
+                </visual>
+            </link>
+            <link name='connectorMinusX__inner'>
+                <inertial>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <mass>10e-3</mass>
+                    <inertia>
+                        <ixx>1.3633e-6</ixx>
+                        <iyy>1.3633e-6</iyy>
+                        <izz>2.645e-6</izz>
+                        <ixy>0.0</ixy>
+                        <ixz>0.0</ixz>
+                        <iyz>0.0</iyz>
+                    </inertia>
+                </inertial>
+                <collision name='inner-collision'>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>23e-3</radius>
+                            <length>7e-3</length>
+                        </cylinder>
+                    </geometry>
+                </collision>
+                <visual name='inner-visual'>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>23e-3</radius>
+                            <length>7e-3</length>
+                        </cylinder>
+                    </geometry>
+                    <material>
+                        <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/DarkGrey</name>
+                        </script>
+                    </material>
+                </visual>
+            </link>
+            <joint name='connectorMinusX__extendJoint' type='prismatic'>
+                <parent>connectorMinusX__outer</parent>
+                <child>connectorMinusX__inner</child>
+                <axis>
+                    <xyz>0 0 1</xyz>
+                    <limit>
+                        <lower>0</lower>
+                        <upper>7e-3</upper>
+                        <effort>50</effort>
+                        <velocity>25e-3</velocity>
+                    </limit>
+                    <dynamics>
+                        <friction>0</friction>
+                        <spring_reference>0</spring_reference>
+                        <spring_stiffness>0</spring_stiffness>
+                    </dynamics>
+                    <use_parent_model_frame>1</use_parent_model_frame>
+                </axis>
+            </joint>
+            <plugin name='rofi::sim::systems::RoFICoMPlugin' filename='roficomPlugin'>
+                <joint>connectorMinusX__extendJoint</joint>
+                <extend>false</extend>
+            </plugin>
         </model>
 
         <model name='connectorPlusY'>
             <pose>0 0.043 0 -1.5708 0 0</pose>
-            <include>
-                <uri>model://roficom</uri>
-            </include>
+            <link name='connectorPlusY__outer'>
+                <inertial>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <mass>10e-3</mass>
+                    <inertia>
+                        <ixx>1.775833e-6</ixx>
+                        <iyy>1.775833e-6</iyy>
+                        <izz>3.125e-6</izz>
+                        <ixy>0.0</ixy>
+                        <ixz>0.0</ixz>
+                        <iyz>0.0</iyz>
+                    </inertia>
+                </inertial>
+                <collision name='outer-collision'>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>25e-3</radius>
+                            <length>17e-3</length>
+                        </cylinder>
+                    </geometry>
+                </collision>
+                <visual name='outer-visual'>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>25e-3</radius>
+                            <length>17e-3</length>
+                        </cylinder>
+                    </geometry>
+                    <material>
+                        <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/DarkGrey</name>
+                        </script>
+                    </material>
+                </visual>
+            </link>
+            <link name='connectorPlusY__inner'>
+                <inertial>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <mass>10e-3</mass>
+                    <inertia>
+                        <ixx>1.3633e-6</ixx>
+                        <iyy>1.3633e-6</iyy>
+                        <izz>2.645e-6</izz>
+                        <ixy>0.0</ixy>
+                        <ixz>0.0</ixz>
+                        <iyz>0.0</iyz>
+                    </inertia>
+                </inertial>
+                <collision name='inner-collision'>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>23e-3</radius>
+                            <length>7e-3</length>
+                        </cylinder>
+                    </geometry>
+                </collision>
+                <visual name='inner-visual'>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>23e-3</radius>
+                            <length>7e-3</length>
+                        </cylinder>
+                    </geometry>
+                    <material>
+                        <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/DarkGrey</name>
+                        </script>
+                    </material>
+                </visual>
+            </link>
+            <joint name='connectorPlusY__extendJoint' type='prismatic'>
+                <parent>connectorPlusY__outer</parent>
+                <child>connectorPlusY__inner</child>
+                <axis>
+                    <xyz>0 0 1</xyz>
+                    <limit>
+                        <lower>0</lower>
+                        <upper>7e-3</upper>
+                        <effort>50</effort>
+                        <velocity>25e-3</velocity>
+                    </limit>
+                    <dynamics>
+                        <friction>0</friction>
+                        <spring_reference>0</spring_reference>
+                        <spring_stiffness>0</spring_stiffness>
+                    </dynamics>
+                    <use_parent_model_frame>1</use_parent_model_frame>
+                </axis>
+            </joint>
+            <plugin name='rofi::sim::systems::RoFICoMPlugin' filename='roficomPlugin'>
+                <joint>connectorPlusY__extendJoint</joint>
+                <extend>false</extend>
+            </plugin>
         </model>
 
         <model name='connectorMinusY'>
             <pose>0 -0.043 0 1.5708 0 0</pose>
-            <include>
-                <uri>model://roficom</uri>
-            </include>
+            <link name='connectorMinusY__outer'>
+                <inertial>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <mass>10e-3</mass>
+                    <inertia>
+                        <ixx>1.775833e-6</ixx>
+                        <iyy>1.775833e-6</iyy>
+                        <izz>3.125e-6</izz>
+                        <ixy>0.0</ixy>
+                        <ixz>0.0</ixz>
+                        <iyz>0.0</iyz>
+                    </inertia>
+                </inertial>
+                <collision name='outer-collision'>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>25e-3</radius>
+                            <length>17e-3</length>
+                        </cylinder>
+                    </geometry>
+                </collision>
+                <visual name='outer-visual'>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>25e-3</radius>
+                            <length>17e-3</length>
+                        </cylinder>
+                    </geometry>
+                    <material>
+                        <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/DarkGrey</name>
+                        </script>
+                    </material>
+                </visual>
+            </link>
+            <link name='connectorMinusY__inner'>
+                <inertial>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <mass>10e-3</mass>
+                    <inertia>
+                        <ixx>1.3633e-6</ixx>
+                        <iyy>1.3633e-6</iyy>
+                        <izz>2.645e-6</izz>
+                        <ixy>0.0</ixy>
+                        <ixz>0.0</ixz>
+                        <iyz>0.0</iyz>
+                    </inertia>
+                </inertial>
+                <collision name='inner-collision'>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>23e-3</radius>
+                            <length>7e-3</length>
+                        </cylinder>
+                    </geometry>
+                </collision>
+                <visual name='inner-visual'>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>23e-3</radius>
+                            <length>7e-3</length>
+                        </cylinder>
+                    </geometry>
+                    <material>
+                        <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/DarkGrey</name>
+                        </script>
+                    </material>
+                </visual>
+            </link>
+            <joint name='connectorMinusY__extendJoint' type='prismatic'>
+                <parent>connectorMinusY__outer</parent>
+                <child>connectorMinusY__inner</child>
+                <axis>
+                    <xyz>0 0 1</xyz>
+                    <limit>
+                        <lower>0</lower>
+                        <upper>7e-3</upper>
+                        <effort>50</effort>
+                        <velocity>25e-3</velocity>
+                    </limit>
+                    <dynamics>
+                        <friction>0</friction>
+                        <spring_reference>0</spring_reference>
+                        <spring_stiffness>0</spring_stiffness>
+                    </dynamics>
+                    <use_parent_model_frame>1</use_parent_model_frame>
+                </axis>
+            </joint>
+            <plugin name='rofi::sim::systems::RoFICoMPlugin' filename='roficomPlugin'>
+                <joint>connectorMinusY__extendJoint</joint>
+                <extend>false</extend>
+            </plugin>
         </model>
 
         <model name='connectorPlusZ'>
             <pose>0 0 0.043 0 0 0</pose>
-            <include>
-                <uri>model://roficom</uri>
-            </include>
+            <link name='connectorPlusZ__outer'>
+                <inertial>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <mass>10e-3</mass>
+                    <inertia>
+                        <ixx>1.775833e-6</ixx>
+                        <iyy>1.775833e-6</iyy>
+                        <izz>3.125e-6</izz>
+                        <ixy>0.0</ixy>
+                        <ixz>0.0</ixz>
+                        <iyz>0.0</iyz>
+                    </inertia>
+                </inertial>
+                <collision name='outer-collision'>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>25e-3</radius>
+                            <length>17e-3</length>
+                        </cylinder>
+                    </geometry>
+                </collision>
+                <visual name='outer-visual'>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>25e-3</radius>
+                            <length>17e-3</length>
+                        </cylinder>
+                    </geometry>
+                    <material>
+                        <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/DarkGrey</name>
+                        </script>
+                    </material>
+                </visual>
+            </link>
+            <link name='connectorPlusZ__inner'>
+                <inertial>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <mass>10e-3</mass>
+                    <inertia>
+                        <ixx>1.3633e-6</ixx>
+                        <iyy>1.3633e-6</iyy>
+                        <izz>2.645e-6</izz>
+                        <ixy>0.0</ixy>
+                        <ixz>0.0</ixz>
+                        <iyz>0.0</iyz>
+                    </inertia>
+                </inertial>
+                <collision name='inner-collision'>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>23e-3</radius>
+                            <length>7e-3</length>
+                        </cylinder>
+                    </geometry>
+                </collision>
+                <visual name='inner-visual'>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>23e-3</radius>
+                            <length>7e-3</length>
+                        </cylinder>
+                    </geometry>
+                    <material>
+                        <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/DarkGrey</name>
+                        </script>
+                    </material>
+                </visual>
+            </link>
+            <joint name='connectorPlusZ__extendJoint' type='prismatic'>
+                <parent>connectorPlusZ__outer</parent>
+                <child>connectorPlusZ__inner</child>
+                <axis>
+                    <xyz>0 0 1</xyz>
+                    <limit>
+                        <lower>0</lower>
+                        <upper>7e-3</upper>
+                        <effort>50</effort>
+                        <velocity>25e-3</velocity>
+                    </limit>
+                    <dynamics>
+                        <friction>0</friction>
+                        <spring_reference>0</spring_reference>
+                        <spring_stiffness>0</spring_stiffness>
+                    </dynamics>
+                    <use_parent_model_frame>1</use_parent_model_frame>
+                </axis>
+            </joint>
+            <plugin name='rofi::sim::systems::RoFICoMPlugin' filename='roficomPlugin'>
+                <joint>connectorPlusZ__extendJoint</joint>
+                <extend>false</extend>
+            </plugin>
         </model>
 
         <model name='connectorMinusZ'>
             <pose>0 0 -0.043 3.1416 0 0</pose>
-            <include>
-                <uri>model://roficom</uri>
-            </include>
+            <link name='connectorMinusZ__outer'>
+                <inertial>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <mass>10e-3</mass>
+                    <inertia>
+                        <ixx>1.775833e-6</ixx>
+                        <iyy>1.775833e-6</iyy>
+                        <izz>3.125e-6</izz>
+                        <ixy>0.0</ixy>
+                        <ixz>0.0</ixz>
+                        <iyz>0.0</iyz>
+                    </inertia>
+                </inertial>
+                <collision name='outer-collision'>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>25e-3</radius>
+                            <length>17e-3</length>
+                        </cylinder>
+                    </geometry>
+                </collision>
+                <visual name='outer-visual'>
+                    <pose>0 0 -8.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>25e-3</radius>
+                            <length>17e-3</length>
+                        </cylinder>
+                    </geometry>
+                    <material>
+                        <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/DarkGrey</name>
+                        </script>
+                    </material>
+                </visual>
+            </link>
+            <link name='connectorMinusZ__inner'>
+                <inertial>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <mass>10e-3</mass>
+                    <inertia>
+                        <ixx>1.3633e-6</ixx>
+                        <iyy>1.3633e-6</iyy>
+                        <izz>2.645e-6</izz>
+                        <ixy>0.0</ixy>
+                        <ixz>0.0</ixz>
+                        <iyz>0.0</iyz>
+                    </inertia>
+                </inertial>
+                <collision name='inner-collision'>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>23e-3</radius>
+                            <length>7e-3</length>
+                        </cylinder>
+                    </geometry>
+                </collision>
+                <visual name='inner-visual'>
+                    <pose>0 0 -3.5e-3 0 0 0</pose>
+                    <geometry>
+                        <cylinder>
+                            <radius>23e-3</radius>
+                            <length>7e-3</length>
+                        </cylinder>
+                    </geometry>
+                    <material>
+                        <script>
+                            <uri>file://media/materials/scripts/gazebo.material</uri>
+                            <name>Gazebo/DarkGrey</name>
+                        </script>
+                    </material>
+                </visual>
+            </link>
+            <joint name='connectorMinusZ__extendJoint' type='prismatic'>
+                <parent>connectorMinusZ__outer</parent>
+                <child>connectorMinusZ__inner</child>
+                <axis>
+                    <xyz>0 0 1</xyz>
+                    <limit>
+                        <lower>0</lower>
+                        <upper>7e-3</upper>
+                        <effort>50</effort>
+                        <velocity>25e-3</velocity>
+                    </limit>
+                    <dynamics>
+                        <friction>0</friction>
+                        <spring_reference>0</spring_reference>
+                        <spring_stiffness>0</spring_stiffness>
+                    </dynamics>
+                    <use_parent_model_frame>1</use_parent_model_frame>
+                </axis>
+            </joint>
+            <plugin name='rofi::sim::systems::RoFICoMPlugin' filename='roficomPlugin'>
+                <joint>connectorMinusZ__extendJoint</joint>
+                <extend>false</extend>
+            </plugin>
         </model>
 
 
         <joint name='connectorPlusXJoint' type='fixed'>
-            <child>connectorPlusX::RoFICoM::outer</child>
+            <child>connectorPlusX::connectorPlusX__outer</child>
             <parent>shoe</parent>
         </joint>
 
         <joint name='connectorMinusXJoint' type='fixed'>
-            <child>connectorMinusX::RoFICoM::outer</child>
+            <child>connectorMinusX::connectorMinusX__outer</child>
             <parent>shoe</parent>
         </joint>
 
         <joint name='connectorPlusYJoint' type='fixed'>
-            <child>connectorPlusY::RoFICoM::outer</child>
+            <child>connectorPlusY::connectorPlusY__outer</child>
             <parent>shoe</parent>
         </joint>
 
         <joint name='connectorMinusYJoint' type='fixed'>
-            <child>connectorMinusY::RoFICoM::outer</child>
+            <child>connectorMinusY::connectorMinusY__outer</child>
             <parent>shoe</parent>
         </joint>
 
         <joint name='connectorPlusZJoint' type='fixed'>
-            <child>connectorPlusZ::RoFICoM::outer</child>
+            <child>connectorPlusZ::connectorPlusZ__outer</child>
             <parent>shoe</parent>
         </joint>
 
         <joint name='connectorMinusZJoint' type='fixed'>
-            <child>connectorMinusZ::RoFICoM::outer</child>
+            <child>connectorMinusZ::connectorMinusZ__outer</child>
             <parent>shoe</parent>
         </joint>
 

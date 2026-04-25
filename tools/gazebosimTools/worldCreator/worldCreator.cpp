@@ -420,43 +420,9 @@ sdf::ElementPtr newRoFIUniversalModule( ID rofiId )
     auto modelSdf = getOnlyChild< true >( sdf->Root(), "model" );
     assert( isRoFIModule( modelSdf ) );
 
-    for ( auto connectorSdf : getChildren( modelSdf, "model" ) )
-    {
-        auto includeSdf = getOnlyChild< false >( connectorSdf, "include" );
-        if ( !includeSdf )
-        {
-            continue;
-        }
-
-        auto uriSdf = getOnlyChild< false >( includeSdf, "uri" );
-        if ( !uriSdf || uriSdf->Get< std::string >() != "model://roficom" )
-        {
-            continue;
-        }
-
-        auto roficomSdf = loadFromFile( "model://roficom/model.sdf" );
-        auto roficomModelSdf = getOnlyChild< true >( roficomSdf->Root(), "model" );
-        insertElement( connectorSdf, roficomModelSdf );
-        includeSdf->RemoveFromParent();
-    }
-
     setAttribute( modelSdf, "name", rofiName( rofiId ) );
 
     return modelSdf;
-}
-
-std::string getRoFICoMInnerName( sdf::ElementPtr roficomSdf )
-{
-    assert( roficomSdf );
-    assert( isRoFICoM( roficomSdf ) );
-
-    auto roficomModelSdf = getOnlyChild< true >( roficomSdf, "model" );
-    auto pluginSdf = getRoFICoMPluginSdf( roficomSdf );
-    assert( pluginSdf );
-
-    auto jointName = getOnlyChild< true >( pluginSdf, "joint" )->Get< std::string >();
-    auto jointSdf = getElemByName< true >( roficomModelSdf, "joint", jointName );
-    return getOnlyChild< true >( jointSdf, "child" )->Get< std::string >();
 }
 
 gz::math::Pose3d matrixToPose( const Matrix & matrix )

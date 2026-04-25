@@ -73,8 +73,6 @@ sdf::ElementPtr_V getModules( sdf::ElementPtr worldSdf );
 
 sdf::ElementPtr newRoFIUniversalModule( ID rofiId );
 
-std::string getRoFICoMInnerName( sdf::ElementPtr roficomSdf );
-
 template < bool Required >
 sdf::ElementPtr getElemByName( sdf::ElementPtr sdf,
                                const std::string & elemName,
