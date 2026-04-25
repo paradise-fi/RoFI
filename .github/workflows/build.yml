@@ -7,12 +7,27 @@ on:
     - cron: '0 3 * * *'
 jobs:
   build_desktop:
-    name: "Build suite desktop (headless during migration)"
+    name: "Build suite desktop"
     runs-on: ubuntu-24.04
     strategy:
       matrix:
-        environment: [Debug, Release]
-        image: [ghcr.io/paradise-fi/rofi.debian, ghcr.io/paradise-fi/rofi.ubuntu]
+        include:
+          - environment: Debug
+            image: ghcr.io/paradise-fi/rofi.debian
+            cmake_flags: -DBUILD_HEADLESS=ON -DBUILD_GAZEBO=OFF
+            run_tests: true
+          - environment: Release
+            image: ghcr.io/paradise-fi/rofi.debian
+            cmake_flags: -DBUILD_HEADLESS=ON -DBUILD_GAZEBO=OFF
+            run_tests: true
+          - environment: Debug
+            image: ghcr.io/paradise-fi/rofi.ubuntu
+            cmake_flags: -DBUILD_GAZEBO=ON -DBUILD_GZ_SIMULATOR=ON
+            run_tests: false
+          - environment: Release
+            image: ghcr.io/paradise-fi/rofi.ubuntu
+            cmake_flags: -DBUILD_GAZEBO=ON -DBUILD_GZ_SIMULATOR=ON
+            run_tests: false
     defaults:
       run:
         shell: bash
@@ -24,31 +39,13 @@ jobs:
       - name: Build
         run: |
           source setup.sh ${{ matrix.environment }}
-          rcfg desktop -- -DBUILD_HEADLESS=ON -DBUILD_GAZEBO=OFF
+          rcfg desktop -- ${{ matrix.cmake_flags }}
           rmake desktop
       - name: Run tests
+        if: ${{ matrix.run_tests }}
         run: |
           source setup.sh ${{ matrix.environment }}
           rmake --test --all
-  build_desktop_gazebo:
-    name: "Build suite desktop with Gazebo Sim"
-    runs-on: ubuntu-24.04
-    strategy:
-      matrix:
-        environment: [Debug, Release]
-    defaults:
-      run:
-        shell: bash
-    container:
-      image: ghcr.io/paradise-fi/rofi.ubuntu
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: Build
-        run: |
-          source setup.sh ${{ matrix.environment }}
-          rcfg desktop -- -DBUILD_GAZEBO=ON -DBUILD_GZ_SIMULATOR=ON
-          rmake desktop
   build_esp32:
     name: "Build suite esp32"
     runs-on: ubuntu-24.04
