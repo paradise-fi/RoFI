@@ -7,4 +7,4 @@ add_rust_executable(rofi-voxel_one_step)
 
 add_rust_tests(test-rofi-voxel)
 
-add_executable_script(rofi-voxel DEPENDS rofi-convert rofi-voxel_main rofi-tool)
+add_executable_script(rofi-voxel DEPENDS rofi-convert rofi-voxel_main)

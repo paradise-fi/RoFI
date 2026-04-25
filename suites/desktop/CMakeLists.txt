@@ -188,6 +188,11 @@ if (${BUILD_SMTRECONFIG})
   add_component(smtreconfig)
 endif()
 add_component(lwip++)
+add_component(rofiHalInc)
+if (NOT ${BUILD_GAZEBO})
+  add_component(rofiHalHeadless)
+  add_library(rofi::hal ALIAS rofi_hal_headless)
+endif()
 
 # Libraries for simulators
 add_component(lwipcore)
@@ -205,7 +210,6 @@ if (${BUILD_GAZEBO})
 
   add_component(messageServer)
 
-  add_component(rofiHalInc)
   add_component(rofiHalSim)
   add_component(rofiHalSimPy)
 

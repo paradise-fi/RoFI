@@ -7,7 +7,7 @@ SHELL ["/bin/bash", "-c"]
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-        apt-utils ca-certificates curl git gnupg python3-click rsync software-properties-common ssh tar wget
+        apt-utils ca-certificates curl git gnupg libusb-1.0-0 python3-click rsync software-properties-common ssh tar wget
 
 RUN DEBIAN_FRONTEND=noninteractive TZ="Europe/London" \
         apt-get install -y --no-install-recommends \
@@ -72,7 +72,7 @@ RUN export IDF_PATH=$ROFI_TOOLS_PATH/esp-idf && \
 # Install Rust
 ENV RUSTUP_HOME="/rust"
 ENV CARGO_HOME="/cargo"
-ENV PATH="/cargo/bin:$PATH"
+ENV PATH="/cargo/bin:${PATH}"
 
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y --default-toolchain 1.95.0
 
