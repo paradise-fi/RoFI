@@ -1,0 +1,60 @@
+name: "Publish CI Images"
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - Dockerfile
+      - Dockerfile.doc
+      - releng/tools/updateDockerImages
+      - .github/workflows/docker-images.yml
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: "Publish ${{ matrix.name }}"
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: rofi.debian
+            dockerfile: Dockerfile
+            tags: |
+              ghcr.io/paradise-fi/rofi:latest
+              ghcr.io/paradise-fi/rofi.debian:latest
+          - name: rofi.ubuntu
+            dockerfile: Dockerfile
+            build-args: |
+              BASE=ubuntu:24.04
+            tags: ghcr.io/paradise-fi/rofi.ubuntu:latest
+          - name: rofi.doc
+            dockerfile: Dockerfile.doc
+            tags: ghcr.io/paradise-fi/rofi.doc:latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push ${{ matrix.name }}
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          build-args: ${{ matrix.build-args }}
+          pull: true
+          push: true
+          provenance: false
+          tags: ${{ matrix.tags }}
+          cache-from: type=gha,scope=${{ matrix.name }}
+          cache-to: type=gha,scope=${{ matrix.name }},mode=max

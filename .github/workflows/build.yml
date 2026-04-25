@@ -1,5 +1,6 @@
 name: "Build & test"
 on:
+  workflow_dispatch:
   push:
   pull_request:
   schedule:
@@ -123,7 +124,7 @@ jobs:
           # Fetch all branches
           git fetch --all
           git branch -r | grep -v '\->' | sed "s,\x1B\[[0-9;]*[a-zA-Z],,g" | \
-            while read remote
+            while IFS= read -r remote
               do git branch --track "${remote#origin/}" "$remote" || true
             done
           git pull --all
