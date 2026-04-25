@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Atoms &mdash; The RoFI Platform  documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="../../_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="../../_static/doctools.js?v=9a2dae69"></script>
+        <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Patterns" href="patterns.html" />
+    <link rel="prev" title="Voxel Serialization" href="../configurations/serializations/voxel.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            The RoFI Platform
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../intro/index.html">Introduction, compiling and structure</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../releng/index.html">Release engineering notes</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../tutorials/index.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../rofihal/index.html">RoFI HAL</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">RoFILib</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../configurations/index.html">Configurations</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Atoms</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="patterns.html">Patterns</a></li>
+<li class="toctree-l3"><a class="reference internal" href="containers.html">Containers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="result.html">Result</a></li>
+<li class="toctree-l3"><a class="reference internal" href="resources.html">Embedded Resources Management</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="../networking/index.html">Netwokring</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../roficom/index.html">RoFICoM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../universalModule/index.html">Universal Module</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">The RoFI Platform</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">RoFILib</a></li>
+      <li class="breadcrumb-item active">Atoms</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/rofilib/atoms/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="atoms">
+<h1>Atoms<a class="headerlink" href="#atoms" title="Link to this heading"></a></h1>
+<p>Atoms contain all the “general purpose utilities”. They do not specifically
+belong to the RoFI library and in theory, they could be used in a different
+project.</p>
+<p>Atoms currently provide:</p>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="patterns.html">Patterns</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="patterns.html#visitor-pattern">Visitor Pattern</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="patterns.html#_CPPv4IDpEN5atoms6VisitsE"><code class="docutils literal notranslate"><span class="pre">Visits</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4IDpEN5atoms6Visits4makeEDaDp2Fs"><code class="docutils literal notranslate"><span class="pre">Visits::make()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="patterns.html#_CPPv4I00EN5atoms13VisitableBaseE"><code class="docutils literal notranslate"><span class="pre">VisitableBase</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4N5atoms13VisitableBase11VisitorTypeE"><code class="docutils literal notranslate"><span class="pre">VisitableBase::VisitorType</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4N5atoms13VisitableBaseD0Ev"><code class="docutils literal notranslate"><span class="pre">VisitableBase::~VisitableBase()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4N5atoms13VisitableBase6acceptER11VisitorType"><code class="docutils literal notranslate"><span class="pre">VisitableBase::accept()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="patterns.html#_CPPv4I00EN5atoms9VisitableE"><code class="docutils literal notranslate"><span class="pre">Visitable</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4IDpEN5atoms9Visitable9VisitableEDpRR2Ts"><code class="docutils literal notranslate"><span class="pre">Visitable::Visitable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4N5atoms9Visitable6acceptERN4Base11VisitorTypeE"><code class="docutils literal notranslate"><span class="pre">Visitable::accept()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="patterns.html#_CPPv4I00DpEN5atoms7VisitorE"><code class="docutils literal notranslate"><span class="pre">Visitor</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4N5atoms7Visitor10ReturnTypeE"><code class="docutils literal notranslate"><span class="pre">Visitor::ReturnType</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4N5atoms7Visitor9SuccessorE"><code class="docutils literal notranslate"><span class="pre">Visitor::Successor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4N5atoms7Visitor7VisitorE1FDp2Fs"><code class="docutils literal notranslate"><span class="pre">Visitor::Visitor()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="patterns.html#_CPPv4I0DpEN5atoms5visitEDaR1TDp2Fs"><code class="docutils literal notranslate"><span class="pre">visit()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="patterns.html#_CPPv4I00EN5atoms5visitENSt11enable_if_tINSt12is_base_of_vIN1T11VisitorTypeE7VisitorEEN7Visitor10ReturnTypeEEER1T7Visitor"><code class="docutils literal notranslate"><span class="pre">visit()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="patterns.html#cloneable-object-hiearchy-valueptr">Cloneable Object Hiearchy &amp; ValuePtr</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="patterns.html#_CPPv4I0EN5atoms8ValuePtrE"><code class="docutils literal notranslate"><span class="pre">ValuePtr</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4N5atoms8ValuePtr8ValuePtrEv"><code class="docutils literal notranslate"><span class="pre">ValuePtr::ValuePtr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4N5atoms8ValuePtr8ValuePtrENSt10unique_ptrI1TEE"><code class="docutils literal notranslate"><span class="pre">ValuePtr::ValuePtr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4N5atoms8ValuePtr8ValuePtrERK1T"><code class="docutils literal notranslate"><span class="pre">ValuePtr::ValuePtr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4I_NSt12derived_fromI1TEEEN5atoms8ValuePtr8ValuePtrENSt10unique_ptrI1TEE"><code class="docutils literal notranslate"><span class="pre">ValuePtr::ValuePtr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4N5atoms8ValuePtr8ValuePtrERR8ValuePtr"><code class="docutils literal notranslate"><span class="pre">ValuePtr::ValuePtr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4N5atoms8ValuePtraSERR8ValuePtr"><code class="docutils literal notranslate"><span class="pre">ValuePtr::operator=()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4NK5atoms8ValuePtr5cloneEv"><code class="docutils literal notranslate"><span class="pre">ValuePtr::clone()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4N5atoms8ValuePtr4swapER8ValuePtr"><code class="docutils literal notranslate"><span class="pre">ValuePtr::swap()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4NK5atoms8ValuePtrmlEv"><code class="docutils literal notranslate"><span class="pre">ValuePtr::operator*()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4NK5atoms8ValuePtrptEv"><code class="docutils literal notranslate"><span class="pre">ValuePtr::operator-&gt;()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4NK5atoms8ValuePtr3getEv"><code class="docutils literal notranslate"><span class="pre">ValuePtr::get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="patterns.html#_CPPv4NK5atoms8ValuePtrcvbEv"><code class="docutils literal notranslate"><span class="pre">ValuePtr::operator</span> <span class="pre">bool()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="containers.html">Containers</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="containers.html#classes-reference">Classes reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="containers.html#_CPPv4I0EN5atoms9HandleSetE"><code class="docutils literal notranslate"><span class="pre">HandleSet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet11handle_typeE"><code class="docutils literal notranslate"><span class="pre">HandleSet::handle_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet10value_typeE"><code class="docutils literal notranslate"><span class="pre">HandleSet::value_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet9size_typeE"><code class="docutils literal notranslate"><span class="pre">HandleSet::size_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet15difference_typeE"><code class="docutils literal notranslate"><span class="pre">HandleSet::difference_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet9referenceE"><code class="docutils literal notranslate"><span class="pre">HandleSet::reference</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet15const_referenceE"><code class="docutils literal notranslate"><span class="pre">HandleSet::const_reference</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet7pointerE"><code class="docutils literal notranslate"><span class="pre">HandleSet::pointer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet13const_pointerE"><code class="docutils literal notranslate"><span class="pre">HandleSet::const_pointer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet8iteratorE"><code class="docutils literal notranslate"><span class="pre">HandleSet::iterator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet14const_iteratorE"><code class="docutils literal notranslate"><span class="pre">HandleSet::const_iterator</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet4swapER9HandleSet"><code class="docutils literal notranslate"><span class="pre">HandleSet::swap()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4NK5atoms9HandleSet5emptyEv"><code class="docutils literal notranslate"><span class="pre">HandleSet::empty()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4NK5atoms9HandleSet4sizeEv"><code class="docutils literal notranslate"><span class="pre">HandleSet::size()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet13shrink_to_fitEv"><code class="docutils literal notranslate"><span class="pre">HandleSet::shrink_to_fit()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet7reserveE9size_type"><code class="docutils literal notranslate"><span class="pre">HandleSet::reserve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet5clearEv"><code class="docutils literal notranslate"><span class="pre">HandleSet::clear()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4IDpEN5atoms9HandleSet7emplaceE11handle_typeDpRR4Args"><code class="docutils literal notranslate"><span class="pre">HandleSet::emplace()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet6insertERK1T"><code class="docutils literal notranslate"><span class="pre">HandleSet::insert()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet6insertERR1T"><code class="docutils literal notranslate"><span class="pre">HandleSet::insert()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet5eraseE11handle_type"><code class="docutils literal notranslate"><span class="pre">HandleSet::erase()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet5beginEv"><code class="docutils literal notranslate"><span class="pre">HandleSet::begin()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4NK5atoms9HandleSet5beginEv"><code class="docutils literal notranslate"><span class="pre">HandleSet::begin()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4NK5atoms9HandleSet6cbeginEv"><code class="docutils literal notranslate"><span class="pre">HandleSet::cbegin()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet3endEv"><code class="docutils literal notranslate"><span class="pre">HandleSet::end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4NK5atoms9HandleSet3endEv"><code class="docutils literal notranslate"><span class="pre">HandleSet::end()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4NK5atoms9HandleSet4cendEv"><code class="docutils literal notranslate"><span class="pre">HandleSet::cend()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4NK5atoms9HandleSetixE11handle_type"><code class="docutils literal notranslate"><span class="pre">HandleSet::operator[]()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSetixE11handle_type"><code class="docutils literal notranslate"><span class="pre">HandleSet::operator[]()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4NK5atoms9HandleSet8containsE11handle_type"><code class="docutils literal notranslate"><span class="pre">HandleSet::contains()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4N5atoms9HandleSet4findE11handle_type"><code class="docutils literal notranslate"><span class="pre">HandleSet::find()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="containers.html#_CPPv4NK5atoms9HandleSet4findE11handle_type"><code class="docutils literal notranslate"><span class="pre">HandleSet::find()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="result.html">Result</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="result.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="result.html#classes-reference">Classes reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="result.html#_CPPv4I00EN5atoms6ResultE"><code class="docutils literal notranslate"><span class="pre">Result</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4N5atoms6Result10value_typeE"><code class="docutils literal notranslate"><span class="pre">Result::value_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4N5atoms6Result10error_typeE"><code class="docutils literal notranslate"><span class="pre">Result::error_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4N5atoms6Result5valueERK10value_type"><code class="docutils literal notranslate"><span class="pre">Result::value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4N5atoms6Result5valueERR10value_type"><code class="docutils literal notranslate"><span class="pre">Result::value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4N5atoms6Result13emplace_valueEDpRRDa"><code class="docutils literal notranslate"><span class="pre">Result::emplace_value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4N5atoms6Result5errorERK10error_type"><code class="docutils literal notranslate"><span class="pre">Result::error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4N5atoms6Result5errorERR10error_type"><code class="docutils literal notranslate"><span class="pre">Result::error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4N5atoms6Result13emplace_errorEDpRRDa"><code class="docutils literal notranslate"><span class="pre">Result::emplace_error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I0ENKR5atoms6Resultcv6ResultI6ValueT10error_typeEEv"><code class="docutils literal notranslate"><span class="pre">Result::operator</span> <span class="pre">Result&lt;ValueT,</span> <span class="pre">error_type&gt;()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I0ENO5atoms6Resultcv6ResultI6ValueT10error_typeEEv"><code class="docutils literal notranslate"><span class="pre">Result::operator</span> <span class="pre">Result&lt;ValueT,</span> <span class="pre">error_type&gt;()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I0ENKR5atoms6Resultcv6ResultI10value_type6ErrorTEEv"><code class="docutils literal notranslate"><span class="pre">Result::operator</span> <span class="pre">Result&lt;value_type,</span> <span class="pre">ErrorT&gt;()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I0ENO5atoms6Resultcv6ResultI10value_type6ErrorTEEv"><code class="docutils literal notranslate"><span class="pre">Result::operator</span> <span class="pre">Result&lt;value_type,</span> <span class="pre">ErrorT&gt;()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NK5atoms6Result9has_valueEv"><code class="docutils literal notranslate"><span class="pre">Result::has_value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NK5atoms6ResultcvbEv"><code class="docutils literal notranslate"><span class="pre">Result::operator</span> <span class="pre">bool()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4N5atoms6ResultptEv"><code class="docutils literal notranslate"><span class="pre">Result::operator-&gt;()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NK5atoms6ResultptEv"><code class="docutils literal notranslate"><span class="pre">Result::operator-&gt;()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NR5atoms6ResultmlEv"><code class="docutils literal notranslate"><span class="pre">Result::operator*()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NKR5atoms6ResultmlEv"><code class="docutils literal notranslate"><span class="pre">Result::operator*()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NO5atoms6ResultmlEv"><code class="docutils literal notranslate"><span class="pre">Result::operator*()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NR5atoms6Result12assume_valueEv"><code class="docutils literal notranslate"><span class="pre">Result::assume_value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NKR5atoms6Result12assume_valueEv"><code class="docutils literal notranslate"><span class="pre">Result::assume_value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NO5atoms6Result12assume_valueEv"><code class="docutils literal notranslate"><span class="pre">Result::assume_value()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NR5atoms6Result12assume_errorEv"><code class="docutils literal notranslate"><span class="pre">Result::assume_error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NKR5atoms6Result12assume_errorEv"><code class="docutils literal notranslate"><span class="pre">Result::assume_error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NO5atoms6Result12assume_errorEv"><code class="docutils literal notranslate"><span class="pre">Result::assume_error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NR5atoms6Result19assume_error_resultEv"><code class="docutils literal notranslate"><span class="pre">Result::assume_error_result()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NKR5atoms6Result19assume_error_resultEv"><code class="docutils literal notranslate"><span class="pre">Result::assume_error_result()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NO5atoms6Result19assume_error_resultEv"><code class="docutils literal notranslate"><span class="pre">Result::assume_error_result()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NR5atoms6Result12get_or_throwEv"><code class="docutils literal notranslate"><span class="pre">Result::get_or_throw()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NKR5atoms6Result12get_or_throwEv"><code class="docutils literal notranslate"><span class="pre">Result::get_or_throw()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NO5atoms6Result12get_or_throwEv"><code class="docutils literal notranslate"><span class="pre">Result::get_or_throw()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt18constructible_fromIR10error_typeEEENR5atoms6Result15get_or_throw_asER10value_typev"><code class="docutils literal notranslate"><span class="pre">Result::get_or_throw_as()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt18constructible_fromIRK10error_typeEEENKR5atoms6Result15get_or_throw_asERK10value_typev"><code class="docutils literal notranslate"><span class="pre">Result::get_or_throw_as()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt18constructible_fromIRR10error_typeEEENO5atoms6Result15get_or_throw_asERR10value_typev"><code class="docutils literal notranslate"><span class="pre">Result::get_or_throw_as()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIR10value_typeEEENR5atoms6Result8and_thenEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::and_then()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIRK10value_typeEEENKR5atoms6Result8and_thenEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::and_then()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIRR10value_typeEEENO5atoms6Result8and_thenEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::and_then()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIR10error_typeEEENR5atoms6Result7or_elseEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::or_else()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIRK10error_typeEEENKR5atoms6Result7or_elseEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::or_else()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIRR10error_typeEEENO5atoms6Result7or_elseEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::or_else()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIEEENK5atoms6Result7or_elseEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::or_else()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIEEENO5atoms6Result7or_elseEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::or_else()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIR10value_typeEEENR5atoms6Result9transformEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::transform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIRK10value_typeEEENKR5atoms6Result9transformEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::transform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIRR10value_typeEEENO5atoms6Result9transformEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::transform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIR10error_typeEEENR5atoms6Result15transform_errorEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::transform_error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIRK10error_typeEEENKR5atoms6Result15transform_errorEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::transform_error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_NSt9invocableIRR10error_typeEEENO5atoms6Result15transform_errorEDaRR1F"><code class="docutils literal notranslate"><span class="pre">Result::transform_error()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_N6detail18hint_match_visitorIR10value_typeR10error_typeEEENR5atoms6Result5matchEDaRR3Vis"><code class="docutils literal notranslate"><span class="pre">Result::match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_N6detail18hint_match_visitorIRK10value_typeRK10error_typeEEENKR5atoms6Result5matchEDaRR3Vis"><code class="docutils literal notranslate"><span class="pre">Result::match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_N6detail18hint_match_visitorIRR10value_typeRR10error_typeEEENO5atoms6Result5matchEDaRR3Vis"><code class="docutils literal notranslate"><span class="pre">Result::match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_N6detail21no_hint_match_visitorIR10value_typeR10error_typeEEENR5atoms6Result5matchEDaRR3Vis"><code class="docutils literal notranslate"><span class="pre">Result::match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_N6detail21no_hint_match_visitorIRK10value_typeRK10error_typeEEENKR5atoms6Result5matchEDaRR3Vis"><code class="docutils literal notranslate"><span class="pre">Result::match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4I_N6detail21no_hint_match_visitorIRR10value_typeRR10error_typeEEENO5atoms6Result5matchEDaRR3Vis"><code class="docutils literal notranslate"><span class="pre">Result::match()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4NK5atoms6ResulteqERK6Result"><code class="docutils literal notranslate"><span class="pre">Result::operator==()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="result.html#_CPPv4N5atoms6detail15TypePlaceholderE"><code class="docutils literal notranslate"><span class="pre">TypePlaceholder</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="result.html#_CPPv4N5atoms6detail15TypePlaceholder15TypePlaceholderEv"><code class="docutils literal notranslate"><span class="pre">TypePlaceholder::TypePlaceholder()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="result.html#functions-reference">Functions reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="result.html#_CPPv4I0EN5atoms12result_valueE6ResultI6ValueTN6detail15TypePlaceholderEE6ValueT"><code class="docutils literal notranslate"><span class="pre">result_value()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="result.html#_CPPv4I0DpEN5atoms17make_result_valueE6ResultI6ValueTN6detail15TypePlaceholderEEDpRR4Args"><code class="docutils literal notranslate"><span class="pre">make_result_value()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="result.html#_CPPv4I0EN5atoms12result_errorE6ResultIN6detail15TypePlaceholderE6ErrorTE6ErrorT"><code class="docutils literal notranslate"><span class="pre">result_error()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="result.html#_CPPv4I0DpEN5atoms17make_result_errorE6ResultIN6detail15TypePlaceholderE6ErrorTEDpRR4Args"><code class="docutils literal notranslate"><span class="pre">make_result_error()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="resources.html">Embedded Resources Management</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="resources.html#usage">Usage</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resources.html#classes-reference">Classes reference</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="resources.html#_CPPv415ResourceManager"><code class="docutils literal notranslate"><span class="pre">ResourceManager</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="resources.html#_CPPv4N15ResourceManagerD0Ev"><code class="docutils literal notranslate"><span class="pre">ResourceManager::~ResourceManager()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="resources.html#_CPPv4N15ResourceManager3addEPKcNSt9ptrdiff_tE"><code class="docutils literal notranslate"><span class="pre">ResourceManager::add()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="resources.html#_CPPv4N15ResourceManager4instEv"><code class="docutils literal notranslate"><span class="pre">ResourceManager::inst()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="resources.html#_CPPv412ResourceFile"><code class="docutils literal notranslate"><span class="pre">ResourceFile</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="resources.html#_CPPv4N12ResourceFile12ResourceFileEPKcPKc"><code class="docutils literal notranslate"><span class="pre">ResourceFile::ResourceFile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="resources.html#_CPPv4N12ResourceFile12ResourceFileEPKcNSt9ptrdiff_tE"><code class="docutils literal notranslate"><span class="pre">ResourceFile::ResourceFile()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="resources.html#_CPPv4NK12ResourceFile4nameEv"><code class="docutils literal notranslate"><span class="pre">ResourceFile::name()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="resources.html#macro-reference">Macro reference</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../configurations/serializations/voxel.html" class="btn btn-neutral float-left" title="Voxel Serialization" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="patterns.html" class="btn btn-neutral float-right" title="Patterns" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2021, Paradise.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
