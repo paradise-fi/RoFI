@@ -95,16 +95,29 @@ void AttacherPlugin::PreUpdate( const gz::sim::UpdateInfo &,
         pending.swap( _pendingAttachRequests );
     }
 
+    std::vector< rofi::messages::ConnectorAttachInfo > retryAttachRequests;
+
     for ( const auto & msg : pending )
     {
         if ( msg.attach() )
         {
-            attach( { msg.modelname1(), msg.modelname2() }, msg.orientation(), ecm );
+            if ( !attach( { msg.modelname1(), msg.modelname2() }, msg.orientation(), ecm ) )
+            {
+                retryAttachRequests.push_back( msg );
+            }
         }
         else if ( auto orientation = detach( { msg.modelname1(), msg.modelname2() }, ecm ) )
         {
             sendAttachInfo( msg.modelname1(), msg.modelname2(), false, *orientation );
         }
+    }
+
+    if ( !retryAttachRequests.empty() )
+    {
+        std::lock_guard lock( _queueMutex );
+        _pendingAttachRequests.insert( _pendingAttachRequests.end(),
+                                       retryAttachRequests.begin(),
+                                       retryAttachRequests.end() );
     }
 }
 
@@ -152,6 +165,14 @@ bool AttacherPlugin::attach( StringPair modelNames,
         return false;
     }
 
+    {
+        std::lock_guard lock( _connectedMutex );
+        if ( _connected.contains( modelNames ) )
+        {
+            return true;
+        }
+    }
+
     auto link1 = getLinkByName( *model1, ecm, "inner" );
     auto link2 = getLinkByName( *model2, ecm, "inner" );
     if ( !link1 || !link2 )
@@ -179,7 +200,7 @@ bool AttacherPlugin::attach( StringPair modelNames,
     std::lock_guard lock( _connectedMutex );
     if ( _connected.contains( modelNames ) )
     {
-        return false;
+        return true;
     }
 
     auto jointName =
