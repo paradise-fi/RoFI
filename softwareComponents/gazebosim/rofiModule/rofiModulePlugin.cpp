@@ -1,12 +1,43 @@
 #include "rofiModulePlugin.hpp"
 
 #include <algorithm>
+#include <array>
+#include <string_view>
 
 #include <gz/plugin/Register.hh>
 #include <gz/sim/Joint.hh>
 
 namespace gazebo
 {
+namespace
+{
+std::optional< size_t > connectorIndexFromName( std::string_view name )
+{
+    static constexpr std::array< std::pair< std::string_view, size_t >, 6 > connectors = { {
+            { "connectorAminusX", 0 },
+            { "connectorAplusX", 1 },
+            { "connectorAminusZ", 2 },
+            { "connectorBminusX", 3 },
+            { "connectorBplusX", 4 },
+            { "connectorBminusZ", 5 },
+    } };
+
+    if ( auto scopePos = name.rfind( "::" ); scopePos != std::string_view::npos )
+    {
+        name.remove_prefix( scopePos + 2 );
+    }
+
+    for ( const auto & [ connectorName, index ] : connectors )
+    {
+        if ( name == connectorName )
+        {
+            return index;
+        }
+    }
+    return std::nullopt;
+}
+} // namespace
+
 void RoFIModulePlugin::Configure( const gz::sim::Entity & entity,
                                   const std::shared_ptr< const sdf::Element > & sdf,
                                   gz::sim::EntityComponentManager & ecm,
@@ -124,12 +155,32 @@ void RoFIModulePlugin::findAndInitJoints( gz::sim::EntityComponentManager & ecm 
 void RoFIModulePlugin::findAndInitConnectors( const gz::sim::EntityComponentManager & ecm )
 {
     clearConnectors();
+    std::vector< std::pair< size_t, gz::sim::Entity > > indexedConnectors;
     for ( auto nested : _model.Models( ecm ) )
     {
         if ( isRoFICoM( nested, ecm ) )
         {
-            addConnector( nested, ecm );
+            const auto name = gz::sim::Model( nested ).Name( ecm );
+            if ( auto index = connectorIndexFromName( name ) )
+            {
+                indexedConnectors.emplace_back( *index, nested );
+            }
+            else
+            {
+                gzwarn << "Skipping RoFICoM with unknown connector name '" << name << "'\n";
+            }
         }
+    }
+
+    std::ranges::sort( indexedConnectors, {}, &std::pair< size_t, gz::sim::Entity >::first );
+    for ( const auto & [ index, connector ] : indexedConnectors )
+    {
+        if ( index != connectors.size() )
+        {
+            gzwarn << "Unexpected connector index " << index << ", expected " << connectors.size()
+                   << "\n";
+        }
+        addConnector( connector, ecm );
     }
 }
 

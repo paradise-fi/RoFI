@@ -38,15 +38,11 @@
                 </material>
             </visual>
             <collision name='bodyA-collision'>
-                <pose>0 0 0 0 -0 0</pose>
+                <pose>-0.000069718 -0.036934263 0 0 -0 0</pose>
                 <geometry>
-                    <mesh>
-                        <uri>model://universalModule/meshes/model.obj</uri>
-                        <scale>0.001 0.001 0.001</scale>
-                        <submesh>
-                            <name>bodyA</name>
-                        </submesh>
-                    </mesh>
+                    <box>
+                        <size>0.085860564 0.073868525 0.085930254</size>
+                    </box>
                 </geometry>
             </collision>
         </link>
@@ -88,15 +84,11 @@
                 </material>
             </visual>
             <collision name='bodyB-collision'>
-                <pose>0 0 0 0 -0 0</pose>
+                <pose>-0.000069718 0.036934263 0 0 -0 0</pose>
                 <geometry>
-                    <mesh>
-                        <uri>model://universalModule/meshes/model.obj</uri>
-                        <scale>0.001 0.001 0.001</scale>
-                        <submesh>
-                            <name>bodyB</name>
-                        </submesh>
-                    </mesh>
+                    <box>
+                        <size>0.085860564 0.073868525 0.085930254</size>
+                    </box>
                 </geometry>
             </collision>
         </link>
@@ -117,15 +109,11 @@
                 </inertia>
             </inertial>
             <collision name='shoeA-collision'>
-                <pose>0.0265 0.05 -0 0 -0 0</pose>
+                <pose>0.0265 -0.006195345 0 0 -0 0</pose>
                 <geometry>
-                    <mesh>
-                        <uri>model://universalModule/meshes/model.obj</uri>
-                        <scale>0.001 0.001 0.001</scale>
-                        <submesh>
-                            <name>shoeA</name>
-                        </submesh>
-                    </mesh>
+                    <box>
+                        <size>0.08478138 0.07239069 0.06</size>
+                    </box>
                 </geometry>
             </collision>
             <visual name='shoeA-visual'>
@@ -168,15 +156,11 @@
                 </inertia>
             </inertial>
             <collision name='shoeB-collision'>
-                <pose>0.0265 -0.05 -0.0015 0 -0 0</pose>
+                <pose>0.0265 0.006578487 -0.0015 0 -0 0</pose>
                 <geometry>
-                    <mesh>
-                        <uri>model://universalModule/meshes/model.obj</uri>
-                        <scale>0.001 0.001 0.001</scale>
-                        <submesh>
-                            <name>shoeB</name>
-                        </submesh>
-                    </mesh>
+                    <box>
+                        <size>0.08478138 0.07239069 0.06</size>
+                    </box>
                 </geometry>
             </collision>
             <visual name='shoeB-visual'>

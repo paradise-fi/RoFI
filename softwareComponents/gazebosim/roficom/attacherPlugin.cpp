@@ -203,10 +203,17 @@ bool AttacherPlugin::attach( StringPair modelNames,
         return true;
     }
 
+    auto jointLink1 = getLinkByName( *model1, ecm, "outer" );
+    auto jointLink2 = getLinkByName( *model2, ecm, "outer" );
+    if ( !jointLink1 || !jointLink2 )
+    {
+        return false;
+    }
+
     auto jointName =
-            "rofi_attacher_" + std::to_string( static_cast< uint64_t >( *link1 ) ) + "_"
-            + std::to_string( static_cast< uint64_t >( *link2 ) );
-    auto jointEntity = createFixedJoint( *link1, *link2, jointName, ecm );
+            "rofi_attacher_" + std::to_string( static_cast< uint64_t >( *jointLink1 ) ) + "_"
+            + std::to_string( static_cast< uint64_t >( *jointLink2 ) );
+    auto jointEntity = createFixedJoint( *jointLink1, *jointLink2, jointName, ecm );
     _connected.emplace( modelNames, ConnectedInfo{ *connected, jointEntity } );
     sendAttachInfo( modelNames.first, modelNames.second, true, *connected );
     return true;
@@ -254,7 +261,7 @@ void AttacherPlugin::sendAttachInfoToOne( const std::string & roficomName,
     msg.set_modelname2( connectedToName );
     msg.set_attach( attach );
     msg.set_orientation( orientation );
-    _node->Advertise< rofi::messages::ConnectorAttachInfo >( "/gazebo/"
+    _node->Advertise< rofi::messages::ConnectorAttachInfo >( "/gazebo/" + _worldName + "/"
                                                              + scopedNameToPath( roficomName )
                                                              + "/attach_event" )
             ->Publish( msg, true );

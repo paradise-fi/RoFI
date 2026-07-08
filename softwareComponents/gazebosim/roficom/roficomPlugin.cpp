@@ -1,10 +1,42 @@
 #include "roficomPlugin.hpp"
 
+#include <array>
+#include <string_view>
+
 #include <gz/sim/Joint.hh>
 #include <gz/plugin/Register.hh>
 
 namespace gazebo
 {
+namespace
+{
+std::optional< int > connectorIndexFromName( std::string_view name )
+{
+    static constexpr std::array< std::pair< std::string_view, int >, 6 > connectors = { {
+            { "connectorAminusX", 0 },
+            { "connectorAplusX", 1 },
+            { "connectorAminusZ", 2 },
+            { "connectorBminusX", 3 },
+            { "connectorBplusX", 4 },
+            { "connectorBminusZ", 5 },
+    } };
+
+    if ( auto scopePos = name.rfind( "::" ); scopePos != std::string_view::npos )
+    {
+        name.remove_prefix( scopePos + 2 );
+    }
+
+    for ( const auto & [ connectorName, index ] : connectors )
+    {
+        if ( name == connectorName )
+        {
+            return index;
+        }
+    }
+    return std::nullopt;
+}
+} // namespace
+
 std::recursive_mutex RoFICoMPlugin::positionMutex;
 std::map< gz::sim::Entity, RoFICoMPlugin::Position > RoFICoMPlugin::positionsMap;
 
@@ -16,6 +48,7 @@ void RoFICoMPlugin::Configure( const gz::sim::Entity & entity,
     _entity = entity;
     _model = gz::sim::Model( entity );
     _sdf = sdf;
+    connectorNumber = connectorIndexFromName( _model.Name( ecm ) ).value_or( 0 );
 
     loadJoint( ecm );
     initCommunication( ecm );

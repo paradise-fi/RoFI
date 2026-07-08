@@ -19,7 +19,7 @@ void RoficomConnection::load( RoFICoMPlugin & roficomPlugin,
     assert( _model != gz::sim::kNullEntity );
     assert( _node );
 
-    _scopedName = GetScopedName( _model, ecm );
+    _scopedName = GetScopedName( _model, ecm, false );
     _worldScopedName = getElemPath( gz::sim::worldEntity( _model, ecm ), ecm );
 
     _pubToOther = _node->Advertise< rofi::messages::Packet >( "~/packets" );
@@ -57,7 +57,7 @@ void RoficomConnection::connectRequest( gz::sim::Entity other,
 
     rofi::messages::ConnectorAttachInfo msg;
     msg.set_modelname1( _scopedName );
-    msg.set_modelname2( GetScopedName( other, ecm ) );
+    msg.set_modelname2( GetScopedName( other, ecm, false ) );
     msg.set_attach( true );
     msg.set_orientation( orientation );
     _pubAttachEvent->Publish( msg, true );
@@ -194,7 +194,8 @@ void RoficomConnection::disconnect()
 
 void RoficomConnection::startCommunication( const std::string & otherRoficomName )
 {
-    const auto path = "/gazebo/" + scopedNameToPath( otherRoficomName ) + "/packets";
+    const auto path = "/gazebo/" + _worldScopedName + "/" + scopedNameToPath( otherRoficomName )
+                    + "/packets";
     _subToOther = _node->Subscribe( path, &RoficomConnection::onPacket, this );
 }
 

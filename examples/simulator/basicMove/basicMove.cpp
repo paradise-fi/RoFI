@@ -64,19 +64,20 @@ void oneMove( int connector )
 {
     assert( connector == connectorA || connector == connectorB );
 
-    int otherConnector = connector == connectorA ? connectorB : connectorA;
+    int newConnector = connector == connectorA ? connectorB : connectorA;
 
     RoFI localRofi = RoFI::getLocalRoFI();
     RoFI remoteRofi = RoFI::getRemoteRoFI( remoteRofiId );
 
-    // Disconnect old connections
-    std::cout << "Disconnect old\n";
-    localRofi.getConnector( otherConnector ).disconnect();
-    remoteRofi.getConnector( otherConnector ).disconnect();
+    // Make sure the target connector is free. Keep the current connector attached
+    // while moving so it constrains the modules into the next pose.
+    std::cout << "Disconnect target\n";
+    localRofi.getConnector( newConnector ).disconnect();
+    remoteRofi.getConnector( newConnector ).disconnect();
 
     // Wait 1 second
     std::cout << "Wait for 1s\n";
-    sleep( 1000 );
+    RoFI::sleep( 1000 );
 
     // Move joints
     {
@@ -110,11 +111,11 @@ void oneMove( int connector )
 
     // Connect new connections
     std::cout << "Connect new\n";
-    localRofi.getConnector( otherConnector ).connect();
-    remoteRofi.getConnector( otherConnector ).connect();
+    localRofi.getConnector( newConnector ).connect();
+    remoteRofi.getConnector( newConnector ).connect();
 
     std::cout << "Check connection\n";
-    checkConnected( localRofi.getConnector( otherConnector ) );
+    checkConnected( localRofi.getConnector( newConnector ) );
 }
 
 int main()
