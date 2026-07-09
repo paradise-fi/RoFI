@@ -64,6 +64,12 @@ class RoficomController
     void fixJoint( gz::sim::EntityComponentManager & ecm )
     {
         auto currentPosition = _jointData.position( ecm );
+        fixJoint( ecm, currentPosition );
+    }
+
+    void fixJoint( gz::sim::EntityComponentManager & ecm, double position )
+    {
+        auto currentPosition = position;
         _jointData.setPositionLimits( ecm, currentPosition, currentPosition );
     }
 
@@ -152,6 +158,16 @@ public:
         looseJoint( ecm );
         _position = RoFICoMPosition::Retracting;
         _lastForce = -minForce;
+    }
+
+    void setConnected( gz::sim::EntityComponentManager & ecm, bool connected )
+    {
+        if ( !connected
+             && ( _position == RoFICoMPosition::Extended
+                  || _position == RoFICoMPosition::Retracted ) )
+        {
+            fixJoint( ecm );
+        }
     }
 
     struct ControllerValues

@@ -1,8 +1,10 @@
 #pragma once
 
+#include <chrono>
 #include <map>
 #include <mutex>
 #include <optional>
+#include <set>
 #include <utility>
 #include <variant>
 #include <vector>
@@ -65,6 +67,24 @@ private:
         gz::sim::Entity jointEntity = gz::sim::kNullEntity;
     };
 
+    struct SettlingInfo
+    {
+        Orientation orientation;
+        gz::sim::Entity model1 = gz::sim::kNullEntity;
+        gz::sim::Entity model2 = gz::sim::kNullEntity;
+        gz::sim::Entity link1 = gz::sim::kNullEntity;
+        gz::sim::Entity link2 = gz::sim::kNullEntity;
+    };
+
+    void processSettling( const gz::sim::UpdateInfo & info,
+                          gz::sim::EntityComponentManager & ecm );
+    bool createConnection( const StringPair & modelNames,
+                           Orientation orientation,
+                           gz::sim::Entity model1,
+                           gz::sim::Entity model2,
+                           gz::sim::EntityComponentManager & ecm,
+                           bool publishAttachInfo = true );
+
     void sendAttachInfoToOne( const std::string & roficomName,
                               const std::string & connectedToName,
                               bool attach,
@@ -78,6 +98,8 @@ private:
     rofi::gz::SubscriberPtr _subAttachEvent;
 
     std::map< StringPair, ConnectedInfo > _connected;
+    std::map< StringPair, SettlingInfo > _settling;
+    std::set< StringPair > _initialConnections;
     std::mutex _connectedMutex;
 
     std::mutex _queueMutex;

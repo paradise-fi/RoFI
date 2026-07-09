@@ -8,10 +8,10 @@
 
 struct RoficomConnectConfig
 {
-    static constexpr double maxDistance = 5e-3;       // [m]
-    static constexpr double maxTilt = 0.1;            // [rad] ( 6 deg )
-    static constexpr double maxShift = 4e-3;          // [m]
-    static constexpr double maxRotation = GZ_PI / 8; // [rad]
+    static constexpr double maxDistance = 80e-3;      // [m]
+    static constexpr double maxTilt = 0.7;            // [rad] ( 40 deg )
+    static constexpr double maxShift = 60e-3;         // [m]
+    static constexpr double maxRotation = GZ_PI / 4 - 1e-3; // [rad]
 
 
     static_assert( 4 * 2 * maxRotation < 2 * GZ_PI );

@@ -228,7 +228,12 @@ class PositionPIDController : public VelocityPIDController
     double _targetPosition = 0;
     double _maxSpeed = 0;
     std::optional< bool > _targetDirection;
+    std::chrono::steady_clock::duration _stalledNearTargetDuration{};
     const std::function< void( double ) > _positionReachedCallback;
+
+    static constexpr double compliantPositionPrecision = 3.5e-1; // [rad]
+    static constexpr double stalledVelocityThreshold = 3e-2;   // [rad/s]
+    static constexpr auto stalledNearTargetTimeout = std::chrono::milliseconds( 500 );
 
     template < bool Verbose = true >
     void setTargetPosition( double desiredPosition )
@@ -259,6 +264,16 @@ class PositionPIDController : public VelocityPIDController
         _posController.SetCmdMax( _maxSpeed );
         _posController.SetIMin( -_maxSpeed );
         _posController.SetIMax( _maxSpeed );
+    }
+
+    void completePositionCommand()
+    {
+        _targetDirection = std::nullopt;
+        _stalledNearTargetDuration = {};
+        if ( _positionReachedCallback )
+        {
+            _positionReachedCallback( _desiredPosition );
+        }
     }
 
 public:
@@ -298,14 +313,28 @@ public:
                     *_targetDirection && -linearError <= _jointData.getPositionPrecision();
             const bool reachedFromNegativeDirection =
                     !*_targetDirection && linearError <= _jointData.getPositionPrecision();
+            const bool shortOfTarget =
+                    ( *_targetDirection && linearError < 0 )
+                    || ( !*_targetDirection && linearError > 0 );
+            const bool nearTarget = std::abs( linearError ) <= compliantPositionPrecision;
+            const bool stalled = std::abs( _jointData.velocity( ecm ) ) <= stalledVelocityThreshold;
+
+            if ( shortOfTarget && nearTarget && stalled )
+            {
+                _stalledNearTargetDuration += info.dt;
+            }
+            else
+            {
+                _stalledNearTargetDuration = {};
+            }
 
             if ( reachedFromPositiveDirection || reachedFromNegativeDirection )
             {
-                _targetDirection = std::nullopt;
-                if ( _positionReachedCallback )
-                {
-                    _positionReachedCallback( _desiredPosition );
-                }
+                completePositionCommand();
+            }
+            else if ( _stalledNearTargetDuration >= stalledNearTargetTimeout )
+            {
+                completePositionCommand();
             }
         }
 
@@ -352,9 +381,11 @@ public:
             resetPositionPID( *lastControlType );
         }
 
+        const auto currentPosition = _jointData.position( ecm );
         setMaxSpeed( maxSpeed );
         setTargetPosition( targetPosition );
-        _targetDirection = targetPosition > _jointData.position( ecm );
+        _targetDirection = targetPosition > currentPosition;
+        _stalledNearTargetDuration = {};
     }
 
     void setCurrentPosition( std::optional< PidControlType > lastControlType,
@@ -368,6 +399,7 @@ public:
         setMaxSpeed( _jointData.getMaxVelocity() );
         setTargetPosition< false >( _jointData.position( ecm ) );
         _targetDirection = std::nullopt;
+        _stalledNearTargetDuration = {};
     }
 };
 

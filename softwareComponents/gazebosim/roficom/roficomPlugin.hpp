@@ -41,7 +41,8 @@ public:
     void disconnect( gz::sim::EntityComponentManager & ecm );
     void sendPacket( const rofi::messages::Packet & packet );
     void onPacket( const rofi::messages::Packet & packet );
-    void onConnectorEvent( rofi::messages::ConnectorCmd::Type eventType );
+    void onConnectorEvent( rofi::messages::ConnectorCmd::Type eventType,
+                           gz::sim::EntityComponentManager & ecm );
 
     bool isConnected() const;
     std::optional< Orientation > getOrientation() const;

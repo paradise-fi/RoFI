@@ -45,7 +45,7 @@ public:
     void disconnectRequest();
 
     void sendPacket( const rofi::messages::Packet & packet );
-    void processPending( const gz::sim::EntityComponentManager & ecm );
+    void processPending( gz::sim::EntityComponentManager & ecm );
 
 private:
     std::optional< Orientation > canBeConnected( gz::sim::Entity roficom,

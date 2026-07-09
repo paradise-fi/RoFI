@@ -1,10 +1,14 @@
 #include "attacherPlugin.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
+#include <cmath>
 
 #include <gz/plugin/Register.hh>
 #include <gz/sim/Link.hh>
+#include <gz/sim/Model.hh>
+#include <gz/sim/Util.hh>
 #include <gz/sim/World.hh>
 #include <gz/sim/components/ChildLinkName.hh>
 #include <gz/sim/components/DetachableJoint.hh>
@@ -15,6 +19,84 @@
 
 namespace gazebo
 {
+namespace
+{
+using rofi::messages::ConnectorState;
+
+constexpr double pi = 3.14159265358979323846;
+constexpr double halfPi = pi / 2;
+constexpr double springRadius = 18e-3;        // [m]
+constexpr double maxSpringCaptureError = 80e-3; // [m]
+
+double orientationYaw( ConnectorState::Orientation orientation )
+{
+    switch ( orientation )
+    {
+        case ConnectorState::NORTH:
+            return 0;
+        case ConnectorState::EAST:
+            return halfPi;
+        case ConnectorState::SOUTH:
+            return pi;
+        case ConnectorState::WEST:
+            return -halfPi;
+        default:
+            return 0;
+    }
+}
+
+std::string parentModelName( const std::string & scopedName )
+{
+    auto separator = scopedName.rfind( "::" );
+    if ( separator == std::string::npos )
+    {
+        return {};
+    }
+    return scopedName.substr( 0, separator );
+}
+
+std::array< gz::math::Vector3d, 4 > facePoints()
+{
+    return { gz::math::Vector3d{ springRadius, 0, 0 },
+             gz::math::Vector3d{ 0, springRadius, 0 },
+             gz::math::Vector3d{ -springRadius, 0, 0 },
+             gz::math::Vector3d{ 0, -springRadius, 0 } };
+}
+
+gz::math::Vector3d matchingSecondPoint( const gz::math::Vector3d & firstPoint,
+                                        ConnectorState::Orientation orientation )
+{
+    const auto orientationRotation = gz::math::Quaterniond( 0, 0, orientationYaw( orientation ) );
+    const auto faceToFaceRotation = gz::math::Quaterniond( pi, 0, 0 );
+    return faceToFaceRotation.RotateVector( orientationRotation.Inverse().RotateVector( firstPoint ) );
+}
+
+double maxSpringPointError( const gz::math::Pose3d & firstPose,
+                            const gz::math::Pose3d & secondPose,
+                            ConnectorState::Orientation orientation )
+{
+    double maxPointError = 0;
+    for ( const auto & basePoint : facePoints() )
+    {
+        const auto firstPoint = firstPose.Pos() + firstPose.Rot().RotateVector( basePoint );
+        const auto secondPoint = secondPose.Pos()
+                               + secondPose.Rot().RotateVector(
+                                         matchingSecondPoint( basePoint, orientation ) );
+        maxPointError = std::max( maxPointError, firstPoint.Distance( secondPoint ) );
+    }
+    return maxPointError;
+}
+
+gz::math::Pose3d alignedSecondPose( const gz::math::Pose3d & firstPose,
+                                    ConnectorState::Orientation orientation )
+{
+    const auto orientationRotation = gz::math::Quaterniond( 0, 0, orientationYaw( orientation ) );
+    const auto faceToFaceRotation = gz::math::Quaterniond( pi, 0, 0 );
+    return { firstPose.Pos(), firstPose.Rot() * orientationRotation * faceToFaceRotation };
+}
+
+} // namespace
+
 std::pair< std::string, std::string > sortNames( std::pair< std::string, std::string > names )
 {
     if ( names.first > names.second )
@@ -86,9 +168,11 @@ void AttacherPlugin::Configure( const gz::sim::Entity & entity,
     loadConnectionsFromSdf();
 }
 
-void AttacherPlugin::PreUpdate( const gz::sim::UpdateInfo &,
+void AttacherPlugin::PreUpdate( const gz::sim::UpdateInfo & info,
                                 gz::sim::EntityComponentManager & ecm )
 {
+    processSettling( info, ecm );
+
     std::vector< rofi::messages::ConnectorAttachInfo > pending;
     {
         std::lock_guard lock( _queueMutex );
@@ -144,6 +228,7 @@ void AttacherPlugin::loadConnectionsFromSdf()
 
         std::lock_guard lock( _queueMutex );
         _pendingAttachRequests.push_back( msg );
+        _initialConnections.insert( sortNames( { msg.modelname1(), msg.modelname2() } ) );
     }
 }
 
@@ -168,6 +253,10 @@ bool AttacherPlugin::attach( StringPair modelNames,
     {
         std::lock_guard lock( _connectedMutex );
         if ( _connected.contains( modelNames ) )
+        {
+            return true;
+        }
+        if ( _settling.contains( modelNames ) )
         {
             return true;
         }
@@ -202,19 +291,25 @@ bool AttacherPlugin::attach( StringPair modelNames,
     {
         return true;
     }
+    if ( _settling.contains( modelNames ) )
+    {
+        return true;
+    }
 
-    auto jointLink1 = getLinkByName( *model1, ecm, "outer" );
-    auto jointLink2 = getLinkByName( *model2, ecm, "outer" );
-    if ( !jointLink1 || !jointLink2 )
+    if ( _initialConnections.erase( modelNames ) != 0 )
+    {
+        return createConnection( modelNames, *connected, *model1, *model2, ecm );
+    }
+
+    const auto springPointError = maxSpringPointError( *pose1, *pose2, *connected );
+    if ( springPointError > maxSpringCaptureError )
     {
         return false;
     }
 
-    auto jointName =
-            "rofi_attacher_" + std::to_string( static_cast< uint64_t >( *jointLink1 ) ) + "_"
-            + std::to_string( static_cast< uint64_t >( *jointLink2 ) );
-    auto jointEntity = createFixedJoint( *jointLink1, *jointLink2, jointName, ecm );
-    _connected.emplace( modelNames, ConnectedInfo{ *connected, jointEntity } );
+    _settling.emplace(
+            modelNames,
+            SettlingInfo{ *connected, *model1, *model2, *link1, *link2 } );
     sendAttachInfo( modelNames.first, modelNames.second, true, *connected );
     return true;
 }
@@ -229,7 +324,14 @@ std::optional< AttacherPlugin::Orientation > AttacherPlugin::detach(
     auto it = _connected.find( modelNames );
     if ( it == _connected.end() )
     {
-        return {};
+        auto settling = _settling.find( modelNames );
+        if ( settling == _settling.end() )
+        {
+            return {};
+        }
+        auto orientation = settling->second.orientation;
+        _settling.erase( settling );
+        return orientation;
     }
 
     if ( it->second.jointEntity != gz::sim::kNullEntity )
@@ -240,6 +342,88 @@ std::optional< AttacherPlugin::Orientation > AttacherPlugin::detach(
     auto orientation = it->second.orientation;
     _connected.erase( it );
     return orientation;
+}
+
+void AttacherPlugin::processSettling( const gz::sim::UpdateInfo & info,
+                                      gz::sim::EntityComponentManager & ecm )
+{
+    if ( info.paused )
+    {
+        return;
+    }
+
+    std::vector< StringPair > toDrop;
+    std::lock_guard lock( _connectedMutex );
+
+    for ( auto & [ modelNames, settling ] : _settling )
+    {
+        if ( _connected.contains( modelNames ) )
+        {
+            toDrop.push_back( modelNames );
+            continue;
+        }
+
+        if ( !ecm.HasEntity( settling.model1 ) || !ecm.HasEntity( settling.model2 )
+             || !ecm.HasEntity( settling.link1 ) || !ecm.HasEntity( settling.link2 ) )
+        {
+            toDrop.push_back( modelNames );
+            continue;
+        }
+
+        gz::sim::Link firstLink( settling.link1 );
+        gz::sim::Link secondLink( settling.link2 );
+        firstLink.EnableVelocityChecks( ecm );
+        secondLink.EnableVelocityChecks( ecm );
+
+        auto firstPose = firstLink.WorldPose( ecm );
+        auto secondPose = secondLink.WorldPose( ecm );
+        if ( !firstPose || !secondPose )
+        {
+            continue;
+        }
+        auto parentModel2 =
+                findModelEntityByScopedName( parentModelName( modelNames.second ),
+                                             ecm,
+                                             _worldEntity );
+        if ( parentModel2 )
+        {
+            const auto model2Pose = gz::sim::worldPose( *parentModel2, ecm );
+            const auto correction =
+                    alignedSecondPose( *firstPose, settling.orientation ) * secondPose->Inverse();
+            gz::sim::Model( *parentModel2 ).SetWorldPoseCmd( ecm, correction * model2Pose );
+        }
+    }
+
+    for ( const auto & modelNames : toDrop )
+    {
+        _settling.erase( modelNames );
+    }
+}
+
+bool AttacherPlugin::createConnection( const StringPair & modelNames,
+                                       Orientation orientation,
+                                       gz::sim::Entity model1,
+                                       gz::sim::Entity model2,
+                                       gz::sim::EntityComponentManager & ecm,
+                                       bool publishAttachInfo )
+{
+    auto jointLink1 = getLinkByName( model1, ecm, "outer" );
+    auto jointLink2 = getLinkByName( model2, ecm, "outer" );
+    if ( !jointLink1 || !jointLink2 )
+    {
+        return false;
+    }
+
+    auto jointName =
+            "rofi_attacher_" + std::to_string( static_cast< uint64_t >( *jointLink1 ) ) + "_"
+            + std::to_string( static_cast< uint64_t >( *jointLink2 ) );
+    auto jointEntity = createFixedJoint( *jointLink1, *jointLink2, jointName, ecm );
+    _connected.emplace( modelNames, ConnectedInfo{ orientation, jointEntity } );
+    if ( publishAttachInfo )
+    {
+        sendAttachInfo( modelNames.first, modelNames.second, true, orientation );
+    }
+    return true;
 }
 
 void AttacherPlugin::sendAttachInfo( const std::string & modelName1,

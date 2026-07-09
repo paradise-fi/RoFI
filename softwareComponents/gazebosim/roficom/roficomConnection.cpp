@@ -83,7 +83,7 @@ void RoficomConnection::sendPacket( const rofi::messages::Packet & packet )
     _pubToOther->Publish( packet );
 }
 
-void RoficomConnection::processPending( const gz::sim::EntityComponentManager & )
+void RoficomConnection::processPending( gz::sim::EntityComponentManager & ecm )
 {
     std::vector< rofi::messages::Packet > packets;
     std::vector< rofi::messages::ConnectorAttachInfo > attachInfos;
@@ -117,12 +117,12 @@ void RoficomConnection::processPending( const gz::sim::EntityComponentManager & 
         if ( attachInfo.attach() )
         {
             onConnectEvent( otherRoficomName, attachInfo.orientation() );
-            _roficomPlugin->onConnectorEvent( rofi::messages::ConnectorCmd::CONNECT );
+            _roficomPlugin->onConnectorEvent( rofi::messages::ConnectorCmd::CONNECT, ecm );
         }
         else
         {
             onDisconnectEvent( otherRoficomName );
-            _roficomPlugin->onConnectorEvent( rofi::messages::ConnectorCmd::DISCONNECT );
+            _roficomPlugin->onConnectorEvent( rofi::messages::ConnectorCmd::DISCONNECT, ecm );
         }
     }
 }

@@ -37,27 +37,28 @@ void setToLimitPos( Joint joint, bool max, Callback && callback )
     }
 }
 
-void checkConnected( Connector connector_ )
+void waitConnected( Connector connector )
 {
-    RoFI::postpone( 2000, [ connectorConst = connector_ ] {
-        Connector connector = connectorConst;
+    while ( true )
+    {
+        RoFI::sleep( 2000 );
         auto state = connector.getState();
-        if ( state.position != ConnectorPosition::Extended || state.connected )
+        if ( state.position != ConnectorPosition::Extended )
         {
-            // Already retracted or successfully connected
+            return;
+        }
+        if ( state.connected )
+        {
             return;
         }
 
         std::cout << "Retracting\n";
         connector.disconnect();
-        RoFI::postpone( 2000, [ connectorConst = connector ] {
-            Connector conn = connectorConst;
-            std::cout << "Extending\n";
-            conn.connect();
+        RoFI::sleep( 2000 );
 
-            checkConnected( conn );
-        } );
-    } );
+        std::cout << "Extending\n";
+        connector.connect();
+    }
 }
 
 void oneMove( int connector )
@@ -115,7 +116,7 @@ void oneMove( int connector )
     remoteRofi.getConnector( newConnector ).connect();
 
     std::cout << "Check connection\n";
-    checkConnected( localRofi.getConnector( newConnector ) );
+    waitConnected( localRofi.getConnector( newConnector ) );
 }
 
 int main()
@@ -132,23 +133,10 @@ int main()
     assert( remoteRofi.getDescriptor().connectorCount > connectorA );
     assert( remoteRofi.getDescriptor().connectorCount > connectorB );
 
-    localRofi.getConnector( connectorA ).onConnectorEvent( []( Connector, ConnectorEvent event ) {
-        if ( event == ConnectorEvent::Connected )
-        {
-            oneMove( connectorA );
-        }
-    } );
-    localRofi.getConnector( connectorB ).onConnectorEvent( []( Connector, ConnectorEvent event ) {
-        if ( event == ConnectorEvent::Connected )
-        {
-            oneMove( connectorB );
-        }
-    } );
-
-    oneMove( connectorA );
-
+    int connector = connectorA;
     while ( true )
     {
-        std::this_thread::sleep_for( std::chrono::seconds( 1 ) );
+        oneMove( connector );
+        connector = connector == connectorA ? connectorB : connectorA;
     }
 }

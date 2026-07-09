@@ -136,7 +136,7 @@
                     <limit>
                         <lower>0</lower>
                         <upper>7e-3</upper>
-                        <effort>50</effort>
+                        <effort>2500</effort>
                         <velocity>25e-3</velocity>
                     </limit>
                     <dynamics>
@@ -239,7 +239,7 @@
                     <limit>
                         <lower>0</lower>
                         <upper>7e-3</upper>
-                        <effort>50</effort>
+                        <effort>2500</effort>
                         <velocity>25e-3</velocity>
                     </limit>
                     <dynamics>
@@ -342,7 +342,7 @@
                     <limit>
                         <lower>0</lower>
                         <upper>7e-3</upper>
-                        <effort>50</effort>
+                        <effort>2500</effort>
                         <velocity>25e-3</velocity>
                     </limit>
                     <dynamics>
@@ -445,7 +445,7 @@
                     <limit>
                         <lower>0</lower>
                         <upper>7e-3</upper>
-                        <effort>50</effort>
+                        <effort>2500</effort>
                         <velocity>25e-3</velocity>
                     </limit>
                     <dynamics>
@@ -548,7 +548,7 @@
                     <limit>
                         <lower>0</lower>
                         <upper>7e-3</upper>
-                        <effort>50</effort>
+                        <effort>2500</effort>
                         <velocity>25e-3</velocity>
                     </limit>
                     <dynamics>
@@ -651,7 +651,7 @@
                     <limit>
                         <lower>0</lower>
                         <upper>7e-3</upper>
-                        <effort>50</effort>
+                        <effort>2500</effort>
                         <velocity>25e-3</velocity>
                     </limit>
                     <dynamics>

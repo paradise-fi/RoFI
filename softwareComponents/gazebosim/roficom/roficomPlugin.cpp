@@ -175,6 +175,7 @@ void RoFICoMPlugin::disconnect( gz::sim::EntityComponentManager & ecm )
     }
 
     updatePosition( Position::Retracting );
+    extendJoint->controller.setConnected( ecm, false );
     roficomConnection.disconnectRequest();
     extendJoint->controller.retract( ecm );
 }
@@ -191,8 +192,18 @@ void RoFICoMPlugin::onPacket( const rofi::messages::Packet & packet )
     _pubRofi->Publish( msg, true );
 }
 
-void RoFICoMPlugin::onConnectorEvent( rofi::messages::ConnectorCmd::Type eventType )
+void RoFICoMPlugin::onConnectorEvent( rofi::messages::ConnectorCmd::Type eventType,
+                                      gz::sim::EntityComponentManager & ecm )
 {
+    using rofi::messages::ConnectorCmd;
+    if ( eventType == ConnectorCmd::CONNECT )
+    {
+        extendJoint->controller.setConnected( ecm, true );
+    }
+    else if ( eventType == ConnectorCmd::DISCONNECT )
+    {
+        extendJoint->controller.setConnected( ecm, false );
+    }
     _pubRofi->Publish( getConnectorResp( eventType ), true );
 }
 

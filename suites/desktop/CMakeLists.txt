@@ -146,6 +146,7 @@ if (${BUILD_GZ_SIMULATOR})
 endif()
 
 if (NOT ${BUILD_HEADLESS})
+  find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
   find_package(VTK REQUIRED COMPONENTS
       CommonColor
       CommonCore
@@ -161,6 +162,13 @@ if (NOT ${BUILD_HEADLESS})
       RenderingAnnotation
       RenderingCore
       RenderingOpenGL2)
+  if (VTK_USE_FILE AND VTK_VERSION VERSION_LESS "8.90")
+    include(${VTK_USE_FILE})
+  endif()
+  if (NOT COMMAND vtk_module_autoinit)
+    function(vtk_module_autoinit)
+    endfunction()
+  endif()
 endif()
 
 
