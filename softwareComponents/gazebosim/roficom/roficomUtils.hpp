@@ -73,6 +73,25 @@ class RoficomController
         _jointData.setPositionLimits( ecm, currentPosition, currentPosition );
     }
 
+    void fixJointAtEndpoint( gz::sim::EntityComponentManager & ecm, RoFICoMPosition position )
+    {
+        switch ( position )
+        {
+            case RoFICoMPosition::Extended:
+                _jointData.joint.ResetPosition( ecm, { _jointData.getMaxPosition() } );
+                fixJoint( ecm, _jointData.getMaxPosition() );
+                break;
+            case RoFICoMPosition::Retracted:
+                _jointData.joint.ResetPosition( ecm, { _jointData.getMinPosition() } );
+                fixJoint( ecm, _jointData.getMinPosition() );
+                break;
+            case RoFICoMPosition::Extending:
+            case RoFICoMPosition::Retracting:
+                assert( false );
+                break;
+        }
+    }
+
     void looseJoint( gz::sim::EntityComponentManager & ecm )
     {
         _jointData.setPositionLimits( ecm, _jointData.minPosition, _jointData.maxPosition );
@@ -98,7 +117,7 @@ public:
                 break;
             case RoFICoMPosition::Extended:
             case RoFICoMPosition::Retracted:
-                fixJoint( ecm );
+                fixJointAtEndpoint( ecm, _position );
                 break;
         }
     }
@@ -162,9 +181,14 @@ public:
 
     void setConnected( gz::sim::EntityComponentManager & ecm, bool connected )
     {
-        if ( !connected
-             && ( _position == RoFICoMPosition::Extended
-                  || _position == RoFICoMPosition::Retracted ) )
+        if ( connected )
+        {
+            _position = RoFICoMPosition::Extended;
+            fixJointAtEndpoint( ecm, RoFICoMPosition::Extended );
+            return;
+        }
+
+        if ( _position == RoFICoMPosition::Extended || _position == RoFICoMPosition::Retracted )
         {
             fixJoint( ecm );
         }
