@@ -154,7 +154,7 @@ def build(patterns, maxThreads):
     targetsToCompile.sort(key=lambda x: x.suite)
 
     for s in suitesToClean:
-        cleanSuite(s, maxThreads)
+        cleanSuite(s)
 
     for s in suitesToCompile:
         compileSuite(s, maxThreads)
@@ -196,7 +196,7 @@ def test(patterns, maxThreads):
     targetsToCompile.sort(key=lambda x: x.suite)
 
     for s in suitesToClean:
-        cleanSuite(s, maxThreads)
+        cleanSuite(s)
 
     compileTargets(targetsToCompile, maxThreads)
 
